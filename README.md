@@ -12,6 +12,9 @@ Agon is a library for running dedicated game servers on [Kubernetes](https://kub
 - Simple example code
 - Documentation of the above
 
+## Development
+See the tools in the [build](build/README.md) directory for testing and building Agon.
+
 ## Licence
 
 Apache 2.0
