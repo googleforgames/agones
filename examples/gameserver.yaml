@@ -1,0 +1,43 @@
+# Copyright 2017 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Full example of a single Game Server resource
+#
+# This is a superset of the PodSpec (https://kubernetes.io/docs/api-reference/v1.8/#podspec-v1-core)
+# that sets hostNetwork=true, provides the port to open on as KOOLIE_GAMESERVER_PORT environment variable
+# and provides a sidecar for this game server that the SDK will connect with.
+#
+# By default, RestartPolicy is set to "Never", but can be overwritten.
+#
+
+apiVersion: "stable.agon.io/v1alpha1"
+kind: GameServer
+metadata:
+  name: "gds-example"
+spec:
+  # Koolie specific configuration
+
+  # Context for the game server port
+  portContext:
+    # `static` is the only current option. Dynamic port allocated will come in future releases.
+    # When `static` is the policy specified, `port` is required, to specify the port that game clients will connect to
+    policy: "static"
+    port: 5000
+
+  # Pod specifications
+  containers:
+  - name: exampleServer
+    image: gcr.io/agon/test-server
+    imagePullPolicy: Always
