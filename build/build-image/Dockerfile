@@ -14,7 +14,7 @@
 
 FROM golang:1.9.1
 
-RUN apt-get update && apt-get install -y wget unzip bash-completion
+RUN apt-get update && apt-get install -y wget unzip bash-completion rsync
 
 WORKDIR /
 
@@ -29,12 +29,14 @@ RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 # install go tooling for building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \
-    /go/bin/gometalinter --install && \
-    mv /go/bin/* /usr/local/bin/ && \
-    rm -r /go/src/* && \
-    rm -r /go/pkg
+    go get -u k8s.io/code-generator/... && \
+    /go/bin/gometalinter --install
 
 # make sure we keep the path to go
-RUN echo "export PATH=/usr/local/go/bin:\$PATH" >> /root/.bashrc
+RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
+
+# script for generating the CRD scripts
+COPY gen-client.sh /root/gen-client.sh
+RUN chmod +x /root/gen-client.sh
 
 ENTRYPOINT kubectl

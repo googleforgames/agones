@@ -8,9 +8,26 @@ tasks you may wish to accomplish.
 
 ## Make Targets
 
+## Development Targets
+
+Targets for developing with the build image
+
+### `make build-gameserver-image`
+Compile the gameserver controller and then build the docker image
+
+### `make test`
+Run all tests
+
+### `make gen-client`
+Generate the Custom Resource Definition client(s)
+
 ### `make shell`
 Run a bash shell with the developer tools ad source code in it.
 Also creates the image if it doesn't exist
+
+## Build Image Targets
+
+Targets for building the build image
 
 ### `make clean-config`
 Cleans the kubernetes and gcloud configurations
