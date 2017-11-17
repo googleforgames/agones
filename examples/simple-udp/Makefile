@@ -42,7 +42,7 @@ build: build-server build-client
 
 # Build the server
 build-server:
-	go build -o $(project_path)/server/bin/server -a -installsuffix cgo $(package)/server
+	CGO_ENABLED=0 go build -o $(project_path)/server/bin/server -a -installsuffix cgo $(package)/server
 
 # Build a docker image for the server, and tag it
 build-server-image:

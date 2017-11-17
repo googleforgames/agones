@@ -16,7 +16,7 @@
 # Full example of a single Game Server resource
 #
 # This is a superset of the PodSpec (https://kubernetes.io/docs/api-reference/v1.8/#podspec-v1-core)
-# that sets hostNetwork=true, provides the port to open on as KOOLIE_GAMESERVER_PORT environment variable
+# that sets hostPort + containerPort combo for the game server,
 # and provides a sidecar for this game server that the SDK will connect with.
 #
 # By default, RestartPolicy is set to "Never", but can be overwritten.
@@ -28,16 +28,22 @@ metadata:
   name: "gds-example"
 spec:
   # Koolie specific configuration
-
-  # Context for the game server port
-  portContext:
+  # Context for the game server
+  gameServer:
+    # if there is more than one container, specify which one is the game server
+    container: exampleServer
     # `static` is the only current option. Dynamic port allocated will come in future releases.
-    # When `static` is the policy specified, `port` is required, to specify the port that game clients will connect to
-    policy: "static"
-    port: 5000
+    # When `static` is the policy specified, `hostPort` is required, to specify the port that game clients will connect to
+    portPolicy: "static"
+    # the port that is being opened on the game server process
+    containerPort: 7654
+    # the port exposed on the host
+    hostPort: 7777
+    # protocol being used. Defaults to UDP. TCP is the only other option
+    protocol: UDP
 
   # Pod specifications
   containers:
   - name: exampleServer
-    image: gcr.io/agon/test-server
+    image: gcr.io/agon/test-server:0.1
     imagePullPolicy: Always

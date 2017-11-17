@@ -36,9 +36,10 @@ resources:
         username: admin
         password: supersecret
 - name: game-server-firewall
-  type: compute.v1.firewall
+  type: compute.beta.firewall
   properties:
     name: game-server
+    description: "Firewall to allow game server udp traffic"
     targetTags:
       - "game-server"
     allowed:

@@ -15,5 +15,6 @@
 package stable
 
 const (
+	// GroupName is the Scheme Group Name for Agon Custom Resource Definitions
 	GroupName = "stable.agon.io"
 )

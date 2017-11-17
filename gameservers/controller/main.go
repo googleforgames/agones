@@ -16,9 +16,15 @@
 package main
 
 import (
+	"time"
+
+	"github.com/agonio/agon/pkg/client/clientset/versioned"
+	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	"github.com/agonio/agon/pkg/signals"
 	"github.com/sirupsen/logrus"
-	apiclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
@@ -35,20 +41,36 @@ func main() {
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		logrus.WithError(err).Fatal("error getting in cluster config")
+		logrus.WithError(err).Fatal("Could not create in cluster config")
 	}
 
-	apiclient, err := apiclientset.NewForConfig(config)
+	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logrus.WithError(err).Fatal("error creating clientset to the api extension")
+		logrus.WithError(err).Fatal("Could not create the kubernetes clientset")
 	}
 
-	c := NewController(apiclient.ApiextensionsV1beta1().CustomResourceDefinitions())
+	extClient, err := extclientset.NewForConfig(config)
+	if err != nil {
+		logrus.WithError(err).Fatal("Could not create the api extension clientset")
+	}
+
+	agonClient, err := versioned.NewForConfig(config)
+	if err != nil {
+		logrus.WithError(err).Fatal("Could not create the agon api clientset")
+	}
+
+	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
+	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
+	c := NewController(kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
 
 	stop := signals.NewStopChannel()
-	err = c.Run(stop)
+
+	kubeInformationFactory.Start(stop)
+	agonInformerFactory.Start(stop)
+
+	err = c.Run(2, stop)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error running gameserver controller")
+		logrus.WithError(err).Fatal("Could not run gameserver controller")
 	}
 
 	logrus.Info("Shut down gameserver controller")
