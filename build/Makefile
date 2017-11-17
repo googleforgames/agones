@@ -81,7 +81,13 @@ shell: ensure-image
 
 # run a container with godoc
 godoc:
-	docker run -p 8888:8888 --rm $(common_mounts) --entrypoint=godoc $(TAG) -http=":8888" -index=true
+	if [ ! -f $(build_path)/.index ]; then \
+	    touch $(build_path)/.index && \
+		docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
+				--entrypoint=godoc $(TAG) -http=":8888" -index=true -write_index=true -index_files=/root/.index;\
+	fi
+	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
+		--entrypoint=godoc $(TAG) -http=":8888" -index=true -index_files=/root/.index
 
 .PHONY: build-image
 
