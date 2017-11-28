@@ -12,8 +12,11 @@ tasks you may wish to accomplish.
 
 Targets for developing with the build image
 
-### `make build-gameserver-image`
+### `make build-gameservers-controller-image`
 Compile the gameserver controller and then build the docker image
+
+### `make build-gameservers-sidecar-image`
+Compile the gameserver sidecar and then build the docker image
 
 ### `make test`
 Run all tests

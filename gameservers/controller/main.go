@@ -16,12 +16,16 @@
 package main
 
 import (
+	"strings"
 	"time"
 
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
 	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	"github.com/agonio/agon/pkg/signals"
+	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -29,7 +33,11 @@ import (
 )
 
 // Version the release version of the gameserver controller
-const Version = "0.1"
+const (
+	Version         = "0.1"
+	sidecarFlag     = "sidecar"
+	pullSidecarFlag = "always-pull-sidecar"
+)
 
 func init() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
@@ -37,7 +45,24 @@ func init() {
 
 // main starts the operator for the gameserver CRD
 func main() {
-	logrus.WithField("Version", Version).Info("starting gameServer operator...")
+	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/gameservers-sidecar:"+Version)
+	viper.SetDefault(pullSidecarFlag, false)
+
+	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
+	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
+	pflag.Parse()
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(sidecarFlag))
+	runtime.Must(viper.BindEnv(pullSidecarFlag))
+	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+
+	sidecarImage := viper.GetString(sidecarFlag)
+	alwaysPullSidecar := viper.GetBool(pullSidecarFlag)
+
+	logrus.WithField(sidecarFlag, sidecarImage).
+		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
+		WithField("Version", Version).Info("starting gameServer operator...")
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -61,7 +86,7 @@ func main() {
 
 	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := NewController(kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
+	c := NewController(sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
 
 	stop := signals.NewStopChannel()
 

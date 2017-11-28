@@ -16,8 +16,8 @@
 package versioned
 
 import (
-	glog "github.com/golang/glog"
 	stablev1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

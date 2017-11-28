@@ -15,28 +15,38 @@
 package v1alpha1
 
 import (
+	"github.com/agonio/agon/pkg/apis/stable"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	// CreatingState is when the Pod for the GameServer is being created,
+	// Creating is when the Pod for the GameServer is being created,
 	// but they have yet to register themselves yet as Ready
-	CreatingState State = "Creating"
-	// StartingState is for when the Pods for the GameServer are being
+	Creating State = "Creating"
+	// Starting is for when the Pods for the GameServer are being
 	// created but have yet to register themselves as Ready
-	StartingState State = "Starting"
-	// ReadyState is when a GameServer is ready to take connections
+	Starting State = "Starting"
+	// RequestReady is when the GameServer has declared that it is ready
+	RequestReady State = "RequestReady"
+	// Ready is when a GameServer is ready to take connections
 	// from Game clients
-	ReadyState State = "Ready"
-
-	// Error state is when something has gone with the Gameserver and
+	Ready State = "Ready"
+	// Shutdown is when the GameServer has shutdown and everything needs to be
+	// deleted from the cluster
+	Shutdown State = "Shutdown"
+	// Error is when something has gone with the Gameserver and
 	// it cannot be resolved
-	ErrorState State = "Error"
+	Error State = "Error"
 
-	// StaticPortPolicy is the PortPolicy is defined in the configuration
-	StaticPortPolicy PortPolicy = "static"
+	// Static PortPolicy means that the user defines the hostPort to be used
+	// in the configuration.
+	Static PortPolicy = "static"
+
+	// GameServerPodLabel is the label that the name of the GameServer
+	// is set on the Pod the GameServer controls
+	GameServerPodLabel = stable.GroupName + "/gameserver"
 )
 
 // +genclient
@@ -81,7 +91,9 @@ type PortPolicy string
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// The current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State State `json:"state"`
+	State   State  `json:"state"`
+	Port    int32  `json:"port"`
+	Address string `json:"address"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -105,7 +117,7 @@ func (gs *GameServer) ApplyDefaults() {
 	}
 
 	if gs.Status.State == "" {
-		gs.Status.State = CreatingState
+		gs.Status.State = Creating
 	}
 }
 
@@ -120,4 +132,47 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 	}
 
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gs.Spec.Container)
+}
+
+// Pod creates a new Pod from the PodTemplateSpec
+// attached for the
+func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
+	pod := &corev1.Pod{
+		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
+		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
+	}
+	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
+	// can be no collisions
+	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
+	pod.ObjectMeta.Name = ""
+	// Pods for GameServers need to stay in the same namespace
+	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
+	// Make sure these are blank, just in case
+	pod.ResourceVersion = ""
+	pod.UID = ""
+	if pod.ObjectMeta.Labels == nil {
+		pod.ObjectMeta.Labels = make(map[string]string, 1)
+	}
+	pod.ObjectMeta.Labels[stable.GroupName+"/role"] = "gameserver"
+	// store the GameServer name as a label, for easy lookup later on
+	pod.ObjectMeta.Labels[GameServerPodLabel] = gs.ObjectMeta.Name
+	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
+	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
+
+	i, gsContainer, err := gs.FindGameServerContainer()
+	// this shouldn't happen, but if it does.
+	if err != nil {
+		return pod, err
+	}
+
+	cp := corev1.ContainerPort{
+		ContainerPort: gs.Spec.ContainerPort,
+		HostPort:      gs.Spec.HostPort,
+		Protocol:      gs.Spec.Protocol,
+	}
+	gsContainer.Ports = append(gsContainer.Ports, cp)
+	pod.Spec.Containers[i] = gsContainer
+
+	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
+	return pod, nil
 }

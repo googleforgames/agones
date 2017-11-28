@@ -24,11 +24,11 @@
 #
 
 NAME = agon-build
-VERSION = 0.1
+VERSION ?= 0.1
 TAG = $(NAME):$(VERSION)
-CLUSTER_NAME = test-cluster
-KUBECONFIG = $(build_path)/.kube
-REPOSITORY = gcr.io/agon-images
+CLUSTER_NAME ?= test-cluster
+KUBECONFIG ?= $(build_path)/.kube
+REPOSITORY ?= gcr.io/agon-images
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -42,6 +42,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(agon_path):$(mount_path)
 
 gameserver_tag = $(REPOSITORY)/gameservers-controller:$(VERSION)
+sidecar_tag = $(REPOSITORY)/gameservers-sidecar:$(VERSION)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -50,12 +51,14 @@ gameserver_tag = $(REPOSITORY)/gameservers-controller:$(VERSION)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
+# build all
+build: build-gameservers-controller-image build-gameservers-sidecar-image
+
 # Run all tests
 test: ensure-image
 	docker run --rm $(common_mounts) --entrypoint=go $(TAG) test -race $(agon_package)/...
 
-# Build a static binary for the gameserver operator
-# CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+# Build a static binary for the gameserver controller
 build-gameservers-controller-binary: ensure-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(TAG) build \
 		-o $(mount_path)/gameservers/controller/bin/controller -a -installsuffix cgo $(agon_package)/gameservers/controller
@@ -64,9 +67,22 @@ build-gameservers-controller-binary: ensure-image
 build-gameservers-controller-image: ensure-image build-gameservers-controller-binary
 	docker build $(agon_path)/gameservers/controller/ --tag=$(gameserver_tag)
 
-# Generate the CRD client
-gen-client: ensure-image
-	docker run --rm $(common_mounts) --entrypoint="/root/gen-client.sh" $(TAG)
+# build the static binary for the gamesever sidecar
+build-gameservers-sidecar-binary: ensure-image
+	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(TAG) build \
+		-o $(mount_path)/gameservers/sidecar/bin/sidecar -a -installsuffix cgo $(agon_package)/gameservers/sidecar
+
+# Build the image for the gameserver sidecar
+build-gameservers-sidecar-image: ensure-image build-gameservers-sidecar-binary
+	docker build $(agon_path)/gameservers/sidecar/ --tag=$(sidecar_tag)
+
+# Generate the sidecar gRPC code
+gen-gameservers-sidecar-grpc: ensure-image
+	docker run --rm $(common_mounts) --entrypoint="/root/gen-grpc-go.sh" $(TAG)
+
+# Generate the client for our CustomResourceDefinition
+gen-crd-client: ensure-image
+	docker run --rm $(common_mounts) --entrypoint="/root/gen-crd-client.sh" $(TAG)
 	docker run --rm $(common_mounts) --entrypoint=goimports $(TAG) -w $(mount_path)/pkg
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)

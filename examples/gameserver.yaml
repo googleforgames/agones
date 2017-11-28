@@ -29,7 +29,7 @@ metadata:
   name: "gds-example"
 spec:
   # if there is more than one container, specify which one is the game server
-  container: exampleServer
+  container: example-server
   # `static` is the only current option. Dynamic port allocated will come in future releases.
   # When `static` is the policy specified, `hostPort` is required, to specify the port that game clients will connect to
   portPolicy: "static"
@@ -48,6 +48,6 @@ spec:
     # Pod Specification
     spec:
       containers:
-      - name: exampleServer
+      - name: example-server
         image: gcr.io/agon/test-server:0.1
         imagePullPolicy: Always
