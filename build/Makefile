@@ -41,7 +41,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(KUBECONFIG):/root/.kube \
 				-v $(agon_path):$(mount_path)
 
-gameserver_tag = $(REPOSITORY)/gameserver-controller:$(VERSION)
+gameserver_tag = $(REPOSITORY)/gameservers-controller:$(VERSION)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -56,13 +56,13 @@ test: ensure-image
 
 # Build a static binary for the gameserver operator
 # CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
-build-controller-gameserver-binary: ensure-image
+build-gameservers-controller-binary: ensure-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(TAG) build \
-		-o $(mount_path)/controllers/gameserver/bin/gameserver -a -installsuffix cgo $(agon_package)/controllers/gameserver
+		-o $(mount_path)/gameservers/controller/bin/controller -a -installsuffix cgo $(agon_package)/gameservers/controller
 
 # Build the image for the gameserver controller
-build-controller-gameserver-image: ensure-image build-controller-gameserver-binary
-	docker build $(agon_path)/controllers/gameserver --tag=$(gameserver_tag)
+build-gameservers-controller-image: ensure-image build-gameservers-controller-binary
+	docker build $(agon_path)/gameservers/controller/ --tag=$(gameserver_tag)
 
 # Generate the CRD client
 gen-client: ensure-image

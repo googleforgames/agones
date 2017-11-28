@@ -15,7 +15,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: gameserver-controller
+  name: gameservers-controller
 spec:
   replicas: 1
   strategy:
@@ -26,6 +26,6 @@ spec:
         stable.agon.io/role: controller
     spec:
       containers:
-      - name: gameserver-controller
-        image: gcr.io/agon-images/gameserver-controller:0.1
+      - name: gameservers-controller
+        image: gcr.io/agon-images/gameservers-controller:0.1
         imagePullPolicy: Always
