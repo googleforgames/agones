@@ -23,7 +23,7 @@ spec:
   template:
     metadata:
       labels:
-        agon: controller
+        stable.agon.io/role: controller
     spec:
       containers:
       - name: gameserver-controller
