@@ -23,6 +23,7 @@ import (
 	getterv1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	listerv1alpha1 "github.com/agonio/agon/pkg/client/listers/stable/v1alpha1"
+	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -123,7 +123,7 @@ func (c Controller) enqueueGameServer(obj interface{}) {
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
 		err := errors.Wrap(err, "Error creating key for object")
-		handleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(logrus.WithField("obj", obj), err)
 		return
 	}
 	c.queue.AddRateLimited(key)
@@ -149,7 +149,7 @@ func (c *Controller) processNextWorkItem() bool {
 	var key string
 	var ok bool
 	if key, ok = obj.(string); !ok {
-		handleError(logrus.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
+		runtime.HandleError(logrus.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
 		// this is a bad entry, we don't want to reprocess
 		c.queue.Forget(obj)
 		return true
@@ -157,7 +157,7 @@ func (c *Controller) processNextWorkItem() bool {
 
 	if err := c.syncHandler(key); err != nil {
 		// we don't forget here, because we want this to be retried via the queue
-		handleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(logrus.WithField("obj", obj), err)
 		c.queue.AddRateLimited(obj)
 		return true
 	}
@@ -175,7 +175,7 @@ func (c *Controller) syncGameServer(key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		handleError(logrus.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(logrus.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
@@ -308,11 +308,4 @@ func (c Controller) waitForEstablishedCRD() error {
 
 		return false, nil
 	})
-}
-
-// handleError wraps runtime.HandleError to provide
-// logging to both logrus and runtime.HandleError
-func handleError(logger *logrus.Entry, err error) {
-	logger.WithError(err).Errorf("%+v", err)
-	runtime.HandleError(err)
 }
