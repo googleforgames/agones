@@ -66,9 +66,8 @@ build-controller-gameserver-image: ensure-image build-controller-gameserver-bina
 
 # Generate the CRD client
 gen-client: ensure-image
-	docker run --rm \
-		$(common_mounts) \
-		--entrypoint="/root/gen-client.sh" $(TAG)
+	docker run --rm $(common_mounts) --entrypoint="/root/gen-client.sh" $(TAG)
+	docker run --rm $(common_mounts) --entrypoint=goimports $(TAG) -w $(mount_path)/pkg
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use ARGS for extra arguments.
@@ -82,7 +81,7 @@ shell: ensure-image
 # run a container with godoc
 godoc:
 	if [ ! -f $(build_path)/.index ]; then \
-	    touch $(build_path)/.index && \
+		touch $(build_path)/.index && \
 		docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
 				--entrypoint=godoc $(TAG) -http=":8888" -index=true -write_index=true -index_files=/root/.index;\
 	fi
