@@ -18,5 +18,3 @@ See the tools in the [build](build/README.md) directory for testing and building
 ## Licence
 
 Apache 2.0
-
-This is not an official Google product.
