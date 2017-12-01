@@ -27,23 +27,24 @@ func TestGameServerFindGameServerContainer(t *testing.T) {
 	fixture := v1.Container{Name: "mycontainer", Image: "foo/mycontainer"}
 	gs := &GameServer{
 		Spec: GameServerSpec{
-			GameServerContext: GameServerContext{
-				Container: "mycontainer",
-			},
-			PodSpec: v1.PodSpec{
-				Containers: []v1.Container{
-					fixture,
-					{Name: "notmycontainer", Image: "foo/notmycontainer"},
+			Container: "mycontainer",
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						fixture,
+						{Name: "notmycontainer", Image: "foo/notmycontainer"},
+					},
 				},
 			},
 		},
 	}
 
-	i, container := gs.FindGameServerContainer()
+	i, container, err := gs.FindGameServerContainer()
+	assert.Nil(t, err)
 	assert.Equal(t, fixture, container)
 	container.Ports = append(container.Ports, v1.ContainerPort{HostPort: 1234})
-	gs.Spec.PodSpec.Containers[i] = container
-	assert.Equal(t, gs.Spec.PodSpec.Containers[0], container)
+	gs.Spec.Template.Spec.Containers[i] = container
+	assert.Equal(t, gs.Spec.Template.Spec.Containers[0], container)
 }
 
 func TestGameServerApplyDefaults(t *testing.T) {
@@ -58,7 +59,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"set basic defaults on a very simple gameserver": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					PodSpec: v1.PodSpec{Containers: []v1.Container{{Name: "testing", Image: "testing/image"}}}}},
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{Containers: []v1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
 			expectedContainer: "testing",
 			expectedProtocol:  "UDP",
 			expectedState:     CreatingState,
@@ -66,10 +69,13 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					GameServerContext: GameServerContext{Container: "testing2", Protocol: "TCP"},
-					PodSpec: v1.PodSpec{Containers: []v1.Container{
-						{Name: "testing", Image: "testing/image"},
-						{Name: "testing2", Image: "testing/image2"}}}},
+					Container: "testing2", Protocol: "TCP",
+					Template: v1.PodTemplateSpec{
+						Spec: v1.PodSpec{Containers: []v1.Container{
+							{Name: "testing", Image: "testing/image"},
+							{Name: "testing2", Image: "testing/image2"}}},
+					},
+				},
 				Status: GameServerStatus{State: "TestState"}},
 			expectedContainer: "testing2",
 			expectedProtocol:  "TCP",
@@ -81,9 +87,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			test.gameServer.ApplyDefaults()
 
-			ctx := test.gameServer.Spec.GameServerContext
-			assert.Equal(t, test.expectedContainer, ctx.Container)
-			assert.Equal(t, test.expectedProtocol, ctx.Protocol)
+			spec := test.gameServer.Spec
+			assert.Equal(t, test.expectedContainer, spec.Container)
+			assert.Equal(t, test.expectedProtocol, spec.Protocol)
 			assert.Equal(t, test.expectedState, test.gameServer.Status.State)
 		})
 	}

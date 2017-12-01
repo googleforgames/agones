@@ -17,12 +17,12 @@ kind: GameServer
 metadata:
   name: "simple-udp"
 spec:
-  gameServer:
-    policy: "static"
-    containerPort: 7654
-    hostPort: 7777
-    protocol: UDP
-  containers:
-  - name: simple-udp
-    image: gcr.io/agon-images/udp-server:0.1
-    imagePullPolicy: Always
+  portPolicy: "static"
+  containerPort: 7654
+  hostPort: 7777
+  template:
+    spec:
+      containers:
+      - name: simple-udp
+        image: gcr.io/agon-images/udp-server:0.1
+        imagePullPolicy: Always

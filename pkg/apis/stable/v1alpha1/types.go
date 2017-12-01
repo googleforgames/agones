@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -29,6 +30,10 @@ const (
 	// ReadyState is when a GameServer is ready to take connections
 	// from Game clients
 	ReadyState State = "Ready"
+
+	// Error state is when something has gone with the Gameserver and
+	// it cannot be resolved
+	ErrorState State = "Error"
 
 	// StaticPortPolicy is the PortPolicy is defined in the configuration
 	StaticPortPolicy PortPolicy = "static"
@@ -49,12 +54,6 @@ type GameServer struct {
 
 // GameServerSpec is the spec for a GameServer resource
 type GameServerSpec struct {
-	GameServerContext GameServerContext `json:"gameServer"`
-	corev1.PodSpec    `json:",inline"`
-}
-
-// GameServerContext defines the port allocation strategy and values
-type GameServerContext struct {
 	// Container specifies which Pod container is the game server. Only required if there is more than once
 	// container defined
 	Container string `json:"container,omitempty"`
@@ -69,6 +68,8 @@ type GameServerContext struct {
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocoal is the network protocol being used. Defaults to UDP. TCP is the only other option
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
+	// Template describes the Pod that will be created for the GameServer
+	Template corev1.PodTemplateSpec `json:"template"`
 }
 
 // State is the state for the GameServer
@@ -95,12 +96,12 @@ type GameServerList struct {
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
 func (gs *GameServer) ApplyDefaults() {
-	if len(gs.Spec.Containers) == 1 {
-		gs.Spec.GameServerContext.Container = gs.Spec.Containers[0].Name
+	if len(gs.Spec.Template.Spec.Containers) == 1 {
+		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
 	}
 
-	if gs.Spec.GameServerContext.Protocol == "" {
-		gs.Spec.GameServerContext.Protocol = "UDP"
+	if gs.Spec.Protocol == "" {
+		gs.Spec.Protocol = "UDP"
 	}
 
 	if gs.Status.State == "" {
@@ -110,15 +111,13 @@ func (gs *GameServer) ApplyDefaults() {
 
 // FindGameServerContainer returns the container that is specified in
 // spec.gameServer.container. Returns the index and the value.
-// Currently panics if the container is not found.
-func (gs *GameServer) FindGameServerContainer() (int, corev1.Container) {
-	for i, c := range gs.Spec.Containers {
-		if c.Name == gs.Spec.GameServerContext.Container {
-			return i, c
+// Returns an error if not found
+func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
+	for i, c := range gs.Spec.Template.Spec.Containers {
+		if c.Name == gs.Spec.Container {
+			return i, c, nil
 		}
 	}
-	// work out something better to do here?
-	// or leave it, as once we have validation, this should never happen?
-	// Going to leave this as is, until we work out how we want validation to work.
-	panic("validation error. gameServer.container should always match a podspec.container")
+
+	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gs.Spec.Container)
 }

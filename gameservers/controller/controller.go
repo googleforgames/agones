@@ -226,14 +226,16 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 
 		if len(ret) == 0 {
 			pod := &corev1.Pod{
-				ObjectMeta: *gs.ObjectMeta.DeepCopy(),
-				Spec:       *gs.Spec.PodSpec.DeepCopy(),
+				ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
+				Spec:       *gs.Spec.Template.Spec.DeepCopy(),
 			}
 			// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
 			// can be no collisions
-			pod.ObjectMeta.GenerateName = pod.ObjectMeta.Name + "-"
+			pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
 			pod.ObjectMeta.Name = ""
-			// Don't copy these from the GameServer's ObjectMeta, bad things happen
+			// Pods for GameServers need to stay in the same namespace
+			pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
+			// Make sure these are blank, just in case
 			pod.ResourceVersion = ""
 			pod.UID = ""
 			if pod.ObjectMeta.Labels == nil {
@@ -245,11 +247,15 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 			ref := metav1.NewControllerRef(gs, stablev1alpha1.SchemeGroupVersion.WithKind("GameServer"))
 			pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-			i, gsContainer := gs.FindGameServerContainer()
+			i, gsContainer, err := gs.FindGameServerContainer()
+			// this shouldn't happen, but if it does.
+			if err != nil {
+				return c.moveToErrorState(gs)
+			}
 			cp := corev1.ContainerPort{
-				ContainerPort: gs.Spec.GameServerContext.ContainerPort,
-				HostPort:      gs.Spec.GameServerContext.HostPort,
-				Protocol:      gs.Spec.GameServerContext.Protocol,
+				ContainerPort: gs.Spec.ContainerPort,
+				HostPort:      gs.Spec.HostPort,
+				Protocol:      gs.Spec.Protocol,
 			}
 			gsContainer.Ports = append(gsContainer.Ports, cp)
 			pod.Spec.Containers[i] = gsContainer
@@ -276,7 +282,7 @@ func (c Controller) createCRDIfDoesntExist() error {
 	crd, err := c.crdGetter.Create(stablev1alpha1.GameServerCRD())
 	if err != nil {
 		if !k8serrors.IsAlreadyExists(err) {
-			return errors.Wrap(err, "Error creating gameserver custom resource definition")
+			return errors.Wrap(err, "error creating gameserver custom resource definition")
 		}
 		logrus.Info("gameserver custom resource definition already exists.")
 	} else {
@@ -308,4 +314,13 @@ func (c Controller) waitForEstablishedCRD() error {
 
 		return false, nil
 	})
+}
+
+// moveToErrorState moves the GameServer to the error state
+func (c Controller) moveToErrorState(gs *stablev1alpha1.GameServer) error {
+	copy := gs.DeepCopy()
+	copy.Status.State = stablev1alpha1.ErrorState
+
+	_, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs)
+	return errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
 }

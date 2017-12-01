@@ -282,8 +282,8 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[gameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
-			assert.Equal(t, fixture.Spec.GameServerContext.HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
-			assert.Equal(t, fixture.Spec.GameServerContext.ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
+			assert.Equal(t, fixture.Spec.HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
+			assert.Equal(t, fixture.Spec.ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
 			assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 
 			return true, pod, nil
@@ -394,14 +394,15 @@ func newFakeController() (*Controller, mocks) {
 
 func newSingeContainerSpec() v1alpha1.GameServerSpec {
 	return v1alpha1.GameServerSpec{
-		PodSpec: corev1.PodSpec{
-			Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+		ContainerPort: 7777,
+		HostPort:      9999,
+		PortPolicy:    v1alpha1.StaticPortPolicy,
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+			},
 		},
-		GameServerContext: v1alpha1.GameServerContext{
-			ContainerPort: 7777,
-			HostPort:      9999,
-			PortPolicy:    v1alpha1.StaticPortPolicy,
-		}}
+	}
 }
 
 func newEstablishedCRD() *v1beta1.CustomResourceDefinition {
