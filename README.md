@@ -1,7 +1,5 @@
 # Agon
 
-![Agon Dog](agon.jpg)
-
 Agon is a library for running dedicated game servers on [Kubernetes](https://kubernetes.io).
 
 ## Roadmap for 0.1 release
