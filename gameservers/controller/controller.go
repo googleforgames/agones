@@ -110,11 +110,7 @@ func NewController(sidecarImage string,
 func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	defer c.queue.ShutDown()
 
-	err := c.createCRDIfDoesntExist()
-	if err != nil {
-		return err
-	}
-	err = c.waitForEstablishedCRD()
+	err := c.waitForEstablishedCRD()
 	if err != nil {
 		return err
 	}
@@ -400,28 +396,11 @@ func (c Controller) externalIP(pod *corev1.Pod) (string, error) {
 	return "", errors.Errorf("Could not find an external ip for Node: #%s", node.ObjectMeta.Name)
 }
 
-// createCRDIfDoesntExist creates the GameServer CRD if it doesn't exist.
-// only returns an error if something goes wrong
-func (c Controller) createCRDIfDoesntExist() error {
-	crd, err := c.crdGetter.Create(stablev1alpha1.GameServerCRD())
-	if err != nil {
-		if !k8serrors.IsAlreadyExists(err) {
-			return errors.Wrap(err, "error creating gameserver custom resource definition")
-		}
-		logrus.Info("gameserver custom resource definition already exists.")
-	} else {
-		logrus.WithField("crd", crd).Info("gameserver custom resource definition created successfully")
-	}
-
-	return nil
-}
-
 // waitForEstablishedCRD blocks until CRD comes to an Established state.
 // Has a deadline of 60 seconds for this to occur.
 func (c Controller) waitForEstablishedCRD() error {
-	crdName := stablev1alpha1.GameServerCRD().ObjectMeta.Name
 	return wait.PollImmediate(500*time.Millisecond, 60*time.Second, func() (done bool, err error) {
-		crd, err := c.crdGetter.Get(crdName, metav1.GetOptions{})
+		crd, err := c.crdGetter.Get("gameservers.stable.agon.io", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -430,7 +409,7 @@ func (c Controller) waitForEstablishedCRD() error {
 			switch cond.Type {
 			case apiv1beta1.Established:
 				if cond.Status == apiv1beta1.ConditionTrue {
-					logrus.WithField("crd", crd).Info("gameserver custom resource definition is established")
+					logrus.WithField("crd", crd).Info("GameServer custom resource definition is established")
 					return true, err
 				}
 			}
