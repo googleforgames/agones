@@ -2,6 +2,9 @@
 
 Agon is a library for running dedicated game servers on [Kubernetes](https://kubernetes.io).
 
+## Disclaimer
+This software is currenty alpha, and subject to change. Not to be used in production systems.
+
 ## Roadmap for 0.1 release
 - Develop a [Custom Resource Defintion](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions) for dedicated game server
 - Sidecar for managing the DGS lifecycle and recorded status, e.g. registering the port the server has started on
