@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/agonio/agon/pkg"
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
 	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	"github.com/agonio/agon/pkg/signals"
@@ -32,9 +33,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-// Version the release version of the gameserver controller
 const (
-	Version         = "0.1"
 	sidecarFlag     = "sidecar"
 	pullSidecarFlag = "always-pull-sidecar"
 )
@@ -45,7 +44,7 @@ func init() {
 
 // main starts the operator for the gameserver CRD
 func main() {
-	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/gameservers-sidecar:"+Version)
+	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/gameservers-sidecar:"+pkg.Version)
 	viper.SetDefault(pullSidecarFlag, false)
 
 	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
@@ -62,7 +61,7 @@ func main() {
 
 	logrus.WithField(sidecarFlag, sidecarImage).
 		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
-		WithField("Version", Version).Info("starting gameServer operator...")
+		WithField("Version", pkg.Version).Info("starting gameServer operator...")
 
 	config, err := rest.InClusterConfig()
 	if err != nil {

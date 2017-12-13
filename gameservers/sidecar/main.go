@@ -20,6 +20,7 @@ import (
 	"net"
 
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
+	"github.com/agonio/agon/pkg"
 	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -29,9 +30,7 @@ import (
 )
 
 const (
-	// Version the release version of the sidecar
-	Version = "0.1"
-	port    = 59357
+	port = 59357
 
 	// gameServerNameEnv is the environment variable for the Game Server name
 	gameServerNameEnv = "GAMESERVER_NAME"
@@ -58,7 +57,7 @@ func main() {
 
 	isLocal := viper.GetBool(localFlag)
 
-	logrus.WithField(localFlag, isLocal).WithField("version", Version).WithField("port", port).Info("Starting sdk sidecar")
+	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).WithField("port", port).Info("Starting sdk sidecar")
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
