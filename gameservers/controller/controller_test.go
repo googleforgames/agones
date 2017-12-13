@@ -15,7 +15,6 @@
 package main
 
 import (
-	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -42,44 +41,6 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
-
-func TestControllerCreateCRDIfDoesntExist(t *testing.T) {
-	t.Parallel()
-
-	t.Run("CRD doesn't exist", func(t *testing.T) {
-		con, mocks := newFakeController()
-		var crd *v1beta1.CustomResourceDefinition
-		mocks.extClient.AddReactor("create", "customresourcedefinitions", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			a := action.(k8stesting.CreateAction)
-			crd = a.GetObject().(*v1beta1.CustomResourceDefinition)
-			return true, nil, nil
-		})
-
-		err := con.createCRDIfDoesntExist()
-		assert.Nil(t, err, "CRD Should be created: %v", err)
-		assert.Equal(t, v1alpha1.GameServerCRD(), crd)
-	})
-
-	t.Run("CRD does exist", func(t *testing.T) {
-		con, mocks := newFakeController()
-		mocks.extClient.AddReactor("create", "customresourcedefinitions", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
-			err = k8serrors.NewAlreadyExists(schema.GroupResource{Group: stable.GroupName, Resource: "gameserver"}, "Foo")
-			return true, nil, err
-		})
-		err := con.createCRDIfDoesntExist()
-		assert.Nil(t, err, "CRD Should not be created, but not throw an error: %v", err)
-	})
-
-	t.Run("Something bad happens", func(t *testing.T) {
-		con, mocks := newFakeController()
-		fixture := errors.New("this is a custom error")
-		mocks.extClient.AddReactor("create", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, nil, fixture
-		})
-		err := con.createCRDIfDoesntExist()
-		assert.NotNil(t, err, "Custom error should be returned")
-	})
-}
 
 func TestControllerWaitForEstablishedCRD(t *testing.T) {
 	t.Parallel()
@@ -608,13 +569,14 @@ func newSingeContainerSpec() v1alpha1.GameServerSpec {
 }
 
 func newEstablishedCRD() *v1beta1.CustomResourceDefinition {
-	crd := v1alpha1.GameServerCRD()
-	crd.Status.Conditions = []v1beta1.CustomResourceDefinitionCondition{{
-		Type:   v1beta1.Established,
-		Status: v1beta1.ConditionTrue,
-	}}
-
-	return crd
+	return &v1beta1.CustomResourceDefinition{
+		Status: v1beta1.CustomResourceDefinitionStatus{
+			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
+				Type:   v1beta1.Established,
+				Status: v1beta1.ConditionTrue,
+			}},
+		},
+	}
 }
 
 func startInformers(c *Controller, mocks mocks) chan struct{} {
