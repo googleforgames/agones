@@ -42,24 +42,31 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-const gameServerPodLabel = stable.GroupName + "/gameserver"
+var (
+	errPodNotFound = errors.New("A Pod for this GameServer Was Not Found")
+)
 
 // Controller is a GameServer crd controller
 type Controller struct {
-	crdGetter        v1beta1.CustomResourceDefinitionInterface
-	podGetter        typedcorev1.PodsGetter
-	podLister        corelisterv1.PodLister
-	gameServerGetter getterv1alpha1.GameServersGetter
-	gameServerLister listerv1alpha1.GameServerLister
-	gameServerSynced cache.InformerSynced
-	queue            workqueue.RateLimitingInterface
+	sidecarImage           string
+	alwaysPullSidecarImage bool
+	crdGetter              v1beta1.CustomResourceDefinitionInterface
+	podGetter              typedcorev1.PodsGetter
+	podLister              corelisterv1.PodLister
+	gameServerGetter       getterv1alpha1.GameServersGetter
+	gameServerLister       listerv1alpha1.GameServerLister
+	gameServerSynced       cache.InformerSynced
+	nodeLister             corelisterv1.NodeLister
+	queue                  workqueue.RateLimitingInterface
 
 	// this allows for overwriting for testing purposes
 	syncHandler func(string) error
 }
 
 // NewController returns a new gameserver crd controller
-func NewController(kubeClient kubernetes.Interface,
+func NewController(sidecarImage string,
+	alwaysPullSidecarImage bool,
+	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
 	agonClient versioned.Interface,
@@ -69,17 +76,28 @@ func NewController(kubeClient kubernetes.Interface,
 	gsInformer := gameServers.Informer()
 
 	c := &Controller{
-		crdGetter:        extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
-		podGetter:        kubeClient.CoreV1(),
-		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
-		gameServerGetter: agonClient.StableV1alpha1(),
-		gameServerLister: gameServers.Lister(),
-		gameServerSynced: gsInformer.HasSynced,
-		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName),
+		sidecarImage:           sidecarImage,
+		alwaysPullSidecarImage: alwaysPullSidecarImage,
+		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		podGetter:              kubeClient.CoreV1(),
+		podLister:              kubeInformerFactory.Core().V1().Pods().Lister(),
+		gameServerGetter:       agonClient.StableV1alpha1(),
+		gameServerLister:       gameServers.Lister(),
+		gameServerSynced:       gsInformer.HasSynced,
+		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
+		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName),
 	}
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.enqueueGameServer,
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// no point in processing unless there is a State change
+			oldGs := oldObj.(*stablev1alpha1.GameServer)
+			newGs := newObj.(*stablev1alpha1.GameServer)
+			if oldGs.Status.State != newGs.Status.State {
+				c.enqueueGameServer(newGs)
+			}
+		},
 	})
 
 	c.syncHandler = c.syncGameServer
@@ -192,7 +210,13 @@ func (c *Controller) syncGameServer(key string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.syncGameServerCreatingState(gs); err != nil {
+	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerRequestReadyState(gs); err != nil {
+		return err
+	}
+	if _, err = c.syncGameServerShutdownState(gs); err != nil {
 		return err
 	}
 
@@ -214,66 +238,166 @@ func (c *Controller) syncGameServerBlankState(gs *stablev1alpha1.GameServer) (*s
 
 // syncGameServerCreatingState checks if the GameServer is in the Creating state, and if so
 // creates a Pod for the GameServer and moves the state to Starting
-func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) error {
-	if gs.Status.State == stablev1alpha1.CreatingState {
+func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	if gs.Status.State == stablev1alpha1.Creating {
 		logrus.WithField("gs", gs).Info("Syncing Create State")
 
 		// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
-		ret, err := c.podLister.List(labels.SelectorFromSet(labels.Set{gameServerPodLabel: gs.ObjectMeta.Name}))
+		ret, err := c.listGameServerPods(gs)
 		if err != nil {
-			return errors.Wrapf(err, "error checking if pod exists for GameServer %s", gs.Name)
+			return nil, err
 		}
 
 		if len(ret) == 0 {
-			pod := &corev1.Pod{
-				ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
-				Spec:       *gs.Spec.Template.Spec.DeepCopy(),
+			sidecar := corev1.Container{
+				Name:  "agon-gameserver-sidecar",
+				Image: c.sidecarImage,
+				Env: []corev1.EnvVar{
+					{
+						Name:  "GAMESERVER_NAME",
+						Value: gs.ObjectMeta.Name,
+					},
+					{
+						Name: "POD_NAMESPACE",
+						ValueFrom: &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "metadata.namespace",
+							},
+						},
+					},
+				},
 			}
-			// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
-			// can be no collisions
-			pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
-			pod.ObjectMeta.Name = ""
-			// Pods for GameServers need to stay in the same namespace
-			pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
-			// Make sure these are blank, just in case
-			pod.ResourceVersion = ""
-			pod.UID = ""
-			if pod.ObjectMeta.Labels == nil {
-				pod.ObjectMeta.Labels = make(map[string]string, 1)
+			if c.alwaysPullSidecarImage {
+				sidecar.ImagePullPolicy = corev1.PullAlways
 			}
-			pod.ObjectMeta.Labels[stable.GroupName+"/role"] = "gameserver"
-			// store the GameServer name as a label, for easy lookup later on
-			pod.ObjectMeta.Labels[gameServerPodLabel] = gs.ObjectMeta.Name
-			ref := metav1.NewControllerRef(gs, stablev1alpha1.SchemeGroupVersion.WithKind("GameServer"))
-			pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-			i, gsContainer, err := gs.FindGameServerContainer()
+			pod, err := gs.Pod(sidecar)
+
 			// this shouldn't happen, but if it does.
 			if err != nil {
+				logrus.WithField("gamserver", gs).WithError(err).Error("error creating pod from Game Server")
 				return c.moveToErrorState(gs)
 			}
-			cp := corev1.ContainerPort{
-				ContainerPort: gs.Spec.ContainerPort,
-				HostPort:      gs.Spec.HostPort,
-				Protocol:      gs.Spec.Protocol,
-			}
-			gsContainer.Ports = append(gsContainer.Ports, cp)
-			pod.Spec.Containers[i] = gsContainer
 
 			logrus.WithField("pod", pod).Info("creating Pod for GameServer")
 			if _, err := c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod); err != nil {
-				return errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
+				if k8serrors.IsInvalid(err) {
+					logrus.WithField("pod", pod).WithField("gameserver", gs).Errorf("Pod created is invalid")
+					return c.moveToErrorState(gs)
+				}
+				return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 			}
 		}
 
 		gsCopy := gs.DeepCopy()
-		gsCopy.Status.State = stablev1alpha1.StartingState
-		if _, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
-			return errors.Wrapf(err, "error updating GameServer %s to Creating state", gs.Name)
+		gsCopy.Status.State = stablev1alpha1.Starting
+		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
+	}
+	return gs, nil
+}
+
+// syncGameServerRequestReadyState checks if the Game Server is Requesting to be ready,
+// and then adds the IP and Port information to the Status and marks the GameServer
+// as Ready
+func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	if gs.Status.State == stablev1alpha1.RequestReady {
+		logrus.WithField("gs", gs).Info("Syncing RequestReady State")
+		pod, err := c.gameServerPod(gs)
+		if err != nil {
+			return gs, errors.Wrapf(err, "error getting pod for GameServer %s", gs.ObjectMeta.Name)
+		}
+		addr, err := c.externalIP(pod)
+		if err != nil {
+			return gs, errors.Wrapf(err, "error getting external ip for GameServer %s", gs.ObjectMeta.Name)
+		}
+
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.State = stablev1alpha1.Ready
+		gsCopy.Status.Address = addr
+		// HostPort is always going to be populated, even when dynamic
+		// This will be a double up of information, but it will be easier to read
+		gsCopy.Status.Port = gs.Spec.HostPort
+
+		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+		return gs, errors.Wrapf(err, "error setting Ready, Port and Address on GameServer %s Status", gs.ObjectMeta.Name)
+	}
+	return gs, nil
+}
+
+// syncGameServerShutdownState deletes the game server (and therefore the backing Pod) if it is in shutdown state
+func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	if gs.Status.State == stablev1alpha1.Shutdown {
+		logrus.WithField("gs", gs).Info("Syncing Shutdown State")
+		// let's be explicit about how we want to shut things down
+		p := metav1.DeletePropagationBackground
+		err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
+		return nil, errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
+	}
+
+	return gs, nil
+}
+
+// moveToErrorState moves the GameServer to the error state
+func (c Controller) moveToErrorState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	copy := gs.DeepCopy()
+	copy.Status.State = stablev1alpha1.Error
+
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
+	return gs, errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
+}
+
+// gameServerPod returns the Pod for this Game Server, or an error if there are none,
+// or it cannot be determined (there are more than one, which should not happen)
+func (c *Controller) gameServerPod(gs *stablev1alpha1.GameServer) (*corev1.Pod, error) {
+	pods, err := c.listGameServerPods(gs)
+	if err != nil {
+		return nil, err
+	}
+	len := len(pods)
+	if len == 0 {
+		return nil, errPodNotFound
+	}
+	if len > 1 {
+		return nil, errors.Errorf("Found %d pods for Game Server %s", len, gs.ObjectMeta.Name)
+	}
+	return pods[0], nil
+}
+
+// listGameServerPods returns all the Pods that the GameServer created.
+// This should only ever be one.
+func (c *Controller) listGameServerPods(gs *stablev1alpha1.GameServer) ([]*corev1.Pod, error) {
+	pods, err := c.podLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.GameServerPodLabel: gs.ObjectMeta.Name}))
+	if err != nil {
+		return pods, errors.Wrapf(err, "error checking if pod exists for GameServer %s", gs.Name)
+	}
+
+	// there is a small chance that the GameServer name is not unique, and a Pod for a previous
+	// GameServer is has yet to Terminate so check its controller, just to be sure.
+	var result []*corev1.Pod
+	for _, p := range pods {
+		if metav1.IsControlledBy(p, gs) {
+			result = append(result, p)
 		}
 	}
 
-	return nil
+	return result, nil
+}
+
+// ExternalIP returns the external IP that the given Pod is being run on
+func (c Controller) externalIP(pod *corev1.Pod) (string, error) {
+	node, err := c.nodeLister.Get(pod.Spec.NodeName)
+	if err != nil {
+		return "", errors.Wrapf(err, "error retrieving node %s for Pod %s", node.ObjectMeta.Name, pod.ObjectMeta.Name)
+	}
+
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeExternalIP {
+			return a.Address, nil
+		}
+	}
+
+	return "", errors.Errorf("Could not find an external ip for Node: #%s", node.ObjectMeta.Name)
 }
 
 // createCRDIfDoesntExist creates the GameServer CRD if it doesn't exist.
@@ -314,13 +438,4 @@ func (c Controller) waitForEstablishedCRD() error {
 
 		return false, nil
 	})
-}
-
-// moveToErrorState moves the GameServer to the error state
-func (c Controller) moveToErrorState(gs *stablev1alpha1.GameServer) error {
-	copy := gs.DeepCopy()
-	copy.Status.State = stablev1alpha1.ErrorState
-
-	_, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs)
-	return errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
 }

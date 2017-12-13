@@ -35,3 +35,10 @@ func HandleError(logger *logrus.Entry, err error) {
 	logger.WithError(err).Error()
 	runtime.HandleError(err)
 }
+
+// Must panics if there is an error
+func Must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}

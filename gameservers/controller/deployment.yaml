@@ -29,3 +29,6 @@ spec:
       - name: gameservers-controller
         image: gcr.io/agon-images/gameservers-controller:0.1
         imagePullPolicy: Always
+        env:
+        - name: ALWAYS_PULL_SIDECAR
+          value: "true"

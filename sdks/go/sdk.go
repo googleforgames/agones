@@ -1,0 +1,64 @@
+// Copyright 2017 Google Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package sdk
+
+import (
+	"fmt"
+
+	"time"
+
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+)
+
+const port = 59357
+
+// SDK is an instance of the Agon SDK
+type SDK struct {
+	client SDKClient
+	ctx    context.Context
+}
+
+// NewSDK starts a new SDK instance, and connects to
+// localhost on port 59357. Blocks until connection and handshake are made.
+// Times out after 30 seconds.
+func NewSDK() (*SDK, error) {
+	addr := fmt.Sprintf("localhost:%d", port)
+	s := &SDK{ctx: context.Background()}
+	// block for at least 30 seconds
+	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, addr, grpc.WithBlock(), grpc.WithInsecure())
+	if err != nil {
+		return s, errors.Wrapf(err, "could not connect to %s", addr)
+	}
+	s.client = NewSDKClient(conn)
+	return s, nil
+}
+
+// Ready marks the Game Server as ready to
+// receive connections
+func (s *SDK) Ready() error {
+	_, err := s.client.Ready(s.ctx, &Empty{})
+	return errors.Wrap(err, "could not send Ready message")
+}
+
+// Shutdown marks the Game Server as ready to
+// shutdown
+func (s *SDK) Shutdown() error {
+	_, err := s.client.Shutdown(s.ctx, &Empty{})
+	return errors.Wrapf(err, "could not send Shutdown message")
+}

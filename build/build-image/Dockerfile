@@ -26,17 +26,31 @@ ENV PATH /google-cloud-sdk/bin:$PATH
 RUN gcloud components update && gcloud components install kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
+# install protoc for grpc
+ENV PB_VER 3.5.0
+ENV PB_URL https://github.com/google/protobuf/releases/download/v${PB_VER}/protoc-${PB_VER}-linux-x86_64.zip
+RUN mkdir -p /tmp/protoc && \
+    curl -L ${PB_URL} > /tmp/protoc/protoc.zip && \
+    cd /tmp/protoc && \
+    unzip protoc.zip && \
+    cp /tmp/protoc/bin/protoc /usr/local/bin && \
+    cp -R /tmp/protoc/include/* /usr/local/include && \
+    chmod go+rx /usr/local/bin/protoc && \
+    cd /tmp && \
+    rm -r /tmp/protoc
+
 # install go tooling for building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \
     go get -u k8s.io/code-generator/... && \
+    go get -u github.com/golang/protobuf/protoc-gen-go && \
     /go/bin/gometalinter --install
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 
 # script for generating the CRD scripts
-COPY gen-client.sh /root/gen-client.sh
-RUN chmod +x /root/gen-client.sh
+COPY *.sh /root/
+RUN chmod +x /root/*.sh
 
 ENTRYPOINT kubectl

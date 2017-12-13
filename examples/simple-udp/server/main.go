@@ -20,6 +20,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/agonio/agon/sdks/go"
 )
 
 const exit = "EXIT"
@@ -40,6 +42,18 @@ func main() {
 	}
 	defer conn.Close()
 
+	log.Print("Creating SDK instance")
+	s, err := sdk.NewSDK()
+	if err != nil {
+		log.Fatalf("Could not connect to sdk: %v", err)
+	}
+	log.Print("Marking this server as ready")
+	// This tells Agon that the server is ready to receive connections.
+	err = s.Ready()
+	if err != nil {
+		log.Fatalf("Could not send ready message")
+	}
+
 	b := make([]byte, 1024)
 	for {
 		n, sender, err := conn.ReadFrom(b)
@@ -51,6 +65,11 @@ func main() {
 		log.Printf("Received packet from %v: %v", sender.String(), txt)
 		if txt == exit {
 			log.Printf("Received EXIT command. Exiting.")
+			// This tells Agon to shutdown this Game Server
+			err := s.Shutdown()
+			if err != nil {
+				log.Printf("Could not shutdown")
+			}
 			os.Exit(0)
 		}
 
