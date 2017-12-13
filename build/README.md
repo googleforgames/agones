@@ -28,6 +28,9 @@ Build all the images required for Agon
 #### `make test`
 Run all tests
 
+### `make push`
+Pushes all built images up to the `$(REGISTRY)`
+
 ### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
 
@@ -73,3 +76,7 @@ Creates and authenticates a small, 3 node GKE cluster to work against
 ### `make gcloud-auth-cluster`
 Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 (defaults to 'test-cluster')
+
+### `make gcloud-auth-docker`
+Creates a short lived access to Google Cloud container repositories, so that you are able to call
+`docker push` directly. Useful when used in combination with `make push` command.
