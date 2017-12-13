@@ -24,9 +24,9 @@
 #
 
 VERSION ?= 0.1
+REGISTRY ?= gcr.io/agon-images
 CLUSTER_NAME ?= test-cluster
 KUBECONFIG ?= $(build_path)/.kube
-REPOSITORY ?= gcr.io/agon-images
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -43,8 +43,8 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 # it automatically rebuilds
 build_version := $(shell sha256sum $(build_path)/build-image/Dockerfile | head -c 10)
 build_tag = agon-build:$(build_version)
-gameserver_tag = $(REPOSITORY)/gameservers-controller:$(VERSION)
-sidecar_tag = $(REPOSITORY)/gameservers-sidecar:$(VERSION)
+controller_tag = $(REGISTRY)/gameservers-controller:$(VERSION)
+sidecar_tag = $(REGISTRY)/gameservers-sidecar:$(VERSION)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -60,6 +60,9 @@ build: build-gameservers-controller-image build-gameservers-sidecar-image
 test: ensure-image
 	docker run --rm $(common_mounts) --entrypoint=go $(build_tag) test -race $(agon_package)/...
 
+# Push all the images up to $(REGISTRY)
+push: push-gameservers-controller-image push-gameservers-sidecar-image
+
 # Build a static binary for the gameserver controller
 build-gameservers-controller-binary: ensure-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(build_tag) build \
@@ -67,7 +70,11 @@ build-gameservers-controller-binary: ensure-image
 
 # Build the image for the gameserver controller
 build-gameservers-controller-image: ensure-image build-gameservers-controller-binary
-	docker build $(agon_path)/gameservers/controller/ --tag=$(gameserver_tag)
+	docker build $(agon_path)/gameservers/controller/ --tag=$(controller_tag)
+
+# push the gameservers controller image
+push-gameservers-controller-image: ensure-image
+	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
 build-gameservers-sidecar-binary: ensure-image
@@ -77,6 +84,10 @@ build-gameservers-sidecar-binary: ensure-image
 # Build the image for the gameserver sidecar
 build-gameservers-sidecar-image: ensure-image build-gameservers-sidecar-binary
 	docker build $(agon_path)/gameservers/sidecar/ --tag=$(sidecar_tag)
+
+# push the gameservers sidecar image
+push-gameservers-sidecar-image: ensure-image
+	docker push $(sidecar_tag)
 
 # Generate the sidecar gRPC code
 gen-gameservers-sidecar-grpc: ensure-image
@@ -146,6 +157,16 @@ gcloud-auth-cluster:
 	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) config set compute/zone \
 		`grep zone: $(build_path)/gke-test-cluster/deployment.yml | sed 's/zone: //'`
 	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) container clusters get-credentials $(CLUSTER_NAME)
+
+# authenticate our docker configuration so that you can do a docker push directly
+# to the gcr.io repository
+gcloud-auth-docker:
+	-sudo rm -rf /tmp/gcloud-auth-docker
+	mkdir -p /tmp/gcloud-auth-docker
+	-cp ~/.dockercfg /tmp/gcloud-auth-docker
+	docker run --rm $(common_mounts) -v /tmp/gcloud-auth-docker:/root --entrypoint="gcloud" $(build_tag) docker --authorize-only
+	sudo mv /tmp/gcloud-auth-docker/.dockercfg ~/
+	sudo chown $(USER) ~/.dockercfg
 
 # Clean the kubernetes and gcloud configuration
 clean-config:
