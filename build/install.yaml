@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Install with development settings - suggest using `make install` to run
+
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -41,8 +43,11 @@ spec:
         stable.agon.io/role: controller
     spec:
       containers:
-      - nameW: gameservers-controller
-        image: gcr.io/agon-images/gameservers-controller:0.1
+      - name: gameservers-controller
+        image: ${REGISTRY}/gameservers-controller:${VERSION}
+        imagePullPolicy: Always
         env:
-        # - name: SIDECAR # overwrite the GameServer sidecar image that is used
-        #   value: gcr.io/agon-images/gameservers-sidecar:0.1
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: "true"
+        - name: SIDECAR # overwrite the GameServer sidecar image that is used
+          value: ${REGISTRY}/gameservers-sidecar:${VERSION}

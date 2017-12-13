@@ -20,7 +20,7 @@ This software is currenty alpha, and subject to change. Not to be used in produc
 ## Installation
 `kubectl apply -f install.yaml`
 
-If you are running your own Docker repository, make a local copy of install.yaml
+If you are running your own Docker repository or want to install a specific version, make a local copy of install.yaml
 and edit to match your settings. 
 
 ## Usage

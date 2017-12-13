@@ -23,10 +23,22 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-VERSION ?= 0.1
+# base version target. This is usually the next release.
+base_version = 0.1
+
+#
+# All of the following can be overwritten with environemt variables
+# or passed through directly when invoking the relevent Make targets
+#
+
+# Version defaults to the short hash of the latest commit
+VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
+# The registry that is being used to store docker images
 REGISTRY ?= gcr.io/agon-images
-CLUSTER_NAME ?= test-cluster
+# Where the kubectl configuration files are being stored
 KUBECONFIG ?= $(build_path)/.kube
+# The (gcloud) test cluster that is being worked against
+CLUSTER_NAME ?= test-cluster
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -46,6 +58,8 @@ build_tag = agon-build:$(build_version)
 controller_tag = $(REGISTRY)/gameservers-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/gameservers-sidecar:$(VERSION)
 
+go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -63,10 +77,16 @@ test: ensure-image
 # Push all the images up to $(REGISTRY)
 push: push-gameservers-controller-image push-gameservers-sidecar-image
 
+# install the development version of Agon
+install:
+	cp $(build_path)/install.yaml $(build_path)/.install.yaml
+	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' $(build_path)/.install.yaml
+	docker run --rm $(common_mounts) --entrypoint=kubectl $(build_tag) apply -f $(mount_path)/build/.install.yaml
+
 # Build a static binary for the gameserver controller
 build-gameservers-controller-binary: ensure-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(build_tag) build \
-		-o $(mount_path)/gameservers/controller/bin/controller -a -installsuffix cgo $(agon_package)/gameservers/controller
+		-o $(mount_path)/gameservers/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/controller
 
 # Build the image for the gameserver controller
 build-gameservers-controller-image: ensure-image build-gameservers-controller-binary
@@ -79,7 +99,7 @@ push-gameservers-controller-image: ensure-image
 # build the static binary for the gamesever sidecar
 build-gameservers-sidecar-binary: ensure-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(build_tag) build \
-		-o $(mount_path)/gameservers/sidecar/bin/sidecar -a -installsuffix cgo $(agon_package)/gameservers/sidecar
+		-o $(mount_path)/gameservers/sidecar/bin/sidecar -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/sidecar
 
 # Build the image for the gameserver sidecar
 build-gameservers-sidecar-image: ensure-image build-gameservers-sidecar-binary
