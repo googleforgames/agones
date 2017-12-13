@@ -42,14 +42,17 @@ RUN mkdir -p /tmp/protoc && \
 # install go tooling for building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \
-    go get -u k8s.io/code-generator/... && \
     go get -u github.com/golang/protobuf/protoc-gen-go && \
     /go/bin/gometalinter --install
+
+# install the release branch of the code generator tools
+RUN cd /go/src && mkdir -p k8s.io && cd k8s.io && \
+    git clone -b release-1.8 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 
-# script for generating the CRD scripts
+# code generation scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
 
