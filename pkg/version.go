@@ -14,7 +14,8 @@
 
 package pkg
 
-const (
+var (
 	// Version is the global version for all binaries
-	Version = "0.1"
+	// This is set at compile time by the build process
+	Version string = "dev"
 )
