@@ -58,6 +58,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		expectedContainer string
 		expectedProtocol  corev1.Protocol
 		expectedState     State
+		expectedPolicy    PortPolicy
 	}{
 		"set basic defaults on a very simple gameserver": {
 			gameServer: GameServer{
@@ -68,11 +69,13 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			expectedContainer: "testing",
 			expectedProtocol:  "UDP",
 			expectedState:     Creating,
+			expectedPolicy:    Dynamic,
 		},
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing2", Protocol: "TCP",
+					PortPolicy: Static,
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
@@ -83,6 +86,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			expectedContainer: "testing2",
 			expectedProtocol:  "TCP",
 			expectedState:     "TestState",
+			expectedPolicy:    Static,
 		},
 	}
 

@@ -44,6 +44,9 @@ const (
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
 	Static PortPolicy = "static"
+	// Dynamic PortPolicy means that the system will choose an open
+	// port for the GameServer in question
+	Dynamic PortPolicy = "dynamic"
 
 	// RoleLabel is the label in which the Agon role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -102,9 +105,10 @@ type PortPolicy string
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// The current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State   State  `json:"state"`
-	Port    int32  `json:"port"`
-	Address string `json:"address"`
+	State    State  `json:"state"`
+	Port     int32  `json:"port"`
+	Address  string `json:"address"`
+	NodeName string `json:"nodeName"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -123,6 +127,10 @@ func (gs *GameServer) ApplyDefaults() {
 
 	if len(gs.Spec.Template.Spec.Containers) == 1 {
 		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
+	}
+
+	if gs.Spec.PortPolicy == "" {
+		gs.Spec.PortPolicy = Dynamic
 	}
 
 	if gs.Spec.Protocol == "" {
