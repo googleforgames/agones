@@ -12,41 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.9.2
+# compiling proto + grpc takes an exceptionally long time
+# so we'll use that as the base.
+FROM grpc/cxx:1.8
 
-RUN apt-get update && apt-get install -y wget unzip bash-completion rsync
+RUN apt-get update && \
+    apt-get install -y wget rsync make python bash-completion && \
+    apt-get clean
 
-WORKDIR /
+# install go
+WORKDIR /usr/local
+ENV GO_VERSION=1.9.2
+ENV GOPATH /go
+RUN wget -q https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+    tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
 
 # install gcloud + kubectl, because it's an easy way to test/dev against kubernetes.
-RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && unzip -q google-cloud-sdk.zip && rm google-cloud-sdk.zip
-RUN /google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/root/.bashrc
-ENV PATH /google-cloud-sdk/bin:$PATH
+WORKDIR /opt
+RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && unzip -q google-cloud-sdk.zip && \
+    rm google-cloud-sdk.zip && \
+    /opt/google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/root/.bashrc
 
+# update the path for both go and gcloud
+ENV PATH /usr/local/go/bin:/opt/google-cloud-sdk/bin:$PATH
+
+# RUN gcloud components update
 RUN gcloud components update && gcloud components install kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
-# install protoc for grpc
-ENV PB_VER 3.5.0
-ENV PB_URL https://github.com/google/protobuf/releases/download/v${PB_VER}/protoc-${PB_VER}-linux-x86_64.zip
-RUN mkdir -p /tmp/protoc && \
-    curl -L ${PB_URL} > /tmp/protoc/protoc.zip && \
-    cd /tmp/protoc && \
-    unzip protoc.zip && \
-    cp /tmp/protoc/bin/protoc /usr/local/bin && \
-    cp -R /tmp/protoc/include/* /usr/local/include && \
-    chmod go+rx /usr/local/bin/protoc && \
-    cd /tmp && \
-    rm -r /tmp/protoc
-
-# install go tooling for building and testing
+# install go tooling for development, building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \
     go get -u github.com/golang/protobuf/protoc-gen-go && \
     /go/bin/gometalinter --install
 
 # install the release branch of the code generator tools
-RUN cd /go/src && mkdir -p k8s.io && cd k8s.io && \
+RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
     git clone -b release-1.8 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # make sure we keep the path to go
@@ -56,4 +57,4 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
 
-ENTRYPOINT kubectl
+WORKDIR /go
