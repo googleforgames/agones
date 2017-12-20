@@ -21,6 +21,9 @@ import (
 
 	"fmt"
 
+	"io/ioutil"
+	"net/http"
+
 	"github.com/agonio/agon/pkg/apis/stable"
 	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
 	agonfake "github.com/agonio/agon/pkg/client/clientset/versioned/fake"
@@ -158,8 +161,6 @@ func TestSyncGameServer(t *testing.T) {
 }
 
 func TestWatchGameServers(t *testing.T) {
-	t.Parallel()
-
 	c, mocks := newFakeController()
 	fixture := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"}}
 	fakeWatch := watch.NewFake()
@@ -196,6 +197,32 @@ func TestWatchGameServers(t *testing.T) {
 	logrus.Info("modify copyFixture")
 	fakeWatch.Modify(copyFixture)
 	assert.Equal(t, "default/test", <-received)
+}
+
+func TestHealthCheck(t *testing.T) {
+	c, mocks := newFakeController()
+	mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, newEstablishedCRD(), nil
+	})
+
+	c.syncHandler = func(name string) error {
+		return nil
+	}
+
+	stop := startInformers(c, mocks)
+	defer close(stop)
+
+	go func() {
+		err := c.Run(1, stop)
+		assert.Nil(t, err, "Run should not error")
+	}()
+
+	resp, err := http.Get("http://localhost:8080/healthz")
+	assert.Nil(t, err, "health check error should be nil")
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.Nil(t, err, "read response error should be nil")
+	assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
 }
 
 func TestSyncGameServerBlankState(t *testing.T) {

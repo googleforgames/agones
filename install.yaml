@@ -41,8 +41,14 @@ spec:
         stable.agon.io/role: controller
     spec:
       containers:
-      - nameW: gameservers-controller
+      - name: gameservers-controller
         image: gcr.io/agon-images/gameservers-controller:0.1
         env:
         # - name: SIDECAR # overwrite the GameServer sidecar image that is used
         #   value: gcr.io/agon-images/gameservers-sidecar:0.1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
