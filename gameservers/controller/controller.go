@@ -17,6 +17,8 @@ package main
 import (
 	"time"
 
+	"net/http"
+
 	"github.com/agonio/agon/pkg/apis/stable"
 	stablev1alpha1 "github.com/agonio/agon/pkg/apis/stable/v1alpha1"
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
@@ -58,6 +60,7 @@ type Controller struct {
 	gameServerSynced       cache.InformerSynced
 	nodeLister             corelisterv1.NodeLister
 	queue                  workqueue.RateLimitingInterface
+	server                 *http.Server
 
 	// this allows for overwriting for testing purposes
 	syncHandler func(string) error
@@ -102,6 +105,16 @@ func NewController(sidecarImage string,
 
 	c.syncHandler = c.syncGameServer
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
+
+	c.server = &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
 	return c
 }
 
@@ -109,6 +122,14 @@ func NewController(sidecarImage string,
 // Runs threadiness number workers to process the rate limited queue
 func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	defer c.queue.ShutDown()
+
+	logrus.Info("Starting health check...")
+	go func() {
+		if err := c.server.ListenAndServe(); err != nil {
+			logrus.WithError(err).Error("Could not listen on :8080")
+		}
+	}()
+	defer c.server.Close()
 
 	err := c.waitForEstablishedCRD()
 	if err != nil {

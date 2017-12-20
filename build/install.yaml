@@ -51,3 +51,9 @@ spec:
           value: "true"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
           value: ${REGISTRY}/gameservers-sidecar:${VERSION}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
