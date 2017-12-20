@@ -14,7 +14,92 @@ for when you are developing locally, and require package resolution in your IDE.
 
 This is not required if you are simply building using the `make` targets
 
-## Make Targets
+### Testing and Building
+Make sure you are in the `build` directory to start.
+
+First, let's test all the code. To do this, run `make test`, which will execute all the unit tests for the codebase. 
+If you haven't run any of the `build` make targets before then this will also create the build image, and then run the tests.
+
+The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
+Dockerfile has changed.
+
+Assuming that the tests all pass, let's go ahead an compile the code and build the Docker images that Agon consists of.
+
+To compile the code and create the Docker images run `make build`. This will compile the code and create the docker image.
+You may note that the docker image is tagged with a concatenation of the upcoming release number and short git hash
+for the current commit. This has also been set in the code itself, so that it can be seen in log statements.
+
+Congratulations! You have now successfully tested and built Agon!  
+
+### Running a Test Google Kubernetes Engine Cluster
+
+This will setup a test GKE cluster on Google Cloud, with firewall rules set each of the nodes for ports 7000-8000
+to be open to UDP traffic.
+
+First step is to create a Google Cloud Project at https://console.cloud.google.com or reuse an existing one.
+
+The build tools (by default) maintain configuration for gcloud and kubectl within the `build` folder, so as to keep
+everything seperate (see below for overwriting these config locations). Therefore, once the project has been created,
+we will need to authenticate out gcloud tooling against it. To do that run `make gcloud-init` and fill in the
+prompts as directed.
+
+Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the deployment template
+found in the `gke-test-cluster` directory. If you would like to change the region and zone the cluster is in, feel free
+to edit the `deployment.yaml` file before running this command.  This will take several minutes to complete, but once
+done you can go to the Google Cloud Platform console and see that a cluster is up and running! If you want to change the
+name of the test cluster you can set the `CLUSTER_NAME` environemnt varlable to value you would like.
+
+To grab the kubectl authentication details for this cluster, run `make gcloud-auth-cluster`, which will generate the
+required Kubernetes security credintials for `kubectl`. This will be stored in `build/.kube` by default, but can also be
+overwritten by setting the `KUBECONFIG` environment variable before running the command.
+
+Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
+
+Run `make shell` to enter the development shell. You should see a bash shell that has you as the root user.
+Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
+Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at building, pushing and 
+installing Agon next.
+
+To prepare building and pushing images, let's set the REGISTRY environment variable to point to our new project.
+You can [choose any registry region](https://cloud.google.com/container-registry/docs/pushing-and-pulling#choosing_a_registry_name)
+but for this example, we'll just use `gcr.io`. 
+
+In your shell, run `export REGISTRY=gcr.io/<YOUR-PROJECT-ID>` which will overwrite the default registry settings in our
+Make targets. Then, to rebuild our images for this registry, we run `make build` again.
+
+Before we can push the images, there is one more small step! So that we can run regular `docker push` commands 
+(rather than `gcloud docker -- push`), we have to authenticate against the registry, which will give us a short
+lived key for our local docker config. To do this, run `make gcloud-auth-docker`, and now we have the short lived tokens.
+
+To push our images up at this point, is simple `make push` and that will push up all images you just built to your
+project's container registry.
+
+Now that the images are pushed, to install the development version (with all imagePolicies set to always download),
+run `make install` and agon will install the image that you just built and pushed on the test cluster you
+created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
+
+### Running a Test Minikube cluster
+(Coming soon: Track [this bug](https://github.com/googleprivate/agon/issues/30) for details)
+
+### Next Steps
+
+Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agon.
+
+## Make Variable Reference
+
+### VERSION
+The version of this build. Version defaults to the short hash of the latest commit
+
+### REGISTRY
+The registry that is being used to store docker images. Defaults to gcr.io/agon-images - the release + CI registry.
+
+### KUBECONFIG
+Where the kubectl configuration files are being stored for shell and kubectl targets. Defaults to build/.kube
+
+### CLUSTER_NAME
+The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`
+
+## Make Target Reference
 
 All targets will create the build image if it is not present.
 

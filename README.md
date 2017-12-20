@@ -21,13 +21,16 @@ This software is currenty alpha, and subject to change. Not to be used in produc
 `kubectl apply -f install.yaml`
 
 If you are running your own Docker repository or want to install a specific version, make a local copy of install.yaml
-and edit to match your settings. 
+and edit to match your settings.
+
+_Note:_ There has yet to be a release of Agon, so you will need to edit the `install.yaml` to specify a 
+development release or [build from source](build/README.md) 
 
 ## Usage
 See the [examples](./examples) directory
  
 ## Development
-See the tools in the [build](build/README.md) directory for testing and building Agon.
+See the tools in the [build](build/README.md) directory for testing and building Agon from source.
 
 ## Licence
 
