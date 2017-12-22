@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.*
-!.gitignore
-*.iml
-bin
-*.o
+FROM debian:stretch
+RUN useradd -m server
+
+COPY ./bin/server-static /home/server/server-static
+RUN chown -R server /home/server && \
+    chmod o+x /home/server/server-static
+
+USER server
+ENTRYPOINT /home/server/server-static

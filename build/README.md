@@ -1,4 +1,4 @@
-# Build
+# Developing, Testing and Building Agon
 
 Tooling for building and developing against Agon, with only dependencies being
 [Make](https://www.gnu.org/software/make/) and [Docker](https://www.docker.com)
@@ -7,6 +7,25 @@ Rather than installing all the dependencies locally, you can test and build Agon
 built from the Dockerfile in this directory. There is an accompanying Makefile for all the common
 tasks you may wish to accomplish.
 
+<!-- ToC start -->
+## Table of Contents
+
+   1. [GOPATH](#gopath)
+   1. [Testing and Building](#testing-and-building)
+      1. [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
+      1. [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
+      1. [Next Steps](#next-steps)
+   1. [Make Variable Reference](#make-variable-reference)
+      1. [VERSION](#version)
+      1. [REGISTRY](#registry)
+      1. [KUBECONFIG](#kubeconfig)
+      1. [CLUSTER_NAME](#cluster_name)
+   1. [Make Target Reference](#make-target-reference)
+      1. [Development Targets](#development-targets)
+      1. [Build Image Targets](#build-image-targets)
+      1. [Google Cloud Platform](#google-cloud-platform)
+<!-- ToC end -->
+
 ## GOPATH
 
 This project should be cloned to the directory `$GOPATH/src/github.com/agonio/agon`
@@ -14,18 +33,22 @@ for when you are developing locally, and require package resolution in your IDE.
 
 This is not required if you are simply building using the `make` targets
 
-### Testing and Building
+## Testing and Building
 Make sure you are in the `build` directory to start.
 
 First, let's test all the code. To do this, run `make test`, which will execute all the unit tests for the codebase. 
+
 If you haven't run any of the `build` make targets before then this will also create the build image, and then run the tests.
+Building the `build-image` may take a few minutes to download all the dependencies, so feel 
+free to make cup of tea or coffee at this point. ☕️ 
 
 The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
 Dockerfile has changed.
 
 Assuming that the tests all pass, let's go ahead an compile the code and build the Docker images that Agon consists of.
 
-To compile the code and create the Docker images run `make build`. This will compile the code and create the docker image.
+To compile the code, create the Docker images, and compile and archive the sdks, 
+run `make build`. This will compile the code and create the docker image.
 You may note that the docker image is tagged with a concatenation of the upcoming release number and short git hash
 for the current commit. This has also been set in the code itself, so that it can be seen in log statements.
 
@@ -108,18 +131,27 @@ All targets will create the build image if it is not present.
 Targets for developing with the build image
 
 #### `make build`
+Build all the images required for Agon, as well as the SDKs
+
+#### `make build-images`
 Build all the images required for Agon
+
+#### `make build-sdks`
+Build all the sdks required for Agon
+
+#### `make build-sdk-cpp`
+Build the cpp sdk static and dynamic libraries (linux libraries only)
 
 #### `make test`
 Run all tests
 
-### `make push`
+#### `make push`
 Pushes all built images up to the `$(REGISTRY)`
 
-### `make shell`
+#### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
 
-### `make godoc`
+#### `make godoc`
 Run a container with godoc (search index enabled)
 
 #### `make build-gameservers-controller-image`
@@ -131,37 +163,37 @@ Compile the gameserver sidecar and then build the docker image
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
 
-#### `make gen-gameservers-sidecar-grpc`
-Generate the gRPC sidecar Server and Client
+#### `make gen-gameservers-sdk-grpc`
+Generate the SDK gRPC server and client code
 
 ### Build Image Targets
 
 Targets for building the build image
 
-### `make clean-config`
+#### `make clean-config`
 Cleans the kubernetes and gcloud configurations
 
-### `make clean-image`
+#### `make clean-build-image`
 Deletes the local build docker image
 
-### `make build-image`
+#### `make build-build-image`
 Creates the build docker image
 
-## Google Cloud Platform
+### Google Cloud Platform
 
 A set of utilities for setting up a Container Engine cluster on Google Cloud Platform,
 since it's an easy way to get a test cluster working with Kubernetes.
 
-### `make gcloud-init`
+#### `make gcloud-init`
 Initialise the gcloud login and project configuration, if you are working with GCP
 
-### `make gcloud-test-cluster`
+#### `make gcloud-test-cluster`
 Creates and authenticates a small, 3 node GKE cluster to work against
 
-### `make gcloud-auth-cluster`
+#### `make gcloud-auth-cluster`
 Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 (defaults to 'test-cluster')
 
-### `make gcloud-auth-docker`
+#### `make gcloud-auth-docker`
 Creates a short lived access to Google Cloud container repositories, so that you are able to call
 `docker push` directly. Useful when used in combination with `make push` command.

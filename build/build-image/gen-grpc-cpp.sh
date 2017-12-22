@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2017 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.*
-!.gitignore
-*.iml
-bin
-*.o
+cd /go/src/github.com/agonio/agon
+protoc -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
+protoc -I . --cpp_out=./sdks/cpp sdk.proto
+mkdir /tmp/cpp
+ls ./sdks/cpp | xargs -I@ bash -c "cat ./build/boilerplate.go.txt ./sdks/cpp/@ >> /tmp/cpp/@"
+# already has a header, so we'll remove it
+rm /tmp/cpp/sdk.grpc.pb.h
+mv /tmp/cpp/* ./sdks/cpp/
+

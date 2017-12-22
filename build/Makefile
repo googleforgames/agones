@@ -68,7 +68,13 @@ go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
 #                 |___/
 
 # build all
-build: build-gameservers-controller-image build-gameservers-sidecar-image
+build: build-images build-sdks
+
+# build the docker images
+build-images: build-gameservers-controller-image build-gameservers-sidecar-image
+
+#build all the sdks
+build-sdks: build-sdk-cpp
 
 # Run all tests
 test: ensure-image
@@ -105,13 +111,18 @@ build-gameservers-sidecar-binary: ensure-image
 build-gameservers-sidecar-image: ensure-image build-gameservers-sidecar-binary
 	docker build $(agon_path)/gameservers/sidecar/ --tag=$(sidecar_tag)
 
+# Build the cpp sdk linux archive
+build-sdk-cpp: ensure-image
+	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp --entrypoint make $(build_tag) build install archive VERSION=$(VERSION)
+
 # push the gameservers sidecar image
 push-gameservers-sidecar-image: ensure-image
 	docker push $(sidecar_tag)
 
-# Generate the sidecar gRPC code
-gen-gameservers-sidecar-grpc: ensure-image
+# Generate the SDK gRPC server and client code
+gen-gameservers-sdk-grpc: ensure-image
 	docker run --rm $(common_mounts) --entrypoint="/root/gen-grpc-go.sh" $(build_tag)
+	docker run --rm $(common_mounts) --entrypoint="/root/gen-grpc-cpp.sh" $(build_tag)
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: ensure-image
@@ -137,14 +148,12 @@ godoc:
 	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
 		--entrypoint=godoc $(build_tag) -http=":8888" -index=true -index_files=/root/.index
 
-.PHONY: build-image
-
 # Creates the build docker image
-build-image:
+build-build-image:
 	docker build --tag=$(build_tag) $(build_path)/build-image
 
 # Deletes the local build docker image
-clean-image:
+clean-build-image:
 	docker rmi $(build_tag)
 
 ensure-config:
@@ -154,7 +163,7 @@ ensure-config:
 ensure-image: ensure-config
 	@if [ -z $$(docker images -q $(build_tag)) ]; then\
 		echo "Could not find $(build_tag) image. Building...";\
-		$(MAKE) build-image;\
+		$(MAKE) build-build-image;\
 	fi
 
 # Initialise the gcloud login and project configuration, if you are working with GCP
@@ -164,7 +173,7 @@ gcloud-init: ensure-config
 		--entrypoint="gcloud" $(build_tag) init
 
 # Creates and authenticates a small, 3 node GKE cluster to work against
-gcloud-test-cluster:
+gcloud-test-cluster: ensure-image
 	docker run --rm -it $(common_mounts) \
 		--entrypoint="gcloud" $(build_tag) \
 		deployment-manager deployments create test-cluster --config=$(mount_path)/build/gke-test-cluster/deployment.yml
@@ -172,7 +181,7 @@ gcloud-test-cluster:
 
 # Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 # (defaults to 'test-cluster')
-gcloud-auth-cluster:
+gcloud-auth-cluster: ensure-image
 	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) config set container/cluster $(CLUSTER_NAME)
 	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) config set compute/zone \
 		`grep zone: $(build_path)/gke-test-cluster/deployment.yml | sed 's/zone: //'`
@@ -180,7 +189,7 @@ gcloud-auth-cluster:
 
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
-gcloud-auth-docker:
+gcloud-auth-docker: ensure-image
 	-sudo rm -rf /tmp/gcloud-auth-docker
 	mkdir -p /tmp/gcloud-auth-docker
 	-cp ~/.dockercfg /tmp/gcloud-auth-docker
