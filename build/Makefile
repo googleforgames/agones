@@ -104,8 +104,12 @@ push-gameservers-controller-image: ensure-image
 
 # build the static binary for the gamesever sidecar
 build-gameservers-sidecar-binary: ensure-image
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(build_tag) build \
-		-o $(mount_path)/gameservers/sidecar/bin/sidecar -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/sidecar
+	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/gameservers/sidecar/bin/sidecar.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/sidecar
+	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/gameservers/sidecar/bin/sidecar.darwin.amd64 $(go_version_flags) $(agon_package)/gameservers/sidecar
+	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/gameservers/sidecar/bin/sidecar.windows.amd64.exe $(go_version_flags) $(agon_package)/gameservers/sidecar
 
 # Build the image for the gameserver sidecar
 build-gameservers-sidecar-image: ensure-image build-gameservers-sidecar-binary

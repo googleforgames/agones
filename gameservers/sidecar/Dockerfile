@@ -1,6 +1,6 @@
 FROM alpine:3.6
 
-COPY ./bin/sidecar /home/agon/sidecar
+COPY ./bin/sidecar.linux.amd64 /home/agon/sidecar
 RUN apk --update add ca-certificates && \
                 adduser -D agon && \
                 chown -R agon /home/agon && \

@@ -38,8 +38,10 @@ Make sure you are in the `build` directory to start.
 
 First, let's test all the code. To do this, run `make test`, which will execute all the unit tests for the codebase. 
 
-If you haven't run any of the `build` make targets before then this will also create the build image, and then run the tests.
-Building the `build-image` may take a few minutes to download all the dependencies, so feel 
+If you haven't run any of the `build` make targets before then this will also create the Docker based build image,
+and then run the tests.
+
+Building the build image may take a few minutes to download all the dependencies, so feel 
 free to make cup of tea or coffee at this point. ☕️ 
 
 The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
@@ -47,12 +49,18 @@ Dockerfile has changed.
 
 Assuming that the tests all pass, let's go ahead an compile the code and build the Docker images that Agon consists of.
 
-To compile the code, create the Docker images, and compile and archive the sdks, 
-run `make build`. This will compile the code and create the docker image.
-You may note that the docker image is tagged with a concatenation of the upcoming release number and short git hash
-for the current commit. This has also been set in the code itself, so that it can be seen in log statements.
+Let's compile and build everything, by running `make build`, this will:
 
-Congratulations! You have now successfully tested and built Agon!  
+- Compile the Agon Kubernetes integration code
+- Create the Docker images that we will later push
+- Build the local development tooling for all supported OS's
+- Compile and archive the SDKs in various languages
+
+You may note that docker images, and tar archives are tagged with a concatenation of the 
+upcoming release number and short git hash for the current commit. This has also been set in 
+the code itself, so that it can be seen in via log statements.
+
+Congratulations! You have now successfully tested and built Agon!
 
 ### Running a Test Google Kubernetes Engine Cluster
 
