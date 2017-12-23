@@ -34,4 +34,35 @@ The GameServer state will be set `Shutdown` and the
 backing Pod will be deleted, if they have not shut themselves down already. 
 
 ## Local Development
-(Coming soon: Track [this bug](https://github.com/googleprivate/agon/issues/8) for details)
+_Note:_ There has yet to be a release of Agon, so if you want the local
+development tools, you will need to [build from source](build/README.md).
+
+If you do not wish to `make build` and build everything, 
+the `make` target `build-gameservers-sidecar-binary` will compile the necessary binaries
+for all supported operating systems (64 bit windows, linux and osx).
+
+You can find the binaries in the `bin` folder in [`gameservers/sidecar`](../gameservers/sidecar)
+once compilation is complete.
+
+When the game server is running on Agon, the SDK communicates over TCP to a small
+gRPC server that Agon coordinated to runs in a container in the same network 
+namespace as it - usually referred to in Kubernetes terms as a "sidecar".
+
+Therefore, when developing locally, we also need a process for the SDK to connect to!
+
+To do this, we can run the same binary that runs inside Agon, but pass in a flag
+to run it in "local mode". Local mode means that the sidecar binary
+won't try and connect to anything, and will just send logs messages to stdout so 
+that you can see exactly what the SDK in your game server is doing, and can
+confirm everything works.
+
+To run in local mode, pass the flag `--local` to the executable.
+
+For example:
+
+```bash
+$ ./sidecar.linux.amd64 --local
+{"level":"info","local":true,"msg":"Starting sdk sidecar","port":59357,"time":"2017-12-22T16:09:03-08:00","version":"0.1-5217b21"}
+{"level":"info","msg":"Ready request has been received!","time":"2017-12-22T16:09:19-08:00"}
+{"level":"info","msg":"Shutdown request has been received!","time":"2017-12-22T16:10:19-08:00"}
+```
