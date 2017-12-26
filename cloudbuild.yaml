@@ -1,0 +1,41 @@
+# Copyright 2017 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Google Cloud Builder CI configuration
+#
+
+# right now, do nothing.
+steps:
+- name: "ubuntu"
+  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+- name: "gcr.io/cloud-builders/docker"
+  args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
+- name: "make-docker"
+  dir: "build"
+  args: ["pull-build-image"] # pull the build image if it exists
+- name: "make-docker"
+  dir: "build"
+  args: [ "test" ] # run tests
+- name: "make-docker"
+  dir: "build"
+  args: [ "build", "push" ] # build all the things, and push images
+- name: 'gcr.io/cloud-builders/gsutil'
+  dir: "sdks/cpp/bin"
+  args: ['cp', '*.tar.gz', 'gs://agon-artifacts/cpp-sdk']
+- name: "make-docker"
+  dir: "build"
+  args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
+timeout: "1h"
+images: ['gcr.io/$PROJECT_ID/gameservers-controller', 'gcr.io/$PROJECT_ID/gameservers-sidecar']
