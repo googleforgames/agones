@@ -91,6 +91,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			test.gameServer.ApplyDefaults()
 
 			spec := test.gameServer.Spec
+			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
 			assert.Equal(t, test.expectedContainer, spec.Container)
 			assert.Equal(t, test.expectedProtocol, spec.Protocol)
 			assert.Equal(t, test.expectedState, test.gameServer.Status.State)

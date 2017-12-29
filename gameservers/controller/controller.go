@@ -97,8 +97,19 @@ func NewController(sidecarImage string,
 			// no point in processing unless there is a State change
 			oldGs := oldObj.(*stablev1alpha1.GameServer)
 			newGs := newObj.(*stablev1alpha1.GameServer)
-			if oldGs.Status.State != newGs.Status.State {
+			if oldGs.Status.State != newGs.Status.State || oldGs.ObjectMeta.DeletionTimestamp != newGs.ObjectMeta.DeletionTimestamp {
 				c.enqueueGameServer(newGs)
+			}
+		},
+	})
+
+	// track pod deletions, for when GameServers are deleted
+	kubeInformerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		DeleteFunc: func(obj interface{}) {
+			pod := obj.(*corev1.Pod)
+			if stablev1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
+				owner := metav1.GetControllerOf(pod)
+				c.enqueueGameServer(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
 			}
 		},
 	})
@@ -223,8 +234,10 @@ func (c *Controller) syncGameServer(key string) error {
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
 	}
 
-	gs, err = c.syncGameServerBlankState(gs)
-	if err != nil {
+	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerBlankState(gs); err != nil {
 		return err
 	}
 	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
@@ -240,10 +253,49 @@ func (c *Controller) syncGameServer(key string) error {
 	return nil
 }
 
+// syncGameServerDeletionTimestamp if the deletion timestamp is non-zero
+// then do one of two things:
+// - if the GameServer has Pods running, delete them
+// - if there no pods, remove the finalizer
+func (c *Controller) syncGameServerDeletionTimestamp(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	if !gs.ObjectMeta.DeletionTimestamp.IsZero() {
+		logrus.WithField("gs", gs).Info("Syncing with Deletion Timestamp")
+		pods, err := c.listGameServerPods(gs)
+		if err != nil {
+			return gs, err
+		}
+
+		if len(pods) > 0 {
+			logrus.WithField("pods", pods).WithField("gsName", gs.ObjectMeta.Name).Info("Found pods, deleting")
+			for _, p := range pods {
+				err := c.podGetter.Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, nil)
+				if err != nil {
+					return gs, errors.Wrapf(err, "error deleting pod for GameServer %s, %s", gs.ObjectMeta.Name, p.ObjectMeta.Name)
+				}
+			}
+		} else {
+			gsCopy := gs.DeepCopy()
+			// remove the finalizer for this controller
+			var fin []string
+			for _, f := range gsCopy.ObjectMeta.Finalizers {
+				if f != stable.GroupName {
+					fin = append(fin, f)
+				}
+			}
+			gsCopy.ObjectMeta.Finalizers = fin
+			logrus.WithField("gs", gsCopy).Infof("No pods found, removing finalizer %s", stable.GroupName)
+			gs, err := c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gsCopy)
+			return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
+		}
+	}
+
+	return gs, nil
+}
+
 // syncGameServerBlankState applies default values to the the GameServer if its state is "" (blank)
 // returns an updated GameServer
 func (c *Controller) syncGameServerBlankState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if gs.Status.State == "" {
+	if gs.Status.State == "" && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		gsCopy := gs.DeepCopy()
 		gsCopy.ApplyDefaults()
 		logrus.WithField("gs", gsCopy).Info("Syncing Blank State")
@@ -256,7 +308,7 @@ func (c *Controller) syncGameServerBlankState(gs *stablev1alpha1.GameServer) (*s
 // syncGameServerCreatingState checks if the GameServer is in the Creating state, and if so
 // creates a Pod for the GameServer and moves the state to Starting
 func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if gs.Status.State == stablev1alpha1.Creating {
+	if gs.Status.State == stablev1alpha1.Creating && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		logrus.WithField("gs", gs).Info("Syncing Create State")
 
 		// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
@@ -318,7 +370,7 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 // and then adds the IP and Port information to the Status and marks the GameServer
 // as Ready
 func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if gs.Status.State == stablev1alpha1.RequestReady {
+	if gs.Status.State == stablev1alpha1.RequestReady && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		logrus.WithField("gs", gs).Info("Syncing RequestReady State")
 		pod, err := c.gameServerPod(gs)
 		if err != nil {
@@ -344,7 +396,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 
 // syncGameServerShutdownState deletes the game server (and therefore the backing Pod) if it is in shutdown state
 func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if gs.Status.State == stablev1alpha1.Shutdown {
+	if gs.Status.State == stablev1alpha1.Shutdown && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		logrus.WithField("gs", gs).Info("Syncing Shutdown State")
 		// let's be explicit about how we want to shut things down
 		p := metav1.DeletePropagationBackground

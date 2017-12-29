@@ -162,9 +162,16 @@ func TestSyncGameServer(t *testing.T) {
 
 func TestWatchGameServers(t *testing.T) {
 	c, mocks := newFakeController()
-	fixture := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"}}
-	fakeWatch := watch.NewFake()
-	mocks.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+	fixture := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"}, Spec: newSingeContainerSpec()}
+	fixture.ApplyDefaults()
+	pod, err := fixture.Pod()
+	assert.Nil(t, err)
+	pod.ObjectMeta.Name = pod.ObjectMeta.GenerateName + "-pod"
+
+	gsWatch := watch.NewFake()
+	podWatch := watch.NewFake()
+	mocks.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	mocks.kubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 	mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, newEstablishedCRD(), nil
 	})
@@ -187,15 +194,24 @@ func TestWatchGameServers(t *testing.T) {
 	}()
 
 	logrus.Info("Adding first fixture")
-	fakeWatch.Add(&fixture)
+	gsWatch.Add(&fixture)
 	assert.Equal(t, "default/test", <-received)
+	podWatch.Add(pod)
 
 	// no state change
-	fakeWatch.Modify(&fixture)
+	gsWatch.Modify(&fixture)
+	select {
+	case <-received:
+		assert.Fail(t, "Should not be queued")
+	case <-time.After(time.Second):
+	}
 	copyFixture := fixture.DeepCopy()
 	copyFixture.Status.State = v1alpha1.Starting
 	logrus.Info("modify copyFixture")
-	fakeWatch.Modify(copyFixture)
+	gsWatch.Modify(copyFixture)
+	assert.Equal(t, "default/test", <-received)
+
+	podWatch.Delete(pod)
 	assert.Equal(t, "default/test", <-received)
 }
 
@@ -225,6 +241,68 @@ func TestHealthCheck(t *testing.T) {
 	assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
 }
 
+func TestSyncGameServerDeletionTimestamp(t *testing.T) {
+	t.Parallel()
+
+	t.Run("GameServer has a Pod", func(t *testing.T) {
+		c, mocks := newFakeController()
+		now := metav1.Now()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
+			Spec: newSingeContainerSpec()}
+		fixture.ApplyDefaults()
+		pod, err := fixture.Pod()
+		assert.Nil(t, err)
+		pod.ObjectMeta.Name = pod.ObjectMeta.GenerateName
+
+		deleted := false
+		mocks.kubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		mocks.kubeClient.AddReactor("delete", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			deleted = true
+			da := action.(k8stesting.DeleteAction)
+			assert.Equal(t, pod.ObjectMeta.Name, da.GetName())
+			return true, nil, nil
+		})
+
+		stop := startInformers(c, mocks)
+		defer close(stop)
+
+		result, err := c.syncGameServerDeletionTimestamp(fixture)
+		assert.Nil(t, err)
+		assert.True(t, deleted, "pod should be deleted")
+		assert.Equal(t, fixture, result)
+	})
+
+	t.Run("GameServer's Pods have been deleted", func(t *testing.T) {
+		c, mocks := newFakeController()
+		now := metav1.Now()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
+			Spec: newSingeContainerSpec()}
+		fixture.ApplyDefaults()
+
+		updated := false
+		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+			assert.Empty(t, gs.ObjectMeta.Finalizers)
+
+			return true, gs, nil
+		})
+		stop := startInformers(c, mocks)
+		defer close(stop)
+
+		result, err := c.syncGameServerDeletionTimestamp(fixture)
+		assert.Nil(t, err)
+		assert.True(t, updated, "gameserver should be updated, to remove the finaliser")
+		assert.Equal(t, fixture.ObjectMeta.Name, result.ObjectMeta.Name)
+		assert.Empty(t, result.ObjectMeta.Finalizers)
+	})
+}
+
 func TestSyncGameServerBlankState(t *testing.T) {
 
 	t.Run("GameServer with a blank initial state", func(t *testing.T) {
@@ -252,6 +330,12 @@ func TestSyncGameServerBlankState(t *testing.T) {
 	t.Run("Gameserver with unknown state", func(t *testing.T) {
 		testWithUnknownState(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return c.syncGameServerBlankState(fixture)
+		})
+	})
+
+	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
+		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+			return c.syncGameServerRequestReadyState(fixture)
 		})
 	})
 }
@@ -376,6 +460,12 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			return c.syncGameServerCreatingState(fixture)
 		})
 	})
+
+	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
+		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+			return c.syncGameServerRequestReadyState(fixture)
+		})
+	})
 }
 
 func TestSyncGameServerRequestReadyState(t *testing.T) {
@@ -427,6 +517,12 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 			return c.syncGameServerRequestReadyState(fixture)
 		})
 	})
+
+	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
+		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+			return c.syncGameServerRequestReadyState(fixture)
+		})
+	})
 }
 
 func TestSyncGameServerShutdownState(t *testing.T) {
@@ -457,6 +553,12 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 
 	t.Run("GameServer with unknown state", func(t *testing.T) {
 		testWithUnknownState(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+			return c.syncGameServerRequestReadyState(fixture)
+		})
+	})
+
+	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
+		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return c.syncGameServerRequestReadyState(fixture)
 		})
 	})
@@ -543,6 +645,26 @@ func testWithUnknownState(t *testing.T, f func(*Controller, *v1alpha1.GameServer
 	c, mocks := newFakeController()
 	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingeContainerSpec(), Status: v1alpha1.GameServerStatus{State: "ThisStateDoesNotExist"}}
+	fixture.ApplyDefaults()
+	updated := false
+	mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		updated = true
+		return true, nil, nil
+	})
+
+	result, err := f(c, fixture)
+	assert.Nil(t, err, "sync should not error")
+	assert.False(t, updated, "update should occur")
+	assert.Equal(t, fixture, result)
+}
+
+// testWithNonZeroDeletionTimestamp runs a test with a given state, but
+// the DeletionTimestamp set to Now()
+func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func(*Controller, *v1alpha1.GameServer) (*v1alpha1.GameServer, error)) {
+	c, mocks := newFakeController()
+	now := metav1.Now()
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
+		Spec: newSingeContainerSpec(), Status: v1alpha1.GameServerStatus{State: state}}
 	fixture.ApplyDefaults()
 	updated := false
 	mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
