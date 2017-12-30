@@ -60,7 +60,6 @@ ensure-bin:
 	-mkdir $(build_path)/bin
 
 # build dev and runtime tarballs
-# TODO: add the verrsion to the archive (pass through from main Makefile
 archive: VERSION = "dev"
 archive:
 	-rm $(build_path)/bin/argonsdk-$(VERSION)-dev-linux-arch_64.tar.gz

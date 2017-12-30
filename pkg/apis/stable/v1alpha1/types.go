@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 const (
@@ -44,9 +45,19 @@ const (
 	// in the configuration.
 	Static PortPolicy = "static"
 
+	// RoleLabel is the label in which the Agon role is specified.
+	// Pods from a GameServer will have the value "gameserver"
+	RoleLabel = stable.GroupName + "/role"
+	// GameServerLabelRole is the GameServer label value for RoleLabel
+	GameServerLabelRole = "gameserver"
 	// GameServerPodLabel is the label that the name of the GameServer
 	// is set on the Pod the GameServer controls
 	GameServerPodLabel = stable.GroupName + "/gameserver"
+)
+
+var (
+	// GameServerRolePodSelector is the selector to get all GameServer Pods
+	GameServerRolePodSelector = labels.SelectorFromSet(labels.Set{RoleLabel: GameServerLabelRole})
 )
 
 // +genclient
@@ -108,6 +119,8 @@ type GameServerList struct {
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
 func (gs *GameServer) ApplyDefaults() {
+	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
+
 	if len(gs.Spec.Template.Spec.Containers) == 1 {
 		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
 	}
@@ -153,7 +166,7 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	if pod.ObjectMeta.Labels == nil {
 		pod.ObjectMeta.Labels = make(map[string]string, 1)
 	}
-	pod.ObjectMeta.Labels[stable.GroupName+"/role"] = "gameserver"
+	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
 	// store the GameServer name as a label, for easy lookup later on
 	pod.ObjectMeta.Labels[GameServerPodLabel] = gs.ObjectMeta.Name
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
