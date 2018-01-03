@@ -51,6 +51,10 @@ spec:
           value: "true"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
           value: ${REGISTRY}/gameservers-sidecar:${VERSION}
+        - name: MIN_PORT
+          value: "7000"
+        - name: MAX_PORT
+          value: "8000"
         livenessProbe:
           httpGet:
             path: /healthz

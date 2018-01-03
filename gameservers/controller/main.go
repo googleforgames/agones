@@ -36,6 +36,8 @@ import (
 const (
 	sidecarFlag     = "sidecar"
 	pullSidecarFlag = "always-pull-sidecar"
+	minPortFlag     = "min-port"
+	maxPortFlag     = "max-port"
 )
 
 func init() {
@@ -49,19 +51,33 @@ func main() {
 
 	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
+	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
+	pflag.Int32(maxPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(sidecarFlag))
 	runtime.Must(viper.BindEnv(pullSidecarFlag))
+	runtime.Must(viper.BindEnv(minPortFlag))
+	runtime.Must(viper.BindEnv(maxPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
+	minPort := int32(viper.GetInt64(minPortFlag))
+	maxPort := int32(viper.GetInt64(maxPortFlag))
 	sidecarImage := viper.GetString(sidecarFlag)
 	alwaysPullSidecar := viper.GetBool(pullSidecarFlag)
 
 	logrus.WithField(sidecarFlag, sidecarImage).
+		WithField("minPort", minPort).
+		WithField("maxPort", maxPort).
 		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
 		WithField("Version", pkg.Version).Info("starting gameServer operator...")
+
+	if minPort <= 0 || maxPort <= 0 {
+		logrus.Fatal("Min Port and Max Port values are required.")
+	} else if maxPort < minPort {
+		logrus.Fatal("Max Port cannot be set less that the Min Port")
+	}
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -85,7 +101,7 @@ func main() {
 
 	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := NewController(sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
+	c := NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
 
 	stop := signals.NewStopChannel()
 

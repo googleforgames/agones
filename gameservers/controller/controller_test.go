@@ -15,32 +15,25 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
 
-	"fmt"
-
-	"io/ioutil"
-	"net/http"
-
 	"github.com/agonio/agon/pkg/apis/stable"
 	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	agonfake "github.com/agonio/agon/pkg/client/clientset/versioned/fake"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/informers"
-	kubefake "k8s.io/client-go/kubernetes/fake"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
@@ -124,8 +117,8 @@ func TestSyncGameServer(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		err := c.syncHandler("default/test")
 		assert.Nil(t, err)
@@ -149,8 +142,8 @@ func TestSyncGameServer(t *testing.T) {
 			return false, nil, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		agonWatch.Delete(fixture)
 
@@ -185,8 +178,8 @@ func TestWatchGameServers(t *testing.T) {
 		return nil
 	}
 
-	stop := startInformers(c, mocks)
-	defer close(stop)
+	stop, cancel := startInformers(mocks, c.gameServerSynced)
+	defer cancel()
 
 	go func() {
 		err := c.Run(1, stop)
@@ -225,8 +218,8 @@ func TestHealthCheck(t *testing.T) {
 		return nil
 	}
 
-	stop := startInformers(c, mocks)
-	defer close(stop)
+	stop, cancel := startInformers(mocks, c.gameServerSynced)
+	defer cancel()
 
 	go func() {
 		err := c.Run(1, stop)
@@ -234,11 +227,14 @@ func TestHealthCheck(t *testing.T) {
 	}()
 
 	resp, err := http.Get("http://localhost:8080/healthz")
-	assert.Nil(t, err, "health check error should be nil")
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	assert.Nil(t, err, "read response error should be nil")
-	assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
+	assert.Nil(t, err, "health check error should be nil: %s", err)
+	assert.NotNil(t, resp)
+	if resp != nil {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.Nil(t, err, "read response error should be nil")
+		assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
+	}
 }
 
 func TestSyncGameServerDeletionTimestamp(t *testing.T) {
@@ -265,8 +261,8 @@ func TestSyncGameServerDeletionTimestamp(t *testing.T) {
 			return true, nil, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		result, err := c.syncGameServerDeletionTimestamp(fixture)
 		assert.Nil(t, err)
@@ -292,8 +288,8 @@ func TestSyncGameServerDeletionTimestamp(t *testing.T) {
 
 			return true, gs, nil
 		})
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		result, err := c.syncGameServerDeletionTimestamp(fixture)
 		assert.Nil(t, err)
@@ -304,6 +300,7 @@ func TestSyncGameServerDeletionTimestamp(t *testing.T) {
 }
 
 func TestSyncGameServerBlankState(t *testing.T) {
+	t.Parallel()
 
 	t.Run("GameServer with a blank initial state", func(t *testing.T) {
 		c, mocks := newFakeController()
@@ -325,6 +322,50 @@ func TestSyncGameServerBlankState(t *testing.T) {
 		assert.Equal(t, fixture.ObjectMeta.Name, result.ObjectMeta.Name)
 		assert.Equal(t, fixture.ObjectMeta.Namespace, result.ObjectMeta.Namespace)
 		assert.Equal(t, v1alpha1.Creating, result.Status.State)
+	})
+
+	t.Run("Gameserver with dynamic port state", func(t *testing.T) {
+		t.Parallel()
+		c, mocks := newFakeController()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: v1alpha1.GameServerSpec{
+				ContainerPort: 7777,
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+					},
+				},
+			},
+		}
+		mocks.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.NodeList{Items: []corev1.Node{{ObjectMeta: metav1.ObjectMeta{Name: "node1"}}}}, nil
+		})
+
+		updated := false
+
+		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+			assert.Equal(t, v1alpha1.Dynamic, gs.Spec.PortPolicy)
+			assert.NotEqual(t, fixture.Spec.HostPort, gs.Spec.HostPort)
+			assert.True(t, 10 <= gs.Spec.HostPort && gs.Spec.HostPort <= 20, "%s not in range", gs.Spec.HostPort)
+
+			return true, gs, nil
+		})
+
+		stop, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
+		err := c.portAllocator.Run(stop)
+		assert.Nil(t, err)
+
+		result, err := c.syncGameServerBlankState(fixture)
+		assert.Nil(t, err, "sync should not error")
+		assert.True(t, updated, "update should occur")
+		assert.Equal(t, v1alpha1.Dynamic, result.Spec.PortPolicy)
+		assert.NotEqual(t, fixture.Spec.HostPort, result.Spec.HostPort)
+		assert.True(t, 10 <= result.Spec.HostPort && result.Spec.HostPort <= 20, "%s not in range", result.Spec.HostPort)
 	})
 
 	t.Run("Gameserver with unknown state", func(t *testing.T) {
@@ -416,8 +457,8 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(fixture)
 		assert.Equal(t, v1alpha1.Starting, gs.Status.State)
@@ -444,8 +485,8 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(fixture)
 		assert.Nil(t, err)
@@ -497,11 +538,12 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, v1alpha1.Ready, gs.Status.State)
 			assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
 			assert.Equal(t, ipFixture, gs.Status.Address)
+			assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
 			return true, gs, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		gs, err := c.syncGameServerRequestReadyState(gsFixture)
 		assert.Nil(t, err, "should not error")
@@ -509,7 +551,7 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Equal(t, v1alpha1.Ready, gs.Status.State)
 		assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
 		assert.Equal(t, ipFixture, gs.Status.Address)
-
+		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
 	})
 
 	t.Run("GameServer with unknown state", func(t *testing.T) {
@@ -526,6 +568,8 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 }
 
 func TestSyncGameServerShutdownState(t *testing.T) {
+	t.Parallel()
+
 	t.Run("GameServer with a Shutdown state", func(t *testing.T) {
 		c, mocks := newFakeController()
 		gsFixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -542,8 +586,8 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 			return true, nil, nil
 		})
 
-		stop := startInformers(c, mocks)
-		defer close(stop)
+		_, cancel := startInformers(mocks, c.gameServerSynced)
+		defer cancel()
 
 		gs, err := c.syncGameServerShutdownState(gsFixture)
 		assert.Nil(t, gs)
@@ -566,6 +610,7 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 
 func TestControllerExternalIP(t *testing.T) {
 	t.Parallel()
+
 	c, mocks := newFakeController()
 	ipfixture := "12.12.12.12"
 	node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipfixture, Type: corev1.NodeExternalIP}}}}
@@ -579,8 +624,8 @@ func TestControllerExternalIP(t *testing.T) {
 		return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 	})
 
-	stop := startInformers(c, mocks)
-	defer close(stop)
+	_, cancel := startInformers(mocks, c.gameServerSynced)
+	defer cancel()
 
 	addr, err := c.externalIP(&pod)
 	assert.Nil(t, err)
@@ -589,6 +634,7 @@ func TestControllerExternalIP(t *testing.T) {
 
 func TestControllerGameServerPod(t *testing.T) {
 	t.Parallel()
+
 	c, mocks := newFakeController()
 	fakeWatch := watch.NewFake()
 	mocks.kubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(fakeWatch, nil))
@@ -596,8 +642,8 @@ func TestControllerGameServerPod(t *testing.T) {
 	gs.ApplyDefaults()
 	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Labels: map[string]string{v1alpha1.GameServerPodLabel: gs.ObjectMeta.Name}}}
 
-	stop := startInformers(c, mocks)
-	defer close(stop)
+	stop, cancel := startInformers(mocks, c.gameServerSynced)
+	defer cancel()
 
 	_, err := c.gameServerPod(gs)
 	assert.Equal(t, errPodNotFound, err)
@@ -678,30 +724,12 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func
 	assert.Equal(t, fixture, result)
 }
 
-// holder for all my fakes and mocks
-type mocks struct {
-	kubeClient             *kubefake.Clientset
-	kubeInformationFactory informers.SharedInformerFactory
-	extClient              *extfake.Clientset
-	agonClient             *agonfake.Clientset
-	agonInformerFactory    externalversions.SharedInformerFactory
-}
-
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, mocks) {
-	kubeClient := &kubefake.Clientset{}
-	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	extClient := &extfake.Clientset{}
-	agonClient := &agonfake.Clientset{}
-	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
-
-	return NewController("sidecar:dev", false, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory),
-		mocks{
-			kubeClient:             kubeClient,
-			kubeInformationFactory: kubeInformationFactory,
-			extClient:              extClient,
-			agonClient:             agonClient,
-			agonInformerFactory:    agonInformerFactory}
+	m := newMocks()
+	c := NewController(10, 20, "sidecar:dev", false,
+		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonClient, m.agonInformerFactory)
+	return c, m
 }
 
 func newSingeContainerSpec() v1alpha1.GameServerSpec {
@@ -726,17 +754,4 @@ func newEstablishedCRD() *v1beta1.CustomResourceDefinition {
 			}},
 		},
 	}
-}
-
-func startInformers(c *Controller, mocks mocks) chan struct{} {
-	stop := make(chan struct{})
-	mocks.kubeInformationFactory.Start(stop)
-	mocks.agonInformerFactory.Start(stop)
-
-	logrus.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
-		panic("Cache never synced")
-	}
-
-	return stop
 }

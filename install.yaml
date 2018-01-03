@@ -44,6 +44,12 @@ spec:
       - name: gameservers-controller
         image: gcr.io/agon-images/gameservers-controller:0.1
         env:
+        # minimum port that can be exposed to GameServer traffic
+        - name: MIN_PORT
+          value: "7000"
+        # maximum port that can be exposed to GameServer traffic
+        - name: MAX_PORT
+          value: "8000"
         # - name: SIDECAR # overwrite the GameServer sidecar image that is used
         #   value: gcr.io/agon-images/gameservers-sidecar:0.1
         livenessProbe:

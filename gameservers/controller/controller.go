@@ -15,9 +15,8 @@
 package main
 
 import (
-	"time"
-
 	"net/http"
+	"time"
 
 	"github.com/agonio/agon/pkg/apis/stable"
 	stablev1alpha1 "github.com/agonio/agon/pkg/apis/stable/v1alpha1"
@@ -60,6 +59,7 @@ type Controller struct {
 	gameServerSynced       cache.InformerSynced
 	nodeLister             corelisterv1.NodeLister
 	queue                  workqueue.RateLimitingInterface
+	portAllocator          *PortAllocator
 	server                 *http.Server
 
 	// this allows for overwriting for testing purposes
@@ -67,7 +67,8 @@ type Controller struct {
 }
 
 // NewController returns a new gameserver crd controller
-func NewController(sidecarImage string,
+func NewController(minPort, maxPort int32,
+	sidecarImage string,
 	alwaysPullSidecarImage bool,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
@@ -89,6 +90,7 @@ func NewController(sidecarImage string,
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName),
+		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonInformerFactory),
 	}
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -118,7 +120,11 @@ func NewController(sidecarImage string,
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("ok"))
+		_, err := w.Write([]byte("ok"))
+		if err != nil {
+			logrus.WithError(err).Error("could not send ok response on healthz")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	})
 
 	c.server = &http.Server{
@@ -137,10 +143,15 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	logrus.Info("Starting health check...")
 	go func() {
 		if err := c.server.ListenAndServe(); err != nil {
-			logrus.WithError(err).Error("Could not listen on :8080")
+			if err == http.ErrServerClosed {
+				logrus.WithError(err).Info("health check: http server closed")
+			} else {
+				err := errors.Wrap(err, "Could not listen on :8080")
+				runtime.HandleError(logrus.WithError(err), err)
+			}
 		}
 	}()
-	defer c.server.Close()
+	defer c.server.Close() // nolint: errcheck
 
 	err := c.waitForEstablishedCRD()
 	if err != nil {
@@ -150,6 +161,10 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	logrus.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
+	}
+
+	if err := c.portAllocator.Run(stop); err != nil {
+		return err
 	}
 
 	logrus.Info("Starting workers...")
@@ -298,6 +313,16 @@ func (c *Controller) syncGameServerBlankState(gs *stablev1alpha1.GameServer) (*s
 	if gs.Status.State == "" && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		gsCopy := gs.DeepCopy()
 		gsCopy.ApplyDefaults()
+
+		// manage dynamic ports
+		if gsCopy.Spec.PortPolicy == stablev1alpha1.Dynamic {
+			port, err := c.portAllocator.Allocate()
+			if err != nil {
+				return gsCopy, errors.Wrapf(err, "error allocating port for GameServer %s", gsCopy.Name)
+			}
+			gsCopy.Spec.HostPort = port
+		}
+
 		logrus.WithField("gs", gsCopy).Info("Syncing Blank State")
 		gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 		return gs, errors.Wrapf(err, "error updating GameServer %s to default values", gs.Name)
@@ -384,6 +409,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = stablev1alpha1.Ready
 		gsCopy.Status.Address = addr
+		gsCopy.Status.NodeName = pod.Spec.NodeName
 		// HostPort is always going to be populated, even when dynamic
 		// This will be a double up of information, but it will be easier to read
 		gsCopy.Status.Port = gs.Spec.HostPort
@@ -398,8 +424,8 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
 	if gs.Status.State == stablev1alpha1.Shutdown && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 		logrus.WithField("gs", gs).Info("Syncing Shutdown State")
-		// let's be explicit about how we want to shut things down
-		p := metav1.DeletePropagationBackground
+		// Do it in the foreground, so the gameserver gets killed last
+		p := metav1.DeletePropagationForeground
 		err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
 		return nil, errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
 	}

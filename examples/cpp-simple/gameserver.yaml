@@ -15,11 +15,11 @@
 apiVersion: "stable.agon.io/v1alpha1"
 kind: GameServer
 metadata:
-  name: cpp-simple
+  # generate a unique name
+  # will need to be created with `kubectl create`
+  generateName: cpp-simple-
 spec:
-  portPolicy: "static"
   containerPort: 7654
-  hostPort: 7778
   template:
     spec:
       containers:

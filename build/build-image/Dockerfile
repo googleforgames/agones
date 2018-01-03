@@ -34,7 +34,7 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && un
     /opt/google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/root/.bashrc
 
 # update the path for both go and gcloud
-ENV PATH /usr/local/go/bin:/opt/google-cloud-sdk/bin:$PATH
+ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 
 # RUN gcloud components update
 RUN gcloud components update && gcloud components install kubectl
