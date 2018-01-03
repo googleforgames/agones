@@ -369,7 +369,7 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 
 			// this shouldn't happen, but if it does.
 			if err != nil {
-				logrus.WithField("gamserver", gs).WithError(err).Error("error creating pod from Game Server")
+				logrus.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
 				return c.moveToErrorState(gs)
 			}
 
