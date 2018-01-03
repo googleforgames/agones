@@ -21,12 +21,14 @@ import (
 
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg"
+	"github.com/agonio/agon/pkg/client/clientset/versioned"
 	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"k8s.io/client-go/rest"
 )
 
 const (
@@ -68,13 +70,24 @@ func main() {
 	if isLocal {
 		sdk.RegisterSDKServer(grpcServer, &Local{})
 	} else {
+		config, err := rest.InClusterConfig()
+		if err != nil {
+			logrus.WithError(err).Fatal("Could not create in cluster config")
+		}
+
+		agonClient, err := versioned.NewForConfig(config)
+		if err != nil {
+			logrus.WithError(err).Fatalf("Could not create the agon api clientset")
+		}
+
 		var s *Sidecar
-		s, err = NewSidecar(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv))
+		s, err = NewSidecar(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv), agonClient)
 		if err != nil {
 			logrus.WithError(err).Fatalf("Could not start sidecar")
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
+
 		go s.Run(ctx.Done())
 		sdk.RegisterSDKServer(grpcServer, s)
 	}

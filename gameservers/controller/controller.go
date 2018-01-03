@@ -34,6 +34,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -359,6 +360,16 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 							},
 						},
 					},
+				},
+				LivenessProbe: &corev1.Probe{
+					Handler: corev1.Handler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: "/healthz",
+							Port: intstr.FromInt(8080),
+						},
+					},
+					InitialDelaySeconds: 3,
+					PeriodSeconds:       3,
 				},
 			}
 			if c.alwaysPullSidecarImage {
