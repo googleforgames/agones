@@ -7,4 +7,4 @@ RUN apk --update add ca-certificates && \
                 chmod o+x /home/agon/sidecar
 
 USER agon
-ENTRYPOINT /home/agon/sidecar
+ENTRYPOINT ["/home/agon/sidecar"]

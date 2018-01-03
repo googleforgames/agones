@@ -7,4 +7,4 @@ RUN apk --update add ca-certificates && \
                 chmod o+x /home/agon/controller
 
 USER agon
-ENTRYPOINT /home/agon/controller
+ENTRYPOINT ["/home/agon/controller"]
