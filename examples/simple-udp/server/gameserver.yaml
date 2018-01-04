@@ -25,4 +25,4 @@ spec:
       containers:
       - name: simple-udp
         image: gcr.io/agon-images/udp-server:0.1
-        imagePullPolicy: Always
+        # imagePullPolicy: Always # add for development

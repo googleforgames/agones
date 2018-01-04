@@ -7,6 +7,10 @@ Rather than installing all the dependencies locally, you can test and build Agon
 built from the Dockerfile in this directory. There is an accompanying Makefile for all the common
 tasks you may wish to accomplish.
 
+**Note** - this has been tested on Linux. Tickets for [OSX](https://github.com/googleprivate/agon/issues/46) 
+and [Windows](https://github.com/googleprivate/agon/issues/47) exist, and require work. Testing on these platforms
+and reporting bugs is appreciated.
+
 <!-- ToC start -->
 ## Table of Contents
 
@@ -18,12 +22,13 @@ tasks you may wish to accomplish.
    1. [Make Variable Reference](#make-variable-reference)
       1. [VERSION](#version)
       1. [REGISTRY](#registry)
-      1. [KUBECONFIG](#kubeconfig)
+      1. [KUBEPATH](#kubepath)
       1. [CLUSTER_NAME](#cluster_name)
    1. [Make Target Reference](#make-target-reference)
       1. [Development Targets](#development-targets)
       1. [Build Image Targets](#build-image-targets)
       1. [Google Cloud Platform](#google-cloud-platform)
+      1. [Minikube](#minikube)
 <!-- ToC end -->
 
 ## GOPATH
@@ -69,8 +74,8 @@ to be open to UDP traffic.
 
 First step is to create a Google Cloud Project at https://console.cloud.google.com or reuse an existing one.
 
-The build tools (by default) maintain configuration for gcloud and kubectl within the `build` folder, so as to keep
-everything seperate (see below for overwriting these config locations). Therefore, once the project has been created,
+The build tools (by default) maintain configuration for gcloud within the `build` folder, so as to keep
+everything separate (see below for overwriting these config locations). Therefore, once the project has been created,
 we will need to authenticate out gcloud tooling against it. To do that run `make gcloud-init` and fill in the
 prompts as directed.
 
@@ -81,8 +86,8 @@ done you can go to the Google Cloud Platform console and see that a cluster is u
 name of the test cluster you can set the `CLUSTER_NAME` environemnt varlable to value you would like.
 
 To grab the kubectl authentication details for this cluster, run `make gcloud-auth-cluster`, which will generate the
-required Kubernetes security credintials for `kubectl`. This will be stored in `build/.kube` by default, but can also be
-overwritten by setting the `KUBECONFIG` environment variable before running the command.
+required Kubernetes security credintials for `kubectl`. This will be stored in `~/.kube` by default, but can also be
+overwritten by setting the `KUBEPATH` environment variable before running the command.
 
 Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
 
@@ -106,11 +111,60 @@ To push our images up at this point, is simple `make push` and that will push up
 project's container registry.
 
 Now that the images are pushed, to install the development version (with all imagePolicies set to always download),
-run `make install` and agon will install the image that you just built and pushed on the test cluster you
+run `make install` and Agon will install the image that you just built and pushed on the test cluster you
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
 ### Running a Test Minikube cluster
-(Coming soon: Track [this bug](https://github.com/googleprivate/agon/issues/30) for details)
+This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agon` profile, 
+
+Because Minikube runs on a virtualisation layer on the host, some of the standard build and development Make targets
+need to be replaced by Minikube specific targets.
+
+First, [install Minikube](https://github.com/kubernetes/minikube#installation), which may also require you to install
+a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as well.
+
+Next we will create the Agon Minikube cluster. Run `make minikube-test-cluster` to create an `agon` profile,
+create a Kubernetes cluster under this profile of the supported version, 
+and mount the development code inside the Minikube instance so we are able to build Agon inside Minikube.
+
+This will also install the kubectl authentication credentials in `~/.kube`, and set the 
+[`kubectl` context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) 
+to `agon`.
+
+Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
+
+Run `make minikube-shell` to enter the development shell. You should see a bash shell that has you as the root user.
+Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
+Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a couple of 
+options for building, pushing and installing Agon next.
+
+There are two options for building Agon, and depending on your virtualisation solution and its configuration
+each has it's pros and cons
+
+#### Building directly on Minikube
+Since Minikube allows you to [reuse its Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md)
+we can build our images to run Agon directly on Minikube!
+
+To do this, run `make minikube-build`, which will transfer the build image into the cluster 
+and run the `build-images` target on the Minikube instance, creating the images required to run Agon. 
+
+Again depending on your virtualisation layer, you may want to configure it to allow it to have access to more
+cores and/or memory than the default, to allow for faster compilation (or for it to compile at all).
+
+#### Pushing locally built images to Minikube
+You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+we needed to work with Agon locally. So instead of rebuilding them, can we push them straight into Minikube?
+
+You bet we can!
+
+Run `make minikube-push` which will send all of Agon's docker images from your local Docker into the Agon Minikube
+instance.
+
+This may be better option if you find building on Minikube slow, or you just prefer to build locally.
+
+Now that the images are pushed, to install the development version,
+run `make minikube-install` and Agon will install the images that you built and pushed to the Agon Minikube instance
+created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
 ### Next Steps
 
@@ -124,8 +178,9 @@ The version of this build. Version defaults to the short hash of the latest comm
 ### REGISTRY
 The registry that is being used to store docker images. Defaults to gcr.io/agon-images - the release + CI registry.
 
-### KUBECONFIG
-Where the kubectl configuration files are being stored for shell and kubectl targets. Defaults to build/.kube
+### KUBEPATH
+The directory the kubectl configuration files are being stored for shell and kubectl targets. 
+Defaults to ~/.kube (where your Kubernetes configs are likely to already exist)
 
 ### CLUSTER_NAME
 The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`
@@ -155,6 +210,9 @@ Run all tests
 
 #### `make push`
 Pushes all built images up to the `$(REGISTRY)`
+
+#### `make install`
+Installs the current development version of Agon into the Kubernetes cluster
 
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
@@ -189,7 +247,7 @@ Creates the build docker image
 
 ### Google Cloud Platform
 
-A set of utilities for setting up a Container Engine cluster on Google Cloud Platform,
+A set of utilities for setting up a Kubernetes Engine cluster on Google Cloud Platform,
 since it's an easy way to get a test cluster working with Kubernetes.
 
 #### `make gcloud-init`
@@ -205,3 +263,37 @@ Pulls down authentication information for kubectl against a cluster, name can be
 #### `make gcloud-auth-docker`
 Creates a short lived access to Google Cloud container repositories, so that you are able to call
 `docker push` directly. Useful when used in combination with `make push` command.
+
+### Minikube
+
+A set of utilities for setting up and running a [Minikube](https://github.com/kubernetes/minikube) instance, 
+for local development.
+
+Since Minikube runs locally, there are some targets that need to be used instead of the standard ones above.
+
+#### `minikube-test-cluster`
+Switches to an "agon" profile, and starts a kubernetes cluster
+of the right version. Also mounts the project directory into Minikube, 
+so that the build tools will work.
+
+Use DRIVER variable to change the VM driver (default virtualbox) if you so desire.
+
+#### `minikube-build`
+Convenience target to build Agon's docker images directly on Minikube.
+
+#### `minikube-push`
+Instead of building Agon's docker images inside Minikube, 
+use this command to push the local images that have already been built 
+via `make build` or `make build-images`.
+
+#### `minikube-install`
+Installs the current development version of Agon into the Kubernetes cluster.
+Use this instead of `make install`, as it disables PullAlways on the install.yaml
+
+#### `minikube-shell`
+Connecting to Minikube requires so enhanced permissions, so use this target
+instead of `make shell` to start an interactive shell for development on Minikube.
+
+Depending on the virtualisation driver/configuration, 
+it may be faster  to build locally and push, rather than building directly on Minikube.
+

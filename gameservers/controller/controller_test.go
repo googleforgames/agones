@@ -608,28 +608,52 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 	})
 }
 
-func TestControllerExternalIP(t *testing.T) {
+func TestControllerAddress(t *testing.T) {
 	t.Parallel()
 
-	c, mocks := newFakeController()
-	ipfixture := "12.12.12.12"
-	node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipfixture, Type: corev1.NodeExternalIP}}}}
-	pod := corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod"},
-		Spec: corev1.PodSpec{NodeName: node.ObjectMeta.Name}}
+	fixture := map[string]struct {
+		node            corev1.Node
+		expectedAddress string
+	}{
+		"node with external ip": {
+			node:            corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: "12.12.12.12", Type: corev1.NodeExternalIP}}}},
+			expectedAddress: "12.12.12.12",
+		},
+		"node with an internal ip": {
+			node:            corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: "11.11.11.11", Type: corev1.NodeInternalIP}}}},
+			expectedAddress: "11.11.11.11",
+		},
+		"node with internal and external ip": {
+			node: corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
+					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
+					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
+				}}},
+			expectedAddress: "9.9.9.8",
+		},
+	}
 
-	mocks.kubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &corev1.PodList{Items: []corev1.Pod{pod}}, nil
-	})
-	mocks.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
-	})
+	for name, fixture := range fixture {
+		t.Run(name, func(t *testing.T) {
+			c, mocks := newFakeController()
+			pod := corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod"},
+				Spec: corev1.PodSpec{NodeName: fixture.node.ObjectMeta.Name}}
 
-	_, cancel := startInformers(mocks, c.gameServerSynced)
-	defer cancel()
+			mocks.kubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				return true, &corev1.PodList{Items: []corev1.Pod{pod}}, nil
+			})
+			mocks.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				return true, &corev1.NodeList{Items: []corev1.Node{fixture.node}}, nil
+			})
 
-	addr, err := c.externalIP(&pod)
-	assert.Nil(t, err)
-	assert.Equal(t, ipfixture, addr)
+			_, cancel := startInformers(mocks, c.gameServerSynced)
+			defer cancel()
+
+			addr, err := c.Address(&pod)
+			assert.Nil(t, err)
+			assert.Equal(t, fixture.expectedAddress, addr)
+		})
+	}
 }
 
 func TestControllerGameServerPod(t *testing.T) {

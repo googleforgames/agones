@@ -45,10 +45,10 @@ spec:
       containers:
       - name: gameservers-controller
         image: ${REGISTRY}/gameservers-controller:${VERSION}
-        imagePullPolicy: Always
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: "true"
+          value: "${ALWAYS_PULL_SIDECAR}"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
           value: ${REGISTRY}/gameservers-sidecar:${VERSION}
         - name: MIN_PORT
