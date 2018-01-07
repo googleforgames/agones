@@ -7,13 +7,14 @@ Rather than installing all the dependencies locally, you can test and build Agon
 built from the Dockerfile in this directory. There is an accompanying Makefile for all the common
 tasks you may wish to accomplish.
 
-**Note** - this has been tested on Linux. Tickets for [OSX](https://github.com/googleprivate/agon/issues/46) 
-and [Windows](https://github.com/googleprivate/agon/issues/47) exist, and require work. Testing on these platforms
-and reporting bugs is appreciated.
-
 <!-- ToC start -->
-## Table of Contents
+# Table of Contents
 
+   1. [Table of Contents](#table-of-contents)
+   1. [Building on Different Platforms](#building-on-different-platforms)
+      1. [Linux](#linux)
+      1. [Windows](#windows)
+      1. [OSX](#osx)
    1. [GOPATH](#gopath)
    1. [Testing and Building](#testing-and-building)
       1. [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
@@ -31,14 +32,60 @@ and reporting bugs is appreciated.
       1. [Minikube](#minikube)
 <!-- ToC end -->
 
+## Building on Different Platforms
+
+### Linux
+- Install Make, either via `apt install make` or `yum install make` depending on platform.
+- [Install Docker](https://docs.docker.com/engine/installation/) for your Linux platform.
+
+### Windows
+Building and developing Agon requires you to use the 
+[Windows Subsystem for Linux](https://blogs.msdn.microsoft.com/wsl/)(WSL),
+as this makes it easy to create a (relatively) cross platform development and build system.
+
+- [Install WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+  - Preferred release is [Ubuntu 16.04](https://www.microsoft.com/en-us/store/p/ubuntu/9nblggh4msv6) or greater.
+- [Install Docker for Windows](https://docs.docker.com/docker-for-windows/install/)
+- Within WSL, Install [Docker for Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
+- Follow [this guide](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly)
+  from "Configure WSL to Connect to Docker for Windows" forward 
+  for integrating the Docker on WSL with the Windows Docker installation
+  - Note the binding of `/c` to `/mnt/c` (or drive of your choice) - this is very important!
+- Agon will need to be cloned somewhere on your `/c` (or drive of your choice) path, as that is what Docker will support mounts from
+- All interaction with Agon must be on the `/c` (or drive of your choice) path, otherwise Docker mounts will not work
+- Now the `make` commands can all be run from within your WSL shell
+
+Building and testing Agon will now work, as will developing on GKE.
+
+Issues with building and developing on Minikube are currently to be expected, but Agon will run on Minikube.
+
+You can see progress on this on the [Build Agon on Windows](https://github.com/googleprivate/agon/issues/47) ticket.
+
+### OSX
+
+- Install Make, `brew install make`, if it's not installed already
+- Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
+
+This has currently yet to be tested, but should have few issues around testing, building and running on GKE.
+
+Issues with building and developing on Minikube are currently to be expected, but Agon will run on Minikube.  
+
+Testing on OSX and reporting bugs are appreciated. 
+
+You can see progress on this on the [Build Agon on OSX](https://github.com/googleprivate/agon/issues/46) ticket.
+
+
 ## GOPATH
 
 This project should be cloned to the directory `$GOPATH/src/github.com/agonio/agon`
 for when you are developing locally, and require package resolution in your IDE.
 
-This is not required if you are simply building using the `make` targets
+This is not required if you are simply building using the `make` targets.
+
+If you are not familiar with GOPATHs, you can read [How to Write Go Code](https://golang.org/doc/code.html). 
 
 ## Testing and Building
+
 Make sure you are in the `build` directory to start.
 
 First, let's test all the code. To do this, run `make test`, which will execute all the unit tests for the codebase. 
