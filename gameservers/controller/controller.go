@@ -401,9 +401,9 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 		if err != nil {
 			return gs, errors.Wrapf(err, "error getting pod for GameServer %s", gs.ObjectMeta.Name)
 		}
-		addr, err := c.externalIP(pod)
+		addr, err := c.Address(pod)
 		if err != nil {
-			return gs, errors.Wrapf(err, "error getting external ip for GameServer %s", gs.ObjectMeta.Name)
+			return gs, errors.Wrapf(err, "error getting external Address for GameServer %s", gs.ObjectMeta.Name)
 		}
 
 		gsCopy := gs.DeepCopy()
@@ -479,8 +479,11 @@ func (c *Controller) listGameServerPods(gs *stablev1alpha1.GameServer) ([]*corev
 	return result, nil
 }
 
-// ExternalIP returns the external IP that the given Pod is being run on
-func (c Controller) externalIP(pod *corev1.Pod) (string, error) {
+// Address returns the IP that the given Pod is being run on
+// This should be the externalIP, but if the externalIP is
+// not set, it will fall back to the internalIP with a warning.
+// (basically because minikube only has an internalIP)
+func (c Controller) Address(pod *corev1.Pod) (string, error) {
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return "", errors.Wrapf(err, "error retrieving node %s for Pod %s", node.ObjectMeta.Name, pod.ObjectMeta.Name)
@@ -492,7 +495,15 @@ func (c Controller) externalIP(pod *corev1.Pod) (string, error) {
 		}
 	}
 
-	return "", errors.Errorf("Could not find an external ip for Node: #%s", node.ObjectMeta.Name)
+	// minikube only has an InternalIP on a Node, so we'll fall back to that.
+	logrus.WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
+	for _, a := range node.Status.Addresses {
+		if a.Type == corev1.NodeInternalIP {
+			return a.Address, nil
+		}
+	}
+
+	return "", errors.Errorf("Could not find an Address for Node: %s", node.ObjectMeta.Name)
 }
 
 // waitForEstablishedCRD blocks until CRD comes to an Established state.

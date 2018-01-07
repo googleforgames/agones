@@ -36,9 +36,11 @@ VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
 # The registry that is being used to store docker images
 REGISTRY ?= gcr.io/agon-images
 # Where the kubectl configuration files are being stored
-KUBECONFIG ?= $(build_path)/.kube
+KUBEPATH ?= ~/.kube
 # The (gcloud) test cluster that is being worked against
 CLUSTER_NAME ?= test-cluster
+# the profile to use when developing on minikube
+MINIKUBE_PROFILE ?= agon
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -48,7 +50,7 @@ agon_path := $(realpath $(build_path)/..)
 agon_package = github.com/agonio/agon
 mount_path = /go/src/$(agon_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
-				-v $(KUBECONFIG):/root/.kube \
+				-v $(KUBEPATH):/root/.kube \
 				-v $(agon_path):$(mount_path)
 
 # Use a hash of the Dockerfile for the tag, so when the Dockerfile changes,
@@ -84,11 +86,15 @@ test: ensure-build-image
 # Push all the images up to $(REGISTRY)
 push: push-gameservers-controller-image push-gameservers-sidecar-image
 
-# install the development version of Agon
+# Installs the current development version of Agon into the Kubernetes cluster
+install: ALWAYS_PULL_SIDECAR := true
+install: IMAGE_PULL_POLICY := "Always"
 install:
 	cp $(build_path)/install.yaml $(build_path)/.install.yaml
-	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' $(build_path)/.install.yaml
-	docker run --rm $(common_mounts) --entrypoint=kubectl $(build_tag) apply -f $(mount_path)/build/.install.yaml
+	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' \
+		-e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' \
+		$(build_path)/.install.yaml
+	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
 
 # Build a static binary for the gameserver controller
 build-gameservers-controller-binary: ensure-build-image
@@ -182,6 +188,13 @@ push-build-image:
 	docker tag $(build_tag) $(build_remote_tag)
 	docker push $(build_remote_tag)
 
+#    ____                   _         ____ _                 _
+#   / ___| ___   ___   __ _| | ___   / ___| | ___  _   _  __| |
+#  | |  _ / _ \ / _ \ / _` | |/ _ \ | |   | |/ _ \| | | |/ _` |
+#  | |_| | (_) | (_) | (_| | |  __/ | |___| | (_) | |_| | (_| |
+#   \____|\___/ \___/ \__, |_|\___|  \____|_|\___/ \__,_|\__,_|
+#                     |___/
+
 # Initialise the gcloud login and project configuration, if you are working with GCP
 gcloud-init: ensure-build-config
 	docker run --rm -it \
@@ -213,7 +226,67 @@ gcloud-auth-docker: ensure-build-image
 	sudo mv /tmp/gcloud-auth-docker/.dockercfg ~/
 	sudo chown $(USER) ~/.dockercfg
 
-# Clean the kubernetes and gcloud configuration
-clean-config:
-	-sudo rm -r $(build_path)/.kube
+# Clean the gcloud configuration
+clean-gcloud-config:
 	-sudo rm -r $(build_path)/.config
+
+#   __  __ _       _ _          _
+#  |  \/  (_)_ __ (_) | ___   _| |__   ___
+#  | |\/| | | '_ \| | |/ / | | | '_ \ / _ \
+#  | |  | | | | | | |   <| |_| | |_) |  __/
+#  |_|  |_|_|_| |_|_|_|\_\\__,_|_.__/ \___|
+#
+
+# Switches to an agon profile, and starts a kubernetes cluster
+# of the right version. Also mounts the project directory into minikube,
+# so that the build tools will work.
+#
+# Use DRIVER variable to change the VM driver (default virtualbox) if you so desire.
+minikube-test-cluster: DRIVER := virtualbox
+minikube-test-cluster: minikube-agon-profile
+	minikube start --kubernetes-version v1.8.0 --vm-driver $(DRIVER)
+	$(MAKE) minikube-ensure-build-image
+	minikube mount $(agon_path):$(agon_path)
+
+# switch to the agon cluster
+minikube-agon-profile:
+	minikube profile $(MINIKUBE_PROFILE)
+
+# Connecting to minikube requires so enhanced permissions, so use this target
+# instead of `make shell` to start an interactive shell for development on minikube.
+minikube-shell: ensure-build-image
+	eval $$(minikube docker-env --unset) && \
+	$(MAKE) shell ARGS="--network=host -v ~/.minikube:$(HOME)/.minikube"
+
+# Convenience target to build Agon's docker images directly on minikube.
+minikube-build: minikube-ensure-build-image
+	eval $$(minikube docker-env) && \
+	$(MAKE) build-images
+
+# ensure minikube has the build image, if not, grab it
+minikube-ensure-build-image: ensure-build-image
+	@if [ -z $$(minikube ssh -- docker images -q $(build_tag)) ]; then\
+		echo "Could not find $(build_tag) image. Transferring...";\
+		$(MAKE) minikube-transfer TAG=$(build_tag);\
+	fi
+
+# Instead of building Agon's docker images inside minikube,
+# use this command to push the local images that have already been built
+# via `make build` or `make build-images`.
+#
+# Depending on the virtualisation driver/configuration,
+# it may be faster  to build locally and push, rather than building directly on minikube.
+minikube-push:
+	$(MAKE) minikube-transfer TAG=$(sidecar_tag)
+	$(MAKE) minikube-transfer TAG=$(controller_tag)
+
+# Installs the current development version of Agon into the Kubernetes cluster.
+# Use this instead of `make install`, as it disables PullAlways on the install.yaml
+minikube-install: ensure-build-image
+	eval $$(minikube docker-env --unset) && \
+	$(MAKE) install ARGS="--network=host -v ~/.minikube:/$(HOME)/.minikube" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
+
+# convenience target for transferring images into minikube
+minikube-transfer:
+	eval $$(minikube docker-env --unset) && \
+	docker save $(TAG) | (eval $$(minikube docker-env) && docker load)
