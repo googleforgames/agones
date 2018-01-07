@@ -17,3 +17,4 @@
 *.iml
 bin
 *.o
+tmp

@@ -219,11 +219,11 @@ gcloud-auth-cluster: ensure-build-image
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
 gcloud-auth-docker: ensure-build-image
-	-sudo rm -rf /tmp/gcloud-auth-docker
-	mkdir -p /tmp/gcloud-auth-docker
-	-cp ~/.dockercfg /tmp/gcloud-auth-docker
-	docker run --rm $(common_mounts) -v /tmp/gcloud-auth-docker:/root --entrypoint="gcloud" $(build_tag) docker --authorize-only
-	sudo mv /tmp/gcloud-auth-docker/.dockercfg ~/
+	-sudo rm -rf $(build_path)/tmp
+	mkdir -p $(build_path)/tmp/gcloud-auth-docker
+	-cp ~/.dockercfg $(build_path)/tmp/gcloud-auth-docker
+	docker run --rm $(common_mounts) -v $(build_path)/tmp/gcloud-auth-docker:/root $(build_tag) gcloud docker --authorize-only
+	sudo mv $(build_path)/tmp/gcloud-auth-docker/.dockercfg ~/
 	sudo chown $(USER) ~/.dockercfg
 
 # Clean the gcloud configuration
