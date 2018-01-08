@@ -16,6 +16,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
@@ -29,7 +30,6 @@ import (
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/workqueue"
 )
 
@@ -42,25 +42,29 @@ type Sidecar struct {
 	namespace        string
 	gameServerGetter typedv1alpha1.GameServersGetter
 	queue            workqueue.RateLimitingInterface
+	server           *http.Server
 }
 
 // NewSidecar creates a Sidecar that sets up an
 // InClusterConfig for Kubernetes
-func NewSidecar(gameServerName, namespace string) (*Sidecar, error) {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not create Kubernetes in cluster config")
-	}
-
-	agonClient, err := versioned.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not create the agon api clientset")
-	}
+func NewSidecar(gameServerName, namespace string, agonClient versioned.Interface) (*Sidecar, error) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("ok"))
+		if err != nil {
+			logrus.WithError(err).Error("could not send ok response on healthz")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	})
 
 	s := &Sidecar{
 		gameServerName:   gameServerName,
 		namespace:        namespace,
 		gameServerGetter: agonClient.StableV1alpha1(),
+		server: &http.Server{
+			Addr:    ":8080",
+			Handler: mux,
+		},
 	}
 
 	s.queue = s.newWorkQueue()
@@ -79,6 +83,20 @@ func (s *Sidecar) newWorkQueue() workqueue.RateLimitingInterface {
 // Will block until stop is closed
 func (s *Sidecar) Run(stop <-chan struct{}) {
 	defer s.queue.ShutDown()
+
+	logrus.Info("Starting health check...")
+	go func() {
+		if err := s.server.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				logrus.WithError(err).Info("health check: http server closed")
+			} else {
+				err := errors.Wrap(err, "Could not listen on :8080")
+				runtime.HandleError(logrus.WithError(err), err)
+			}
+		}
+	}()
+	defer s.server.Close() // nolint: errcheck
+
 	logrus.Info("Starting worker")
 	wait.Until(s.runWorker, time.Second, stop)
 	<-stop

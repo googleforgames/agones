@@ -15,6 +15,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"net/http"
 	"testing"
 	"time"
 
@@ -28,8 +30,6 @@ import (
 )
 
 func TestSidecarRun(t *testing.T) {
-	t.Parallel()
-
 	fixtures := map[string]struct {
 		state v1alpha1.State
 		f     func(*Sidecar, context.Context)
@@ -71,12 +71,8 @@ func TestSidecarRun(t *testing.T) {
 				return true, gs, nil
 			})
 
-			sc := &Sidecar{
-				gameServerName:   "test",
-				namespace:        "default",
-				gameServerGetter: agonClient.StableV1alpha1(),
-			}
-			sc.queue = sc.newWorkQueue()
+			sc, err := NewSidecar("test", "default", agonClient)
+			assert.Nil(t, err)
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
@@ -91,5 +87,26 @@ func TestSidecarRun(t *testing.T) {
 				assert.Fail(t, "Timeout on Run")
 			}
 		})
+	}
+}
+
+func TestHealthCheck(t *testing.T) {
+	agonClient := &fake.Clientset{}
+
+	sc, err := NewSidecar("test", "default", agonClient)
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go sc.Run(ctx.Done())
+	resp, err := http.Get("http://localhost:8080/healthz")
+	assert.Nil(t, err, "health check error should be nil: %s", err)
+	assert.NotNil(t, resp)
+	if resp != nil {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		assert.Nil(t, err, "read response error should be nil")
+		assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
 	}
 }

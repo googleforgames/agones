@@ -382,8 +382,6 @@ func TestSyncGameServerBlankState(t *testing.T) {
 }
 
 func TestSyncGameServerCreatingState(t *testing.T) {
-	t.Parallel()
-
 	newFixture := func() *v1alpha1.GameServer {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingeContainerSpec(), Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
