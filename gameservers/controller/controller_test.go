@@ -280,6 +280,8 @@ func TestSyncGameServerDeletionTimestamp(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, deleted, "pod should be deleted")
 		assert.Equal(t, fixture, result)
+		assert.Equal(t, fmt.Sprintf("%s %s %s", corev1.EventTypeNormal,
+			fixture.Status.State, "Deleting Pod "+pod.ObjectMeta.Name), <-mocks.fakeRecorder.Events)
 	})
 
 	t.Run("GameServer's Pods have been deleted", func(t *testing.T) {
@@ -334,6 +336,7 @@ func TestSyncGameServerBlankState(t *testing.T) {
 		assert.Equal(t, fixture.ObjectMeta.Name, result.ObjectMeta.Name)
 		assert.Equal(t, fixture.ObjectMeta.Namespace, result.ObjectMeta.Namespace)
 		assert.Equal(t, v1alpha1.Creating, result.Status.State)
+		assert.Equal(t, fmt.Sprintf("%s %s %s", corev1.EventTypeNormal, v1alpha1.Creating, "Defaults applied"), <-mocks.fakeRecorder.Events)
 	})
 
 	t.Run("Gameserver with dynamic port state", func(t *testing.T) {
@@ -388,7 +391,7 @@ func TestSyncGameServerBlankState(t *testing.T) {
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
 		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-			return c.syncGameServerRequestReadyState(fixture)
+			return c.syncGameServerBlankState(fixture)
 		})
 	})
 }
@@ -426,7 +429,6 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
-
 			return true, pod, nil
 		})
 		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -442,6 +444,8 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, podCreated, "Pod should have been created")
 		assert.True(t, gsUpdated, "GameServer should have been updated")
+		assert.Contains(t, <-mocks.fakeRecorder.Events, "Pod")
+		assert.Contains(t, <-mocks.fakeRecorder.Events, "Synced")
 	})
 
 	t.Run("Previously started sync, created Pod, but didn't move to Starting", func(t *testing.T) {
@@ -514,7 +518,7 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
 		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-			return c.syncGameServerRequestReadyState(fixture)
+			return c.syncGameServerCreatingState(fixture)
 		})
 	})
 }
@@ -562,6 +566,7 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
 		assert.Equal(t, ipFixture, gs.Status.Address)
 		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
+		assert.Contains(t, <-mocks.fakeRecorder.Events, "Address and Port populated")
 	})
 
 	t.Run("GameServer with unknown state", func(t *testing.T) {
@@ -599,21 +604,21 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 		_, cancel := startInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		gs, err := c.syncGameServerShutdownState(gsFixture)
-		assert.Nil(t, gs)
+		err := c.syncGameServerShutdownState(gsFixture)
 		assert.Nil(t, err)
 		assert.True(t, checkDeleted, "GameServer should be deleted")
+		assert.Contains(t, <-mocks.fakeRecorder.Events, "Deletion started")
 	})
 
 	t.Run("GameServer with unknown state", func(t *testing.T) {
 		testWithUnknownState(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-			return c.syncGameServerRequestReadyState(fixture)
+			return fixture, c.syncGameServerShutdownState(fixture)
 		})
 	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
 		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-			return c.syncGameServerRequestReadyState(fixture)
+			return fixture, c.syncGameServerShutdownState(fixture)
 		})
 	})
 }
@@ -763,6 +768,7 @@ func newFakeController() (*Controller, mocks) {
 	m := newMocks()
 	c := NewController(10, 20, "sidecar:dev", false,
 		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonClient, m.agonInformerFactory)
+	c.recorder = m.fakeRecorder
 	return c, m
 }
 
