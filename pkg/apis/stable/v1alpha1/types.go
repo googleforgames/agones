@@ -82,7 +82,8 @@ type GameServerSpec struct {
 	// container defined
 	Container string `json:"container,omitempty"`
 	// PortPolicy defined the policy for how the HostPort is populated.
-	// `static` PortPolicy is the only current option. Dynamic port allocated will come in future releases.
+	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
+	// at installation time.
 	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"PortPolicy,omitempty"`
@@ -90,7 +91,7 @@ type GameServerSpec struct {
 	ContainerPort int32 `json:"containerPort"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
-	// Protocoal is the network protocol being used. Defaults to UDP. TCP is the only other option
+	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
