@@ -23,9 +23,11 @@ import (
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
 	"github.com/agonio/agon/pkg/client/clientset/versioned/fake"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	k8stesting "k8s.io/client-go/testing"
 )
 
@@ -100,13 +102,25 @@ func TestHealthCheck(t *testing.T) {
 	defer cancel()
 
 	go sc.Run(ctx.Done())
-	resp, err := http.Get("http://localhost:8080/healthz")
-	assert.Nil(t, err, "health check error should be nil: %s", err)
-	assert.NotNil(t, resp)
-	if resp != nil {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		assert.Nil(t, err, "read response error should be nil")
-		assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
-	}
+
+	// do a poll, because this code could run before the health check becomes live
+	err = wait.PollImmediate(time.Second, 20*time.Second, func() (done bool, err error) {
+		resp, err := http.Get("http://localhost:8080/healthz")
+		if err != nil {
+			logrus.WithError(err).Error("Error connecting to health")
+			return false, nil
+		}
+
+		assert.NotNil(t, resp)
+		if resp != nil {
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			assert.Nil(t, err, "read response error should be nil")
+			assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
+		}
+
+		return true, nil
+	})
+
+	assert.Nil(t, err, "Timeout on health check, %v", err)
 }
