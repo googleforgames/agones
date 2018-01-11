@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/informers"
 	kubefake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/record"
 )
 
 // holder for all my fakes and mocks
@@ -35,6 +36,7 @@ type mocks struct {
 	extClient              *extfake.Clientset
 	agonClient             *agonfake.Clientset
 	agonInformerFactory    externalversions.SharedInformerFactory
+	fakeRecorder           *record.FakeRecorder
 }
 
 func newMocks() mocks {
@@ -48,7 +50,9 @@ func newMocks() mocks {
 		kubeInformationFactory: kubeInformationFactory,
 		extClient:              extClient,
 		agonClient:             agonClient,
-		agonInformerFactory:    agonInformerFactory}
+		agonInformerFactory:    agonInformerFactory,
+		fakeRecorder:           record.NewFakeRecorder(10),
+	}
 	return m
 }
 

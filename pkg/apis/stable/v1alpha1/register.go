@@ -16,13 +16,20 @@ package v1alpha1
 
 import (
 	"github.com/agonio/agon/pkg/apis/stable"
+	"github.com/agonio/agon/pkg/util/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 // SchemeGroupVersion is group version used to register these objects
 var SchemeGroupVersion = schema.GroupVersion{Group: stable.GroupName, Version: "v1alpha1"}
+
+// Kind takes an unqualified kind and returns back a Group qualified GroupKind
+func Kind(kind string) schema.GroupKind {
+	return SchemeGroupVersion.WithKind(kind).GroupKind()
+}
 
 // Resource takes an unqualified resource and returns a Group qualified GroupResource
 func Resource(resource string) schema.GroupResource {
@@ -30,18 +37,18 @@ func Resource(resource string) schema.GroupResource {
 }
 
 var (
-	// SchemeBuilder is just runtime.SchemeBuilder
-	SchemeBuilder      runtime.SchemeBuilder
-	localSchemeBuilder = &SchemeBuilder
-	AddToScheme        = localSchemeBuilder.AddToScheme
+	// SchemeBuilder registers our types
+	SchemeBuilder = k8sruntime.NewSchemeBuilder(addKnownTypes)
+	// AddToScheme local alias for SchemeBuilder.AddToScheme
+	AddToScheme = SchemeBuilder.AddToScheme
 )
 
 func init() {
-	localSchemeBuilder.Register(addKnownTypes)
+	runtime.Must(AddToScheme(scheme.Scheme))
 }
 
 // Adds the list of known types to api.Scheme.
-func addKnownTypes(scheme *runtime.Scheme) error {
+func addKnownTypes(scheme *k8sruntime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&GameServer{},
 		&GameServerList{},
