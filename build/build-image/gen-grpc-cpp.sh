@@ -18,7 +18,7 @@ cd /go/src/github.com/agonio/agon
 protoc -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
 protoc -I . --cpp_out=./sdks/cpp sdk.proto
 mkdir /tmp/cpp
-ls ./sdks/cpp | xargs -I@ bash -c "cat ./build/boilerplate.go.txt ./sdks/cpp/@ >> /tmp/cpp/@"
+find ./sdks/cpp/ -type f \( -name '*.pb.cc' -or -name '*.pb.h' \) -printf "%f\n" | xargs -I@ bash -c "cat ./build/boilerplate.go.txt ./sdks/cpp/@ >> /tmp/cpp/@"
 # already has a header, so we'll remove it
 rm /tmp/cpp/sdk.grpc.pb.h
 mv /tmp/cpp/* ./sdks/cpp/
