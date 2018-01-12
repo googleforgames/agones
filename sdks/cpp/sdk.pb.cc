@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -109,13 +109,15 @@ void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\tsdk.proto\022\022stable.agon.io.sdk\"\007\n\005Empty"
-      "2\212\001\n\003SDK\022\?\n\005Ready\022\031.stable.agon.io.sdk.E"
+      "2\316\001\n\003SDK\022\?\n\005Ready\022\031.stable.agon.io.sdk.E"
       "mpty\032\031.stable.agon.io.sdk.Empty\"\000\022B\n\010Shu"
       "tdown\022\031.stable.agon.io.sdk.Empty\032\031.stabl"
-      "e.agon.io.sdk.Empty\"\000B\005Z\003sdkb\006proto3"
+      "e.agon.io.sdk.Empty\"\000\022B\n\006Health\022\031.stable"
+      ".agon.io.sdk.Empty\032\031.stable.agon.io.sdk."
+      "Empty\"\000(\001B\005Z\003sdkb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 196);
+      descriptor, 264);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
 }

@@ -15,13 +15,14 @@
 package main
 
 import (
+	"context"
 	"time"
 
-	"context"
-
+	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
 	agonfake "github.com/agonio/agon/pkg/client/clientset/versioned/fake"
 	"github.com/agonio/agon/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/client-go/informers"
 	kubefake "k8s.io/client-go/kubernetes/fake"
@@ -69,4 +70,17 @@ func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{},
 	}
 
 	return stop, cancel
+}
+
+func newSingleContainerSpec() v1alpha1.GameServerSpec {
+	return v1alpha1.GameServerSpec{
+		ContainerPort: 7777,
+		HostPort:      9999,
+		PortPolicy:    v1alpha1.Static,
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+			},
+		},
+	}
 }

@@ -20,9 +20,15 @@ option go_package = "sdk";
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 service SDK {
     // Call when the GameServer is ready
-    rpc Ready(Empty) returns (Empty) {}
+    rpc Ready (Empty) returns (Empty) {
+    }
     // Call when the GmaeServer is shutting down
-    rpc Shutdown(Empty) returns (Empty) {}
+    rpc Shutdown (Empty) returns (Empty) {
+    }
+    // Send a Empty every d Duration to declare that this GameSever is healthy
+    rpc Health (stream Empty) returns (Empty) {
+    }
 }
 
-message Empty {}
+message Empty {
+}

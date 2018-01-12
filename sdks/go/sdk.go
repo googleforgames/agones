@@ -30,6 +30,7 @@ const port = 59357
 type SDK struct {
 	client SDKClient
 	ctx    context.Context
+	health SDK_HealthClient
 }
 
 // NewSDK starts a new SDK instance, and connects to
@@ -46,7 +47,8 @@ func NewSDK() (*SDK, error) {
 		return s, errors.Wrapf(err, "could not connect to %s", addr)
 	}
 	s.client = NewSDKClient(conn)
-	return s, nil
+	s.health, err = s.client.Health(s.ctx)
+	return s, errors.Wrap(err, "could not set up health check")
 }
 
 // Ready marks the Game Server as ready to
@@ -61,4 +63,10 @@ func (s *SDK) Ready() error {
 func (s *SDK) Shutdown() error {
 	_, err := s.client.Shutdown(s.ctx, &Empty{})
 	return errors.Wrapf(err, "could not send Shutdown message")
+}
+
+// Health sends a ping to the health
+// check to indicate that this server is healthy
+func (s *SDK) Health() error {
+	return errors.Wrap(s.health.Send(&Empty{}), "could not send Health ping")
 }

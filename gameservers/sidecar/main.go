@@ -18,6 +18,9 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
+
+	"time"
 
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg"
@@ -28,19 +31,23 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 const (
 	port = 59357
 
-	// gameServerNameEnv is the environment variable for the Game Server name
+	// specifically env vars
 	gameServerNameEnv = "GAMESERVER_NAME"
-	// podNamespaceEnv is the environment variable for the current Game Server namespace
-	podNamespaceEnv = "POD_NAMESPACE"
+	podNamespaceEnv   = "POD_NAMESPACE"
 
-	// localFlag determines if this is running locally or not
-	localFlag = "local"
+	// Flags (that can also be env vars)
+	localFlag                  = "local"
+	healthDisabledFlag         = "health-disabled"
+	healthTimeoutFlag          = "health-timeout"
+	healthInitialDelayFlag     = "health-initial-delay"
+	healthFailureThresholdFlag = "health-failure-threshold"
 )
 
 func init() {
@@ -49,17 +56,42 @@ func init() {
 
 func main() {
 	viper.SetDefault(localFlag, false)
-	pflag.Bool(localFlag, viper.GetBool(localFlag), "Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	viper.SetDefault(healthDisabledFlag, false)
+	viper.SetDefault(healthTimeoutFlag, 5)
+	viper.SetDefault(healthInitialDelayFlag, 5)
+	viper.SetDefault(healthFailureThresholdFlag, 3)
+	pflag.Bool(localFlag, viper.GetBool(localFlag),
+		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
+		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
+	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
+		"Set this or HEALTH_TIMEOUT env to the number of seconds that the health check times out at. Defaults to 5")
+	pflag.Int64(healthInitialDelayFlag, viper.GetInt64(healthInitialDelayFlag),
+		"Set this or HEALTH_INITIAL_DELAY env to the number of seconds that the health will wait before starting. Defaults to 5")
+	pflag.Int64(healthFailureThresholdFlag, viper.GetInt64(healthFailureThresholdFlag),
+		"Set this or HEALTH_FAILURE_THRESHOLD env to the number of times the health check needs to fail to be deemed unhealthy. Defaults to 3")
 	pflag.Parse()
 
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
+	runtime.Must(viper.BindEnv(healthDisabledFlag))
+	runtime.Must(viper.BindEnv(healthTimeoutFlag))
+	runtime.Must(viper.BindEnv(healthInitialDelayFlag))
+	runtime.Must(viper.BindEnv(healthFailureThresholdFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	isLocal := viper.GetBool(localFlag)
+	healthDisabled := viper.GetBool(healthDisabledFlag)
+	healthTimeout := time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second
+	healthInitialDelay := time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second
+	healthFailureThreshold := viper.GetInt64(healthFailureThresholdFlag)
 
-	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).WithField("port", port).Info("Starting sdk sidecar")
+	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).WithField("port", port).
+		WithField(healthDisabledFlag, healthDisabled).WithField(healthTimeoutFlag, healthTimeout).
+		WithField(healthFailureThresholdFlag, healthFailureThreshold).
+		WithField(healthInitialDelayFlag, healthInitialDelay).Info("Starting sdk sidecar")
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
@@ -75,13 +107,19 @@ func main() {
 			logrus.WithError(err).Fatal("Could not create in cluster config")
 		}
 
+		kubeClient, err := kubernetes.NewForConfig(config)
+		if err != nil {
+			logrus.WithError(err).Fatal("Could not create the kubernetes clientset")
+		}
+
 		agonClient, err := versioned.NewForConfig(config)
 		if err != nil {
 			logrus.WithError(err).Fatalf("Could not create the agon api clientset")
 		}
 
 		var s *Sidecar
-		s, err = NewSidecar(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv), agonClient)
+		s, err = NewSidecar(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
+			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonClient)
 		if err != nil {
 			logrus.WithError(err).Fatalf("Could not start sidecar")
 		}

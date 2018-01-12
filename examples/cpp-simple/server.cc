@@ -21,6 +21,18 @@
 #include <agon/sdk.h>
 #include <grpc++/grpc++.h>
 
+// send health check pings
+void doHealth(agon::SDK *sdk) {
+    while (true) {
+        if (!sdk->Health()) {
+            std::cout << "Health ping failed" << std::endl;
+        } else {
+            std::cout << "Health ping sent" << std::endl;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+}
+
 int main() {
     std::cout << "C++ Game Server has started!" << std::endl;
 
@@ -34,6 +46,8 @@ int main() {
         return -1;
     }
     std::cout << "...handshake complete." << std::endl;
+
+    std::thread health (doHealth, sdk);
 
     std::cout << "Marking server as ready..." << std::endl;
     grpc::Status status = sdk->Ready();

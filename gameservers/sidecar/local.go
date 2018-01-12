@@ -15,7 +15,10 @@
 package main
 
 import (
+	"io"
+
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
@@ -38,4 +41,19 @@ func (l *Local) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 func (l *Local) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Shutdown request has been received!")
 	return &sdk.Empty{}, nil
+}
+
+// Health logs each health ping that comes down the stream
+func (l *Local) Health(stream sdk.SDK_HealthServer) error {
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			logrus.Info("Health stream closed.")
+			return stream.SendAndClose(&sdk.Empty{})
+		}
+		if err != nil {
+			return errors.Wrap(err, "Error with Health check")
+		}
+		logrus.Info("Health Ping Received!")
+	}
 }

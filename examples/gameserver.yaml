@@ -20,8 +20,6 @@
 # This definition sets hostPort + containerPort combo for the game server,
 # and provides a sidecar for this game server that the SDK will connect with.
 #
-# By default, RestartPolicy is set to "Never", but can be overwritten.
-#
 
 apiVersion: "stable.agon.io/v1alpha1"
 kind: GameServer
@@ -44,6 +42,18 @@ spec:
   hostPort: 7777
   # protocol being used. Defaults to UDP. TCP is the only other option
   protocol: UDP
+  # Health checking for the running game server
+  health:
+    # Disable health checking. defaults to false, but can be set to true
+    disabled: false
+    # Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+    initialDelaySeconds: 5
+    # If the `Health()` function doesn't get called at least once every period (seconds), then
+    # the game server is not healthy. Defaults to 5
+    periodSeconds: 5
+    # Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+    # Defaults to 3. Minimum value is 1
+    failureThreshold: 3
   # Pod template configuration
   # https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#podtemplate-v1-core
   template:

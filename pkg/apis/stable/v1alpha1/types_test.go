@@ -53,12 +53,16 @@ func TestGameServerFindGameServerContainer(t *testing.T) {
 func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
+	type expected struct {
+		protocol corev1.Protocol
+		state    State
+		policy   PortPolicy
+		health   Health
+	}
 	data := map[string]struct {
-		gameServer        GameServer
-		expectedContainer string
-		expectedProtocol  corev1.Protocol
-		expectedState     State
-		expectedPolicy    PortPolicy
+		gameServer GameServer
+		container  string
+		expected   expected
 	}{
 		"set basic defaults on a very simple gameserver": {
 			gameServer: GameServer{
@@ -66,27 +70,67 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
-			expectedContainer: "testing",
-			expectedProtocol:  "UDP",
-			expectedState:     Creating,
-			expectedPolicy:    Dynamic,
+			container: "testing",
+			expected: expected{
+				protocol: "UDP",
+				state:    Creating,
+				policy:   Dynamic,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    3,
+					InitialDelaySeconds: 5,
+					PeriodSeconds:       5,
+				},
+			},
 		},
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing2", Protocol: "TCP",
 					PortPolicy: Static,
+					Health: Health{
+						Disabled:            false,
+						PeriodSeconds:       12,
+						InitialDelaySeconds: 11,
+						FailureThreshold:    10,
+					},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-							{Name: "testing2", Image: "testing/image2"}}},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{Name: "testing", Image: "testing/image"},
+								{Name: "testing2", Image: "testing/image2"}}},
 					},
 				},
 				Status: GameServerStatus{State: "TestState"}},
-			expectedContainer: "testing2",
-			expectedProtocol:  "TCP",
-			expectedState:     "TestState",
-			expectedPolicy:    Static,
+			container: "testing2",
+			expected: expected{
+				protocol: "TCP",
+				state:    "TestState",
+				policy:   Static,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    10,
+					InitialDelaySeconds: 11,
+					PeriodSeconds:       12,
+				},
+			},
+		},
+		"health is disabled": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					Health: Health{Disabled: true},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol: "UDP",
+				state:    Creating,
+				policy:   Dynamic,
+				health: Health{
+					Disabled: true,
+				},
+			},
 		},
 	}
 
@@ -96,9 +140,10 @@ func TestGameServerApplyDefaults(t *testing.T) {
 
 			spec := test.gameServer.Spec
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
-			assert.Equal(t, test.expectedContainer, spec.Container)
-			assert.Equal(t, test.expectedProtocol, spec.Protocol)
-			assert.Equal(t, test.expectedState, test.gameServer.Status.State)
+			assert.Equal(t, test.container, spec.Container)
+			assert.Equal(t, test.expected.protocol, spec.Protocol)
+			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
+			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 		})
 	}
 }
@@ -123,6 +168,7 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, fixture.Spec.HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
 	assert.Equal(t, fixture.Spec.ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
