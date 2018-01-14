@@ -37,6 +37,8 @@ tasks you may wish to accomplish.
 ### Linux
 - Install Make, either via `apt install make` or `yum install make` depending on platform.
 - [Install Docker](https://docs.docker.com/engine/installation/) for your Linux platform.
+- (optional) Minikube will require [VirtualBox](https://www.virtualbox.org) and will need to be installed if you wish
+  to develop on Minikube 
 
 ### Windows
 Building and developing Agon requires you to use the 
@@ -54,21 +56,20 @@ as this makes it easy to create a (relatively) cross platform development and bu
 - Agon will need to be cloned somewhere on your `/c` (or drive of your choice) path, as that is what Docker will support mounts from
 - All interaction with Agon must be on the `/c` (or drive of your choice) path, otherwise Docker mounts will not work
 - Now the `make` commands can all be run from within your WSL shell
-
-Building and testing Agon will now work, as will developing on GKE.
-
-Issues with building and developing on Minikube are currently to be expected, but Agon will run on Minikube.
-
-You can see progress on this on the [Build Agon on Windows](https://github.com/googleprivate/agon/issues/47) ticket.
+- (optional) Minikube is supported via the [HyperV](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/index) 
+  driver - the same virtualisation platform as the Docker installation.
+- **Note**: If you want to dev and test with Minikube, you **must** run WSL as Administrator, otherwise Minikube can't control HyperV.
 
 ### OSX
 
 - Install Make, `brew install make`, if it's not installed already
 - Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
+- (optional) Minikube will require [VirtualBox](https://www.virtualbox.org) and will need to be installed if you wish
+  to develop on Minikube 
 
 This has currently yet to be tested, but should have few issues around testing, building and running on GKE.
 
-Issues with building and developing on Minikube are currently to be expected, but Agon will run on Minikube.  
+Issues with building and developing on Minikube are currently expected, due to lack of testing, but Agon will run on Minikube.  
 
 Testing on OSX and reporting bugs are appreciated. 
 
@@ -169,10 +170,11 @@ need to be replaced by Minikube specific targets.
 
 First, [install Minikube](https://github.com/kubernetes/minikube#installation), which may also require you to install
 a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as well.
+Check the [Building on Different Platforms](#building-on-different-platforms) above for details on what virtualisation 
+solution to use.
 
-Next we will create the Agon Minikube cluster. Run `make minikube-test-cluster` to create an `agon` profile,
-create a Kubernetes cluster under this profile of the supported version, 
-and mount the development code inside the Minikube instance so we are able to build Agon inside Minikube.
+Next we will create the Agon Minikube cluster. Run `make minikube-test-cluster` to create the `agon` profile,
+and a Kubernetes cluster of the supported version under this profile.
 
 This will also install the kubectl authentication credentials in `~/.kube`, and set the 
 [`kubectl` context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) 
@@ -182,36 +184,31 @@ Great! Now we are setup, let's try out the development shell, and see if our `ku
 
 Run `make minikube-shell` to enter the development shell. You should see a bash shell that has you as the root user.
 Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
-Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a couple of 
-options for building, pushing and installing Agon next.
+Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and 
+installing Agon on Minikube next.
 
-There are two options for building Agon, and depending on your virtualisation solution and its configuration
-each has it's pros and cons
-
-#### Building directly on Minikube
-Since Minikube allows you to [reuse its Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md)
-we can build our images to run Agon directly on Minikube!
-
-To do this, run `make minikube-build`, which will transfer the build image into the cluster 
-and run the `build-images` target on the Minikube instance, creating the images required to run Agon. 
-
-Again depending on your virtualisation layer, you may want to configure it to allow it to have access to more
-cores and/or memory than the default, to allow for faster compilation (or for it to compile at all).
-
-#### Pushing locally built images to Minikube
 You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
-we needed to work with Agon locally. So instead of rebuilding them, can we push them straight into Minikube?
-
-You bet we can!
+we needed to work with Agon locally. We can push these images them straight into Minikube very easily!
 
 Run `make minikube-push` which will send all of Agon's docker images from your local Docker into the Agon Minikube
 instance.
 
-This may be better option if you find building on Minikube slow, or you just prefer to build locally.
-
 Now that the images are pushed, to install the development version,
-run `make minikube-install` and Agon will install the images that you built and pushed to the Agon Minikube instance
-created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
+run `make minikube-install` and Agon will install the images that you built and pushed to the Agon Minikube instance 
+(if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`).
+
+It's worth noting that Minikube does let you [reuse its Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md),
+and build directly on Minikube, but in this case this approach is far simpler, 
+and makes cross-platform support for the build system much easier.
+
+If you find you also want to push your own images into Minikube, 
+the convenience make target `make minikube-transfer-image` can be run with the `TAG` argument specifying 
+the tag of the Docker image you wish to transfer into Minikube.
+
+For example:
+```bash
+$ make minikube-transfer-image TAG=myimage:0.1
+```
 
 ### Next Steps
 
@@ -320,18 +317,14 @@ Since Minikube runs locally, there are some targets that need to be used instead
 
 #### `minikube-test-cluster`
 Switches to an "agon" profile, and starts a kubernetes cluster
-of the right version. Also mounts the project directory into Minikube, 
-so that the build tools will work.
+of the right version.
 
-Use DRIVER variable to change the VM driver (default virtualbox) if you so desire.
-
-#### `minikube-build`
-Convenience target to build Agon's docker images directly on Minikube.
+Use MINIKUBE_DRIVER variable to change the VM driver 
+(defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
 
 #### `minikube-push`
-Instead of building Agon's docker images inside Minikube, 
-use this command to push the local images that have already been built 
-via `make build` or `make build-images`.
+Push the local Agon Docker images that have already been built 
+via `make build` or `make build-images` into the "agon" minikube instance.
 
 #### `minikube-install`
 Installs the current development version of Agon into the Kubernetes cluster.
@@ -341,6 +334,6 @@ Use this instead of `make install`, as it disables PullAlways on the install.yam
 Connecting to Minikube requires so enhanced permissions, so use this target
 instead of `make shell` to start an interactive shell for development on Minikube.
 
-Depending on the virtualisation driver/configuration, 
-it may be faster  to build locally and push, rather than building directly on Minikube.
-
+#### `minikube-transfer-image`
+Convenience target for transferring images into minikube.
+Use TAG to specify the image to transfer into minikube
