@@ -63,6 +63,26 @@ sidecar_tag = $(REGISTRY)/gameservers-sidecar:$(VERSION)
 
 go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
 
+# TODO: update documentation, variables, WSL admin, targets
+
+#    ___  ____    ___            _           _
+#   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
+#  | | | \___ \   | || '_ \ / __| | | | |/ _` |/ _ \
+#  | |_| |___) |  | || | | | (__| | |_| | (_| |  __/
+#   \___/|____/  |___|_| |_|\___|_|\__,_|\__,_|\___|
+#
+
+uname := $(shell uname -s)
+ifneq ($(findstring Microsoft,$(shell uname -r)),)
+    osinclude := windows.mk
+else ifeq ($(uname),Linux)
+	osinclude := linux.mk
+else ifeq ($(uname),Darwin)
+	osinclude := osx.mk
+endif
+
+include ./includes/$(osinclude)
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -168,7 +188,7 @@ clean-build-image:
 	docker rmi $(build_tag)
 
 ensure-build-config:
-	-mkdir -p $(build_path)/.kube
+	-mkdir -p $(KUBEPATH)
 	-mkdir -p $(build_path)/.config/gcloud
 
 # create the build image if it doesn't exist
@@ -237,56 +257,36 @@ clean-gcloud-config:
 #  |_|  |_|_|_| |_|_|_|\_\\__,_|_.__/ \___|
 #
 
-# Switches to an agon profile, and starts a kubernetes cluster
-# of the right version. Also mounts the project directory into minikube,
-# so that the build tools will work.
+# Switches to an "agon" profile, and starts a kubernetes cluster
+# of the right version.
 #
-# Use DRIVER variable to change the VM driver (default virtualbox) if you so desire.
-minikube-test-cluster: DRIVER := virtualbox
+# Use MINIKUBE_DRIVER variable to change the VM driver 
+# (defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
 minikube-test-cluster: minikube-agon-profile
-	minikube start --kubernetes-version v1.8.0 --vm-driver $(DRIVER)
-	$(MAKE) minikube-ensure-build-image
-	minikube mount $(agon_path):$(agon_path)
+	$(MINIKUBE) start --kubernetes-version v1.8.0 --vm-driver $(MINIKUBE_DRIVER)
+	$(MAKE) minikube-post-start
 
 # switch to the agon cluster
 minikube-agon-profile:
-	minikube profile $(MINIKUBE_PROFILE)
+	$(MINIKUBE) profile $(MINIKUBE_PROFILE)
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
 minikube-shell: ensure-build-image
-	eval $$(minikube docker-env --unset) && \
-	$(MAKE) shell ARGS="--network=host -v ~/.minikube:$(HOME)/.minikube"
+	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount)"
 
-# Convenience target to build Agon's docker images directly on minikube.
-minikube-build: minikube-ensure-build-image
-	eval $$(minikube docker-env) && \
-	$(MAKE) build-images
-
-# ensure minikube has the build image, if not, grab it
-minikube-ensure-build-image: ensure-build-image
-	@if [ -z $$(minikube ssh -- docker images -q $(build_tag)) ]; then\
-		echo "Could not find $(build_tag) image. Transferring...";\
-		$(MAKE) minikube-transfer TAG=$(build_tag);\
-	fi
-
-# Instead of building Agon's docker images inside minikube,
-# use this command to push the local images that have already been built
-# via `make build` or `make build-images`.
-#
-# Depending on the virtualisation driver/configuration,
-# it may be faster  to build locally and push, rather than building directly on minikube.
+# Push the local Agon Docker images that have already been built
+# via `make build` or `make build-images` into the "agon" minikube instance.
 minikube-push:
-	$(MAKE) minikube-transfer TAG=$(sidecar_tag)
-	$(MAKE) minikube-transfer TAG=$(controller_tag)
+	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
+	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
 
 # Installs the current development version of Agon into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: ensure-build-image
-	eval $$(minikube docker-env --unset) && \
-	$(MAKE) install ARGS="--network=host -v ~/.minikube:/$(HOME)/.minikube" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
+	$(MAKE) install ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
 
-# convenience target for transferring images into minikube
-minikube-transfer:
-	eval $$(minikube docker-env --unset) && \
-	docker save $(TAG) | (eval $$(minikube docker-env) && docker load)
+# Convenience target for transferring images into minikube.
+# Use TAG to specify the image to transfer into minikube
+minikube-transfer-image:
+	docker save $(TAG) | ($(MINIKUBE_DOCKER_ENV) && docker load)
