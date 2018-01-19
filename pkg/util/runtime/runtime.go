@@ -17,14 +17,30 @@
 package runtime
 
 import (
+	"fmt"
+
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
+// stackTracer is the pkg/errors stacktrace interface
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
 // replace the standard glog error logger, with a logrus one
 func init() {
 	runtime.ErrorHandlers[0] = func(err error) {
-		logrus.Errorf("stack: %+v", err)
+		if err, ok := err.(stackTracer); ok {
+			var stack []string
+			for _, f := range err.StackTrace() {
+				stack = append(stack, fmt.Sprintf("%+v", f))
+			}
+			logrus.WithField("stack", stack).Error(err)
+		} else {
+			logrus.Error(err)
+		}
 	}
 }
 
