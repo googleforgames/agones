@@ -109,7 +109,7 @@ push: push-gameservers-controller-image push-gameservers-sidecar-image
 # Installs the current development version of Agon into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
-install:
+install: ensure-build-image
 	cp $(build_path)/install.yaml $(build_path)/.install.yaml
 	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' \
 		-e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' \
@@ -272,18 +272,18 @@ minikube-agon-profile:
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
-minikube-shell: ensure-build-image
+minikube-shell: ensure-build-image minikube-agon-profile
 	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount)"
 
 # Push the local Agon Docker images that have already been built
 # via `make build` or `make build-images` into the "agon" minikube instance.
-minikube-push:
+minikube-push: minikube-agon-profile
 	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
 	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
 
 # Installs the current development version of Agon into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
-minikube-install: ensure-build-image
+minikube-install: minikube-agon-profile
 	$(MAKE) install ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
 
 # Convenience target for transferring images into minikube.
