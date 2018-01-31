@@ -32,9 +32,9 @@ type stackTracer interface {
 // replace the standard glog error logger, with a logrus one
 func init() {
 	runtime.ErrorHandlers[0] = func(err error) {
-		if err, ok := err.(stackTracer); ok {
+		if stackTrace, ok := err.(stackTracer); ok {
 			var stack []string
-			for _, f := range err.StackTrace() {
+			for _, f := range stackTrace.StackTrace() {
 				stack = append(stack, fmt.Sprintf("%+v", f))
 			}
 			logrus.WithField("stack", stack).Error(err)
