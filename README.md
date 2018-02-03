@@ -25,9 +25,26 @@ _Note:_ There has yet to be a release of Agon, so you will need to edit the `ins
 development release or [build from source](build/README.md) 
 
 ## Usage
-See the [sdks](sdks) and [examples](examples) directories.
+
+Documentation and usage guides on how to develop and host dedicated game servers on top of Agon.
 
 More documentation forthcoming.
+
+### Quickstarts: 
+ - Create a Game Server (forthcoming) 
+
+### Guides
+ - Integrating the C++ SDK (forthcoming)
+ - GameServer Health Checking (forthcoming)
+
+### Reference
+- [SDK](sdks)
+
+### Examples
+- [Full GameServer Configuration](./examples/gameserver.yaml)
+- [Simple UDP](./examples/simple-udp) (Go) - simple server and client that send UDP packets back and forth.
+- [CPP Simple](./examples/cpp-simple) (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
+- [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agon. 
  
 ## Development and Contribution
 See the tools in the [build](build/README.md) directory for testing and building Agon from source.
