@@ -63,8 +63,6 @@ sidecar_tag = $(REGISTRY)/gameservers-sidecar:$(VERSION)
 
 go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
 
-# TODO: update documentation, variables, WSL admin, targets
-
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
 #  | | | \___ \   | || '_ \ / __| | | | |/ _` |/ _ \

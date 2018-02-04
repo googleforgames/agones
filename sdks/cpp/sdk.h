@@ -33,6 +33,9 @@ namespace agon {
             // Marks the Game Server as ready to receive connections
             grpc::Status Ready();
 
+            // Send Health ping. This is a synchronous request.
+            bool Health();
+
             // Marks the Game Server as ready to shutdown
             grpc::Status Shutdown();
 
@@ -41,5 +44,6 @@ namespace agon {
         private:
             std::shared_ptr<grpc::Channel> channel;
             std::unique_ptr<stable::agon::io::sdk::SDK::Stub> stub;
+            std::unique_ptr< ::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>> health;
     };
 }

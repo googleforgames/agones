@@ -15,6 +15,7 @@
 package main
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/agonio/agon/gameservers/sidecar/sdk"
@@ -32,4 +33,19 @@ func TestLocal(t *testing.T) {
 
 	_, err = l.Shutdown(ctx, e)
 	assert.Nil(t, err, "Shutdown should not error")
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	stream := newMockStream()
+
+	go func() {
+		err := l.Health(stream)
+		assert.Nil(t, err)
+		wg.Done()
+	}()
+
+	stream.msgs <- &sdk.Empty{}
+	close(stream.msgs)
+
+	wg.Wait()
 }

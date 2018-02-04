@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ namespace sdk {
 static const char* SDK_method_names[] = {
   "/stable.agon.io.sdk.SDK/Ready",
   "/stable.agon.io.sdk.SDK/Shutdown",
+  "/stable.agon.io.sdk.SDK/Health",
 };
 
 std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -46,6 +47,7 @@ std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelI
 SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_Ready_(SDK_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Shutdown_(SDK_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Health_(SDK_method_names[2], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::stable::agon::io::sdk::Empty* response) {
@@ -72,6 +74,18 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agon::io::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Shutdown_, context, request, false);
 }
 
+::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>* SDK::Stub::HealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response) {
+  return ::grpc::internal::ClientWriterFactory< ::stable::agon::io::sdk::Empty>::Create(channel_.get(), rpcmethod_Health_, context, response);
+}
+
+::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>* SDK::Stub::AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncWriterFactory< ::stable::agon::io::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Health_, context, response, true, tag);
+}
+
+::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>* SDK::Stub::PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncWriterFactory< ::stable::agon::io::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Health_, context, response, false, nullptr);
+}
+
 SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[0],
@@ -83,6 +97,11 @@ SDK::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agon::io::sdk::Empty, ::stable::agon::io::sdk::Empty>(
           std::mem_fn(&SDK::Service::Shutdown), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[2],
+      ::grpc::internal::RpcMethod::CLIENT_STREAMING,
+      new ::grpc::internal::ClientStreamingHandler< SDK::Service, ::stable::agon::io::sdk::Empty, ::stable::agon::io::sdk::Empty>(
+          std::mem_fn(&SDK::Service::Health), this)));
 }
 
 SDK::Service::~Service() {
@@ -98,6 +117,13 @@ SDK::Service::~Service() {
 ::grpc::Status SDK::Service::Shutdown(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) {
   (void) context;
   (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agon::io::sdk::Empty>* reader, ::stable::agon::io::sdk::Empty* response) {
+  (void) context;
+  (void) reader;
   (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }

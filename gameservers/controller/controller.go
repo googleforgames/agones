@@ -64,6 +64,7 @@ type Controller struct {
 	nodeLister             corelisterv1.NodeLister
 	queue                  workqueue.RateLimitingInterface
 	portAllocator          *PortAllocator
+	healthController       *HealthController
 	server                 *http.Server
 	recorder               record.EventRecorder
 	// this allows for overwriting for testing purposes
@@ -98,8 +99,9 @@ func NewController(minPort, maxPort int32,
 		gameServerLister:       gameServers.Lister(),
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
-		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName),
+		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".GameServerController"),
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonInformerFactory),
+		healthController:       NewHealthController(kubeClient, agonClient, kubeInformerFactory, agonInformerFactory),
 		recorder:               recorder,
 	}
 
@@ -120,8 +122,9 @@ func NewController(minPort, maxPort int32,
 		DeleteFunc: func(obj interface{}) {
 			pod := obj.(*corev1.Pod)
 			if stablev1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
-				owner := metav1.GetControllerOf(pod)
-				c.enqueueGameServer(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+				if owner := metav1.GetControllerOf(pod); owner != nil {
+					c.enqueueGameServer(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+				}
 			}
 		},
 	})
@@ -173,9 +176,13 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
+	// Run the Port Allocator
 	if err := c.portAllocator.Run(stop); err != nil {
 		return err
 	}
+
+	// Run the Health Controller
+	go c.healthController.Run(stop)
 
 	logrus.Info("Starting workers...")
 	for i := 0; i < threadiness; i++ {
@@ -365,38 +372,7 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 	}
 
 	if len(ret) == 0 {
-		sidecar := corev1.Container{
-			Name:  "agon-gameserver-sidecar",
-			Image: c.sidecarImage,
-			Env: []corev1.EnvVar{
-				{
-					Name:  "GAMESERVER_NAME",
-					Value: gs.ObjectMeta.Name,
-				},
-				{
-					Name: "POD_NAMESPACE",
-					ValueFrom: &corev1.EnvVarSource{
-						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: "metadata.namespace",
-						},
-					},
-				},
-			},
-			LivenessProbe: &corev1.Probe{
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Path: "/healthz",
-						Port: intstr.FromInt(8080),
-					},
-				},
-				InitialDelaySeconds: 3,
-				PeriodSeconds:       3,
-			},
-		}
-		if c.alwaysPullSidecarImage {
-			sidecar.ImagePullPolicy = corev1.PullAlways
-		}
-
+		sidecar := c.sidecar(gs)
 		pod, err := gs.Pod(sidecar)
 
 		// this shouldn't happen, but if it does.
@@ -404,6 +380,8 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 			logrus.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
 			return c.moveToErrorState(gs, err.Error())
 		}
+
+		c.addGameServerHealthCheck(gs, pod)
 
 		logrus.WithField("pod", pod).Info("creating Pod for GameServer")
 		pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
@@ -429,11 +407,76 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 	return gs, nil
 }
 
+// sidecar creates the sidecar container for a given GameServer
+func (c *Controller) sidecar(gs *stablev1alpha1.GameServer) corev1.Container {
+	sidecar := corev1.Container{
+		Name:  "agon-gameserver-sidecar",
+		Image: c.sidecarImage,
+		Env: []corev1.EnvVar{
+			{
+				Name:  "GAMESERVER_NAME",
+				Value: gs.ObjectMeta.Name,
+			},
+			{
+				Name: "POD_NAMESPACE",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.namespace",
+					},
+				},
+			},
+		},
+		LivenessProbe: &corev1.Probe{
+			Handler: corev1.Handler{
+				HTTPGet: &corev1.HTTPGetAction{
+					Path: "/healthz",
+					Port: intstr.FromInt(8080),
+				},
+			},
+			InitialDelaySeconds: 3,
+			PeriodSeconds:       3,
+		},
+	}
+	if c.alwaysPullSidecarImage {
+		sidecar.ImagePullPolicy = corev1.PullAlways
+	}
+	return sidecar
+}
+
+// addGameServerHealthCheck adds the http health check to the GameServer container
+func (c *Controller) addGameServerHealthCheck(gs *stablev1alpha1.GameServer, pod *corev1.Pod) {
+	if !gs.Spec.Health.Disabled {
+		for i, c := range pod.Spec.Containers {
+			logrus.WithField("c", c.Name).WithField("Container", gs.Spec.Container).Info("Checking name and container")
+			if c.Name == gs.Spec.Container {
+				logrus.WithField("liveness", c.LivenessProbe).Info("Found container")
+				if c.LivenessProbe == nil {
+					c.LivenessProbe = &corev1.Probe{
+						Handler: corev1.Handler{
+							HTTPGet: &corev1.HTTPGetAction{
+								Path: "/gshealthz",
+								Port: intstr.FromInt(8080),
+							},
+						},
+						InitialDelaySeconds: gs.Spec.Health.InitialDelaySeconds,
+						PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
+						FailureThreshold:    gs.Spec.Health.FailureThreshold,
+					}
+					logrus.WithField("container", c).WithField("pod", pod).Info("Final pod")
+					pod.Spec.Containers[i] = c
+				}
+				break
+			}
+		}
+	}
+}
+
 // syncGameServerRequestReadyState checks if the Game Server is Requesting to be ready,
 // and then adds the IP and Port information to the Status and marks the GameServer
 // as Ready
 func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if !(gs.Status.State == stablev1alpha1.RequestReady && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !(gs.Status.State == stablev1alpha1.RequestReady && gs.ObjectMeta.DeletionTimestamp.IsZero()) ||
+		gs.Status.State == stablev1alpha1.Unhealthy {
 		return gs, nil
 	}
 

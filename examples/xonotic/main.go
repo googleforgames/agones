@@ -15,8 +15,10 @@
 package main
 
 import (
-	"github.com/agonio/agon/sdks/go"
 	"log"
+	"time"
+
+	"github.com/agonio/agon/sdks/go"
 )
 
 // main cheats a little, and just declares the game server as ready
@@ -30,6 +32,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not send ready message")
 	}
+
+	doHealth(s)
 }
 
-
+// doHealth sends the regular Health Pings
+func doHealth(sdk *sdk.SDK) {
+	tick := time.Tick(2 * time.Second)
+	for {
+		err := sdk.Health()
+		if err != nil {
+			log.Fatalf("Could not send health ping, %v", err)
+		}
+		<-tick
+	}
+}

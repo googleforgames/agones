@@ -28,6 +28,14 @@ One a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
 for its public address and connection port will be populated.
 
+### Health()
+This sends a single ping to designate that the Game Server is alive and
+healthy. Failure to send pings within the configured thresholds will result
+in the GameServer being marked as `Unhealthy`. 
+
+See the [gameserver.yaml](../examples/gameserver.yaml) for all health checking
+configurations.
+
 ### Shutdown()
 This tells Agon to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 

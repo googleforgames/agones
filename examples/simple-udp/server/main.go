@@ -21,10 +21,10 @@ import (
 	"net"
 	"os"
 
+	"time"
+
 	"github.com/agonio/agon/sdks/go"
 )
-
-const exit = "EXIT"
 
 // main starts a UDP server that received 1024 byte sized packets at at time
 // converts the bytes to a string, and logs the output
@@ -47,6 +47,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not connect to sdk: %v", err)
 	}
+
+	log.Print("Starting Health Ping")
+	stop := make(chan bool)
+	go doHealth(s, stop)
+
 	log.Print("Marking this server as ready")
 	// This tells Agon that the server is ready to receive connections.
 	err = s.Ready()
@@ -63,7 +68,9 @@ func main() {
 
 		txt := string(b[:n]) // trim the empty bytes
 		log.Printf("Received packet from %v: %v", sender.String(), txt)
-		if txt == exit {
+		switch txt {
+		// shuts down the gameserver
+		case "EXIT":
 			log.Printf("Received EXIT command. Exiting.")
 			// This tells Agon to shutdown this Game Server
 			err := s.Shutdown()
@@ -71,12 +78,36 @@ func main() {
 				log.Printf("Could not shutdown")
 			}
 			os.Exit(0)
+			break
+
+		// turns off the health pings
+		case "UNHEALTHY":
+			close(stop)
+			break
 		}
 
 		// echo it back
 		ack := "ACK: " + txt
 		if _, err = conn.WriteTo([]byte(ack), sender); err != nil {
 			log.Fatalf("Could not write to udp stream: %v", err)
+		}
+	}
+}
+
+// doHealth sends the regular Health Pings
+func doHealth(sdk *sdk.SDK, stop <-chan bool) {
+	tick := time.Tick(2 * time.Second)
+	for {
+		err := sdk.Health()
+		if err != nil {
+			log.Fatalf("Could not send health ping, %v", err)
+		}
+		select {
+		case <-stop:
+			log.Print("Stopped health pings")
+			return
+			break
+		case <-tick:
 		}
 	}
 }

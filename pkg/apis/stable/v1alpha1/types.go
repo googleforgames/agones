@@ -40,6 +40,8 @@ const (
 	// Error is when something has gone with the Gameserver and
 	// it cannot be resolved
 	Error State = "Error"
+	// Unhealthy is when the GameServer has failed its health checks
+	Unhealthy State = "Unhealthy"
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
@@ -56,6 +58,9 @@ const (
 	// GameServerPodLabel is the label that the name of the GameServer
 	// is set on the Pod the GameServer controls
 	GameServerPodLabel = stable.GroupName + "/gameserver"
+	// GameServerContainerAnnotation is the annotation that stores
+	// which container is the container that runs the dedicated game server
+	GameServerContainerAnnotation = stable.GroupName + "/container"
 )
 
 var (
@@ -93,6 +98,8 @@ type GameServerSpec struct {
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
+	// Health configures health checking
+	Health Health `json:"health,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
 }
@@ -103,9 +110,21 @@ type State string
 // PortPolicy is the port policy for the GameServer
 type PortPolicy string
 
+// Health configures health checking on the GameServer
+type Health struct {
+	// Disabled is whether health checking is disabled or not
+	Disabled bool `json:"disabled,omitempty"`
+	// PeriodSeconds is the number of seconds each health ping has to occur in
+	PeriodSeconds int32 `json:"periodSeconds,omitempty"`
+	// FailureThreshold how many failures in a row constitutes unhealthy
+	FailureThreshold int32 `json:"failureThreshold,omitempty"`
+	// InitialDelaySeconds initial delay before checking health
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty"`
+}
+
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
-	// The current state of a GameServer, e.g. Creating, Starting, Ready, etc
+	// State is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
 	State    State  `json:"state"`
 	Port     int32  `json:"port"`
 	Address  string `json:"address"`
@@ -130,6 +149,7 @@ func (gs *GameServer) ApplyDefaults() {
 		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
 	}
 
+	// basic spec
 	if gs.Spec.PortPolicy == "" {
 		gs.Spec.PortPolicy = Dynamic
 	}
@@ -140,6 +160,19 @@ func (gs *GameServer) ApplyDefaults() {
 
 	if gs.Status.State == "" {
 		gs.Status.State = Creating
+	}
+
+	// health
+	if !gs.Spec.Health.Disabled {
+		if gs.Spec.Health.PeriodSeconds <= 0 {
+			gs.Spec.Health.PeriodSeconds = 5
+		}
+		if gs.Spec.Health.FailureThreshold <= 0 {
+			gs.Spec.Health.FailureThreshold = 3
+		}
+		if gs.Spec.Health.InitialDelaySeconds <= 0 {
+			gs.Spec.Health.InitialDelaySeconds = 5
+		}
 	}
 }
 
@@ -173,11 +206,17 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod.ResourceVersion = ""
 	pod.UID = ""
 	if pod.ObjectMeta.Labels == nil {
-		pod.ObjectMeta.Labels = make(map[string]string, 1)
+		pod.ObjectMeta.Labels = make(map[string]string, 2)
+	}
+	if pod.ObjectMeta.Annotations == nil {
+		pod.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
 	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
 	// store the GameServer name as a label, for easy lookup later on
 	pod.ObjectMeta.Labels[GameServerPodLabel] = gs.ObjectMeta.Name
+	// store the GameServer container as an annotation, to make lookup at a Pod level easier
+	pod.ObjectMeta.Annotations[GameServerContainerAnnotation] = gs.Spec.Container
+
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 

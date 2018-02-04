@@ -29,6 +29,11 @@ namespace agon {
         }
 
         stub = stable::agon::io::sdk::SDK::NewStub(channel);
+
+        // make the health connection
+        stable::agon::io::sdk::Empty response;
+        health = stub->Health(new grpc::ClientContext(), &response);
+
         return true;
     }
 
@@ -39,6 +44,11 @@ namespace agon {
         stable::agon::io::sdk::Empty response;
 
         return stub->Ready(context, request, &response);
+    }
+
+    bool SDK::Health() {
+        stable::agon::io::sdk::Empty request;
+        return health->Write(request);
     }
 
     grpc::Status SDK::Shutdown() {

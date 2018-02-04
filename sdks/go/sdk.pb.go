@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,6 +74,8 @@ type SDKClient interface {
 	Ready(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
 	// Call when the GmaeServer is shutting down
 	Shutdown(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	// Send a Empty every d Duration to declare that this GameSever is healthy
+	Health(ctx context.Context, opts ...grpc.CallOption) (SDK_HealthClient, error)
 }
 
 type sDKClient struct {
@@ -102,6 +104,40 @@ func (c *sDKClient) Shutdown(ctx context.Context, in *Empty, opts ...grpc.CallOp
 	return out, nil
 }
 
+func (c *sDKClient) Health(ctx context.Context, opts ...grpc.CallOption) (SDK_HealthClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_SDK_serviceDesc.Streams[0], c.cc, "/stable.agon.io.sdk.SDK/Health", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &sDKHealthClient{stream}
+	return x, nil
+}
+
+type SDK_HealthClient interface {
+	Send(*Empty) error
+	CloseAndRecv() (*Empty, error)
+	grpc.ClientStream
+}
+
+type sDKHealthClient struct {
+	grpc.ClientStream
+}
+
+func (x *sDKHealthClient) Send(m *Empty) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *sDKHealthClient) CloseAndRecv() (*Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for SDK service
 
 type SDKServer interface {
@@ -109,6 +145,8 @@ type SDKServer interface {
 	Ready(context.Context, *Empty) (*Empty, error)
 	// Call when the GmaeServer is shutting down
 	Shutdown(context.Context, *Empty) (*Empty, error)
+	// Send a Empty every d Duration to declare that this GameSever is healthy
+	Health(SDK_HealthServer) error
 }
 
 func RegisterSDKServer(s *grpc.Server, srv SDKServer) {
@@ -151,6 +189,32 @@ func _SDK_Shutdown_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SDK_Health_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(SDKServer).Health(&sDKHealthServer{stream})
+}
+
+type SDK_HealthServer interface {
+	SendAndClose(*Empty) error
+	Recv() (*Empty, error)
+	grpc.ServerStream
+}
+
+type sDKHealthServer struct {
+	grpc.ServerStream
+}
+
+func (x *sDKHealthServer) SendAndClose(m *Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *sDKHealthServer) Recv() (*Empty, error) {
+	m := new(Empty)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _SDK_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "stable.agon.io.sdk.SDK",
 	HandlerType: (*SDKServer)(nil),
@@ -164,20 +228,27 @@ var _SDK_serviceDesc = grpc.ServiceDesc{
 			Handler:    _SDK_Shutdown_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Health",
+			Handler:       _SDK_Health_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "sdk.proto",
 }
 
 func init() { proto.RegisterFile("sdk.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 121 bytes of a gzipped FileDescriptorProto
+	// 133 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2c, 0x4e, 0xc9, 0xd6,
 	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x2a, 0x2e, 0x49, 0x4c, 0xca, 0x49, 0xd5, 0x4b, 0x4c,
 	0xcf, 0xcf, 0xd3, 0xcb, 0xcc, 0xd7, 0x2b, 0x4e, 0xc9, 0x56, 0x62, 0xe7, 0x62, 0x75, 0xcd, 0x2d,
-	0x28, 0xa9, 0x34, 0xea, 0x62, 0xe4, 0x62, 0x0e, 0x76, 0xf1, 0x16, 0xb2, 0xe7, 0x62, 0x0d, 0x4a,
-	0x4d, 0x4c, 0xa9, 0x14, 0x92, 0xd4, 0xc3, 0x54, 0xae, 0x07, 0x56, 0x2b, 0x85, 0x5b, 0x4a, 0x89,
-	0x41, 0xc8, 0x89, 0x8b, 0x23, 0x38, 0xa3, 0xb4, 0x24, 0x25, 0xbf, 0x3c, 0x8f, 0x5c, 0x33, 0x9c,
-	0x58, 0xa3, 0x98, 0x8b, 0x53, 0xb2, 0x93, 0xd8, 0xc0, 0xee, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff,
-	0xff, 0x0f, 0xb4, 0x24, 0x6b, 0xc4, 0x00, 0x00, 0x00,
+	0x28, 0xa9, 0x34, 0x3a, 0xc7, 0xc8, 0xc5, 0x1c, 0xec, 0xe2, 0x2d, 0x64, 0xcf, 0xc5, 0x1a, 0x94,
+	0x9a, 0x98, 0x52, 0x29, 0x24, 0xa9, 0x87, 0xa9, 0x5c, 0x0f, 0xac, 0x56, 0x0a, 0xb7, 0x94, 0x12,
+	0x83, 0x90, 0x13, 0x17, 0x47, 0x70, 0x46, 0x69, 0x49, 0x4a, 0x7e, 0x79, 0x1e, 0x05, 0x66, 0xb0,
+	0x79, 0xa4, 0x26, 0xe6, 0x94, 0x64, 0x90, 0x6b, 0x82, 0x06, 0xa3, 0x13, 0x6b, 0x14, 0x73, 0x71,
+	0x4a, 0x76, 0x12, 0x1b, 0xd8, 0xef, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe7, 0x22, 0x81,
+	0x1e, 0x08, 0x01, 0x00, 0x00,
 }
