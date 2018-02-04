@@ -271,7 +271,7 @@ minikube-agon-profile:
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
 minikube-shell: ensure-build-image minikube-agon-profile
-	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount)"
+	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount) $(ARGS)"
 
 # Push the local Agon Docker images that have already been built
 # via `make build` or `make build-images` into the "agon" minikube instance.
