@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"sync"
 	"testing"
@@ -34,7 +33,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
@@ -228,26 +226,7 @@ func TestHealthCheck(t *testing.T) {
 		assert.Nil(t, err, "Run should not error")
 	}()
 
-	// do a poll, because this code could run before the health check becomes live
-	err := wait.PollImmediate(time.Second, 20*time.Second, func() (done bool, err error) {
-		resp, err := http.Get("http://localhost:8080/healthz")
-		if err != nil {
-			logrus.WithError(err).Error("Error connecting to health")
-			return false, nil
-		}
-
-		assert.NotNil(t, resp)
-		if resp != nil {
-			defer resp.Body.Close()
-			body, err := ioutil.ReadAll(resp.Body)
-			assert.Nil(t, err, "read response error should be nil")
-			assert.Equal(t, []byte("ok"), body, "response body should be 'ok'")
-		}
-
-		return true, nil
-	})
-
-	assert.Nil(t, err, "Timeout on health check, %v", err)
+	testHTTPHealth(t, "http://localhost:8080/healthz", "ok", http.StatusOK)
 }
 
 func TestSyncGameServerDeletionTimestamp(t *testing.T) {

@@ -264,10 +264,10 @@ Run a bash shell with the developer tools (go tooling, kubectl, etc) and source 
 #### `make godoc`
 Run a container with godoc (search index enabled)
 
-#### `make build-gameservers-controller-image`
+#### `make build-agon-controller-image`
 Compile the gameserver controller and then build the docker image
 
-#### `make build-gameservers-sidecar-image`
+#### `make build-agon-sdk-image`
 Compile the gameserver sidecar and then build the docker image
 
 #### `make gen-crd-client`

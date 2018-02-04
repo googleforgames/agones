@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"sync"
 	"testing"
 
-	"github.com/agonio/agon/gameservers/sidecar/sdk"
+	"github.com/agonio/agon/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
@@ -26,7 +26,7 @@ import (
 func TestLocal(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
-	l := Local{}
+	l := LocalSDKServer{}
 
 	_, err := l.Ready(ctx, e)
 	assert.Nil(t, err, "Ready should not error")

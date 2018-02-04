@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"fmt"
@@ -51,7 +51,7 @@ var (
 	errPodNotFound = errors.New("A Pod for this GameServer Was Not Found")
 )
 
-// Controller is a GameServer crd controller
+// Controller is a the main GameServer crd controller
 type Controller struct {
 	sidecarImage           string
 	alwaysPullSidecarImage bool

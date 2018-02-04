@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"net"
 	"strings"
-
 	"time"
 
-	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg"
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
+	"github.com/agonio/agon/pkg/gameservers"
+	"github.com/agonio/agon/pkg/sdk"
 	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
@@ -105,7 +105,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	if isLocal {
-		sdk.RegisterSDKServer(grpcServer, &Local{})
+		sdk.RegisterSDKServer(grpcServer, &gameservers.LocalSDKServer{})
 	} else {
 		config, err := rest.InClusterConfig()
 		if err != nil {
@@ -122,8 +122,8 @@ func main() {
 			logrus.WithError(err).Fatalf("Could not create the agon api clientset")
 		}
 
-		var s *Sidecar
-		s, err = NewSidecar(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
+		var s *gameservers.SDKServer
+		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
 			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonClient)
 		if err != nil {
 			logrus.WithError(err).Fatalf("Could not start sidecar")

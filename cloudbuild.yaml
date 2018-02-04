@@ -38,4 +38,4 @@ steps:
   dir: "build"
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 timeout: "1h"
-images: ['gcr.io/$PROJECT_ID/gameservers-controller', 'gcr.io/$PROJECT_ID/gameservers-sidecar']
+images: ['gcr.io/$PROJECT_ID/agon-controller', 'gcr.io/$PROJECT_ID/agon-sdk']

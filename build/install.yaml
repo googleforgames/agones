@@ -32,7 +32,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: gameservers-controller
+  name: agon-controller
 spec:
   replicas: 1
   strategy:
@@ -43,14 +43,14 @@ spec:
         stable.agon.io/role: controller
     spec:
       containers:
-      - name: gameservers-controller
-        image: ${REGISTRY}/gameservers-controller:${VERSION}
+      - name: agon-controller
+        image: ${REGISTRY}/agon-controller:${VERSION}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "${ALWAYS_PULL_SIDECAR}"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: ${REGISTRY}/gameservers-sidecar:${VERSION}
+          value: ${REGISTRY}/agon-sdk:${VERSION}
         - name: MIN_PORT
           value: "7000"
         - name: MAX_PORT
