@@ -17,9 +17,8 @@ kind: GameServer
 metadata:
   name: "xonotic"
 spec:
-  portPolicy: "static"
+  portPolicy: "dynamic"
   containerPort: 26000
-  hostPort: 7345
   template:
     spec:
       containers:
