@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.6
+FROM alpine:3.7
 
 COPY ./bin/server /home/server/server
 RUN adduser -D server && \

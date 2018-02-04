@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.7
 
 COPY ./bin/sidecar.linux.amd64 /home/agon/sidecar
 RUN apk --update add ca-certificates && \
