@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.7
 
 COPY ./bin/controller /home/agon/controller
 RUN apk --update add ca-certificates && \
