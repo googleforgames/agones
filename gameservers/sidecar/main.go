@@ -44,6 +44,7 @@ const (
 
 	// Flags (that can also be env vars)
 	localFlag                  = "local"
+	addressFlag                = "address"
 	healthDisabledFlag         = "health-disabled"
 	healthTimeoutFlag          = "health-timeout"
 	healthInitialDelayFlag     = "health-initial-delay"
@@ -56,12 +57,14 @@ func init() {
 
 func main() {
 	viper.SetDefault(localFlag, false)
+	viper.SetDefault(addressFlag, "localhost")
 	viper.SetDefault(healthDisabledFlag, false)
 	viper.SetDefault(healthTimeoutFlag, 5)
 	viper.SetDefault(healthInitialDelayFlag, 5)
 	viper.SetDefault(healthFailureThresholdFlag, 3)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	pflag.String(addressFlag, viper.GetString(addressFlag), "The address to bind the server port to. Defaults to 'localhost")
 	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
 		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
 	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
@@ -83,19 +86,21 @@ func main() {
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	isLocal := viper.GetBool(localFlag)
+	address := viper.GetString(addressFlag)
 	healthDisabled := viper.GetBool(healthDisabledFlag)
 	healthTimeout := time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second
 	healthInitialDelay := time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second
 	healthFailureThreshold := viper.GetInt64(healthFailureThresholdFlag)
 
-	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).WithField("port", port).
+	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).
+		WithField("port", port).WithField(addressFlag, address).
 		WithField(healthDisabledFlag, healthDisabled).WithField(healthTimeoutFlag, healthTimeout).
 		WithField(healthFailureThresholdFlag, healthFailureThreshold).
 		WithField(healthInitialDelayFlag, healthInitialDelay).Info("Starting sdk sidecar")
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
-		logrus.WithField("port", port).Fatalf("Could not listen on port")
+		logrus.WithField("port", port).WithField("address", address).Fatalf("Could not listen on port")
 	}
 	grpcServer := grpc.NewServer()
 
