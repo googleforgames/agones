@@ -35,7 +35,7 @@ More documentation forthcoming.
 
 ### Guides
  - Integrating the C++ SDK (forthcoming)
- - GameServer Health Checking (forthcoming)
+ - [GameServer Health Checking](./docs/health_checking.md)
 
 ### Reference
 - [SDK](sdks)
