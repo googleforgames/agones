@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agonio/agon/pkg/apis/stable"
-	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -96,11 +96,11 @@ func TestSyncGameServer(t *testing.T) {
 			assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
 			return false, pod, nil
 		})
-		mocks.agonClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gameServers := &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{fixture}}
 			return true, gameServers, nil
 		})
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
 			updateCount++
@@ -131,10 +131,10 @@ func TestSyncGameServer(t *testing.T) {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec:   newSingleContainerSpec(),
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready}}
-		agonWatch := watch.NewFake()
+		agonesWatch := watch.NewFake()
 		podAction := false
 
-		mocks.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(agonWatch, nil))
+		mocks.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(agonesWatch, nil))
 		mocks.kubeClient.AddReactor("*", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			if action.GetVerb() == "update" || action.GetVerb() == "delete" || action.GetVerb() == "create" || action.GetVerb() == "patch" {
 				podAction = true
@@ -145,7 +145,7 @@ func TestSyncGameServer(t *testing.T) {
 		_, cancel := startInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
-		agonWatch.Delete(fixture)
+		agonesWatch.Delete(fixture)
 
 		err := c.syncGameServer("default/test")
 		assert.Nil(t, err, fmt.Sprintf("Shouldn't be an error from syncGameServer: %+v", err))
@@ -163,7 +163,7 @@ func TestWatchGameServers(t *testing.T) {
 
 	gsWatch := watch.NewFake()
 	podWatch := watch.NewFake()
-	mocks.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	mocks.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	mocks.kubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 	mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, newEstablishedCRD(), nil
@@ -272,7 +272,7 @@ func TestSyncGameServerDeletionTimestamp(t *testing.T) {
 		fixture.ApplyDefaults()
 
 		updated := false
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 
 			ua := action.(k8stesting.UpdateAction)
@@ -301,7 +301,7 @@ func TestSyncGameServerBlankState(t *testing.T) {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"}, Spec: newSingleContainerSpec()}
 		updated := false
 
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -338,7 +338,7 @@ func TestSyncGameServerBlankState(t *testing.T) {
 
 		updated := false
 
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -419,7 +419,7 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
 			return true, pod, nil
 		})
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -451,7 +451,7 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			podCreated = true
 			return true, nil, nil
 		})
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -479,7 +479,7 @@ func TestSyncGameServerCreatingState(t *testing.T) {
 			podCreated = true
 			return true, nil, k8serrors.NewInvalid(schema.GroupKind{}, "test", field.ErrorList{})
 		})
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -533,7 +533,7 @@ func TestSyncGameServerRequestReadyState(t *testing.T) {
 		mocks.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 		})
-		mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
@@ -583,7 +583,7 @@ func TestSyncGameServerShutdownState(t *testing.T) {
 		gsFixture.ApplyDefaults()
 		checkDeleted := false
 
-		mocks.agonClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		mocks.agonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			checkDeleted = true
 			assert.Equal(t, "default", action.GetNamespace())
 			da := action.(k8stesting.DeleteAction)
@@ -744,7 +744,7 @@ func testNoChange(t *testing.T, state v1alpha1.State, f func(*Controller, *v1alp
 		Spec: newSingleContainerSpec(), Status: v1alpha1.GameServerStatus{State: state}}
 	fixture.ApplyDefaults()
 	updated := false
-	mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		updated = true
 		return true, nil, nil
 	})
@@ -764,7 +764,7 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func
 		Spec: newSingleContainerSpec(), Status: v1alpha1.GameServerStatus{State: state}}
 	fixture.ApplyDefaults()
 	updated := false
-	mocks.agonClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	mocks.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		updated = true
 		return true, nil, nil
 	})
@@ -779,7 +779,7 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func
 func newFakeController() (*Controller, mocks) {
 	m := newMocks()
 	c := NewController(10, 20, "sidecar:dev", false,
-		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonClient, m.agonInformerFactory)
+		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory)
 	c.recorder = m.fakeRecorder
 	return c, m
 }

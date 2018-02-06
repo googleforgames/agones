@@ -1,9 +1,9 @@
-# Developing, Testing and Building Agon
+# Developing, Testing and Building Agones
 
-Tooling for building and developing against Agon, with only dependencies being
+Tooling for building and developing against Agones, with only dependencies being
 [Make](https://www.gnu.org/software/make/) and [Docker](https://www.docker.com)
 
-Rather than installing all the dependencies locally, you can test and build Agon using the Docker image that is
+Rather than installing all the dependencies locally, you can test and build Agones using the Docker image that is
 built from the Dockerfile in this directory. There is an accompanying Makefile for all the common
 tasks you may wish to accomplish.
 
@@ -41,7 +41,7 @@ tasks you may wish to accomplish.
   to develop on Minikube 
 
 ### Windows
-Building and developing Agon requires you to use the 
+Building and developing Agones requires you to use the 
 [Windows Subsystem for Linux](https://blogs.msdn.microsoft.com/wsl/)(WSL),
 as this makes it easy to create a (relatively) cross platform development and build system.
 
@@ -53,8 +53,8 @@ as this makes it easy to create a (relatively) cross platform development and bu
   from "Configure WSL to Connect to Docker for Windows" forward 
   for integrating the Docker on WSL with the Windows Docker installation
   - Note the binding of `/c` to `/mnt/c` (or drive of your choice) - this is very important!
-- Agon will need to be cloned somewhere on your `/c` (or drive of your choice) path, as that is what Docker will support mounts from
-- All interaction with Agon must be on the `/c` (or drive of your choice) path, otherwise Docker mounts will not work
+- Agones will need to be cloned somewhere on your `/c` (or drive of your choice) path, as that is what Docker will support mounts from
+- All interaction with Agones must be on the `/c` (or drive of your choice) path, otherwise Docker mounts will not work
 - Now the `make` commands can all be run from within your WSL shell
 - (optional) Minikube is supported via the [HyperV](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/index) 
   driver - the same virtualisation platform as the Docker installation.
@@ -69,19 +69,26 @@ as this makes it easy to create a (relatively) cross platform development and bu
 
 This has currently yet to be tested, but should have few issues around testing, building and running on GKE.
 
-Issues with building and developing on Minikube are currently expected, due to lack of testing, but Agon will run on Minikube.  
+Issues with building and developing on Minikube are currently expected, due to lack of testing, but Agones will run on Minikube.  
 
 Testing on OSX and reporting bugs are appreciated. 
 
-You can see progress on this on the [Build Agon on OSX](https://github.com/googleprivate/agon/issues/46) ticket.
-
+You can see progress on this on the [Build Agones on OSX](https://github.com/googleprivate/agones/issues/46) ticket.
 
 ## GOPATH
 
-This project should be cloned to the directory `$GOPATH/src/github.com/agonio/agon`
+This project should be cloned to the directory `$GOPATH/src/agones.dev/agones`
 for when you are developing locally, and require package resolution in your IDE.
 
-This is not required if you are simply building using the `make` targets.
+If you have a working [Go environment](https://golang.org/doc/install), you can also do this through:
+
+```bash
+go get -d agones.dev/agones
+cd $GOPATH/src/agones.dev/agones
+```
+
+This is not required if you are simply building using the `make` targets, and do not plan to edit the code 
+in an IDE.
 
 If you are not familiar with GOPATHs, you can read [How to Write Go Code](https://golang.org/doc/code.html). 
 
@@ -100,11 +107,11 @@ free to make cup of tea or coffee at this point. ☕️
 The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
 Dockerfile has changed.
 
-Assuming that the tests all pass, let's go ahead an compile the code and build the Docker images that Agon consists of.
+Assuming that the tests all pass, let's go ahead an compile the code and build the Docker images that Agones consists of.
 
 Let's compile and build everything, by running `make build`, this will:
 
-- Compile the Agon Kubernetes integration code
+- Compile the Agones Kubernetes integration code
 - Create the Docker images that we will later push
 - Build the local development tooling for all supported OS's
 - Compile and archive the SDKs in various languages
@@ -113,7 +120,7 @@ You may note that docker images, and tar archives are tagged with a concatenatio
 upcoming release number and short git hash for the current commit. This has also been set in 
 the code itself, so that it can be seen in via log statements.
 
-Congratulations! You have now successfully tested and built Agon!
+Congratulations! You have now successfully tested and built Agones!
 
 ### Running a Test Google Kubernetes Engine Cluster
 
@@ -142,7 +149,7 @@ Great! Now we are setup, let's try out the development shell, and see if our `ku
 Run `make shell` to enter the development shell. You should see a bash shell that has you as the root user.
 Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at building, pushing and 
-installing Agon next.
+installing Agones next.
 
 To prepare building and pushing images, let's set the REGISTRY environment variable to point to our new project.
 You can [choose any registry region](https://cloud.google.com/container-registry/docs/pushing-and-pulling#choosing_a_registry_name)
@@ -159,11 +166,11 @@ To push our images up at this point, is simple `make push` and that will push up
 project's container registry.
 
 Now that the images are pushed, to install the development version (with all imagePolicies set to always download),
-run `make install` and Agon will install the image that you just built and pushed on the test cluster you
+run `make install` and Agones will install the image that you just built and pushed on the test cluster you
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
 ### Running a Test Minikube cluster
-This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agon` profile, 
+This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
 
 Because Minikube runs on a virtualisation layer on the host, some of the standard build and development Make targets
 need to be replaced by Minikube specific targets.
@@ -173,28 +180,28 @@ a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as w
 Check the [Building on Different Platforms](#building-on-different-platforms) above for details on what virtualisation 
 solution to use.
 
-Next we will create the Agon Minikube cluster. Run `make minikube-test-cluster` to create the `agon` profile,
+Next we will create the Agones Minikube cluster. Run `make minikube-test-cluster` to create the `agones` profile,
 and a Kubernetes cluster of the supported version under this profile.
 
 This will also install the kubectl authentication credentials in `~/.kube`, and set the 
 [`kubectl` context](https://kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) 
-to `agon`.
+to `agones`.
 
 Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
 
 Run `make minikube-shell` to enter the development shell. You should see a bash shell that has you as the root user.
 Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
 Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and 
-installing Agon on Minikube next.
+installing Agones on Minikube next.
 
 You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
-we needed to work with Agon locally. We can push these images them straight into Minikube very easily!
+we needed to work with Agones locally. We can push these images them straight into Minikube very easily!
 
-Run `make minikube-push` which will send all of Agon's docker images from your local Docker into the Agon Minikube
+Run `make minikube-push` which will send all of Agones's docker images from your local Docker into the Agones Minikube
 instance.
 
 Now that the images are pushed, to install the development version,
-run `make minikube-install` and Agon will install the images that you built and pushed to the Agon Minikube instance 
+run `make minikube-install` and Agones will install the images that you built and pushed to the Agones Minikube instance 
 (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`).
 
 It's worth noting that Minikube does let you [reuse its Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md),
@@ -212,7 +219,7 @@ $ make minikube-transfer-image TAG=myimage:0.1
 
 ### Next Steps
 
-Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agon.
+Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agones.
 
 ## Make Variable Reference
 
@@ -220,7 +227,7 @@ Have a look in the [examples](../examples) folder to see examples of running Gam
 The version of this build. Version defaults to the short hash of the latest commit
 
 ### REGISTRY
-The registry that is being used to store docker images. Defaults to gcr.io/agon-images - the release + CI registry.
+The registry that is being used to store docker images. Defaults to gcr.io/agones-images - the release + CI registry.
 
 ### KUBEPATH
 The directory the kubectl configuration files are being stored for shell and kubectl targets. 
@@ -238,13 +245,13 @@ All targets will create the build image if it is not present.
 Targets for developing with the build image
 
 #### `make build`
-Build all the images required for Agon, as well as the SDKs
+Build all the images required for Agones, as well as the SDKs
 
 #### `make build-images`
-Build all the images required for Agon
+Build all the images required for Agones
 
 #### `make build-sdks`
-Build all the sdks required for Agon
+Build all the sdks required for Agones
 
 #### `make build-sdk-cpp`
 Build the cpp sdk static and dynamic libraries (linux libraries only)
@@ -256,7 +263,7 @@ Run all tests
 Pushes all built images up to the `$(REGISTRY)`
 
 #### `make install`
-Installs the current development version of Agon into the Kubernetes cluster
+Installs the current development version of Agones into the Kubernetes cluster
 
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
@@ -264,10 +271,10 @@ Run a bash shell with the developer tools (go tooling, kubectl, etc) and source 
 #### `make godoc`
 Run a container with godoc (search index enabled)
 
-#### `make build-agon-controller-image`
+#### `make build-agones-controller-image`
 Compile the gameserver controller and then build the docker image
 
-#### `make build-agon-sdk-image`
+#### `make build-agones-sdk-image`
 Compile the gameserver sidecar and then build the docker image
 
 #### `make gen-crd-client`
@@ -316,18 +323,18 @@ for local development.
 Since Minikube runs locally, there are some targets that need to be used instead of the standard ones above.
 
 #### `minikube-test-cluster`
-Switches to an "agon" profile, and starts a kubernetes cluster
+Switches to an "agones" profile, and starts a kubernetes cluster
 of the right version.
 
 Use MINIKUBE_DRIVER variable to change the VM driver 
 (defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
 
 #### `minikube-push`
-Push the local Agon Docker images that have already been built 
-via `make build` or `make build-images` into the "agon" minikube instance.
+Push the local Agones Docker images that have already been built 
+via `make build` or `make build-images` into the "agones" minikube instance.
 
 #### `minikube-install`
-Installs the current development version of Agon into the Kubernetes cluster.
+Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
 
 #### `minikube-shell`

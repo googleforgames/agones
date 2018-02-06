@@ -64,24 +64,24 @@ inline void InitDefaults() {
 }
 }  // namespace protobuf_sdk_2eproto
 namespace stable {
-namespace agon {
-namespace io {
+namespace agones {
+namespace dev {
 namespace sdk {
 class Empty;
 class EmptyDefaultTypeInternal;
 extern EmptyDefaultTypeInternal _Empty_default_instance_;
 }  // namespace sdk
-}  // namespace io
-}  // namespace agon
+}  // namespace dev
+}  // namespace agones
 }  // namespace stable
 namespace stable {
-namespace agon {
-namespace io {
+namespace agones {
+namespace dev {
 namespace sdk {
 
 // ===================================================================
 
-class Empty : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:stable.agon.io.sdk.Empty) */ {
+class Empty : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:stable.agones.dev.sdk.Empty) */ {
  public:
   Empty();
   virtual ~Empty();
@@ -163,7 +163,7 @@ class Empty : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 
   // accessors -------------------------------------------------------
 
-  // @@protoc_insertion_point(class_scope:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(class_scope:stable.agones.dev.sdk.Empty)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
@@ -189,8 +189,8 @@ class Empty : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 // @@protoc_insertion_point(namespace_scope)
 
 }  // namespace sdk
-}  // namespace io
-}  // namespace agon
+}  // namespace dev
+}  // namespace agones
 }  // namespace stable
 
 // @@protoc_insertion_point(global_scope)

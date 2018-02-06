@@ -21,11 +21,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agonio/agon/pkg"
-	"github.com/agonio/agon/pkg/client/clientset/versioned"
-	"github.com/agonio/agon/pkg/gameservers"
-	"github.com/agonio/agon/pkg/sdk"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -117,14 +117,14 @@ func main() {
 			logrus.WithError(err).Fatal("Could not create the kubernetes clientset")
 		}
 
-		agonClient, err := versioned.NewForConfig(config)
+		agonesClient, err := versioned.NewForConfig(config)
 		if err != nil {
-			logrus.WithError(err).Fatalf("Could not create the agon api clientset")
+			logrus.WithError(err).Fatalf("Could not create the agones api clientset")
 		}
 
 		var s *gameservers.SDKServer
 		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
-			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonClient)
+			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonesClient)
 		if err != nil {
 			logrus.WithError(err).Fatalf("Could not start sidecar")
 		}

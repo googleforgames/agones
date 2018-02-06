@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/agonio/agon/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/agonio/agon/pkg/client/informers/externalversions/internalinterfaces"
-	stable "github.com/agonio/agon/pkg/client/informers/externalversions/stable"
+	versioned "agones.dev/agones/pkg/client/clientset/versioned"
+	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
+	stable "agones.dev/agones/pkg/client/informers/externalversions/stable"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"

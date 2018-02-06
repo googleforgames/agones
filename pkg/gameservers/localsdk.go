@@ -17,7 +17,7 @@ package gameservers
 import (
 	"io"
 
-	"github.com/agonio/agon/pkg/sdk"
+	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"

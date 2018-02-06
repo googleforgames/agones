@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agonio/agon/pkg"
-	"github.com/agonio/agon/pkg/client/clientset/versioned"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	"github.com/agonio/agon/pkg/gameservers"
-	"github.com/agonio/agon/pkg/util/runtime"
-	"github.com/agonio/agon/pkg/util/signals"
+	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -47,7 +47,7 @@ func init() {
 
 // main starts the operator for the gameserver CRD
 func main() {
-	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/agon-sdk:"+pkg.Version)
+	viper.SetDefault(sidecarFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
 	viper.SetDefault(pullSidecarFlag, false)
 
 	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
@@ -95,19 +95,19 @@ func main() {
 		logrus.WithError(err).Fatal("Could not create the api extension clientset")
 	}
 
-	agonClient, err := versioned.NewForConfig(config)
+	agonesClient, err := versioned.NewForConfig(config)
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not create the agon api clientset")
+		logrus.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := gameservers.NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
+	c := gameservers.NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
 	kubeInformationFactory.Start(stop)
-	agonInformerFactory.Start(stop)
+	agonesInformerFactory.Start(stop)
 
 	err = c.Run(2, stop)
 	if err != nil {

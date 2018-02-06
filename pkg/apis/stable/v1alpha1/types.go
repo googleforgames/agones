@@ -15,7 +15,7 @@
 package v1alpha1
 
 import (
-	"github.com/agonio/agon/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +50,7 @@ const (
 	// port for the GameServer in question
 	Dynamic PortPolicy = "dynamic"
 
-	// RoleLabel is the label in which the Agon role is specified.
+	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
 	RoleLabel = stable.GroupName + "/role"
 	// GameServerLabelRole is the GameServer label value for RoleLabel

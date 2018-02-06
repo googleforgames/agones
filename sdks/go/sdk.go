@@ -26,7 +26,7 @@ import (
 
 const port = 59357
 
-// SDK is an instance of the Agon SDK
+// SDK is an instance of the Agones SDK
 type SDK struct {
 	client SDKClient
 	ctx    context.Context

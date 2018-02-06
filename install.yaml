@@ -15,9 +15,9 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: gameservers.stable.agon.io
+  name: gameservers.stable.agones.dev
 spec:
-  group: stable.agon.io
+  group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
   names:
@@ -30,7 +30,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: agon-controller
+  name: agones-controller
 spec:
   replicas: 1
   strategy:
@@ -38,11 +38,11 @@ spec:
   template:
     metadata:
       labels:
-        stable.agon.io/role: controller
+        stable.agones.dev/role: controller
     spec:
       containers:
-      - name: agon-controller
-        image: gcr.io/agon-images/agon-controller:0.1
+      - name: agones-controller
+        image: gcr.io/agones-images/agones-controller:0.1
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
@@ -51,7 +51,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         # - name: SIDECAR # overwrite the GameServer sidecar image that is used
-        #   value: gcr.io/agon-images/agon-sdk:0.1
+        #   value: gcr.io/agones-images/agones-sdk:0.1
         livenessProbe:
           httpGet:
             path: /healthz

@@ -15,9 +15,9 @@
 #include <grpc++/grpc++.h>
 #include "sdk.grpc.pb.h"
 
-namespace agon {
+namespace agones {
 
-    // The Agon SDK
+    // The Agones SDK
     class SDK {
         public:
             // Creates a new instance of the SDK.
@@ -43,7 +43,7 @@ namespace agon {
 
         private:
             std::shared_ptr<grpc::Channel> channel;
-            std::unique_ptr<stable::agon::io::sdk::SDK::Stub> stub;
-            std::unique_ptr< ::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>> health;
+            std::unique_ptr<stable::agones::dev::sdk::SDK::Stub> stub;
+            std::unique_ptr< ::grpc::ClientWriter< ::stable::agones::dev::sdk::Empty>> health;
     };
 }

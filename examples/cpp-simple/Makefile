@@ -26,8 +26,8 @@
 CXX = g++
 CPPFLAGS += -I/usr/local/include -pthread
 CXXFLAGS += -std=c++11
-LDFLAGS += -L/usr/local/lib -lagonsdk -lgrpc++_unsecure -lgrpc -lprotobuf -lpthread -ldl
-REPOSITORY = gcr.io/agon-images
+LDFLAGS += -L/usr/local/lib -lagonessdk -lgrpc++_unsecure -lgrpc -lprotobuf -lpthread -ldl
+REPOSITORY = gcr.io/agones-images
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))

@@ -1,15 +1,15 @@
-# Agon Game Server Client SDKs
+# Agones Game Server Client SDKs
 
-The SDKs are integration points for game servers with Agon itself.
+The SDKs are integration points for game servers with Agones itself.
 
-They are required for a game server to work with Agon.
+They are required for a game server to work with Agones.
 
 There are currently two support SDKs:
 - [C++](cpp)
 - [Go](go)
 
 The SDKs are relatively thin wrappers around [gRPC](https://grpc.io), generated clients,
-which connects to a small process that Agon coordinates to run alongside the Game Server
+which connects to a small process that Agones coordinates to run alongside the Game Server
 in a Kubernetes [`Pod`](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/).
 This means that more languages can be supported in the future with minimal effort
 (but pull requests are welcome! 😊 ).
@@ -23,7 +23,7 @@ For language specific documentation, have a look at the respective source (linke
 and the [examples](../examples)
 
 ### Ready()
-This tells Agon that the Game Server is ready to take player connections.
+This tells Agones that the Game Server is ready to take player connections.
 One a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
 for its public address and connection port will be populated.
@@ -37,28 +37,28 @@ See the [gameserver.yaml](../examples/gameserver.yaml) for all health checking
 configurations.
 
 ### Shutdown()
-This tells Agon to shut down the currently running game server.
+This tells Agones to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 
 backing Pod will be deleted, if they have not shut themselves down already. 
 
 ## Local Development
-_Note:_ There has yet to be a release of Agon, so if you want the local
+_Note:_ There has yet to be a release of Agones, so if you want the local
 development tools, you will need to [build from source](build/README.md).
 
 If you do not wish to `make build` and build everything, 
-the `make` target `build-agon-sdk-binary` will compile the necessary binaries
+the `make` target `build-agones-sdk-binary` will compile the necessary binaries
 for all supported operating systems (64 bit windows, linux and osx).
 
 You can find the binaries in the `bin` folder in [`cmd/sdk-server`](../cmd/sdk-server)
 once compilation is complete.
 
-When the game server is running on Agon, the SDK communicates over TCP to a small
-gRPC server that Agon coordinated to runs in a container in the same network 
+When the game server is running on Agones, the SDK communicates over TCP to a small
+gRPC server that Agones coordinated to runs in a container in the same network 
 namespace as it - usually referred to in Kubernetes terms as a "sidecar".
 
 Therefore, when developing locally, we also need a process for the SDK to connect to!
 
-To do this, we can run the same binary that runs inside Agon, but pass in a flag
+To do this, we can run the same binary that runs inside Agones, but pass in a flag
 to run it in "local mode". Local mode means that the sidecar binary
 won't try and connect to anything, and will just send logs messages to stdout so 
 that you can see exactly what the SDK in your game server is doing, and can

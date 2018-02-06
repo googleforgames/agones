@@ -23,11 +23,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agon-images
+REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-agon_path := $(realpath $(project_path)/../..)
+agones_path := $(realpath $(project_path)/../..)
 image_tag = $(REPOSITORY)/xonotic-example:0.1
 
 #   _____                    _
@@ -42,9 +42,9 @@ build: build-go-binary
 	docker build $(project_path) --tag=$(image_tag)
 
 # build the go binary with Docker, so you don't have to install anything
-build-go-binary: MOUNTPATH="/go/src/github.com/agonio/agon"
+build-go-binary: MOUNTPATH="/go/src/agones.dev/agones"
 build-go-binary:
-	docker run --rm -v $(agon_path):$(MOUNTPATH) golang:1.9.2 go build -o $(MOUNTPATH)/examples/xonotic/bin/sdk github.com/agonio/agon/examples/xonotic
+	docker run --rm -v $(agones_path):$(MOUNTPATH) golang:1.9.2 go build -o $(MOUNTPATH)/examples/xonotic/bin/sdk agones.dev/agones/examples/xonotic
 
 
 

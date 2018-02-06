@@ -20,7 +20,7 @@ import (
 
 	"sync"
 
-	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -42,7 +42,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("ports are all allocated", func(t *testing.T) {
 		m := newMocks()
-		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 		nodeWatch := watch.NewFake()
 		m.kubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
@@ -74,7 +74,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("ports are unique in a node", func(t *testing.T) {
 		m := newMocks()
-		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 
 		m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
@@ -96,7 +96,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	m := newMocks()
-	pa := NewPortAllocator(10, 110, m.kubeInformationFactory, m.agonInformerFactory)
+	pa := NewPortAllocator(10, 110, m.kubeInformationFactory, m.agonesInformerFactory)
 
 	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
@@ -127,14 +127,14 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	t.Parallel()
 
 	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 
 	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
 
-	m.agonClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		gs1 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Spec: v1alpha1.GameServerSpec{HostPort: 10},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n1.ObjectMeta.Name}}
 		gs2 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Spec: v1alpha1.GameServerSpec{HostPort: 10},
@@ -172,20 +172,20 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	m := newMocks()
 	fakeWatch := watch.NewFake()
-	m.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
 	gs1Fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Spec: v1alpha1.GameServerSpec{HostPort: 10}}
 	gs2Fixture := gs1Fixture.DeepCopy()
 	gs2Fixture.ObjectMeta.Name = "gs5"
 
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 
 	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
 
-	m.agonClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		gs1 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Spec: v1alpha1.GameServerSpec{HostPort: 10},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n1.ObjectMeta.Name}}
 		gs2 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Spec: v1alpha1.GameServerSpec{HostPort: 11},
@@ -237,11 +237,11 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 
 func TestPortAllocatorNodeEvents(t *testing.T) {
 	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 	nodeWatch := watch.NewFake()
 	gsWatch := watch.NewFake()
 	m.kubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
-	m.agonClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	stop, cancel := startInformers(m)
 	defer cancel()
@@ -311,7 +311,7 @@ func TestNodePortAllocation(t *testing.T) {
 	t.Parallel()
 
 	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonInformerFactory)
+	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
 	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}

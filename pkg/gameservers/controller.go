@@ -19,13 +19,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/agonio/agon/pkg/apis/stable"
-	stablev1alpha1 "github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/clientset/versioned"
-	getterv1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	listerv1alpha1 "github.com/agonio/agon/pkg/client/listers/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg/apis/stable"
+	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -78,10 +78,10 @@ func NewController(minPort, maxPort int32,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
-	agonClient versioned.Interface,
-	agonInformerFactory externalversions.SharedInformerFactory) *Controller {
+	agonesClient versioned.Interface,
+	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
-	gameServers := agonInformerFactory.Stable().V1alpha1().GameServers()
+	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServers.Informer()
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -95,13 +95,13 @@ func NewController(minPort, maxPort int32,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
 		podLister:              kubeInformerFactory.Core().V1().Pods().Lister(),
-		gameServerGetter:       agonClient.StableV1alpha1(),
+		gameServerGetter:       agonesClient.StableV1alpha1(),
 		gameServerLister:       gameServers.Lister(),
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".GameServerController"),
-		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonInformerFactory),
-		healthController:       NewHealthController(kubeClient, agonClient, kubeInformerFactory, agonInformerFactory),
+		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
+		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 		recorder:               recorder,
 	}
 
@@ -410,7 +410,7 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 // sidecar creates the sidecar container for a given GameServer
 func (c *Controller) sidecar(gs *stablev1alpha1.GameServer) corev1.Container {
 	sidecar := corev1.Container{
-		Name:  "agon-gameserver-sidecar",
+		Name:  "agones-gameserver-sidecar",
 		Image: c.sidecarImage,
 		Env: []corev1.EnvVar{
 			{
@@ -607,7 +607,7 @@ func (c Controller) Address(pod *corev1.Pod) (string, error) {
 // Has a deadline of 60 seconds for this to occur.
 func (c Controller) waitForEstablishedCRD() error {
 	return wait.PollImmediate(500*time.Millisecond, 60*time.Second, func() (done bool, err error) {
-		crd, err := c.crdGetter.Get("gameservers.stable.agon.io", metav1.GetOptions{})
+		crd, err := c.crdGetter.Get("gameservers.stable.agones.dev", metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

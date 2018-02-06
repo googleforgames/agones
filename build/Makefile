@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #
-# Makefile for building, testing and developing Agon
+# Makefile for building, testing and developing Agones
 #
 
 #  __     __         _       _     _
@@ -34,34 +34,34 @@ base_version = 0.1
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
 # The registry that is being used to store docker images
-REGISTRY ?= gcr.io/agon-images
+REGISTRY ?= gcr.io/agones-images
 # Where the kubectl configuration files are being stored
 KUBEPATH ?= ~/.kube
 # The (gcloud) test cluster that is being worked against
 CLUSTER_NAME ?= test-cluster
 # the profile to use when developing on minikube
-MINIKUBE_PROFILE ?= agon
+MINIKUBE_PROFILE ?= agones
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
-agon_path := $(realpath $(build_path)/..)
+agones_path := $(realpath $(build_path)/..)
 
-agon_package = github.com/agonio/agon
-mount_path = /go/src/$(agon_package)
+agones_package = agones.dev/agones
+mount_path = /go/src/$(agones_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(KUBEPATH):/root/.kube \
-				-v $(agon_path):$(mount_path)
+				-v $(agones_path):$(mount_path)
 
 # Use a hash of the Dockerfile for the tag, so when the Dockerfile changes,
 # it automatically rebuilds
 build_version := $(shell sha256sum $(build_path)/build-image/Dockerfile | head -c 10)
-build_tag = agon-build:$(build_version)
+build_tag = agones-build:$(build_version)
 build_remote_tag = $(REGISTRY)/$(build_tag)
-controller_tag = $(REGISTRY)/agon-controller:$(VERSION)
-sidecar_tag = $(REGISTRY)/agon-sdk:$(VERSION)
+controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
+sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
-go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
+go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
@@ -92,19 +92,19 @@ include ./includes/$(osinclude)
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-agon-sdk-image
+build-images: build-controller-image build-agones-sdk-image
 
 #build all the sdks
 build-sdks: build-sdk-cpp
 
 # Run all tests
 test: ensure-build-image
-	docker run --rm $(common_mounts) --entrypoint=go $(build_tag) test -race $(agon_package)/...
+	docker run --rm $(common_mounts) --entrypoint=go $(build_tag) test -race $(agones_package)/...
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-agon-sdk-image
+push: push-controller-image push-agones-sdk-image
 
-# Installs the current development version of Agon into the Kubernetes cluster
+# Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: ensure-build-image
@@ -117,35 +117,35 @@ install: ensure-build-image
 # Build a static binary for the gameserver controller
 build-controller-binary: ensure-build-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agon_package)/cmd/controller
+		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Build the image for the gameserver controller
 build-controller-image: ensure-build-image build-controller-binary
-	docker build $(agon_path)/cmd/controller/ --tag=$(controller_tag)
+	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag)
 
 # push the gameservers controller image
 push-controller-image: ensure-build-image
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-agon-sdk-binary: ensure-build-image
+build-agones-sdk-binary: ensure-build-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agon_package)/cmd/sdk-server
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_version_flags) $(agon_package)/cmd/sdk-server
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_version_flags) $(agones_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_version_flags) $(agon_package)/cmd/sdk-server
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
-build-agon-sdk-image: ensure-build-image build-agon-sdk-binary
-	docker build $(agon_path)/cmd/sdk-server/ --tag=$(sidecar_tag)
+build-agones-sdk-image: ensure-build-image build-agones-sdk-binary
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag)
 
 # Build the cpp sdk linux archive
 build-sdk-cpp: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp --entrypoint make $(build_tag) build install archive VERSION=$(VERSION)
 
 # push the gameservers sidecar image
-push-agon-sdk-image: ensure-build-image
+push-agones-sdk-image: ensure-build-image
 	docker push $(sidecar_tag)
 
 # Generate the SDK gRPC server and client code
@@ -255,33 +255,33 @@ clean-gcloud-config:
 #  |_|  |_|_|_| |_|_|_|\_\\__,_|_.__/ \___|
 #
 
-# Switches to an "agon" profile, and starts a kubernetes cluster
+# Switches to an "agones" profile, and starts a kubernetes cluster
 # of the right version.
 #
 # Use MINIKUBE_DRIVER variable to change the VM driver 
 # (defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
-minikube-test-cluster: minikube-agon-profile
+minikube-test-cluster: minikube-agones-profile
 	$(MINIKUBE) start --kubernetes-version v1.8.0 --vm-driver $(MINIKUBE_DRIVER)
 	$(MAKE) minikube-post-start
 
-# switch to the agon cluster
-minikube-agon-profile:
+# switch to the agones cluster
+minikube-agones-profile:
 	$(MINIKUBE) profile $(MINIKUBE_PROFILE)
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
-minikube-shell: ensure-build-image minikube-agon-profile
+minikube-shell: ensure-build-image minikube-agones-profile
 	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount) $(ARGS)"
 
-# Push the local Agon Docker images that have already been built
-# via `make build` or `make build-images` into the "agon" minikube instance.
-minikube-push: minikube-agon-profile
+# Push the local Agones Docker images that have already been built
+# via `make build` or `make build-images` into the "agones" minikube instance.
+minikube-push: minikube-agones-profile
 	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
 	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
 
-# Installs the current development version of Agon into the Kubernetes cluster.
+# Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
-minikube-install: minikube-agon-profile
+minikube-install: minikube-agones-profile
 	$(MAKE) install ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
 
 # Convenience target for transferring images into minikube.

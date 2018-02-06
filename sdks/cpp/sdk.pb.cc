@@ -35,8 +35,8 @@
 #endif
 // @@protoc_insertion_point(includes)
 namespace stable {
-namespace agon {
-namespace io {
+namespace agones {
+namespace dev {
 namespace sdk {
 class EmptyDefaultTypeInternal {
  public:
@@ -44,8 +44,8 @@ class EmptyDefaultTypeInternal {
       _instance;
 } _Empty_default_instance_;
 }  // namespace sdk
-}  // namespace io
-}  // namespace agon
+}  // namespace dev
+}  // namespace agones
 }  // namespace stable
 namespace protobuf_sdk_2eproto {
 void InitDefaultsEmptyImpl() {
@@ -57,11 +57,11 @@ void InitDefaultsEmptyImpl() {
   ::google::protobuf::internal::InitProtobufDefaults();
 #endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
-    void* ptr = &::stable::agon::io::sdk::_Empty_default_instance_;
-    new (ptr) ::stable::agon::io::sdk::Empty();
+    void* ptr = &::stable::agones::dev::sdk::_Empty_default_instance_;
+    new (ptr) ::stable::agones::dev::sdk::Empty();
     ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::stable::agon::io::sdk::Empty::InitAsDefaultInstance();
+  ::stable::agones::dev::sdk::Empty::InitAsDefaultInstance();
 }
 
 void InitDefaultsEmpty() {
@@ -73,17 +73,17 @@ void InitDefaultsEmpty() {
 
 const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agon::io::sdk::Empty, _internal_metadata_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::Empty, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-  { 0, -1, sizeof(::stable::agon::io::sdk::Empty)},
+  { 0, -1, sizeof(::stable::agones::dev::sdk::Empty)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::stable::agon::io::sdk::_Empty_default_instance_),
+  reinterpret_cast<const ::google::protobuf::Message*>(&::stable::agones::dev::sdk::_Empty_default_instance_),
 };
 
 void protobuf_AssignDescriptors() {
@@ -108,16 +108,17 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\tsdk.proto\022\022stable.agon.io.sdk\"\007\n\005Empty"
-      "2\316\001\n\003SDK\022\?\n\005Ready\022\031.stable.agon.io.sdk.E"
-      "mpty\032\031.stable.agon.io.sdk.Empty\"\000\022B\n\010Shu"
-      "tdown\022\031.stable.agon.io.sdk.Empty\032\031.stabl"
-      "e.agon.io.sdk.Empty\"\000\022B\n\006Health\022\031.stable"
-      ".agon.io.sdk.Empty\032\031.stable.agon.io.sdk."
-      "Empty\"\000(\001B\005Z\003sdkb\006proto3"
+      "\n\tsdk.proto\022\025stable.agones.dev.sdk\"\007\n\005Em"
+      "pty2\340\001\n\003SDK\022E\n\005Ready\022\034.stable.agones.dev"
+      ".sdk.Empty\032\034.stable.agones.dev.sdk.Empty"
+      "\"\000\022H\n\010Shutdown\022\034.stable.agones.dev.sdk.E"
+      "mpty\032\034.stable.agones.dev.sdk.Empty\"\000\022H\n\006"
+      "Health\022\034.stable.agones.dev.sdk.Empty\032\034.s"
+      "table.agones.dev.sdk.Empty\"\000(\001B\005Z\003sdkb\006p"
+      "roto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 264);
+      descriptor, 285);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
 }
@@ -134,8 +135,8 @@ struct StaticDescriptorInitializer {
 } static_descriptor_initializer;
 }  // namespace protobuf_sdk_2eproto
 namespace stable {
-namespace agon {
-namespace io {
+namespace agones {
+namespace dev {
 namespace sdk {
 
 // ===================================================================
@@ -151,14 +152,14 @@ Empty::Empty()
     ::protobuf_sdk_2eproto::InitDefaultsEmpty();
   }
   SharedCtor();
-  // @@protoc_insertion_point(constructor:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.Empty)
 }
 Empty::Empty(const Empty& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  // @@protoc_insertion_point(copy_constructor:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(copy_constructor:stable.agones.dev.sdk.Empty)
 }
 
 void Empty::SharedCtor() {
@@ -166,7 +167,7 @@ void Empty::SharedCtor() {
 }
 
 Empty::~Empty() {
-  // @@protoc_insertion_point(destructor:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(destructor:stable.agones.dev.sdk.Empty)
   SharedDtor();
 }
 
@@ -197,7 +198,7 @@ Empty* Empty::New(::google::protobuf::Arena* arena) const {
 }
 
 void Empty::Clear() {
-// @@protoc_insertion_point(message_clear_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.Empty)
   ::google::protobuf::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
@@ -209,7 +210,7 @@ bool Empty::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.Empty)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
@@ -222,17 +223,17 @@ bool Empty::MergePartialFromCodedStream(
           input, tag, _internal_metadata_.mutable_unknown_fields()));
   }
 success:
-  // @@protoc_insertion_point(parse_success:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(parse_success:stable.agones.dev.sdk.Empty)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(parse_failure:stable.agones.dev.sdk.Empty)
   return false;
 #undef DO_
 }
 
 void Empty::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(serialize_start:stable.agones.dev.sdk.Empty)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -240,13 +241,13 @@ void Empty::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
   }
-  // @@protoc_insertion_point(serialize_end:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(serialize_end:stable.agones.dev.sdk.Empty)
 }
 
 ::google::protobuf::uint8* Empty::InternalSerializeWithCachedSizesToArray(
     bool deterministic, ::google::protobuf::uint8* target) const {
   (void)deterministic; // Unused
-  // @@protoc_insertion_point(serialize_to_array_start:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(serialize_to_array_start:stable.agones.dev.sdk.Empty)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -254,12 +255,12 @@ void Empty::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
   }
-  // @@protoc_insertion_point(serialize_to_array_end:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(serialize_to_array_end:stable.agones.dev.sdk.Empty)
   return target;
 }
 
 size_t Empty::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(message_byte_size_start:stable.agones.dev.sdk.Empty)
   size_t total_size = 0;
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -275,22 +276,22 @@ size_t Empty::ByteSizeLong() const {
 }
 
 void Empty::MergeFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_merge_from_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(generalized_merge_from_start:stable.agones.dev.sdk.Empty)
   GOOGLE_DCHECK_NE(&from, this);
   const Empty* source =
       ::google::protobuf::internal::DynamicCastToGenerated<const Empty>(
           &from);
   if (source == NULL) {
-  // @@protoc_insertion_point(generalized_merge_from_cast_fail:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(generalized_merge_from_cast_fail:stable.agones.dev.sdk.Empty)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
-  // @@protoc_insertion_point(generalized_merge_from_cast_success:stable.agon.io.sdk.Empty)
+  // @@protoc_insertion_point(generalized_merge_from_cast_success:stable.agones.dev.sdk.Empty)
     MergeFrom(*source);
   }
 }
 
 void Empty::MergeFrom(const Empty& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(class_specific_merge_from_start:stable.agones.dev.sdk.Empty)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::google::protobuf::uint32 cached_has_bits = 0;
@@ -299,14 +300,14 @@ void Empty::MergeFrom(const Empty& from) {
 }
 
 void Empty::CopyFrom(const ::google::protobuf::Message& from) {
-// @@protoc_insertion_point(generalized_copy_from_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(generalized_copy_from_start:stable.agones.dev.sdk.Empty)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
 void Empty::CopyFrom(const Empty& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:stable.agon.io.sdk.Empty)
+// @@protoc_insertion_point(class_specific_copy_from_start:stable.agones.dev.sdk.Empty)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
@@ -334,8 +335,8 @@ void Empty::InternalSwap(Empty* other) {
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace sdk
-}  // namespace io
-}  // namespace agon
+}  // namespace dev
+}  // namespace agones
 }  // namespace stable
 
 // @@protoc_insertion_point(global_scope)

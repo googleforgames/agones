@@ -54,7 +54,7 @@ For a configuration that requires a health ping every 5 seconds, the example bel
 to be sure that the GameServer is under the threshold.
 
 ```cpp
-void doHealth(agon::SDK *sdk) {
+void doHealth(agones::SDK *sdk) {
     while (true) {
         if (!sdk->Health()) {
             std::cout << "Health ping failed" << std::endl;
@@ -66,7 +66,7 @@ void doHealth(agon::SDK *sdk) {
 }
 
 int main() {
-    agon::SDK *sdk = new agon::SDK();
+    agones::SDK *sdk = new agones::SDK();
     bool connected = sdk->Connect();
     if (!connected) {
         return -1;

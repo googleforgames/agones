@@ -5,7 +5,7 @@ Read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
 [C++ example](../../examples/cpp-simple).
 
 ## Dynamic and Static Libraries
-_Note:_ There has yet to be a release of Agon, so if you want static and dynamic libraries,
+_Note:_ There has yet to be a release of Agones, so if you want static and dynamic libraries,
 you will need to [build from source](build/README.md).
 
 If you do not wish to `make build` and build everything, 

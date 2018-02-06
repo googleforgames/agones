@@ -15,7 +15,7 @@
 #include "sdk.h"
 #include "sdk.pb.h"
 
-namespace agon {
+namespace agones {
 
     const int port = 59357;
 
@@ -28,10 +28,10 @@ namespace agon {
             return false;
         }
 
-        stub = stable::agon::io::sdk::SDK::NewStub(channel);
+        stub = stable::agones::dev::sdk::SDK::NewStub(channel);
 
         // make the health connection
-        stable::agon::io::sdk::Empty response;
+        stable::agones::dev::sdk::Empty response;
         health = stub->Health(new grpc::ClientContext(), &response);
 
         return true;
@@ -40,22 +40,22 @@ namespace agon {
     grpc::Status SDK::Ready() {
         grpc::ClientContext *context = new grpc::ClientContext();
         context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
-        stable::agon::io::sdk::Empty request;
-        stable::agon::io::sdk::Empty response;
+        stable::agones::dev::sdk::Empty request;
+        stable::agones::dev::sdk::Empty response;
 
         return stub->Ready(context, request, &response);
     }
 
     bool SDK::Health() {
-        stable::agon::io::sdk::Empty request;
+        stable::agones::dev::sdk::Empty request;
         return health->Write(request);
     }
 
     grpc::Status SDK::Shutdown() {
         grpc::ClientContext *context = new grpc::ClientContext();
         context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
-        stable::agon::io::sdk::Empty request;
-        stable::agon::io::sdk::Empty response;
+        stable::agones::dev::sdk::Empty request;
+        stable::agones::dev::sdk::Empty response;
 
         return stub->Shutdown(context, request, &response);
     }

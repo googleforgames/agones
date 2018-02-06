@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# ForceUpdate 1 -- change here if you need to force a rebuild
+
 # compiling proto + grpc takes an exceptionally long time
 # so we'll use that as the base.
 FROM grpc/cxx:1.8

@@ -18,7 +18,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/agonio/agon/pkg/sdk"
+	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
