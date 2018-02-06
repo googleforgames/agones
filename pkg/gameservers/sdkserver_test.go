@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"net/http"
@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
+	"github.com/agonio/agon/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -34,24 +34,24 @@ import (
 func TestSidecarRun(t *testing.T) {
 	fixtures := map[string]struct {
 		state      v1alpha1.State
-		f          func(*Sidecar, context.Context)
+		f          func(*SDKServer, context.Context)
 		recordings []string
 	}{
 		"ready": {
 			state: v1alpha1.RequestReady,
-			f: func(sc *Sidecar, ctx context.Context) {
+			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Ready(ctx, &sdk.Empty{})
 			},
 		},
 		"shutdown": {
 			state: v1alpha1.Shutdown,
-			f: func(sc *Sidecar, ctx context.Context) {
+			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Shutdown(ctx, &sdk.Empty{})
 			},
 		},
 		"unhealthy": {
 			state: v1alpha1.Unhealthy,
-			f: func(sc *Sidecar, ctx context.Context) {
+			f: func(sc *SDKServer, ctx context.Context) {
 				// we have a 1 second timeout
 				time.Sleep(2 * time.Second)
 			},
@@ -82,7 +82,7 @@ func TestSidecarRun(t *testing.T) {
 				return true, gs, nil
 			})
 
-			sc, err := NewSidecar("test", "default",
+			sc, err := NewSDKServer("test", "default",
 				false, time.Second, 1, 0, m.kubeClient, m.agonClient)
 			sc.recorder = m.fakeRecorder
 
@@ -284,7 +284,7 @@ func TestSidecarHealthy(t *testing.T) {
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
 	m := newMocks()
-	sc, err := NewSidecar("test", "default",
+	sc, err := NewSDKServer("test", "default",
 		false, 1*time.Second, 1, 0, m.kubeClient, m.agonClient)
 	assert.Nil(t, err)
 	now := time.Now().Add(time.Hour).UTC()
@@ -307,12 +307,12 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError)
 }
 
-func defaultSidecar(mocks mocks) (*Sidecar, error) {
-	return NewSidecar("test", "default",
+func defaultSidecar(mocks mocks) (*SDKServer, error) {
+	return NewSDKServer("test", "default",
 		true, 5*time.Second, 1, 0, mocks.kubeClient, mocks.agonClient)
 }
 
-func waitForMessage(sc *Sidecar) error {
+func waitForMessage(sc *SDKServer) error {
 	return wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
 		sc.healthMutex.RLock()
 		defer sc.healthMutex.RUnlock()

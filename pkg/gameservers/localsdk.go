@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,39 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"io"
 
-	"github.com/agonio/agon/gameservers/sidecar/sdk"
+	"github.com/agonio/agon/pkg/sdk"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
 
-var _ sdk.SDKServer = &Local{}
+var _ sdk.SDKServer = &LocalSDKServer{}
 
-// Local type is the SDKServer implementation for when the sidecar
+// LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
-type Local struct {
+type LocalSDKServer struct {
 }
 
 // Ready logs that the Ready request has been received
-func (l *Local) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
+func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Ready request has been received!")
 	return &sdk.Empty{}, nil
 }
 
 // Shutdown logs that the shutdown request has been received
-func (l *Local) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
+func (l *LocalSDKServer) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Shutdown request has been received!")
 	return &sdk.Empty{}, nil
 }
 
 // Health logs each health ping that comes down the stream
-func (l *Local) Health(stream sdk.SDK_HealthServer) error {
+func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {

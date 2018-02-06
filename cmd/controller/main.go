@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,9 @@ import (
 	"github.com/agonio/agon/pkg"
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
 	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	"github.com/agonio/agon/pkg/signals"
+	"github.com/agonio/agon/pkg/gameservers"
 	"github.com/agonio/agon/pkg/util/runtime"
+	"github.com/agonio/agon/pkg/util/signals"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -46,7 +47,7 @@ func init() {
 
 // main starts the operator for the gameserver CRD
 func main() {
-	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/gameservers-sidecar:"+pkg.Version)
+	viper.SetDefault(sidecarFlag, "gcr.io/agon-images/agon-sdk:"+pkg.Version)
 	viper.SetDefault(pullSidecarFlag, false)
 
 	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
@@ -101,7 +102,7 @@ func main() {
 
 	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
+	c := gameservers.NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonClient, agonInformerFactory)
 
 	stop := signals.NewStopChannel()
 

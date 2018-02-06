@@ -30,7 +30,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: gameservers-controller
+  name: agon-controller
 spec:
   replicas: 1
   strategy:
@@ -41,8 +41,8 @@ spec:
         stable.agon.io/role: controller
     spec:
       containers:
-      - name: gameservers-controller
-        image: gcr.io/agon-images/gameservers-controller:0.1
+      - name: agon-controller
+        image: gcr.io/agon-images/agon-controller:0.1
         env:
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
@@ -51,7 +51,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         # - name: SIDECAR # overwrite the GameServer sidecar image that is used
-        #   value: gcr.io/agon-images/gameservers-sidecar:0.1
+        #   value: gcr.io/agon-images/agon-sdk:0.1
         livenessProbe:
           httpGet:
             path: /healthz

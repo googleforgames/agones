@@ -18,5 +18,5 @@ cd /go/src/github.com/agonio/agon
 protoc -I . sdk.proto --go_out=plugins=grpc:sdks/go
 cat ./build/boilerplate.go.txt ./sdks/go/sdk.pb.go >> ./sdk.pb.go
 goimports -w ./sdk.pb.go
-cp ./sdk.pb.go ./gameservers/sidecar/sdk
+cp ./sdk.pb.go ./pkg/sdk
 mv ./sdk.pb.go ./sdks/go

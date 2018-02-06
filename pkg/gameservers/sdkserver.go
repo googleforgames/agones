@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package gameservers
 
 import (
 	"fmt"
@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/agonio/agon/gameservers/sidecar/sdk"
 	"github.com/agonio/agon/pkg/apis/stable"
 	stablev1alpha1 "github.com/agonio/agon/pkg/apis/stable/v1alpha1"
 	"github.com/agonio/agon/pkg/client/clientset/versioned"
 	typedv1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	"github.com/agonio/agon/pkg/sdk"
 	"github.com/agonio/agon/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -41,11 +41,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var _ sdk.SDKServer = &Sidecar{}
+var _ sdk.SDKServer = &SDKServer{}
 
-// Sidecar GameServer sidecar implementation that will update the
-// game server status on SDK request
-type Sidecar struct {
+// SDKServer is a gRPC server, that is meant to be a sidecar
+// for a GameServer that will update the game server status on SDK requests
+type SDKServer struct {
 	gameServerName         string
 	namespace              string
 	gameServerGetter       typedv1alpha1.GameServersGetter
@@ -61,12 +61,12 @@ type Sidecar struct {
 	recorder               record.EventRecorder
 }
 
-// NewSidecar creates a Sidecar that sets up an
+// NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
-func NewSidecar(gameServerName, namespace string,
+func NewSDKServer(gameServerName, namespace string,
 	healthDisabled bool, healthTimeout time.Duration, healthFailureThreshold int64, healthInitialDelay time.Duration,
 	kubeClient kubernetes.Interface,
-	agonClient versioned.Interface) (*Sidecar, error) {
+	agonClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("ok"))
@@ -81,7 +81,7 @@ func NewSidecar(gameServerName, namespace string,
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
 
-	s := &Sidecar{
+	s := &SDKServer{
 		gameServerName:   gameServerName,
 		namespace:        namespace,
 		gameServerGetter: agonClient.StableV1alpha1(),
@@ -120,21 +120,21 @@ func NewSidecar(gameServerName, namespace string,
 
 // initHealthLastUpdated adds the initial delay to now, then it will always be after `now`
 // until the delay passes
-func (s *Sidecar) initHealthLastUpdated(healthInitialDelay time.Duration) {
+func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
 	s.healthLastUpdated = s.clock.Now().UTC().Add(healthInitialDelay)
 }
 
-func (s *Sidecar) newWorkQueue() workqueue.RateLimitingInterface {
+func (s *SDKServer) newWorkQueue() workqueue.RateLimitingInterface {
 	return workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
 		fmt.Sprintf("%s/%s/%s", stable.GroupName, s.namespace, s.gameServerName))
 }
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (s *Sidecar) Run(stop <-chan struct{}) {
+func (s *SDKServer) Run(stop <-chan struct{}) {
 	defer s.queue.ShutDown()
 
-	logrus.Info("Starting Sidecar http health check...")
+	logrus.Info("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
@@ -161,12 +161,12 @@ func (s *Sidecar) Run(stop <-chan struct{}) {
 // runWorker is a long-running function that will continually call the
 // processNextWorkItem function in order to read and process a message on the
 // workqueue.
-func (s *Sidecar) runWorker() {
+func (s *SDKServer) runWorker() {
 	for s.processNextWorkItem() {
 	}
 }
 
-func (s *Sidecar) processNextWorkItem() bool {
+func (s *SDKServer) processNextWorkItem() bool {
 	obj, quit := s.queue.Get()
 	if quit {
 		return false
@@ -197,7 +197,7 @@ func (s *Sidecar) processNextWorkItem() bool {
 
 // updateState sets the GameServer Status's state to the state
 // that has been passed through
-func (s *Sidecar) updateState(state stablev1alpha1.State) error {
+func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	logrus.WithField("state", state).Info("Updating state")
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := gameServers.Get(s.gameServerName, metav1.GetOptions{})
@@ -224,7 +224,7 @@ func (s *Sidecar) updateState(state stablev1alpha1.State) error {
 
 // Ready enters the RequestReady state change for this GameServer into
 // the workqueue so it can be updated
-func (s *Sidecar) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
+func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Received Ready request, adding to queue")
 	s.queue.AddRateLimited(stablev1alpha1.RequestReady)
 	return e, nil
@@ -232,7 +232,7 @@ func (s *Sidecar) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 
 // Shutdown enters the Shutdown state change for this GameServer into
 // the workqueue so it can be updated
-func (s *Sidecar) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
+func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Received Shutdown request, adding to queue")
 	s.queue.AddRateLimited(stablev1alpha1.Shutdown)
 	return e, nil
@@ -240,7 +240,7 @@ func (s *Sidecar) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error
 
 // Health receives each health ping, and tracks the last time the health
 // check was received, to track if a GameServer is healthy
-func (s *Sidecar) Health(stream sdk.SDK_HealthServer) error {
+func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {
@@ -258,7 +258,7 @@ func (s *Sidecar) Health(stream sdk.SDK_HealthServer) error {
 // runHealth actively checks the health, and if not
 // healthy will push the Unhealthy state into the queue so
 // it can be updated
-func (s *Sidecar) runHealth() {
+func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
 		logrus.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
@@ -268,7 +268,7 @@ func (s *Sidecar) runHealth() {
 
 // touchHealthLastUpdated sets the healthLastUpdated
 // value to now in UTC
-func (s *Sidecar) touchHealthLastUpdated() {
+func (s *SDKServer) touchHealthLastUpdated() {
 	s.healthMutex.Lock()
 	defer s.healthMutex.Unlock()
 	s.healthLastUpdated = s.clock.Now().UTC()
@@ -278,7 +278,7 @@ func (s *Sidecar) touchHealthLastUpdated() {
 // checkHealth checks the healthLastUpdated value
 // and if it is outside the timeout value, log and
 // count a failure
-func (s *Sidecar) checkHealth() {
+func (s *SDKServer) checkHealth() {
 	timeout := s.healthLastUpdated.Add(s.healthTimeout)
 	if timeout.Before(s.clock.Now().UTC()) {
 		s.healthMutex.Lock()
@@ -291,7 +291,7 @@ func (s *Sidecar) checkHealth() {
 // healthy returns if the GameServer is
 // currently healthy or not based on the configured
 // failure count vs failure threshold
-func (s *Sidecar) healthy() bool {
+func (s *SDKServer) healthy() bool {
 	if s.healthDisabled {
 		return true
 	}

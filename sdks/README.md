@@ -46,10 +46,10 @@ _Note:_ There has yet to be a release of Agon, so if you want the local
 development tools, you will need to [build from source](build/README.md).
 
 If you do not wish to `make build` and build everything, 
-the `make` target `build-gameservers-sidecar-binary` will compile the necessary binaries
+the `make` target `build-agon-sdk-binary` will compile the necessary binaries
 for all supported operating systems (64 bit windows, linux and osx).
 
-You can find the binaries in the `bin` folder in [`gameservers/sidecar`](../gameservers/sidecar)
+You can find the binaries in the `bin` folder in [`cmd/sdk-server`](../cmd/sdk-server)
 once compilation is complete.
 
 When the game server is running on Agon, the SDK communicates over TCP to a small

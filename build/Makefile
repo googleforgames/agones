@@ -58,8 +58,8 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 build_version := $(shell sha256sum $(build_path)/build-image/Dockerfile | head -c 10)
 build_tag = agon-build:$(build_version)
 build_remote_tag = $(REGISTRY)/$(build_tag)
-controller_tag = $(REGISTRY)/gameservers-controller:$(VERSION)
-sidecar_tag = $(REGISTRY)/gameservers-sidecar:$(VERSION)
+controller_tag = $(REGISTRY)/agon-controller:$(VERSION)
+sidecar_tag = $(REGISTRY)/agon-sdk:$(VERSION)
 
 go_version_flags = -ldflags "-X github.com/agonio/agon/pkg.Version=$(VERSION)"
 
@@ -92,7 +92,7 @@ include ./includes/$(osinclude)
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-gameservers-controller-image build-gameservers-sidecar-image
+build-images: build-controller-image build-agon-sdk-image
 
 #build all the sdks
 build-sdks: build-sdk-cpp
@@ -102,7 +102,7 @@ test: ensure-build-image
 	docker run --rm $(common_mounts) --entrypoint=go $(build_tag) test -race $(agon_package)/...
 
 # Push all the images up to $(REGISTRY)
-push: push-gameservers-controller-image push-gameservers-sidecar-image
+push: push-controller-image push-agon-sdk-image
 
 # Installs the current development version of Agon into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
@@ -115,37 +115,37 @@ install: ensure-build-image
 	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
 
 # Build a static binary for the gameserver controller
-build-gameservers-controller-binary: ensure-build-image
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) --entrypoint=go $(build_tag) build \
-		-o $(mount_path)/gameservers/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/controller
+build-controller-binary: ensure-build-image
+	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agon_package)/cmd/controller
 
 # Build the image for the gameserver controller
-build-gameservers-controller-image: ensure-build-image build-gameservers-controller-binary
-	docker build $(agon_path)/gameservers/controller/ --tag=$(controller_tag)
+build-controller-image: ensure-build-image build-controller-binary
+	docker build $(agon_path)/cmd/controller/ --tag=$(controller_tag)
 
 # push the gameservers controller image
-push-gameservers-controller-image: ensure-build-image
+push-controller-image: ensure-build-image
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-gameservers-sidecar-binary: ensure-build-image
+build-agon-sdk-binary: ensure-build-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/gameservers/sidecar/bin/sidecar.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agon_package)/gameservers/sidecar
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agon_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/gameservers/sidecar/bin/sidecar.darwin.amd64 $(go_version_flags) $(agon_package)/gameservers/sidecar
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_version_flags) $(agon_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/gameservers/sidecar/bin/sidecar.windows.amd64.exe $(go_version_flags) $(agon_package)/gameservers/sidecar
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_version_flags) $(agon_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
-build-gameservers-sidecar-image: ensure-build-image build-gameservers-sidecar-binary
-	docker build $(agon_path)/gameservers/sidecar/ --tag=$(sidecar_tag)
+build-agon-sdk-image: ensure-build-image build-agon-sdk-binary
+	docker build $(agon_path)/cmd/sdk-server/ --tag=$(sidecar_tag)
 
 # Build the cpp sdk linux archive
 build-sdk-cpp: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp --entrypoint make $(build_tag) build install archive VERSION=$(VERSION)
 
 # push the gameservers sidecar image
-push-gameservers-sidecar-image: ensure-build-image
+push-agon-sdk-image: ensure-build-image
 	docker push $(sidecar_tag)
 
 # Generate the SDK gRPC server and client code
