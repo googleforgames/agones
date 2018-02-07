@@ -17,7 +17,6 @@ limitations under the License.
 package apiserver
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -310,7 +309,6 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 		&metav1.GetOptions{},
 		&metav1.DeleteOptions{},
 	)
-	parameterScheme.AddGeneratedDeepCopyFuncs(metav1.GetGeneratedDeepCopyFuncs()...)
 	parameterCodec := runtime.NewParameterCodec(parameterScheme)
 
 	kind := schema.GroupVersionKind{Group: crd.Spec.Group, Version: crd.Spec.Version, Kind: crd.Status.AcceptedNames.Kind}
@@ -333,7 +331,6 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 	storage := customresource.NewREST(
 		schema.GroupResource{Group: crd.Spec.Group, Resource: crd.Status.AcceptedNames.Plural},
 		schema.GroupVersionKind{Group: crd.Spec.Group, Version: crd.Spec.Version, Kind: crd.Status.AcceptedNames.ListKind},
-		UnstructuredCopier{},
 		customresource.NewStrategy(
 			typer,
 			crd.Spec.Scope == apiextensions.NamespaceScoped,
@@ -351,6 +348,8 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 		selfLinkPrefix = "/" + path.Join("apis", crd.Spec.Group, crd.Spec.Version, "namespaces") + "/"
 	}
 
+	clusterScoped := crd.Spec.Scope == apiextensions.ClusterScoped
+
 	requestScope := handlers.RequestScope{
 		Namer: handlers.ContextBasedNaming{
 			GetContext: func(req *http.Request) apirequest.Context {
@@ -358,7 +357,7 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 				return ret
 			},
 			SelfLinker:         meta.NewAccessor(),
-			ClusterScoped:      crd.Spec.Scope == apiextensions.ClusterScoped,
+			ClusterScoped:      clusterScoped,
 			SelfLinkPathPrefix: selfLinkPrefix,
 		},
 		ContextFunc: func(req *http.Request) apirequest.Context {
@@ -369,10 +368,12 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 		Serializer:     unstructuredNegotiatedSerializer{typer: typer, creator: creator},
 		ParameterCodec: parameterCodec,
 
-		Creater:         creator,
-		Convertor:       unstructured.UnstructuredObjectConverter{},
+		Creater: creator,
+		Convertor: crdObjectConverter{
+			UnstructuredObjectConverter: unstructured.UnstructuredObjectConverter{},
+			clusterScoped:               clusterScoped,
+		},
 		Defaulter:       unstructuredDefaulter{parameterScheme},
-		Copier:          UnstructuredCopier{},
 		Typer:           typer,
 		UnsafeConvertor: unstructured.UnstructuredObjectConverter{},
 
@@ -402,6 +403,24 @@ func (r *crdHandler) getServingInfoFor(crd *apiextensions.CustomResourceDefiniti
 	storageMap2[crd.UID] = ret
 	r.customStorage.Store(storageMap2)
 	return ret, nil
+}
+
+// crdObjectConverter is a converter that supports field selectors for CRDs.
+type crdObjectConverter struct {
+	unstructured.UnstructuredObjectConverter
+	clusterScoped bool
+}
+
+func (c crdObjectConverter) ConvertFieldLabel(version, kind, label, value string) (string, string, error) {
+	// We currently only support metadata.namespace and metadata.name.
+	switch {
+	case label == "metadata.name":
+		return label, value, nil
+	case !c.clusterScoped && label == "metadata.namespace":
+		return label, value, nil
+	default:
+		return "", "", fmt.Errorf("field label not supported: %s", label)
+	}
 }
 
 func (c *crdHandler) updateCustomResourceDefinition(oldObj, newObj interface{}) {
@@ -524,28 +543,6 @@ func (c unstructuredCreator) New(kind schema.GroupVersionKind) (runtime.Object, 
 	ret := &unstructured.Unstructured{}
 	ret.SetGroupVersionKind(kind)
 	return ret, nil
-}
-
-type UnstructuredCopier struct{}
-
-func (UnstructuredCopier) Copy(obj runtime.Object) (runtime.Object, error) {
-	if _, ok := obj.(runtime.Unstructured); !ok {
-		// Callers should not use this UnstructuredCopier for things other than Unstructured.
-		// If they do, the copy they get back will become Unstructured, which can lead to
-		// difficult-to-debug errors downstream. To make such errors more obvious,
-		// we explicitly reject anything that isn't Unstructured.
-		return nil, fmt.Errorf("UnstructuredCopier can't copy type %T", obj)
-	}
-
-	// serialize and deserialize to ensure a clean copy
-	buf := &bytes.Buffer{}
-	err := unstructured.UnstructuredJSONScheme.Encode(obj, buf)
-	if err != nil {
-		return nil, err
-	}
-	out := &unstructured.Unstructured{}
-	result, _, err := unstructured.UnstructuredJSONScheme.Decode(buf.Bytes(), nil, out)
-	return result, err
 }
 
 type unstructuredDefaulter struct {

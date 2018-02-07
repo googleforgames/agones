@@ -50,7 +50,7 @@ RUN go get -u github.com/golang/dep/cmd/dep && \
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
-    git clone -b release-1.8 --depth=3 https://github.com/kubernetes/code-generator.git
+    git clone -b kubernetes-1.9.2 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
