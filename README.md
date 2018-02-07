@@ -46,6 +46,12 @@ More documentation forthcoming.
 - [CPP Simple](./examples/cpp-simple) (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
 - [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones. 
  
+## Get involved
+
+- Slack (forthcoming)
+- [Twitter](https://twitter.com/agonesdev)
+- Mailing List (forthcoming)
+
 ## Development and Contribution
 See the tools in the [build](build/README.md) directory for testing and building Agones from source.
 
