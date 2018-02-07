@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	agonfake "github.com/agonio/agon/pkg/client/clientset/versioned/fake"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	"github.com/agonio/agon/pkg/sdk"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
@@ -44,8 +44,8 @@ type mocks struct {
 	kubeClient             *kubefake.Clientset
 	kubeInformationFactory informers.SharedInformerFactory
 	extClient              *extfake.Clientset
-	agonClient             *agonfake.Clientset
-	agonInformerFactory    externalversions.SharedInformerFactory
+	agonesClient           *agonesfake.Clientset
+	agonesInformerFactory  externalversions.SharedInformerFactory
 	fakeRecorder           *record.FakeRecorder
 }
 
@@ -53,14 +53,14 @@ func newMocks() mocks {
 	kubeClient := &kubefake.Clientset{}
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
 	extClient := &extfake.Clientset{}
-	agonClient := &agonfake.Clientset{}
-	agonInformerFactory := externalversions.NewSharedInformerFactory(agonClient, 30*time.Second)
+	agonesClient := &agonesfake.Clientset{}
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	m := mocks{
 		kubeClient:             kubeClient,
 		kubeInformationFactory: kubeInformationFactory,
 		extClient:              extClient,
-		agonClient:             agonClient,
-		agonInformerFactory:    agonInformerFactory,
+		agonesClient:           agonesClient,
+		agonesInformerFactory:  agonesInformerFactory,
 		fakeRecorder:           record.NewFakeRecorder(10),
 	}
 	return m
@@ -71,7 +71,7 @@ func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{},
 	stop := ctx.Done()
 
 	mocks.kubeInformationFactory.Start(stop)
-	mocks.agonInformerFactory.Start(stop)
+	mocks.agonesInformerFactory.Start(stop)
 
 	logrus.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, sync...) {

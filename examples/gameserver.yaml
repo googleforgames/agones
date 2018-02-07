@@ -21,7 +21,7 @@
 # and provides a sidecar for this game server that the SDK will connect with.
 #
 
-apiVersion: "stable.agon.io/v1alpha1"
+apiVersion: "stable.agones.dev/v1alpha1"
 kind: GameServer
 # GameServer Metadata
 # https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#objectmeta-v1-meta
@@ -65,5 +65,5 @@ spec:
     spec:
       containers:
       - name: example-server
-        image: gcr.io/agon/test-server:0.1
+        image: gcr.io/agones/test-server:0.1
         imagePullPolicy: Always

@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rsync -r /go/src/github.com/agonio/agon/vendor/k8s.io/ /go/src/k8s.io/
+rsync -r /go/src/agones.dev/agones/vendor/k8s.io/ /go/src/k8s.io/
 cd /go/src/k8s.io/code-generator
 ./generate-groups.sh "all" \
-    github.com/agonio/agon/pkg/client \
-    github.com/agonio/agon/pkg/apis stable:v1alpha1 \
-    --go-header-file=/go/src/github.com/agonio/agon/build/boilerplate.go.txt
+    agones.dev/agones/pkg/client \
+    agones.dev/agones/pkg/apis stable:v1alpha1 \
+    --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt

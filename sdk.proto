@@ -14,7 +14,7 @@
 
 syntax = "proto3";
 
-package stable.agon.io.sdk;
+package stable.agones.dev.sdk;
 option go_package = "sdk";
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar

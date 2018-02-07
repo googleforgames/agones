@@ -18,7 +18,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/agonio/agon/sdks/go"
+	"agones.dev/agones/sdks/go"
 )
 
 // main cheats a little, and just declares the game server as ready

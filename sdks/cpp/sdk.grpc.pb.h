@@ -39,90 +39,90 @@ class ServerContext;
 }  // namespace grpc
 
 namespace stable {
-namespace agon {
-namespace io {
+namespace agones {
+namespace dev {
 namespace sdk {
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
 class SDK final {
  public:
   static constexpr char const* service_full_name() {
-    return "stable.agon.io.sdk.SDK";
+    return "stable.agones.dev.sdk.SDK";
   }
   class StubInterface {
    public:
     virtual ~StubInterface() {}
     // Call when the GameServer is ready
-    virtual ::grpc::Status Ready(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::stable::agon::io::sdk::Empty* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>> AsyncReady(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>>(AsyncReadyRaw(context, request, cq));
+    virtual ::grpc::Status Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> AsyncReady(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(AsyncReadyRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>> PrepareAsyncReady(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>>(PrepareAsyncReadyRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> PrepareAsyncReady(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncReadyRaw(context, request, cq));
     }
     // Call when the GmaeServer is shutting down
-    virtual ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::stable::agon::io::sdk::Empty* response) = 0;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>> AsyncShutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>>(AsyncShutdownRaw(context, request, cq));
+    virtual ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> AsyncShutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(AsyncShutdownRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>>(PrepareAsyncShutdownRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncShutdownRaw(context, request, cq));
     }
     // Send a Empty every d Duration to declare that this GameSever is healthy
-    std::unique_ptr< ::grpc::ClientWriterInterface< ::stable::agon::io::sdk::Empty>> Health(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response) {
-      return std::unique_ptr< ::grpc::ClientWriterInterface< ::stable::agon::io::sdk::Empty>>(HealthRaw(context, response));
+    std::unique_ptr< ::grpc::ClientWriterInterface< ::stable::agones::dev::sdk::Empty>> Health(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) {
+      return std::unique_ptr< ::grpc::ClientWriterInterface< ::stable::agones::dev::sdk::Empty>>(HealthRaw(context, response));
     }
-    std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>> AsyncHealth(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>>(AsyncHealthRaw(context, response, cq, tag));
+    std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>> AsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>>(AsyncHealthRaw(context, response, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
+    std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
     }
   private:
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>* AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>* PrepareAsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agon::io::sdk::Empty>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientWriterInterface< ::stable::agon::io::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response) = 0;
-    virtual ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) = 0;
-    virtual ::grpc::ClientAsyncWriterInterface< ::stable::agon::io::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* PrepareAsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientWriterInterface< ::stable::agones::dev::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) = 0;
+    virtual ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) = 0;
+    virtual ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
     Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
-    ::grpc::Status Ready(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::stable::agon::io::sdk::Empty* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>> AsyncReady(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>>(AsyncReadyRaw(context, request, cq));
+    ::grpc::Status Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>> AsyncReady(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>>(AsyncReadyRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>> PrepareAsyncReady(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>>(PrepareAsyncReadyRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>> PrepareAsyncReady(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncReadyRaw(context, request, cq));
     }
-    ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::stable::agon::io::sdk::Empty* response) override;
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>> AsyncShutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>>(AsyncShutdownRaw(context, request, cq));
+    ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>> AsyncShutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>>(AsyncShutdownRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>>(PrepareAsyncShutdownRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>> PrepareAsyncShutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncShutdownRaw(context, request, cq));
     }
-    std::unique_ptr< ::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>> Health(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response) {
-      return std::unique_ptr< ::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>>(HealthRaw(context, response));
+    std::unique_ptr< ::grpc::ClientWriter< ::stable::agones::dev::sdk::Empty>> Health(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) {
+      return std::unique_ptr< ::grpc::ClientWriter< ::stable::agones::dev::sdk::Empty>>(HealthRaw(context, response));
     }
-    std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>> AsyncHealth(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>>(AsyncHealthRaw(context, response, cq, tag));
+    std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>> AsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>>(AsyncHealthRaw(context, response, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
+    std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
     }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>* AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>* PrepareAsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientAsyncResponseReader< ::stable::agon::io::sdk::Empty>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agon::io::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientWriter< ::stable::agon::io::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response) override;
-    ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) override;
-    ::grpc::ClientAsyncWriter< ::stable::agon::io::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agon::io::sdk::Empty* response, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* PrepareAsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* AsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* PrepareAsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientWriter< ::stable::agones::dev::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) override;
+    ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) override;
+    ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Ready_;
     const ::grpc::internal::RpcMethod rpcmethod_Shutdown_;
     const ::grpc::internal::RpcMethod rpcmethod_Health_;
@@ -134,11 +134,11 @@ class SDK final {
     Service();
     virtual ~Service();
     // Call when the GameServer is ready
-    virtual ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response);
+    virtual ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response);
     // Call when the GmaeServer is shutting down
-    virtual ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response);
+    virtual ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response);
     // Send a Empty every d Duration to declare that this GameSever is healthy
-    virtual ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agon::io::sdk::Empty>* reader, ::stable::agon::io::sdk::Empty* response);
+    virtual ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Ready : public BaseClass {
@@ -152,11 +152,11 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestReady(::grpc::ServerContext* context, ::stable::agon::io::sdk::Empty* request, ::grpc::ServerAsyncResponseWriter< ::stable::agon::io::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestReady(::grpc::ServerContext* context, ::stable::agones::dev::sdk::Empty* request, ::grpc::ServerAsyncResponseWriter< ::stable::agones::dev::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
@@ -172,11 +172,11 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestShutdown(::grpc::ServerContext* context, ::stable::agon::io::sdk::Empty* request, ::grpc::ServerAsyncResponseWriter< ::stable::agon::io::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestShutdown(::grpc::ServerContext* context, ::stable::agones::dev::sdk::Empty* request, ::grpc::ServerAsyncResponseWriter< ::stable::agones::dev::sdk::Empty>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
@@ -192,11 +192,11 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agon::io::sdk::Empty>* reader, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestHealth(::grpc::ServerContext* context, ::grpc::ServerAsyncReader< ::stable::agon::io::sdk::Empty, ::stable::agon::io::sdk::Empty>* reader, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestHealth(::grpc::ServerContext* context, ::grpc::ServerAsyncReader< ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::Empty>* reader, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncClientStreaming(2, context, reader, new_call_cq, notification_cq, tag);
     }
   };
@@ -213,7 +213,7 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -230,7 +230,7 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -247,7 +247,7 @@ class SDK final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agon::io::sdk::Empty>* reader, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -259,18 +259,18 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Ready() {
       ::grpc::Service::MarkMethodStreamed(0,
-        new ::grpc::internal::StreamedUnaryHandler< ::stable::agon::io::sdk::Empty, ::stable::agon::io::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Ready<BaseClass>::StreamedReady, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler< ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Ready<BaseClass>::StreamedReady, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithStreamedUnaryMethod_Ready() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedReady(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agon::io::sdk::Empty,::stable::agon::io::sdk::Empty>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedReady(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agones::dev::sdk::Empty,::stable::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Shutdown : public BaseClass {
@@ -279,18 +279,18 @@ class SDK final {
    public:
     WithStreamedUnaryMethod_Shutdown() {
       ::grpc::Service::MarkMethodStreamed(1,
-        new ::grpc::internal::StreamedUnaryHandler< ::stable::agon::io::sdk::Empty, ::stable::agon::io::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Shutdown<BaseClass>::StreamedShutdown, this, std::placeholders::_1, std::placeholders::_2)));
+        new ::grpc::internal::StreamedUnaryHandler< ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::Empty>(std::bind(&WithStreamedUnaryMethod_Shutdown<BaseClass>::StreamedShutdown, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithStreamedUnaryMethod_Shutdown() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agon::io::sdk::Empty* request, ::stable::agon::io::sdk::Empty* response) final override {
+    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response) final override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with streamed unary
-    virtual ::grpc::Status StreamedShutdown(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agon::io::sdk::Empty,::stable::agon::io::sdk::Empty>* server_unary_streamer) = 0;
+    virtual ::grpc::Status StreamedShutdown(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agones::dev::sdk::Empty,::stable::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
   };
   typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Shutdown<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
@@ -298,8 +298,8 @@ class SDK final {
 };
 
 }  // namespace sdk
-}  // namespace io
-}  // namespace agon
+}  // namespace dev
+}  // namespace agones
 }  // namespace stable
 
 

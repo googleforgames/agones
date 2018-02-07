@@ -17,13 +17,13 @@ package gameservers
 import (
 	"time"
 
-	"github.com/agonio/agon/pkg/apis/stable"
-	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/clientset/versioned"
-	getterv1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	listerv1alpha1 "github.com/agonio/agon/pkg/client/listers/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -54,15 +54,15 @@ type HealthController struct {
 }
 
 // NewHealthController returns a HealthController
-func NewHealthController(kubeClient kubernetes.Interface, agonClient versioned.Interface, kubeInformerFactory informers.SharedInformerFactory,
-	agonInformerFactory externalversions.SharedInformerFactory) *HealthController {
+func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned.Interface, kubeInformerFactory informers.SharedInformerFactory,
+	agonesInformerFactory externalversions.SharedInformerFactory) *HealthController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
 	hc := &HealthController{
 		podSynced:        podInformer.HasSynced,
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
-		gameServerGetter: agonClient.StableV1alpha1(),
-		gameServerLister: agonInformerFactory.Stable().V1alpha1().GameServers().Lister(),
+		gameServerGetter: agonesClient.StableV1alpha1(),
+		gameServerLister: agonesInformerFactory.Stable().V1alpha1().GameServers().Lister(),
 		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".HealthController"),
 	}
 

@@ -15,8 +15,8 @@
 package v1alpha1
 
 import (
-	"github.com/agonio/agon/pkg/apis/stable"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/util/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"

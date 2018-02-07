@@ -40,18 +40,18 @@ build_path := $(dir $(mkfile_path))
 #                 |___/
 
 # build the library
-build: ensure-bin libagonsdk
+build: ensure-bin libagonessdk
 
 # install into /usr/local in the appropriate places
 # make sure to install protoc and grpc from source first to build dependencies
 install:
-	cp $(build_path)/bin/libagonsdk.* /usr/local/lib
-	-mkdir -p /usr/local/include/agon
-	cp $(build_path)/*.h /usr/local/include/agon/
+	cp $(build_path)/bin/libagonessdk.* /usr/local/lib
+	-mkdir -p /usr/local/include/agones
+	cp $(build_path)/*.h /usr/local/include/agones/
 	ldconfig
 
 # make the .so build
-libagonsdk: sdk.grpc.pb.o sdk.pb.o sdk.o
+libagonessdk: sdk.grpc.pb.o sdk.pb.o sdk.o
 	$(CXX) $^ $(LDFLAGS) -shared -o $(build_path)/bin/$@.so
 	ar rcs $(build_path)/bin/$@.a $^
 
@@ -62,15 +62,15 @@ ensure-bin:
 # build dev and runtime tarballs
 archive: VERSION = "dev"
 archive:
-	-rm $(build_path)/bin/argonsdk-$(VERSION)-dev-linux-arch_64.tar.gz
-	-rm $(build_path)/bin/argonsdk-$(VERSION)-runtime-linux-arch_64.tar.gz
+	-rm $(build_path)/bin/agonessdk-$(VERSION)-dev-linux-arch_64.tar.gz
+	-rm $(build_path)/bin/agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz
 	cp /usr/local/lib/libgrpc.so.5 $(build_path)/bin/
 	cp /usr/local/lib/libprotobuf.so.15 $(build_path)/bin/
-	cp /usr/local/lib/libagonsdk.so $(build_path)/bin/
+	cp /usr/local/lib/libagonessdk.so $(build_path)/bin/
 	cp /usr/local/lib/libgpr.so.5 $(build_path)/bin/
 	cp /usr/local/lib/libgrpc_unsecure.so.5 $(build_path)/bin/
-	cd $(build_path)/bin && tar cvf argonsdk-$(VERSION)-runtime-linux-arch_64.tar.gz *
-	cd /usr/local && tar cvf $(build_path)/bin/argonsdk-$(VERSION)-dev-linux-arch_64.tar.gz lib include
+	cd $(build_path)/bin && tar cvf agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz *
+	cd /usr/local && tar cvf $(build_path)/bin/agonessdk-$(VERSION)-dev-linux-arch_64.tar.gz lib include
 
 clean:
 	-rm -r $(build_path)/bin

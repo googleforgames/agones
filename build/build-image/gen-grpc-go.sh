@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /go/src/github.com/agonio/agon
+cd /go/src/agones.dev/agones
 protoc -I . sdk.proto --go_out=plugins=grpc:sdks/go
 cat ./build/boilerplate.go.txt ./sdks/go/sdk.pb.go >> ./sdk.pb.go
 goimports -w ./sdk.pb.go

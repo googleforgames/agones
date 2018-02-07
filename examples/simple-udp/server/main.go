@@ -23,7 +23,7 @@ import (
 
 	"time"
 
-	"github.com/agonio/agon/sdks/go"
+	"agones.dev/agones/sdks/go"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time
@@ -53,7 +53,7 @@ func main() {
 	go doHealth(s, stop)
 
 	log.Print("Marking this server as ready")
-	// This tells Agon that the server is ready to receive connections.
+	// This tells Agones that the server is ready to receive connections.
 	err = s.Ready()
 	if err != nil {
 		log.Fatalf("Could not send ready message")
@@ -72,7 +72,7 @@ func main() {
 		// shuts down the gameserver
 		case "EXIT":
 			log.Printf("Received EXIT command. Exiting.")
-			// This tells Agon to shutdown this Game Server
+			// This tells Agones to shutdown this Game Server
 			err := s.Shutdown()
 			if err != nil {
 				log.Printf("Could not shutdown")

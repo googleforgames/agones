@@ -17,9 +17,9 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: gameservers.stable.agon.io
+  name: gameservers.stable.agones.dev
 spec:
-  group: stable.agon.io
+  group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
   names:
@@ -32,7 +32,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: agon-controller
+  name: agones-controller
 spec:
   replicas: 1
   strategy:
@@ -40,17 +40,17 @@ spec:
   template:
     metadata:
       labels:
-        stable.agon.io/role: controller
+        stable.agones.dev/role: controller
     spec:
       containers:
-      - name: agon-controller
-        image: ${REGISTRY}/agon-controller:${VERSION}
+      - name: agones-controller
+        image: ${REGISTRY}/agones-controller:${VERSION}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "${ALWAYS_PULL_SIDECAR}"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: ${REGISTRY}/agon-sdk:${VERSION}
+          value: ${REGISTRY}/agones-sdk:${VERSION}
         - name: MIN_PORT
           value: "7000"
         - name: MAX_PORT

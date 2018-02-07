@@ -1,7 +1,7 @@
 # Simple UDP Server
 
 A very simple UDP logging server and client, for the purposes of demoing and testing
-running a UDP based server on Agon.
+running a UDP based server on Agones.
 
 ## Server
 Starts a server on port `7654` by default. Can be overwritten by `PORT` env var or `port` flag.

@@ -17,10 +17,10 @@ package gameservers
 import (
 	"sync"
 
-	"github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/informers/externalversions"
-	listerv1alpha1 "github.com/agonio/agon/pkg/client/listers/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -59,12 +59,12 @@ type PortAllocator struct {
 // the game servers
 func NewPortAllocator(minPort, maxPort int32,
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonInformerFactory externalversions.SharedInformerFactory) *PortAllocator {
+	agonesInformerFactory externalversions.SharedInformerFactory) *PortAllocator {
 	logrus.WithField("minPort", minPort).WithField("maxPort", maxPort).Info("Starting port allocator")
 
 	v1 := kubeInformerFactory.Core().V1()
 	nodes := v1.Nodes()
-	gameServers := agonInformerFactory.Stable().V1alpha1().GameServers()
+	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 
 	pa := &PortAllocator{
 		mutex:              sync.RWMutex{},

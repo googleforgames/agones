@@ -23,12 +23,12 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
-REPOSITORY = gcr.io/agon-images
+REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 server_tag = $(REPOSITORY)/udp-server:0.1
-package = github.com/agonio/agon/examples/simple-udp
+package = agones.dev/agones/examples/simple-udp
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

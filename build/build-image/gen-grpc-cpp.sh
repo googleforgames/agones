@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /go/src/github.com/agonio/agon
+cd /go/src/agones.dev/agones
 protoc -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
 protoc -I . --cpp_out=./sdks/cpp sdk.proto
 mkdir /tmp/cpp

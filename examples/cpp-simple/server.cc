@@ -18,11 +18,11 @@
 
 #include <iostream>
 #include <thread>
-#include <agon/sdk.h>
+#include <agones/sdk.h>
 #include <grpc++/grpc++.h>
 
 // send health check pings
-void doHealth(agon::SDK *sdk) {
+void doHealth(agones::SDK *sdk) {
     while (true) {
         if (!sdk->Health()) {
             std::cout << "Health ping failed" << std::endl;
@@ -37,7 +37,7 @@ int main() {
     std::cout << "C++ Game Server has started!" << std::endl;
 
     std::cout << "Getting the instance of the SDK!" << std::endl;
-    agon::SDK *sdk = new agon::SDK();
+    agones::SDK *sdk = new agones::SDK();
 
     std::cout << "Attempting to connect..." << std::endl;
     bool connected = sdk->Connect();

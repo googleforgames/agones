@@ -21,12 +21,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/agonio/agon/pkg/apis/stable"
-	stablev1alpha1 "github.com/agonio/agon/pkg/apis/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/client/clientset/versioned"
-	typedv1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
-	"github.com/agonio/agon/pkg/sdk"
-	"github.com/agonio/agon/pkg/util/runtime"
+	"agones.dev/agones/pkg/apis/stable"
+	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	typedv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -66,7 +66,7 @@ type SDKServer struct {
 func NewSDKServer(gameServerName, namespace string,
 	healthDisabled bool, healthTimeout time.Duration, healthFailureThreshold int64, healthInitialDelay time.Duration,
 	kubeClient kubernetes.Interface,
-	agonClient versioned.Interface) (*SDKServer, error) {
+	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("ok"))
@@ -84,7 +84,7 @@ func NewSDKServer(gameServerName, namespace string,
 	s := &SDKServer{
 		gameServerName:   gameServerName,
 		namespace:        namespace,
-		gameServerGetter: agonClient.StableV1alpha1(),
+		gameServerGetter: agonesClient.StableV1alpha1(),
 		server: &http.Server{
 			Addr:    ":8080",
 			Handler: mux,

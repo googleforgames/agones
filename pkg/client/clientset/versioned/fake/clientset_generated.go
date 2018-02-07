@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 package fake
 
 import (
-	clientset "github.com/agonio/agon/pkg/client/clientset/versioned"
-	stablev1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1"
-	fakestablev1alpha1 "github.com/agonio/agon/pkg/client/clientset/versioned/typed/stable/v1alpha1/fake"
+	clientset "agones.dev/agones/pkg/client/clientset/versioned"
+	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	fakestablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
