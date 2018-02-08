@@ -44,7 +44,7 @@ build: build-go-binary
 # build the go binary with Docker, so you don't have to install anything
 build-go-binary: MOUNTPATH="/go/src/agones.dev/agones"
 build-go-binary:
-	docker run --rm -v $(agones_path):$(MOUNTPATH) golang:1.9.2 go build -o $(MOUNTPATH)/examples/xonotic/bin/sdk agones.dev/agones/examples/xonotic
+	docker run --rm -v $(agones_path):$(MOUNTPATH) golang:1.9.4 go build -o $(MOUNTPATH)/examples/xonotic/bin/sdk agones.dev/agones/examples/xonotic
 
 
 
