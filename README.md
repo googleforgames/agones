@@ -53,7 +53,12 @@ More documentation forthcoming.
 - Mailing List (forthcoming)
 
 ## Development and Contribution
+
+Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones.
+
 See the tools in the [build](build/README.md) directory for testing and building Agones from source.
+
+Agones is in active development - we would love your help in shaping its future!
 
 ## Licence
 
