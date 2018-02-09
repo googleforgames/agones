@@ -81,6 +81,9 @@ endif
 
 include ./includes/$(osinclude)
 
+# personal includes, excluded from the git repository
+-include ./local-includes/*.mk
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -99,7 +102,7 @@ build-sdks: build-sdk-cpp
 
 # Run all tests
 test: ensure-build-image
-	docker run --rm $(common_mounts) --entrypoint=go $(build_tag) test -race $(agones_package)/...
+	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/...
 
 # Push all the images up to $(REGISTRY)
 push: push-controller-image push-agones-sdk-image
@@ -112,7 +115,7 @@ install: ensure-build-image
 	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' \
 		-e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' \
 		$(build_path)/.install.yaml
-	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
 
 # Build a static binary for the gameserver controller
 build-controller-binary: ensure-build-image
@@ -121,7 +124,7 @@ build-controller-binary: ensure-build-image
 
 # Build the image for the gameserver controller
 build-controller-image: ensure-build-image build-controller-binary
-	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag)
+	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: ensure-build-image
@@ -138,11 +141,11 @@ build-agones-sdk-binary: ensure-build-image
 
 # Build the image for the gameserver sidecar
 build-agones-sdk-image: ensure-build-image build-agones-sdk-binary
-	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag)
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build the cpp sdk linux archive
 build-sdk-cpp: ensure-build-image
-	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp --entrypoint make $(build_tag) build install archive VERSION=$(VERSION)
+	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make build install archive VERSION=$(VERSION)
 
 # push the gameservers sidecar image
 push-agones-sdk-image: ensure-build-image
@@ -150,36 +153,36 @@ push-agones-sdk-image: ensure-build-image
 
 # Generate the SDK gRPC server and client code
 gen-gameservers-sdk-grpc: ensure-build-image
-	docker run --rm $(common_mounts) --entrypoint="/root/gen-grpc-go.sh" $(build_tag)
-	docker run --rm $(common_mounts) --entrypoint="/root/gen-grpc-cpp.sh" $(build_tag)
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-go.sh
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-cpp.sh
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: ensure-build-image
-	docker run --rm $(common_mounts) --entrypoint="/root/gen-crd-client.sh" $(build_tag)
-	docker run --rm $(common_mounts) --entrypoint=goimports $(build_tag) -w $(mount_path)/pkg
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
+	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
-# Can use ARGS for extra arguments.
+# Can use DOCKER_RUN_ARGS for extra arguments.
 shell: ensure-build-image
 	docker run -it --rm \
 		$(common_mounts) \
 		-w $(mount_path) \
-		$(ARGS) \
-		--entrypoint=bash $(build_tag) -l
+		$(DOCKER_RUN_ARGS) \
+		$(build_tag) bash -l
 
 # run a container with godoc
 godoc:
 	if [ ! -f $(build_path)/.index ]; then \
 		touch $(build_path)/.index && \
 		docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-				--entrypoint=godoc $(build_tag) -http=":8888" -index=true -write_index=true -index_files=/root/.index;\
+				$(build_tag) godoc -http=":8888" -index=true -write_index=true -index_files=/root/.index;\
 	fi
 	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-		--entrypoint=godoc $(build_tag) -http=":8888" -index=true -index_files=/root/.index
+		$(build_tag) godoc -http=":8888" -index=true -index_files=/root/.index
 
 # Creates the build docker image
 build-build-image:
-	docker build --tag=$(build_tag) $(build_path)/build-image
+	docker build --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
 
 # Deletes the local build docker image
 clean-build-image:
@@ -215,24 +218,21 @@ push-build-image:
 
 # Initialise the gcloud login and project configuration, if you are working with GCP
 gcloud-init: ensure-build-config
-	docker run --rm -it \
-		$(common_mounts) \
-		--entrypoint="gcloud" $(build_tag) init
+	docker run --rm -it $(common_mounts) $(build_tag) gcloud init
 
 # Creates and authenticates a small, 3 node GKE cluster to work against
 gcloud-test-cluster: ensure-build-image
-	docker run --rm -it $(common_mounts) \
-		--entrypoint="gcloud" $(build_tag) \
+	docker run --rm -it $(common_mounts) $(build_tag) gcloud \
 		deployment-manager deployments create test-cluster --config=$(mount_path)/build/gke-test-cluster/deployment.yml
 	$(MAKE) gcloud-auth-cluster
 
 # Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: ensure-build-image
-	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) config set container/cluster $(CLUSTER_NAME)
-	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) config set compute/zone \
+	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(CLUSTER_NAME)
+	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone \
 		`grep zone: $(build_path)/gke-test-cluster/deployment.yml | sed 's/zone: //'`
-	docker run --rm $(common_mounts) --entrypoint="gcloud" $(build_tag) container clusters get-credentials $(CLUSTER_NAME)
+	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(CLUSTER_NAME)
 
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
@@ -271,7 +271,7 @@ minikube-agones-profile:
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
 minikube-shell: ensure-build-image minikube-agones-profile
-	$(MAKE) shell ARGS="--network=host -v $(minikube_cert_mount) $(ARGS)"
+	$(MAKE) shell DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS)"
 
 # Push the local Agones Docker images that have already been built
 # via `make build` or `make build-images` into the "agones" minikube instance.
@@ -282,7 +282,7 @@ minikube-push: minikube-agones-profile
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: minikube-agones-profile
-	$(MAKE) install ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
+	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
 
 # Convenience target for transferring images into minikube.
 # Use TAG to specify the image to transfer into minikube

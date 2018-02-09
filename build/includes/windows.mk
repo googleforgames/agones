@@ -51,10 +51,10 @@ cert_path = $(realpath $(shell $(MINIKUBE) docker-env --shell bash | grep DOCKER
 minikube-post-start:
 	echo "Creating minikube credentials"
 	export CERT_PATH=$(cert_path) && \
-	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl config set-cluster $(MINIKUBE_PROFILE) \
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl config set-cluster $(MINIKUBE_PROFILE) \
 		--certificate-authority=$$CERT_PATH/ca.crt --server=https://$$($(MINIKUBE) ip):8443 && \
-	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl config set-credentials $(MINIKUBE_PROFILE) \
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl config set-credentials $(MINIKUBE_PROFILE) \
 		--client-certificate=$$CERT_PATH/client.crt --client-key=$$CERT_PATH/client.key
-	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl config set-context $(MINIKUBE_PROFILE) \
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl config set-context $(MINIKUBE_PROFILE) \
 		--cluster=$(MINIKUBE_PROFILE) --user=$(MINIKUBE_PROFILE)
-	docker run --rm $(common_mounts) $(ARGS) $(build_tag) kubectl config use-context $(MINIKUBE_PROFILE)
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl config use-context $(MINIKUBE_PROFILE)
