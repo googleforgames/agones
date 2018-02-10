@@ -136,6 +136,13 @@ func (pa *PortAllocator) Allocate() (int32, error) {
 	return -1, ErrPortNotFound
 }
 
+// DeAllocate marks the given port as no longer allocated
+func (pa *PortAllocator) DeAllocate(port int32) {
+	pa.mutex.Lock()
+	defer pa.mutex.Unlock()
+	pa.portAllocations = setPortAllocation(port, pa.portAllocations, false)
+}
+
 // syncAddNode adds another node port section
 // to the available ports
 func (pa *PortAllocator) syncAddNode(obj interface{}) {
@@ -156,12 +163,9 @@ func (pa *PortAllocator) syncAddNode(obj interface{}) {
 // syncDeleteGameServer when a GameServer Pod is deleted
 // make the HostPort available
 func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
-	pa.mutex.Lock()
-	defer pa.mutex.Unlock()
-
 	gs := object.(*v1alpha1.GameServer)
 	logrus.WithField("gs", gs).Info("syncing deleted GameServer")
-	pa.portAllocations = setPortAllocation(gs.Spec.HostPort, pa.portAllocations, false)
+	pa.DeAllocate(gs.Spec.HostPort)
 }
 
 // syncPortAllocations syncs the pod, node and gameserver caches then

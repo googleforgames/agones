@@ -73,7 +73,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol: "UDP",
-				state:    Creating,
+				state:    PortAllocation,
 				policy:   Dynamic,
 				health: Health{
 					Disabled:            false,
@@ -115,6 +115,26 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 			},
 		},
+		"set basic defaults on static gameserver": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					PortPolicy: Static,
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol: "UDP",
+				state:    Creating,
+				policy:   Static,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    3,
+					InitialDelaySeconds: 5,
+					PeriodSeconds:       5,
+				},
+			},
+		},
 		"health is disabled": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
@@ -125,7 +145,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol: "UDP",
-				state:    Creating,
+				state:    PortAllocation,
 				policy:   Dynamic,
 				health: Health{
 					Disabled: true,
@@ -146,6 +166,30 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 		})
 	}
+}
+
+func TestGameServerValidate(t *testing.T) {
+	gs := GameServer{
+		Spec: GameServerSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+	}
+	gs.ApplyDefaults()
+	ok, causes := gs.Validate()
+	assert.True(t, ok)
+	assert.Empty(t, causes)
+
+	gs = GameServer{
+		Spec: GameServerSpec{
+			Container: "nope",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+	}
+	ok, causes = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, causes[0].Field, "container")
+	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 }
 
 func TestGameServerPod(t *testing.T) {

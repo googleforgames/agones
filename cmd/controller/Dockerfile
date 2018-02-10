@@ -1,6 +1,7 @@
 FROM alpine:3.7
 
 COPY ./bin/controller /home/agones/controller
+COPY ./certs /home/agones/certs
 RUN apk --update add ca-certificates && \
                 adduser -D agones && \
                 chown -R agones /home/agones && \

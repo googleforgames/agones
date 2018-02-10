@@ -183,6 +183,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mattbaird/jsonpatch"
+  packages = ["."]
+  revision = "81af80346b1a01caae0cbc27fd3c1ba5b11e189f"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   revision = "06020f85339e21b2478f756a78e295255ffa4d6a"
@@ -362,6 +368,7 @@
 [[projects]]
   name = "k8s.io/api"
   packages = [
+    "admission/v1beta1",
     "admissionregistration/v1alpha1",
     "admissionregistration/v1beta1",
     "apps/v1",
@@ -616,6 +623,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "faa21da15f8a0ce6e5c6faafd268ac059c252eac32d222215645cdc308e61c70"
+  inputs-digest = "e4e6f9000b679617c61b4af906948d2587e5105ea38aac81dd788caf502ffd27"
   solver-name = "gps-cdcl"
   solver-version = 1

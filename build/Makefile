@@ -261,6 +261,7 @@ clean-gcloud-config:
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: minikube-agones-profile
 	$(MINIKUBE) start --kubernetes-version v1.9.0 --vm-driver $(MINIKUBE_DRIVER) \
+		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
 		--extra-config=apiserver.Authorization.Mode=RBAC
 	# wait until the master is up
 	until docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \

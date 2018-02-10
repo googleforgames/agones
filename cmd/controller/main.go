@@ -18,6 +18,8 @@ package main
 import (
 	"strings"
 	"time"
+	"os"
+	"path/filepath"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -25,6 +27,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
+	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -39,6 +42,8 @@ const (
 	pullSidecarFlag = "always-pull-sidecar"
 	minPortFlag     = "min-port"
 	maxPortFlag     = "max-port"
+	certFileFlag    = "cert-file"
+	keyFileFlag     = "key-file"
 )
 
 func init() {
@@ -47,13 +52,23 @@ func init() {
 
 // main starts the operator for the gameserver CRD
 func main() {
+	exec, err := os.Executable()
+	if err != nil {
+		logrus.WithError(err).Fatal("Could not get executable path")
+	}
+
+	base := filepath.Dir(exec)
 	viper.SetDefault(sidecarFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
 	viper.SetDefault(pullSidecarFlag, false)
+	viper.SetDefault(certFileFlag, filepath.Join(base, "certs/server.crt"))
+	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
 
 	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
 	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
+	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
+	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -61,16 +76,22 @@ func main() {
 	runtime.Must(viper.BindEnv(pullSidecarFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
 	runtime.Must(viper.BindEnv(maxPortFlag))
+	runtime.Must(viper.BindEnv(keyFileFlag))
+	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	minPort := int32(viper.GetInt64(minPortFlag))
 	maxPort := int32(viper.GetInt64(maxPortFlag))
 	sidecarImage := viper.GetString(sidecarFlag)
 	alwaysPullSidecar := viper.GetBool(pullSidecarFlag)
+	keyFile := viper.GetString(keyFileFlag)
+	certFile := viper.GetString(certFileFlag)
 
 	logrus.WithField(sidecarFlag, sidecarImage).
 		WithField("minPort", minPort).
 		WithField("maxPort", maxPort).
+		WithField(keyFileFlag, keyFile).
+		WithField(certFileFlag, certFile).
 		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
 		WithField("Version", pkg.Version).Info("starting gameServer operator...")
 
@@ -102,12 +123,20 @@ func main() {
 
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := gameservers.NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+
+	wh := webhooks.NewWebHook(certFile, keyFile)
+	c := gameservers.NewController(wh, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
 	kubeInformationFactory.Start(stop)
 	agonesInformerFactory.Start(stop)
+
+	go func() {
+		if err := wh.Run(stop); err != nil { // nolint: vetshadow
+			logrus.WithError(err).Fatal("could not run webhook server")
+		}
+	}()
 
 	err = c.Run(2, stop)
 	if err != nil {
