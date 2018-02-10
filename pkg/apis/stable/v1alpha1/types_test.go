@@ -169,6 +169,7 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
 	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+	assert.Equal(t, "agones-sdk", pod.Spec.ServiceAccountName)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, fixture.Spec.HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
 	assert.Equal(t, fixture.Spec.ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
@@ -177,10 +178,12 @@ func TestGameServerPod(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 
 	sidecar := corev1.Container{Name: "sidecar", Image: "container/sidecar"}
+	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
 	pod, err = fixture.Pod(sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
+	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
 	assert.Equal(t, "sidecar", pod.Spec.Containers[1].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))

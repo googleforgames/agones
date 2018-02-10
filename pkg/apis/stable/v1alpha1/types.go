@@ -61,6 +61,8 @@ const (
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = stable.GroupName + "/container"
+	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
+	SidecarServiceAccountName = "agones-sdk"
 )
 
 var (
@@ -204,6 +206,9 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
 	// Make sure these are blank, just in case
 	pod.ResourceVersion = ""
+	if pod.Spec.ServiceAccountName == "" {
+		pod.Spec.ServiceAccountName = SidecarServiceAccountName
+	}
 	pod.UID = ""
 	if pod.ObjectMeta.Labels == nil {
 		pod.ObjectMeta.Labels = make(map[string]string, 2)
