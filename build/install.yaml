@@ -14,6 +14,11 @@
 
 # Install with development settings - suggest using `make install` to run
 
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agones-system
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -33,6 +38,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: agones-controller
+  namespace: agones-system
 spec:
   replicas: 1
   strategy:
