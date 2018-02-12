@@ -53,9 +53,6 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(KUBEPATH):/root/.kube \
 				-v $(agones_path):$(mount_path)
 
-# Use a hash of the Dockerfile for the tag, so when the Dockerfile changes,
-# it automatically rebuilds
-build_version := $(shell sha256sum $(build_path)/build-image/Dockerfile | head -c 10)
 build_tag = agones-build:$(build_version)
 build_remote_tag = $(REGISTRY)/$(build_tag)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
@@ -76,7 +73,7 @@ ifneq ($(findstring Microsoft,$(shell uname -r)),)
 else ifeq ($(uname),Linux)
 	osinclude := linux.mk
 else ifeq ($(uname),Darwin)
-	osinclude := osx.mk
+	osinclude := macos.mk
 endif
 
 include ./includes/$(osinclude)
@@ -112,9 +109,10 @@ install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: ensure-build-image
 	cp $(build_path)/install.yaml $(build_path)/.install.yaml
-	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' -e 's!$${VERSION}!$(VERSION)!g' \
-		-e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' \
-		$(build_path)/.install.yaml
+	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' $(build_path)/.install.yaml
+	sed -i -e 's!$${VERSION}!$(VERSION)!g' $(build_path)/.install.yaml
+	sed -i -e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' $(build_path)/.install.yaml
+	sed -i -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' $(build_path)/.install.yaml
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
 
 # Build a static binary for the gameserver controller
@@ -258,8 +256,8 @@ clean-gcloud-config:
 # Switches to an "agones" profile, and starts a kubernetes cluster
 # of the right version.
 #
-# Use MINIKUBE_DRIVER variable to change the VM driver 
-# (defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
+# Use MINIKUBE_DRIVER variable to change the VM driver
+# (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: minikube-agones-profile
 	$(MINIKUBE) start --kubernetes-version v1.8.0 --vm-driver $(MINIKUBE_DRIVER)
 	$(MAKE) minikube-post-start

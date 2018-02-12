@@ -14,7 +14,7 @@ tasks you may wish to accomplish.
    1. [Building on Different Platforms](#building-on-different-platforms)
       1. [Linux](#linux)
       1. [Windows](#windows)
-      1. [OSX](#osx)
+      1. [macOS](#macOS)
    1. [GOPATH](#gopath)
    1. [Testing and Building](#testing-and-building)
       1. [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
@@ -60,7 +60,7 @@ as this makes it easy to create a (relatively) cross platform development and bu
   driver - the same virtualisation platform as the Docker installation.
 - **Note**: If you want to dev and test with Minikube, you **must** run WSL as Administrator, otherwise Minikube can't control HyperV.
 
-### OSX
+### macOS
 
 - Install Make, `brew install make`, if it's not installed already
 - Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
@@ -71,9 +71,7 @@ This has currently yet to be tested, but should have few issues around testing, 
 
 Issues with building and developing on Minikube are currently expected, due to lack of testing, but Agones will run on Minikube.  
 
-Testing on OSX and reporting bugs are appreciated. 
-
-You can see progress on this on the [Build Agones on OSX](https://github.com/googleprivate/agones/issues/46) ticket.
+Testing on macOS and reporting bugs are appreciated.
 
 ## GOPATH
 
@@ -326,8 +324,8 @@ Since Minikube runs locally, there are some targets that need to be used instead
 Switches to an "agones" profile, and starts a kubernetes cluster
 of the right version.
 
-Use MINIKUBE_DRIVER variable to change the VM driver 
-(defaults virtualbox for Linux and OSX, hyperv for windows) if you so desire.
+Use MINIKUBE_DRIVER variable to change the VM driver
+(defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 
 #### `minikube-push`
 Push the local Agones Docker images that have already been built 
