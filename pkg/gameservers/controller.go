@@ -25,6 +25,7 @@ import (
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/health"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -64,7 +65,7 @@ type Controller struct {
 	nodeLister             corelisterv1.NodeLister
 	queue                  workqueue.RateLimitingInterface
 	portAllocator          *PortAllocator
-	healthController       *HealthController
+	monitor                health.Monitor
 	server                 *http.Server
 	recorder               record.EventRecorder
 	// this allows for overwriting for testing purposes
@@ -79,7 +80,9 @@ func NewController(minPort, maxPort int32,
 	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
-	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
+	agonesInformerFactory externalversions.SharedInformerFactory,
+	monitor health.Monitor,
+) *Controller {
 
 	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServers.Informer()
@@ -101,7 +104,7 @@ func NewController(minPort, maxPort int32,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".GameServerController"),
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
-		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		monitor:                monitor,
 		recorder:               recorder,
 	}
 
@@ -181,8 +184,8 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 		return err
 	}
 
-	// Run the Health Controller
-	go c.healthController.Run(stop)
+	// Run the Health Monitor
+	go c.monitor.Run(stop)
 
 	logrus.Info("Starting workers...")
 	for i := 0; i < threadiness; i++ {

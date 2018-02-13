@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package health
 
 import (
 	"time"
@@ -41,10 +41,10 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-// HealthController watches Pods, and applies
+// DefaultMonitor watches Pods, and applies
 // an Unhealthy state if the GameServer main container exits when in
 // a Ready state
-type HealthController struct {
+type DefaultMonitor struct {
 	podSynced        cache.InformerSynced
 	podLister        corelisterv1.PodLister
 	gameServerGetter getterv1alpha1.GameServersGetter
@@ -53,42 +53,47 @@ type HealthController struct {
 	recorder         record.EventRecorder
 }
 
-// NewHealthController returns a HealthController
-func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned.Interface, kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *HealthController {
+// Monitor describes the health interface.
+type Monitor interface {
+	Run(stop <-chan struct{})
+}
+
+// NewMonitor is the default initializer for a DefaultMonitor
+func NewMonitor(kubeClient kubernetes.Interface, agonesClient versioned.Interface, kubeInformerFactory informers.SharedInformerFactory,
+	agonesInformerFactory externalversions.SharedInformerFactory) *DefaultMonitor {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
-	hc := &HealthController{
+	m := &DefaultMonitor{
 		podSynced:        podInformer.HasSynced,
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
 		gameServerGetter: agonesClient.StableV1alpha1(),
 		gameServerLister: agonesInformerFactory.Stable().V1alpha1().GameServers().Lister(),
-		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".HealthController"),
+		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".HealthMonitor"),
 	}
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(logrus.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
-	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
+	m.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-monitor"})
 
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
 			if owner := metav1.GetControllerOf(pod); owner != nil && owner.Kind == "GameServer" {
-				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.failedContainer(pod) {
+				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && m.failedContainer(pod) {
 					key := pod.ObjectMeta.Namespace + "/" + owner.Name
 					logrus.WithField("key", key).Info("GameServer container has terminated")
-					hc.enqueueGameServer(key)
+					m.enqueueGameServer(key)
 				}
 			}
 		},
 	})
-	return hc
+	return m
 }
 
 // failedContainer checks each container, and determines if there was a failed
 // container
-func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
+func (m *DefaultMonitor) failedContainer(pod *corev1.Pod) bool {
 	container := pod.Annotations[v1alpha1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == container && cs.State.Terminated != nil {
@@ -100,13 +105,13 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 }
 
 // enqueue puts the name of the GameServer into the queue
-func (hc *HealthController) enqueueGameServer(key string) {
+func (hc *DefaultMonitor) enqueueGameServer(key string) {
 	hc.queue.AddRateLimited(key)
 }
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (hc *HealthController) Run(stop <-chan struct{}) {
+func (hc *DefaultMonitor) Run(stop <-chan struct{}) {
 	defer hc.queue.ShutDown()
 
 	logrus.Info("Starting health worker")
@@ -118,12 +123,12 @@ func (hc *HealthController) Run(stop <-chan struct{}) {
 // runWorker is a long-running function that will continually call the
 // processNextWorkItem function in order to read and process a message on the
 // workqueue.
-func (hc *HealthController) runWorker() {
+func (hc *DefaultMonitor) runWorker() {
 	for hc.processNextWorkItem() {
 	}
 }
 
-func (hc *HealthController) processNextWorkItem() bool {
+func (hc *DefaultMonitor) processNextWorkItem() bool {
 	obj, quit := hc.queue.Get()
 	if quit {
 		return false
@@ -153,7 +158,7 @@ func (hc *HealthController) processNextWorkItem() bool {
 }
 
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
-func (hc *HealthController) syncGameServer(key string) error {
+func (hc *DefaultMonitor) syncGameServer(key string) error {
 	logrus.WithField("key", key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name

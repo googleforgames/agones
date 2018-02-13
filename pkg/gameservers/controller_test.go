@@ -779,7 +779,7 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func
 func newFakeController() (*Controller, mocks) {
 	m := newMocks()
 	c := NewController(10, 20, "sidecar:dev", false,
-		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory)
+		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory, m.healthMonitor)
 	c.recorder = m.fakeRecorder
 	return c, m
 }
