@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Install with development settings - suggest using `make install` to run
-
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -48,6 +46,7 @@ spec:
       labels:
         stable.agones.dev/role: controller
     spec:
+      serviceAccountName: agones-controller
       containers:
       - name: agones-controller
         image: ${REGISTRY}/agones-controller:${VERSION}
@@ -67,3 +66,97 @@ spec:
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 3
+---
+# Service account, secret, role and rolebinding for sidecar (agones-sdk) pod
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agones-sdk
+secrets:
+- name: agones-sdk-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agones-sdk-secret
+  annotations:
+    kubernetes.io/service-account.name: agones-sdk
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agones-sdk
+  namespace: agones-system
+rules:
+- apiGroups: ["stable.agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-sdk-access
+  namespace: agones-system
+subjects:
+- kind: User
+  name: system:serviceaccount:default:agones-sdk
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-sdk
+---
+# Service account, secret, role and rolebinding for agones-controller
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agones-controller
+  namespace: agones-system
+secrets:
+- name: agones-controller-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agones-controller-secret
+  namespace: agones-system
+  annotations:
+    kubernetes.io/service-account.name: agones-controller
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agones-controller
+  namespace: agones-system
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create", "delete", "list", "watch"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list", "watch"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: ["stable.agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["delete", "get", "list", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-controller-access
+  namespace: agones-system
+subjects:
+- kind: User
+  name: system:serviceaccount:agones-system:agones-controller
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-controller

@@ -21,6 +21,7 @@ resources:
     cluster:
       name: test-cluster
       description: Test cluster for Agones
+      initialClusterVersion: 1.8.7-gke.1
       nodePools:
         - name: "default"
           initialNodeCount: 3
@@ -35,6 +36,8 @@ resources:
       masterAuth:
         username: admin
         password: supersecretpassword
+      legacyAbac:
+        enabled: false
 - name: game-server-firewall
   type: compute.beta.firewall
   properties:

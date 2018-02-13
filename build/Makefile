@@ -231,6 +231,7 @@ gcloud-auth-cluster: ensure-build-image
 	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone \
 		`grep zone: $(build_path)/gke-test-cluster/deployment.yml | sed 's/zone: //'`
 	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(CLUSTER_NAME)
+	-docker run --rm $(common_mounts) $(build_tag) bash -c 'kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $$(gcloud config get-value account)'
 
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
@@ -259,7 +260,17 @@ clean-gcloud-config:
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: minikube-agones-profile
-	$(MINIKUBE) start --kubernetes-version v1.8.0 --vm-driver $(MINIKUBE_DRIVER)
+	$(MINIKUBE) start --kubernetes-version v1.8.0 --vm-driver $(MINIKUBE_DRIVER) \
+		--extra-config=apiserver.Authorization.Mode=RBAC
+	# wait until the master is up
+	until docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
+		do \
+			echo "Waiting for cluster to start..."; \
+			sleep 1; \
+		done
+	# this is needed for kubernetes component to work correctly while RBAC is enabled
+	-docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
+		kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
 	$(MAKE) minikube-post-start
 
 # switch to the agones cluster
