@@ -11,7 +11,7 @@ This software is currently alpha, and subject to change. Not to be used in produ
 - Client SDKs for integration with dedicated game servers to work with Agones.
 
 ## Requirements
-- Requires a Kubernetes cluster of version 1.8+
+- Requires a Kubernetes cluster of version 1.9+
 - Open the firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [project SDK](sdks) integrated, to manage Game Server state, health checking, etc.
 
