@@ -23,6 +23,10 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
+# Use a hash of the Dockerfile for the tag, so when the Dockerfile changes,
+# it automatically rebuilds
+build_version := $(shell sha256sum $(build_path)/build-image/Dockerfile | head -c 10)
+
 # Minikube executable
 MINIKUBE ?= minikube
 # Default minikube driver
