@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/health"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/sirupsen/logrus"
@@ -102,7 +103,18 @@ func main() {
 
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	c := gameservers.NewController(minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+	c := gameservers.NewController(
+		minPort,
+		maxPort,
+		sidecarImage,
+		alwaysPullSidecar,
+		kubeClient,
+		kubeInformationFactory,
+		extClient,
+		agonesClient,
+		agonesInformerFactory,
+		health.NewMonitor(kubeClient, agonesClient, kubeInformationFactory, agonesInformerFactory),
+	)
 
 	stop := signals.NewStopChannel()
 

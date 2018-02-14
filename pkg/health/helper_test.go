@@ -12,21 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package health
 
 import (
 	"context"
-	"time"
-
 	"io"
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/health"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -48,12 +46,7 @@ type mocks struct {
 	agonesClient           *agonesfake.Clientset
 	agonesInformerFactory  externalversions.SharedInformerFactory
 	fakeRecorder           *record.FakeRecorder
-	healthMonitor          health.Monitor
 }
-
-type fakeHealthMonitor struct{}
-
-func (fakeHealthMonitor) Run(stop <-chan struct{}) {}
 
 func newMocks() mocks {
 	kubeClient := &kubefake.Clientset{}
@@ -61,7 +54,6 @@ func newMocks() mocks {
 	extClient := &extfake.Clientset{}
 	agonesClient := &agonesfake.Clientset{}
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
-	healthMonitor := fakeHealthMonitor{}
 	m := mocks{
 		kubeClient:             kubeClient,
 		kubeInformationFactory: kubeInformationFactory,
@@ -69,7 +61,6 @@ func newMocks() mocks {
 		agonesClient:           agonesClient,
 		agonesInformerFactory:  agonesInformerFactory,
 		fakeRecorder:           record.NewFakeRecorder(10),
-		healthMonitor:          healthMonitor,
 	}
 	return m
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package health
 
 import (
 	"testing"
@@ -27,11 +27,11 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestHealthControllerFailedContainer(t *testing.T) {
+func TestDefaultMonitorFailedContainer(t *testing.T) {
 	t.Parallel()
 
 	m := newMocks()
-	hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
+	hc := NewMonitor(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -51,7 +51,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	assert.False(t, hc.failedContainer(pod2))
 }
 
-func TestHealthControllerSyncGameServer(t *testing.T) {
+func TestDefaultMonitorSyncGameServer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
@@ -81,7 +81,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	for name, test := range fixtures {
 		t.Run(name, func(t *testing.T) {
 			m := newMocks()
-			hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
+			hc := NewMonitor(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
 
 			gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 				Status: v1alpha1.GameServerStatus{State: test.state}}
@@ -113,9 +113,9 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	}
 }
 
-func TestHealthControllerRun(t *testing.T) {
+func TestDefaultMonitorRun(t *testing.T) {
 	m := newMocks()
-	hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
+	hc := NewMonitor(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
 	hc.recorder = m.fakeRecorder
 
 	gsWatch := watch.NewFake()
