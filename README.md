@@ -50,7 +50,7 @@ More documentation forthcoming.
 
 - Slack (forthcoming)
 - [Twitter](https://twitter.com/agonesdev)
-- Mailing List (forthcoming)
+- [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss) 
 
 ## Development and Contribution
 
