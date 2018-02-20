@@ -24,6 +24,7 @@ import (
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -185,24 +186,29 @@ func TestControllerWatchGameServers(t *testing.T) {
 }
 
 func TestControllerHealthCheck(t *testing.T) {
-	c, mocks := newFakeController()
-	mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m := newMocks()
+	m.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, newEstablishedCRD(), nil
 	})
+	health := healthcheck.NewHandler()
+	c := NewController(webhooks.NewWebHook("", ""), health, 10, 20, "sidecar:dev", false,
+		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory)
 
 	c.workerqueue.SyncHandler = func(name string) error {
 		return nil
 	}
 
-	stop, cancel := startInformers(mocks, c.gameServerSynced)
+	stop, cancel := startInformers(m, c.gameServerSynced)
 	defer cancel()
+
+	go http.ListenAndServe("localhost:9090", health)
 
 	go func() {
 		err := c.Run(1, stop)
 		assert.Nil(t, err, "Run should not error")
 	}()
 
-	testHTTPHealth(t, "http://localhost:8080/healthz", "ok", http.StatusOK)
+	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusOK)
 }
 
 func TestControllerCreationHandler(t *testing.T) {
@@ -820,7 +826,7 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func
 func newFakeController() (*Controller, mocks) {
 	m := newMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, 10, 20, "sidecar:dev", false,
+	c := NewController(wh, healthcheck.NewHandler(), 10, 20, "sidecar:dev", false,
 		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory)
 	c.recorder = m.fakeRecorder
 	return c, m
