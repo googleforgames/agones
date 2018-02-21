@@ -23,8 +23,10 @@ import (
 )
 
 const (
-	// Creating is when the Pod for the GameServer is being created,
-	// but they have yet to register themselves yet as Ready
+	// PortAllocation is for when a dynamically allocating GameServer
+	// is being created, an open port needs to be allocated
+	PortAllocation State = "PortAllocation"
+	// Creating is before the Pod for the GameServer is being created
 	Creating State = "Creating"
 	// Starting is for when the Pods for the GameServer are being
 	// created but have yet to register themselves as Ready
@@ -161,7 +163,11 @@ func (gs *GameServer) ApplyDefaults() {
 	}
 
 	if gs.Status.State == "" {
-		gs.Status.State = Creating
+		if gs.Spec.PortPolicy == Dynamic {
+			gs.Status.State = PortAllocation
+		} else {
+			gs.Status.State = Creating
+		}
 	}
 
 	// health
@@ -176,6 +182,25 @@ func (gs *GameServer) ApplyDefaults() {
 			gs.Spec.Health.InitialDelaySeconds = 5
 		}
 	}
+}
+
+// Validate validates the GameServer configuration.
+// If a GameServer is invalid there will be > 0 values in
+// the returned array
+func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
+	var causes []metav1.StatusCause
+
+	// make sure the container value points to a valid container
+	_, _, err := gs.FindGameServerContainer()
+	if err != nil {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "container",
+			Message: err.Error(),
+		})
+	}
+
+	return len(causes) == 0, causes
 }
 
 // FindGameServerContainer returns the container that is specified in

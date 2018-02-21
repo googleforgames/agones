@@ -123,6 +123,30 @@ func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	wg.Wait()
 }
 
+func TestPortAllocatorDeAllocate(t *testing.T) {
+	t.Parallel()
+
+	m := newMocks()
+	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	nodes := []corev1.Node{n1, n2, n3}
+	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		nl := &corev1.NodeList{Items: nodes}
+		return true, nl, nil
+	})
+	stop, cancel := startInformers(m)
+	defer cancel()
+	err := pa.Run(stop)
+	assert.Nil(t, err)
+
+	port, err := pa.Allocate()
+	assert.Nil(t, err)
+	assert.True(t, port >= 10)
+	assert.Equal(t, 1, countAllocatedPorts(pa, port))
+
+	pa.DeAllocate(port)
+	assert.Equal(t, 0, countAllocatedPorts(pa, port))
+}
+
 func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	t.Parallel()
 

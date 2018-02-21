@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -26,8 +27,11 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	apiv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -72,7 +76,9 @@ type Controller struct {
 }
 
 // NewController returns a new gameserver crd controller
-func NewController(minPort, maxPort int32,
+func NewController(
+	wh *webhooks.WebHook,
+	minPort, maxPort int32,
 	sidecarImage string,
 	alwaysPullSidecarImage bool,
 	kubeClient kubernetes.Interface,
@@ -104,6 +110,8 @@ func NewController(minPort, maxPort int32,
 		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 		recorder:               recorder,
 	}
+
+	wh.AddHandler("/mutate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.enqueueGameServer,
@@ -146,6 +154,66 @@ func NewController(minPort, maxPort int32,
 	}
 
 	return c
+}
+
+// creationHandler is the handler for the mutating webhook that sets the
+// the default values on the GameServer, and validates the results
+// Should only be called on gameserver create operations.
+func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	logrus.WithField("review", review).Info("creationHandler")
+
+	obj := review.Request.Object
+	gs := &stablev1alpha1.GameServer{}
+	err := json.Unmarshal(obj.Raw, gs)
+	if err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
+	}
+
+	// This is the main logic of this function
+	// the rest is really just json plumbing
+	gs.ApplyDefaults()
+	ok, causes := gs.Validate()
+	if !ok {
+		review.Response.Allowed = false
+		details := metav1.StatusDetails{
+			Name:   review.Request.Name,
+			Group:  review.Request.Kind.Group,
+			Kind:   review.Request.Kind.Kind,
+			Causes: causes,
+		}
+		review.Response.Result = &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: "GameServer configuration is invalid: " + details.String(),
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &details,
+		}
+
+		logrus.WithField("review", review).Info("Invalid GameServer")
+		return review, nil
+	}
+
+	newGS, err := json.Marshal(gs)
+	if err != nil {
+		return review, errors.Wrapf(err, "error marshalling default applied GameSever %s to json", gs.ObjectMeta.Name)
+	}
+
+	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	json, err := json.Marshal(patch)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	logrus.WithField("gs", gs.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
+
+	pt := admv1beta1.PatchTypeJSONPatch
+	review.Response.PatchType = &pt
+	review.Response.Patch = json
+
+	return review, nil
 }
 
 // Run the GameServer controller. Will block until stop is closed.
@@ -269,7 +337,7 @@ func (c *Controller) syncGameServer(key string) error {
 	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
 		return err
 	}
-	if gs, err = c.syncGameServerBlankState(gs); err != nil {
+	if gs, err = c.syncGameServerPortAllocationState(gs); err != nil {
 		return err
 	}
 	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
@@ -326,33 +394,31 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *stablev1alpha1.GameServ
 	return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
 }
 
-// syncGameServerBlankState applies default values to the the GameServer if its state is "" (blank)
-// returns an updated GameServer
-func (c *Controller) syncGameServerBlankState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
-	if !(gs.Status.State == "" && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+// syncGameServerPortAllocationState gives a port to a dynamically allocating GameServer
+func (c *Controller) syncGameServerPortAllocationState(gs *stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, error) {
+	if !(gs.Status.State == stablev1alpha1.PortAllocation && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
 	gsCopy := gs.DeepCopy()
-	gsCopy.ApplyDefaults()
 
-	// manage dynamic ports
-	if gsCopy.Spec.PortPolicy == stablev1alpha1.Dynamic {
-		port, err := c.portAllocator.Allocate()
-		if err != nil {
-			return gsCopy, errors.Wrapf(err, "error allocating port for GameServer %s", gsCopy.Name)
-		}
-		gsCopy.Spec.HostPort = port
+	port, err := c.portAllocator.Allocate()
+	if err != nil {
+		return gsCopy, errors.Wrapf(err, "error allocating port for GameServer %s", gsCopy.Name)
 	}
+	gsCopy.Spec.HostPort = port
+	gsCopy.Status.State = stablev1alpha1.Creating
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
-	logrus.WithField("gs", gsCopy).Info("Syncing Blank State")
-	var err error
+	logrus.WithField("gs", gsCopy).Info("Syncing Port Allocation State")
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
+		// if the GameServer doesn't get updated with the port data, then put the port
+		// back in the pool, as it will get retried on the next pass
+		c.portAllocator.DeAllocate(port)
 		return gs, errors.Wrapf(err, "error updating GameServer %s to default values", gs.Name)
 	}
 
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Defaults applied")
 	return gs, nil
 }
 
