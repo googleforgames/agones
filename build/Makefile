@@ -157,7 +157,7 @@ gen-gameservers-sdk-grpc: ensure-build-image
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
-	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports
+	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
