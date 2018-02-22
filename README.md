@@ -52,6 +52,10 @@ More documentation forthcoming.
 - [Twitter](https://twitter.com/agonesdev)
 - [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss) 
 
+## Code of Conduct
+
+Participation in this project comes under the [Contributor Covenant Code of Conduct](code-of-conduct.md)
+
 ## Development and Contribution
 
 Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones.
