@@ -24,6 +24,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
+const sourceKey = "source"
+
 // stackTracer is the pkg/errors stacktrace interface
 type stackTracer interface {
 	StackTrace() errors.StackTrace
@@ -31,6 +33,8 @@ type stackTracer interface {
 
 // replace the standard glog error logger, with a logrus one
 func init() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+
 	runtime.ErrorHandlers[0] = func(err error) {
 		if stackTrace, ok := err.(stackTracer); ok {
 			var stack []string
@@ -57,4 +61,15 @@ func Must(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// NewLoggerWithSource returns a logrus.Entry to use when you want to specify an source
+func NewLoggerWithSource(source string) *logrus.Entry {
+	return logrus.WithField(sourceKey, source)
+}
+
+// NewLoggerWithType returns a logrus.Entry to use when you want to use a data type as the source
+// such as when you have a struct with methods
+func NewLoggerWithType(obj interface{}) *logrus.Entry {
+	return NewLoggerWithSource(fmt.Sprintf("%T", obj))
 }

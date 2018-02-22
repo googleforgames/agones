@@ -46,6 +46,7 @@ var _ sdk.SDKServer = &SDKServer{}
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
 type SDKServer struct {
+	logger                 *logrus.Entry
 	gameServerName         string
 	namespace              string
 	gameServerGetter       typedv1alpha1.GameServersGetter
@@ -68,18 +69,6 @@ func NewSDKServer(gameServerName, namespace string,
 	kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("ok"))
-		if err != nil {
-			logrus.WithError(err).Error("could not send ok response on healthz")
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	})
-
-	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(logrus.Infof)
-	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
 
 	s := &SDKServer{
 		gameServerName:   gameServerName,
@@ -95,14 +84,27 @@ func NewSDKServer(gameServerName, namespace string,
 		healthTimeout:          healthTimeout,
 		healthMutex:            sync.RWMutex{},
 		healthFailureCount:     0,
-		recorder:               recorder,
 	}
 
+	s.logger = runtime.NewLoggerWithType(s)
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(s.logger.Infof)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	s.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
+
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("ok"))
+		if err != nil {
+			s.logger.WithError(err).Error("could not send ok response on healthz")
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	})
 	mux.HandleFunc("/gshealthz", func(w http.ResponseWriter, r *http.Request) {
 		if s.healthy() {
 			_, err := w.Write([]byte("ok"))
 			if err != nil {
-				logrus.WithError(err).Error("could not send ok response on gshealthz")
+				s.logger.WithError(err).Error("could not send ok response on gshealthz")
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		} else {
@@ -113,7 +115,7 @@ func NewSDKServer(gameServerName, namespace string,
 	s.initHealthLastUpdated(healthInitialDelay)
 	s.queue = s.newWorkQueue()
 
-	logrus.WithField("gameServerName", s.gameServerName).WithField("namespace", s.namespace).Info("created GameServer sidecar")
+	s.logger.WithField("gameServerName", s.gameServerName).WithField("namespace", s.namespace).Info("created GameServer sidecar")
 
 	return s, nil
 }
@@ -134,28 +136,28 @@ func (s *SDKServer) newWorkQueue() workqueue.RateLimitingInterface {
 func (s *SDKServer) Run(stop <-chan struct{}) {
 	defer s.queue.ShutDown()
 
-	logrus.Info("Starting SDKServer http health check...")
+	s.logger.Info("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				logrus.WithError(err).Info("health check: http server closed")
+				s.logger.WithError(err).Info("health check: http server closed")
 			} else {
 				err := errors.Wrap(err, "Could not listen on :8080")
-				runtime.HandleError(logrus.WithError(err), err)
+				runtime.HandleError(s.logger.WithError(err), err)
 			}
 		}
 	}()
 	defer s.server.Close() // nolint: errcheck
 
 	if !s.healthDisabled {
-		logrus.Info("Starting GameServer health checking")
+		s.logger.Info("Starting GameServer health checking")
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
-	logrus.Info("Starting worker")
+	s.logger.Info("Starting worker")
 	go wait.Until(s.runWorker, time.Second, stop)
 	<-stop
-	logrus.Info("Shut down workers and health checking")
+	s.logger.Info("Shut down workers and health checking")
 }
 
 // runWorker is a long-running function that will continually call the
@@ -173,12 +175,12 @@ func (s *SDKServer) processNextWorkItem() bool {
 	}
 	defer s.queue.Done(obj)
 
-	logrus.WithField("obj", obj).Info("Processing obj")
+	s.logger.WithField("obj", obj).Info("Processing obj")
 
 	var state stablev1alpha1.State
 	var ok bool
 	if state, ok = obj.(stablev1alpha1.State); !ok {
-		runtime.HandleError(logrus.WithField("obj", obj), errors.Errorf("expected State in queue, but got %T", obj))
+		runtime.HandleError(s.logger.WithField("obj", obj), errors.Errorf("expected State in queue, but got %T", obj))
 		// this is a bad entry, we don't want to reprocess
 		s.queue.Forget(obj)
 		return true
@@ -186,7 +188,7 @@ func (s *SDKServer) processNextWorkItem() bool {
 
 	if err := s.updateState(state); err != nil {
 		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(s.logger.WithField("obj", obj), err)
 		s.queue.AddRateLimited(obj)
 		return true
 	}
@@ -198,7 +200,7 @@ func (s *SDKServer) processNextWorkItem() bool {
 // updateState sets the GameServer Status's state to the state
 // that has been passed through
 func (s *SDKServer) updateState(state stablev1alpha1.State) error {
-	logrus.WithField("state", state).Info("Updating state")
+	s.logger.WithField("state", state).Info("Updating state")
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := gameServers.Get(s.gameServerName, metav1.GetOptions{})
 	if err != nil {
@@ -207,7 +209,7 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 
 	// if the state is currently unhealthy, you can't go back to Ready
 	if gs.Status.State == stablev1alpha1.Unhealthy {
-		logrus.Info("State already unhealthy. Skipping update.")
+		s.logger.Info("State already unhealthy. Skipping update.")
 		return nil
 	}
 
@@ -225,7 +227,7 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 // Ready enters the RequestReady state change for this GameServer into
 // the workqueue so it can be updated
 func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Received Ready request, adding to queue")
+	s.logger.Info("Received Ready request, adding to queue")
 	s.queue.AddRateLimited(stablev1alpha1.RequestReady)
 	return e, nil
 }
@@ -233,7 +235,7 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 // Shutdown enters the Shutdown state change for this GameServer into
 // the workqueue so it can be updated
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Received Shutdown request, adding to queue")
+	s.logger.Info("Received Shutdown request, adding to queue")
 	s.queue.AddRateLimited(stablev1alpha1.Shutdown)
 	return e, nil
 }
@@ -244,13 +246,13 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {
-			logrus.Info("Health stream closed.")
+			s.logger.Info("Health stream closed.")
 			return stream.SendAndClose(&sdk.Empty{})
 		}
 		if err != nil {
 			return errors.Wrap(err, "Error with Health check")
 		}
-		logrus.Info("Health Ping Received")
+		s.logger.Info("Health Ping Received")
 		s.touchHealthLastUpdated()
 	}
 }
@@ -261,7 +263,7 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
-		logrus.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
+		s.logger.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
 		s.queue.AddRateLimited(stablev1alpha1.Unhealthy)
 	}
 }
@@ -276,7 +278,7 @@ func (s *SDKServer) touchHealthLastUpdated() {
 }
 
 // checkHealth checks the healthLastUpdated value
-// and if it is outside the timeout value, log and
+// and if it is outside the timeout value, logger and
 // count a failure
 func (s *SDKServer) checkHealth() {
 	timeout := s.healthLastUpdated.Add(s.healthTimeout)
@@ -284,7 +286,7 @@ func (s *SDKServer) checkHealth() {
 		s.healthMutex.Lock()
 		defer s.healthMutex.Unlock()
 		s.healthFailureCount++
-		logrus.WithField("failureCount", s.healthFailureCount).Infof("GameServer Health Check failed")
+		s.logger.WithField("failureCount", s.healthFailureCount).Infof("GameServer Health Check failed")
 	}
 }
 

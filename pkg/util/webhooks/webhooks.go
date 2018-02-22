@@ -34,6 +34,7 @@ type Server interface {
 
 // WebHook manage Kubernetes webhooks
 type WebHook struct {
+	logger   *logrus.Entry
 	mux      *http.ServeMux
 	server   Server
 	certFile string
@@ -60,13 +61,16 @@ func NewWebHook(certFile, keyFile string) *WebHook {
 		Handler: mux,
 	}
 
-	return &WebHook{
+	wh := &WebHook{
 		mux:      mux,
 		server:   &server,
 		certFile: certFile,
 		keyFile:  keyFile,
 		handlers: map[string][]operationHandler{},
 	}
+	wh.logger = runtime.NewLoggerWithType(wh)
+
+	return wh
 }
 
 // Run runs the webhook server, starting a https listener.
@@ -77,11 +81,11 @@ func (wh *WebHook) Run(stop <-chan struct{}) error {
 		wh.server.Close() // nolint: errcheck
 	}()
 
-	logrus.WithField("webook", wh).Infof("webhook: https server started")
+	wh.logger.WithField("webook", wh).Infof("https server started")
 
 	err := wh.server.ListenAndServeTLS(wh.certFile, wh.keyFile)
 	if err == http.ErrServerClosed {
-		logrus.WithError(err).Info("webhook: https server closed")
+		wh.logger.WithError(err).Info("https server closed")
 		return nil
 	}
 
@@ -94,18 +98,18 @@ func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op v1beta1.Opera
 		wh.mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			err := wh.handle(path, w, r)
 			if err != nil {
-				runtime.HandleError(logrus.WithField("url", r.URL), err)
+				runtime.HandleError(wh.logger.WithField("url", r.URL), err)
 				w.WriteHeader(http.StatusInternalServerError)
 			}
 		})
 	}
-	logrus.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Info("Added webhook handler")
+	wh.logger.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Info("Added webhook handler")
 	wh.handlers[path] = append(wh.handlers[path], operationHandler{groupKind: gk, operation: op, handler: h})
 }
 
 // handle Handles http requests for webhooks
 func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) error {
-	logrus.WithField("path", path).Info("running webhook")
+	wh.logger.WithField("path", path).Info("running webhook")
 
 	var review v1beta1.AdmissionReview
 	err := json.NewDecoder(r.Body).Decode(&review)

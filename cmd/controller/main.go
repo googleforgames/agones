@@ -16,10 +16,10 @@
 package main
 
 import (
-	"strings"
-	"time"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -28,7 +28,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -46,15 +45,15 @@ const (
 	keyFileFlag     = "key-file"
 )
 
-func init() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-}
+var (
+	logger = runtime.NewLoggerWithSource("main")
+)
 
 // main starts the operator for the gameserver CRD
 func main() {
 	exec, err := os.Executable()
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not get executable path")
+		logger.WithError(err).Fatal("Could not get executable path")
 	}
 
 	base := filepath.Dir(exec)
@@ -87,7 +86,7 @@ func main() {
 	keyFile := viper.GetString(keyFileFlag)
 	certFile := viper.GetString(certFileFlag)
 
-	logrus.WithField(sidecarFlag, sidecarImage).
+	logger.WithField(sidecarFlag, sidecarImage).
 		WithField("minPort", minPort).
 		WithField("maxPort", maxPort).
 		WithField(keyFileFlag, keyFile).
@@ -96,29 +95,29 @@ func main() {
 		WithField("Version", pkg.Version).Info("starting gameServer operator...")
 
 	if minPort <= 0 || maxPort <= 0 {
-		logrus.Fatal("Min Port and Max Port values are required.")
+		logger.Fatal("Min Port and Max Port values are required.")
 	} else if maxPort < minPort {
-		logrus.Fatal("Max Port cannot be set less that the Min Port")
+		logger.Fatal("Max Port cannot be set less that the Min Port")
 	}
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not create in cluster config")
+		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not create the kubernetes clientset")
+		logger.WithError(err).Fatal("Could not create the kubernetes clientset")
 	}
 
 	extClient, err := extclientset.NewForConfig(config)
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not create the api extension clientset")
+		logger.WithError(err).Fatal("Could not create the api extension clientset")
 	}
 
 	agonesClient, err := versioned.NewForConfig(config)
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not create the agones api clientset")
+		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
@@ -134,14 +133,14 @@ func main() {
 
 	go func() {
 		if err := wh.Run(stop); err != nil { // nolint: vetshadow
-			logrus.WithError(err).Fatal("could not run webhook server")
+			logger.WithError(err).Fatal("could not run webhook server")
 		}
 	}()
 
 	err = c.Run(2, stop)
 	if err != nil {
-		logrus.WithError(err).Fatal("Could not run gameserver controller")
+		logger.WithError(err).Fatal("Could not run gameserver controller")
 	}
 
-	logrus.Info("Shut down gameserver controller")
+	logger.Info("Shut down gameserver controller")
 }

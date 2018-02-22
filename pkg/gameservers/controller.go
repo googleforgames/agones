@@ -57,6 +57,7 @@ var (
 
 // Controller is a the main GameServer crd controller
 type Controller struct {
+	logger                 *logrus.Entry
 	sidecarImage           string
 	alwaysPullSidecarImage bool
 	crdGetter              v1beta1.CustomResourceDefinitionInterface
@@ -90,11 +91,6 @@ func NewController(
 	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServers.Informer()
 
-	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(logrus.Infof)
-	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
-	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-controller"})
-
 	c := &Controller{
 		sidecarImage:           sidecarImage,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
@@ -108,8 +104,14 @@ func NewController(
 		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".GameServerController"),
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
-		recorder:               recorder,
 	}
+
+	c.logger = runtime.NewLoggerWithType(c)
+
+	eventBroadcaster := record.NewBroadcaster()
+	eventBroadcaster.StartLogging(c.logger.Infof)
+	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-controller"})
 
 	wh.AddHandler("/mutate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationHandler)
 
@@ -143,7 +145,7 @@ func NewController(
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("ok"))
 		if err != nil {
-			logrus.WithError(err).Error("could not send ok response on healthz")
+			c.logger.WithError(err).Error("could not send ok response on healthz")
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 	})
@@ -160,7 +162,7 @@ func NewController(
 // the default values on the GameServer, and validates the results
 // Should only be called on gameserver create operations.
 func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	logrus.WithField("review", review).Info("creationHandler")
+	c.logger.WithField("review", review).Info("creationHandler")
 
 	obj := review.Request.Object
 	gs := &stablev1alpha1.GameServer{}
@@ -188,7 +190,7 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 			Details: &details,
 		}
 
-		logrus.WithField("review", review).Info("Invalid GameServer")
+		c.logger.WithField("review", review).Info("Invalid GameServer")
 		return review, nil
 	}
 
@@ -207,7 +209,7 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	logrus.WithField("gs", gs.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
+	c.logger.WithField("gs", gs.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
@@ -221,14 +223,14 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	defer c.queue.ShutDown()
 
-	logrus.Info("Starting health check...")
+	c.logger.Info("Starting health check...")
 	go func() {
 		if err := c.server.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				logrus.WithError(err).Info("health check: http server closed")
+				c.logger.WithError(err).Info("health check: http server closed")
 			} else {
 				err := errors.Wrap(err, "Could not listen on :8080")
-				runtime.HandleError(logrus.WithError(err), err)
+				runtime.HandleError(c.logger.WithError(err), err)
 			}
 		}
 	}()
@@ -239,7 +241,7 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 		return err
 	}
 
-	logrus.Info("Wait for cache sync")
+	c.logger.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -252,7 +254,7 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	// Run the Health Controller
 	go c.healthController.Run(stop)
 
-	logrus.Info("Starting workers...")
+	c.logger.Info("Starting workers...")
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stop)
 	}
@@ -269,7 +271,7 @@ func (c Controller) enqueueGameServer(obj interface{}) {
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
 		err := errors.Wrap(err, "Error creating key for object")
-		runtime.HandleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(c.logger.WithField("obj", obj), err)
 		return
 	}
 	c.queue.AddRateLimited(key)
@@ -290,12 +292,12 @@ func (c *Controller) processNextWorkItem() bool {
 	}
 	defer c.queue.Done(obj)
 
-	logrus.WithField("obj", obj).Info("Processing obj")
+	c.logger.WithField("obj", obj).Info("Processing obj")
 
 	var key string
 	var ok bool
 	if key, ok = obj.(string); !ok {
-		runtime.HandleError(logrus.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
+		runtime.HandleError(c.logger.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
 		// this is a bad entry, we don't want to reprocess
 		c.queue.Forget(obj)
 		return true
@@ -303,7 +305,7 @@ func (c *Controller) processNextWorkItem() bool {
 
 	if err := c.syncHandler(key); err != nil {
 		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(c.logger.WithField("obj", obj), err)
 		c.queue.AddRateLimited(obj)
 		return true
 	}
@@ -315,20 +317,20 @@ func (c *Controller) processNextWorkItem() bool {
 // syncGameServer synchronises the Pods for the GameServers.
 // and reacts to status changes that can occur through the client SDK
 func (c *Controller) syncGameServer(key string) error {
-	logrus.WithField("key", key).Info("Synchronising")
+	c.logger.WithField("key", key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(logrus.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithField("key", key).Info("GameServer is no longer available for syncing")
+			c.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
@@ -362,14 +364,14 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *stablev1alpha1.GameServ
 		return gs, nil
 	}
 
-	logrus.WithField("gs", gs).Info("Syncing with Deletion Timestamp")
+	c.logger.WithField("gs", gs).Info("Syncing with Deletion Timestamp")
 	pods, err := c.listGameServerPods(gs)
 	if err != nil {
 		return gs, err
 	}
 
 	if len(pods) > 0 {
-		logrus.WithField("pods", pods).WithField("gsName", gs.ObjectMeta.Name).Info("Found pods, deleting")
+		c.logger.WithField("pods", pods).WithField("gsName", gs.ObjectMeta.Name).Info("Found pods, deleting")
 		for _, p := range pods {
 			err := c.podGetter.Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, nil)
 			if err != nil {
@@ -389,7 +391,7 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *stablev1alpha1.GameServ
 		}
 	}
 	gsCopy.ObjectMeta.Finalizers = fin
-	logrus.WithField("gs", gsCopy).Infof("No pods found, removing finalizer %s", stable.GroupName)
+	c.logger.WithField("gs", gsCopy).Infof("No pods found, removing finalizer %s", stable.GroupName)
 	gs, err = c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gsCopy)
 	return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
 }
@@ -410,7 +412,7 @@ func (c *Controller) syncGameServerPortAllocationState(gs *stablev1alpha1.GameSe
 	gsCopy.Status.State = stablev1alpha1.Creating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
-	logrus.WithField("gs", gsCopy).Info("Syncing Port Allocation State")
+	c.logger.WithField("gs", gsCopy).Info("Syncing Port Allocation State")
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
@@ -429,7 +431,7 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 		return gs, nil
 	}
 
-	logrus.WithField("gs", gs).Info("Syncing Create State")
+	c.logger.WithField("gs", gs).Info("Syncing Create State")
 
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
 	ret, err := c.listGameServerPods(gs)
@@ -443,17 +445,17 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 
 		// this shouldn't happen, but if it does.
 		if err != nil {
-			logrus.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
+			c.logger.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
 			return c.moveToErrorState(gs, err.Error())
 		}
 
 		c.addGameServerHealthCheck(gs, pod)
 
-		logrus.WithField("pod", pod).Info("creating Pod for GameServer")
+		c.logger.WithField("pod", pod).Info("creating Pod for GameServer")
 		pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
 		if err != nil {
 			if k8serrors.IsInvalid(err) {
-				logrus.WithField("pod", pod).WithField("gameserver", gs).Errorf("Pod created is invalid")
+				c.logger.WithField("pod", pod).WithField("gameserver", gs).Errorf("Pod created is invalid")
 				return c.moveToErrorState(gs, err.Error())
 			}
 			return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
@@ -513,9 +515,7 @@ func (c *Controller) sidecar(gs *stablev1alpha1.GameServer) corev1.Container {
 func (c *Controller) addGameServerHealthCheck(gs *stablev1alpha1.GameServer, pod *corev1.Pod) {
 	if !gs.Spec.Health.Disabled {
 		for i, c := range pod.Spec.Containers {
-			logrus.WithField("c", c.Name).WithField("Container", gs.Spec.Container).Info("Checking name and container")
 			if c.Name == gs.Spec.Container {
-				logrus.WithField("liveness", c.LivenessProbe).Info("Found container")
 				if c.LivenessProbe == nil {
 					c.LivenessProbe = &corev1.Probe{
 						Handler: corev1.Handler{
@@ -528,7 +528,6 @@ func (c *Controller) addGameServerHealthCheck(gs *stablev1alpha1.GameServer, pod
 						PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
 						FailureThreshold:    gs.Spec.Health.FailureThreshold,
 					}
-					logrus.WithField("container", c).WithField("pod", pod).Info("Final pod")
 					pod.Spec.Containers[i] = c
 				}
 				break
@@ -546,7 +545,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 		return gs, nil
 	}
 
-	logrus.WithField("gs", gs).Info("Syncing RequestReady State")
+	c.logger.WithField("gs", gs).Info("Syncing RequestReady State")
 
 	pod, err := c.gameServerPod(gs)
 	if err != nil {
@@ -580,7 +579,7 @@ func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) 
 		return nil
 	}
 
-	logrus.WithField("gs", gs).Info("Syncing Shutdown State")
+	c.logger.WithField("gs", gs).Info("Syncing Shutdown State")
 	// Do it in the foreground, so the GameServer gets killed last
 	p := metav1.DeletePropagationForeground
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
@@ -659,7 +658,7 @@ func (c Controller) Address(pod *corev1.Pod) (string, error) {
 	}
 
 	// minikube only has an InternalIP on a Node, so we'll fall back to that.
-	logrus.WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
+	c.logger.WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
 	for _, a := range node.Status.Addresses {
 		if a.Type == corev1.NodeInternalIP {
 			return a.Address, nil
@@ -682,7 +681,7 @@ func (c Controller) waitForEstablishedCRD() error {
 			switch cond.Type {
 			case apiv1beta1.Established:
 				if cond.Status == apiv1beta1.ConditionTrue {
-					logrus.WithField("crd", crd).Info("GameServer custom resource definition is established")
+					c.logger.WithField("crd", crd).Info("GameServer custom resource definition is established")
 					return true, err
 				}
 			}
