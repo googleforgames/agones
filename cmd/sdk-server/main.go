@@ -26,7 +26,6 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
@@ -51,9 +50,9 @@ const (
 	healthFailureThresholdFlag = "health-failure-threshold"
 )
 
-func init() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-}
+var (
+	logger = runtime.NewLoggerWithSource("main")
+)
 
 func main() {
 	viper.SetDefault(localFlag, false)
@@ -92,7 +91,7 @@ func main() {
 	healthInitialDelay := time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second
 	healthFailureThreshold := viper.GetInt64(healthFailureThresholdFlag)
 
-	logrus.WithField(localFlag, isLocal).WithField("version", pkg.Version).
+	logger.WithField(localFlag, isLocal).WithField("version", pkg.Version).
 		WithField("port", port).WithField(addressFlag, address).
 		WithField(healthDisabledFlag, healthDisabled).WithField(healthTimeoutFlag, healthTimeout).
 		WithField(healthFailureThresholdFlag, healthFailureThreshold).
@@ -100,7 +99,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
 	if err != nil {
-		logrus.WithField("port", port).WithField("address", address).Fatalf("Could not listen on port")
+		logger.WithField("port", port).WithField("address", address).Fatalf("Could not listen on port")
 	}
 	grpcServer := grpc.NewServer()
 
@@ -109,24 +108,24 @@ func main() {
 	} else {
 		config, err := rest.InClusterConfig()
 		if err != nil {
-			logrus.WithError(err).Fatal("Could not create in cluster config")
+			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
 
 		kubeClient, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			logrus.WithError(err).Fatal("Could not create the kubernetes clientset")
+			logger.WithError(err).Fatal("Could not create the kubernetes clientset")
 		}
 
 		agonesClient, err := versioned.NewForConfig(config)
 		if err != nil {
-			logrus.WithError(err).Fatalf("Could not create the agones api clientset")
+			logger.WithError(err).Fatalf("Could not create the agones api clientset")
 		}
 
 		var s *gameservers.SDKServer
 		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
 			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonesClient)
 		if err != nil {
-			logrus.WithError(err).Fatalf("Could not start sidecar")
+			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -137,6 +136,6 @@ func main() {
 
 	err = grpcServer.Serve(lis)
 	if err != nil {
-		logrus.WithError(err).Error("Could not serve grpc server")
+		logger.WithError(err).Error("Could not serve grpc server")
 	}
 }

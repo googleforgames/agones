@@ -42,6 +42,7 @@ type portAllocation map[int32]bool
 // The PortAllocator does not currently support mixing static portAllocations (or any pods with defined HostPort)
 // within the dynamic port range other than the ones it coordinates.
 type PortAllocator struct {
+	logger             *logrus.Entry
 	mutex              sync.RWMutex
 	portAllocations    []portAllocation
 	minPort            int32
@@ -60,7 +61,6 @@ type PortAllocator struct {
 func NewPortAllocator(minPort, maxPort int32,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *PortAllocator {
-	logrus.WithField("minPort", minPort).WithField("maxPort", maxPort).Info("Starting port allocator")
 
 	v1 := kubeInformerFactory.Core().V1()
 	nodes := v1.Nodes()
@@ -77,14 +77,16 @@ func NewPortAllocator(minPort, maxPort int32,
 		nodeInformer:       nodes.Informer(),
 		nodeSynced:         nodes.Informer().HasSynced,
 	}
+	pa.logger = runtime.NewLoggerWithType(pa)
 
+	pa.logger.WithField("minPort", minPort).WithField("maxPort", maxPort).Info("Starting")
 	return pa
 }
 
 // Run sets up the current state of port allocations and
 // starts tracking Pod and Node changes
 func (pa *PortAllocator) Run(stop <-chan struct{}) error {
-	logrus.Info("Running Pod Allocator")
+	pa.logger.Info("Running")
 	pa.gameServerInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: pa.syncDeleteGameServer,
 	})
@@ -99,7 +101,7 @@ func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 				err := pa.syncPortAllocations(stop)
 				if err != nil {
 					err := errors.Wrap(err, "error resetting ports on node update")
-					runtime.HandleError(logrus.WithField("node", newNode), err)
+					runtime.HandleError(pa.logger.WithField("node", newNode), err)
 				}
 			}
 		},
@@ -107,12 +109,12 @@ func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 			err := pa.syncPortAllocations(stop)
 			if err != nil {
 				err := errors.Wrap(err, "error on node deletion")
-				runtime.HandleError(logrus.WithField("node", obj), err)
+				runtime.HandleError(pa.logger.WithField("node", obj), err)
 			}
 		},
 	})
 
-	logrus.Info("Flush cache sync, before syncing gameserver and node state")
+	pa.logger.Info("Flush cache sync, before syncing gameserver and node state")
 	if !cache.WaitForCacheSync(stop, pa.gameServerSynced, pa.nodeSynced) {
 		return nil
 	}
@@ -150,7 +152,7 @@ func (pa *PortAllocator) syncAddNode(obj interface{}) {
 	defer pa.mutex.Unlock()
 
 	node := obj.(*corev1.Node)
-	logrus.WithField("node", node.ObjectMeta.Name).Info("Adding Node to port allocations")
+	pa.logger.WithField("node", node.ObjectMeta.Name).Info("Adding Node to port allocations")
 
 	ports := portAllocation{}
 	for i := pa.minPort; i <= pa.maxPort; i++ {
@@ -164,7 +166,7 @@ func (pa *PortAllocator) syncAddNode(obj interface{}) {
 // make the HostPort available
 func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
 	gs := object.(*v1alpha1.GameServer)
-	logrus.WithField("gs", gs).Info("syncing deleted GameServer")
+	pa.logger.WithField("gs", gs).Info("syncing deleted GameServer")
 	pa.DeAllocate(gs.Spec.HostPort)
 }
 
@@ -178,7 +180,7 @@ func (pa *PortAllocator) syncPortAllocations(stop <-chan struct{}) error {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
-	logrus.Info("Resetting Port Allocation")
+	pa.logger.Info("Resetting Port Allocation")
 
 	if !cache.WaitForCacheSync(stop, pa.gameServerSynced, pa.nodeSynced) {
 		return nil

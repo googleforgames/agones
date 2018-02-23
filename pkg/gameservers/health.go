@@ -45,6 +45,7 @@ import (
 // an Unhealthy state if the GameServer main container exits when in
 // a Ready state
 type HealthController struct {
+	logger           *logrus.Entry
 	podSynced        cache.InformerSynced
 	podLister        corelisterv1.PodLister
 	gameServerGetter getterv1alpha1.GameServersGetter
@@ -66,8 +67,10 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".HealthController"),
 	}
 
+	hc.logger = runtime.NewLoggerWithType(hc)
+
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(logrus.Infof)
+	eventBroadcaster.StartLogging(hc.logger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
 
@@ -77,7 +80,7 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 			if owner := metav1.GetControllerOf(pod); owner != nil && owner.Kind == "GameServer" {
 				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.failedContainer(pod) {
 					key := pod.ObjectMeta.Namespace + "/" + owner.Name
-					logrus.WithField("key", key).Info("GameServer container has terminated")
+					hc.logger.WithField("key", key).Info("GameServer container has terminated")
 					hc.enqueueGameServer(key)
 				}
 			}
@@ -109,10 +112,10 @@ func (hc *HealthController) enqueueGameServer(key string) {
 func (hc *HealthController) Run(stop <-chan struct{}) {
 	defer hc.queue.ShutDown()
 
-	logrus.Info("Starting health worker")
+	hc.logger.Info("Starting worker")
 	go wait.Until(hc.runWorker, time.Second, stop)
 	<-stop
-	logrus.Info("Shut down health worker")
+	hc.logger.Info("Shut down worker")
 }
 
 // runWorker is a long-running function that will continually call the
@@ -130,12 +133,12 @@ func (hc *HealthController) processNextWorkItem() bool {
 	}
 	defer hc.queue.Done(obj)
 
-	logrus.WithField("obj", obj).Info("Processing obj")
+	hc.logger.WithField("obj", obj).Info("Processing obj")
 
 	var key string
 	var ok bool
 	if key, ok = obj.(string); !ok {
-		runtime.HandleError(logrus.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
+		runtime.HandleError(hc.logger.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
 		// this is a bad entry, we don't want to reprocess
 		hc.queue.Forget(obj)
 		return true
@@ -143,7 +146,7 @@ func (hc *HealthController) processNextWorkItem() bool {
 
 	if err := hc.syncGameServer(key); err != nil {
 		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(logrus.WithField("obj", obj), err)
+		runtime.HandleError(hc.logger.WithField("obj", obj), err)
 		hc.queue.AddRateLimited(obj)
 		return true
 	}
@@ -154,27 +157,27 @@ func (hc *HealthController) processNextWorkItem() bool {
 
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
 func (hc *HealthController) syncGameServer(key string) error {
-	logrus.WithField("key", key).Info("Synchronising")
+	hc.logger.WithField("key", key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(logrus.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(hc.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	gs, err := hc.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithField("key", key).Info("GameServer is no longer available for syncing")
+			hc.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
 	}
 
 	if gs.Status.State == v1alpha1.Ready {
-		logrus.WithField("gs", gs).Infof("Marking GameServer as Unhealthy")
+		hc.logger.WithField("gs", gs).Infof("Marking GameServer as Unhealthy")
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = v1alpha1.Unhealthy
 
