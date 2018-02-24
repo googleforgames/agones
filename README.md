@@ -48,7 +48,7 @@ More documentation forthcoming.
  
 ## Get involved
 
-- Slack (forthcoming)
+- [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWQ2ZmY1Mjc4ZDQ4NDJhOGYxYTY2NTY0NjUwNjliYzVhMWFjYjMxM2RlMjg3NGU0M2E0YTYzNDIxNDMyZGNjMjU)
 - [Twitter](https://twitter.com/agonesdev)
 - [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss) 
 
