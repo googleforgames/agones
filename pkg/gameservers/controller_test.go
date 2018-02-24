@@ -138,7 +138,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 		err := c.portAllocator.Run(stop)
 		assert.Nil(t, err)
 
-		err = c.syncHandler("default/test")
+		err = c.syncGameServer("default/test")
 		assert.Nil(t, err)
 		assert.Equal(t, 2, updateCount, "update reactor should twice")
 		assert.True(t, podCreated, "pod should be created")
@@ -190,7 +190,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	c.syncHandler = func(name string) error {
+	c.workerqueue.SyncHandler = func(name string) error {
 		assert.Equal(t, "default/test", name)
 		received <- name
 		return nil
@@ -232,7 +232,7 @@ func TestControllerHealthCheck(t *testing.T) {
 		return true, newEstablishedCRD(), nil
 	})
 
-	c.syncHandler = func(name string) error {
+	c.workerqueue.SyncHandler = func(name string) error {
 		return nil
 	}
 

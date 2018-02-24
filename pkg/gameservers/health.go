@@ -15,8 +15,6 @@
 package gameservers
 
 import (
-	"time"
-
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -24,13 +22,13 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -38,7 +36,6 @@ import (
 	corelisterv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/workqueue"
 )
 
 // HealthController watches Pods, and applies
@@ -50,7 +47,7 @@ type HealthController struct {
 	podLister        corelisterv1.PodLister
 	gameServerGetter getterv1alpha1.GameServersGetter
 	gameServerLister listerv1alpha1.GameServerLister
-	queue            workqueue.RateLimitingInterface
+	workerqueue      *workerqueue.WorkerQueue
 	recorder         record.EventRecorder
 }
 
@@ -64,10 +61,10 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
 		gameServerGetter: agonesClient.StableV1alpha1(),
 		gameServerLister: agonesInformerFactory.Stable().V1alpha1().GameServers().Lister(),
-		queue:            workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".HealthController"),
 	}
 
 	hc.logger = runtime.NewLoggerWithType(hc)
+	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.logger, stable.GroupName+".HealthController")
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(hc.logger.Infof)
@@ -81,7 +78,7 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.failedContainer(pod) {
 					key := pod.ObjectMeta.Namespace + "/" + owner.Name
 					hc.logger.WithField("key", key).Info("GameServer container has terminated")
-					hc.enqueueGameServer(key)
+					hc.workerqueue.Enqueue(cache.ExplicitKey(key))
 				}
 			}
 		},
@@ -102,57 +99,10 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 
 }
 
-// enqueue puts the name of the GameServer into the queue
-func (hc *HealthController) enqueueGameServer(key string) {
-	hc.queue.AddRateLimited(key)
-}
-
 // Run processes the rate limited queue.
 // Will block until stop is closed
 func (hc *HealthController) Run(stop <-chan struct{}) {
-	defer hc.queue.ShutDown()
-
-	hc.logger.Info("Starting worker")
-	go wait.Until(hc.runWorker, time.Second, stop)
-	<-stop
-	hc.logger.Info("Shut down worker")
-}
-
-// runWorker is a long-running function that will continually call the
-// processNextWorkItem function in order to read and process a message on the
-// workqueue.
-func (hc *HealthController) runWorker() {
-	for hc.processNextWorkItem() {
-	}
-}
-
-func (hc *HealthController) processNextWorkItem() bool {
-	obj, quit := hc.queue.Get()
-	if quit {
-		return false
-	}
-	defer hc.queue.Done(obj)
-
-	hc.logger.WithField("obj", obj).Info("Processing obj")
-
-	var key string
-	var ok bool
-	if key, ok = obj.(string); !ok {
-		runtime.HandleError(hc.logger.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
-		// this is a bad entry, we don't want to reprocess
-		hc.queue.Forget(obj)
-		return true
-	}
-
-	if err := hc.syncGameServer(key); err != nil {
-		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(hc.logger.WithField("obj", obj), err)
-		hc.queue.AddRateLimited(obj)
-		return true
-	}
-
-	hc.queue.Forget(obj)
-	return true
+	hc.workerqueue.Run(1, stop)
 }
 
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
