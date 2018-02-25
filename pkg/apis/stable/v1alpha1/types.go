@@ -190,6 +190,24 @@ func (gs *GameServer) ApplyDefaults() {
 func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 	var causes []metav1.StatusCause
 
+	// make sure a name is specified when there is multiple containers in the pod.
+	if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "container",
+			Message: "Container is required when using multiple containers in the pod templace",
+		})
+	}
+
+	// no host port when using dynamic PortPolicy
+	if gs.Spec.HostPort > 0 && gs.Spec.PortPolicy == Dynamic {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "hostPort",
+			Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+		})
+	}
+
 	// make sure the container value points to a valid container
 	_, _, err := gs.FindGameServerContainer()
 	if err != nil {

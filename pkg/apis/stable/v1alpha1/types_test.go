@@ -180,14 +180,23 @@ func TestGameServerValidate(t *testing.T) {
 
 	gs = GameServer{
 		Spec: GameServerSpec{
-			Container: "nope",
+			Container:  "",
+			HostPort:   5001,
+			PortPolicy: Dynamic,
 			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "testing", Image: "testing/image"},
+					{Name: "anothertest", Image: "testing/image"},
+				}}}},
 	}
 	ok, causes = gs.Validate()
+	fields := []string{}
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
 	assert.False(t, ok)
-	assert.Len(t, causes, 1)
-	assert.Equal(t, causes[0].Field, "container")
+	assert.Len(t, causes, 3)
+	assert.Contains(t, fields, "container", "hostPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 }
 
