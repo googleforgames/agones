@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"agones.dev/agones/pkg/apis/stable"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -26,6 +25,7 @@ import (
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -34,14 +34,12 @@ import (
 	"github.com/sirupsen/logrus"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	apiv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -231,7 +229,7 @@ func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
 	}()
 	defer c.server.Close() // nolint: errcheck
 
-	err := c.waitForEstablishedCRD()
+	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameservers.stable.agones.dev", c.logger)
 	if err != nil {
 		return err
 	}
@@ -605,27 +603,4 @@ func (c *Controller) address(pod *corev1.Pod) (string, error) {
 	}
 
 	return "", errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
-}
-
-// waitForEstablishedCRD blocks until CRD comes to an Established state.
-// Has a deadline of 60 seconds for this to occur.
-func (c *Controller) waitForEstablishedCRD() error {
-	return wait.PollImmediate(500*time.Millisecond, 60*time.Second, func() (done bool, err error) {
-		crd, err := c.crdGetter.Get("gameservers.stable.agones.dev", metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		for _, cond := range crd.Status.Conditions {
-			switch cond.Type {
-			case apiv1beta1.Established:
-				if cond.Status == apiv1beta1.ConditionTrue {
-					c.logger.WithField("crd", crd).Info("GameServer custom resource definition is established")
-					return true, err
-				}
-			}
-		}
-
-		return false, nil
-	})
 }
