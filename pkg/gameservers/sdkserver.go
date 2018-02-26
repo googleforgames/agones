@@ -15,9 +15,9 @@
 package gameservers
 
 import (
-	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +27,7 @@ import (
 	typedv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -37,8 +38,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/workqueue"
 )
 
 var _ sdk.SDKServer = &SDKServer{}
@@ -50,7 +51,6 @@ type SDKServer struct {
 	gameServerName         string
 	namespace              string
 	gameServerGetter       typedv1alpha1.GameServersGetter
-	queue                  workqueue.RateLimitingInterface
 	server                 *http.Server
 	clock                  clock.Clock
 	healthDisabled         bool
@@ -59,6 +59,7 @@ type SDKServer struct {
 	healthMutex            sync.RWMutex
 	healthLastUpdated      time.Time
 	healthFailureCount     int64
+	workerqueue            *workerqueue.WorkerQueue
 	recorder               record.EventRecorder
 }
 
@@ -113,7 +114,12 @@ func NewSDKServer(gameServerName, namespace string,
 	})
 
 	s.initHealthLastUpdated(healthInitialDelay)
-	s.queue = s.newWorkQueue()
+	s.workerqueue = workerqueue.NewWorkerQueue(
+		func(key string) error {
+			return s.updateState(stablev1alpha1.State(key))
+		},
+		s.logger,
+		strings.Join([]string{stable.GroupName, s.namespace, s.gameServerName}, "."))
 
 	s.logger.WithField("gameServerName", s.gameServerName).WithField("namespace", s.namespace).Info("created GameServer sidecar")
 
@@ -126,16 +132,9 @@ func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
 	s.healthLastUpdated = s.clock.Now().UTC().Add(healthInitialDelay)
 }
 
-func (s *SDKServer) newWorkQueue() workqueue.RateLimitingInterface {
-	return workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(),
-		fmt.Sprintf("%s/%s/%s", stable.GroupName, s.namespace, s.gameServerName))
-}
-
 // Run processes the rate limited queue.
 // Will block until stop is closed
 func (s *SDKServer) Run(stop <-chan struct{}) {
-	defer s.queue.ShutDown()
-
 	s.logger.Info("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
@@ -154,47 +153,7 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
-	s.logger.Info("Starting worker")
-	go wait.Until(s.runWorker, time.Second, stop)
-	<-stop
-	s.logger.Info("Shut down workers and health checking")
-}
-
-// runWorker is a long-running function that will continually call the
-// processNextWorkItem function in order to read and process a message on the
-// workqueue.
-func (s *SDKServer) runWorker() {
-	for s.processNextWorkItem() {
-	}
-}
-
-func (s *SDKServer) processNextWorkItem() bool {
-	obj, quit := s.queue.Get()
-	if quit {
-		return false
-	}
-	defer s.queue.Done(obj)
-
-	s.logger.WithField("obj", obj).Info("Processing obj")
-
-	var state stablev1alpha1.State
-	var ok bool
-	if state, ok = obj.(stablev1alpha1.State); !ok {
-		runtime.HandleError(s.logger.WithField("obj", obj), errors.Errorf("expected State in queue, but got %T", obj))
-		// this is a bad entry, we don't want to reprocess
-		s.queue.Forget(obj)
-		return true
-	}
-
-	if err := s.updateState(state); err != nil {
-		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(s.logger.WithField("obj", obj), err)
-		s.queue.AddRateLimited(obj)
-		return true
-	}
-
-	s.queue.Forget(obj)
-	return true
+	s.workerqueue.Run(1, stop)
 }
 
 // updateState sets the GameServer Status's state to the state
@@ -228,7 +187,7 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 // the workqueue so it can be updated
 func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Ready request, adding to queue")
-	s.queue.AddRateLimited(stablev1alpha1.RequestReady)
+	s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.RequestReady))
 	return e, nil
 }
 
@@ -236,7 +195,7 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 // the workqueue so it can be updated
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Shutdown request, adding to queue")
-	s.queue.AddRateLimited(stablev1alpha1.Shutdown)
+	s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.Shutdown))
 	return e, nil
 }
 
@@ -264,7 +223,7 @@ func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
 		s.logger.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
-		s.queue.AddRateLimited(stablev1alpha1.Unhealthy)
+		s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.Unhealthy))
 	}
 }
 

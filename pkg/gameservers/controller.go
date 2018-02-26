@@ -28,6 +28,7 @@ import (
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
+	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -48,7 +49,6 @@ import (
 	corelisterv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/workqueue"
 )
 
 var (
@@ -67,13 +67,11 @@ type Controller struct {
 	gameServerLister       listerv1alpha1.GameServerLister
 	gameServerSynced       cache.InformerSynced
 	nodeLister             corelisterv1.NodeLister
-	queue                  workqueue.RateLimitingInterface
 	portAllocator          *PortAllocator
 	healthController       *HealthController
+	workerqueue            *workerqueue.WorkerQueue
 	server                 *http.Server
 	recorder               record.EventRecorder
-	// this allows for overwriting for testing purposes
-	syncHandler func(string) error
 }
 
 // NewController returns a new gameserver crd controller
@@ -101,7 +99,6 @@ func NewController(
 		gameServerLister:       gameServers.Lister(),
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
-		queue:                  workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), stable.GroupName+".GameServerController"),
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
@@ -113,16 +110,18 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-controller"})
 
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServer, c.logger, stable.GroupName+".GameServerController")
+
 	wh.AddHandler("/mutate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: c.enqueueGameServer,
+		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// no point in processing unless there is a State change
 			oldGs := oldObj.(*stablev1alpha1.GameServer)
 			newGs := newObj.(*stablev1alpha1.GameServer)
 			if oldGs.Status.State != newGs.Status.State || oldGs.ObjectMeta.DeletionTimestamp != newGs.ObjectMeta.DeletionTimestamp {
-				c.enqueueGameServer(newGs)
+				c.workerqueue.Enqueue(newGs)
 			}
 		},
 	})
@@ -133,13 +132,11 @@ func NewController(
 			pod := obj.(*corev1.Pod)
 			if stablev1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
 				if owner := metav1.GetControllerOf(pod); owner != nil {
-					c.enqueueGameServer(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+					c.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
 				}
 			}
 		},
 	})
-
-	c.syncHandler = c.syncGameServer
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -221,8 +218,6 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 // Run the GameServer controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
-	defer c.queue.ShutDown()
-
 	c.logger.Info("Starting health check...")
 	go func() {
 		if err := c.server.ListenAndServe(); err != nil {
@@ -254,64 +249,8 @@ func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
 	// Run the Health Controller
 	go c.healthController.Run(stop)
 
-	c.logger.Info("Starting workers...")
-	for i := 0; i < threadiness; i++ {
-		go wait.Until(c.runWorker, time.Second, stop)
-	}
-
-	<-stop
+	c.workerqueue.Run(threadiness, stop)
 	return nil
-}
-
-// enqueueGameServer puts the name of the GameServer in the
-// queue to be processed. This should not be passed any object
-// other than a GameServer.
-func (c Controller) enqueueGameServer(obj interface{}) {
-	var key string
-	var err error
-	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
-		err := errors.Wrap(err, "Error creating key for object")
-		runtime.HandleError(c.logger.WithField("obj", obj), err)
-		return
-	}
-	c.queue.AddRateLimited(key)
-}
-
-// runWorker is a long-running function that will continually call the
-// processNextWorkItem function in order to read and process a message on the
-// workqueue.
-func (c *Controller) runWorker() {
-	for c.processNextWorkItem() {
-	}
-}
-
-func (c *Controller) processNextWorkItem() bool {
-	obj, quit := c.queue.Get()
-	if quit {
-		return false
-	}
-	defer c.queue.Done(obj)
-
-	c.logger.WithField("obj", obj).Info("Processing obj")
-
-	var key string
-	var ok bool
-	if key, ok = obj.(string); !ok {
-		runtime.HandleError(c.logger.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
-		// this is a bad entry, we don't want to reprocess
-		c.queue.Forget(obj)
-		return true
-	}
-
-	if err := c.syncHandler(key); err != nil {
-		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(c.logger.WithField("obj", obj), err)
-		c.queue.AddRateLimited(obj)
-		return true
-	}
-
-	c.queue.Forget(obj)
-	return true
 }
 
 // syncGameServer synchronises the Pods for the GameServers.
