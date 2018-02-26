@@ -87,10 +87,10 @@ type GameServer struct {
 
 // GameServerSpec is the spec for a GameServer resource
 type GameServerSpec struct {
-	// Container specifies which Pod container is the game server. Only required if there is more than once
+	// Container specifies which Pod container is the game server. Only required if there is more than one
 	// container defined
 	Container string `json:"container,omitempty"`
-	// PortPolicy defined the policy for how the HostPort is populated.
+	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
 	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
@@ -195,7 +195,7 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   "container",
-			Message: "Container is required when using multiple containers in the pod templace",
+			Message: "Container is required when using multiple containers in the pod template",
 		})
 	}
 
@@ -235,7 +235,7 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 }
 
 // Pod creates a new Pod from the PodTemplateSpec
-// attached for the
+// attached to the GameServer resource
 func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod := &corev1.Pod{
 		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
