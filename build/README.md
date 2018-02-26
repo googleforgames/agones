@@ -320,25 +320,25 @@ for local development.
 
 Since Minikube runs locally, there are some targets that need to be used instead of the standard ones above.
 
-#### `minikube-test-cluster`
+#### `make minikube-test-cluster`
 Switches to an "agones" profile, and starts a kubernetes cluster
 of the right version.
 
 Use MINIKUBE_DRIVER variable to change the VM driver
 (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 
-#### `minikube-push`
+#### `make minikube-push`
 Push the local Agones Docker images that have already been built 
 via `make build` or `make build-images` into the "agones" minikube instance.
 
-#### `minikube-install`
+#### `make minikube-install`
 Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
 
-#### `minikube-shell`
+#### `make minikube-shell`
 Connecting to Minikube requires so enhanced permissions, so use this target
 instead of `make shell` to start an interactive shell for development on Minikube.
 
-#### `minikube-transfer-image`
+#### `make minikube-transfer-image`
 Convenience target for transferring images into minikube.
 Use TAG to specify the image to transfer into minikube
