@@ -16,6 +16,7 @@
 package main
 
 import (
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,8 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -120,11 +123,12 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
+	health := healthcheck.NewHandler()
+	wh := webhooks.NewWebHook(certFile, keyFile)
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
 
-	wh := webhooks.NewWebHook(certFile, keyFile)
-	c := gameservers.NewController(wh, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+	c := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
@@ -134,6 +138,23 @@ func main() {
 	go func() {
 		if err := wh.Run(stop); err != nil { // nolint: vetshadow
 			logger.WithError(err).Fatal("could not run webhook server")
+		}
+	}()
+	go func() {
+		logger.Info("Starting health check...")
+		srv := &http.Server{
+			Addr:    ":8080",
+			Handler: health,
+		}
+		defer srv.Close() // nolint: errcheck
+
+		if err := srv.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				logger.WithError(err).Info("health check: http server closed")
+			} else {
+				err := errors.Wrap(err, "Could not listen on :8080")
+				runtime.HandleError(logger.WithError(err), err)
+			}
 		}
 	}()
 

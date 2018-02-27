@@ -17,7 +17,6 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"agones.dev/agones/pkg/apis/stable"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -29,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -68,13 +68,13 @@ type Controller struct {
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	workerqueue            *workerqueue.WorkerQueue
-	server                 *http.Server
 	recorder               record.EventRecorder
 }
 
 // NewController returns a new gameserver crd controller
 func NewController(
 	wh *webhooks.WebHook,
+	health healthcheck.Handler,
 	minPort, maxPort int32,
 	sidecarImage string,
 	alwaysPullSidecarImage bool,
@@ -136,20 +136,6 @@ func NewController(
 			}
 		},
 	})
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("ok"))
-		if err != nil {
-			c.logger.WithError(err).Error("could not send ok response on healthz")
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	})
-
-	c.server = &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
 
 	return c
 }
@@ -217,19 +203,6 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 // Run the GameServer controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
-	c.logger.Info("Starting health check...")
-	go func() {
-		if err := c.server.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
-				c.logger.WithError(err).Info("health check: http server closed")
-			} else {
-				err := errors.Wrap(err, "Could not listen on :8080")
-				runtime.HandleError(c.logger.WithError(err), err)
-			}
-		}
-	}()
-	defer c.server.Close() // nolint: errcheck
-
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameservers.stable.agones.dev", c.logger)
 	if err != nil {
 		return err

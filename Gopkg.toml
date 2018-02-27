@@ -47,3 +47,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mattbaird/jsonpatch"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/heptiolabs/healthcheck"
