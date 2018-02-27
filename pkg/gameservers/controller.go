@@ -127,8 +127,9 @@ func NewController(
 	// track pod deletions, for when GameServers are deleted
 	kubeInformerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: func(obj interface{}) {
-			pod := obj.(*corev1.Pod)
-			if stablev1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
+			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
+			pod, ok := obj.(*corev1.Pod)
+			if ok && stablev1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
 				if owner := metav1.GetControllerOf(pod); owner != nil {
 					c.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
 				}
