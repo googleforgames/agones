@@ -217,7 +217,7 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 
 // Run the GameServer controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
-func (c Controller) Run(threadiness int, stop <-chan struct{}) error {
+func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
 	c.logger.Info("Starting health check...")
 	go func() {
 		if err := c.server.ListenAndServe(); err != nil {
@@ -490,9 +490,9 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 	if err != nil {
 		return gs, errors.Wrapf(err, "error getting pod for GameServer %s", gs.ObjectMeta.Name)
 	}
-	addr, err := c.Address(pod)
+	addr, err := c.address(pod)
 	if err != nil {
-		return gs, errors.Wrapf(err, "error getting external Address for GameServer %s", gs.ObjectMeta.Name)
+		return gs, errors.Wrapf(err, "error getting external address for GameServer %s", gs.ObjectMeta.Name)
 	}
 
 	gsCopy := gs.DeepCopy()
@@ -505,10 +505,10 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
-		return gs, errors.Wrapf(err, "error setting Ready, Port and Address on GameServer %s Status", gs.ObjectMeta.Name)
+		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 	}
 
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and Port populated")
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "address and Port populated")
 	return gs, nil
 }
 
@@ -530,7 +530,7 @@ func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) 
 }
 
 // moveToErrorState moves the GameServer to the error state
-func (c Controller) moveToErrorState(gs *stablev1alpha1.GameServer, msg string) (*stablev1alpha1.GameServer, error) {
+func (c *Controller) moveToErrorState(gs *stablev1alpha1.GameServer, msg string) (*stablev1alpha1.GameServer, error) {
 	copy := gs.DeepCopy()
 	copy.Status.State = stablev1alpha1.Error
 
@@ -580,11 +580,11 @@ func (c *Controller) listGameServerPods(gs *stablev1alpha1.GameServer) ([]*corev
 	return result, nil
 }
 
-// Address returns the IP that the given Pod is being run on
+// address returns the IP that the given Pod is being run on
 // This should be the externalIP, but if the externalIP is
 // not set, it will fall back to the internalIP with a warning.
 // (basically because minikube only has an internalIP)
-func (c Controller) Address(pod *corev1.Pod) (string, error) {
+func (c *Controller) address(pod *corev1.Pod) (string, error) {
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return "", errors.Wrapf(err, "error retrieving node %s for Pod %s", node.ObjectMeta.Name, pod.ObjectMeta.Name)
@@ -604,12 +604,12 @@ func (c Controller) Address(pod *corev1.Pod) (string, error) {
 		}
 	}
 
-	return "", errors.Errorf("Could not find an Address for Node: %s", node.ObjectMeta.Name)
+	return "", errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
 }
 
 // waitForEstablishedCRD blocks until CRD comes to an Established state.
 // Has a deadline of 60 seconds for this to occur.
-func (c Controller) waitForEstablishedCRD() error {
+func (c *Controller) waitForEstablishedCRD() error {
 	return wait.PollImmediate(500*time.Millisecond, 60*time.Second, func() (done bool, err error) {
 		crd, err := c.crdGetter.Get("gameservers.stable.agones.dev", metav1.GetOptions{})
 		if err != nil {
