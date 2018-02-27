@@ -637,7 +637,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
 		assert.Equal(t, ipFixture, gs.Status.Address)
 		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
-		assert.Contains(t, <-mocks.fakeRecorder.Events, "Address and Port populated")
+		assert.Contains(t, <-mocks.fakeRecorder.Events, "address and Port populated")
 	})
 
 	for _, s := range []v1alpha1.State{"Unknown", v1alpha1.Unhealthy} {
@@ -738,7 +738,7 @@ func TestControllerAddress(t *testing.T) {
 			_, cancel := startInformers(mocks, c.gameServerSynced)
 			defer cancel()
 
-			addr, err := c.Address(&pod)
+			addr, err := c.address(&pod)
 			assert.Nil(t, err)
 			assert.Equal(t, fixture.expectedAddress, addr)
 		})
