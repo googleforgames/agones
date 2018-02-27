@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"testing"
 	"time"
 
@@ -41,47 +40,6 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
-
-func TestControllerWaitForEstablishedCRD(t *testing.T) {
-	t.Parallel()
-	crd := newEstablishedCRD()
-	t.Run("CRD already established", func(t *testing.T) {
-		con, mocks := newFakeController()
-		mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, crd, nil
-		})
-
-		err := con.waitForEstablishedCRD()
-		assert.Nil(t, err)
-	})
-
-	t.Run("CRD takes a second to become established", func(t *testing.T) {
-		t.Parallel()
-		con, mocks := newFakeController()
-
-		m := sync.RWMutex{}
-		established := false
-
-		mocks.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			m.RLock()
-			defer m.RUnlock()
-			if established {
-				return true, crd, nil
-			}
-			return false, nil, nil
-		})
-
-		go func() {
-			time.Sleep(3 * time.Second)
-			m.Lock()
-			defer m.Unlock()
-			established = true
-		}()
-
-		err := con.waitForEstablishedCRD()
-		assert.Nil(t, err)
-	})
-}
 
 func TestControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
