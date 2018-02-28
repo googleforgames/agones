@@ -478,7 +478,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 	}
 
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "address and Port populated")
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and Port populated")
 	return gs, nil
 }
 
