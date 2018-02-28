@@ -19,7 +19,7 @@
 FROM grpc/cxx:1.8
 
 RUN apt-get update && \
-    apt-get install -y wget rsync make python bash-completion && \
+    apt-get install -y wget rsync make python bash-completion zip && \
     apt-get clean
 
 # install go

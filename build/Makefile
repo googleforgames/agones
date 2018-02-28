@@ -136,6 +136,8 @@ build-agones-sdk-binary: ensure-build-image
 		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_version_flags) $(agones_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
 		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_version_flags) $(agones_package)/cmd/sdk-server
+	docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip \
+		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
 # Build the image for the gameserver sidecar
 build-agones-sdk-image: ensure-build-image build-agones-sdk-binary
