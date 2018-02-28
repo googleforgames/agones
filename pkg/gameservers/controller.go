@@ -313,13 +313,11 @@ func (c *Controller) syncGameServerPortAllocationState(gs *stablev1alpha1.GameSe
 		return gs, nil
 	}
 
-	gsCopy := gs.DeepCopy()
-
-	port, err := c.portAllocator.Allocate()
+	gsCopy, err := c.portAllocator.Allocate(gs.DeepCopy())
 	if err != nil {
 		return gsCopy, errors.Wrapf(err, "error allocating port for GameServer %s", gsCopy.Name)
 	}
-	gsCopy.Spec.HostPort = port
+
 	gsCopy.Status.State = stablev1alpha1.Creating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
@@ -328,7 +326,7 @@ func (c *Controller) syncGameServerPortAllocationState(gs *stablev1alpha1.GameSe
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
 		// back in the pool, as it will get retried on the next pass
-		c.portAllocator.DeAllocate(port)
+		c.portAllocator.DeAllocate(gsCopy)
 		return gs, errors.Wrapf(err, "error updating GameServer %s to default values", gs.Name)
 	}
 
