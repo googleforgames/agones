@@ -15,23 +15,18 @@ This software is currently alpha, and subject to change. Not to be used in produ
 
 ## Requirements
 - Kubernetes cluster version 1.9+
-    - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested  
-    - If you are creating and managing your own Kubernetes cluster, the 
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19) 
-    admission controller is required.  
+    - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested
+    - If you are creating and managing your own Kubernetes cluster, the
+    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19)
+    admission controller is required.
     We also recommend following the
     [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [project SDK](sdks) integrated, to manage Game Server state, health checking, etc.
 
 ## Installation
-`kubectl apply -f install.yaml`
 
-If you are running your own Docker repository or want to install a specific version, make a local copy of install.yaml
-and edit to match your settings.
-
-_Note:_ There has yet to be a release of Agones, so you will need to edit the `install.yaml` to specify a 
-development release or [build from source](build/README.md) 
+Follow [these instructions](./docs/installing_agones.md) to create a cluster on Google Kubernetes Engine (GKE) or Minikube, and install Agones.
 
 ## Usage
 
@@ -52,13 +47,13 @@ Documentation and usage guides on how to develop and host dedicated game servers
 - [Full GameServer Configuration](./examples/gameserver.yaml)
 - [Simple UDP](./examples/simple-udp) (Go) - simple server and client that send UDP packets back and forth.
 - [CPP Simple](./examples/cpp-simple) (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
-- [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones. 
- 
+- [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.
+
 ## Get involved
 
 - [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWQ2ZmY1Mjc4ZDQ4NDJhOGYxYTY2NTY0NjUwNjliYzVhMWFjYjMxM2RlMjg3NGU0M2E0YTYzNDIxNDMyZGNjMjU)
 - [Twitter](https://twitter.com/agonesdev)
-- [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss) 
+- [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss)
 
 ## Code of Conduct
 
