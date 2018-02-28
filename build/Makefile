@@ -209,6 +209,28 @@ push-build-image:
 	docker tag $(build_tag) $(build_remote_tag)
 	docker push $(build_remote_tag)
 
+# Creates a release. Version defaults to the base_version
+# - Checks out a release branch
+# - Build binaries and images
+# - Creates sdk and binary archives, and moves the into the /release folder for upload
+# - Creates a zip of the install.yaml, LICENCE and README.md for installation
+do-release: RELEASE_VERSION ?= $(base_version)
+do-release:
+	@echo "Starting release for version: $(RELEASE_VERSION)"
+	git checkout -b release-$(RELEASE_VERSION)
+	$(MAKE) test
+	-rm -rf $(agones_path)/release
+	mkdir $(agones_path)/release
+	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
+	$(MAKE) build VERSION=$(RELEASE_VERSION)
+	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
+	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
+	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
+	zip --junk-paths $(agones_path)/release/agones-$(RELEASE_VERSION).zip $(agones_path)/README.md $(agones_path)/install.yaml $(agones_path)/LICENSE
+	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
+	git push -u origin release-$(RELEASE_VERSION)
+	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
+
 #    ____                   _         ____ _                 _
 #   / ___| ___   ___   __ _| | ___   / ___| | ___  _   _  __| |
 #  | |  _ / _ \ / _ \ / _` | |/ _ \ | |   | |/ _ \| | | |/ _` |
