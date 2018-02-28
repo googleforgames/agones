@@ -154,7 +154,7 @@ spec:
         #   value: gcr.io/agones-images/agones-sdk:0.1
         livenessProbe:
           httpGet:
-            path: /healthz
+            path: /live
             port: 8080
           initialDelaySeconds: 3
           periodSeconds: 3
