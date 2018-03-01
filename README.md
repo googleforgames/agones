@@ -37,19 +37,16 @@ development release or [build from source](build/README.md)
 
 Documentation and usage guides on how to develop and host dedicated game servers on top of Agones.
 
-More documentation forthcoming.
-
-### Quickstarts: 
+### Quickstarts:
  - [Create a Game Server](./docs/create_gameserver.md)
 
 ### Guides
- - Integrating the C++ SDK (forthcoming)
+ - [Integrating the Game Server SDK](sdks)
  - [GameServer Health Checking](./docs/health_checking.md)
  - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
 
 ### Reference
 - [Game Server Specification](./docs/gameserver_spec.md)
-- [SDK](sdks)
 
 ### Examples
 - [Full GameServer Configuration](./examples/gameserver.yaml)
