@@ -45,6 +45,7 @@ More documentation forthcoming.
 ### Guides
  - Integrating the C++ SDK (forthcoming)
  - [GameServer Health Checking](./docs/health_checking.md)
+ - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
 
 ### Reference
 - [Game Server Specification](./docs/gameserver_spec.md)
