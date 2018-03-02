@@ -1,6 +1,6 @@
 # Agones
 
-Agones is a library for running dedicated game servers on [Kubernetes](https://kubernetes.io).
+Agones is a library for hosting, running and scaling [dedicated game servers](https://en.wikipedia.org/wiki/Game_server#Dedicated_server) on [Kubernetes](https://kubernetes.io).
 
 _Agones, is derived from the Greek word agōn which roughly translates to “contest”, “competition at games” and “gathering”.
 ([source](https://www.merriam-webster.com/dictionary/agones))_
