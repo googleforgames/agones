@@ -17,12 +17,10 @@ kind: GameServer
 metadata:
   name: "simple-udp"
 spec:
-  portPolicy: "static"
+  portPolicy: "dynamic"
   containerPort: 7654
-  hostPort: 7777
   template:
     spec:
       containers:
       - name: simple-udp
         image: gcr.io/agones-images/udp-server:0.1
-        # imagePullPolicy: Always # add for development

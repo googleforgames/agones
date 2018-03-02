@@ -20,6 +20,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	"time"
 
@@ -66,7 +67,7 @@ func main() {
 			log.Fatalf("Could not read from udp stream: %v", err)
 		}
 
-		txt := string(b[:n]) // trim the empty bytes
+		txt := strings.TrimSpace(string(b[:n]))
 		log.Printf("Received packet from %v: %v", sender.String(), txt)
 		switch txt {
 		// shuts down the gameserver
@@ -87,7 +88,7 @@ func main() {
 		}
 
 		// echo it back
-		ack := "ACK: " + txt
+		ack := "ACK: " + txt + "\n"
 		if _, err = conn.WriteTo([]byte(ack), sender); err != nil {
 			log.Fatalf("Could not write to udp stream: %v", err)
 		}

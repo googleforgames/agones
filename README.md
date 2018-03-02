@@ -40,13 +40,14 @@ Documentation and usage guides on how to develop and host dedicated game servers
 More documentation forthcoming.
 
 ### Quickstarts: 
- - Create a Game Server (forthcoming) 
+ - [Create a Game Server](./docs/create_gameserver.md)
 
 ### Guides
  - Integrating the C++ SDK (forthcoming)
  - [GameServer Health Checking](./docs/health_checking.md)
 
 ### Reference
+- [Game Server Specification](./docs/gameserver_spec.md)
 - [SDK](sdks)
 
 ### Examples
