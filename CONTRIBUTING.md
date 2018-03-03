@@ -32,4 +32,4 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 - Finally - *Thanks* for considering submitting code to Agones!
 
 ### Additional Resources
-- [How to write a good Git Commit message](How to Write a Git Commit Message) 
+- [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) 
