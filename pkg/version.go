@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg // import "agones.dev/agones/pkg"
+package pkg // import "agonesZZZ.dev/agones/pkg"
 
 var (
 	// Version is the global version for all binaries
