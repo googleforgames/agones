@@ -1,6 +1,8 @@
 # Agones
 [![GoDoc](https://godoc.org/agones.dev/agones?status.svg)](https://godoc.org/agones.dev/agones)
 
+I AM JUST TESTING THE BUILD SYSTEM. IGNORE THIS.
+
 Agones is a library for hosting, running and scaling [dedicated game servers](https://en.wikipedia.org/wiki/Game_server#Dedicated_server) on [Kubernetes](https://kubernetes.io).
 
 _Agones, is derived from the Greek word agōn which roughly translates to “contest”, “competition at games” and “gathering”.
