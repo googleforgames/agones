@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2018 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
-
-var (
-	// Version is the global version for all binaries
-	// This is set at compile time by the build process
-	Version = "dev"
-)
+// Package client contains the generated client for the Custom Resource Definitions
+package client
