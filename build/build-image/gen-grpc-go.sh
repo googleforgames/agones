@@ -15,8 +15,7 @@
 # limitations under the License.
 
 cd /go/src/agones.dev/agones
-protoc -I . sdk.proto --go_out=plugins=grpc:sdks/go
-cat ./build/boilerplate.go.txt ./sdks/go/sdk.pb.go >> ./sdk.pb.go
+protoc -I . sdk.proto --go_out=plugins=grpc:pkg/sdk
+cat ./build/boilerplate.go.txt ./pkg/sdk/sdk.pb.go >> ./sdk.pb.go
 goimports -w ./sdk.pb.go
-cp ./sdk.pb.go ./pkg/sdk
-mv ./sdk.pb.go ./sdks/go
+mv ./sdk.pb.go ./pkg/sdk
