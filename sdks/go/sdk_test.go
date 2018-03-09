@@ -17,6 +17,7 @@ package sdk
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -50,8 +51,8 @@ func TestSDK(t *testing.T) {
 	assert.True(t, sm.shutdown)
 }
 
-var _ SDKClient = &sdkMock{}
-var _ SDK_HealthClient = &healthMock{}
+var _ sdk.SDKClient = &sdkMock{}
+var _ sdk.SDK_HealthClient = &healthMock{}
 
 type sdkMock struct {
 	ready    bool
@@ -59,17 +60,17 @@ type sdkMock struct {
 	hm       *healthMock
 }
 
-func (m *sdkMock) Ready(ctx context.Context, e *Empty, opts ...grpc.CallOption) (*Empty, error) {
+func (m *sdkMock) Ready(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
 	m.ready = true
 	return e, nil
 }
 
-func (m *sdkMock) Shutdown(ctx context.Context, e *Empty, opts ...grpc.CallOption) (*Empty, error) {
+func (m *sdkMock) Shutdown(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
 	m.shutdown = true
 	return e, nil
 }
 
-func (m *sdkMock) Health(ctx context.Context, opts ...grpc.CallOption) (SDK_HealthClient, error) {
+func (m *sdkMock) Health(ctx context.Context, opts ...grpc.CallOption) (sdk.SDK_HealthClient, error) {
 	return m.hm, nil
 }
 
@@ -77,12 +78,12 @@ type healthMock struct {
 	healthy bool
 }
 
-func (h *healthMock) Send(*Empty) error {
+func (h *healthMock) Send(*sdk.Empty) error {
 	h.healthy = true
 	return nil
 }
 
-func (h *healthMock) CloseAndRecv() (*Empty, error) {
+func (h *healthMock) CloseAndRecv() (*sdk.Empty, error) {
 	panic("implement me")
 }
 

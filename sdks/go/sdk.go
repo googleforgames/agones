@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package sdk is the Go game server sdk
 package sdk
 
 import (
 	"fmt"
-
 	"time"
 
+	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -28,9 +29,9 @@ const port = 59357
 
 // SDK is an instance of the Agones SDK
 type SDK struct {
-	client SDKClient
+	client sdk.SDKClient
 	ctx    context.Context
-	health SDK_HealthClient
+	health sdk.SDK_HealthClient
 }
 
 // NewSDK starts a new SDK instance, and connects to
@@ -46,7 +47,7 @@ func NewSDK() (*SDK, error) {
 	if err != nil {
 		return s, errors.Wrapf(err, "could not connect to %s", addr)
 	}
-	s.client = NewSDKClient(conn)
+	s.client = sdk.NewSDKClient(conn)
 	s.health, err = s.client.Health(s.ctx)
 	return s, errors.Wrap(err, "could not set up health check")
 }
@@ -54,19 +55,19 @@ func NewSDK() (*SDK, error) {
 // Ready marks the Game Server as ready to
 // receive connections
 func (s *SDK) Ready() error {
-	_, err := s.client.Ready(s.ctx, &Empty{})
+	_, err := s.client.Ready(s.ctx, &sdk.Empty{})
 	return errors.Wrap(err, "could not send Ready message")
 }
 
 // Shutdown marks the Game Server as ready to
 // shutdown
 func (s *SDK) Shutdown() error {
-	_, err := s.client.Shutdown(s.ctx, &Empty{})
+	_, err := s.client.Shutdown(s.ctx, &sdk.Empty{})
 	return errors.Wrapf(err, "could not send Shutdown message")
 }
 
 // Health sends a ping to the health
 // check to indicate that this server is healthy
 func (s *SDK) Health() error {
-	return errors.Wrap(s.health.Send(&Empty{}), "could not send Health ping")
+	return errors.Wrap(s.health.Send(&sdk.Empty{}), "could not send Health ping")
 }
