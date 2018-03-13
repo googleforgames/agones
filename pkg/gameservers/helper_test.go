@@ -144,7 +144,7 @@ func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedS
 	err := wait.PollImmediate(time.Second, 20*time.Second, func() (done bool, err error) {
 		resp, err := http.Get(url)
 		if err != nil {
-			logrus.WithError(err).Error("Error connecting to %v", url)
+			logrus.WithError(err).Error("Error connecting to ", url)
 			return false, nil
 		}
 

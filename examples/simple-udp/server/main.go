@@ -107,7 +107,6 @@ func doHealth(sdk *sdk.SDK, stop <-chan bool) {
 		case <-stop:
 			log.Print("Stopped health pings")
 			return
-			break
 		case <-tick:
 		}
 	}
