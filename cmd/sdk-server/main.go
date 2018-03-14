@@ -26,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
@@ -101,6 +102,7 @@ func main() {
 	if err != nil {
 		logger.WithField("port", port).WithField("address", address).Fatalf("Could not listen on port")
 	}
+	stop := signals.NewStopChannel()
 	grpcServer := grpc.NewServer()
 
 	if isLocal {
@@ -134,8 +136,17 @@ func main() {
 		sdk.RegisterSDKServer(grpcServer, s)
 	}
 
-	err = grpcServer.Serve(lis)
-	if err != nil {
-		logger.WithError(err).Error("Could not serve grpc server")
-	}
+	go func() {
+		err = grpcServer.Serve(lis)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not serve grpc server")
+		}
+	}()
+
+	<-stop
+	logger.Info("shutting down grpc server")
+	// don't graceful stop, because if we get a kill signal
+	// then the gameserver is being shut down, and we no longer
+	// care about running RPC calls.
+	grpcServer.Stop()
 }
