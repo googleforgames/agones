@@ -28,7 +28,7 @@ For the purpose of this guide we're going to use the [simple-udp](../examples/si
 Let's create a GameServer using the following command :
 
 ```
-kubectl apply -f https://github.com/googlecloudplatform/agones/blob/master/examples/simple-udp/server/gameserver.yaml
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/gameserver.yaml
 ```
 
 You should see a successful ouput similar to this :
