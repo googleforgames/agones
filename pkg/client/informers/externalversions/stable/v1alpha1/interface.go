@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// GameServers returns a GameServerInformer.
 	GameServers() GameServerInformer
+	// GameServerSets returns a GameServerSetInformer.
+	GameServerSets() GameServerSetInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // GameServers returns a GameServerInformer.
 func (v *version) GameServers() GameServerInformer {
 	return &gameServerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// GameServerSets returns a GameServerSetInformer.
+func (v *version) GameServerSets() GameServerSetInformer {
+	return &gameServerSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

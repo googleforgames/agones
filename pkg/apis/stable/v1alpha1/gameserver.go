@@ -44,6 +44,8 @@ const (
 	Error State = "Error"
 	// Unhealthy is when the GameServer has failed its health checks
 	Unhealthy State = "Unhealthy"
+	// Allocated is when the GameServer has been allocated to a session
+	Allocated State = "Allocated"
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
@@ -83,6 +85,22 @@ type GameServer struct {
 
 	Spec   GameServerSpec   `json:"spec"`
 	Status GameServerStatus `json:"status"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// GameServerList is a list of GameServer resources
+type GameServerList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []GameServer `json:"items"`
+}
+
+// GameServerTemplateSpec is a template for GameServers
+type GameServerTemplateSpec struct {
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              GameServerSpec `json:"spec"`
 }
 
 // GameServerSpec is the spec for a GameServer resource
@@ -133,16 +151,6 @@ type GameServerStatus struct {
 	Port     int32  `json:"port"`
 	Address  string `json:"address"`
 	NodeName string `json:"nodeName"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// GameServerList is a list of GameServer resources
-type GameServerList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-
-	Items []GameServer `json:"items"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated

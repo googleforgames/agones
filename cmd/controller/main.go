@@ -26,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -128,7 +129,8 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
 
-	c := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+	gsController := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+	gsSetController := gameserversets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
@@ -138,6 +140,18 @@ func main() {
 	go func() {
 		if err := wh.Run(stop); err != nil { // nolint: vetshadow
 			logger.WithError(err).Fatal("could not run webhook server")
+		}
+	}()
+	go func() {
+		err = gsController.Run(2, stop)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not run gameserver controller")
+		}
+	}()
+	go func() {
+		err = gsSetController.Run(2, stop)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not run gameserverset controller")
 		}
 	}()
 	go func() {
@@ -158,10 +172,6 @@ func main() {
 		}
 	}()
 
-	err = c.Run(2, stop)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not run gameserver controller")
-	}
-
-	logger.Info("Shut down gameserver controller")
+	<-stop
+	logger.Info("Shut down agones controllers")
 }

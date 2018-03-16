@@ -25,6 +25,7 @@ import (
 type StableV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	GameServersGetter
+	GameServerSetsGetter
 }
 
 // StableV1alpha1Client is used to interact with features provided by the stable.agones.dev group.
@@ -34,6 +35,10 @@ type StableV1alpha1Client struct {
 
 func (c *StableV1alpha1Client) GameServers(namespace string) GameServerInterface {
 	return newGameServers(c, namespace)
+}
+
+func (c *StableV1alpha1Client) GameServerSets(namespace string) GameServerSetInterface {
+	return newGameServerSets(c, namespace)
 }
 
 // NewForConfig creates a new StableV1alpha1Client for the given config.
