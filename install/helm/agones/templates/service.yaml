@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-controller-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    component: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    stable.agones.dev/role: controller
+  ports:
+    - port: 443
+      targetPort: 8081

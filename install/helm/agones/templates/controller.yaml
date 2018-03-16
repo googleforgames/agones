@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: agones-controller
+  namespace: {{ .Values.namespace}}
+  labels:
+    component: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        stable.agones.dev/role: controller
+        app: {{ template "agones.name" . }}
+        chart: {{ template "agones.chart" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      serviceAccountName: {{ .Values.serviceaccount.controller }}
+      containers:
+      - name: agones-controller
+        image: "{{ .Values.image.controller.repository }}:{{ .Values.image.controller.tag }}"
+        imagePullPolicy: {{ .Values.image.controller.pullPolicy }}
+        env:
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: {{ .Values.image.sdk.alwaysPull | quote }}
+        # minimum port that can be exposed to GameServer traffic
+        - name: MIN_PORT
+          value: {{ .Values.minPort | quote }} 
+        # maximum port that can be exposed to GameServer traffic
+        - name: MAX_PORT
+          value: {{ .Values.maxPort | quote }}
+        - name: SIDECAR # overwrite the GameServer sidecar image that is used
+          value: "{{ .Values.image.sdk.repository }}:{{ .Values.image.sdk.tag }}"
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: {{ .Values.healthCheck.http.port }}
+          initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}

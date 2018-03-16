@@ -42,6 +42,16 @@ ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 RUN gcloud components update && gcloud components install kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
+# install Helm package manager
+ENV HELM_VER 2.8.0
+ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
+RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
+  && tar -zxvf /tmp/helm.tar.gz -C /tmp \
+  && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
+  && chmod go+rx /usr/local/bin/helm \
+  && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
+RUN echo "source <(helm completion bash)" >> /root/.bashrc
+
 # install go tooling for development, building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \

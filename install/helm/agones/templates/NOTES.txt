@@ -1,0 +1,29 @@
+The Agones controller has been installed in the namespace {{ .Values.namespace }}.
+
+You can watch the status by running 'kubectl --namespace {{ .Values.namespace }} get pods -o wide -w {{ .Values.serviceaccount.controller }}'
+
+Once ready you can create your first GameServer using our examples:
+
+'kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/gameserver.yaml'
+
+An example GameServer that makes use of the controller:
+
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: GameServer
+metadata:
+  name: "simple-udp"
+spec:
+  portPolicy: "dynamic"
+  containerPort: 7654
+  template:
+    spec:
+      containers:
+      - name: simple-udp
+        image: gcr.io/agones-images/udp-server:0.1
+
+Finally don't forget to explore our documentation and usage guides on how to develop and host dedicated game servers on top of Agones. :
+
+ - [Create a Game Server](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/create_gameserver.md)
+ - [Integrating the Game Server SDK](https://github.com/GoogleCloudPlatform/agones/tree/master/sdks)
+ - [GameServer Health Checking](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/health_checking.md)
+ - [Accessing Agones via the Kubernetes API](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/access_api.md)

@@ -17,6 +17,8 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
    1. [Starting Minikube](#starting-minikube)
 1. [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
 1. [Installing Agones](#installing-agones)
+   1. [Install with yaml](#install-with-yaml)
+   1. [Install using Helm](#install-using-helm)
    1. [Confirming Agones started successfully](#confirming-agones-started-successfully)
 1. [What's next](#whats-next)
 
@@ -175,11 +177,25 @@ kubectl create clusterrolebinding cluster-admin-binding \
 
 # Installing Agones
 
-Finally, we install Agones to the cluster.
+This will install Agones in your cluster.
+
+## Install with YAML
+
+We can install Agones to the cluster using the [install.yaml file](agones-install-file)
+
+[agones-install-file]: ../install/yaml/install.yaml
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/googlecloudplatform/agones/release-0.1/install.yaml
 ```
+
+## Install using Helm
+
+Also, we can install Agones using [Helm](helm) package manager. If you want more details and configuration
+options see the [Helm installation guide for Agones](agones-install-guide)
+
+[helm]: https://docs.helm.sh
+[agones-install-guide]: ../install/helm/README.md
 
 ## Confirming Agones started successfully
 

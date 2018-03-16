@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.serviceaccount.sdk }}
+  labels:
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+secrets:
+- name: {{ .Values.serviceaccount.sdk }}-secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Values.serviceaccount.sdk }}-secret
+  labels:
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    kubernetes.io/service-account.name: {{ .Values.serviceaccount.sdk }}
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.serviceaccount.sdk }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+rules:
+- apiGroups: ["stable.agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.serviceaccount.sdk }}-access
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+subjects:
+- kind: User
+  name: system:serviceaccount:{{ .Values.namespace }}:{{ .Values.serviceaccount.sdk }}
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Values.serviceaccount.sdk }}

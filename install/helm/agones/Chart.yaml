@@ -1,0 +1,20 @@
+apiVersion: v1
+appVersion: "0.1"
+version: 0.1.0
+name: agones
+description: a library for hosting, running and scaling dedicated game servers on Kubernetes.
+keywords:
+  - go
+  - golang
+  - dedicated-gameservers
+  - multiplayer
+  - game-development
+home: https://agones.dev
+sources:
+  - https://github.com/GoogleCloudPlatform/agones
+maintainers:
+ - name: agones
+   email: agones-discuss@googlegroups.com
+   url: https://groups.google.com/forum/#!forum/agones-discuss
+engine: gotpl
+icon: https://github.com/GoogleCloudPlatform/agones/raw/master/docs/agones.png

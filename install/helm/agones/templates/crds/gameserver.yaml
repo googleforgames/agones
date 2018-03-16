@@ -1,0 +1,113 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gameservers.stable.agones.dev
+  labels:
+    component: crd
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  group: stable.agones.dev
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    kind: GameServer
+    plural: gameservers
+    shortNames:
+    - gs
+    singular: gameserver
+  validation:
+    openAPIV3Schema:
+      required:
+      - spec
+      properties:
+        spec:
+          required:
+          - containerPort
+          - template
+          properties:
+            template:
+              type: object
+              required:
+              - spec
+              properties:
+                spec:
+                  type: object
+                  required:
+                  - containers
+                  properties:
+                    containers:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - image
+                        properties:
+                          name:
+                            type: string
+                            minLength: 0
+                            maxLength: 63
+                            pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                          image:
+                            type: string
+                            minLength: 1
+                      minItems: 1
+            container:
+              title: The container name running the gameserver
+              description: if there is more than one container, specify which one is the game server
+              type: string
+              minLength: 0
+              maxLength: 63
+              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+            portPolicy:
+              title: the port policy that will be applied to the game server
+              description: |
+                  portPolicy has two options:
+                  - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                  - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                  port is available. When static is the policy specified, `hostPort` is required to be populated
+              type: string
+              enum:
+              - dynamic
+              - static
+            protocol:
+              title: Protocol being used. Defaults to UDP. TCP is the only other option
+              type: string
+              enum:
+              - UDP
+              - TCP
+            containerPort:
+              title: The port that is being opened on the game server process
+              type: integer
+              minimum: 0
+              maximum: 65535
+            hostPort:
+              title: The port exposed on the host
+              description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
+              type: integer
+              minimum: 0
+              maximum: 65535
+            health:
+              type: object
+              title: Health checking for the running game server
+              properties:
+                disabled:
+                  title: Disable health checking. defaults to false, but can be set to true
+                  type: boolean
+                initialDelaySeconds:
+                  title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+                  type: integer
+                  minimum: 0
+                  maximum: 2147483648
+                periodSeconds:
+                  title: How long before the server is considered not healthy
+                  type: integer
+                  minimum: 0
+                  maximum: 2147483648
+                failureThreshold:
+                  title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+                  type: integer
+                  minimum: 1
+                  maximum: 2147483648

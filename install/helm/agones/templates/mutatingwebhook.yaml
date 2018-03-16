@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: agones-mutation-webhook
+  namespace: {{ .Values.namespace }}
+  labels:
+    component: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+webhooks:
+  - name: mutations.stable.agones.dev
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: {{ .Values.namespace }}
+        path: /mutate
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    rules:
+      - apiGroups:
+          - stable.agones.dev
+        resources:
+          - "gameservers"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - CREATE
