@@ -110,7 +110,8 @@ func NewController(
 
 	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServer, c.logger, stable.GroupName+".GameServerController")
 
-	wh.AddHandler("/mutate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationHandler)
+	wh.AddHandler("/mutate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationMutationHandler)
+	wh.AddHandler("/validate", stablev1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationValidationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -140,11 +141,11 @@ func NewController(
 	return c
 }
 
-// creationHandler is the handler for the mutating webhook that sets the
-// the default values on the GameServer, and validates the results
+// creationMutationHandler is the handler for the mutating webhook that sets the
+// the default values on the GameServer
 // Should only be called on gameserver create operations.
-func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("creationHandler")
+func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("creationMutationHandler")
 
 	obj := review.Request.Object
 	gs := &stablev1alpha1.GameServer{}
@@ -156,25 +157,6 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 	// This is the main logic of this function
 	// the rest is really just json plumbing
 	gs.ApplyDefaults()
-	ok, causes := gs.Validate()
-	if !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
-		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "GameServer configuration is invalid: " + details.String(),
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-
-		c.logger.WithField("review", review).Info("Invalid GameServer")
-		return review, nil
-	}
 
 	newGS, err := json.Marshal(gs)
 	if err != nil {
@@ -196,6 +178,41 @@ func (c *Controller) creationHandler(review admv1beta1.AdmissionReview) (admv1be
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
 	review.Response.Patch = json
+
+	return review, nil
+}
+
+// creationValidationHandler that validates a GameServer when it is created
+// Should only be called on gameserver create operations.
+func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("creationValidationHandler")
+
+	obj := review.Request.Object
+	gs := &stablev1alpha1.GameServer{}
+	err := json.Unmarshal(obj.Raw, gs)
+	if err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
+	}
+
+	ok, causes := gs.Validate()
+	if !ok {
+		review.Response.Allowed = false
+		details := metav1.StatusDetails{
+			Name:   review.Request.Name,
+			Group:  review.Request.Kind.Group,
+			Kind:   review.Request.Kind.Kind,
+			Causes: causes,
+		}
+		review.Response.Result = &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: "GameServer configuration is invalid",
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &details,
+		}
+
+		c.logger.WithField("review", review).Info("Invalid GameServer")
+		return review, nil
+	}
 
 	return review, nil
 }
