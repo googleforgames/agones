@@ -18,8 +18,9 @@ This software is currently alpha, and subject to change. Not to be used in produ
 - Kubernetes cluster version 1.9+
     - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19)
-    admission controller is required.
+    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and 
+    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
+    admission controllers are required.
     We also recommend following the
     [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.

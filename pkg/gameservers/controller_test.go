@@ -211,15 +211,62 @@ func TestControllerHealthCheck(t *testing.T) {
 	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusOK)
 }
 
-func TestControllerCreationHandler(t *testing.T) {
+func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Parallel()
 
 	c, _ := newFakeController()
 	gvk := metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
 
-	t.Run("gameserver defaults", func(t *testing.T) {
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+		Spec: newSingleContainerSpec()}
+
+	raw, err := json.Marshal(fixture)
+	assert.Nil(t, err)
+	review := admv1beta1.AdmissionReview{
+		Request: &admv1beta1.AdmissionRequest{
+			Kind:      gvk,
+			Operation: admv1beta1.Create,
+			Object: runtime.RawExtension{
+				Raw: raw,
+			},
+		},
+		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+	}
+
+	result, err := c.creationMutationHandler(review)
+	assert.Nil(t, err)
+	assert.True(t, result.Response.Allowed)
+	assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
+
+	patch := &jsonpatch.ByPath{}
+	err = json.Unmarshal(result.Response.Patch, patch)
+	assert.Nil(t, err)
+
+	assertContains := func(patch *jsonpatch.ByPath, op jsonpatch.JsonPatchOperation) {
+		found := false
+		for _, p := range *patch {
+			if assert.ObjectsAreEqualValues(p, op) {
+				found = true
+			}
+		}
+
+		assert.True(t, found, "Could not find operation %#v in patch %v", op, *patch)
+	}
+
+	assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"stable.agones.dev"}})
+	assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/spec/protocol", Value: "UDP"})
+}
+
+func TestControllerCreationValidationHandler(t *testing.T) {
+	t.Parallel()
+
+	c, _ := newFakeController()
+	gvk := metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
+
+	t.Run("valid gameserver", func(t *testing.T) {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec()}
+		fixture.ApplyDefaults()
 
 		raw, err := json.Marshal(fixture)
 		assert.Nil(t, err)
@@ -234,28 +281,9 @@ func TestControllerCreationHandler(t *testing.T) {
 			Response: &admv1beta1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationHandler(review)
+		result, err := c.creationValidationHandler(review)
 		assert.Nil(t, err)
 		assert.True(t, result.Response.Allowed)
-		assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
-
-		patch := &jsonpatch.ByPath{}
-		err = json.Unmarshal(result.Response.Patch, patch)
-		assert.Nil(t, err)
-
-		assertContains := func(patch *jsonpatch.ByPath, op jsonpatch.JsonPatchOperation) {
-			found := false
-			for _, p := range *patch {
-				if assert.ObjectsAreEqualValues(p, op) {
-					found = true
-				}
-			}
-
-			assert.True(t, found, "Could not find operation %#v in patch %v", op, *patch)
-		}
-
-		assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"stable.agones.dev"}})
-		assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/spec/protocol", Value: "UDP"})
 	})
 
 	t.Run("invalid gameserver", func(t *testing.T) {
@@ -286,7 +314,7 @@ func TestControllerCreationHandler(t *testing.T) {
 			Response: &admv1beta1.AdmissionResponse{Allowed: true},
 		}
 
-		result, err := c.creationHandler(review)
+		result, err := c.creationValidationHandler(review)
 		assert.Nil(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, metav1.StatusFailure, review.Response.Result.Status)
