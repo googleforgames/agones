@@ -10,7 +10,7 @@ _Agones, is derived from the Greek word agōn which roughly translates to “con
 This software is currently alpha, and subject to change. Not to be used in production systems.
 
 ## Major Features
-- Be able to define a `GameServer` within Kubernetes - either through yaml or the via API
+- Be able to define a `GameServer` within Kubernetes - either through yaml or via the API
 - Manage GameServer lifecycles - including health checking and connection information.
 - Client SDKs for integration with dedicated game servers to work with Agones.
 
