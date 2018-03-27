@@ -16,7 +16,6 @@
 # Google Cloud Builder CI configuration
 #
 
-# right now, do nothing.
 steps:
 - name: "ubuntu"
   args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]

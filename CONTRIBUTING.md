@@ -31,5 +31,16 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 - Once review has occurred, please rebase your PR down to a single commit. This will ensure a nice clean Git history.
 - Finally - *Thanks* for considering submitting code to Agones!
 
+## Continuous Integration
+
+Continuous integration is provided by [Google Cloud Container Builder](https://cloud.google.com/container-builder/),
+through the [cloudbuilder.yaml](./cloudbuild.yaml) file found at the root of the directory.
+
+Build success/failure with relevant details are pushed automatically to pull requests via the not (yet 😉) opensourced
+build system.
+
+See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
+how to edit and expand the build process.
+
 ### Additional Resources
 - [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) 
