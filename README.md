@@ -1,5 +1,6 @@
 # Agones
 [![GoDoc](https://godoc.org/agones.dev/agones?status.svg)](https://godoc.org/agones.dev/agones)
+[![Go Report Card](https://goreportcard.com/badge/github.com/GoogleCloudPlatform/agones)](https://goreportcard.com/report/github.com/GoogleCloudPlatform/agones)
 
 Agones is a library for hosting, running and scaling [dedicated game servers](https://en.wikipedia.org/wiki/Game_server#Dedicated_server) on [Kubernetes](https://kubernetes.io).
 
