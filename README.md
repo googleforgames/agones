@@ -73,6 +73,9 @@ See the tools in the [build](build/README.md) directory for testing and building
 
 Agones is in active development - we would love your help in shaping its future!
 
+## This all sounds great, but can you explain Kubernetes to me?
+[You should totally read this comic, and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
+
 ## Licence
 
 Apache 2.0
