@@ -14,6 +14,10 @@ This software is currently alpha, and subject to change. Not to be used in produ
 - Manage GameServer lifecycles - including health checking and connection information.
 - Client SDKs for integration with dedicated game servers to work with Agones.
 
+## Why does this project exist?
+For more details on why this project was written, read the 
+[announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
+
 ## Requirements
 - Kubernetes cluster version 1.9+
     - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested
