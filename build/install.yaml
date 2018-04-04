@@ -225,6 +225,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agones-sdk
+  namespace: agones-system
 secrets:
 - name: agones-sdk-secret
 ---
@@ -240,7 +241,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-sdk
-  namespace: agones-system
 rules:
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
@@ -250,10 +250,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-sdk-access
-  namespace: agones-system
 subjects:
 - kind: User
-  name: system:serviceaccount:default:agones-sdk
+  name: system:serviceaccount:agones-system:agones-sdk
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   apiGroup: rbac.authorization.k8s.io
