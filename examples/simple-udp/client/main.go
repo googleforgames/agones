@@ -53,7 +53,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Could not read packet: %v", err)
 			}
-			log.Printf("Recieved Packet: %s", b[:n])
+			log.Printf("Receieved Packet: %s", b[:n])
 		}
 	}()
 
