@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package crd contains utilities for working with
-// CustomResourceDefinitions
+// Package crd contains utilities for working with
+// CustomResourceDefinitions.
 package crd
 
 import (
