@@ -199,7 +199,6 @@ func TestControllerHealthCheck(t *testing.T) {
 	}
 
 	stop, cancel := startInformers(m, c.gameServerSynced)
-	defer cancel()
 
 	go http.ListenAndServe("localhost:9090", health)
 
@@ -209,6 +208,10 @@ func TestControllerHealthCheck(t *testing.T) {
 	}()
 
 	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusOK)
+
+	cancel()
+
+	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusServiceUnavailable)
 }
 
 func TestControllerCreationMutationHandler(t *testing.T) {

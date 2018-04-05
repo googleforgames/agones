@@ -54,3 +54,30 @@ func TestWorkerQueueRun(t *testing.T) {
 		assert.Fail(t, "should have received value")
 	}
 }
+
+func TestWorkerQueueHealthy(t *testing.T) {
+	done := make(chan struct{})
+	handler := func(string) error {
+		<-done
+		return nil
+	}
+	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "test")
+	wq.Enqueue(cache.ExplicitKey("default/test"))
+
+	stop := make(chan struct{})
+	go wq.Run(1, stop)
+
+	// Yield to the scheduler to ensure the worker queue goroutine can run.
+	time.Sleep(10 * time.Millisecond)
+	assert.Equal(t, 1, wq.RunCount())
+	assert.Nil(t, wq.Healthy())
+
+	close(done) // Ensure the handler no longer blocks.
+	close(stop) // Stop the worker queue.
+
+	// Yield to the scheduler again to ensure the worker queue goroutine can
+	// finish.
+	time.Sleep(10 * time.Millisecond)
+	assert.Equal(t, 0, wq.RunCount())
+	assert.EqualError(t, wq.Healthy(), "want 1 worker goroutine(s), got 0")
+}
