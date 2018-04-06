@@ -41,24 +41,24 @@ The command removes all the Kubernetes components associated with the chart and 
 
 The following tables lists the configurable parameters of the Agones chart and their default values.
 
-| Parameter                            | Description                               | Default                                              |
-| ------------------------------------ | ----------------------------------------- | ---------------------------------------------------- |
-| `namespace`                          | Namespace to use for Agones               | `agones-system`                                      |
-| `serviceaccount.controller`          | Service account name for the controller   | `agones-controller`                                  |
-| `serviceaccount.sdk`                 | Service account name for the sdk          | `agones-sdk`                                         |
-| `image.controller.repository`        | Image repository for the controller       | `gcr.io/agones-images/agones-controller`             |
-| `image.controller.tag`               | Image tag for the controller              | `0.1`                                                |
-| `image.controller.pullPolicy`        | Image pull policy for the controller      | `IfNotPresent`                                       |
-| `image.sdk.repository`               | Image repository for the sdk              | `gcr.io/agones-images/agones-sdk`                    |
-| `image.sdk.tag`                      | Image tag for the sdk                     | `0.1`                                                |
-| `image.sdk.alwaysPull`               | Tells if the sdk image should always be pulled  | `false`                                        |
-| `minPort`                            | Minimum port to use for dynamic port allocation | `7000` |
-| `maxPort`                            | Maximum port to use for dynamic port allocation | `8000` |
-| `healthCheck.http.port`              | Port to use for liveness probe service          | `8080` |
-| `healthCheck.initialDelaySeconds`    | Initial delay before performing the first probe (in seconds) | `3` |
-| `healthCheck.periodSeconds`          | Seconds between every liveness probe (in seconds)   | `3` |
-| `healthCheck.failureThreshold`       | Number of times before giving up (in seconds)         | `3` |
-| `healthCheck.timeoutSeconds`         | Number of seconds after which the probe times out (in seconds)         | `1` |
+| Parameter                            | Description                                                     | Default                    |
+| ------------------------------------ | ----------------------------------------------------------------| ---------------------------|
+| `namespace`                          | Namespace to use for Agones                                     | `agones-system`            |
+| `serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
+| `serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |
+| `image.registry`                     | Global image registry for all images                            | `gcr.io/agones-images`     |
+| `image.tag`                          | Global image tag for all images                                 | `0.2`                      |
+| `image.controller.name`              | Image name for the controller                                   | `agones-controller`        |
+| `image.controller.pullPolicy`        | Image pull policy for the controller                            | `IfNotPresent`             |
+| `image.sdk.name`                     | Image name for the sdk                                          | `agones-sdk`               |
+| `image.sdk.alwaysPull`               | Tells if the sdk image should always be pulled                  | `false`                    |
+| `minPort`                            | Minimum port to use for dynamic port allocation                 | `7000`                     |
+| `maxPort`                            | Maximum port to use for dynamic port allocation                 | `8000`                     |
+| `healthCheck.http.port`              | Port to use for liveness probe service                          | `8080`                     |
+| `healthCheck.initialDelaySeconds`    | Initial delay before performing the first probe (in seconds)    | `3`                        |
+| `healthCheck.periodSeconds`          | Seconds between every liveness probe (in seconds)               | `3`                        |
+| `healthCheck.failureThreshold`       | Number of times before giving up (in seconds)                   | `3`                        |
+| `healthCheck.timeoutSeconds`         | Number of seconds after which the probe times out (in seconds)  | `1`                        |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

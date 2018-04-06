@@ -12,30 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Declare variables to be passed into your templates.
+# Service account for helm
 
-namespace: agones-system
-serviceaccount:
-  controller: agones-controller
-  sdk: agones-sdk
-
-image:
-  registry: gcr.io/agones-images
-  tag: 0.2
-  controller:
-    name: agones-controller
-    pullPolicy: IfNotPresent
-  sdk:
-    name: agones-sdk
-    alwaysPull: false
-
-minPort: 7000
-maxPort: 8000   
-
-healthCheck:
-  http:
-    port: 8080
-  initialDelaySeconds: 3
-  periodSeconds: 3
-  failureThreshold: 3
-  timeoutSeconds: 1
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: helm
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: helm
+    namespace: kube-system
