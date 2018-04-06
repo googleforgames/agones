@@ -1,3 +1,5 @@
+**(This is currently a development feature)**
+
 # Install Agones using Helm
 
 This chart install the Agones application and defines deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
