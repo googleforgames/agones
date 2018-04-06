@@ -1,0 +1,41 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Declare variables to be passed into your templates.
+
+namespace: agones-system
+serviceaccount:
+  controller: agones-controller
+  sdk: agones-sdk
+
+image:
+  controller:
+    repository: gcr.io/agones-images/agones-controller
+    tag: 0.1
+    pullPolicy: IfNotPresent
+  sdk:
+    repository: gcr.io/agones-images/agones-sdk
+    tag: 0.1
+    alwaysPull: false
+
+minPort: 7000
+maxPort: 8000   
+
+healthCheck:
+  http:
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 3
+  failureThreshold: 3
+  timeoutSeconds: 1
