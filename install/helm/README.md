@@ -16,7 +16,7 @@ This chart install the Agones application and defines deployment on a [Kubernete
 To install the chart with the release name `my-release`:
 
 ```bash
-$ cd install/
+$ cd install/helm/
 $ helm install --name my-release agones
 ```
 
