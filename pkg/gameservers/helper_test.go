@@ -16,12 +16,11 @@ package gameservers
 
 import (
 	"context"
-	"time"
-
 	"io"
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"

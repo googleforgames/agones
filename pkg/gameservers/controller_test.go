@@ -17,7 +17,6 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
@@ -183,35 +182,6 @@ func TestControllerWatchGameServers(t *testing.T) {
 
 	podWatch.Delete(pod)
 	assert.Equal(t, "default/test", <-received)
-}
-
-func TestControllerHealthCheck(t *testing.T) {
-	m := newMocks()
-	m.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, newEstablishedCRD(), nil
-	})
-	health := healthcheck.NewHandler()
-	c := NewController(webhooks.NewWebHook("", ""), health, 10, 20, "sidecar:dev", false,
-		m.kubeClient, m.kubeInformationFactory, m.extClient, m.agonesClient, m.agonesInformerFactory)
-
-	c.workerqueue.SyncHandler = func(name string) error {
-		return nil
-	}
-
-	stop, cancel := startInformers(m, c.gameServerSynced)
-
-	go http.ListenAndServe("localhost:9090", health)
-
-	go func() {
-		err := c.Run(1, stop)
-		assert.Nil(t, err, "Run should not error")
-	}()
-
-	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusOK)
-
-	cancel()
-
-	testHTTPHealth(t, "http://localhost:9090/live", "{}\n", http.StatusServiceUnavailable)
 }
 
 func TestControllerCreationMutationHandler(t *testing.T) {
