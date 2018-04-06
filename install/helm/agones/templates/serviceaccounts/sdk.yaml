@@ -50,7 +50,7 @@ metadata:
     heritage: {{ .Release.Service }}
 subjects:
 - kind: User
-  name: system:serviceaccount:{{ .Values.namespace }}:{{ .Values.serviceaccount.sdk }}
+  name: system:serviceaccount:default:{{ .Values.serviceaccount.sdk }}
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   apiGroup: rbac.authorization.k8s.io
