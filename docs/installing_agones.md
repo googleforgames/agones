@@ -181,7 +181,7 @@ This will install Agones in your cluster.
 
 ## Install with YAML
 
-We can install Agones to the cluster using the [install.yaml file](agones-install-file)
+We can install Agones to the cluster using the [install.yaml file][agones-install-file]
 
 [agones-install-file]: ../install/yaml/install.yaml
 
@@ -191,8 +191,8 @@ kubectl apply -f https://raw.githubusercontent.com/googlecloudplatform/agones/re
 
 ## Install using Helm
 
-Also, we can install Agones using [Helm](helm) package manager. If you want more details and configuration
-options see the [Helm installation guide for Agones](agones-install-guide)
+Also, we can install Agones using [Helm][helm] package manager. If you want more details and configuration
+options see the [Helm installation guide for Agones][agones-install-guide]
 
 [helm]: https://docs.helm.sh
 [agones-install-guide]: ../install/helm/README.md

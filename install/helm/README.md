@@ -79,4 +79,4 @@ $ helm install --name my-release -f values.yaml agones
 
 ## Confirm Agones is running
 
-To confirm Agones is up and running, [go to the next section](../../docs/installing_agones#confirming-agones-started-successfully)
+To confirm Agones is up and running, [go to the next section](../../docs/installing_agones.md#confirming-agones-started-successfully)
