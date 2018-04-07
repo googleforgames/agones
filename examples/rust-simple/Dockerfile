@@ -1,0 +1,50 @@
+FROM rust:1.25.0 as builder
+RUN useradd -m build
+
+# Rust SDK depends on https://github.com/pingcap/grpc-rs and it requires CMake and Go
+
+## Cmake
+ENV CMAKE_MINOR_VERSION=v3.10 \
+    CMAKE_FULL_VERSION=3.10.3
+RUN mkdir -p /usr/src/cmake \
+  && curl -fSLO https://cmake.org/files/${CMAKE_MINOR_VERSION}/cmake-${CMAKE_FULL_VERSION}.tar.gz \
+  && curl -fSLO https://cmake.org/files/${CMAKE_MINOR_VERSION}/cmake-${CMAKE_FULL_VERSION}-SHA-256.txt \
+  && sha256sum -c cmake-${CMAKE_FULL_VERSION}-SHA-256.txt 2>&1 | grep OK \
+  && tar xf cmake-${CMAKE_FULL_VERSION}.tar.gz -C /usr/src/cmake --strip-components=1 \
+  && rm -f cmake-${CMAKE_FULL_VERSION}.* \
+  && cd /usr/src/cmake \
+  && ./configure && make -j$(nproc) && make install
+
+## Go
+ENV GO_VERSION=1.10.2 \
+    GO_CHECKSUM=4b677d698c65370afa33757b6954ade60347aaca310ea92a63ed717d7cb0c2ff
+RUN mkdir -p /usr/local/go \
+  && curl -fSO https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
+  && shasum -a 256 go${GO_VERSION}.linux-amd64.tar.gz | grep ${GO_CHECKSUM} \
+  && tar xf go${GO_VERSION}.linux-amd64.tar.gz -C /usr/local/go --strip-components=1 \
+  && rm -f go${GO_VERSION}.linux-amd64.tar.gz
+ENV PATH $PATH:/usr/local/go/bin
+
+# SDK
+COPY sdk/src /home/builder/agones/sdks/rust/src
+COPY sdk/Cargo.toml /home/builder/agones/sdks/rust/
+COPY sdk/Cargo.lock /home/builder/agones/sdks/rust/
+
+# Example
+COPY src /home/builder/agones/examples/rust-simple/src
+COPY Cargo.toml /home/builder/agones/examples/rust-simple/
+COPY Cargo.lock /home/builder/agones/examples/rust-simple/
+COPY Makefile /home/builder/agones/examples/rust-simple/
+
+WORKDIR /home/builder/agones/examples/rust-simple
+RUN make build
+
+FROM debian:stretch
+RUN useradd -m server
+
+COPY --from=builder /home/builder/agones/examples/rust-simple/target/release/rust-simple /home/server/rust-simple
+RUN chown -R server /home/server && \
+    chmod o+x /home/server/rust-simple
+
+USER server
+ENTRYPOINT /home/server/rust-simple

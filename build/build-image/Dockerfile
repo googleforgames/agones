@@ -67,6 +67,26 @@ RUN go get -u github.com/golang/dep/cmd/dep && \
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
     git clone -b kubernetes-1.9.2 --depth=3 https://github.com/kubernetes/code-generator.git
 
+# install rust
+ENV RUSTUP_HOME=/usr/local/rustup \
+    CARGO_HOME=/usr/local/cargo \
+    PATH=/usr/local/cargo/bin:$PATH \
+    RUST_VERSION=1.26.1
+ENV RUST_ARCH=x86_64-unknown-linux-gnu \
+    RUSTUP_SHA256=c9837990bce0faab4f6f52604311a19bb8d2cde989bea6a7b605c8e526db6f02
+RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rustup-init && \
+    echo "${RUSTUP_SHA256} *rustup-init" | sha256sum -c - && \
+    chmod +x rustup-init && \
+    ./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION && \
+    rm rustup-init && \
+    rustup --version; \
+    cargo --version; \
+    rustc --version;
+
+# install rust tooling for SDK generation
+RUN cargo install protobuf-codegen --vers 2.0.2
+RUN cargo install grpcio-compiler --vers 0.3.0
+
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 # make nano the editor

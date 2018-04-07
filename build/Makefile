@@ -184,6 +184,7 @@ gen-install: ensure-build-image
 gen-gameservers-sdk-grpc: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-go.sh
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-cpp.sh
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-rust.sh
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: ensure-build-image
