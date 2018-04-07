@@ -1,0 +1,14 @@
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: GameServer
+metadata:
+  # generate a unique name
+  # will need to be created with `kubectl create`
+  generateName: rust-simple-
+spec:
+  containerPort: 7654
+  template:
+    spec:
+      containers:
+      - name: rust-simple
+        image: gcr.io/agones-images/rust-simple-server:0.1
+        imagePullPolicy: IfNotPresent

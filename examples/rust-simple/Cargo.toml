@@ -1,0 +1,6 @@
+[package]
+name = "rust-simple"
+version = "0.1.0"
+
+[dependencies]
+agones = { path = "../../sdks/rust" }

@@ -1,0 +1,10 @@
+[package]
+name = "agones"
+version = "0.1.0"
+
+[dependencies]
+grpcio = "0.3.0"
+grpcio-proto = "0.3.0"
+protobuf = "2.0.2"
+futures = "^0.1.15"
+error-chain = "0.11.0"
