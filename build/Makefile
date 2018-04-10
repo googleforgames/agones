@@ -108,12 +108,10 @@ push: push-controller-image push-agones-sdk-image
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: ensure-build-image
-	cp $(build_path)/install.yaml $(build_path)/.install.yaml
-	sed -i -e 's!$${REGISTRY}!$(REGISTRY)!g' $(build_path)/.install.yaml
-	sed -i -e 's!$${VERSION}!$(VERSION)!g' $(build_path)/.install.yaml
-	sed -i -e 's!$${IMAGE_PULL_POLICY}!$(IMAGE_PULL_POLICY)!g' $(build_path)/.install.yaml
-	sed -i -e 's!$${ALWAYS_PULL_SIDECAR}!$(ALWAYS_PULL_SIDECAR)!g' $(build_path)/.install.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/.install.yaml
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm upgrade --install --namespace=default \
+		--set image.tag=$(VERSION),image.registry=$(REGISTRY),image.controller.pullPolicy=$(IMAGE_PULL_POLICY),image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
+		agones $(mount_path)/install/helm/agones/
 
 # Build a static binary for the gameserver controller
 build-controller-binary: ensure-build-image
@@ -244,9 +242,11 @@ gcloud-init: ensure-build-config
 
 # Creates and authenticates a small, 3 node GKE cluster to work against
 gcloud-test-cluster: ensure-build-image
-	docker run --rm -it $(common_mounts) $(build_tag) gcloud \
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
 		deployment-manager deployments create test-cluster --config=$(mount_path)/build/gke-test-cluster/deployment.yml
 	$(MAKE) gcloud-auth-cluster
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
 
 # Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 # (defaults to 'test-cluster')
@@ -284,7 +284,7 @@ clean-gcloud-config:
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: minikube-agones-profile
-	$(MINIKUBE) start --kubernetes-version v1.9.0 --vm-driver $(MINIKUBE_DRIVER) \
+	$(MINIKUBE) start --kubernetes-version v1.9.4 --vm-driver $(MINIKUBE_DRIVER) \
 		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
 		--extra-config=apiserver.Authorization.Mode=RBAC
 	# wait until the master is up
@@ -296,6 +296,7 @@ minikube-test-cluster: minikube-agones-profile
 	# this is needed for kubernetes component to work correctly while RBAC is enabled
 	-docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
 		kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) helm init
 	$(MAKE) minikube-post-start
 
 # switch to the agones cluster

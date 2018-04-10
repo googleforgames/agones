@@ -39,7 +39,7 @@ spec:
       serviceAccountName: {{ .Values.serviceaccount.controller }}
       containers:
       - name: agones-controller
-        image: "{{ .Values.image.controller.repository }}:{{ .Values.image.controller.tag }}"
+        image: "{{ .Values.image.registry }}/{{ .Values.image.controller.name}}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.controller.pullPolicy }}
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
@@ -51,7 +51,7 @@ spec:
         - name: MAX_PORT
           value: {{ .Values.maxPort | quote }}
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: "{{ .Values.image.sdk.repository }}:{{ .Values.image.sdk.tag }}"
+          value: "{{ .Values.image.registry }}/{{ .Values.image.sdk.name}}:{{ .Values.image.tag }}"
         livenessProbe:
           httpGet:
             path: /live
