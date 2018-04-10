@@ -275,6 +275,9 @@ Compile the gameserver controller and then build the docker image
 #### `make build-agones-sdk-image`
 Compile the gameserver sidecar and then build the docker image
 
+#### `make gen-install`
+Generate the `/install/yaml/install.yaml` from the Helm template
+
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
 

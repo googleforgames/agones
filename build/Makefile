@@ -98,8 +98,21 @@ build-images: build-controller-image build-agones-sdk-image
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: ensure-build-image
+test: ensure-build-image test-go test-install-yaml
+
+# Run go tests
+test-go:
 	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/...
+
+# Run test on install yaml - make sure there is no change
+# mostly this is for CI
+test-install-yaml:
+	-mkdir -p /tmp/agones-install
+	cp $(agones_path)/install/yaml/install.yaml /tmp/agones-install/install.yaml
+	sort /tmp/agones-install/install.yaml > /tmp/agones-install/install.yaml.sorted
+	$(MAKE) gen-install
+	sort $(agones_path)/install/yaml/install.yaml > /tmp/agones-install/install.current.yaml.sorted
+	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
 push: push-controller-image push-agones-sdk-image
@@ -148,6 +161,11 @@ build-sdk-cpp: ensure-build-image
 # push the gameservers sidecar image
 push-agones-sdk-image: ensure-build-image
 	docker push $(sidecar_tag)
+
+# Generate the static install script
+gen-install: ensure-build-image
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		'helm template --name=agones-manual $(mount_path)/install/helm/agones > $(mount_path)/install/yaml/install.yaml'
 
 # Generate the SDK gRPC server and client code
 gen-gameservers-sdk-grpc: ensure-build-image
