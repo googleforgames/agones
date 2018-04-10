@@ -36,3 +36,11 @@ webhooks:
           - "v1alpha1"
         operations:
           - CREATE
+      - apiGroups:
+          - stable.agones.dev
+        resources:
+          - "gameserversets"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - UPDATE

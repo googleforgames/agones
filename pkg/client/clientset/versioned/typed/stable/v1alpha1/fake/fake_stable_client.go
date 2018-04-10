@@ -29,6 +29,10 @@ func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerIn
 	return &FakeGameServers{c, namespace}
 }
 
+func (c *FakeStableV1alpha1) GameServerSets(namespace string) v1alpha1.GameServerSetInterface {
+	return &FakeGameServerSets{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeStableV1alpha1) RESTClient() rest.Interface {

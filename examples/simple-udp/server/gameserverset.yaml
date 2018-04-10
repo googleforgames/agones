@@ -12,26 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
+# Usually you would define a Fleet rather than a GameServerSet
+# directly. This is here mostly for testing purposes
+
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: GameServerSet
 metadata:
-  name: gameservers.stable.agones.dev
-  labels:
-    component: crd
-    app: {{ template "agones.name" . }}
-    chart: {{ template "agones.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+  name: simple-udp
 spec:
-  group: stable.agones.dev
-  version: v1alpha1
-  scope: Namespaced
-  names:
-    kind: GameServer
-    plural: gameservers
-    shortNames:
-    - gs
-    singular: gameserver
-  validation:
-    openAPIV3Schema:
-      {{- include "gameserver.validation" . | indent 6 }}
+  replicas: 2
+  template:
+    spec:
+      containerPort: 7654
+      template:
+        spec:
+          containers:
+          - name: simple-udp
+            image: gcr.io/agones-images/udp-server:0.1
