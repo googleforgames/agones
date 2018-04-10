@@ -23,62 +23,13 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
-	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
-	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
-	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/informers"
-	kubefake "k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
-	"k8s.io/client-go/tools/record"
 )
-
-// holder for all my fakes and mocks
-type mocks struct {
-	kubeClient             *kubefake.Clientset
-	kubeInformationFactory informers.SharedInformerFactory
-	extClient              *extfake.Clientset
-	agonesClient           *agonesfake.Clientset
-	agonesInformerFactory  externalversions.SharedInformerFactory
-	fakeRecorder           *record.FakeRecorder
-}
-
-func newMocks() mocks {
-	kubeClient := &kubefake.Clientset{}
-	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-	extClient := &extfake.Clientset{}
-	agonesClient := &agonesfake.Clientset{}
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
-	m := mocks{
-		kubeClient:             kubeClient,
-		kubeInformationFactory: kubeInformationFactory,
-		extClient:              extClient,
-		agonesClient:           agonesClient,
-		agonesInformerFactory:  agonesInformerFactory,
-		fakeRecorder:           record.NewFakeRecorder(10),
-	}
-	return m
-}
-
-func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	stop := ctx.Done()
-
-	mocks.kubeInformationFactory.Start(stop)
-	mocks.agonesInformerFactory.Start(stop)
-
-	logrus.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, sync...) {
-		panic("Cache never synced")
-	}
-
-	return stop, cancel
-}
 
 func newSingleContainerSpec() v1alpha1.GameServerSpec {
 	return v1alpha1.GameServerSpec{

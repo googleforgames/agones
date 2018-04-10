@@ -25,13 +25,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
+	agtesting "agones.dev/agones/pkg/testing"
 )
 
 func TestHealthControllerFailedContainer(t *testing.T) {
 	t.Parallel()
 
-	m := newMocks()
-	hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -80,8 +81,8 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 	for name, test := range fixtures {
 		t.Run(name, func(t *testing.T) {
-			m := newMocks()
-			hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
+			m := agtesting.NewMocks()
+			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
 
 			gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 				Status: v1alpha1.GameServerStatus{State: test.state}}
@@ -89,11 +90,11 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 			got := false
 			updated := false
-			m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				got = true
 				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
 			})
-			m.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
 				gsObj := ua.GetObject().(*v1alpha1.GameServer)
@@ -101,7 +102,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				return true, gsObj, nil
 			})
 
-			_, cancel := startInformers(m)
+			_, cancel := agtesting.StartInformers(m)
 			defer cancel()
 
 			err := hc.syncGameServer("default/test")
@@ -114,18 +115,18 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 }
 
 func TestHealthControllerRun(t *testing.T) {
-	m := newMocks()
-	hc := NewHealthController(m.kubeClient, m.agonesClient, m.kubeInformationFactory, m.agonesInformerFactory)
-	hc.recorder = m.fakeRecorder
+	m := agtesting.NewMocks()
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+	hc.recorder = m.FakeRecorder
 
 	gsWatch := watch.NewFake()
-	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	podWatch := watch.NewFake()
-	m.kubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
+	m.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 
 	updated := make(chan bool)
-	m.agonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		defer close(updated)
 		ua := action.(k8stesting.UpdateAction)
 		gsObj := ua.GetObject().(*v1alpha1.GameServer)
@@ -139,7 +140,7 @@ func TestHealthControllerRun(t *testing.T) {
 	pod, err := gs.Pod()
 	assert.Nil(t, err)
 
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	go hc.Run(stop)
@@ -159,5 +160,5 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	assert.Contains(t, <-m.fakeRecorder.Events, v1alpha1.Unhealthy)
+	assert.Contains(t, <-m.FakeRecorder.Events, v1alpha1.Unhealthy)
 }

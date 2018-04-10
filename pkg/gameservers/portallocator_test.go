@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
+	agtesting "agones.dev/agones/pkg/testing"
 )
 
 var (
@@ -42,12 +43,12 @@ func TestPortAllocatorAllocate(t *testing.T) {
 	fixture := dynamicGameServerFixture()
 
 	t.Run("ports are all allocated", func(t *testing.T) {
-		m := newMocks()
-		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+		m := agtesting.NewMocks()
+		pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 		nodeWatch := watch.NewFake()
-		m.kubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := startInformers(m)
+		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
@@ -75,14 +76,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 	t.Run("ports are unique in a node", func(t *testing.T) {
 		fixture := dynamicGameServerFixture()
-		m := newMocks()
-		pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+		m := agtesting.NewMocks()
+		pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-		m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
 			return true, nl, nil
 		})
-		stop, cancel := startInformers(m)
+		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 		err := pa.Run(stop)
 		assert.Nil(t, err)
@@ -98,14 +99,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	fixture := dynamicGameServerFixture()
-	m := newMocks()
-	pa := NewPortAllocator(10, 110, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 110, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
 		return true, nl, nil
 	})
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 	err := pa.Run(stop)
 	assert.Nil(t, err)
@@ -131,14 +132,14 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 	t.Parallel()
 
 	fixture := dynamicGameServerFixture()
-	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
-	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 	err := pa.Run(stop)
 	assert.Nil(t, err)
@@ -167,15 +168,15 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	t.Parallel()
 
-	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
 
-	m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		gs1 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
 			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n1.ObjectMeta.Name}}
@@ -198,7 +199,7 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 		return true, gsl, nil
 	})
 
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	err := pa.Run(stop)
@@ -222,9 +223,9 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 	t.Parallel()
 
-	m := newMocks()
+	m := agtesting.NewMocks()
 	gsWatch := watch.NewFake()
-	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	gs1 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
 		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
@@ -239,14 +240,14 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
 		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n2.ObjectMeta.Name}}
 
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2, n3}}
 		return true, nl, nil
 	})
 
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	gsWatch.Add(gs1.DeepCopy())
@@ -283,14 +284,14 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 
 func TestPortAllocatorNodeEvents(t *testing.T) {
 	fixture := dynamicGameServerFixture()
-	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 	nodeWatch := watch.NewFake()
 	gsWatch := watch.NewFake()
-	m.kubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
-	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
-	stop, cancel := startInformers(m)
+	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	// Make sure the add's don't corrupt the sync
@@ -365,10 +366,10 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 func TestNodePortAllocation(t *testing.T) {
 	t.Parallel()
 
-	m := newMocks()
-	pa := NewPortAllocator(10, 20, m.kubeInformationFactory, m.agonesInformerFactory)
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 	nodes := []corev1.Node{n1, n2, n3}
-	m.kubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})
