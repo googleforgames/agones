@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameserversets
+package testing
 
 import (
 	"context"
@@ -22,40 +22,45 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
+	"k8s.io/client-go/informers"
 	kubefake "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 )
 
-// holder for all my fakes and mocks
-type mocks struct {
-	kubeClient            *kubefake.Clientset
-	extClient             *extfake.Clientset
-	agonesClient          *agonesfake.Clientset
-	agonesInformerFactory externalversions.SharedInformerFactory
-	fakeRecorder          *record.FakeRecorder
+// Handy tools for testing controllers
+
+// holder for all my fakes and Mocks
+type Mocks struct {
+	KubeClient             *kubefake.Clientset
+	KubeInformationFactory informers.SharedInformerFactory
+	ExtClient              *extfake.Clientset
+	AgonesClient           *agonesfake.Clientset
+	AgonesInformerFactory  externalversions.SharedInformerFactory
+	FakeRecorder           *record.FakeRecorder
 }
 
-func newMocks() mocks {
+func NewMocks() Mocks {
 	kubeClient := &kubefake.Clientset{}
-	extClient := &extfake.Clientset{}
 	agonesClient := &agonesfake.Clientset{}
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
-	m := mocks{
-		kubeClient:            kubeClient,
-		extClient:             extClient,
-		agonesClient:          agonesClient,
-		agonesInformerFactory: agonesInformerFactory,
-		fakeRecorder:          record.NewFakeRecorder(10),
+
+	m := Mocks{
+		KubeClient:             kubeClient,
+		KubeInformationFactory: informers.NewSharedInformerFactory(kubeClient, 30*time.Second),
+		ExtClient:              &extfake.Clientset{},
+		AgonesClient:           agonesClient,
+		AgonesInformerFactory:  externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second),
+		FakeRecorder:           record.NewFakeRecorder(10),
 	}
 	return m
 }
 
-func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
+func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	stop := ctx.Done()
 
-	mocks.agonesInformerFactory.Start(stop)
+	mocks.KubeInformationFactory.Start(stop)
+	mocks.AgonesInformerFactory.Start(stop)
 
 	logrus.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, sync...) {

@@ -24,6 +24,7 @@ import (
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
@@ -33,7 +34,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
-	"github.com/heptiolabs/healthcheck"
+	agtesting "agones.dev/agones/pkg/testing"
 )
 
 func TestControllerWatchGameServers(t *testing.T) {
@@ -44,20 +45,20 @@ func TestControllerWatchGameServers(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	m.extClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, newEstablishedCRD(), nil
 	})
 	gsSetWatch := watch.NewFake()
-	m.agonesClient.AddWatchReactor("gameserversets", k8stesting.DefaultWatchReactor(gsSetWatch, nil))
+	m.AgonesClient.AddWatchReactor("gameserversets", k8stesting.DefaultWatchReactor(gsSetWatch, nil))
 	gsWatch := watch.NewFake()
-	m.agonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	c.workerqueue.SyncHandler = func(name string) error {
 		received <- name
 		return nil
 	}
 
-	stop, cancel := startInformers(m, c.gameServerSynced)
+	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	go func() {
@@ -134,20 +135,20 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.agonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet}}, nil
 		})
-		m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
 
-		m.agonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			da := action.(k8stesting.DeleteAction)
 			deleted = true
 			assert.Equal(t, "test-0", da.GetName())
 			return true, nil, nil
 		})
-		m.agonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ca := action.(k8stesting.CreateAction)
 			gs := ca.GetObject().(*v1alpha1.GameServer)
 
@@ -156,7 +157,7 @@ func TestSyncGameServerSet(t *testing.T) {
 			return true, gs, nil
 		})
 
-		_, cancel := startInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
 		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name)
@@ -171,18 +172,18 @@ func TestSyncGameServerSet(t *testing.T) {
 		count := 0
 
 		c, m := newFakeController()
-		m.agonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet}}, nil
 		})
-		m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
-		m.agonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			count++
 			return true, nil, nil
 		})
 
-		_, cancel := startInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
 		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name)
@@ -205,11 +206,11 @@ func TestControllerListGameServers(t *testing.T) {
 	gs4.ObjectMeta.OwnerReferences = nil
 
 	c, m := newFakeController()
-	m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*gs1, *gs2, gs3, *gs4}}, nil
 	})
 
-	_, cancel := startInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	list, err := c.listGameServers(gsSet)
@@ -242,7 +243,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	deleted := false
 
 	c, m := newFakeController()
-	m.agonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		deleted = true
 		da := action.(k8stesting.DeleteAction)
 		assert.Equal(t, gs1.ObjectMeta.Name, da.GetName())
@@ -250,7 +251,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 		return true, nil, nil
 	})
 
-	_, cancel := startInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	err := c.syncUnhealthyGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
@@ -266,7 +267,7 @@ func TestSyncMoreGameServers(t *testing.T) {
 	count := 0
 	expected := 10
 
-	m.agonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		ca := action.(k8stesting.CreateAction)
 		gs := ca.GetObject().(*v1alpha1.GameServer)
 
@@ -276,7 +277,7 @@ func TestSyncMoreGameServers(t *testing.T) {
 		return true, gs, nil
 	})
 
-	_, cancel := startInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	err := c.syncMoreGameServers(gsSet, int32(expected))
@@ -284,7 +285,7 @@ func TestSyncMoreGameServers(t *testing.T) {
 	assert.Equal(t, expected, count)
 
 	select {
-	case event := <-m.fakeRecorder.Events:
+	case event := <-m.FakeRecorder.Events:
 		assert.Contains(t, event, "SuccessfulCreate")
 	case <-time.After(3 * time.Second):
 		assert.FailNow(t, "should have received an event")
@@ -313,10 +314,10 @@ func TestSyncLessGameServers(t *testing.T) {
 	assert.Equal(t, v1alpha1.Allocated, list[3].Status.State)
 	assert.False(t, list[10].ObjectMeta.DeletionTimestamp.IsZero())
 
-	m.agonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.GameServerList{Items: list}, nil
 	})
-	m.agonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		da := action.(k8stesting.DeleteAction)
 
 		found := false
@@ -332,7 +333,7 @@ func TestSyncLessGameServers(t *testing.T) {
 		return true, nil, nil
 	})
 
-	_, cancel := startInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	list2, err := c.listGameServers(gsSet)
@@ -346,7 +347,7 @@ func TestSyncLessGameServers(t *testing.T) {
 	assert.Equal(t, expected-1, count)
 
 	select {
-	case event := <-m.fakeRecorder.Events:
+	case event := <-m.FakeRecorder.Events:
 		assert.Contains(t, event, "SuccessfulDelete")
 	case <-time.After(3 * time.Second):
 		assert.FailNow(t, "should have received an event")
@@ -361,7 +362,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 		c, m := newFakeController()
 
 		updated := false
-		m.agonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			return true, nil, nil
 		})
@@ -376,7 +377,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 		c, m := newFakeController()
 
 		updated := false
-		m.agonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			ua := action.(k8stesting.UpdateAction)
 			gsSet := ua.GetObject().(*v1alpha1.GameServerSet)
@@ -398,7 +399,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 		c, m := newFakeController()
 
 		updated := false
-		m.agonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			ua := action.(k8stesting.UpdateAction)
 			gsSet := ua.GetObject().(*v1alpha1.GameServerSet)
@@ -519,11 +520,11 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 }
 
 // newFakeController returns a controller, backed by the fake Clientset
-func newFakeController() (*Controller, mocks) {
-	m := newMocks()
+func newFakeController() (*Controller, agtesting.Mocks) {
+	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), m.kubeClient, m.extClient, m.agonesClient, m.agonesInformerFactory)
-	c.recorder = m.fakeRecorder
+	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c.recorder = m.FakeRecorder
 	return c, m
 }
 
