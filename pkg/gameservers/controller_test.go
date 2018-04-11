@@ -30,7 +30,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -143,7 +142,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	mocks.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	mocks.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 	mocks.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, newEstablishedCRD(), nil
+		return true, agtesting.NewEstablishedCRD(), nil
 	})
 
 	received := make(chan string)
@@ -832,15 +831,4 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 		m.KubeClient, m.KubeInformationFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
-}
-
-func newEstablishedCRD() *v1beta1.CustomResourceDefinition {
-	return &v1beta1.CustomResourceDefinition{
-		Status: v1beta1.CustomResourceDefinitionStatus{
-			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
-				Type:   v1beta1.Established,
-				Status: v1beta1.ConditionTrue,
-			}},
-		},
-	}
 }

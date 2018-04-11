@@ -19,13 +19,13 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
-	agtesting "agones.dev/agones/pkg/testing"
 )
 
 func TestHealthControllerFailedContainer(t *testing.T) {

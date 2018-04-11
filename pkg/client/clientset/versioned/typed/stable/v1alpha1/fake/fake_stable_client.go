@@ -25,6 +25,10 @@ type FakeStableV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeStableV1alpha1) Fleets(namespace string) v1alpha1.FleetInterface {
+	return &FakeFleets{c, namespace}
+}
+
 func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerInterface {
 	return &FakeGameServers{c, namespace}
 }

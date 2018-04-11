@@ -24,6 +24,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// Fleets returns a FleetInformer.
+	Fleets() FleetInformer
 	// GameServers returns a GameServerInformer.
 	GameServers() GameServerInformer
 	// GameServerSets returns a GameServerSetInformer.
@@ -39,6 +41,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// Fleets returns a FleetInformer.
+func (v *version) Fleets() FleetInformer {
+	return &fleetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GameServers returns a GameServerInformer.

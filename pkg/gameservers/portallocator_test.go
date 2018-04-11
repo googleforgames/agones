@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
-	agtesting "agones.dev/agones/pkg/testing"
 )
 
 var (
