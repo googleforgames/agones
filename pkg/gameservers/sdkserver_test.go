@@ -22,6 +22,7 @@ import (
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
+	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -29,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8stesting "k8s.io/client-go/testing"
-	agtesting "agones.dev/agones/pkg/testing"
 )
 
 func TestSidecarRun(t *testing.T) {

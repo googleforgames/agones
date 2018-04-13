@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/util/runtime"
@@ -41,12 +42,13 @@ import (
 )
 
 const (
-	sidecarFlag     = "sidecar"
-	pullSidecarFlag = "always-pull-sidecar"
-	minPortFlag     = "min-port"
-	maxPortFlag     = "max-port"
-	certFileFlag    = "cert-file"
-	keyFileFlag     = "key-file"
+	sidecarFlag           = "sidecar"
+	pullSidecarFlag       = "always-pull-sidecar"
+	minPortFlag           = "min-port"
+	maxPortFlag           = "max-port"
+	certFileFlag          = "cert-file"
+	keyFileFlag           = "key-file"
+	controllerThreadiness = 2
 )
 
 var (
@@ -131,6 +133,7 @@ func main() {
 
 	gsController := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
@@ -143,15 +146,21 @@ func main() {
 		}
 	}()
 	go func() {
-		err = gsController.Run(2, stop)
+		err = gsController.Run(controllerThreadiness, stop)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not run gameserver controller")
 		}
 	}()
 	go func() {
-		err = gsSetController.Run(2, stop)
+		err = gsSetController.Run(controllerThreadiness, stop)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not run gameserverset controller")
+		}
+	}()
+	go func() {
+		err = fleetController.Run(controllerThreadiness, stop)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not run fleet controller")
 		}
 	}()
 	go func() {

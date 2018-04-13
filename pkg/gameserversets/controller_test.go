@@ -23,18 +23,17 @@ import (
 	"encoding/json"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
-	agtesting "agones.dev/agones/pkg/testing"
 )
 
 func TestControllerWatchGameServers(t *testing.T) {
@@ -46,7 +45,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	defer close(received)
 
 	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, newEstablishedCRD(), nil
+		return true, agtesting.NewEstablishedCRD(), nil
 	})
 	gsSetWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameserversets", k8stesting.DefaultWatchReactor(gsSetWatch, nil))
@@ -526,15 +525,4 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
-}
-
-func newEstablishedCRD() *v1beta1.CustomResourceDefinition {
-	return &v1beta1.CustomResourceDefinition{
-		Status: v1beta1.CustomResourceDefinitionStatus{
-			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
-				Type:   v1beta1.Established,
-				Status: v1beta1.ConditionTrue,
-			}},
-		},
-	}
 }

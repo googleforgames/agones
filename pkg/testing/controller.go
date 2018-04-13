@@ -21,6 +21,7 @@ import (
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/client-go/informers"
 	kubefake "k8s.io/client-go/kubernetes/fake"
@@ -68,4 +69,15 @@ func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{},
 	}
 
 	return stop, cancel
+}
+
+func NewEstablishedCRD() *v1beta1.CustomResourceDefinition {
+	return &v1beta1.CustomResourceDefinition{
+		Status: v1beta1.CustomResourceDefinitionStatus{
+			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
+				Type:   v1beta1.Established,
+				Status: v1beta1.ConditionTrue,
+			}},
+		},
+	}
 }
