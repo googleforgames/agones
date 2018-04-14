@@ -31,7 +31,7 @@ import (
 
 // Handy tools for testing controllers
 
-// holder for all my fakes and Mocks
+// Mocks is a holder for all my fakes and Mocks
 type Mocks struct {
 	KubeClient             *kubefake.Clientset
 	KubeInformationFactory informers.SharedInformerFactory
@@ -41,6 +41,7 @@ type Mocks struct {
 	FakeRecorder           *record.FakeRecorder
 }
 
+// NewMocks creates a new set of fakes and mocks.
 func NewMocks() Mocks {
 	kubeClient := &kubefake.Clientset{}
 	agonesClient := &agonesfake.Clientset{}
@@ -56,6 +57,7 @@ func NewMocks() Mocks {
 	return m
 }
 
+// StartInformers starts new fake informers
 func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	stop := ctx.Done()
@@ -71,6 +73,7 @@ func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{},
 	return stop, cancel
 }
 
+// NewEstablishedCRD fakes CRD installation success.
 func NewEstablishedCRD() *v1beta1.CustomResourceDefinition {
 	return &v1beta1.CustomResourceDefinition{
 		Status: v1beta1.CustomResourceDefinitionStatus{

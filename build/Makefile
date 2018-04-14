@@ -98,7 +98,7 @@ build-images: build-controller-image build-agones-sdk-image
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: ensure-build-image test-go test-install-yaml
+test: ensure-build-image lint test-go test-install-yaml
 
 # Run go tests
 test-go:
@@ -130,6 +130,11 @@ install: ensure-build-image
 build-controller-binary: ensure-build-image
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
 		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+
+# Lint the go source code.
+lint: ensure-build-image
+	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline 100s -t --skip vendor ./..."
 
 # Build the image for the gameserver controller
 build-controller-image: ensure-build-image build-controller-binary

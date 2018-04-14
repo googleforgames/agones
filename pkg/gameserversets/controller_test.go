@@ -159,7 +159,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name)
+		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 5, count)
 		assert.True(t, deleted, "A game servers should have been deleted")
@@ -185,7 +185,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name)
+		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 5, count)
 	})

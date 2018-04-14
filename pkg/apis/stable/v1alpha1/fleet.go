@@ -20,6 +20,8 @@ import (
 )
 
 const (
+	// FleetGameServerSetLabel is the label that the name of the Fleet
+	// is set to on the GameServerSet the Fleet controls
 	FleetGameServerSetLabel = stable.GroupName + "/fleet"
 )
 
@@ -62,7 +64,7 @@ type FleetStatus struct {
 	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
-// Fleet returns a single GameServerSet for this Fleet definition
+// GameServerSet returns a single GameServerSet for this Fleet definition
 func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet := &GameServerSet{
 		ObjectMeta: *f.Spec.Template.ObjectMeta.DeepCopy(),
