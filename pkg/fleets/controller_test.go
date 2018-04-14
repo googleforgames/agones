@@ -254,8 +254,10 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 			return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet1, *gsSet2}}, nil
 		})
 
+	updated := false
 	m.AgonesClient.AddReactor("update", "fleets",
 		func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
 			ua := action.(k8stesting.UpdateAction)
 			fleet := ua.GetObject().(*v1alpha1.Fleet)
 
@@ -269,6 +271,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 
 	err := c.updateFleetStatus(fleet)
 	assert.Nil(t, err)
+	assert.True(t, updated)
 }
 
 // newFakeController returns a controller, backed by the fake Clientset
