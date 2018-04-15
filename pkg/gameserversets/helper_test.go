@@ -28,7 +28,7 @@ import (
 )
 
 // holder for all my fakes and mocks
-type mocks struct {
+type mocks struct { // nolint: megacheck
 	kubeClient            *kubefake.Clientset
 	extClient             *extfake.Clientset
 	agonesClient          *agonesfake.Clientset
@@ -36,7 +36,7 @@ type mocks struct {
 	fakeRecorder          *record.FakeRecorder
 }
 
-func newMocks() mocks {
+func newMocks() mocks { // nolint: megacheck
 	kubeClient := &kubefake.Clientset{}
 	extClient := &extfake.Clientset{}
 	agonesClient := &agonesfake.Clientset{}
@@ -51,7 +51,7 @@ func newMocks() mocks {
 	return m
 }
 
-func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
+func startInformers(mocks mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) { // nolint: megacheck
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	stop := ctx.Done()
 

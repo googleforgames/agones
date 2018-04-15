@@ -113,7 +113,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	f := func(t *testing.T, url string, status int) {
 		resp, err := http.Get(url)
 		assert.Nil(t, err)
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint: errcheck
 
 		body, err := ioutil.ReadAll(resp.Body)
 		assert.Nil(t, err)

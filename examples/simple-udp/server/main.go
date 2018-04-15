@@ -29,7 +29,7 @@ import (
 
 // main starts a UDP server that received 1024 byte sized packets at at time
 // converts the bytes to a string, and logs the output
-func main() {
+func main() { // nolint: gocyclo
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not start udp server: %v", err)
 	}
-	defer conn.Close()
+	defer conn.Close() // nolint: errcheck
 
 	log.Print("Creating SDK instance")
 	s, err := sdk.NewSDK()
@@ -79,12 +79,10 @@ func main() {
 				log.Printf("Could not shutdown")
 			}
 			os.Exit(0)
-			break
 
 		// turns off the health pings
 		case "UNHEALTHY":
 			close(stop)
-			break
 		}
 
 		// echo it back

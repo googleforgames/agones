@@ -41,13 +41,13 @@ func TestSidecarRun(t *testing.T) {
 		"ready": {
 			state: v1alpha1.RequestReady,
 			f: func(sc *SDKServer, ctx context.Context) {
-				sc.Ready(ctx, &sdk.Empty{})
+				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 		},
 		"shutdown": {
 			state: v1alpha1.Shutdown,
 			f: func(sc *SDKServer, ctx context.Context) {
-				sc.Shutdown(ctx, &sdk.Empty{})
+				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 		},
 		"unhealthy": {

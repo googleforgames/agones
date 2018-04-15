@@ -39,14 +39,17 @@ func TestSDK(t *testing.T) {
 	assert.False(t, sm.shutdown)
 	assert.False(t, sm.hm.healthy)
 
-	s.Ready()
+	err := s.Ready()
+	assert.Nil(t, err)
 	assert.True(t, sm.ready)
 	assert.False(t, sm.shutdown)
 
-	s.Health()
+	err = s.Health()
+	assert.Nil(t, err)
 	assert.True(t, sm.hm.healthy)
 
-	s.Shutdown()
+	err = s.Shutdown()
+	assert.Nil(t, err)
 	assert.True(t, sm.ready)
 	assert.True(t, sm.shutdown)
 }

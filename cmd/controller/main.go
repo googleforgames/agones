@@ -56,7 +56,7 @@ var (
 )
 
 // main starts the operator for the gameserver CRD
-func main() {
+func main() { // nolint: gocyclo
 	exec, err := os.Executable()
 	if err != nil {
 		logger.WithError(err).Fatal("Could not get executable path")
