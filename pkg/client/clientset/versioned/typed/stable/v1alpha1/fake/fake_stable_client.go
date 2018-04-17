@@ -29,6 +29,10 @@ func (c *FakeStableV1alpha1) Fleets(namespace string) v1alpha1.FleetInterface {
 	return &FakeFleets{c, namespace}
 }
 
+func (c *FakeStableV1alpha1) FleetAllocations(namespace string) v1alpha1.FleetAllocationInterface {
+	return &FakeFleetAllocations{c, namespace}
+}
+
 func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerInterface {
 	return &FakeGameServers{c, namespace}
 }

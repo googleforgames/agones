@@ -39,6 +39,7 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"agones.dev/agones/pkg/fleetallocation"
 )
 
 const (
@@ -134,6 +135,7 @@ func main() { // nolint: gocyclo
 	gsController := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	faController := fleetallocation.NewController(wh, kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 
@@ -163,6 +165,13 @@ func main() { // nolint: gocyclo
 			logger.WithError(err).Fatal("Could not run fleet controller")
 		}
 	}()
+	go func() {
+		err = faController.Run(stop)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not run fleet controller")
+		}
+	}()
+
 	go func() {
 		logger.Info("Starting health check...")
 		srv := &http.Server{

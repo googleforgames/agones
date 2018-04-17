@@ -32,7 +32,6 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -169,7 +168,7 @@ func (c *Controller) syncFleet(key string) error {
 		return errors.Wrapf(err, "error retrieving fleet %s from namespace %s", name, namespace)
 	}
 
-	list, err := c.listGameServerSets(fleet)
+	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {
 		return err
 	}
@@ -209,28 +208,10 @@ func (c *Controller) syncFleet(key string) error {
 	return c.updateFleetStatus(fleet)
 }
 
-// listGameServerSets lists all the GameServerSets for a given
-// Fleet
-func (c *Controller) listGameServerSets(f *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServerSet, error) {
-	list, err := c.gameServerSetLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetGameServerSetLabel: f.ObjectMeta.Name}))
-	if err != nil {
-		return list, errors.Wrapf(err, "error listing gameserversets for fleet %s", f.ObjectMeta.Name)
-	}
-
-	var result []*stablev1alpha1.GameServerSet
-	for _, gsSet := range list {
-		if metav1.IsControlledBy(gsSet, f) {
-			result = append(result, gsSet)
-		}
-	}
-
-	return result, nil
-}
-
 // updateFleetStatus gets the GameServerSets for this Fleet and then
 // calculates the counts for the status, and updates the Fleet
 func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
-	list, err := c.listGameServerSets(fleet)
+	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {
 		return err
 	}

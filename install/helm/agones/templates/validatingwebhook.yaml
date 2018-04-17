@@ -32,6 +32,7 @@ webhooks:
           - stable.agones.dev
         resources:
           - "gameservers"
+          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -40,6 +41,7 @@ webhooks:
           - stable.agones.dev
         resources:
           - "gameserversets"
+          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
