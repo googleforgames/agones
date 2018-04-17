@@ -67,8 +67,6 @@ type Controller struct {
 	recorder              record.EventRecorder
 }
 
-// TODO: write documentation
-
 // NewController returns a controller for a FleetAllocation
 func NewController(
 	wh *webhooks.WebHook,

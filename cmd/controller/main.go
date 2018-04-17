@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/fleetallocation"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
@@ -39,7 +40,6 @@ import (
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"agones.dev/agones/pkg/fleetallocation"
 )
 
 const (
@@ -134,7 +134,7 @@ func main() { // nolint: gocyclo
 
 	gsController := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	fleetController := fleets.NewController(health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()

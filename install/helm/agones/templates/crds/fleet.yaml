@@ -37,5 +37,11 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            strategy:
+              properties:
+                type:
+                  enum:
+                    - Recreate
+                    - RollingUpdate
             template:
               {{- include "gameserver.validation" . | indent 14 }}

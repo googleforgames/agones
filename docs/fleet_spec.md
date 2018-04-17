@@ -15,6 +15,8 @@ metadata:
   name: fleet-example
 spec:
   replicas: 2
+  strategy:
+    type: Recreate  
   template:
     metadata:
       labels:
@@ -45,8 +47,12 @@ This is a very common pattern in the Kubernetes ecosystem.
 
 The `spec` field is the actual `Fleet` specification and it is composed as follow:
 
-- `replicas` is the number of GameServers to keep Ready or Allocated in this Fleet
-- `template` a full `GameServer` configuration template. 
+- `replicas` is the number of `GameServers` to keep Ready or Allocated in this Fleet
+- `strategy` is the `GameServer` replacement strategy for when the `GameServer` template is edited.
+  `type` "Recreate" is the only option. A "RollingUpdate" option will be implemented soon.  
+  - `Recreate` terminates all non-allocated `GameServers`, and starts up a new set with
+  the new `GameServer` configuration to replace them.
+- `template` a full `GameServer` configuration template.
    See the [GameServer](./gameserver_spec.md) reference for all available fields.
 
 # Fleet Allocation Specification

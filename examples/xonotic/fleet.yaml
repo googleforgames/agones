@@ -21,10 +21,12 @@ metadata:
   name: xonotic
 spec:
   replicas: 2
+  strategy:
+    type: Recreate
   template:
     spec:
-      portPolicy: "dynamic"
       containerPort: 26000
+      portPolicy: "dynamic"
       health:
         initialDelaySeconds: 30
         periodSeconds: 60

@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -52,4 +53,29 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	assert.Equal(t, f.Spec.Replicas, gsSet.Spec.Replicas)
 	assert.Equal(t, f.Spec.Template, gsSet.Spec.Template)
 	assert.True(t, v1.IsControlledBy(gsSet, &f))
+}
+
+func TestFleetReplicasMinusSumAllocated(t *testing.T) {
+	f := Fleet{
+		Spec: FleetSpec{Replicas: 10},
+	}
+
+	assert.Equal(t, int32(10), f.ReplicasMinusSumAllocated(nil))
+	gsSet1 := f.GameServerSet()
+	gsSet1.Status.AllocatedReplicas = 2
+
+	gsSet2 := f.GameServerSet()
+	gsSet2.Status.AllocatedReplicas = 3
+
+	assert.Equal(t, int32(5), f.ReplicasMinusSumAllocated([]*GameServerSet{gsSet1, gsSet2}))
+}
+
+func TestFleetApplyDefaults(t *testing.T) {
+	f := &Fleet{}
+
+	// gate
+	assert.EqualValues(t, "", f.Spec.Strategy.Type)
+
+	f.ApplyDefaults()
+	assert.Equal(t, appsv1.RecreateDeploymentStrategyType, f.Spec.Strategy.Type)
 }
