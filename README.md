@@ -41,6 +41,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 
 ### Quickstarts:
  - [Create a Game Server](./docs/create_gameserver.md)
+ - [Create a Game Server Fleet](./docs/create_fleet.md)
 
 ### Guides
  - [Integrating the Game Server SDK](sdks)

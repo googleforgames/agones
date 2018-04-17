@@ -15,12 +15,10 @@
 package gameserversets
 
 import (
-	"sort"
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
-
-	"encoding/json"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -191,37 +189,6 @@ func TestSyncGameServerSet(t *testing.T) {
 	})
 }
 
-func TestControllerListGameServers(t *testing.T) {
-	gsSet := defaultFixture()
-
-	gs1 := gsSet.GameServer()
-	gs1.ObjectMeta.Name = "test-1"
-	gs2 := gsSet.GameServer()
-	assert.True(t, metav1.IsControlledBy(gs2, gsSet))
-
-	gs2.ObjectMeta.Name = "test-2"
-	gs3 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "not-included"}}
-	gs4 := gsSet.GameServer()
-	gs4.ObjectMeta.OwnerReferences = nil
-
-	c, m := newFakeController()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*gs1, *gs2, gs3, *gs4}}, nil
-	})
-
-	_, cancel := agtesting.StartInformers(m)
-	defer cancel()
-
-	list, err := c.listGameServers(gsSet)
-	assert.Nil(t, err)
-
-	// sort of stable ordering
-	sort.SliceStable(list, func(i, j int) bool {
-		return list[i].ObjectMeta.Name < list[j].ObjectMeta.Name
-	})
-	assert.Equal(t, []*v1alpha1.GameServer{gs1, gs2}, list)
-}
-
 func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	gsSet := defaultFixture()
 
@@ -335,7 +302,7 @@ func TestSyncLessGameServers(t *testing.T) {
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	list2, err := c.listGameServers(gsSet)
+	list2, err := ListGameServersByGameServerSetOwner(c.gameServerLister, gsSet)
 	assert.Nil(t, err)
 	assert.Len(t, list2, 11)
 

@@ -15,7 +15,6 @@
 package fleets
 
 import (
-	"sort"
 	"testing"
 	"time"
 
@@ -29,41 +28,6 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
-
-func TestControllerListGameServerSets(t *testing.T) {
-	t.Parallel()
-
-	f := defaultFixture()
-
-	gsSet1 := f.GameServerSet()
-	gsSet1.ObjectMeta.Name = "gsSet1"
-	gsSet2 := f.GameServerSet()
-	gsSet2.ObjectMeta.Name = "gsSet2"
-	gsSet3 := f.GameServerSet()
-	gsSet3.ObjectMeta.Name = "gsSet3"
-	gsSet3.ObjectMeta.Labels = nil
-	gsSet4 := f.GameServerSet()
-	gsSet4.ObjectMeta.Name = "gsSet4"
-	gsSet4.ObjectMeta.OwnerReferences = nil
-
-	c, m := newFakeController()
-
-	m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet1, *gsSet2, *gsSet3, *gsSet4}}, nil
-	})
-
-	_, cancel := agtesting.StartInformers(m)
-	defer cancel()
-
-	list, err := c.listGameServerSets(f)
-	assert.Nil(t, err)
-
-	// sort of stable ordering
-	sort.SliceStable(list, func(i, j int) bool {
-		return list[i].ObjectMeta.Name < list[j].ObjectMeta.Name
-	})
-	assert.Equal(t, []*v1alpha1.GameServerSet{gsSet1, gsSet2}, list)
-}
 
 func TestControllerSyncFleet(t *testing.T) {
 	t.Parallel()
