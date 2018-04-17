@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	"agones.dev/agones/pkg/apis/stable"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -52,6 +53,8 @@ type FleetList struct {
 type FleetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
+	// Deployment strategy
+	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
 }
@@ -94,4 +97,23 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet.ObjectMeta.Labels[FleetGameServerSetLabel] = f.ObjectMeta.Name
 
 	return gsSet
+}
+
+// ApplyDefaults applies default values to the Fleet
+func (f *Fleet) ApplyDefaults() {
+	if f.Spec.Strategy.Type == "" {
+		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
+	}
+}
+
+// ReplicasMinusSumAllocated returns the number of Replicas that are
+// currently configured against this fleet, subtracting the number
+// of allocated GameServers counted on this list of GameServerSets
+func (f *Fleet) ReplicasMinusSumAllocated(list []*GameServerSet) int32 {
+	result := f.Spec.Replicas
+	for _, gsSet := range list {
+		result -= gsSet.Status.AllocatedReplicas
+	}
+
+	return result
 }

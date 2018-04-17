@@ -25,10 +25,10 @@ While not required, you may wish to go through the [Create a Game Server](create
 ## Objectives
 
 - Create a Fleet in Kubernetes using Agones custom resource.
-- Scale the Fleet up from it's initial configuration
-- Request a GameServer allocation from the Fleet to play on
+- Scale the Fleet up from it's initial configuration.
+- Request a GameServer allocation from the Fleet to play on.
 - Connect to the allocated GameServer.
-
+- Deploy a new GameServer configuration to the Fleet
 
 ### 1. Create a Fleet
 
@@ -244,10 +244,7 @@ This will get you a list of all the current `Status > State` of all the `GameSev
   State:      Ready
 ```
 
-### 5. Deploy a new version of the GameServer on the Fleet
-_Coming Soon._
-
-### 6. Scale down the Fleet
+### 5. Scale down the Fleet
 
 Not only can we scale our fleet up, but we can scale it down as well.
 
@@ -260,7 +257,7 @@ Run `kubectl edit fleet simple-udp` and replace `replicas: 5` with `replicas 0`,
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
-watch kubectl describe gs | grep State
+watch 'kubectl describe gs | grep State'
 ```
 
 Eventually, one by one they will be removed from the list, and you should simply see:
@@ -274,7 +271,7 @@ That lone `Allocated` `GameServer` is left all alone, but still running!
 If you would like, try editing the `Fleet` configuration `replicas` field and watch the list of `GameServers`
 grow and shrink.
 
-### 7. Connect to the GameServer
+### 6. Connect to the GameServer
 
 Since we've only got one allocation, we'll just grab the details of the IP and port of the
 only allocated `GameServer`: 
@@ -301,6 +298,44 @@ If you run `kubectl describe gs | grep State` again - either the GameServer will
 
 Since we are running a `Fleet`, Agones will always do it's best to ensure there are always the configured number
 of `GameServers` in the pool in either a `Ready` or `Allocated` state. 
+
+### 7. Deploy a new version of the GameServer on the Fleet
+
+We can also change the configuration of the `GameServer` of the running `Fleet`, and have the changes
+roll out, without interrupting the currently `Allocated` `GameServers`.
+
+Let's take this for a spin! Run `kubectl edit fleet simple-udp` and set the `replicas` field to back to `5`.
+
+Let's also allocate ourselves a `GameServer`
+
+```
+kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/fleetallocation.yaml -o yaml
+```
+
+We should now have four `Ready` `GameServers` and one `Allocated`. We can check this by running `kubectl describe gs | grep State`.
+
+```
+  State:      Allocated
+  State:      Ready
+  State:      Ready
+  State:      Ready
+  State:      Ready
+```
+
+In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
+to run a new game server process, but to make this example simple, change `containerPort` from `7654`
+to `6000`. Save the file and exit.
+
+This will start the deployment of a new set of `GameServers` running
+with a Container Port of `6000`.
+
+> NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
+
+Run `watch 'kubectl describe gs | grep "Container Port"'` until you can see that there are
+one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
+is the new configuration.
+
+You have now deployed a new version of your game!
 
 ## Next Steps
 

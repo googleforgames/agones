@@ -18,9 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"testing"
-
 	"sync"
+	"testing"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"

@@ -29,6 +29,11 @@ spec:
   replicas: 2
   # a GameServer template - see:
   # https://github.com/GoogleCloudPlatform/agones/blob/master/docs/gameserver_spec.md for all the options
+  strategy:
+    # The replacement strategy for when the GameServer template is changed. Current option is "Recreate",
+    # "RollingUpdate" will come at a later date.
+    # "Recreate" terminates all non-allocated GameServers, and starts up a new set with the new details to replace them.
+    type: Recreate
   template:
     # GameServer metadata
     metadata:
