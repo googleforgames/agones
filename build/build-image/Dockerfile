@@ -19,7 +19,7 @@
 FROM grpc/cxx:1.8
 
 RUN apt-get update && \
-    apt-get install -y wget rsync make python bash-completion zip jq && \
+    apt-get install -y wget rsync make python bash-completion zip nano jq && \
     apt-get clean
 
 # install go
@@ -64,6 +64,8 @@ RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
+# make nano the editor
+RUN echo "export EDITOR=nano" >> /root/.bashrc
 
 # code generation scripts
 COPY *.sh /root/
