@@ -14,9 +14,11 @@
 
 FROM alpine:3.7
 
+RUN adduser -D server    
+
 COPY ./bin/server /home/server/server
-RUN adduser -D server && \
-    chown -R server /home/server && \
+    
+RUN chown -R server /home/server && \
     chmod o+x /home/server/server
 
 USER server
