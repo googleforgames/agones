@@ -43,4 +43,20 @@ See the [Container Builder documentation](https://cloud.google.com/container-bui
 how to edit and expand the build process.
 
 ### Additional Resources
-- [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) 
+
+#### Kubernetes
+
+- [Kubernetes Custom Resources](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) - 
+  This is how we define our own resource names (`GameServer`, etc) within Kubernetes. 
+- [Joe Beda's TGIK Controller](https://github.com/jbeda/tgik-controller) -
+  [Joe Beda](https://twitter.com/jbeda) did a video series on writing controllers for Kubernetes.  
+  **This is the best resource for learning about controllers and Kubernetes.**
+- [Kubernetes Sample Controller](https://github.com/kubernetes/sample-controller) -
+  Example of a Custom Resources with a Kubernetes Controller.
+- [Kubernetes Code Generator](https://github.com/kubernetes/code-generator) -
+  The tooling that generated the Go libraries for the Custom Resource we define
+  
+#### Coding and Development
+
+- [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) -
+  Great way to make sure your Pull Requests get accepted. 
