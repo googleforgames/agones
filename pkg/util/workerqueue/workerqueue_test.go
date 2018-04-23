@@ -78,18 +78,28 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	go wq.Run(1, stop)
 
 	// Yield to the scheduler to ensure the worker queue goroutine can run.
-	time.Sleep(10 * time.Millisecond)
-	assert.Equal(t, 1, wq.RunCount())
-	assert.Nil(t, wq.Healthy())
+	err := wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+		if (wq.RunCount() == 1) && wq.Healthy() == nil {
+			return true, nil
+		}
+
+		return false, nil
+	})
+	assert.Nil(t, err)
 
 	close(done) // Ensure the handler no longer blocks.
 	close(stop) // Stop the worker queue.
 
 	// Yield to the scheduler again to ensure the worker queue goroutine can
 	// finish.
-	time.Sleep(10 * time.Millisecond)
-	assert.Equal(t, 0, wq.RunCount())
-	assert.EqualError(t, wq.Healthy(), "want 1 worker goroutine(s), got 0")
+	err = wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
+		if (wq.RunCount() == 0) && wq.Healthy() != nil {
+			return true, nil
+		}
+
+		return false, nil
+	})
+	assert.Nil(t, err)
 }
 
 func TestWorkQueueHealthCheck(t *testing.T) {
