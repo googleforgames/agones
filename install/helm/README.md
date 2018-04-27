@@ -1,4 +1,4 @@
-**(This is currently a development feature)**
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
 
 # Install Agones using Helm
 
