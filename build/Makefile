@@ -306,7 +306,7 @@ clean-gcloud-config:
 #
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
-minikube-test-cluster: minikube-agones-profile
+minikube-test-cluster: ensure-build-image minikube-agones-profile
 	$(MINIKUBE) start --kubernetes-version v1.9.4 --vm-driver $(MINIKUBE_DRIVER) \
 		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
 		--extra-config=apiserver.Authorization.Mode=RBAC
