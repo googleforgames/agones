@@ -207,11 +207,13 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 	gsSet1.ObjectMeta.Name = "gsSet1"
 	gsSet1.Status.Replicas = 3
 	gsSet1.Status.ReadyReplicas = 2
+	gsSet1.Status.AllocatedReplicas = 1
 
 	gsSet2 := fleet.GameServerSet()
 	gsSet2.ObjectMeta.Name = "gsSet2"
 	gsSet2.Status.Replicas = 5
 	gsSet2.Status.ReadyReplicas = 5
+	gsSet2.Status.AllocatedReplicas = 2
 
 	m.AgonesClient.AddReactor("list", "gameserversets",
 		func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -227,6 +229,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 
 			assert.Equal(t, gsSet1.Status.Replicas+gsSet2.Status.Replicas, fleet.Status.Replicas)
 			assert.Equal(t, gsSet1.Status.ReadyReplicas+gsSet2.Status.ReadyReplicas, fleet.Status.ReadyReplicas)
+			assert.Equal(t, gsSet1.Status.AllocatedReplicas+gsSet2.Status.AllocatedReplicas, fleet.Status.AllocatedReplicas)
 			return true, fleet, nil
 		})
 

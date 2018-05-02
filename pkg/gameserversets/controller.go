@@ -317,13 +317,21 @@ func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, lis
 // syncGameServerSetState synchronises the GameServerSet State with active GameServer counts
 func (c *Controller) syncGameServerSetState(gsSet *stablev1alpha1.GameServerSet, list []*stablev1alpha1.GameServer) error {
 	rc := int32(0)
+	ac := int32(0)
 	for _, gs := range list {
-		if gs.Status.State == stablev1alpha1.Ready {
+		switch gs.Status.State {
+		case stablev1alpha1.Ready:
 			rc++
+		case stablev1alpha1.Allocated:
+			ac++
 		}
 	}
 
-	status := stablev1alpha1.GameServerSetStatus{Replicas: int32(len(list)), ReadyReplicas: rc}
+	status := stablev1alpha1.GameServerSetStatus{
+		Replicas:          int32(len(list)),
+		ReadyReplicas:     rc,
+		AllocatedReplicas: ac,
+	}
 	if gsSet.Status != status {
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Status = status

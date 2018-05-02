@@ -66,6 +66,8 @@ type GameServerSetStatus struct {
 	Replicas int32 `json:"replicas"`
 	// ReadyReplicas are the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
+	// AllocatedReplicas are the number of Allocated GameServer replicas
+	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
 
 // ValidateUpdate validates when updates occur. The argument
