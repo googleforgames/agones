@@ -62,6 +62,8 @@ type FleetStatus struct {
 	Replicas int32 `json:"replicas"`
 	// ReadyReplicas are the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
+	// AllocatedReplicas are the number of Allocated GameServer replicas
+	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
 
 // GameServerSet returns a single GameServerSet for this Fleet definition

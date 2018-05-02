@@ -350,6 +350,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 
 			assert.Equal(t, int32(1), gsSet.Status.Replicas)
 			assert.Equal(t, int32(1), gsSet.Status.ReadyReplicas)
+			assert.Equal(t, int32(0), gsSet.Status.AllocatedReplicas)
 
 			return true, nil, nil
 		})
@@ -370,8 +371,9 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gsSet := ua.GetObject().(*v1alpha1.GameServerSet)
 
-			assert.Equal(t, int32(6), gsSet.Status.Replicas)
+			assert.Equal(t, int32(8), gsSet.Status.Replicas)
 			assert.Equal(t, int32(1), gsSet.Status.ReadyReplicas)
+			assert.Equal(t, int32(2), gsSet.Status.AllocatedReplicas)
 
 			return true, nil, nil
 		})
@@ -383,6 +385,8 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 			{Status: v1alpha1.GameServerStatus{State: v1alpha1.PortAllocation}},
 			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Error}},
 			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Allocated}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Allocated}},
 		}
 		err := c.syncGameServerSetState(gsSet, list)
 		assert.Nil(t, err)

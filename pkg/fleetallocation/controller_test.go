@@ -15,22 +15,23 @@
 package fleetallocation
 
 import (
-	"testing"
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"testing"
+
+	"sync"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
-	"sync"
-	"github.com/sirupsen/logrus"
 )
 
 var (
