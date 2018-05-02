@@ -36,7 +36,6 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -224,7 +223,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 		return errors.Wrapf(err, "error retrieving GameServerSet %s from namespace %s", name, namespace)
 	}
 
-	list, err := c.listGameServers(gsSet)
+	list, err := ListGameServersByGameServerSetOwner(c.gameServerLister, gsSet)
 	if err != nil {
 		return err
 	}
@@ -245,23 +244,6 @@ func (c *Controller) syncGameServerSet(key string) error {
 	}
 
 	return nil
-}
-
-// listGameServers lists the GameServers for a given GameServerSet
-func (c *Controller) listGameServers(gsSet *stablev1alpha1.GameServerSet) ([]*stablev1alpha1.GameServer, error) {
-	list, err := c.gameServerLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}))
-	if err != nil {
-		return list, errors.Wrapf(err, "error listing gameservers for gameserverset %s", gsSet.ObjectMeta.Name)
-	}
-
-	var result []*stablev1alpha1.GameServer
-	for _, gs := range list {
-		if metav1.IsControlledBy(gs, gsSet) {
-			result = append(result, gs)
-		}
-	}
-
-	return result, nil
 }
 
 // syncUnhealthyGameServers deletes any unhealthy game servers (that are not already being deleted)
