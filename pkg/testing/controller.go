@@ -52,7 +52,7 @@ func NewMocks() Mocks {
 		ExtClient:              &extfake.Clientset{},
 		AgonesClient:           agonesClient,
 		AgonesInformerFactory:  externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second),
-		FakeRecorder:           record.NewFakeRecorder(10),
+		FakeRecorder:           record.NewFakeRecorder(100),
 	}
 	return m
 }
