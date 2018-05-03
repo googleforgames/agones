@@ -89,7 +89,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.9.2-gke.1 \
+gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.9 \
   --no-enable-legacy-authorization \
   --tags=game-server \
   --enable-basic-auth \

@@ -4,8 +4,8 @@ This guide covers how you can quickly get started using Agones to create GameSer
 
 ## Objectives
 
-- Create a GameServer in Kubernetes using Agones custom ressource.
-- Get informations about the GameServer such as IP address, port and state.
+- Create a GameServer in Kubernetes using Agones custom resource.
+- Get information about the GameServer such as IP address, port and state.
 - Connect to the GameServer.
 
 ## Prerequisites
@@ -133,7 +133,17 @@ This should ouput your Game Server IP address and port. (eg `10.130.65.208:7936`
 
 ### 3. Connect to the GameServer
 
+> NOTE: if you have Agones installed on Google Kubernetes Engine, and are using
+  Cloud Shell for your terminal, UDP is blocked. For this step, we recommend
+  SSH'ing into a running VM in your project, such as a Kubernetes node.
+  You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
+  page to do this. 
+
 You can now communicate with the Game Server :
+
+> NOTE: if you do not have netcat installed 
+  (i.e. you get a response of `nc: command not found`), 
+  you can install netcat by running `sudo apt install netcat`.
 
 ```
 nc -u {IP} {PORT}
