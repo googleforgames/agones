@@ -269,7 +269,7 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet) (*stablev1alpha1.GameServ
 	}
 
 	for _, gs := range gsList {
-		if gs.Status.State == stablev1alpha1.Ready {
+		if gs.Status.State == stablev1alpha1.Ready && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 			allocation = gs
 			break
 		}

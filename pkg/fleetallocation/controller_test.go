@@ -142,8 +142,10 @@ func TestControllerMutationValidationHandler(t *testing.T) {
 }
 
 func TestControllerAllocate(t *testing.T) {
-	f, gsSet, gsList := defaultFixtures(3)
+	f, gsSet, gsList := defaultFixtures(4)
 	c, m := newFakeController()
+	n := metav1.Now()
+	gsList[3].ObjectMeta.DeletionTimestamp = &n
 
 	m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
