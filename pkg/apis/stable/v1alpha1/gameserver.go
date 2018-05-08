@@ -113,7 +113,7 @@ type GameServerSpec struct {
 	// at installation time.
 	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
-	PortPolicy PortPolicy `json:"PortPolicy,omitempty"`
+	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// ContainerPort is the port that is being opened on the game server process
 	ContainerPort int32 `json:"containerPort"`
 	// HostPort the port exposed on the host for clients to connect to
