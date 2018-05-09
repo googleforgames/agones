@@ -74,10 +74,10 @@ rules:
   resources: ["customresourcedefinitions"]
   verbs: ["get"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["gameservers", "gameserversets", "fleets"]
+  resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleetallocations"]
+  resources: ["fleets", "fleetallocations"]
   verbs: ["get", "list", "update", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
