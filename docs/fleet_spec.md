@@ -1,3 +1,5 @@
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
 # Fleet Specification
 
 A `Fleet` is a set of warm GameServers that are available to be allocated from.
