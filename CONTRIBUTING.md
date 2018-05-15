@@ -31,6 +31,14 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 - Once review has occurred, please rebase your PR down to a single commit. This will ensure a nice clean Git history.
 - Finally - *Thanks* for considering submitting code to Agones!
 
+## Formatting
+
+When submitting pull requests, make sure to do the following:
+
+- Format all Go code with [gofmt](https://golang.org/cmd/gofmt/).
+- Remove trailing whitespace. Many editors will do this automatically.
+- Ensure any new files have [a trailing newline](https://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
+
 ## Continuous Integration
 
 Continuous integration is provided by [Google Cloud Container Builder](https://cloud.google.com/container-builder/),
@@ -46,17 +54,17 @@ how to edit and expand the build process.
 
 #### Kubernetes
 
-- [Kubernetes Custom Resources](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) - 
-  This is how we define our own resource names (`GameServer`, etc) within Kubernetes. 
+- [Kubernetes Custom Resources](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) -
+  This is how we define our own resource names (`GameServer`, etc) within Kubernetes.
 - [Joe Beda's TGIK Controller](https://github.com/jbeda/tgik-controller) -
-  [Joe Beda](https://twitter.com/jbeda) did a video series on writing controllers for Kubernetes.  
+  [Joe Beda](https://twitter.com/jbeda) did a video series on writing controllers for Kubernetes.
   **This is the best resource for learning about controllers and Kubernetes.**
 - [Kubernetes Sample Controller](https://github.com/kubernetes/sample-controller) -
   Example of a Custom Resources with a Kubernetes Controller.
 - [Kubernetes Code Generator](https://github.com/kubernetes/code-generator) -
   The tooling that generated the Go libraries for the Custom Resource we define
-  
+
 #### Coding and Development
 
 - [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) -
-  Great way to make sure your Pull Requests get accepted. 
+  Great way to make sure your Pull Requests get accepted.
