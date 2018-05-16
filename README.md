@@ -76,7 +76,7 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 
 Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones.
 
-See the tools in the [build](build/README.md) directory for testing and building Agones from source.
+See the [Developing, Testing and Building Agones](build/README.md) documentation for developing, testing and building Agones from source.
 
 Agones is in active development - we would love your help in shaping its future!
 
