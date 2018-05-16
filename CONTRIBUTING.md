@@ -35,7 +35,9 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 
 When submitting pull requests, make sure to do the following:
 
-- Format all Go code with [gofmt](https://golang.org/cmd/gofmt/).
+- Format all Go code with [gofmt](https://golang.org/cmd/gofmt/). Many people
+  use [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) which
+  fixes import statements and formats code in the same style of `gofmt`.
 - Remove trailing whitespace. Many editors will do this automatically.
 - Ensure any new files have [a trailing newline](https://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
 
