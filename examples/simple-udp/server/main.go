@@ -21,7 +21,6 @@ import (
 	"net"
 	"os"
 	"strings"
-
 	"time"
 
 	"agones.dev/agones/sdks/go"
@@ -29,7 +28,7 @@ import (
 
 // main starts a UDP server that received 1024 byte sized packets at at time
 // converts the bytes to a string, and logs the output
-func main() { // nolint: gocyclo
+func main() {
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
@@ -50,7 +49,7 @@ func main() { // nolint: gocyclo
 	}
 
 	log.Print("Starting Health Ping")
-	stop := make(chan bool)
+	stop := make(chan struct{})
 	go doHealth(s, stop)
 
 	log.Print("Marking this server as ready")
@@ -60,6 +59,10 @@ func main() { // nolint: gocyclo
 		log.Fatalf("Could not send ready message")
 	}
 
+	readWriteLoop(conn, stop, s)
+}
+
+func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 	b := make([]byte, 1024)
 	for {
 		n, sender, err := conn.ReadFrom(b)
@@ -74,8 +77,8 @@ func main() { // nolint: gocyclo
 		case "EXIT":
 			log.Printf("Received EXIT command. Exiting.")
 			// This tells Agones to shutdown this Game Server
-			err := s.Shutdown()
-			if err != nil {
+			shutdownErr := s.Shutdown()
+			if shutdownErr != nil {
 				log.Printf("Could not shutdown")
 			}
 			os.Exit(0)
@@ -94,7 +97,7 @@ func main() { // nolint: gocyclo
 }
 
 // doHealth sends the regular Health Pings
-func doHealth(sdk *sdk.SDK, stop <-chan bool) {
+func doHealth(sdk *sdk.SDK, stop <-chan struct{}) {
 	tick := time.Tick(2 * time.Second)
 	for {
 		err := sdk.Health()
