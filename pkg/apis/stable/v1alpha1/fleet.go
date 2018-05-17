@@ -18,6 +18,7 @@ import (
 	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
@@ -74,7 +75,6 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet := &GameServerSet{
 		ObjectMeta: *f.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec: GameServerSetSpec{
-			Replicas: f.Spec.Replicas,
 			Template: f.Spec.Template,
 		},
 	}
@@ -102,18 +102,60 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 // ApplyDefaults applies default values to the Fleet
 func (f *Fleet) ApplyDefaults() {
 	if f.Spec.Strategy.Type == "" {
-		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
+		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
+	}
+
+	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
+		if f.Spec.Strategy.RollingUpdate == nil {
+			f.Spec.Strategy.RollingUpdate = &appsv1.RollingUpdateDeployment{}
+		}
+
+		def := intstr.FromString("25%")
+		if f.Spec.Strategy.RollingUpdate.MaxSurge == nil {
+			f.Spec.Strategy.RollingUpdate.MaxSurge = &def
+		}
+		if f.Spec.Strategy.RollingUpdate.MaxUnavailable == nil {
+			f.Spec.Strategy.RollingUpdate.MaxUnavailable = &def
+		}
 	}
 }
 
-// ReplicasMinusSumAllocated returns the number of Replicas that are
-// currently configured against this fleet, subtracting the number
-// of allocated GameServers counted on this list of GameServerSets
-func (f *Fleet) ReplicasMinusSumAllocated(list []*GameServerSet) int32 {
-	result := f.Spec.Replicas
+// UpperBoundReplicas returns whichever is smaller,
+// the value i, or the f.Spec.Replicas.
+func (f *Fleet) UpperBoundReplicas(i int32) int32 {
+	if i > f.Spec.Replicas {
+		return f.Spec.Replicas
+	}
+	return i
+}
+
+// LowerBoundReplicas returns 0 (the minimum value for
+// replicas) if i is < 0
+func (f *Fleet) LowerBoundReplicas(i int32) int32 {
+	if i < 0 {
+		return 0
+	}
+	return i
+}
+
+// SumStatusAllocatedReplicas returns the total number of
+// Status.AllocatedReplicas in the list of GameServerSets
+func SumStatusAllocatedReplicas(list []*GameServerSet) int32 {
+	total := int32(0)
 	for _, gsSet := range list {
-		result -= gsSet.Status.AllocatedReplicas
+		total += gsSet.Status.AllocatedReplicas
 	}
 
-	return result
+	return total
+}
+
+// SumStatusReplicas returns the total number of
+// Status.Replicas in the list of GameServerSets
+func SumStatusReplicas(list []*GameServerSet) int32 {
+	total := int32(0)
+	for _, gsSet := range list {
+		total += gsSet.Status.Replicas
+	}
+
+	return total
 }

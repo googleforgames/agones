@@ -39,6 +39,7 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -144,16 +145,16 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating patch for Fleet %s", fleet.ObjectMeta.Name)
 	}
 
-	json, err := json.Marshal(patch)
+	jsn, err := json.Marshal(patch)
 	if err != nil {
 		return review, errors.Wrapf(err, "error creating json for patch for Fleet %s", fleet.ObjectMeta.Name)
 	}
 
-	c.logger.WithField("fleet", fleet.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
+	c.logger.WithField("fleet", fleet.ObjectMeta.Name).WithField("patch", string(jsn)).Infof("patch created!")
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
-	review.Response.Patch = json
+	review.Response.Patch = jsn
 
 	return review, nil
 }
@@ -224,34 +225,34 @@ func (c *Controller) syncFleet(key string) error {
 		return err
 	}
 
-	activeGsSet, rest := c.filterGameServerSetByActive(fleet, list)
-	if err := c.applyDeploymentStrategy(fleet, rest); err != nil {
+	active, rest := c.filterGameServerSetByActive(fleet, list)
+	// if there isn't an active gameServerSet, create one (but don't persist yet)
+	if active == nil {
+		c.logger.WithField("fleet", fleet.ObjectMeta.Name).Info("could not find active GameServerSet, creating")
+		active = fleet.GameServerSet()
+	}
+
+	replicas, err := c.applyDeploymentStrategy(fleet, active, rest)
+	if err != nil {
 		return err
 	}
 	if err := c.deleteEmptyGameServerSets(fleet, rest); err != nil {
 		return err
 	}
 
-	// if there isn't an active gameServerSet, create one (but don't persist yet)
-	if activeGsSet == nil {
-		c.logger.WithField("fleet", fleet.ObjectMeta.Name).Info("could not find active GameServerSet, creating")
-		activeGsSet = fleet.GameServerSet()
-	}
-
-	replicas := fleet.ReplicasMinusSumAllocated(rest)
-	if err := c.upsertGameServerSet(fleet, activeGsSet, replicas); err != nil {
+	if err := c.upsertGameServerSet(fleet, active, replicas); err != nil {
 		return err
 	}
 	return c.updateFleetStatus(fleet)
 }
 
 // upsertGameServerSet if the GameServerSet is new, insert it
-// if the replicas minus sum allocated does not match the active
+// if the replicas do not match the active
 // GameServerSet, then update it
-func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, gsSet *stablev1alpha1.GameServerSet, replicas int32) error {
-	if gsSet.ObjectMeta.UID == "" {
-		gsSet.Spec.Replicas = replicas
-		gsSet, err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).Create(gsSet)
+func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, replicas int32) error {
+	if active.ObjectMeta.UID == "" {
+		active.Spec.Replicas = replicas
+		gsSet, err := c.gameServerSetGetter.GameServerSets(active.ObjectMeta.Namespace).Create(active)
 		if err != nil {
 			return errors.Wrapf(err, "error creating gameserverset for fleet %s", fleet.ObjectMeta.Name)
 		}
@@ -261,15 +262,15 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, gsSet *sta
 		return nil
 	}
 
-	if replicas != gsSet.Spec.Replicas {
-		gsSetCopy := gsSet.DeepCopy()
+	if replicas != active.Spec.Replicas {
+		gsSetCopy := active.DeepCopy()
 		gsSetCopy.Spec.Replicas = replicas
 		gsSetCopy, err := c.gameServerSetGetter.GameServerSets(fleet.ObjectMeta.Namespace).Update(gsSetCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating replicas for gameserverset for fleet %s", fleet.ObjectMeta.Name)
 		}
 		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
-			"Scaling active GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+			"Scaling active GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, active.Spec.Replicas, gsSetCopy.Spec.Replicas)
 	}
 
 	return nil
@@ -277,17 +278,21 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, gsSet *sta
 
 // applyDeploymentStrategy applies the Fleet > Spec > Deployment strategy to all the non-active
 // GameServerSets that are passed in
-func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, list []*stablev1alpha1.GameServerSet) error {
-	switch fleet.Spec.Strategy.Type {
-	case appsv1.RecreateDeploymentStrategyType:
-		return c.recreateDeployment(list)
-	case appsv1.RollingUpdateDeploymentStrategyType:
-		// in this PR, we are only implementing Recreate.
-		// we will do this next
-		panic("this is not implemented!")
+func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
+	// if there is nothing `rest`, then it's either brand Fleet, or we can just jump to the fleet value,
+	// since there is nothing else scaling down at this point
+	if len(rest) == 0 {
+		return fleet.Spec.Replicas, nil
 	}
 
-	return errors.Errorf("unexpected deployment strategy type: %s", fleet.Spec.Strategy.Type)
+	switch fleet.Spec.Strategy.Type {
+	case appsv1.RecreateDeploymentStrategyType:
+		return c.recreateDeployment(fleet, rest)
+	case appsv1.RollingUpdateDeploymentStrategyType:
+		return c.rollingUpdateDeployment(fleet, active, rest)
+	}
+
+	return 0, errors.Errorf("unexpected deployment strategy type: %s", fleet.Spec.Strategy.Type)
 }
 
 // deleteEmptyGameServerSets deletes all GameServerServerSets
@@ -309,19 +314,119 @@ func (c *Controller) deleteEmptyGameServerSets(fleet *stablev1alpha1.Fleet, list
 }
 
 // recreateDeployment applies the recreate deployment strategy to all non-active
-// GameServerSets
-func (c *Controller) recreateDeployment(list []*stablev1alpha1.GameServerSet) error {
-	for _, gsSet := range list {
+// GameServerSets, and return the replica count for the active GameServerSet
+func (c *Controller) recreateDeployment(fleet *stablev1alpha1.Fleet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
+	for _, gsSet := range rest {
 		if gsSet.Spec.Replicas != 0 {
 			c.logger.WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
 			gsSetCopy := gsSet.DeepCopy()
 			gsSetCopy.Spec.Replicas = 0
 			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
-				return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+				return 0, errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
 			}
+			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 		}
 	}
 
+	return fleet.LowerBoundReplicas(fleet.Spec.Replicas - stablev1alpha1.SumStatusAllocatedReplicas(rest)), nil
+}
+
+// rollingUpdateDeployment will do the rolling update of the old GameServers
+// through to the new ones, based on the fleet.Spec.Strategy.RollingUpdate configuration
+// and return the replica count for the active GameServerSet
+func (c *Controller) rollingUpdateDeployment(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
+	replicas, err := c.rollingUpdateActive(fleet, active, rest)
+	if err != nil {
+		return replicas, err
+	}
+	if err := c.rollingUpdateRest(fleet, rest); err != nil {
+		return replicas, err
+	}
+	return replicas, nil
+}
+
+// rollingUpdateActive applies the rolling update to the active GameServerSet
+// and returns what its replica value should be set to
+func (c *Controller) rollingUpdateActive(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
+	replicas := active.Spec.Replicas
+
+	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
+	// need to another rolling update upwards.
+	// Likewise if the active spec replicas don't equal the active status replicas, this means we are
+	// in the middle of a rolling update, and should wait for it to complete.
+	if active.Spec.Replicas >= fleet.Spec.Replicas || active.Spec.Replicas != active.Status.Replicas {
+		return replicas, nil
+	}
+
+	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
+	if err != nil {
+		return replicas, errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
+	}
+	surge := int32(r)
+
+	// make sure we don't end up with more than the configured max surge
+	maxSurge := surge + fleet.Spec.Replicas
+	replicas = fleet.UpperBoundReplicas(replicas + surge)
+	total := stablev1alpha1.SumStatusReplicas(rest) + replicas
+	if total > maxSurge {
+		replicas = fleet.LowerBoundReplicas(replicas - (total - maxSurge))
+	}
+
+	// always leave room for Allocated GameServers
+	sumAllocated := stablev1alpha1.SumStatusAllocatedReplicas(rest)
+
+	// make room for allocated game servers, but not over the fleet replica count
+	if replicas+sumAllocated > fleet.Spec.Replicas {
+		replicas = fleet.LowerBoundReplicas(replicas - sumAllocated)
+	}
+
+	c.logger.WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
+		Info("applying rolling update to active gameserverset")
+
+	return replicas, nil
+}
+
+// rollingUpdateRest applies the rolling update to the inactive GameServerSets
+func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stablev1alpha1.GameServerSet) error {
+	if len(rest) == 0 {
+		return nil
+	}
+
+	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
+	if err != nil {
+		return errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
+	}
+	unavailable := int32(r)
+
+	for _, gsSet := range rest {
+		// if the status.Replicas are less than or equal to 0, then that means we are done
+		// scaling this GameServerSet down, and can therefore exit/move to the next one.
+		if gsSet.Status.Replicas <= 0 {
+			continue
+		}
+		// If the Spec.Replicas does not equal the Status.Replicas for this GameServerSet, this means
+		// that the rolling down process is currently ongoing, and we should therefore exit so we can wait for it to finish
+		if gsSet.Spec.Replicas != gsSet.Status.Replicas {
+			break
+		}
+
+		gsSetCopy := gsSet.DeepCopy()
+		gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
+
+		c.logger.WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
+			Info("applying rolling update to inactive gameserverset")
+
+		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
+			return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+		}
+		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+
+		// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
+		// to make sure we don't overshoot the amount that is being shutdown at any given point and time
+		break
+	}
 	return nil
 }
 
