@@ -220,7 +220,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 
 // Run the GameServer controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
-func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
+func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameservers.stable.agones.dev", c.logger)
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
 	// Run the Health Controller
 	go c.healthController.Run(stop)
 
-	c.workerqueue.Run(threadiness, stop)
+	c.workerqueue.Run(workers, stop)
 	return nil
 }
 

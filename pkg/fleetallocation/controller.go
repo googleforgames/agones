@@ -104,7 +104,7 @@ func NewController(
 
 // Run runs this controller. This controller doesn't (currently)
 // have a worker/queue, and as such, does not block.
-func (c *Controller) Run(stop <-chan struct{}) error {
+func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetallocations."+stable.GroupName, c.logger)
 	if err != nil {
 		return err

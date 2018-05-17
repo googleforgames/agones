@@ -75,7 +75,7 @@ func NewWebHook(certFile, keyFile string) *WebHook {
 
 // Run runs the webhook server, starting a https listener.
 // Will block on stop channel
-func (wh *WebHook) Run(stop <-chan struct{}) error {
+func (wh *WebHook) Run(workers int, stop <-chan struct{}) error {
 	go func() {
 		<-stop
 		wh.server.Close() // nolint: errcheck
