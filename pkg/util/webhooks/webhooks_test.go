@@ -116,7 +116,7 @@ func TestWebHookAddHandler(t *testing.T) {
 				})
 			}
 
-			err := wh.Run(stop)
+			err := wh.Run(0, stop)
 			assert.Nil(t, err)
 
 			client := ts.server.Client()

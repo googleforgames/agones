@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -43,13 +44,14 @@ import (
 )
 
 const (
-	sidecarFlag           = "sidecar"
-	pullSidecarFlag       = "always-pull-sidecar"
-	minPortFlag           = "min-port"
-	maxPortFlag           = "max-port"
-	certFileFlag          = "cert-file"
-	keyFileFlag           = "key-file"
-	controllerThreadiness = 2
+	sidecarFlag     = "sidecar"
+	pullSidecarFlag = "always-pull-sidecar"
+	minPortFlag     = "min-port"
+	maxPortFlag     = "max-port"
+	certFileFlag    = "cert-file"
+	keyFileFlag     = "key-file"
+	workers         = 2
+	defaultResync   = 30 * time.Second
 )
 
 var (
@@ -57,7 +59,67 @@ var (
 )
 
 // main starts the operator for the gameserver CRD
-func main() { // nolint: gocyclo
+func main() {
+	ctlConf := parseEnvFlags()
+	if err := ctlConf.validate(); err != nil {
+		logger.WithError(err).Fatal("Could not create controller from environment or flags")
+	}
+
+	clientConf, err := rest.InClusterConfig()
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create in cluster config")
+	}
+
+	kubeClient, err := kubernetes.NewForConfig(clientConf)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create the kubernetes clientset")
+	}
+
+	extClient, err := extclientset.NewForConfig(clientConf)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create the api extension clientset")
+	}
+
+	agonesClient, err := versioned.NewForConfig(clientConf)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create the agones api clientset")
+	}
+
+	health := healthcheck.NewHandler()
+	wh := webhooks.NewWebHook(ctlConf.certFile, ctlConf.keyFile)
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+
+	gsController := gameservers.NewController(wh, health,
+		ctlConf.minPort, ctlConf.maxPort, ctlConf.sidecarImage, ctlConf.alwaysPullSidecar,
+		kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+	gsSetController := gameserversets.NewController(wh, health,
+		kubeClient, extClient, agonesClient, agonesInformerFactory)
+	fleetController := fleets.NewController(wh, health,
+		kubeClient, extClient, agonesClient, agonesInformerFactory)
+	faController := fleetallocation.NewController(wh, kubeClient, extClient, agonesClient, agonesInformerFactory)
+
+	stop := signals.NewStopChannel()
+
+	kubeInformationFactory.Start(stop)
+	agonesInformerFactory.Start(stop)
+
+	rs := []runner{
+		wh, gsController, gsSetController, fleetController, faController, healthServer{handler: health},
+	}
+	for _, r := range rs {
+		go func(rr runner) {
+			if runErr := rr.Run(workers, stop); runErr != nil {
+				logger.WithError(runErr).Fatalf("could not start runner: %s", reflect.TypeOf(rr))
+			}
+		}(r)
+	}
+
+	<-stop
+	logger.Info("Shut down agones controllers")
+}
+
+func parseEnvFlags() config {
 	exec, err := os.Executable()
 	if err != nil {
 		logger.WithError(err).Fatal("Could not get executable path")
@@ -101,95 +163,60 @@ func main() { // nolint: gocyclo
 		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
 		WithField("Version", pkg.Version).Info("starting gameServer operator...")
 
-	if minPort <= 0 || maxPort <= 0 {
-		logger.Fatal("Min Port and Max Port values are required.")
-	} else if maxPort < minPort {
-		logger.Fatal("Max Port cannot be set less that the Min Port")
+	return config{
+		minPort:           minPort,
+		maxPort:           maxPort,
+		sidecarImage:      sidecarImage,
+		alwaysPullSidecar: alwaysPullSidecar,
+		keyFile:           keyFile,
+		certFile:          certFile,
 	}
+}
 
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		logger.WithError(err).Fatal("Could not create in cluster config")
+// config stores all required configuration to create a game server controller.
+type config struct {
+	minPort           int32
+	maxPort           int32
+	sidecarImage      string
+	alwaysPullSidecar bool
+	keyFile           string
+	certFile          string
+}
+
+// validate ensures the ctlConfig data is valid.
+func (c config) validate() error {
+	if c.minPort <= 0 || c.maxPort <= 0 {
+		return errors.New("min Port and Max Port values are required")
 	}
-
-	kubeClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not create the kubernetes clientset")
+	if c.maxPort < c.minPort {
+		return errors.New("max Port cannot be set less that the Min Port")
 	}
+	return nil
+}
 
-	extClient, err := extclientset.NewForConfig(config)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not create the api extension clientset")
+type runner interface {
+	Run(workers int, stop <-chan struct{}) error
+}
+
+type healthServer struct {
+	handler http.Handler
+}
+
+func (h healthServer) Run(workers int, stop <-chan struct{}) error {
+	logger.Info("Starting health check...")
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: h.handler,
 	}
+	defer srv.Close() // nolint: errcheck
 
-	agonesClient, err := versioned.NewForConfig(config)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not create the agones api clientset")
+	if err := srv.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			logger.WithError(err).Info("health check: http server closed")
+		} else {
+			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
+			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)
+		}
 	}
-
-	health := healthcheck.NewHandler()
-	wh := webhooks.NewWebHook(certFile, keyFile)
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second)
-	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, 30*time.Second)
-
-	gsController := gameservers.NewController(wh, health, minPort, maxPort, sidecarImage, alwaysPullSidecar, kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
-	gsSetController := gameserversets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	faController := fleetallocation.NewController(wh, kubeClient, extClient, agonesClient, agonesInformerFactory)
-
-	stop := signals.NewStopChannel()
-
-	kubeInformationFactory.Start(stop)
-	agonesInformerFactory.Start(stop)
-
-	go func() {
-		if err := wh.Run(stop); err != nil { // nolint: vetshadow
-			logger.WithError(err).Fatal("could not run webhook server")
-		}
-	}()
-	go func() {
-		err = gsController.Run(controllerThreadiness, stop)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not run gameserver controller")
-		}
-	}()
-	go func() {
-		err = gsSetController.Run(controllerThreadiness, stop)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not run gameserverset controller")
-		}
-	}()
-	go func() {
-		err = fleetController.Run(controllerThreadiness, stop)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not run fleet controller")
-		}
-	}()
-	go func() {
-		err = faController.Run(stop)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not run fleet controller")
-		}
-	}()
-
-	go func() {
-		logger.Info("Starting health check...")
-		srv := &http.Server{
-			Addr:    ":8080",
-			Handler: health,
-		}
-		defer srv.Close() // nolint: errcheck
-
-		if err := srv.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
-				logger.WithError(err).Info("health check: http server closed")
-			} else {
-				err := errors.Wrap(err, "Could not listen on :8080")
-				runtime.HandleError(logger.WithError(err), err)
-			}
-		}
-	}()
-
-	<-stop
-	logger.Info("Shut down agones controllers")
+	return nil
 }

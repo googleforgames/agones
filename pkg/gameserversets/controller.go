@@ -126,7 +126,7 @@ func NewController(
 
 // Run the GameServerSet controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
-func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
+func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameserversets."+stable.GroupName, c.logger)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (c *Controller) Run(threadiness int, stop <-chan struct{}) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	c.workerqueue.Run(threadiness, stop)
+	c.workerqueue.Run(workers, stop)
 	return nil
 }
 
