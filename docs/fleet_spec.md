@@ -18,7 +18,10 @@ metadata:
 spec:
   replicas: 2
   strategy:
-    type: Recreate  
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%  
   template:
     metadata:
       labels:
@@ -51,9 +54,12 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 
 - `replicas` is the number of `GameServers` to keep Ready or Allocated in this Fleet
 - `strategy` is the `GameServer` replacement strategy for when the `GameServer` template is edited.
-  `type` "Recreate" is the only option. A "RollingUpdate" option will be implemented soon.  
-  - `Recreate` terminates all non-allocated `GameServers`, and starts up a new set with
-  the new `GameServer` configuration to replace them.
+  - `type` is replacement strategy for when the GameServer template is changed. Default option is "RollingUpdate", but "Recreate" is also available.
+    - `RollingUpdate` will increment by `maxSurge` value on each iteration, while decrementing by `maxUnavailable` on each iteration, until all GameServers have been switched from one version to another.   
+    - `Recreate` terminates all non-allocated `GameServers`, and starts up a new set with the new `GameServer` configuration to replace them.
+  - `rollingUpdate` is only relevant when `type: RollingUpdate`
+    - `maxSurge` is the amount to increment the new GameServers by. Defaults to 25%
+    - `maxUnavailable` is the amount to decrements GameServers by. Defaults to 25%
 - `template` a full `GameServer` configuration template.
    See the [GameServer](./gameserver_spec.md) reference for all available fields.
 
