@@ -103,7 +103,7 @@ func TestSidecarRun(t *testing.T) {
 			}
 
 			for _, str := range v.recordings {
-				assert.Contains(t, <-m.FakeRecorder.Events, str)
+				agtesting.AssertEventContains(t, m.FakeRecorder.Events, str)
 			}
 		})
 	}

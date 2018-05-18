@@ -62,13 +62,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		err := c.syncFleet("default/fleet-1")
 		assert.Nil(t, err)
 		assert.True(t, created, "gameserverset should have been created")
-
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Contains(t, event, "CreatingGameServerSet")
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, "there should be a create event")
-		}
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
 	})
 
 	t.Run("gamserverset with the same number of replicas", func(t *testing.T) {
@@ -102,12 +96,7 @@ func TestControllerSyncFleet(t *testing.T) {
 
 		err := c.syncFleet("default/fleet-1")
 		assert.Nil(t, err)
-
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.FailNow(t, "there should be no events", event)
-		case <-time.After(time.Second):
-		}
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 
 	t.Run("gameserverset with different number of replicas", func(t *testing.T) {
@@ -143,12 +132,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		err := c.syncFleet("default/fleet-1")
 		assert.Nil(t, err)
 		assert.True(t, updated, "gameserverset should have been updated")
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Contains(t, event, "ScalingGameServerSet")
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, "there should be a scaling event")
-		}
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
@@ -197,12 +181,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, updated, "gameserverset should have been updated")
 		assert.True(t, created, "gameserverset should have been created")
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Contains(t, event, "CreatingGameServerSet")
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, "there should be a creating event")
-		}
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
 	})
 }
 
@@ -465,12 +444,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.True(t, created, "Should be created")
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Contains(t, event, "CreatingGameServerSet")
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, "there should be a create event")
-		}
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
 	})
 
 	t.Run("update", func(t *testing.T) {
@@ -493,12 +467,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 		assert.Nil(t, err)
 
 		assert.True(t, update, "Should be update")
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Contains(t, event, "ScalingGameServerSet")
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, "there should be a create event")
-		}
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
 	})
 
 	t.Run("noop", func(t *testing.T) {
@@ -520,12 +489,7 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 
 		err := c.upsertGameServerSet(f, gsSet, replicas)
 		assert.Nil(t, err)
-
-		select {
-		case event := <-m.FakeRecorder.Events:
-			assert.Fail(t, "should not have an event", event)
-		case <-time.After(1 * time.Second):
-		}
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 }
 

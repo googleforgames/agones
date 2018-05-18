@@ -18,9 +18,12 @@ import (
 	"context"
 	"time"
 
+	gotesting "testing"
+
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/client-go/informers"
@@ -82,5 +85,26 @@ func NewEstablishedCRD() *v1beta1.CustomResourceDefinition {
 				Status: v1beta1.ConditionTrue,
 			}},
 		},
+	}
+}
+
+// AssertEventContains asserts that a k8s event stream contains a
+// value, and assert.FailNow() if it does not
+func AssertEventContains(t *gotesting.T, events <-chan string, contains string) {
+	select {
+	case e := <-events:
+		assert.Contains(t, e, contains)
+	case <-time.After(3 * time.Second):
+		assert.FailNow(t, "Did not receive "+contains+" event")
+	}
+}
+
+// AssertNoEvent asserts that the event stream does not
+// have a value in it (at least in the next second)
+func AssertNoEvent(t *gotesting.T, events <-chan string) {
+	select {
+	case e := <-events:
+		assert.Fail(t, "should not have an event", e)
+	case <-time.After(1 * time.Second):
 	}
 }
