@@ -249,13 +249,7 @@ func TestSyncMoreGameServers(t *testing.T) {
 	err := c.syncMoreGameServers(gsSet, int32(expected))
 	assert.Nil(t, err)
 	assert.Equal(t, expected, count)
-
-	select {
-	case event := <-m.FakeRecorder.Events:
-		assert.Contains(t, event, "SuccessfulCreate")
-	case <-time.After(3 * time.Second):
-		assert.FailNow(t, "should have received an event")
-	}
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SuccessfulCreate")
 }
 
 func TestSyncLessGameServers(t *testing.T) {
@@ -311,13 +305,7 @@ func TestSyncLessGameServers(t *testing.T) {
 
 	// subtract one, because one is already deleted
 	assert.Equal(t, expected-1, count)
-
-	select {
-	case event := <-m.FakeRecorder.Events:
-		assert.Contains(t, event, "SuccessfulDelete")
-	case <-time.After(3 * time.Second):
-		assert.FailNow(t, "should have received an event")
-	}
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SuccessfulDelete")
 }
 
 func TestControllerSyncGameServerSetState(t *testing.T) {

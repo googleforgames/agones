@@ -160,5 +160,5 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	assert.Contains(t, <-m.FakeRecorder.Events, v1alpha1.Unhealthy)
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.Unhealthy))
 }
