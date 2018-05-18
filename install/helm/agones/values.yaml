@@ -14,28 +14,32 @@
 
 # Declare variables to be passed into your templates.
 
-namespace: agones-system
-serviceaccount:
-  controller: agones-controller
-  sdk: agones-sdk
-
-image:
-  registry: gcr.io/agones-images
-  tag: 0.2
+agones:
+  namespace: agones-system
+  serviceaccount:
+    controller: agones-controller
+    sdk: agones-sdk
   controller:
-    name: agones-controller
-    pullPolicy: IfNotPresent
-  sdk:
-    name: agones-sdk
-    alwaysPull: false
+    resources: {}
+    healthCheck:
+      http:
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
+      timeoutSeconds: 1
+  image:
+    registry: gcr.io/agones-images
+    tag: 0.2
+    controller:
+      name: agones-controller
+      pullPolicy: IfNotPresent
+    sdk:
+      name: agones-sdk
+      alwaysPull: false
 
-minPort: 7000
-maxPort: 8000   
-
-healthCheck:
-  http:
-    port: 8080
-  initialDelaySeconds: 3
-  periodSeconds: 3
-  failureThreshold: 3
-  timeoutSeconds: 1
+gameservers:
+  namespaces:
+  - default
+  minPort: 7000
+  maxPort: 8000 

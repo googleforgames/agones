@@ -123,7 +123,7 @@ install: IMAGE_PULL_POLICY := "Always"
 install: ensure-build-image
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		helm upgrade --install --namespace=default \
-		--set image.tag=$(VERSION),image.registry=$(REGISTRY),image.controller.pullPolicy=$(IMAGE_PULL_POLICY),image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
+		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		agones $(mount_path)/install/helm/agones/
 
 # Build a static binary for the gameserver controller

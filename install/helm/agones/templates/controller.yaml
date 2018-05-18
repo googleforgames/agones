@@ -16,7 +16,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: agones-controller
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Values.agones.namespace}}
   labels:
     component: controller
     app: {{ template "agones.name" . }}
@@ -36,27 +36,31 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
-      serviceAccountName: {{ .Values.serviceaccount.controller }}
+      serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
       containers:
       - name: agones-controller
-        image: "{{ .Values.image.registry }}/{{ .Values.image.controller.name}}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.controller.pullPolicy }}
+        image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ .Values.agones.image.tag }}"
+        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: {{ .Values.image.sdk.alwaysPull | quote }}
+          value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
-          value: {{ .Values.minPort | quote }} 
+          value: {{ .Values.gameservers.minPort | quote }} 
         # maximum port that can be exposed to GameServer traffic
         - name: MAX_PORT
-          value: {{ .Values.maxPort | quote }}
+          value: {{ .Values.gameservers.maxPort | quote }}
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: "{{ .Values.image.registry }}/{{ .Values.image.sdk.name}}:{{ .Values.image.tag }}"
+          value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ .Values.agones.image.tag }}"
         livenessProbe:
           httpGet:
             path: /live
-            port: {{ .Values.healthCheck.http.port }}
-          initialDelaySeconds: {{ .Values.healthCheck.initialDelaySeconds }}
-          periodSeconds: {{ .Values.healthCheck.periodSeconds }}
-          failureThreshold: {{ .Values.healthCheck.failureThreshold }}
-          timeoutSeconds: {{ .Values.healthCheck.timeoutSeconds }}
+            port: {{ .Values.agones.controller.healthCheck.http.port }}
+          initialDelaySeconds: {{ .Values.agones.controller.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.agones.controller.healthCheck.timeoutSeconds }}
+{{- if .Values.agones.controller.resources }}
+        resources:
+{{ toYaml .Values.agones.controller.resources | indent 10 }}
+{{- end }}
