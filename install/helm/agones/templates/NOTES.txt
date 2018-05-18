@@ -1,6 +1,6 @@
-The Agones controller has been installed in the namespace {{ .Values.namespace }}.
+The Agones controller has been installed in the namespace {{ .Values.agones.namespace }}.
 
-You can watch the status by running 'kubectl --namespace {{ .Values.namespace }} get pods -o wide -w {{ .Values.serviceaccount.controller }}'
+You can watch the status by running 'kubectl --namespace {{ .Values.agones.namespace }} get pods -o wide -w {{ .Values.agones.serviceaccount.controller }}'
 
 Once ready you can create your first GameServer using our examples:
 

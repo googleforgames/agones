@@ -11,22 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+{{- range .Values.gameservers.namespaces }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.serviceaccount.sdk }}
+  name: {{ $.Values.agones.serviceaccount.sdk }}
+  namespace: {{ . }}
   labels:
-    app: {{ template "agones.name" . }}
-    chart: {{ template "agones.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: {{ template "agones.name" $ }}
+    chart: {{ template "agones.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
 ---
+{{- end }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.serviceaccount.sdk }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Values.agones.serviceaccount.sdk }}
+  namespace: {{ .Values.agones.namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
@@ -37,21 +39,24 @@ rules:
   resources: ["gameservers"]
   verbs: ["get", "update"]
 ---
+{{- range .Values.gameservers.namespaces }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: {{ .Values.serviceaccount.sdk }}-access
-  namespace: {{ .Values.namespace }}
+  name: {{ $.Values.agones.serviceaccount.sdk }}-access
+  namespace: {{ . }}
   labels:
-    app: {{ template "agones.name" . }}
-    chart: {{ template "agones.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
+    app: {{ template "agones.name" $ }}
+    chart: {{ template "agones.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
 subjects:
 - kind: User
-  name: system:serviceaccount:default:{{ .Values.serviceaccount.sdk }}
+  name: system:serviceaccount:{{ . }}:{{ $.Values.agones.serviceaccount.sdk }}
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.serviceaccount.sdk }}
+  name: {{ $.Values.agones.serviceaccount.sdk }}
+---
+{{- end }}

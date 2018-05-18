@@ -27,6 +27,26 @@ The command deploys Agones on the Kubernetes cluster with the default configurat
 
 > **Tip**: List all releases using `helm list`
 
+## Namespaces
+
+By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use other namespace you can configure Agones via the parameter `gameservers.namespaces`.
+
+For example to use `default` **and** `xbox` namespaces:
+
+```bash
+$ kubectl create namespace xbox
+$ helm install --set "gameservers.namespaces={default,xbox}"--name my-release agones
+```
+
+> You need to create your namespaces before installing Agones.
+
+If you want to add a new namespace afterward simply upgrade your release:
+
+```bash
+$ kubectl create namespace ps4
+$ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones
+```
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` deployment:
@@ -43,28 +63,30 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                            | Description                                                     | Default                    |
 | ------------------------------------ | ----------------------------------------------------------------| ---------------------------|
-| `namespace`                          | Namespace to use for Agones                                     | `agones-system`            |
-| `serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
-| `serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |
-| `image.registry`                     | Global image registry for all images                            | `gcr.io/agones-images`     |
-| `image.tag`                          | Global image tag for all images                                 | `0.2`                      |
-| `image.controller.name`              | Image name for the controller                                   | `agones-controller`        |
-| `image.controller.pullPolicy`        | Image pull policy for the controller                            | `IfNotPresent`             |
-| `image.sdk.name`                     | Image name for the sdk                                          | `agones-sdk`               |
-| `image.sdk.alwaysPull`               | Tells if the sdk image should always be pulled                  | `false`                    |
-| `minPort`                            | Minimum port to use for dynamic port allocation                 | `7000`                     |
-| `maxPort`                            | Maximum port to use for dynamic port allocation                 | `8000`                     |
-| `healthCheck.http.port`              | Port to use for liveness probe service                          | `8080`                     |
-| `healthCheck.initialDelaySeconds`    | Initial delay before performing the first probe (in seconds)    | `3`                        |
-| `healthCheck.periodSeconds`          | Seconds between every liveness probe (in seconds)               | `3`                        |
-| `healthCheck.failureThreshold`       | Number of times before giving up (in seconds)                   | `3`                        |
-| `healthCheck.timeoutSeconds`         | Number of seconds after which the probe times out (in seconds)  | `1`                        |
+| `agones.namespace`                          | Namespace to use to deploy Agones                                     | `agones-system`            |
+| `agones.serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
+| `agones.serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |
+| `agones.image.registry`                     | Global image registry for all images                            | `gcr.io/agones-images`     |
+| `agones.image.tag`                          | Global image tag for all images                                 | `0.2`                      |
+| `agones.image.controller.name`              | Image name for the controller                                   | `agones-controller`        |
+| `agones.image.controller.pullPolicy`        | Image pull policy for the controller                            | `IfNotPresent`             |
+| `agones.image.sdk.name`                     | Image name for the sdk                                          | `agones-sdk`               |
+| `agones.image.sdk.alwaysPull`               | Tells if the sdk image should always be pulled                  | `false`                    |
+| `agones.controller.healthCheck.http.port`              | Port to use for liveness probe service                          | `8080`                     |
+| `agones.controller.healthCheck.initialDelaySeconds`    | Initial delay before performing the first probe (in seconds)    | `3`                        |
+| `agones.controller.healthCheck.periodSeconds`          | Seconds between every liveness probe (in seconds)               | `3`                        |
+| `agones.controller.healthCheck.failureThreshold`       | Number of times before giving up (in seconds)                   | `3`                        |
+| `agones.controller.healthCheck.timeoutSeconds`         | Number of seconds after which the probe times out (in seconds)  | `1`                        |
+| `agones.controller.resources`  | Controller resource requests/limit | `{}`
+| `gameservers.namespaces`                         | a list of namespaces you are planning to use to deploy game servers | `["defaut"]` |
+| `gameservers.minPort`                            | Minimum port to use for dynamic port allocation                 | `7000`                     |
+| `gameservers.maxPort`                            | Maximum port to use for dynamic port allocation                 | `8000`                     |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
 $ helm install --name my-release \
-  --set namespace=mynamespace,minPort=1000,maxPort=5000 agones
+  --set agones.namespace=mynamespace,gameservers.minPort=1000,gamesevers.maxPort=5000 agones
 ```
 
 The above command sets the namespace where Agones is deployed to `mynamespace`. Additionally Agones will use a dynamic port allocation range of 1000-5000.
