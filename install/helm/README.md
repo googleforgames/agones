@@ -78,6 +78,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.failureThreshold`       | Number of times before giving up (in seconds)                   | `3`                        |
 | `agones.controller.healthCheck.timeoutSeconds`         | Number of seconds after which the probe times out (in seconds)  | `1`                        |
 | `agones.controller.resources`  | Controller resource requests/limit | `{}`
+| `agones.controller.generateTLS`  | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`
 | `gameservers.namespaces`                         | a list of namespaces you are planning to use to deploy game servers | `["defaut"]` |
 | `gameservers.minPort`                            | Minimum port to use for dynamic port allocation                 | `7000`                     |
 | `gameservers.maxPort`                            | Maximum port to use for dynamic port allocation                 | `8000`                     |

@@ -21,6 +21,7 @@ agones:
     sdk: agones-sdk
   controller:
     resources: {}
+    generateTLS: true
     healthCheck:
       http:
         port: 8080

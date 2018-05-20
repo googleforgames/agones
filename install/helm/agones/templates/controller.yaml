@@ -64,3 +64,11 @@ spec:
         resources:
 {{ toYaml .Values.agones.controller.resources | indent 10 }}
 {{- end }}
+        volumeMounts:
+        - name: certs
+          mountPath: /home/agones/certs
+          readOnly: true
+      volumes:
+      - name: certs
+        secret:
+          secretName: {{ template "agones.fullname" . }}-cert

@@ -193,6 +193,10 @@ We can install Agones to the cluster using the
 kubectl apply -f https://raw.githubusercontent.com/googlecloudplatform/agones/release-0.1/install.yaml
 ```
 
+> Note: Installing Agones with the `intall.yaml` will setup the TLS certificates stored in this repository for securing 
+> kubernetes webhooks communication. If you want to generates new certificates or use your own,
+> we recommend using the helm installation.
+
 ## Install using Helm
 
 Also, we can install Agones using [Helm][helm] package manager. If you want more details and configuration

@@ -170,7 +170,9 @@ push-agones-sdk-image: ensure-build-image
 # Generate the static install script
 gen-install: ensure-build-image
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		'helm template --name=agones-manual $(mount_path)/install/helm/agones > $(mount_path)/install/yaml/install.yaml'
+		'helm template --name=agones-manual $(mount_path)/install/helm/agones \
+		--set agones.controller.generateTLS=false \
+		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the SDK gRPC server and client code
 gen-gameservers-sdk-grpc: ensure-build-image
@@ -271,6 +273,10 @@ gcloud-test-cluster: ensure-build-image
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
 
+clean-gcloud-test-cluster: ensure-build-image
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
+		deployment-manager deployments delete test-cluster
+	
 # Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: ensure-build-image
