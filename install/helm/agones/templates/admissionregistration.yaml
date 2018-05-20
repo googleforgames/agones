@@ -1,0 +1,112 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+{{- $ca := genCA "admission-controller-ca" 3650 }}
+{{- $cn := printf "agones-controller-service" }}
+{{- $altName1 := printf "agones-controller-service.%s"  .Values.agones.namespace }}
+{{- $altName2 := printf "agones-controller-service.%s.svc" .Values.agones.namespace }}
+{{- $cert := genSignedCert $cn nil (list $altName1 $altName2) 3650 $ca }}
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: agones-validation-webhook
+  namespace: {{ .Values.agones.namespace }}
+webhooks:
+  - name: validations.stable.agones.dev
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: {{ .Values.agones.namespace }}
+        path: /validate
+{{- if .Values.agones.controller.generateTLS }}
+      caBundle: {{ b64enc $ca.Cert }}
+{{- else }}
+      caBundle: {{ .Files.Get "certs/server.crt" | b64enc }}
+{{- end }}
+    rules:
+      - apiGroups:
+          - stable.agones.dev
+        resources:
+          - "gameservers"
+          - "fleetallocations"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - CREATE
+      - apiGroups:
+          - stable.agones.dev
+        resources:
+          - "gameserversets"
+          - "fleetallocations"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - UPDATE
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: agones-mutation-webhook
+  namespace: {{ .Values.agones.namespace }}
+  labels:
+    component: controller
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+webhooks:
+  - name: mutations.stable.agones.dev
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: {{ .Values.agones.namespace }}
+        path: /mutate
+{{- if .Values.agones.controller.generateTLS }}
+      caBundle: {{ b64enc $ca.Cert }}
+{{- else }}
+      caBundle: {{ .Files.Get "certs/server.crt" | b64enc }}
+{{- end }}
+    rules:
+      - apiGroups:
+          - stable.agones.dev
+        resources:
+          - "gameservers"
+          - "fleets"
+          - "fleetallocations"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - CREATE
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "agones.fullname" . }}-cert
+  namespace: {{ .Values.agones.namespace }}
+  labels:
+    app: {{ template "agones.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+type: Opaque
+data:
+{{- if .Values.agones.controller.generateTLS }}
+  server.crt: {{ b64enc $cert.Cert }}
+  server.key: {{ b64enc $cert.Key }}
+{{- else }}
+  server.crt: {{ .Files.Get "certs/server.crt" | b64enc }}
+  server.key: {{ .Files.Get "certs/server.key" | b64enc }}
+{{- end }}
