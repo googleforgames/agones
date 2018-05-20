@@ -1,0 +1,29 @@
+# Release {version}
+
+<!--
+This is the release issue template. Make a copy of the markdown in this page
+and copy it into a release issue. Fill in relevent values, found inside {}
+!-->
+
+- [ ] Review closed issues have appropriate tags.
+- [ ] Review closed issues have been applied to the current milestone.
+- [ ] Ensure the next version milestone is created.
+- [ ] Any issues in the current milestone that are not closed, move to next milestone.
+- [ ] Run `make gen-changelog` to generate the CHANGELOG.md
+- [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}.rc if release candidate)
+- [ ] Create PR with these changes, and merge them with approval
+- [ ] If full release, close the current milestone.
+- [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
+- [ ] Run `git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the the release branch)
+- [ ] Run `make do-release`. (if release candidate `make do-release RELEASE_VERSION={version}.rc`) to create and push the docker images.
+- [ ] Create a release with the [release template][release-template]
+  - [ ] Make a `tag` with the release version.
+  - [ ] Attach all assets found in the `release` folder to the release.
+- [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
+- [ ] Ensure the [the helm `tag` value][values] is the same at the above `base_version`
+- [ ] Create PR with these changes, and merge them with approval
+- [ ] Close this issue. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1: 
+
+[values]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/values.yaml#L33
+[release-template]: https://github.com/GoogleCloudPlatform/agones/blob/master/docs/governance/templates/release.md
+[build-makefile]: https://github.com/GoogleCloudPlatform/agones/blob/master/build/Makefile
