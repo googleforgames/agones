@@ -54,10 +54,12 @@ how to edit and expand the build process.
 
 ### Additional Resources
 
-#### Kubernetes
+#### Extending Kubernetes
 
 - [Kubernetes Custom Resources](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) -
   This is how we define our own resource names (`GameServer`, etc) within Kubernetes.
+- [Extend the Kubernetes API with CustomResourceDefinitions](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/) -
+  This page shows how to install a custom resource into the Kubernetes API by creating a CustomResourceDefinition.
 - [Joe Beda's TGIK Controller](https://github.com/jbeda/tgik-controller) -
   [Joe Beda](https://twitter.com/jbeda) did a video series on writing controllers for Kubernetes.
   **This is the best resource for learning about controllers and Kubernetes.**
@@ -65,6 +67,10 @@ how to edit and expand the build process.
   Example of a Custom Resources with a Kubernetes Controller.
 - [Kubernetes Code Generator](https://github.com/kubernetes/code-generator) -
   The tooling that generated the Go libraries for the Custom Resource we define
+- [Kubernetes Controller Best Practices](https://github.com/kubernetes/community/blob/master/contributors/devel/controllers.md) -
+  Set of best practices written for writing Controllers inside Kubernetes. Also a great list for everywhere else too.
+- [Writing Kube Controllers for Everyone - Maciej Szulik, Red Hat](https://www.youtube.com/watch?v=AUNPLQVxvmw) -
+  A great into video into coding for Controllers, and explaining Informers and Listers.
 
 #### Coding and Development
 
