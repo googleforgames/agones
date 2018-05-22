@@ -27,10 +27,9 @@ RUN curl -o xonotic.zip http://dl.xonotic.org/xonotic-0.8.2.zip && \
 #
 
 RUN mkdir -p ./.xonotic/data && mv /home/xonotic/Xonotic/server/server_linux.sh /home/xonotic/Xonotic/
-COPY ./bin/sdk .
-COPY run.sh .
+COPY ./bin/wrapper .
 COPY server.cfg ./.xonotic/data
-RUN chown -R xonotic:xonotic . && chmod +x run.sh && chmod +x sdk
+RUN chown -R xonotic:xonotic . && chmod +x wrapper
 
 USER xonotic
-ENTRYPOINT /home/xonotic/run.sh
+ENTRYPOINT /home/xonotic/wrapper -i /home/xonotic/Xonotic/server_linux.sh

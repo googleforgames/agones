@@ -2,6 +2,10 @@
 
 Example using a [Xonotic](http://www.xonotic.org) dedicated game server.
 
-*Note:* This example doesn't directly integrate the SDK (yet), but calls it via a separate binary.
+This example wraps the Xonotic server with a [Go](https://golang.org) binary, and introspects
+stdout to provide the event hooks for the SDK integration.
+
+It is not a direct integration, but is an approach for to integrate with existing
+dedicated game servers.
 
 You will need to download the Xonotic client separately to play.
