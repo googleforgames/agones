@@ -69,7 +69,7 @@ go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 
 uname := $(shell uname -s)
 ifneq ($(findstring Microsoft,$(shell uname -r)),)
-    osinclude := windows.mk
+	osinclude := windows.mk
 else ifeq ($(uname),Linux)
 	osinclude := linux.mk
 else ifeq ($(uname),Darwin)
@@ -231,6 +231,14 @@ pull-build-image:
 push-build-image:
 	docker tag $(build_tag) $(build_remote_tag)
 	docker push $(build_remote_tag)
+
+# generate a changelog using github-changelog-generator
+gen-changelog:
+	@read -p 'Github Token: ' TOKEN && \
+	docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator \
+		GoogleCloudPlatform/agones --bug-labels=kind/bug --enhancement-labels=kind/feature \
+		--future-release "v$(base_version).rc" \
+		--token=$$TOKEN
 
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
