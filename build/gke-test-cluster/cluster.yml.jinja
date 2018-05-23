@@ -17,16 +17,16 @@ resources:
 - name: test-cluster
   type: container.v1.cluster
   properties:
-    zone: {{ properties["zone"] }}
+    zone: {{ properties["cluster.zone"] }}
     cluster:
-      name: test-cluster
+      name: {{ properties["cluster.name"] }}
       description: Test cluster for Agones
       initialClusterVersion: 1.9.6-gke.1 # be specific until 1.9.x becomes default
       nodePools:
         - name: "default"
-          initialNodeCount: 3
+          initialNodeCount: {{ properties["cluster.nodePool.initialNodeCount"] }}
           config:
-            machineType: n1-standard-4
+            machineType: {{ properties["cluster.nodePool.machineType"] }}
             tags:
               - game-server
             oauthScopes:
@@ -37,7 +37,7 @@ resources:
         username: admin
         password: supersecretpassword
       legacyAbac:
-        enabled: false
+        enabled: {{ properties["cluster.legacyAbac"] }}
 - name: game-server-firewall
   type: compute.beta.firewall
   properties:

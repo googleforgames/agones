@@ -47,6 +47,14 @@ $ kubectl create namespace ps4
 $ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones
 ```
 
+## RBAC
+
+By default, `agones.rbacEnabled` is set to true. This enable RBAC support in Agones and must be true if RBAC is enabled in your cluster.
+
+The chart will take care of creating the required service accounts and roles for Agones.
+
+If you have RBAC disabled, or to put it another way, ABAC enabled, you should set this value to `false`.
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` deployment:
@@ -63,6 +71,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                            | Description                                                     | Default                    |
 | ------------------------------------ | ----------------------------------------------------------------| ---------------------------|
+| `agones.rbacEnabled`                          | Creates RBAC resources. Must be set for any cluster configured with RBAC                                     | `true`            |
 | `agones.namespace`                          | Namespace to use to deploy Agones                                     | `agones-system`            |
 | `agones.serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
 | `agones.serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |

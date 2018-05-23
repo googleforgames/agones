@@ -16,6 +16,7 @@
 
 agones:
   namespace: agones-system
+  rbacEnabled: true
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
