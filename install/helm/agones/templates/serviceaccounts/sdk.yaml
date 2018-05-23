@@ -24,6 +24,7 @@ metadata:
     heritage: {{ $.Release.Service }}
 ---
 {{- end }}
+{{- if .Values.agones.rbacEnabled }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -39,7 +40,7 @@ rules:
   resources: ["gameservers"]
   verbs: ["get", "update"]
 ---
-{{- range .Values.gameservers.namespaces }}
+  {{- range .Values.gameservers.namespaces }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -59,4 +60,5 @@ roleRef:
   kind: ClusterRole
   name: {{ $.Values.agones.serviceaccount.sdk }}
 ---
+  {{- end }}
 {{- end }}

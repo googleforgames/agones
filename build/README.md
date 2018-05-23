@@ -133,13 +133,26 @@ we will need to authenticate out gcloud tooling against it. To do that run `make
 prompts as directed.
 
 Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the deployment template
-found in the `gke-test-cluster` directory. If you would like to change the region and zone the cluster is in, feel free
-to edit the `deployment.yaml` file before running this command.  This will take several minutes to complete, but once
-done you can go to the Google Cloud Platform console and see that a cluster is up and running! If you want to change the
-name of the test cluster you can set the `CLUSTER_NAME` environemnt varlable to value you would like.
+found in the `gke-test-cluster` directory.
+
+You can customize GKE cluster via environment variables or by using a [`local-includes`](./local-includes) file.
+See the table below for available customizations :
+
+| Parameter                             | Description                                                                   | Default       |
+|---------------------------------------|-------------------------------------------------------------------------------|---------------|
+| `GCP_CLUSTER_NAME`                    | The name of the cluster                                                       | `test-cluster`  |
+| `GCP_CLUSTER_ZONE`                    | The name of the Google Compute Engine zone in which the cluster will resides. |  `us-west1-c`   |
+| `GCP_CLUSTER_LEGACYABAC`              | Enables or disables the [ABAC](https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters#LegacyAbac) authorization mechanism on a cluster.            | `false`         |
+| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`| The number of nodes to create in this cluster.                                |  `3`            |
+| `GCP_CLUSTER_NODEPOOL_MACHINETYPE`    | The name of a Google Compute Engine machine type.                             | `n1-standard-4` |
+
+If you would like to change more settings, feel free to edit the [`cluster.yml.jinja`](./gke-test-cluster/cluster.yml.jinja) file before running this command.  
+
+This will take several minutes to complete, but once done you can go to the Google Cloud Platform console and see that 
+a cluster is up and running!
 
 To grab the kubectl authentication details for this cluster, run `make gcloud-auth-cluster`, which will generate the
-required Kubernetes security credintials for `kubectl`. This will be stored in `~/.kube` by default, but can also be
+required Kubernetes security credentials for `kubectl`. This will be stored in `~/.kube` by default, but can also be
 overwritten by setting the `KUBEPATH` environment variable before running the command.
 
 Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
