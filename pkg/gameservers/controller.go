@@ -302,7 +302,7 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *stablev1alpha1.GameServ
 	if len(pods) > 0 {
 		c.logger.WithField("pods", pods).WithField("gsName", gs.ObjectMeta.Name).Info("Found pods, deleting")
 		for _, p := range pods {
-			err := c.podGetter.Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, nil)
+			err = c.podGetter.Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, nil)
 			if err != nil {
 				return gs, errors.Wrapf(err, "error deleting pod for GameServer %s, %s", gs.ObjectMeta.Name, p.ObjectMeta.Name)
 			}
@@ -368,7 +368,8 @@ func (c *Controller) syncGameServerCreatingState(gs *stablev1alpha1.GameServer) 
 
 	if len(ret) == 0 {
 		sidecar := c.sidecar(gs)
-		pod, err := gs.Pod(sidecar)
+		var pod *corev1.Pod
+		pod, err = gs.Pod(sidecar)
 
 		// this shouldn't happen, but if it does.
 		if err != nil {

@@ -68,7 +68,7 @@ func (wq *WorkerQueue) Enqueue(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
-		err := errors.Wrap(err, "Error creating key for object")
+		err = errors.Wrap(err, "Error creating key for object")
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
