@@ -108,17 +108,20 @@ func main() {
 	if isLocal {
 		sdk.RegisterSDKServer(grpcServer, &gameservers.LocalSDKServer{})
 	} else {
-		config, err := rest.InClusterConfig()
+		var config *rest.Config
+		config, err = rest.InClusterConfig()
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
 
-		kubeClient, err := kubernetes.NewForConfig(config)
+		var kubeClient *kubernetes.Clientset
+		kubeClient, err = kubernetes.NewForConfig(config)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create the kubernetes clientset")
 		}
 
-		agonesClient, err := versioned.NewForConfig(config)
+		var agonesClient *versioned.Clientset
+		agonesClient, err = versioned.NewForConfig(config)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not create the agones api clientset")
 		}

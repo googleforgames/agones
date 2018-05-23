@@ -97,7 +97,7 @@ func NewPortAllocator(minPort, maxPort int32,
 			if oldNode.Spec.Unschedulable != newNode.Spec.Unschedulable {
 				err := pa.syncPortAllocations()
 				if err != nil {
-					err := errors.Wrap(err, "error resetting ports on node update")
+					err = errors.Wrap(err, "error resetting ports on node update")
 					runtime.HandleError(pa.logger.WithField("node", newNode), err)
 				}
 			}
@@ -105,7 +105,7 @@ func NewPortAllocator(minPort, maxPort int32,
 		DeleteFunc: func(obj interface{}) {
 			err := pa.syncPortAllocations()
 			if err != nil {
-				err := errors.Wrap(err, "error on node deletion")
+				err = errors.Wrap(err, "error on node deletion")
 				runtime.HandleError(pa.logger.WithField("node", obj), err)
 			}
 		},

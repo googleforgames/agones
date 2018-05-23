@@ -141,7 +141,7 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 			if err == http.ErrServerClosed {
 				s.logger.WithError(err).Info("health check: http server closed")
 			} else {
-				err := errors.Wrap(err, "Could not listen on :8080")
+				err = errors.Wrap(err, "Could not listen on :8080")
 				runtime.HandleError(s.logger.WithError(err), err)
 			}
 		}
