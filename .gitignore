@@ -14,6 +14,7 @@
 
 .*
 !.gitignore
+!.helmignore
 !.gitattributes
 *.iml
 bin
