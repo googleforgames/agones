@@ -12,7 +12,7 @@
 
 ## Release Calendar
 
-> Release Calendar forthcoming once the 0.2 release is complete, when the scheduled release cadence will start.
+> Release Calendar forthcoming once the 0.2.0 release is complete, when the scheduled release cadence will start.
 
 # Release Process
 
