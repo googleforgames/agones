@@ -67,7 +67,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
 | `agones.serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |
 | `agones.image.registry`                     | Global image registry for all images                            | `gcr.io/agones-images`     |
-| `agones.image.tag`                          | Global image tag for all images                                 | `0.2`                      |
+| `agones.image.tag`                          | Global image tag for all images                                 | `0.2.0`                    |
 | `agones.image.controller.name`              | Image name for the controller                                   | `agones-controller`        |
 | `agones.image.controller.pullPolicy`        | Image pull policy for the controller                            | `IfNotPresent`             |
 | `agones.image.sdk.name`                     | Image name for the sdk                                          | `agones-sdk`               |
