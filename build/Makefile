@@ -132,9 +132,11 @@ build-controller-binary: ensure-build-image
 		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
+# use LINT_TIMEOUT to manipulate the linter timeout
+lint: LINT_TIMEOUT ?= 5m
 lint: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline 100s -t --skip vendor ./..."
+		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline=$(LINT_TIMEOUT) -t --skip vendor ./..."
 
 # Build the image for the gameserver controller
 build-controller-image: ensure-build-image build-controller-binary

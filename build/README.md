@@ -255,7 +255,7 @@ Build all the sdks required for Agones
 Build the cpp sdk static and dynamic libraries (linux libraries only)
 
 #### `make test`
-Run all tests
+Run the linter and tests
 
 #### `make push`
 Pushes all built images up to the `$(REGISTRY)`
