@@ -94,8 +94,8 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.9 \
   --tags=game-server \
   --enable-basic-auth \
   --password=supersecretpassword \
-  --scopes=https://www.googleapis.com/auth/devstorage.read_only,compute-rw,cloud-platform
-  --num-nodes=3
+  --scopes=https://www.googleapis.com/auth/devstorage.read_only,compute-rw,cloud-platform \
+  --num-nodes=3 \
   --machine-type=n1-standard-1
 ```
 
