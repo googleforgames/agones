@@ -259,7 +259,7 @@ do-release:
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
-	zip --junk-paths $(agones_path)/release/agones-$(RELEASE_VERSION).zip $(agones_path)/README.md $(agones_path)/install.yaml $(agones_path)/LICENSE
+	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
 	git push -u origin release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
