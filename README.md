@@ -35,7 +35,7 @@ For more details on why this project was written, read the
 
 ## Installation
 
-Follow [these instructions](./docs/installing_agones.md) to create a cluster on Google Kubernetes Engine (GKE) or Minikube, and install Agones.
+Follow [these instructions](install/README.md) to create a cluster on Google Kubernetes Engine (GKE) or Minikube, and install Agones.
 
 ## Usage
 
