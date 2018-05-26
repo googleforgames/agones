@@ -94,8 +94,8 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.9 \
   --tags=game-server \
   --enable-basic-auth \
   --password=supersecretpassword \
-  --scopes=https://www.googleapis.com/auth/devstorage.read_only,compute-rw,cloud-platform
-  --num-nodes=3
+  --scopes=https://www.googleapis.com/auth/devstorage.read_only,compute-rw,cloud-platform \
+  --num-nodes=3 \
   --machine-type=n1-standard-1
 ```
 
@@ -203,7 +203,7 @@ Also, we can install Agones using [Helm][helm] package manager. If you want more
 options see the [Helm installation guide for Agones][agones-install-guide]
 
 [helm]: https://docs.helm.sh
-[agones-install-guide]: ../install/helm/README.md
+[agones-install-guide]: helm/README.md
 
 ## Confirming Agones started successfully
 

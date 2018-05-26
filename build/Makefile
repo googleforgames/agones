@@ -26,6 +26,9 @@
 # base version target. This is usually the next release.
 base_version = 0.2.0
 
+# agones image release registry
+release_registry = gcr.io/agones-images
+
 #
 # All of the following can be overwritten with environemt variables
 # or passed through directly when invoking the relevent Make targets
@@ -34,7 +37,7 @@ base_version = 0.2.0
 # Version defaults to the short hash of the latest commit
 VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
 # The registry that is being used to store docker images
-REGISTRY ?= gcr.io/agones-images
+REGISTRY ?= $(release_registry)
 # Where the kubectl configuration files are being stored
 KUBEPATH ?= ~/.kube
 # The (gcloud) test cluster that is being worked against
@@ -255,13 +258,13 @@ do-release:
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
-	$(MAKE) build VERSION=$(RELEASE_VERSION)
+	$(MAKE) build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry)
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
-	zip --junk-paths $(agones_path)/release/agones-$(RELEASE_VERSION).zip $(agones_path)/README.md $(agones_path)/install.yaml $(agones_path)/LICENSE
+	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
-	git push -u origin release-$(RELEASE_VERSION)
+	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 #    ____                   _         ____ _                 _
