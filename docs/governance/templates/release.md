@@ -8,7 +8,7 @@ Features in this release:
 
 { insert enhancements from the changelog }
 
-See [CHANGELOG.md](https://github.com/GoogleCloudPlatform/agones/blob/{release-branch}/CHANGELOG.md) for more details on changes.
+See [CHANGELOG](https://github.com/GoogleCloudPlatform/agones/blob/{release-branch}/CHANGELOG.md) for more details on changes.
 
 This software is currently alpha, and subject to change. Not to be used in production systems.
 
