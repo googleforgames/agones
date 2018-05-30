@@ -1,4 +1,4 @@
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
 
 # Quickstart Create a Game Server Fleet
 

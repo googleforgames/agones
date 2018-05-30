@@ -73,7 +73,7 @@ go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 
 uname := $(shell uname -s)
 ifneq ($(findstring Microsoft,$(shell uname -r)),)
-	osinclude := windows.mk
+    osinclude := windows.mk
 else ifeq ($(uname),Linux)
 	osinclude := linux.mk
 else ifeq ($(uname),Darwin)
