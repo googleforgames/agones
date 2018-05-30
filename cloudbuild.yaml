@@ -34,6 +34,9 @@ steps:
   dir: "sdks/cpp/bin"
   args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
+  dir: "sdks/cpp/bin"
+  args: ['cp', '*.zip', 'gs://agones-artifacts/cpp-sdk']
+- name: 'gcr.io/cloud-builders/gsutil'
   dir: "cmd/sdk-server/bin"
   args: ['cp', '*.zip', 'gs://agones-artifacts/sdk-server']
 - name: "make-docker"

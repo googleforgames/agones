@@ -16,6 +16,7 @@
 
 agones:
   namespace: agones-system
+  rbacEnabled: true
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
@@ -31,7 +32,7 @@ agones:
       timeoutSeconds: 1
   image:
     registry: gcr.io/agones-images
-    tag: 0.2.0
+    tag: 0.2.0.rc
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

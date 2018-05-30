@@ -41,7 +41,8 @@ REGISTRY ?= $(release_registry)
 # Where the kubectl configuration files are being stored
 KUBEPATH ?= ~/.kube
 # The (gcloud) test cluster that is being worked against
-CLUSTER_NAME ?= test-cluster
+GCP_CLUSTER_NAME ?= test-cluster
+GCP_CLUSTER_ZONE ?= us-west1-c
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
 
@@ -72,7 +73,7 @@ go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 
 uname := $(shell uname -s)
 ifneq ($(findstring Microsoft,$(shell uname -r)),)
-	osinclude := windows.mk
+    osinclude := windows.mk
 else ifeq ($(uname),Linux)
 	osinclude := linux.mk
 else ifeq ($(uname),Darwin)
@@ -262,6 +263,7 @@ do-release:
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
+	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
@@ -279,24 +281,28 @@ gcloud-init: ensure-build-config
 	docker run --rm -it $(common_mounts) $(build_tag) gcloud init
 
 # Creates and authenticates a small, 3 node GKE cluster to work against
+gcloud-test-cluster: GCP_CLUSTER_LEGACYABAC ?= false
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
+gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-test-cluster: ensure-build-image
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments create test-cluster --config=$(mount_path)/build/gke-test-cluster/deployment.yml
+		deployment-manager deployments create $(GCP_CLUSTER_NAME)  \
+		--properties cluster.zone:$(GCP_CLUSTER_ZONE),cluster.name:$(GCP_CLUSTER_NAME),cluster.nodePool.initialNodeCount:$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT),cluster.nodePool.machineType:$(GCP_CLUSTER_NODEPOOL_MACHINETYPE),cluster.legacyAbac:$(GCP_CLUSTER_LEGACYABAC)\
+		--template=$(mount_path)/build/gke-test-cluster/cluster.yml.jinja
 	$(MAKE) gcloud-auth-cluster
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
 
 clean-gcloud-test-cluster: ensure-build-image
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments delete test-cluster
+		deployment-manager deployments delete $(GCP_CLUSTER_NAME)
 	
-# Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
+# Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: ensure-build-image
-	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(CLUSTER_NAME)
-	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone \
-		`grep zone: $(build_path)/gke-test-cluster/deployment.yml | sed 's/zone: //'`
-	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(CLUSTER_NAME)
+	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(GCP_CLUSTER_NAME)
+	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone $(GCP_CLUSTER_ZONE)
+	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME)
 	-docker run --rm $(common_mounts) $(build_tag) bash -c 'kubectl create clusterrolebinding cluster-admin-binding --clusterrole cluster-admin --user $$(gcloud config get-value account)'
 
 # authenticate our docker configuration so that you can do a docker push directly
