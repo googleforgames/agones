@@ -11,13 +11,15 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}.rc if release candidate)
-- [ ] Remove all instances of "⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️"
+- [ ] Run `make gen-install`
+- [ ] If RC release, update all ⚠️⚠️⚠️ warnings to: "**This is currently a release candidate feature**"
+- [ ] If full release, remove all instances of "⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️"
 - [ ] If full release, update install docs with the new release version
 - [ ] Create PR with these changes, and merge them with approval
-- [ ] If full release, close the current milestone.
 - [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
 - [ ] Run `git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the the release branch)
 - [ ] Run `make do-release`. (if release candidate `make do-release RELEASE_VERSION={version}.rc`) to create and push the docker images.
+- [ ] Do a `helm install` and a smoke test to confirm everything is working.
 - [ ] Create a release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
   - [ ] Attach all assets found in the `release` folder to the release.
@@ -25,7 +27,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] Ensure the [the helm `tag` value][values] is the same as the above `base_version`
 - [ ] Create PR with these changes, and merge them with approval
-- [ ] Close this issue. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
+- [ ] Close this issue.
+- [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
 
 [values]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/values.yaml#L33
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
