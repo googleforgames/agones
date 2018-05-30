@@ -18,14 +18,14 @@ This software is currently alpha, and subject to change. Not to be used in produ
 - Client SDKs for integration with dedicated game servers to work with Agones.
 
 ## Why does this project exist?
-For more details on why this project was written, read the 
+For more details on why this project was written, read the
 [announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
 
 ## Requirements
 - Kubernetes cluster version 1.9+
     - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and 
+    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
     [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
     admission controllers are required.
     We also recommend following the
@@ -44,6 +44,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 ### Quickstarts:
  - [Create a Game Server](./docs/create_gameserver.md)
  - [Create a Game Server Fleet](./docs/create_fleet.md)
+ - [Edit Your First Game Server (Go)](./docs/edit_first_game_server.md)
 
 ### Guides
  - [Integrating the Game Server SDK](sdks)
