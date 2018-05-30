@@ -1,4 +1,4 @@
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
 
 # Install Agones using Helm
 
@@ -16,6 +16,8 @@ This chart install the Agones application and defines deployment on a [Kubernete
 > If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
 
 To install the chart with the release name `my-release`:
+
+Download the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
 
 ```bash
 $ cd install/helm/
