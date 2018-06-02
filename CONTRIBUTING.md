@@ -71,6 +71,9 @@ how to edit and expand the build process.
   Set of best practices written for writing Controllers inside Kubernetes. Also a great list for everywhere else too.
 - [Writing Kube Controllers for Everyone - Maciej Szulik, Red Hat](https://www.youtube.com/watch?v=AUNPLQVxvmw) -
   A great into video into coding for Controllers, and explaining Informers and Listers.
+- [@markmandel](https://github.com/markmandel) regularly streams his development of Agones on [Twitch](https://www.twitch.tv/markmandel).
+  You can find the full archive on [YouTube](https://www.youtube.com/playlist?list=PLqqp1QEhKwa5aNivDIE4SS21ehE9Zt0VZ)
+  
 
 #### Coding and Development
 
