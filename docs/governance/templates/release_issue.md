@@ -9,7 +9,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Review closed issues have been applied to the current milestone.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
-- [ ] Run `make gen-changelog` to generate the CHANGELOG.md
+- [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}.rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}.rc if release candidate)
 - [ ] Run `make gen-install`
 - [ ] If RC release, update all ⚠️⚠️⚠️ warnings to: "**This is currently a release candidate feature**"
