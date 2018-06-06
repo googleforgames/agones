@@ -698,7 +698,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:0.2.0"
+        image: "gcr.io/agones-images/agones-controller:0.3.0"
         imagePullPolicy: IfNotPresent
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
@@ -710,7 +710,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:0.2.0"
+          value: "gcr.io/agones-images/agones-sdk:0.3.0"
         livenessProbe:
           httpGet:
             path: /live
