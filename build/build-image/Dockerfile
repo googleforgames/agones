@@ -52,10 +52,15 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
   && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
+# install go-proto-gen 1.0
+RUN mkdir -p /go/src/github.com/golang && cd /go/src/github.com/golang && \
+    git clone https://github.com/golang/protobuf.git &&  \
+    cd protobuf && git checkout v1.0.0 && \
+    go install github.com/golang/protobuf/protoc-gen-go
+
 # install go tooling for development, building and testing
 RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u github.com/alecthomas/gometalinter && \
-    go get -u github.com/golang/protobuf/protoc-gen-go && \
     /go/bin/gometalinter --install
 
 # install the release branch of the code generator tools
