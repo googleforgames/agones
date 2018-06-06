@@ -190,7 +190,7 @@ We can install Agones to the cluster using the
 [install.yaml](https://github.com/GoogleCloudPlatform/agones/blob/release-0.1/install.yaml) file.
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/googlecloudplatform/agones/release-0.1/install.yaml
+kubectl apply -f https://github.com/GoogleCloudPlatform/agones/raw/release-0.2.0/install/yaml/install.yaml
 ```
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.

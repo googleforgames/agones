@@ -1,5 +1,3 @@
-⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
-
 # Quickstart Create a Game Server Fleet
 
 This guide covers how you can quickly get started using Agones to create a Fleet 
