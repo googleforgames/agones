@@ -1,5 +1,18 @@
 # Change Log
 
+## [v0.2.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.2.0) (2018-06-06)
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.2.0.rc...v0.2.0)
+
+**Closed issues:**
+
+- Release v0.2.0.rc [\#231](https://github.com/GoogleCloudPlatform/agones/issues/231)
+
+**Merged pull requests:**
+
+- Adding my streaming development to contributing [\#239](https://github.com/GoogleCloudPlatform/agones/pull/239) ([markmandel](https://github.com/markmandel))
+- Adding a README.md file for the simple-udp to help developer to get start [\#234](https://github.com/GoogleCloudPlatform/agones/pull/234) ([g-ericso](https://github.com/g-ericso))
+- Revert install configuration back to 0.2.0 [\#233](https://github.com/GoogleCloudPlatform/agones/pull/233) ([markmandel](https://github.com/markmandel))
+
 ## [v0.2.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.2.0.rc) (2018-05-30)
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.1...v0.2.0.rc)
 
@@ -50,6 +63,8 @@
 
 **Merged pull requests:**
 
+- Updates to release process [\#235](https://github.com/GoogleCloudPlatform/agones/pull/235) ([markmandel](https://github.com/markmandel))
+- Release v0.2.0.rc [\#232](https://github.com/GoogleCloudPlatform/agones/pull/232) ([markmandel](https://github.com/markmandel))
 - do-release release registry and upstream push [\#228](https://github.com/GoogleCloudPlatform/agones/pull/228) ([markmandel](https://github.com/markmandel))
 - Archive C++ src on build and release [\#227](https://github.com/GoogleCloudPlatform/agones/pull/227) ([markmandel](https://github.com/markmandel))
 - Update installing\_agones.md [\#225](https://github.com/GoogleCloudPlatform/agones/pull/225) ([g-ericso](https://github.com/g-ericso))
