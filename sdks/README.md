@@ -7,6 +7,7 @@ They are required for a game server to work with Agones.
 There are currently two support SDKs:
 - [C++](cpp)
 - [Go](https://godoc.org/agones.dev/agones/sdks/go)
+- [Rust](rust)
 
 The SDKs are relatively thin wrappers around [gRPC](https://grpc.io), generated clients,
 which connects to a small process that Agones coordinates to run alongside the Game Server
