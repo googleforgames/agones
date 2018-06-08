@@ -15,7 +15,6 @@
 # Declare variables to be passed into your templates.
 
 agones:
-  namespace: agones-system
   rbacEnabled: true
   serviceaccount:
     controller: agones-controller

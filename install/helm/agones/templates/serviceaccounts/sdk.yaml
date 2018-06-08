@@ -29,7 +29,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ .Values.agones.serviceaccount.sdk }}
-  namespace: {{ .Values.agones.namespace }}
   labels:
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
