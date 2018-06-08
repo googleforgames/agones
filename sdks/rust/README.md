@@ -1,5 +1,7 @@
 # Rust Game Server Client SDK
 
+"⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
 This is the Rust version of the Agones Game Server Client SDK. 
 Check the [Client SDK Documentation](../) for more details on each of the SDK functions and how to run the SDK locally.
 
