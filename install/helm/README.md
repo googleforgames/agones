@@ -19,7 +19,7 @@ Download the latest `agones-install` zip from the [releases](https://github.com/
 
 ```bash
 $ cd install/helm/
-$ helm install --name my-release agones
+$ helm install --name my-release --namespace agones-system agones
 ```
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -35,7 +35,7 @@ For example to use `default` **and** `xbox` namespaces:
 
 ```bash
 $ kubectl create namespace xbox
-$ helm install --set "gameservers.namespaces={default,xbox}"--name my-release agones
+$ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-system --name my-release agones
 ```
 
 > You need to create your namespaces before installing Agones.
@@ -72,7 +72,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                            | Description                                                     | Default                    |
 | ------------------------------------ | ----------------------------------------------------------------| ---------------------------|
 | `agones.rbacEnabled`                          | Creates RBAC resources. Must be set for any cluster configured with RBAC                                     | `true`            |
-| `agones.namespace`                          | Namespace to use to deploy Agones                                     | `agones-system`            |
 | `agones.serviceaccount.controller`          | Service account name for the controller                         | `agones-controller`        |
 | `agones.serviceaccount.sdk`                 | Service account name for the sdk                                | `agones-sdk`               |
 | `agones.image.registry`                     | Global image registry for all images                            | `gcr.io/agones-images`     |
@@ -95,7 +94,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release \
+$ helm install --name my-release --namespace agones-system \
   --set agones.namespace=mynamespace,gameservers.minPort=1000,gamesevers.maxPort=5000 agones
 ```
 
@@ -104,7 +103,7 @@ The above command sets the namespace where Agones is deployed to `mynamespace`. 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release -f values.yaml agones
+$ helm install --name my-release --namespace agones-system -f values.yaml agones
 ```
 
 > **Tip**: You can use the default [values.yaml](agones/values.yaml)
