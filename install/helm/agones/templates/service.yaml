@@ -16,7 +16,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-controller-service
-  namespace: {{ .Values.agones.namespace }}
   labels:
     component: controller
     app: {{ template "agones.name" . }}
