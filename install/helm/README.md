@@ -18,6 +18,8 @@ To install the chart with the release name `my-release`:
 Download the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
 
 ```bash
+$ wget https://github.com/GoogleCloudPlatform/agones/releases/download/v0.2.0/agones-install-0.2.0.zip
+$ unzip agones-install-0.2.0.zip
 $ cd install/helm/
 $ helm install --name my-release agones
 ```
