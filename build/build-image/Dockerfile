@@ -15,8 +15,8 @@
 # ForceUpdate 4 -- change here if you need to force a rebuild
 
 # compiling proto + grpc takes an exceptionally long time
-# so we'll use that as the base.
-FROM grpc/cxx:1.8
+# so we'll use a base from `base` - which is manually built using the below tag.
+FROM gcr.io/agones-images/grpc-cxx:1.12
 
 RUN apt-get update && \
     apt-get install -y wget rsync make python bash-completion zip nano jq && \
@@ -52,10 +52,10 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
   && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
-# install go-proto-gen 1.0
+# install go-proto-gen 1.1
 RUN mkdir -p /go/src/github.com/golang && cd /go/src/github.com/golang && \
     git clone https://github.com/golang/protobuf.git &&  \
-    cd protobuf && git checkout v1.0.0 && \
+    cd protobuf && git checkout v1.1.0 && \
     go install github.com/golang/protobuf/protoc-gen-go
 
 # install go tooling for development, building and testing
