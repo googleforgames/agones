@@ -36,7 +36,7 @@ Take the following steps to enable the Kubernetes Engine API:
 1. [Enable billing][billing] for your project.
    * If you are not an existing GCP user, you may be able to enroll for a $300 US [Free Trial][trial] credit.
 
-[kubernetes]: https://pantheon.corp.google.com/kubernetes/list
+[kubernetes]: https://console.cloud.google.com/kubernetes/list
 [billing]: https://support.google.com/cloud/answer/6293499#enable-billing
 [trial]: https://cloud.google.com/free/
 
@@ -72,7 +72,7 @@ To launch Cloud Shell, perform the following steps:
 To install `gcloud` and `kubectl`, perform the following steps:
 
 1. [Install the Google Cloud SDK][gcloud-install], which includes the `gcloud` command-line tool.
-1. Initialize some default configuration by running the following command.  
+1. Initialize some default configuration by running the following command.
    * When asked `Do you want to configure a default Compute Region and Zone? (Y/n)?`, enter `Y` and choose a zone in your geographical region of choice.
    ```bash
    gcloud init
@@ -144,7 +144,7 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 [minikube]: https://github.com/kubernetes/minikube#installation
 [vb]: https://www.virtualbox.org
 
-> Note: due to some [issues with the 0.26.x release](https://github.com/GoogleCloudPlatform/agones/issues/192), 
+> Note: due to some [issues with the 0.26.x release](https://github.com/GoogleCloudPlatform/agones/issues/192),
 we recommend installing version [0.25.2 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.25.2)
 until they are resolved.
 
@@ -195,7 +195,7 @@ kubectl apply -f https://github.com/GoogleCloudPlatform/agones/raw/release-0.2.0
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
 
-> Note: Installing Agones with the `intall.yaml` will setup the TLS certificates stored in this repository for securing 
+> Note: Installing Agones with the `intall.yaml` will setup the TLS certificates stored in this repository for securing
 > kubernetes webhooks communication. If you want to generates new certificates or use your own,
 > we recommend using the helm installation.
 
@@ -220,8 +220,8 @@ It should describe the single pod created in the `agones-system` namespace, with
 ```
 Conditions:
   Type           Status
-  Initialized    True 
-  Ready          True 
+  Initialized    True
+  Ready          True
   PodScheduled   True
 ```
 
