@@ -121,14 +121,26 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	url := server.URL + "/live"
 
 	f := func(t *testing.T, url string, status int) {
-		resp, err := http.Get(url)
-		assert.Nil(t, err)
-		defer resp.Body.Close() // nolint: errcheck
 
-		body, err := ioutil.ReadAll(resp.Body)
+		// sometimes the http server takes a bit to start up
+		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+			resp, err := http.Get(url)
+			assert.Nil(t, err)
+			defer resp.Body.Close() // nolint: errcheck
+
+			if status != resp.StatusCode {
+				return false, nil
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+			assert.Nil(t, err)
+			assert.Equal(t, status, resp.StatusCode)
+			assert.Equal(t, []byte("{}\n"), body)
+
+			return true, nil
+		})
+
 		assert.Nil(t, err)
-		assert.Equal(t, status, resp.StatusCode)
-		assert.Equal(t, []byte("{}\n"), body)
 	}
 
 	f(t, url, http.StatusOK)
