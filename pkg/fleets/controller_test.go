@@ -341,7 +341,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 			return true, fleet, nil
 		})
 
-	_, cancel := agtesting.StartInformers(m, c.fleetSynced)
+	_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
 	defer cancel()
 
 	err := c.updateFleetStatus(fleet)
