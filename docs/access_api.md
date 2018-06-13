@@ -231,4 +231,4 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
 The [Verb Resources](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#verbs-on-resources)
 section provide the more details on the API conventions that are used in the Kubernetes API.
 
-It may also be useful to look at the [API patterns for standard Kubernetes resources]()https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#-strong-write-operations-strong--54.
+It may also be useful to look at the [API patterns for standard Kubernetes resources](https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#-strong-write-operations-strong--54).
