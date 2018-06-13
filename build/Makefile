@@ -137,7 +137,7 @@ build-controller-binary: ensure-build-image
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
-lint: LINT_TIMEOUT ?= 5m
+lint: LINT_TIMEOUT ?= 15m
 lint: ensure-build-image
 	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline=$(LINT_TIMEOUT) -t --skip vendor ./..."
