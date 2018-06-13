@@ -24,7 +24,7 @@
 #
 
 CXX = g++
-CPPFLAGS += -I/usr/local/include -pthread -fPIC
+CPPFLAGS += -I/usr/local/include -I$(build_path) -pthread -fPIC
 CXXFLAGS += -std=c++11
 LDFLAGS += -L/usr/local/lib -lgrpc++_unsecure -lgrpc -lprotobuf -lpthread -ldl
 

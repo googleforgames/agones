@@ -18,6 +18,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
@@ -36,7 +38,8 @@ import (
 )
 
 const (
-	port = 59357
+	grpcPort = 59357
+	httpPort = 59358
 
 	// specifically env vars
 	gameServerNameEnv = "GAMESERVER_NAME"
@@ -56,56 +59,33 @@ var (
 )
 
 func main() {
-	viper.SetDefault(localFlag, false)
-	viper.SetDefault(addressFlag, "localhost")
-	viper.SetDefault(healthDisabledFlag, false)
-	viper.SetDefault(healthTimeoutFlag, 5)
-	viper.SetDefault(healthInitialDelayFlag, 5)
-	viper.SetDefault(healthFailureThresholdFlag, 3)
-	pflag.Bool(localFlag, viper.GetBool(localFlag),
-		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
-	pflag.String(addressFlag, viper.GetString(addressFlag), "The address to bind the server port to. Defaults to 'localhost")
-	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
-		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
-	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
-		"Set this or HEALTH_TIMEOUT env to the number of seconds that the health check times out at. Defaults to 5")
-	pflag.Int64(healthInitialDelayFlag, viper.GetInt64(healthInitialDelayFlag),
-		"Set this or HEALTH_INITIAL_DELAY env to the number of seconds that the health will wait before starting. Defaults to 5")
-	pflag.Int64(healthFailureThresholdFlag, viper.GetInt64(healthFailureThresholdFlag),
-		"Set this or HEALTH_FAILURE_THRESHOLD env to the number of times the health check needs to fail to be deemed unhealthy. Defaults to 3")
-	pflag.Parse()
+	ctlConf := parseEnvFlags()
+	logger.WithField("version", pkg.Version).
+		WithField("grpcPort", grpcPort).WithField("httpPort", httpPort).
+		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	runtime.Must(viper.BindEnv(localFlag))
-	runtime.Must(viper.BindEnv(gameServerNameEnv))
-	runtime.Must(viper.BindEnv(podNamespaceEnv))
-	runtime.Must(viper.BindEnv(healthDisabledFlag))
-	runtime.Must(viper.BindEnv(healthTimeoutFlag))
-	runtime.Must(viper.BindEnv(healthInitialDelayFlag))
-	runtime.Must(viper.BindEnv(healthFailureThresholdFlag))
-	runtime.Must(viper.BindPFlags(pflag.CommandLine))
-
-	isLocal := viper.GetBool(localFlag)
-	address := viper.GetString(addressFlag)
-	healthDisabled := viper.GetBool(healthDisabledFlag)
-	healthTimeout := time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second
-	healthInitialDelay := time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second
-	healthFailureThreshold := viper.GetInt64(healthFailureThresholdFlag)
-
-	logger.WithField(localFlag, isLocal).WithField("version", pkg.Version).
-		WithField("port", port).WithField(addressFlag, address).
-		WithField(healthDisabledFlag, healthDisabled).WithField(healthTimeoutFlag, healthTimeout).
-		WithField(healthFailureThresholdFlag, healthFailureThreshold).
-		WithField(healthInitialDelayFlag, healthInitialDelay).Info("Starting sdk sidecar")
-
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", address, port))
+	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, grpcPort)
+	lis, err := net.Listen("tcp", grpcEndpoint)
 	if err != nil {
-		logger.WithField("port", port).WithField("address", address).Fatalf("Could not listen on port")
+		logger.WithField("grpcPort", grpcPort).WithField("Address", ctlConf.Address).Fatalf("Could not listen on grpcPort")
 	}
 	stop := signals.NewStopChannel()
 	grpcServer := grpc.NewServer()
+	// don't graceful stop, because if we get a kill signal
+	// then the gameserver is being shut down, and we no longer
+	// care about running RPC calls.
+	defer grpcServer.Stop()
 
-	if isLocal {
+	mux := gwruntime.NewServeMux()
+	httpServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, httpPort),
+		Handler: mux,
+	}
+	defer httpServer.Close() // nolint: errcheck
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if ctlConf.IsLocal {
 		sdk.RegisterSDKServer(grpcServer, &gameservers.LocalSDKServer{})
 	} else {
 		var config *rest.Config
@@ -128,28 +108,100 @@ func main() {
 
 		var s *gameservers.SDKServer
 		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
-			healthDisabled, healthTimeout, healthFailureThreshold, healthInitialDelay, kubeClient, agonesClient)
+			ctlConf.HealthDisabled, ctlConf.HealthTimeout, ctlConf.HealthFailureThreshold,
+			ctlConf.HealthInitialDelay, kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
 
 		go s.Run(ctx.Done())
 		sdk.RegisterSDKServer(grpcServer, s)
 	}
 
-	go func() {
-		err = grpcServer.Serve(lis)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not serve grpc server")
-		}
-	}()
+	go runGrpc(grpcServer, lis)
+	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
 	<-stop
-	logger.Info("shutting down grpc server")
-	// don't graceful stop, because if we get a kill signal
-	// then the gameserver is being shut down, and we no longer
-	// care about running RPC calls.
-	grpcServer.Stop()
+	logger.Info("shutting down sdk server")
+}
+
+// runGrpc runs the grpc service
+func runGrpc(grpcServer *grpc.Server, lis net.Listener) {
+	logger.Info("Starting SDKServer grpc service...")
+	if err := grpcServer.Serve(lis); err != nil {
+		logger.WithError(err).Fatal("Could not serve grpc server")
+	}
+}
+
+// runGateway runs the grpc-gateway
+func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server) {
+	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithInsecure())
+	if err != nil {
+		logger.WithError(err).Fatal("Could not dial grpc server...")
+	}
+
+	if err = sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
+		logger.WithError(err).Fatal("Could not register grpc-gateway")
+	}
+
+	logger.Info("Starting SDKServer grpc-gateway...")
+	if err := httpServer.ListenAndServe(); err != nil {
+		if err == http.ErrServerClosed {
+			logger.WithError(err).Info("http server closed")
+		} else {
+			logger.WithError(err).Fatal("Could not serve http server")
+		}
+	}
+}
+
+// parseEnvFlags parses all the flags and environment variables and returns
+// a configuration structure
+func parseEnvFlags() config {
+	viper.SetDefault(localFlag, false)
+	viper.SetDefault(addressFlag, "localhost")
+	viper.SetDefault(healthDisabledFlag, false)
+	viper.SetDefault(healthTimeoutFlag, 5)
+	viper.SetDefault(healthInitialDelayFlag, 5)
+	viper.SetDefault(healthFailureThresholdFlag, 3)
+	pflag.Bool(localFlag, viper.GetBool(localFlag),
+		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost")
+	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
+		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
+	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
+		"Set this or HEALTH_TIMEOUT env to the number of seconds that the health check times out at. Defaults to 5")
+	pflag.Int64(healthInitialDelayFlag, viper.GetInt64(healthInitialDelayFlag),
+		"Set this or HEALTH_INITIAL_DELAY env to the number of seconds that the health will wait before starting. Defaults to 5")
+	pflag.Int64(healthFailureThresholdFlag, viper.GetInt64(healthFailureThresholdFlag),
+		"Set this or HEALTH_FAILURE_THRESHOLD env to the number of times the health check needs to fail to be deemed unhealthy. Defaults to 3")
+	pflag.Parse()
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(localFlag))
+	runtime.Must(viper.BindEnv(gameServerNameEnv))
+	runtime.Must(viper.BindEnv(podNamespaceEnv))
+	runtime.Must(viper.BindEnv(healthDisabledFlag))
+	runtime.Must(viper.BindEnv(healthTimeoutFlag))
+	runtime.Must(viper.BindEnv(healthInitialDelayFlag))
+	runtime.Must(viper.BindEnv(healthFailureThresholdFlag))
+	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+
+	return config{
+		IsLocal:                viper.GetBool(localFlag),
+		Address:                viper.GetString(addressFlag),
+		HealthDisabled:         viper.GetBool(healthDisabledFlag),
+		HealthTimeout:          time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second,
+		HealthInitialDelay:     time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second,
+		HealthFailureThreshold: viper.GetInt64(healthFailureThresholdFlag),
+	}
+}
+
+// config is all the configuration for this program
+type config struct {
+	Address                string
+	IsLocal                bool
+	HealthDisabled         bool
+	HealthTimeout          time.Duration
+	HealthInitialDelay     time.Duration
+	HealthFailureThreshold int64
 }
