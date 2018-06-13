@@ -122,7 +122,7 @@ Congratulations! You have now successfully tested and built Agones!
 
 ### Running a Test Google Kubernetes Engine Cluster
 
-This will setup a test GKE cluster on Google Cloud, with firewall rules set each of the nodes for ports 7000-8000
+This will setup a test GKE cluster on Google Cloud, with firewall rules set for each of the nodes for ports 7000-8000
 to be open to UDP traffic.
 
 First step is to create a Google Cloud Project at https://console.cloud.google.com or reuse an existing one.
