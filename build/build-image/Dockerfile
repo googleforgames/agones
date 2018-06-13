@@ -24,7 +24,7 @@ RUN apt-get update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.10
+ENV GO_VERSION=1.10.3
 ENV GOPATH /go
 RUN wget -q https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
@@ -43,7 +43,7 @@ RUN gcloud components update && gcloud components install kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
 # install Helm package manager
-ENV HELM_VER 2.8.2
+ENV HELM_VER 2.9.1
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
   && tar -zxvf /tmp/helm.tar.gz -C /tmp \
