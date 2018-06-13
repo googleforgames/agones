@@ -60,7 +60,7 @@ class SDK final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> PrepareAsyncReady(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncReadyRaw(context, request, cq));
     }
-    // Call when the GmaeServer is shutting down
+    // Call when the GameServer is shutting down
     virtual ::grpc::Status Shutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>> AsyncShutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>>(AsyncShutdownRaw(context, request, cq));
@@ -135,7 +135,7 @@ class SDK final {
     virtual ~Service();
     // Call when the GameServer is ready
     virtual ::grpc::Status Ready(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response);
-    // Call when the GmaeServer is shutting down
+    // Call when the GameServer is shutting down
     virtual ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response);
     // Send a Empty every d Duration to declare that this GameSever is healthy
     virtual ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response);
