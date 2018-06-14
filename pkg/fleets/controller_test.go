@@ -59,7 +59,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			return true, gsSet, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced)
 		defer cancel()
 
 		err := c.syncFleet("default/fleet-1")
@@ -96,7 +96,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			return true, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
 		defer cancel()
 
 		err := c.syncFleet("default/fleet-1")
@@ -132,7 +132,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			return true, gsSet, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
 		defer cancel()
 
 		err := c.syncFleet("default/fleet-1")
@@ -183,7 +183,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			return true, gsSet, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
 		defer cancel()
 
 		err := c.syncFleet("default/fleet-1")
