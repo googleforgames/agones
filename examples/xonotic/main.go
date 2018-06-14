@@ -27,12 +27,6 @@ import (
 	"agones.dev/agones/sdks/go"
 )
 
-const (
-	begin        = "BEGIN"
-	configLoaded = "CONFIGLOADED"
-	listening    = "LISTENING"
-)
-
 type interceptor struct {
 	forward   io.Writer
 	intercept func(p []byte)
@@ -66,34 +60,33 @@ func main() {
 	fmt.Println(">>> Starting wrapper for Xonotic!")
 	fmt.Printf(">>> Path to Xonotic server script: %s \n", *input)
 
-	// state tracks the state
-	state := begin
+	// track references to listening count
+	listeningCount := 0
 
 	cmd := exec.Command(*input) // #nosec
 	cmd.Stderr = &interceptor{forward: os.Stderr}
 	cmd.Stdout = &interceptor{
 		forward: os.Stdout,
 		intercept: func(p []byte) {
-			if state == listening {
+			if listeningCount >= 4 {
 				return
 			}
 
 			str := strings.TrimSpace(string(p))
-			// since the game server starts, then loads the server.cfg
-			// and then restarts itself, we need to wait for this line
-			// before we look for "Server listening on address", since
-			// it is output twice.
-			if state == begin && str == "execing server.cfg" {
-				fmt.Printf(">>> Moving to configLoaded: %s", str)
-				state = configLoaded
-				return
-			}
-			if state == configLoaded && strings.Contains(str, "Server listening on address") {
-				state = listening
-				fmt.Printf(">>> Moving to listening: %s", str)
-				err = s.Ready()
-				if err != nil {
-					log.Fatalf("Could not send ready message")
+			// Xonotic will say "Server listening" 4 times before being ready,
+			// once for ipv4 and once for ipv6.
+			// but it does it each twice because it loads the maps between
+			// each one, and resets state as it does so
+			if count := strings.Count(str, "Server listening on address"); count > 0 {
+				listeningCount += count
+				fmt.Printf(">>> Found 'listening' statement: %d \n", listeningCount)
+
+				if listeningCount == 4 {
+					fmt.Printf(">>> Moving to READY: %s \n", str)
+					err = s.Ready()
+					if err != nil {
+						log.Fatalf("Could not send ready message")
+					}
 				}
 			}
 		}}
