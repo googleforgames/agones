@@ -23,7 +23,7 @@ For more details on why this project was written, read the
 
 ## Requirements
 - Kubernetes cluster version 1.9+
-    - [Minikube](https://github.com/kubernetes/minikube) and [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) have been tested
+    - [Minikube](https://github.com/kubernetes/minikube), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) and [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
     [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and 
     [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
@@ -35,7 +35,7 @@ For more details on why this project was written, read the
 
 ## Installation
 
-Follow [these instructions](install/README.md) to create a cluster on Google Kubernetes Engine (GKE) or Minikube, and install Agones.
+Follow [these instructions](install/README.md) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
 
 ## Usage
 
