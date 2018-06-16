@@ -232,9 +232,11 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	// Run the Port Allocator
-	if err := c.portAllocator.Run(stop); err != nil {
-		return err
-	}
+	go func() {
+		if err := c.portAllocator.Run(stop); err != nil {
+			c.logger.WithError(err).Error("error running the port allocator")
+		}
+	}()
 
 	// Run the Health Controller
 	go c.healthController.Run(stop)

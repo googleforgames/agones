@@ -17,10 +17,12 @@ package gameservers
 import (
 	"sync"
 
+	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -30,6 +32,11 @@ import (
 	corelisterv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
+
+// syncAllKey is the queue key to sync all the ports.
+// the + symbol is deliberate, is it can't be used in a K8s
+// naming scheme
+const syncAllKey = cache.ExplicitKey("SYNC+ALL")
 
 // ErrPortNotFound is returns when a port is unable to be allocated
 var ErrPortNotFound = errors.New("Unable to allocate a port")
@@ -56,6 +63,7 @@ type PortAllocator struct {
 	nodeSynced         cache.InformerSynced
 	nodeLister         corelisterv1.NodeLister
 	nodeInformer       cache.SharedIndexInformer
+	workerqueue        *workerqueue.WorkerQueue
 }
 
 // NewPortAllocator returns a new dynamic port
@@ -83,6 +91,7 @@ func NewPortAllocator(minPort, maxPort int32,
 		nodeSynced:         nodes.Informer().HasSynced,
 	}
 	pa.logger = runtime.NewLoggerWithType(pa)
+	pa.workerqueue = workerqueue.NewWorkerQueue(pa.syncPorts, pa.logger, stable.GroupName+".PortAllocator")
 
 	pa.gameServerInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: pa.syncDeleteGameServer,
@@ -90,24 +99,19 @@ func NewPortAllocator(minPort, maxPort int32,
 
 	// Experimental support for node adding/removal
 	pa.nodeInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: pa.syncAddNode,
+		AddFunc: func(obj interface{}) {
+			node := obj.(*corev1.Node)
+			pa.workerqueue.Enqueue(cache.ExplicitKey(node.Name))
+		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			oldNode := oldObj.(*corev1.Node)
 			newNode := newObj.(*corev1.Node)
 			if oldNode.Spec.Unschedulable != newNode.Spec.Unschedulable {
-				err := pa.syncPortAllocations()
-				if err != nil {
-					err = errors.Wrap(err, "error resetting ports on node update")
-					runtime.HandleError(pa.logger.WithField("node", newNode), err)
-				}
+				pa.workerqueue.Enqueue(syncAllKey)
 			}
 		},
-		DeleteFunc: func(obj interface{}) {
-			err := pa.syncPortAllocations()
-			if err != nil {
-				err = errors.Wrap(err, "error on node deletion")
-				runtime.HandleError(pa.logger.WithField("node", obj), err)
-			}
+		DeleteFunc: func(_ interface{}) {
+			pa.workerqueue.Enqueue(syncAllKey)
 		},
 	})
 
@@ -116,7 +120,7 @@ func NewPortAllocator(minPort, maxPort int32,
 }
 
 // Run sets up the current state of port allocations and
-// starts tracking Pod and Node changes (non blocking)
+// starts tracking Pod and Node changes
 func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 	pa.logger.Info("Running")
 
@@ -124,7 +128,29 @@ func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	return pa.syncPortAllocations()
+	// on run, let's make sure we start with a perfect slate straight away
+	if err := pa.syncAll(); err != nil {
+		return errors.Wrap(err, "error performing initial sync")
+	}
+
+	pa.workerqueue.Run(1, stop)
+	return nil
+}
+
+// syncPorts synchronises ports for the given key
+func (pa *PortAllocator) syncPorts(key string) error {
+	if key == string(syncAllKey) {
+		return pa.syncAll()
+	}
+
+	// if we get a specific node name, we add some ports
+	node, err := pa.nodeLister.Get(key)
+	if err != nil {
+		return errors.Wrapf(err, "error retrieving node %s", key)
+	}
+	pa.syncAddNode(node)
+
+	return nil
 }
 
 // Allocate assigns a port to the GameServer and returns it.
@@ -171,8 +197,7 @@ func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
 
 // syncAddNode adds another node port section
 // to the available ports
-func (pa *PortAllocator) syncAddNode(obj interface{}) {
-	node := obj.(*corev1.Node)
+func (pa *PortAllocator) syncAddNode(node *corev1.Node) {
 	// if we're already added this node, don't do it again
 	if _, ok := pa.nodeRegistry[node.ObjectMeta.UID]; ok {
 		pa.logger.WithField("node", node.ObjectMeta.Name).Info("Already added node to port allocations. Skipping")
@@ -201,13 +226,13 @@ func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
 	}
 }
 
-// syncPortAllocations syncs the pod, node and gameserver caches then
+// syncAll syncs the pod, node and gameserver caches then
 // traverses all Nodes in the cluster and all looks at GameServers
 // and Terminating Pods values make sure those
 // portAllocations are marked as taken.
 // Locks the mutex while doing this.
 // This is basically a stop the world Garbage Collection on port allocations.
-func (pa *PortAllocator) syncPortAllocations() error {
+func (pa *PortAllocator) syncAll() error {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
