@@ -16,9 +16,9 @@ package gameservers
 
 import (
 	"fmt"
-	"testing"
-
 	"sync"
+	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -48,14 +48,15 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
+		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
 
-		err := pa.Run(stop)
+		err := pa.syncAll()
 		assert.Nil(t, err)
 
 		// two nodes
@@ -83,9 +84,9 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			nl := &corev1.NodeList{Items: []corev1.Node{n1}}
 			return true, nl, nil
 		})
-		stop, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
-		err := pa.Run(stop)
+		err := pa.syncAll()
 		assert.Nil(t, err)
 		var ports []int32
 		for i := 10; i <= 20; i++ {
@@ -106,9 +107,9 @@ func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
 		return true, nl, nil
 	})
-	stop, cancel := agtesting.StartInformers(m)
+	_, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 	defer cancel()
-	err := pa.Run(stop)
+	err := pa.syncAll()
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 
@@ -139,9 +140,9 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})
-	stop, cancel := agtesting.StartInformers(m)
+	_, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 	defer cancel()
-	err := pa.Run(stop)
+	err := pa.syncAll()
 	assert.Nil(t, err)
 
 	for i := 0; i <= 100; i++ {
@@ -199,12 +200,12 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 		return true, gsl, nil
 	})
 
-	stop, cancel := agtesting.StartInformers(m)
+	_, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
 
-	err := pa.Run(stop)
-
+	err := pa.syncAll()
 	assert.Nil(t, err)
+
 	assert.Len(t, pa.portAllocations, 3)
 	assert.Len(t, pa.gameServerRegistry, 5)
 
@@ -247,14 +248,16 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		return true, nl, nil
 	})
 
-	stop, cancel := agtesting.StartInformers(m)
+	stop, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
 
 	gsWatch.Add(gs1.DeepCopy())
 	gsWatch.Add(gs2.DeepCopy())
 	gsWatch.Add(gs3.DeepCopy())
 
-	err := pa.Run(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, pa.gameServerSynced))
+
+	err := pa.syncAll()
 	assert.Nil(t, err)
 
 	// gate
@@ -291,6 +294,17 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
+	received := make(chan string, 10)
+	defer close(received)
+
+	f := pa.workerqueue.SyncHandler
+	pa.workerqueue.SyncHandler = func(s string) error {
+		err := f(s)
+		assert.Nil(t, err, "sync handler failed")
+		received <- s
+		return nil
+	}
+
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
@@ -298,8 +312,22 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	nodeWatch.Add(&n1)
 	nodeWatch.Add(&n2)
 
-	err := pa.Run(stop)
-	assert.Nil(t, err)
+	go func() {
+		err := pa.Run(stop)
+		assert.Nil(t, err)
+	}()
+
+	testReceived := func(expected, failMsg string) {
+		select {
+		case key := <-received:
+			assert.Equal(t, expected, key)
+		case <-time.After(3 * time.Second):
+			assert.FailNow(t, failMsg, "expected: %s", expected)
+		}
+	}
+
+	testReceived(n1.ObjectMeta.Name, "add node 1")
+	testReceived(n2.ObjectMeta.Name, "add node 2")
 
 	// add a game server
 	gs, err := pa.Allocate(fixture.DeepCopy())
@@ -317,6 +345,7 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	logrus.Info("adding n3")
 	nodeWatch.Add(&n3)
 	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+	testReceived(n3.ObjectMeta.Name, "add node 3")
 
 	pa.mutex.RLock()
 	assert.Len(t, pa.portAllocations, 3)
@@ -330,6 +359,8 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	assert.True(t, copy.Spec.Unschedulable)
 	nodeWatch.Modify(copy)
 	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+	testReceived(string(syncAllKey), "unscheduled node 3")
+
 	pa.mutex.RLock()
 	assert.Len(t, pa.portAllocations, 2)
 	assert.Equal(t, 1, countAllocatedPorts(pa, port))
@@ -341,6 +372,8 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	copy.Spec.Unschedulable = false
 	nodeWatch.Modify(copy)
 	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+	testReceived(string(syncAllKey), "scheduled node 3")
+
 	pa.mutex.RLock()
 	assert.Len(t, pa.portAllocations, 3)
 	assert.Equal(t, 1, countAllocatedPorts(pa, port))
@@ -350,6 +383,8 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 	logrus.Info("deleting n3")
 	nodeWatch.Delete(n3.DeepCopy())
 	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+	testReceived(string(syncAllKey), "deleting node 3")
+
 	pa.mutex.RLock()
 	assert.Len(t, pa.portAllocations, 2)
 	assert.Equal(t, 1, countAllocatedPorts(pa, port))
@@ -357,6 +392,12 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 
 	// add the n1 node again, it shouldn't do anything
 	nodeWatch.Add(&n1)
+	select {
+	case <-received:
+		assert.FailNow(t, "adding back n1: event should not happen")
+	case <-time.After(time.Second):
+	}
+
 	pa.mutex.RLock()
 	assert.Len(t, pa.portAllocations, 2)
 	assert.Equal(t, 1, countAllocatedPorts(pa, port))
