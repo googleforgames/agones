@@ -329,7 +329,9 @@ clean-gcloud-config:
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: ensure-build-image minikube-agones-profile
-	$(MINIKUBE) start --kubernetes-version v1.9.4 --vm-driver $(MINIKUBE_DRIVER) \
+	# localkube bootstrapper fixes issues with profiles
+	$(MINIKUBE) start --kubernetes-version v1.10.0 --vm-driver $(MINIKUBE_DRIVER) \
+		--bootstrapper=localkube \
 		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
 		--extra-config=apiserver.Authorization.Mode=RBAC
 	# wait until the master is up
@@ -340,8 +342,11 @@ minikube-test-cluster: ensure-build-image minikube-agones-profile
 		done
 	# this is needed for kubernetes component to work correctly while RBAC is enabled
 	-docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
-		kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
-	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) helm init
+		kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:default
+	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
+		kubectl apply -f $(mount_path)/build/helm.yaml
+	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm init --service-account helm
 	$(MAKE) minikube-post-start
 
 # switch to the agones cluster

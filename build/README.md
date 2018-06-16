@@ -68,12 +68,6 @@ as this makes it easy to create a (relatively) cross platform development and bu
 - (optional) Minikube will require [VirtualBox](https://www.virtualbox.org) and will need to be installed if you wish
   to develop on Minikube 
 
-This has currently yet to be tested, but should have few issues around testing, building and running on GKE.
-
-Issues with building and developing on Minikube are currently expected, due to lack of testing, but Agones will run on Minikube.  
-
-Testing on macOS and reporting bugs are appreciated.
-
 ## GOPATH
 
 This project should be cloned to the directory `$GOPATH/src/agones.dev/agones`
@@ -186,6 +180,9 @@ This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, ru
 
 Because Minikube runs on a virtualisation layer on the host, some of the standard build and development Make targets
 need to be replaced by Minikube specific targets.
+
+> We recommend installing version [0.28.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.28.0),
+due to issues with other versions
 
 First, [install Minikube](https://github.com/kubernetes/minikube#installation), which may also require you to install
 a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as well.

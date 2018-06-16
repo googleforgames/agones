@@ -149,9 +149,8 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 [minikube]: https://github.com/kubernetes/minikube#installation
 [vb]: https://www.virtualbox.org
 
-> Note: due to some [issues with the 0.26.x release](https://github.com/GoogleCloudPlatform/agones/issues/192),
-we recommend installing version [0.25.2 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.25.2)
-until they are resolved.
+> We recommend installing version [0.28.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.28.0),
+due to issues with other versions
 
 ## Creating an `agones` profile
 
@@ -167,10 +166,13 @@ The following command starts a local minikube cluster via virtualbox - but this 
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
 ```bash
-minikube start --kubernetes-version v1.9.4 --vm-driver virtualbox \
-  --extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
-  --extra-config=apiserver.Authorization.Mode=RBAC
+minikube start --kubernetes-version v1.10.0 --vm-driver virtualbox \
+    --bootstrapper=localkube \
+    --extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+    --extra-config=apiserver.Authorization.Mode=RBAC
 ```
+
+> the --bootstrapper=localkube is required since we aren't using the `default` profile. ([bug](https://github.com/kubernetes/minikube/issues/2717))
 
 # Setting up an Azure Kubernetes Service (AKS) Cluster
 
