@@ -14,12 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /go/src/agones.dev/agones
-protoc -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
-protoc -I . --cpp_out=./sdks/cpp sdk.proto
-mkdir /tmp/cpp
-find ./sdks/cpp/ -type f \( -name '*.pb.cc' -or -name '*.pb.h' \) -printf "%f\n" | xargs -I@ bash -c "cat ./build/boilerplate.go.txt ./sdks/cpp/@ >> /tmp/cpp/@"
-# already has a header, so we'll remove it
-rm /tmp/cpp/sdk.grpc.pb.h
-mv /tmp/cpp/* ./sdks/cpp/
+set -x
 
+header() {
+    cat /go/src/agones.dev/agones/build/boilerplate.go.txt $1 >> /tmp/cpp/$1 && mv /tmp/cpp/$1 .
+}
+
+googlepais=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+
+cd /go/src/agones.dev/agones/sdks/cpp
+find -name '*.pb.*' -delete
+
+cd /go/src/agones.dev/agones
+protoc -I ${googlepais} -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
+protoc -I ${googlepais} -I . --cpp_out=./sdks/cpp sdk.proto ${googlepais}/google/api/annotations.proto  ${googlepais}/google/api/http.proto
+
+mkdir -p /tmp/cpp
+
+cd ./sdks/cpp
+header sdk.pb.h
+header sdk.grpc.pb.cc
+header sdk.pb.cc
+
+cd ./google/api/
+header annotations.pb.cc
+header annotations.pb.h
+header http.pb.cc
+header http.pb.h
+
+rm -r /tmp/cpp

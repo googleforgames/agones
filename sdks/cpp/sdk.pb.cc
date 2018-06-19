@@ -108,19 +108,22 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\tsdk.proto\022\025stable.agones.dev.sdk\"\007\n\005Em"
-      "pty2\340\001\n\003SDK\022E\n\005Ready\022\034.stable.agones.dev"
-      ".sdk.Empty\032\034.stable.agones.dev.sdk.Empty"
-      "\"\000\022H\n\010Shutdown\022\034.stable.agones.dev.sdk.E"
-      "mpty\032\034.stable.agones.dev.sdk.Empty\"\000\022H\n\006"
-      "Health\022\034.stable.agones.dev.sdk.Empty\032\034.s"
-      "table.agones.dev.sdk.Empty\"\000(\001B\005Z\003sdkb\006p"
-      "roto3"
+      "\n\tsdk.proto\022\025stable.agones.dev.sdk\032\034goog"
+      "le/api/annotations.proto\"\007\n\005Empty2\227\002\n\003SD"
+      "K\022V\n\005Ready\022\034.stable.agones.dev.sdk.Empty"
+      "\032\034.stable.agones.dev.sdk.Empty\"\021\202\323\344\223\002\013\"\006"
+      "/ready:\001*\022\\\n\010Shutdown\022\034.stable.agones.de"
+      "v.sdk.Empty\032\034.stable.agones.dev.sdk.Empt"
+      "y\"\024\202\323\344\223\002\016\"\t/shutdown:\001*\022Z\n\006Health\022\034.stab"
+      "le.agones.dev.sdk.Empty\032\034.stable.agones."
+      "dev.sdk.Empty\"\022\202\323\344\223\002\014\"\007/health:\001*(\001B\005Z\003s"
+      "dkb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 285);
+      descriptor, 370);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
+  ::protobuf_google_2fapi_2fannotations_2eproto::AddDescriptors();
 }
 
 void AddDescriptors() {

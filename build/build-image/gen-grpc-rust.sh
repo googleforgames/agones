@@ -14,8 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+
 cd /go/src/agones.dev/agones
-protoc --rust_out sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc --plugin=protoc-gen-grpc=`which grpc_rust_plugin` sdk.proto
+protoc \
+    -I ${googleapis} -I . sdk.proto \
+    --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \
+    --plugin=protoc-gen-grpc=`which grpc_rust_plugin` \
 
 cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk.rs >> ./sdk.rs
 cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk_grpc.rs >> ./sdk_grpc.rs
