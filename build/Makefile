@@ -126,7 +126,7 @@ install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: ensure-build-image
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm upgrade --install --namespace=default \
+		helm upgrade --install --namespace=agones-system \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		agones $(mount_path)/install/helm/agones/
 
@@ -176,7 +176,7 @@ push-agones-sdk-image: ensure-build-image
 # Generate the static install script
 gen-install: ensure-build-image
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		'helm template --name=agones-manual $(mount_path)/install/helm/agones \
+		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		> $(mount_path)/install/yaml/install.yaml'
 

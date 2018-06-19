@@ -1,29 +1,4 @@
 ---
-# Source: agones/templates/namespace.yaml
-# Copyright 2018 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: agones-system
-  labels:
-    app: agones
-    chart: agones-0.2.0
-    release: agones-manual
-    heritage: Tiller
----
 # Source: agones/templates/serviceaccounts/controller.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
 #
@@ -43,10 +18,9 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agones-controller
-  namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -54,10 +28,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-controller
-  namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -84,10 +57,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-controller-access
-  namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -121,7 +93,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -129,10 +101,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-sdk
-  namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -147,7 +118,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -182,7 +153,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -327,7 +298,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -376,7 +347,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -505,7 +476,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -642,11 +613,10 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-controller-service
-  namespace: agones-system
   labels:
     component: controller
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -675,11 +645,10 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: agones-controller
-  namespace: agones-system
   labels:
     component: controller
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -691,7 +660,7 @@ spec:
       labels:
         stable.agones.dev/role: controller
         app: agones
-        chart: agones-0.2.0
+        chart: agones-0.3.0
         release: agones-manual
         heritage: Tiller
     spec:
@@ -748,7 +717,6 @@ apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
-  namespace: agones-system
 webhooks:
   - name: validations.stable.agones.dev
     failurePolicy: Fail
@@ -782,11 +750,10 @@ apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
-  namespace: agones-system
   labels:
     component: controller
     app: agones
-    chart: agones-0.2.0
+    chart: agones-0.3.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -814,10 +781,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: agones-manual-cert
-  namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.2.0"
+    chart: "agones-0.3.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

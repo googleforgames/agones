@@ -15,6 +15,11 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
    1. [Installing Minikube](#installing-minikube)
    1. [Creating an agones profile](#creating-an-agones-profile)
    1. [Starting Minikube](#starting-minikube)
+1. [Setting up an Azure Kubernetes Service (AKS) cluster](#setting-up-an-azure-kubernetes-service-aks-cluster)
+    1. [Choosing your shell](#choosing-your-shell)
+    1. [Creating the AKS cluster](#creating-the-aks-cluster)
+    1. [Allowing UDP traffic](#allowing-udp-traffic)
+    1. [Creating and assigning Public IPs to Nodes](#creating-and-assigning-public-ips-to-nodes)
 1. [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
 1. [Installing Agones](#installing-agones)
    1. [Install with yaml](#install-with-yaml)
@@ -166,6 +171,73 @@ minikube start --kubernetes-version v1.9.4 --vm-driver virtualbox \
   --extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
   --extra-config=apiserver.Authorization.Mode=RBAC
 ```
+
+# Setting up an Azure Kubernetes Service (AKS) Cluster
+
+Follow these steps to create a cluster and install Agones directly on [Azure Kubernetes Service (AKS) ](https://docs.microsoft.com/azure/aks/).
+
+## Choosing your shell
+
+You can use either [Azure Cloud Shell](https://docs.microsoft.com/azure/cloud-shell/overview) or install the [Azure CLI](https://docs.microsoft.com/cli/azure/?view=azure-cli-latest) on your local shell in order to install AKS in your own Azure subscription. Cloud Shell comes preinstalled with `az` and `kubectl` utilities whereas you need to install them locally if you want to use your local shell. If you use Windows 10, you can use the [WIndows Subsystem for Windows](https://docs.microsoft.com/windows/wsl/install-win10) as well.
+
+## Creating the AKS cluster
+
+If you are using Azure CLI from your local shell, you need to login to your Azure account by executing the `az login` command and following the login procedure.
+
+Here are the steps you need to follow to create a new AKS cluster (additional instructions and clarifications are listed [here](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough)): 
+
+```bash
+# Declare necessary variables, modify them according to your needs
+AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
+AKS_NAME=akstest     # Name of your AKS cluster
+AKS_LOCATION=westeurope     # Azure region in which you'll deploy your AKS cluster
+
+# Create the Resource Group where your AKS resource will be installed
+az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
+
+# Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
+# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.9.6. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A1_v2 --kubernetes-version 1.9.6 --enable-rbac
+
+# Install kubectl
+sudo az aks install-cli
+
+# Get credentials for your new AKS cluster
+az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
+```
+
+Alternatively, you can use the [Azure Portal](https://portal.azure.com) to create a new AKS cluster [(instructions)](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-portal).
+
+### Allowing UDP traffic
+
+For Agones to work correctly, we need to allow UDP traffic to pass through to our AKS cluster. To achieve this, we must update the NSG (Network Security Group) with the proper rule. A simple way to do that is:
+
+* Login to the Azure Portal
+* Find the resource group where the AKS resources are kept, which should have a name like `MC_resourceGroupName_AKSName_westeurope`. Alternative, you can type `az resource show --namespace Microsoft.ContainerService --resource-type managedClusters -g $AKS_RESOURCE_GROUP -n $AKS_NAME -o json | jq .properties.nodeResourceGroup`
+* Find the Network Security Group object, which should have a name like `aks-agentpool-********-nsg`
+* Select **Inbound Security Rules**
+* Select **Add** to create a new Rule with **UDP** as the protocol and **7000-8000** as the Destination Port Ranges. Pick a proper name and leave everything else at their default values
+
+Alternatively, you can use the following command, after modifying the `RESOURCE_GROUP_WITH_AKS_RESOURCES` and `NSG_NAME` values:
+
+```bash
+az network nsg rule create \
+  --resource-group RESOURCE_GROUP_WITH_AKS_RESOURCES \
+  --nsg-name NSG_NAME \
+  --name AgonesUDP \
+  --access Allow \
+  --protocol Udp \
+  --direction Inbound \
+  --priority 520 \
+  --source-port-range "*" \
+  --destination-port-range 7000-8000
+  ```
+
+### Creating and assigning Public IPs to Nodes
+
+Nodes in AKS don't get a Public IP by default. To assign a Public IP to a Node, find the Resource Group where the AKS resources are installerd on the [portal](https://portal.azure.com) (it should have a name like `MC_resourceGroupName_AKSName_westeurope`). Then, you can follow the instructions [here](https://blogs.technet.microsoft.com/srinathv/2018/02/07/how-to-add-a-public-ip-address-to-azure-vm-for-vm-failed-over-using-asr/) to create a new Public IP and assign it to the Node/VM. For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses).
+
+Continue to [Installing Agones](#installing-agones).
 
 # Enabling creation of RBAC resources
 

@@ -8,9 +8,13 @@ There are currently two support SDKs:
 - [C++](cpp)
 - [Go](https://godoc.org/agones.dev/agones/sdks/go)
 - [Rust](rust)
+- [REST](../docs/sdk_rest_api.md)
 
-The SDKs are relatively thin wrappers around [gRPC](https://grpc.io), generated clients,
-which connects to a small process that Agones coordinates to run alongside the Game Server
+The SDKs are relatively thin wrappers around [gRPC](https://grpc.io) generated clients,
+or an implementation of the REST API (exposed via [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)), 
+where gRPC client generation and compilation isn't well supported.
+
+They connect to a small process that Agones coordinates to run alongside the Game Server
 in a Kubernetes [`Pod`](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/).
 This means that more languages can be supported in the future with minimal effort
 (but pull requests are welcome! 😊 ).
@@ -75,6 +79,24 @@ $ ./sidecar.linux.amd64 --local
 {"level":"info","msg":"Shutdown request has been received!","time":"2017-12-22T16:10:19-08:00"}
 ```
 
+### Writing your own SDK
+
+If there isn't a SDK for the language and platform you are looking for, you have several options:
+
+#### gRPC Client Generation
+
+If client generation is well supported by [gRPC](https://grpc.io/docs/), then generate a client from the
+[sdk.proto](../sdk.proto), and look at the current [sdks](.) to see how the wrappers are implemented to make interaction
+with the SDK server simpler for the user.
+
+#### REST API Implementation
+
+If client generation is not well supported by gRPC, or if there are other complicating factors, implement the SDK through
+the [REST](../docs/sdk_rest_api.md) HTTP+JSON interface. This could be written by hand, or potentially generated from
+the [Swagger/OpenAPI Spec](../sdk.swagger.json).  
+
+Finally, if you build something that would be usable by the community, please submit a pull request!
+
 ### Building the Local Tools
 
 If you wish to build the binaries for local development from source
@@ -85,3 +107,6 @@ You can find the binaries in the `bin` folder in [`cmd/sdk-server`](../cmd/sdk-s
 once compilation is complete.
 
 See [Developing, Testing and Building Agones](../build) for more details.
+
+### Generating Your Own SDK
+If there is no SDK for 
