@@ -30,7 +30,7 @@ tasks you may wish to accomplish.
       1. [Build Image Targets](#build-image-targets)
       1. [Google Cloud Platform](#google-cloud-platform)
       1. [Minikube](#minikube)
-   1. [Built With](#built-with)      
+   1. [Dependencies](#dependencies)      
 <!-- ToC end -->
 
 ## Building on Different Platforms
@@ -357,11 +357,6 @@ instead of `make shell` to start an interactive shell for development on Minikub
 Convenience target for transferring images into minikube.
 Use TAG to specify the image to transfer into minikube
 
-## Built With
+## Dependencies
 
-- [healthcheck](https://github.com/heptiolabs/healthcheck)
-- [errors](https://github.com/pkg/errors)
-- [pflag](https://github.com/spf13/pflag)
-- [viper](https://github.com/spf13/viper)
-- [grpc](https://godoc.org/google.golang.org/grpc)
-- [context](https://golang.org/pkg/context/)
+This project uses the [dep](https://github.com/golang/dep) as a dependency manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/Gopkg.toml).
