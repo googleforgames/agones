@@ -107,6 +107,3 @@ You can find the binaries in the `bin` folder in [`cmd/sdk-server`](../cmd/sdk-s
 once compilation is complete.
 
 See [Developing, Testing and Building Agones](../build) for more details.
-
-### Generating Your Own SDK
-If there is no SDK for 
