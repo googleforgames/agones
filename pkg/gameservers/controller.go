@@ -510,8 +510,9 @@ func (c *Controller) syncGameServerShutdownState(gs *stablev1alpha1.GameServer) 
 	}
 
 	c.logger.WithField("gs", gs).Info("Syncing Shutdown State")
-	// Do it in the foreground, so the GameServer gets killed last
-	p := metav1.DeletePropagationForeground
+	// be explicit about where to delete. We only need to wait for the Pod to be removed, which we handle with our
+	// own finalizer.
+	p := metav1.DeletePropagationBackground
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
 	if err != nil {
 		return errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
