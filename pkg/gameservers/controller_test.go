@@ -50,7 +50,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 		podCreated := false
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: v1alpha1.GameServerSpec{
-				ContainerPort: 7777,
+				Ports: []v1alpha1.GameServerPort{{ContainerPort: 7777}},
 				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
 				},
@@ -91,9 +91,10 @@ func TestControllerSyncGameServer(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
 		defer cancel()
-		err := c.portAllocator.Run(stop)
+
+		err := c.portAllocator.syncAll()
 		assert.Nil(t, err)
 
 		err = c.syncGameServer("default/test")
@@ -227,7 +228,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	}
 
 	assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/metadata/finalizers", Value: []interface{}{"stable.agones.dev"}})
-	assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/spec/protocol", Value: "UDP"})
+	assertContains(patch, jsonpatch.JsonPatchOperation{Operation: "add", Path: "/spec/ports/0/protocol", Value: "UDP"})
 }
 
 func TestControllerCreationValidationHandler(t *testing.T) {
@@ -262,8 +263,8 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Run("invalid gameserver", func(t *testing.T) {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: v1alpha1.GameServerSpec{
-				Container:     "NOPE!",
-				ContainerPort: 7777,
+				Container: "NOPE!",
+				Ports:     []v1alpha1.GameServerPort{{ContainerPort: 7777}},
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
@@ -370,7 +371,7 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 		c, mocks := newFakeController()
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: v1alpha1.GameServerSpec{
-				ContainerPort: 7777,
+				Ports: []v1alpha1.GameServerPort{{ContainerPort: 7777}},
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
@@ -391,24 +392,26 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
 			assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
-			assert.Equal(t, v1alpha1.Dynamic, gs.Spec.PortPolicy)
-			assert.NotEqual(t, fixture.Spec.HostPort, gs.Spec.HostPort)
-			assert.True(t, 10 <= gs.Spec.HostPort && gs.Spec.HostPort <= 20, "%s not in range", gs.Spec.HostPort)
+			port := gs.Spec.Ports[0]
+			assert.Equal(t, v1alpha1.Dynamic, port.PortPolicy)
+			assert.NotEqual(t, fixture.Spec.Ports[0].HostPort, port.HostPort)
+			assert.True(t, 10 <= port.HostPort && port.HostPort <= 20, "%s not in range", port.HostPort)
 
 			return true, gs, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
 		defer cancel()
-		err := c.portAllocator.Run(stop)
+		err := c.portAllocator.syncAll()
 		assert.Nil(t, err)
 
 		result, err := c.syncGameServerPortAllocationState(fixture)
 		assert.Nil(t, err, "sync should not error")
 		assert.True(t, updated, "update should occur")
-		assert.Equal(t, v1alpha1.Dynamic, result.Spec.PortPolicy)
-		assert.NotEqual(t, fixture.Spec.HostPort, result.Spec.HostPort)
-		assert.True(t, 10 <= result.Spec.HostPort && result.Spec.HostPort <= 20, "%s not in range", result.Spec.HostPort)
+		port := result.Spec.Ports[0]
+		assert.Equal(t, v1alpha1.Dynamic, port.PortPolicy)
+		assert.NotEqual(t, fixture.Spec.Ports[0].HostPort, port.HostPort)
+		assert.True(t, 10 <= port.HostPort && port.HostPort <= 20, "%s not in range", port.HostPort)
 	})
 
 	t.Run("Gameserver with unknown state", func(t *testing.T) {
@@ -449,8 +452,8 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[v1alpha1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
 			gsContainer := pod.Spec.Containers[0]
-			assert.Equal(t, fixture.Spec.HostPort, gsContainer.Ports[0].HostPort)
-			assert.Equal(t, fixture.Spec.ContainerPort, gsContainer.Ports[0].ContainerPort)
+			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
+			assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, gsContainer.Ports[0].ContainerPort)
 			assert.Equal(t, corev1.Protocol("UDP"), gsContainer.Ports[0].Protocol)
 			assert.Equal(t, "/gshealthz", gsContainer.LivenessProbe.HTTPGet.Path)
 			assert.Equal(t, gsContainer.LivenessProbe.HTTPGet.Port, intstr.FromInt(8080))
@@ -586,7 +589,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
 			assert.Equal(t, v1alpha1.Ready, gs.Status.State)
-			assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
+			assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
 			assert.Equal(t, ipFixture, gs.Status.Address)
 			assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
 			return true, gs, nil
@@ -599,7 +602,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Nil(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
 		assert.Equal(t, v1alpha1.Ready, gs.Status.State)
-		assert.Equal(t, gs.Spec.HostPort, gs.Status.Port)
+		assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
 		assert.Equal(t, ipFixture, gs.Status.Address)
 		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
 		assert.Contains(t, <-mocks.FakeRecorder.Events, "Address and Port populated")

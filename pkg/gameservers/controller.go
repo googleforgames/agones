@@ -492,7 +492,10 @@ func (c *Controller) syncGameServerRequestReadyState(gs *stablev1alpha1.GameServ
 	gsCopy.Status.NodeName = pod.Spec.NodeName
 	// HostPort is always going to be populated, even when dynamic
 	// This will be a double up of information, but it will be easier to read
-	gsCopy.Status.Port = gs.Spec.HostPort
+	gsCopy.Status.Ports = make([]stablev1alpha1.GameServerStatusPort, len(gs.Spec.Ports))
+	for i, p := range gs.Spec.Ports {
+		gsCopy.Status.Ports[i] = p.Status()
+	}
 
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {

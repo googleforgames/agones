@@ -19,7 +19,10 @@ metadata:
   # will need to be created with `kubectl create`
   generateName: rust-simple-
 spec:
-  containerPort: 7654
+  ports:
+    - name: default
+      portPolicy: "dynamic"
+      containerPort: 7654
   template:
     spec:
       containers:

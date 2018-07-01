@@ -33,9 +33,7 @@ import (
 
 func newSingleContainerSpec() v1alpha1.GameServerSpec {
 	return v1alpha1.GameServerSpec{
-		ContainerPort: 7777,
-		HostPort:      9999,
-		PortPolicy:    v1alpha1.Static,
+		Ports: []v1alpha1.GameServerPort{{ContainerPort: 7777, HostPort: 9999, PortPolicy: v1alpha1.Static}},
 		Template: corev1.PodTemplateSpec{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},

@@ -86,3 +86,40 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
 
 - `fleetName` is the name of an existing Fleet. If this doesn't exist, and error will be returned
   when the `FleetAllocation` is created
+
+---
+
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+> Development version of the Fleet spec
+
+```yaml
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: Fleet
+metadata:
+  name: fleet-example
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%  
+  template:
+    metadata:
+      labels:
+        foo: bar
+    spec:
+      ports:
+      - name: default
+        portPolicy: "dynamic"
+        containerPort: 26000
+      health:
+        initialDelaySeconds: 30
+        periodSeconds: 60
+      template:
+        spec:
+          containers:
+          - name: example-server
+            image: gcr.io/agones/test-server:0.1
+```  

@@ -15,6 +15,8 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -108,18 +110,10 @@ type GameServerSpec struct {
 	// Container specifies which Pod container is the game server. Only required if there is more than one
 	// container defined
 	Container string `json:"container,omitempty"`
-	// PortPolicy defines the policy for how the HostPort is populated.
-	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
-	// at installation time.
-	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
-	// connect to
-	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
-	// ContainerPort is the port that is being opened on the game server process
-	ContainerPort int32 `json:"containerPort"`
-	// HostPort the port exposed on the host for clients to connect to
-	HostPort int32 `json:"hostPort,omitempty"`
-	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
-	Protocol corev1.Protocol `json:"protocol,omitempty"`
+	// GameServerPort is deprecated, to be removed in 0.4.0:
+	*GameServerPort `json:",inline,omitempty"`
+	// Ports are the array of ports that can be exposed via the game server
+	Ports []GameServerPort `json:"ports"`
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
@@ -144,41 +138,61 @@ type Health struct {
 	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty"`
 }
 
+// GameServerPort defines a set of Ports that
+// are to be exposed via the GameServer
+type GameServerPort struct {
+	// Name is the descriptive name of the port
+	Name string `json:"name,omitempty"`
+	// PortPolicy defines the policy for how the HostPort is populated.
+	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
+	// at installation time.
+	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
+	// connect to
+	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
+	// ContainerPort is the port that is being opened on the game server process
+	ContainerPort int32 `json:"containerPort"`
+	// HostPort the port exposed on the host for clients to connect to
+	HostPort int32 `json:"hostPort,omitempty"`
+	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
+	Protocol corev1.Protocol `json:"protocol,omitempty"`
+}
+
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// State is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State    State  `json:"state"`
-	Port     int32  `json:"port"`
-	Address  string `json:"address"`
-	NodeName string `json:"nodeName"`
+	State    State                  `json:"state"`
+	Ports    []GameServerStatusPort `json:"ports"`
+	Address  string                 `json:"address"`
+	NodeName string                 `json:"nodeName"`
+}
+
+// GameServerStatusPort shows the port that was allocated to a
+// GameServer.
+type GameServerStatusPort struct {
+	Name string `json:"name,omitempty"`
+	Port int32  `json:"port"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
 func (gs *GameServer) ApplyDefaults() {
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
 
+	gs.applyContainerDefaults()
+	gs.applyLegacyConversion()
+	gs.applyPortDefaults()
+	gs.applyStateDefaults()
+	gs.applyHealthDefaults()
+}
+
+// applyContainerDefaults applues the container defaults
+func (gs *GameServer) applyContainerDefaults() {
 	if len(gs.Spec.Template.Spec.Containers) == 1 {
 		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
 	}
+}
 
-	// basic spec
-	if gs.Spec.PortPolicy == "" {
-		gs.Spec.PortPolicy = Dynamic
-	}
-
-	if gs.Spec.Protocol == "" {
-		gs.Spec.Protocol = "UDP"
-	}
-
-	if gs.Status.State == "" {
-		if gs.Spec.PortPolicy == Dynamic {
-			gs.Status.State = PortAllocation
-		} else {
-			gs.Status.State = Creating
-		}
-	}
-
-	// health
+// applyHealthDefaults applies health checking defaults
+func (gs *GameServer) applyHealthDefaults() {
 	if !gs.Spec.Health.Disabled {
 		if gs.Spec.Health.PeriodSeconds <= 0 {
 			gs.Spec.Health.PeriodSeconds = 5
@@ -188,6 +202,38 @@ func (gs *GameServer) ApplyDefaults() {
 		}
 		if gs.Spec.Health.InitialDelaySeconds <= 0 {
 			gs.Spec.Health.InitialDelaySeconds = 5
+		}
+	}
+}
+
+// applyStateDefaults applies state defaults
+func (gs *GameServer) applyStateDefaults() {
+	if gs.Status.State == "" {
+		gs.Status.State = Creating
+		if gs.HasPortPolicy(Dynamic) {
+			gs.Status.State = PortAllocation
+		}
+	}
+}
+
+// applyLegacyConversion applies the legacy conversion
+func (gs *GameServer) applyLegacyConversion() {
+	if gs.Spec.GameServerPort != nil {
+		gs.Spec.Ports = append(gs.Spec.Ports, *gs.Spec.GameServerPort)
+		gs.Spec.GameServerPort = nil
+	}
+}
+
+// applyPortDefaults applies default values for all ports
+func (gs *GameServer) applyPortDefaults() {
+	for i, p := range gs.Spec.Ports {
+		// basic spec
+		if p.PortPolicy == "" {
+			gs.Spec.Ports[i].PortPolicy = Dynamic
+		}
+
+		if p.Protocol == "" {
+			gs.Spec.Ports[i].Protocol = "UDP"
 		}
 	}
 }
@@ -208,12 +254,14 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 	}
 
 	// no host port when using dynamic PortPolicy
-	if gs.Spec.HostPort > 0 && gs.Spec.PortPolicy == Dynamic {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "hostPort",
-			Message: "HostPort cannot be specified with a Dynamic PortPolicy",
-		})
+	for _, p := range gs.Spec.Ports {
+		if p.HostPort > 0 && p.PortPolicy == Dynamic {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   fmt.Sprintf("%s.hostPort", p.Name),
+				Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+			})
+		}
 	}
 
 	// make sure the container value points to a valid container
@@ -282,14 +330,44 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 		return pod, err
 	}
 
-	cp := corev1.ContainerPort{
-		ContainerPort: gs.Spec.ContainerPort,
-		HostPort:      gs.Spec.HostPort,
-		Protocol:      gs.Spec.Protocol,
+	for _, p := range gs.Spec.Ports {
+		cp := corev1.ContainerPort{
+			ContainerPort: p.ContainerPort,
+			HostPort:      p.HostPort,
+			Protocol:      p.Protocol,
+		}
+		gsContainer.Ports = append(gsContainer.Ports, cp)
 	}
-	gsContainer.Ports = append(gsContainer.Ports, cp)
 	pod.Spec.Containers[i] = gsContainer
 
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 	return pod, nil
+}
+
+// HasPortPolicy checks if there is a port with a given
+// PortPolicy
+func (gs *GameServer) HasPortPolicy(policy PortPolicy) bool {
+	for _, p := range gs.Spec.Ports {
+		if p.PortPolicy == policy {
+			return true
+		}
+	}
+	return false
+}
+
+// Status returns a GameServerSatusPort for this GameServerPort
+func (p GameServerPort) Status() GameServerStatusPort {
+	return GameServerStatusPort{Name: p.Name, Port: p.HostPort}
+}
+
+// CountPorts returns the number of
+// ports that have this type of PortPolicy
+func (gs *GameServer) CountPorts(policy PortPolicy) int {
+	count := 0
+	for _, p := range gs.Spec.Ports {
+		if p.PortPolicy == policy {
+			count++
+		}
+	}
+	return count
 }

@@ -19,10 +19,16 @@ metadata:
   # will need to be created with `kubectl create`
   generateName: cpp-simple-
 spec:
-  containerPort: 7654
+  replicas: 2
   template:
     spec:
-      containers:
-      - name: cpp-simple
-        image: gcr.io/agones-images/cpp-simple-server:0.1
-        # imagePullPolicy: Always # add for development
+      ports:
+      - name: default
+        portPolicy: "dynamic"
+        containerPort: 7654
+      template:
+        spec:
+          containers:
+            - name: cpp-simple
+              image: gcr.io/agones-images/cpp-simple-server:0.1
+              # imagePullPolicy: Always # add for development

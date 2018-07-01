@@ -23,7 +23,10 @@ spec:
   replicas: 2
   template:
     spec:
-      containerPort: 7654
+      ports:
+        - name: default
+          portPolicy: "dynamic"
+          containerPort: 7654
       template:
         spec:
           containers:

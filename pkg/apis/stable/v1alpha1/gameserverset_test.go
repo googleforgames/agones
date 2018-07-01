@@ -33,7 +33,7 @@ func TestGameServerSetGameServer(t *testing.T) {
 			Replicas: 10,
 			Template: GameServerTemplateSpec{
 				Spec: GameServerSpec{
-					ContainerPort: 1234,
+					GameServerPort: &GameServerPort{ContainerPort: 1234},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{{Name: "container", Image: "myimage"}},
@@ -59,7 +59,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 		Spec: GameServerSetSpec{
 			Replicas: 10,
 			Template: GameServerTemplateSpec{
-				Spec: GameServerSpec{ContainerPort: 1234},
+				Spec: GameServerSpec{GameServerPort: &GameServerPort{ContainerPort: 1234}},
 			},
 		},
 	}
