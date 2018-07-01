@@ -12,22 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Usually you would define a Fleet rather than a GameServerSet
-# directly. This is here mostly for testing purposes
+# This will be removed in 0.4.0
 
 apiVersion: "stable.agones.dev/v1alpha1"
-kind: GameServerSet
+kind: GameServer
 metadata:
-  name: cpp-simple
+  name: "simple-udp"
 spec:
-  replicas: 5
+  portPolicy: "dynamic"
+  containerPort: 7654
   template:
     spec:
-      containerPort: 7654
-      template:
-        spec:
-          health:
-            initialDelaySeconds: 15
-          containers:
-            - name: cpp-simple
-              image: gcr.io/agones-images/cpp-simple-server:0.1
+      containers:
+      - name: simple-udp
+        image: gcr.io/agones-images/udp-server:0.1

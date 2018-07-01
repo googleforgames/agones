@@ -422,7 +422,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		new := fixture.DeepCopy()
 		new.Spec.Template = v1alpha1.GameServerTemplateSpec{
 			Spec: v1alpha1.GameServerSpec{
-				PortPolicy: v1alpha1.Static,
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Static}},
 			},
 		}
 		newRaw, err := json.Marshal(new)

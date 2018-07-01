@@ -144,12 +144,12 @@ func TestControllerSyncFleet(t *testing.T) {
 	t.Run("gameserverset with different image details", func(t *testing.T) {
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
-		f.Spec.Template.Spec.HostPort = 5555
+		f.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{HostPort: 5555}}
 		c, m := newFakeController()
 		gsSet := f.GameServerSet()
 		gsSet.ObjectMeta.Name = "gsSet1"
 		gsSet.ObjectMeta.UID = "4321"
-		gsSet.Spec.Template.Spec.HostPort = 7777
+		gsSet.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{HostPort: 7777}}
 		gsSet.Spec.Replicas = f.Spec.Replicas
 		gsSet.Status.Replicas = 5
 		updated := false
@@ -168,7 +168,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			ca := action.(k8stesting.CreateAction)
 			gsSet := ca.GetObject().(*v1alpha1.GameServerSet)
 			assert.Equal(t, int32(2), gsSet.Spec.Replicas)
-			assert.Equal(t, f.Spec.Template.Spec.HostPort, gsSet.Spec.Template.Spec.HostPort)
+			assert.Equal(t, f.Spec.Template.Spec.Ports[0].HostPort, gsSet.Spec.Template.Spec.Ports[0].HostPort)
 
 			return true, gsSet, nil
 		})
@@ -360,7 +360,7 @@ func TestControllerFilterGameServerSetByActive(t *testing.T) {
 
 	// different GameServer Template
 	gsSet2 := f.GameServerSet()
-	gsSet2.Spec.Template.Spec.HostPort = 9999
+	gsSet2.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{HostPort: 9999}}
 
 	// one active
 	active, rest := c.filterGameServerSetByActive(f, []*v1alpha1.GameServerSet{gsSet1, gsSet2})
@@ -368,7 +368,7 @@ func TestControllerFilterGameServerSetByActive(t *testing.T) {
 	assert.Equal(t, []*v1alpha1.GameServerSet{gsSet2}, rest)
 
 	// none active
-	gsSet1.Spec.Template.Spec.HostPort = 9999
+	gsSet1.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{HostPort: 9999}}
 	active, rest = c.filterGameServerSetByActive(f, []*v1alpha1.GameServerSet{gsSet1, gsSet2})
 	assert.Nil(t, active)
 	assert.Equal(t, []*v1alpha1.GameServerSet{gsSet1, gsSet2}, rest)

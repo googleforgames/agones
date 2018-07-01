@@ -66,8 +66,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"set basic defaults on a very simple gameserver": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
+					Ports: []GameServerPort{{ContainerPort: 999}},
 					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+						Spec: corev1.PodSpec{Containers: []corev1.Container{
+							{Name: "testing", Image: "testing/image"},
+						}}}},
 			},
 			container: "testing",
 			expected: expected{
@@ -85,8 +88,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					Container: "testing2", Protocol: "TCP",
-					PortPolicy: Static,
+					Container: "testing2",
+					GameServerPort: &GameServerPort{
+						Protocol:   "TCP",
+						PortPolicy: Static,
+					},
 					Health: Health{
 						Disabled:            false,
 						PeriodSeconds:       12,
@@ -117,7 +123,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"set basic defaults on static gameserver": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					PortPolicy: Static,
+					GameServerPort: &GameServerPort{PortPolicy: Static},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -137,6 +143,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"health is disabled": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
+					Ports:  []GameServerPort{{ContainerPort: 999}},
 					Health: Health{Disabled: true},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
@@ -151,6 +158,27 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 			},
 		},
+		"convert from legacy single port to multiple": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					GameServerPort: &GameServerPort{
+						ContainerPort: 777,
+						HostPort:      777,
+						PortPolicy:    Static,
+						Protocol:      corev1.ProtocolTCP,
+					},
+					Health: Health{Disabled: true},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol: corev1.ProtocolTCP,
+				state:    Creating,
+				policy:   Static,
+				health:   Health{Disabled: true},
+			},
+		},
 	}
 
 	for name, test := range data {
@@ -160,7 +188,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			spec := test.gameServer.Spec
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
 			assert.Equal(t, test.container, spec.Container)
-			assert.Equal(t, test.expected.protocol, spec.Protocol)
+			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 		})
@@ -180,9 +208,12 @@ func TestGameServerValidate(t *testing.T) {
 
 	gs = GameServer{
 		Spec: GameServerSpec{
-			Container:  "",
-			HostPort:   5001,
-			PortPolicy: Dynamic,
+			Container: "",
+			Ports: []GameServerPort{{
+				Name:       "main",
+				HostPort:   5001,
+				PortPolicy: Dynamic,
+			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{Containers: []corev1.Container{
 					{Name: "testing", Image: "testing/image"},
@@ -190,22 +221,25 @@ func TestGameServerValidate(t *testing.T) {
 				}}}},
 	}
 	ok, causes = gs.Validate()
-	fields := []string{}
+	var fields []string
 	for _, f := range causes {
 		fields = append(fields, f.Field)
 	}
 	assert.False(t, ok)
 	assert.Len(t, causes, 3)
-	assert.Contains(t, fields, "container", "hostPort")
+	assert.Contains(t, fields, "container")
+	assert.Contains(t, fields, "main.hostPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 }
 
 func TestGameServerPod(t *testing.T) {
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
 		Spec: GameServerSpec{
-			ContainerPort: 7777,
-			HostPort:      9999,
-			PortPolicy:    Static,
+			GameServerPort: &GameServerPort{
+				ContainerPort: 7777,
+				HostPort:      9999,
+				PortPolicy:    Static,
+			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
@@ -223,8 +257,8 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
 	assert.Equal(t, "agones-sdk", pod.Spec.ServiceAccountName)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
-	assert.Equal(t, fixture.Spec.HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
-	assert.Equal(t, fixture.Spec.ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
+	assert.Equal(t, fixture.Spec.Ports[0].HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
+	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
 	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 
@@ -238,4 +272,16 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
 	assert.Equal(t, "sidecar", pod.Spec.Containers[1].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
+}
+
+func TestGameServerCountPorts(t *testing.T) {
+	fixture := &GameServer{Spec: GameServerSpec{Ports: []GameServerPort{
+		{PortPolicy: Dynamic},
+		{PortPolicy: Dynamic},
+		{PortPolicy: Dynamic},
+		{PortPolicy: Static},
+	}}}
+
+	assert.Equal(t, 3, fixture.CountPorts(Dynamic))
+	assert.Equal(t, 1, fixture.CountPorts(Static))
 }

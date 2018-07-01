@@ -156,33 +156,57 @@ func (pa *PortAllocator) syncPorts(key string) error {
 // Allocate assigns a port to the GameServer and returns it.
 // Return ErrPortNotFound if no port is allocatable
 func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-	if gs.Spec.PortPolicy != v1alpha1.Dynamic {
-		return gs, errors.Errorf("Port policy of %s is not supported for port allocation", gs.Spec.PortPolicy)
-	}
-
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
-	for _, n := range pa.portAllocations {
-		for p, taken := range n {
-			if !taken {
-				n[p] = true
-				pa.gameServerRegistry[gs.ObjectMeta.UID] = true
-				gs.Spec.HostPort = p
-				return gs, nil
+
+	type pn struct {
+		pa   portAllocation
+		port int32
+	}
+
+	// we only want this to be called inside the mutex lock
+	// so let's define the function here so it can never be called elsewhere.
+	// Also the return gives an escape from the double loop
+	findOpenPorts := func(amount int) []pn {
+		var ports []pn
+		for _, n := range pa.portAllocations {
+			for p, taken := range n {
+				if !taken {
+					ports = append(ports, pn{pa: n, port: p})
+					// only allocate as many ports as are asked for by the GameServer
+					if len(ports) == amount {
+						return ports
+					}
+				}
 			}
 		}
+		return ports
 	}
+
+	amount := gs.CountPorts(v1alpha1.Dynamic)
+	allocations := findOpenPorts(amount)
+
+	if len(allocations) == amount {
+		pa.gameServerRegistry[gs.ObjectMeta.UID] = true
+
+		for i, p := range gs.Spec.Ports {
+			if p.PortPolicy == v1alpha1.Dynamic {
+				// pop off allocation
+				var a pn
+				a, allocations = allocations[0], allocations[1:]
+				a.pa[a.port] = true
+				gs.Spec.Ports[i].HostPort = a.port
+			}
+		}
+
+		return gs, nil
+	}
+
 	return gs, ErrPortNotFound
 }
 
 // DeAllocate marks the given port as no longer allocated
 func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
-	if gs.Spec.PortPolicy != v1alpha1.Dynamic {
-		return
-	}
-	if gs.Spec.HostPort < pa.minPort || gs.Spec.HostPort > pa.maxPort {
-		return
-	}
 	// skip if it wasn't previously allocated
 	if _, ok := pa.gameServerRegistry[gs.ObjectMeta.UID]; !ok {
 		pa.logger.WithField("gs", gs.ObjectMeta.Name).
@@ -191,7 +215,13 @@ func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
 	}
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
-	pa.portAllocations = setPortAllocation(gs.Spec.HostPort, pa.portAllocations, false)
+	for _, p := range gs.Spec.Ports {
+		if p.HostPort < pa.minPort || p.HostPort > pa.maxPort {
+			continue
+		}
+		pa.portAllocations = setPortAllocation(p.HostPort, pa.portAllocations, false)
+	}
+
 	delete(pa.gameServerRegistry, gs.ObjectMeta.UID)
 }
 
@@ -254,21 +284,7 @@ func (pa *PortAllocator) syncAll() error {
 	gsRegistry := map[types.UID]bool{}
 
 	// place to put GameServer port allocations that are not ready yet/after the ready state
-	var nonReadyNodesPorts []int32
-	// Check GameServers as well, as some
-	for _, gs := range gameservers {
-		if gs.Spec.PortPolicy == v1alpha1.Dynamic {
-			gsRegistry[gs.ObjectMeta.UID] = true
-
-			// if the node doesn't exist, it's likely unscheduled
-			_, ok := nodePorts[gs.Status.NodeName]
-			if gs.Status.NodeName != "" && ok {
-				nodePorts[gs.Status.NodeName][gs.Status.Port] = true
-			} else if gs.Spec.HostPort != 0 {
-				nonReadyNodesPorts = append(nonReadyNodesPorts, gs.Spec.HostPort)
-			}
-		}
-	}
+	nonReadyNodesPorts := pa.registerExistingGameServerPorts(gameservers, gsRegistry, nodePorts)
 
 	// this gives us back an ordered node list.
 	allocations := make([]portAllocation, len(nodePorts))
@@ -291,6 +307,29 @@ func (pa *PortAllocator) syncAll() error {
 	pa.nodeRegistry = nodeRegistry
 
 	return nil
+}
+
+// registerExistingGameServerPorts registers the gameservers against gsRegistry and the ports against nodePorts.
+// any GameServers allocated a port, but not yet assigned a Node will returned as an array of port values.
+func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*v1alpha1.GameServer, gsRegistry map[types.UID]bool, nodePorts map[string]portAllocation) []int32 {
+	var nonReadyNodesPorts []int32
+
+	for _, gs := range gameservers {
+		for _, p := range gs.Spec.Ports {
+			if p.PortPolicy == v1alpha1.Dynamic {
+				gsRegistry[gs.ObjectMeta.UID] = true
+
+				// if the node doesn't exist, it's likely unscheduled
+				_, ok := nodePorts[gs.Status.NodeName]
+				if gs.Status.NodeName != "" && ok {
+					nodePorts[gs.Status.NodeName][p.HostPort] = true
+				} else if p.HostPort != 0 {
+					nonReadyNodesPorts = append(nonReadyNodesPorts, p.HostPort)
+				}
+			}
+		}
+	}
+	return nonReadyNodesPorts
 }
 
 // nodePortAllocation returns a map of port allocations all set to being available

@@ -19,6 +19,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"strconv"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -27,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
@@ -41,6 +43,60 @@ var (
 func TestPortAllocatorAllocate(t *testing.T) {
 	t.Parallel()
 	fixture := dynamicGameServerFixture()
+
+	t.Run("test allocated port counts", func(t *testing.T) {
+		m := agtesting.NewMocks()
+		pa := NewPortAllocator(10, 50, m.KubeInformationFactory, m.AgonesInformerFactory)
+		nodeWatch := watch.NewFake()
+		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		defer cancel()
+
+		// Make sure the add's don't corrupt the sync
+		nodeWatch.Add(&n1)
+		nodeWatch.Add(&n2)
+		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+
+		err := pa.syncAll()
+		assert.Nil(t, err)
+
+		// single port dynamic
+		_, err = pa.Allocate(fixture.DeepCopy())
+		assert.Nil(t, err)
+		assert.Equal(t, 1, countTotalAllocatedPorts(pa))
+
+		_, err = pa.Allocate(fixture.DeepCopy())
+		assert.Nil(t, err)
+		assert.Equal(t, 2, countTotalAllocatedPorts(pa))
+
+		// double port, dynamic
+		copy := fixture.DeepCopy()
+		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
+		assert.Len(t, copy.Spec.Ports, 2)
+		_, err = pa.Allocate(copy.DeepCopy())
+		assert.Nil(t, err)
+		assert.Equal(t, 4, countTotalAllocatedPorts(pa))
+
+		// three ports, dynamic
+		copy = copy.DeepCopy()
+		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
+		assert.Len(t, copy.Spec.Ports, 3)
+		_, err = pa.Allocate(copy)
+		assert.Nil(t, err)
+		assert.Equal(t, 7, countTotalAllocatedPorts(pa))
+
+		// 4 ports, 1 static, rest dynamic
+		copy = copy.DeepCopy()
+		expected := int32(9999)
+		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: v1alpha1.Static})
+		assert.Len(t, copy.Spec.Ports, 4)
+		_, err = pa.Allocate(copy)
+		assert.Nil(t, err)
+		assert.Equal(t, 10, countTotalAllocatedPorts(pa))
+		assert.Equal(t, v1alpha1.Static, copy.Spec.Ports[3].PortPolicy)
+		assert.Equal(t, expected, copy.Spec.Ports[3].HostPort)
+	})
 
 	t.Run("ports are all allocated", func(t *testing.T) {
 		m := agtesting.NewMocks()
@@ -65,11 +121,56 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			for i := 10; i <= 20; i++ {
 				var p int32
 				gs, err := pa.Allocate(fixture.DeepCopy()) // nolint: vetshadow
-				assert.True(t, 10 <= gs.Spec.HostPort && gs.Spec.HostPort <= 20, "%v is not between 10 and 20", p)
+				assert.True(t, 10 <= gs.Spec.Ports[0].HostPort && gs.Spec.Ports[0].HostPort <= 20, "%v is not between 10 and 20", p)
 				assert.Nil(t, err)
 			}
 		}
 
+		// now we should have none left
+		_, err = pa.Allocate(fixture.DeepCopy())
+		assert.Equal(t, ErrPortNotFound, err)
+	})
+
+	t.Run("ports are all allocated with multiple ports per GameServers", func(t *testing.T) {
+		m := agtesting.NewMocks()
+		maxPort := int32(19) // make sure we have an even number
+		pa := NewPortAllocator(10, maxPort, m.KubeInformationFactory, m.AgonesInformerFactory)
+		nodeWatch := watch.NewFake()
+		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		defer cancel()
+
+		morePortFixture := fixture.DeepCopy()
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, v1alpha1.GameServerPort{Name: "static", ContainerPort: 6666, PortPolicy: v1alpha1.Static, HostPort: 9999})
+
+		// Make sure the add's don't corrupt the sync
+		nodeWatch.Add(&n1)
+		nodeWatch.Add(&n2)
+		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+
+		err := pa.syncAll()
+		assert.Nil(t, err)
+
+		// two nodes
+		for x := 0; x < 2; x++ {
+			// ports between 10 and 20, but there are 2 ports
+			for i := 10; i <= 14; i++ {
+				copy := morePortFixture.DeepCopy()
+				copy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
+				gs, err := pa.Allocate(copy) // nolint: vetshadow
+				logrus.WithField("uid", copy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
+				assert.Nil(t, err)
+				for _, p := range gs.Spec.Ports {
+					if p.PortPolicy == v1alpha1.Dynamic {
+						assert.True(t, 10 <= p.HostPort && p.HostPort <= maxPort, "%v is not between 10 and 20", p)
+					}
+				}
+			}
+		}
+
+		logrus.WithField("allocated", countTotalAllocatedPorts(pa)).WithField("count", len(pa.portAllocations[0])+len(pa.portAllocations[1])).Info("How many allocated")
 		// now we should have none left
 		_, err = pa.Allocate(fixture.DeepCopy())
 		assert.Equal(t, ErrPortNotFound, err)
@@ -92,8 +193,8 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		for i := 10; i <= 20; i++ {
 			gs, err := pa.Allocate(fixture.DeepCopy())
 			assert.Nil(t, err)
-			assert.NotContains(t, ports, gs.Spec.HostPort)
-			ports = append(ports, gs.Spec.HostPort)
+			assert.NotContains(t, ports, gs.Spec.Ports[0].HostPort)
+			ports = append(ports, gs.Spec.Ports[0].HostPort)
 		}
 	})
 }
@@ -119,7 +220,9 @@ func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 			for x := 0; x < 10; x++ {
 				logrus.WithField("x", x).WithField("i", i).Info("allocating!")
 				gs, err := pa.Allocate(fixture.DeepCopy())
-				assert.NotEmpty(t, gs.Spec.HostPort)
+				for _, p := range gs.Spec.Ports {
+					assert.NotEmpty(t, p.HostPort)
+				}
 				assert.Nil(t, err)
 			}
 			wg.Done()
@@ -145,11 +248,15 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 	err := pa.syncAll()
 	assert.Nil(t, err)
 
+	// gate
+	assert.NotEmpty(t, fixture.Spec.Ports)
+
 	for i := 0; i <= 100; i++ {
 		gs, err := pa.Allocate(fixture.DeepCopy())
 		assert.Nil(t, err)
-		assert.True(t, 10 <= gs.Spec.HostPort && gs.Spec.HostPort <= 20)
-		assert.Equal(t, 1, countAllocatedPorts(pa, gs.Spec.HostPort))
+		port := gs.Spec.Ports[0]
+		assert.True(t, 10 <= port.HostPort && port.HostPort <= 20)
+		assert.Equal(t, 1, countAllocatedPorts(pa, port.HostPort))
 		assert.Len(t, pa.gameServerRegistry, 1)
 
 		// test a non allocated
@@ -157,11 +264,11 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 		nonAllocatedGS.ObjectMeta.Name = "no"
 		nonAllocatedGS.ObjectMeta.UID = "no"
 		pa.DeAllocate(nonAllocatedGS)
-		assert.Equal(t, 1, countAllocatedPorts(pa, gs.Spec.HostPort))
+		assert.Equal(t, 1, countAllocatedPorts(pa, port.HostPort))
 		assert.Len(t, pa.gameServerRegistry, 1)
 
 		pa.DeAllocate(gs)
-		assert.Equal(t, 0, countAllocatedPorts(pa, gs.Spec.HostPort))
+		assert.Equal(t, 0, countAllocatedPorts(pa, port.HostPort))
 		assert.Len(t, pa.gameServerRegistry, 0)
 	}
 }
@@ -179,22 +286,34 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		gs1 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n1.ObjectMeta.Name}}
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+			},
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 		gs2 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n2.ObjectMeta.Name}}
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+			},
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 		gs3 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 11},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 11, NodeName: n3.ObjectMeta.Name}}
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+			},
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n3.ObjectMeta.Name}}
 		gs4 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 12},
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
+			},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
 		gs5 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", UID: "5"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 12},
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
+			},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
 		gs6 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", UID: "6"},
-			Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Static, HostPort: 12},
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Static, HostPort: 12}},
+			},
 			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
 		gsl := &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}}
 		return true, gsl, nil
@@ -229,17 +348,25 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	gs1 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
-		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n1.ObjectMeta.Name}}
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
-		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 11},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 11, NodeName: n1.ObjectMeta.Name}}
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n1.ObjectMeta.Name}}
 	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
-		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n2.ObjectMeta.Name}}
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
-		Spec:   v1alpha1.GameServerSpec{PortPolicy: v1alpha1.Dynamic, HostPort: 10},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Port: 10, NodeName: n2.ObjectMeta.Name}}
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 
 	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
@@ -331,7 +458,7 @@ func TestPortAllocatorNodeEvents(t *testing.T) {
 
 	// add a game server
 	gs, err := pa.Allocate(fixture.DeepCopy())
-	port := gs.Spec.HostPort
+	port := gs.Spec.Ports[0].HostPort
 
 	assert.Nil(t, err)
 	gsWatch.Add(gs)
@@ -446,8 +573,7 @@ func TestTakePortAllocation(t *testing.T) {
 func dynamicGameServerFixture() *v1alpha1.GameServer {
 	return &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
 		Spec: v1alpha1.GameServerSpec{
-			ContainerPort: 7777,
-			PortPolicy:    v1alpha1.Dynamic,
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, ContainerPort: 7777}},
 		},
 	}
 }
@@ -459,6 +585,19 @@ func countAllocatedPorts(pa *PortAllocator, p int32) int {
 	for _, node := range pa.portAllocations {
 		if node[p] {
 			count++
+		}
+	}
+	return count
+}
+
+// countTotalAllocatedPorts counts the total number of allocated ports
+func countTotalAllocatedPorts(pa *PortAllocator) int {
+	count := 0
+	for _, node := range pa.portAllocations {
+		for _, alloc := range node {
+			if alloc {
+				count++
+			}
 		}
 	}
 	return count

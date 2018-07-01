@@ -48,8 +48,10 @@ spec:
         foo: bar
     # GameServer specification
     spec:
-      portPolicy: "dynamic"
-      containerPort: 26000
+      ports:
+      - name: default
+        portPolicy: "dynamic"
+        containerPort: 26000
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
