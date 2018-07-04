@@ -65,7 +65,7 @@ RUN go get -u github.com/golang/dep/cmd/dep && \
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
-    git clone -b kubernetes-1.9.2 --depth=3 https://github.com/kubernetes/code-generator.git
+    git clone -b kubernetes-1.10.5 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install rust
 ENV RUSTUP_HOME=/usr/local/rustup \
