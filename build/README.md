@@ -30,6 +30,7 @@ tasks you may wish to accomplish.
       1. [Build Image Targets](#build-image-targets)
       1. [Google Cloud Platform](#google-cloud-platform)
       1. [Minikube](#minikube)
+   1. [Dependencies](#dependencies)      
 <!-- ToC end -->
 
 ## Building on Different Platforms
@@ -355,3 +356,7 @@ instead of `make shell` to start an interactive shell for development on Minikub
 #### `make minikube-transfer-image`
 Convenience target for transferring images into minikube.
 Use TAG to specify the image to transfer into minikube
+
+## Dependencies
+
+This project uses the [dep](https://github.com/golang/dep) as a dependency manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/Gopkg.toml).
