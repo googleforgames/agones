@@ -14,7 +14,7 @@
 
 FROM alpine:3.7
 
-RUN adduser -D server    
+RUN adduser -D server
 
 COPY ./bin/server /home/server/server
     

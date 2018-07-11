@@ -78,6 +78,14 @@ class SDK final {
     std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
     }
+    // Retrieve the current GameServer data
+    virtual ::grpc::Status GetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::GameServer* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>> AsyncGetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>>(AsyncGetGameServerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>> PrepareAsyncGetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>>(PrepareAsyncGetGameServerRaw(context, request, cq));
+    }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::Empty>* PrepareAsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
@@ -86,6 +94,8 @@ class SDK final {
     virtual ::grpc::ClientWriterInterface< ::stable::agones::dev::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) = 0;
     virtual ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncWriterInterface< ::stable::agones::dev::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>* AsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::stable::agones::dev::sdk::GameServer>* PrepareAsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -113,6 +123,13 @@ class SDK final {
     std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>> PrepareAsyncHealth(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>>(PrepareAsyncHealthRaw(context, response, cq));
     }
+    ::grpc::Status GetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::GameServer* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>> AsyncGetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>>(AsyncGetGameServerRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>> PrepareAsyncGetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>>(PrepareAsyncGetGameServerRaw(context, request, cq));
+    }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
@@ -123,9 +140,12 @@ class SDK final {
     ::grpc::ClientWriter< ::stable::agones::dev::sdk::Empty>* HealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response) override;
     ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>* AsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncWriter< ::stable::agones::dev::sdk::Empty>* PrepareAsyncHealthRaw(::grpc::ClientContext* context, ::stable::agones::dev::sdk::Empty* response, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>* AsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>* PrepareAsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Ready_;
     const ::grpc::internal::RpcMethod rpcmethod_Shutdown_;
     const ::grpc::internal::RpcMethod rpcmethod_Health_;
+    const ::grpc::internal::RpcMethod rpcmethod_GetGameServer_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -139,6 +159,8 @@ class SDK final {
     virtual ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response);
     // Send a Empty every d Duration to declare that this GameSever is healthy
     virtual ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response);
+    // Retrieve the current GameServer data
+    virtual ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Ready : public BaseClass {
@@ -200,7 +222,27 @@ class SDK final {
       ::grpc::Service::RequestAsyncClientStreaming(2, context, reader, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Ready<WithAsyncMethod_Shutdown<WithAsyncMethod_Health<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_GetGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_GetGameServer() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
+    ~WithAsyncMethod_GetGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestGetGameServer(::grpc::ServerContext* context, ::stable::agones::dev::sdk::Empty* request, ::grpc::ServerAsyncResponseWriter< ::stable::agones::dev::sdk::GameServer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Ready<WithAsyncMethod_Shutdown<WithAsyncMethod_Health<WithAsyncMethod_GetGameServer<Service > > > > AsyncService;
   template <class BaseClass>
   class WithGenericMethod_Ready : public BaseClass {
    private:
@@ -253,6 +295,23 @@ class SDK final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_GetGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_GetGameServer() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
+    ~WithGenericMethod_GetGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_Ready : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
@@ -292,9 +351,29 @@ class SDK final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedShutdown(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agones::dev::sdk::Empty,::stable::agones::dev::sdk::Empty>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Shutdown<Service > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_GetGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_GetGameServer() {
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler< ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::GameServer>(std::bind(&WithStreamedUnaryMethod_GetGameServer<BaseClass>::StreamedGetGameServer, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_GetGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response) final override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedGetGameServer(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::stable::agones::dev::sdk::Empty,::stable::agones::dev::sdk::GameServer>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<Service > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Shutdown<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_Ready<WithStreamedUnaryMethod_Shutdown<WithStreamedUnaryMethod_GetGameServer<Service > > > StreamedService;
 };
 
 }  // namespace sdk

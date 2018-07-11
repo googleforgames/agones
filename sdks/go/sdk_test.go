@@ -52,6 +52,10 @@ func TestSDK(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, sm.ready)
 	assert.True(t, sm.shutdown)
+
+	gs, err := s.GameServer()
+	assert.Nil(t, err)
+	assert.NotNil(t, gs)
 }
 
 var _ sdk.SDKClient = &sdkMock{}
@@ -61,6 +65,10 @@ type sdkMock struct {
 	ready    bool
 	shutdown bool
 	hm       *healthMock
+}
+
+func (m *sdkMock) GetGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (*sdk.GameServer, error) {
+	return &sdk.GameServer{}, nil
 }
 
 func (m *sdkMock) Ready(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {

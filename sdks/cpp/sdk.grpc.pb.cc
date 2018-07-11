@@ -37,6 +37,7 @@ static const char* SDK_method_names[] = {
   "/stable.agones.dev.sdk.SDK/Ready",
   "/stable.agones.dev.sdk.SDK/Shutdown",
   "/stable.agones.dev.sdk.SDK/Health",
+  "/stable.agones.dev.sdk.SDK/GetGameServer",
 };
 
 std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -49,6 +50,7 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_Ready_(SDK_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Shutdown_(SDK_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Health_(SDK_method_names[2], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
+  , rpcmethod_GetGameServer_(SDK_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) {
@@ -87,6 +89,18 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::ClientAsyncWriterFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Health_, context, response, false, nullptr);
 }
 
+::grpc::Status SDK::Stub::GetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::GameServer* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_GetGameServer_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::AsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_GetGameServer_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::PrepareAsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_GetGameServer_, context, request, false);
+}
+
 SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[0],
@@ -103,6 +117,11 @@ SDK::Service::Service() {
       ::grpc::internal::RpcMethod::CLIENT_STREAMING,
       new ::grpc::internal::ClientStreamingHandler< SDK::Service, ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::Empty>(
           std::mem_fn(&SDK::Service::Health), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[3],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::GameServer>(
+          std::mem_fn(&SDK::Service::GetGameServer), this)));
 }
 
 SDK::Service::~Service() {
@@ -125,6 +144,13 @@ SDK::Service::~Service() {
 ::grpc::Status SDK::Service::Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::stable::agones::dev::sdk::Empty>* reader, ::stable::agones::dev::sdk::Empty* response) {
   (void) context;
   (void) reader;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::GetGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response) {
+  (void) context;
+  (void) request;
   (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }

@@ -12,6 +12,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}.rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}.rc if release candidate)
 - [ ] Run `make gen-install`
+- [ ] Ensure all example images exist on gcr.io/agones-images
+- [ ] If full release, update documentation with updated example images tags
 - [ ] If RC release, update all ⚠️⚠️⚠️ warnings to: "**This is currently a release candidate feature**"
 - [ ] If full release, remove all instances of "⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️"
 - [ ] If full release, update install docs with the new release version

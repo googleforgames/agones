@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"agones.dev/agones/sdks/go"
+	"encoding/json"
+	coresdk "agones.dev/agones/pkg/sdk"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time
@@ -86,6 +88,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		// turns off the health pings
 		case "UNHEALTHY":
 			close(stop)
+
+		case "GAMESERVER":
+			writeGameServerName(s, conn, sender)
 		}
 
 		// echo it back
@@ -93,6 +98,25 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		if _, err = conn.WriteTo([]byte(ack), sender); err != nil {
 			log.Fatalf("Could not write to udp stream: %v", err)
 		}
+	}
+}
+
+// writes the GameServer name to the connection UDP stream
+func writeGameServerName(s *sdk.SDK, conn net.PacketConn, sender net.Addr) {
+	var gs *coresdk.GameServer
+	gs, err := s.GameServer()
+	if err != nil {
+		log.Fatalf("Could not retrieve GameServer: %v", err)
+	}
+	var j []byte
+	j, err = json.Marshal(gs)
+	if err != nil {
+		log.Fatalf("error mashalling GameServer to JSON: %v", err)
+	}
+	log.Printf("GameServer: %s \n", string(j))
+	msg := "NAME: " + gs.ObjectMeta.Name + "\n"
+	if _, err = conn.WriteTo([]byte(msg), sender); err != nil {
+		log.Fatalf("Could not write to udp stream: %v", err)
 	}
 }
 

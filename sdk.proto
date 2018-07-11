@@ -42,7 +42,59 @@ service SDK {
 			body: "*"
 		};
     }
+    // Retrieve the current GameServer data
+    rpc GetGameServer (Empty) returns (GameServer) {
+        option (google.api.http) = {
+            get: "/gameserver"
+        };
+    }
 }
 
 message Empty {
+}
+
+// A GameServer Custom Resource Definition object
+// We will only export those resources that make the most
+// sense. Can always expand to more as needed.
+message GameServer {
+    ObjectMeta object_meta = 1;
+    Spec spec = 2;
+    Status status = 3;
+
+    // representation of the K8s ObjectMeta resource
+    message ObjectMeta {
+        string name = 1;
+        string namespace = 2;
+        string uid = 3;
+        string resource_version = 4;
+        int64 generation = 5;
+        // timestamp is in Epoch format, unit: seconds
+        int64 creation_timestamp = 6;
+        // optional deletion timestamp in Epoch format, unit: seconds
+        int64 deletion_timestamp = 7;
+        map<string, string> annotations = 8;
+        map<string, string> labels = 9;
+    }
+
+    message Spec {
+        Health health = 1;
+
+        message Health {
+            bool Disabled = 1;
+            int32 PeriodSeconds = 2;
+            int32 FailureThreshold = 3;
+            int32 InitialDelaySeconds = 4;
+        }
+    }
+
+    message Status {
+        message Port {
+            string name = 1;
+            int32 port = 2;
+        }
+
+        string state = 1;
+        string address = 2;
+        repeated Port ports = 3;
+    }
 }

@@ -25,6 +25,8 @@ import (
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	typedv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -33,6 +35,7 @@ import (
 	"golang.org/x/net/context"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
@@ -50,7 +53,10 @@ type SDKServer struct {
 	logger                 *logrus.Entry
 	gameServerName         string
 	namespace              string
+	informerFactory        externalversions.SharedInformerFactory
 	gameServerGetter       typedv1alpha1.GameServersGetter
+	gameServerLister       v1alpha1.GameServerLister
+	gameServerSynced       cache.InformerSynced
 	server                 *http.Server
 	clock                  clock.Clock
 	healthDisabled         bool
@@ -71,10 +77,19 @@ func NewSDKServer(gameServerName, namespace string,
 	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
 
+	// limit the informer to only working with the gameserver that the sdk is attached to
+	factory := externalversions.NewFilteredSharedInformerFactory(agonesClient, 30*time.Second, namespace, func(opts *metav1.ListOptions) {
+		s1 := fields.OneTermEqualSelector("metadata.name", gameServerName)
+		opts.FieldSelector = s1.String()
+	})
+	gameServers := factory.Stable().V1alpha1().GameServers()
+
 	s := &SDKServer{
 		gameServerName:   gameServerName,
 		namespace:        namespace,
 		gameServerGetter: agonesClient.StableV1alpha1(),
+		gameServerLister: gameServers.Lister(),
+		gameServerSynced: gameServers.Informer().HasSynced,
 		server: &http.Server{
 			Addr:    ":8080",
 			Handler: mux,
@@ -87,6 +102,7 @@ func NewSDKServer(gameServerName, namespace string,
 		healthFailureCount:     0,
 	}
 
+	s.informerFactory = factory
 	s.logger = runtime.NewLoggerWithType(s)
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -153,6 +169,9 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
+	s.informerFactory.Start(stop)
+	cache.WaitForCacheSync(stop, s.gameServerSynced)
+
 	s.workerqueue.Run(1, stop)
 }
 
@@ -161,7 +180,7 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	s.logger.WithField("state", state).Info("Updating state")
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
-	gs, err := gameServers.Get(s.gameServerName, metav1.GetOptions{})
+	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
 	if err != nil {
 		return errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
 	}
@@ -214,6 +233,61 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 		s.logger.Info("Health Ping Received")
 		s.touchHealthLastUpdated()
 	}
+}
+
+// GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
+func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
+	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
+	}
+
+	return s.convert(gs), nil
+}
+
+// convert converts a K8s GameServer object, into a gRPC SDK GameServer object
+func (s *SDKServer) convert(gs *stablev1alpha1.GameServer) *sdk.GameServer {
+	meta := gs.ObjectMeta
+	status := gs.Status
+	health := gs.Spec.Health
+	result := &sdk.GameServer{
+		ObjectMeta: &sdk.GameServer_ObjectMeta{
+			Name:              meta.Name,
+			Namespace:         meta.Namespace,
+			Uid:               string(meta.UID),
+			ResourceVersion:   meta.ResourceVersion,
+			Generation:        meta.Generation,
+			CreationTimestamp: meta.CreationTimestamp.Unix(),
+			Annotations:       meta.Annotations,
+			Labels:            meta.Labels,
+		},
+		Spec: &sdk.GameServer_Spec{
+			Health: &sdk.GameServer_Spec_Health{
+				Disabled:            health.Disabled,
+				PeriodSeconds:       health.PeriodSeconds,
+				FailureThreshold:    health.FailureThreshold,
+				InitialDelaySeconds: health.InitialDelaySeconds,
+			},
+		},
+		Status: &sdk.GameServer_Status{
+			State:   string(status.State),
+			Address: status.Address,
+		},
+	}
+	if meta.DeletionTimestamp != nil {
+		result.ObjectMeta.DeletionTimestamp = meta.DeletionTimestamp.Unix()
+	}
+
+	// loop around and add all the ports
+	for _, p := range status.Ports {
+		grpcPort := &sdk.GameServer_Status_Port{
+			Name: p.Name,
+			Port: p.Port,
+		}
+		result.Status.Ports = append(result.Status.Ports, grpcPort)
+	}
+
+	return result
 }
 
 // runHealth actively checks the health, and if not
