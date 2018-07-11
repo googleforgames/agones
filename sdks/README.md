@@ -46,6 +46,23 @@ This tells Agones to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 
 backing Pod will be deleted, if they have not shut themselves down already. 
 
+### GameServer()
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+This returns most of the backing GameServer configuration and Status. This can be useful
+for instances where you may want to know Health check configuration, or the IP and Port
+the GameServer is currently allocated to.
+
+Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
+the returned object is limited to that configuration that was deemed useful. If there are
+areas that you feel are missing, please [file an issue](https://github.com/GoogleCloudPlatform/agones/issues) or pull request.
+
+The easiest way to see what is exposed, is to check the [`sdk.proto`](https://github.com/GoogleCloudPlatform/agones/blob/master/sdk.proto),
+specifically at the `message GameServer`.
+
+For language specific documentation, have a look at the respective source (linked above), 
+and the [examples](../examples).
+
 ## Local Development
 
 When the game server is running on Agones, the SDK communicates over TCP to a small

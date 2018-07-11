@@ -71,3 +71,8 @@ func (s *SDK) Shutdown() error {
 func (s *SDK) Health() error {
 	return errors.Wrap(s.health.Send(&sdk.Empty{}), "could not send Health ping")
 }
+
+// GameServer retrieve the GameServer details
+func (s *SDK) GameServer() (*sdk.GameServer, error) {
+	return s.client.GetGameServer(s.ctx, &sdk.Empty{})
+}

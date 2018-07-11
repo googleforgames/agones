@@ -63,3 +63,46 @@ Call when the GameServer session is over and it's time to shut down
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/shutdown
 ```
+
+### GameServer
+
+⚠️⚠️⚠️ **/gameserver is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+Call when you want to retrieve the backing `GameServer` configuration details
+
+- Path: `/gameserver`
+- Method: `GET`
+
+```bash
+$ curl -H "Content-Type: application/json" -X GET http://localhost:59358/gameserver
+```
+
+Response:
+```json
+{
+    "object_meta": {
+        "name": "local",
+        "namespace": "default",
+        "uid": "1234",
+        "resource_version": "v1",
+        "generation": "1",
+        "creation_timestamp": "1531795395",
+        "annotations": {
+            "annotation": "true"
+        },
+        "labels": {
+            "islocal": "true"
+        }
+    },
+    "status": {
+        "state": "Ready",
+        "address": "127.0.0.1",
+        "ports": [
+            {
+                "name": "default",
+                "port": 7777
+            }
+        ]
+    }
+}
+```

@@ -54,6 +54,13 @@ const METHOD_SDK_HEALTH: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> 
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
+const METHOD_SDK_GET_GAME_SERVER: ::grpcio::Method<super::sdk::Empty, super::sdk::GameServer> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::Unary,
+    name: "/stable.agones.dev.sdk.SDK/GetGameServer",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
+
 pub struct SdkClient {
     client: ::grpcio::Client,
 }
@@ -104,6 +111,22 @@ impl SdkClient {
     pub fn health(&self) -> ::grpcio::Result<(::grpcio::ClientCStreamSender<super::sdk::Empty>, ::grpcio::ClientCStreamReceiver<super::sdk::Empty>)> {
         self.health_opt(::grpcio::CallOption::default())
     }
+
+    pub fn get_game_server_opt(&self, req: &super::sdk::Empty, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::GameServer> {
+        self.client.unary_call(&METHOD_SDK_GET_GAME_SERVER, req, opt)
+    }
+
+    pub fn get_game_server(&self, req: &super::sdk::Empty) -> ::grpcio::Result<super::sdk::GameServer> {
+        self.get_game_server_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn get_game_server_async_opt(&self, req: &super::sdk::Empty, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::GameServer>> {
+        self.client.unary_call_async(&METHOD_SDK_GET_GAME_SERVER, req, opt)
+    }
+
+    pub fn get_game_server_async(&self, req: &super::sdk::Empty) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::GameServer>> {
+        self.get_game_server_async_opt(req, ::grpcio::CallOption::default())
+    }
     pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
         self.client.spawn(f)
     }
@@ -113,6 +136,7 @@ pub trait Sdk {
     fn ready(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
     fn shutdown(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
     fn health(&self, ctx: ::grpcio::RpcContext, stream: ::grpcio::RequestStream<super::sdk::Empty>, sink: ::grpcio::ClientStreamingSink<super::sdk::Empty>);
+    fn get_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::GameServer>);
 }
 
 pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
@@ -128,6 +152,10 @@ pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let instance = s.clone();
     builder = builder.add_client_streaming_handler(&METHOD_SDK_HEALTH, move |ctx, req, resp| {
         instance.health(ctx, req, resp)
+    });
+    let instance = s.clone();
+    builder = builder.add_unary_handler(&METHOD_SDK_GET_GAME_SERVER, move |ctx, req, resp| {
+        instance.get_game_server(ctx, req, resp)
     });
     builder.build()
 }

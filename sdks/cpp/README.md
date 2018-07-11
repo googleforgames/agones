@@ -59,6 +59,23 @@ if (!status.ok()) { ... }
 For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
 [C++ example](../../examples/cpp-simple).
 
+⚠️⚠️⚠️ **sdk->GameServer(&gameserver) is currently a development feature and has not been released** ⚠️⚠️⚠️
+    
+To get the details on the [backing `GameServer`](../README.md#gameserver) call `sdk->GameServer(&gameserver)`,
+passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
+
+This function will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+```cpp
+stable::agones::dev::sdk::GameServer gameserver;
+grpc::Status status = sdk->GameServer(&gameserver);
+if (!status.ok()) {...}
+```
+
+For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
+[C++ example](../../examples/cpp-simple).
+
 ### Failure
 When running on Agones, the above functions should only fail under exceptional circumstances, so please 
 file a bug if it occurs.

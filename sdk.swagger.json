@@ -14,6 +14,23 @@
     "application/json"
   ],
   "paths": {
+    "/gameserver": {
+      "get": {
+        "summary": "Retrieve the current GameServer data",
+        "operationId": "GetGameServer",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/sdkGameServer"
+            }
+          }
+        },
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
     "/health": {
       "post": {
         "summary": "Send a Empty every d Duration to declare that this GameSever is healthy",
@@ -98,8 +115,125 @@
     }
   },
   "definitions": {
+    "GameServerObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "resource_version": {
+          "type": "string"
+        },
+        "generation": {
+          "type": "string",
+          "format": "int64"
+        },
+        "creation_timestamp": {
+          "type": "string",
+          "format": "int64",
+          "title": "timestamp is in Epoch format, unit: seconds"
+        },
+        "deletion_timestamp": {
+          "type": "string",
+          "format": "int64",
+          "title": "optional deletion timestamp in Epoch format, unit: seconds"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "representation of the K8s ObjectMeta resource"
+    },
+    "GameServerSpec": {
+      "type": "object",
+      "properties": {
+        "health": {
+          "$ref": "#/definitions/SpecHealth"
+        }
+      }
+    },
+    "GameServerStatus": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StatusPort"
+          }
+        }
+      }
+    },
+    "SpecHealth": {
+      "type": "object",
+      "properties": {
+        "Disabled": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "PeriodSeconds": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "FailureThreshold": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "InitialDelaySeconds": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "StatusPort": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "sdkEmpty": {
       "type": "object"
+    },
+    "sdkGameServer": {
+      "type": "object",
+      "properties": {
+        "object_meta": {
+          "$ref": "#/definitions/GameServerObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/GameServerSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/GameServerStatus"
+        }
+      },
+      "description": "A GameServer Custom Resource Definition object\nWe will only export those resources that make the most\nsense. Can always expand to more as needed."
     }
   }
 }

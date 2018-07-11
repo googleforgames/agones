@@ -48,10 +48,12 @@ install:
 	cp $(build_path)/bin/libagonessdk.* /usr/local/lib
 	-mkdir -p /usr/local/include/agones
 	cp $(build_path)/*.h /usr/local/include/agones/
+	-mkdir -p /usr/local/include/google/api
+	cp -r $(build_path)/google/api/*.h /usr/local/include/google/api/
 	ldconfig
 
 # make the .so build
-libagonessdk: sdk.grpc.pb.o sdk.pb.o sdk.o
+libagonessdk: google/api/annotations.pb.o google/api/http.pb.o sdk.grpc.pb.o sdk.pb.o sdk.o
 	$(CXX) $^ $(LDFLAGS) -shared -o $(build_path)/bin/$@.so
 	ar rcs $(build_path)/bin/$@.a $^
 
@@ -76,4 +78,4 @@ archive:
 
 clean:
 	-rm -r $(build_path)/bin
-	-rm *.o
+	-find -name '*.o' -delete

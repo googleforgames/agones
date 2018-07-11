@@ -17,6 +17,8 @@ package gameservers
 import (
 	"io"
 
+	"time"
+
 	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -56,4 +58,28 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 		}
 		logrus.Info("Health Ping Received!")
 	}
+}
+
+// GetGameServer returns a dummy game server.
+func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
+	logrus.Info("getting GameServer details")
+	gs := &sdk.GameServer{
+		ObjectMeta: &sdk.GameServer_ObjectMeta{
+			Name:              "local",
+			Namespace:         "default",
+			Uid:               "1234",
+			Generation:        1,
+			ResourceVersion:   "v1",
+			CreationTimestamp: time.Now().Unix(),
+			Labels:            map[string]string{"islocal": "true"},
+			Annotations:       map[string]string{"annotation": "true"},
+		},
+		Status: &sdk.GameServer_Status{
+			State:   "Ready",
+			Address: "127.0.0.1",
+			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
+		},
+	}
+
+	return gs, nil
 }

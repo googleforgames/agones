@@ -36,6 +36,9 @@ namespace agones {
             // Send Health ping. This is a synchronous request.
             bool Health();
 
+            // Retrieve the current GameServer data
+            grpc::Status GameServer(stable::agones::dev::sdk::GameServer* response);
+
             // Marks the Game Server as ready to shutdown
             grpc::Status Shutdown();
 

@@ -51,6 +51,14 @@ namespace agones {
         return health->Write(request);
     }
 
+    grpc::Status SDK::GameServer(stable::agones::dev::sdk::GameServer* response) {
+        grpc::ClientContext *context = new grpc::ClientContext();
+        context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
+        stable::agones::dev::sdk::Empty request;
+
+        return stub->GetGameServer(context, request, response);
+    }
+
     grpc::Status SDK::Shutdown() {
         grpc::ClientContext *context = new grpc::ClientContext();
         context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));

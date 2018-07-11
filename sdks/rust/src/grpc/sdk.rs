@@ -156,64 +156,1851 @@ impl ::protobuf::reflect::ProtobufValue for Empty {
     }
 }
 
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer {
+    // message fields
+    pub object_meta: ::protobuf::SingularPtrField<GameServer_ObjectMeta>,
+    pub spec: ::protobuf::SingularPtrField<GameServer_Spec>,
+    pub status: ::protobuf::SingularPtrField<GameServer_Status>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer {
+    pub fn new() -> GameServer {
+        ::std::default::Default::default()
+    }
+
+    // .stable.agones.dev.sdk.GameServer.ObjectMeta object_meta = 1;
+
+    pub fn clear_object_meta(&mut self) {
+        self.object_meta.clear();
+    }
+
+    pub fn has_object_meta(&self) -> bool {
+        self.object_meta.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_object_meta(&mut self, v: GameServer_ObjectMeta) {
+        self.object_meta = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_object_meta(&mut self) -> &mut GameServer_ObjectMeta {
+        if self.object_meta.is_none() {
+            self.object_meta.set_default();
+        }
+        self.object_meta.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_object_meta(&mut self) -> GameServer_ObjectMeta {
+        self.object_meta.take().unwrap_or_else(|| GameServer_ObjectMeta::new())
+    }
+
+    pub fn get_object_meta(&self) -> &GameServer_ObjectMeta {
+        self.object_meta.as_ref().unwrap_or_else(|| GameServer_ObjectMeta::default_instance())
+    }
+
+    // .stable.agones.dev.sdk.GameServer.Spec spec = 2;
+
+    pub fn clear_spec(&mut self) {
+        self.spec.clear();
+    }
+
+    pub fn has_spec(&self) -> bool {
+        self.spec.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_spec(&mut self, v: GameServer_Spec) {
+        self.spec = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_spec(&mut self) -> &mut GameServer_Spec {
+        if self.spec.is_none() {
+            self.spec.set_default();
+        }
+        self.spec.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_spec(&mut self) -> GameServer_Spec {
+        self.spec.take().unwrap_or_else(|| GameServer_Spec::new())
+    }
+
+    pub fn get_spec(&self) -> &GameServer_Spec {
+        self.spec.as_ref().unwrap_or_else(|| GameServer_Spec::default_instance())
+    }
+
+    // .stable.agones.dev.sdk.GameServer.Status status = 3;
+
+    pub fn clear_status(&mut self) {
+        self.status.clear();
+    }
+
+    pub fn has_status(&self) -> bool {
+        self.status.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_status(&mut self, v: GameServer_Status) {
+        self.status = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_status(&mut self) -> &mut GameServer_Status {
+        if self.status.is_none() {
+            self.status.set_default();
+        }
+        self.status.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_status(&mut self) -> GameServer_Status {
+        self.status.take().unwrap_or_else(|| GameServer_Status::new())
+    }
+
+    pub fn get_status(&self) -> &GameServer_Status {
+        self.status.as_ref().unwrap_or_else(|| GameServer_Status::default_instance())
+    }
+}
+
+impl ::protobuf::Message for GameServer {
+    fn is_initialized(&self) -> bool {
+        for v in &self.object_meta {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.spec {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.status {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.object_meta)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.spec)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.status)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.object_meta.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        if let Some(ref v) = self.spec.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        if let Some(ref v) = self.status.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.object_meta.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        if let Some(ref v) = self.spec.as_ref() {
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        if let Some(ref v) = self.status.as_ref() {
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer {
+        GameServer::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_ObjectMeta>>(
+                    "object_meta",
+                    |m: &GameServer| { &m.object_meta },
+                    |m: &mut GameServer| { &mut m.object_meta },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_Spec>>(
+                    "spec",
+                    |m: &GameServer| { &m.spec },
+                    |m: &mut GameServer| { &mut m.spec },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_Status>>(
+                    "status",
+                    |m: &GameServer| { &m.status },
+                    |m: &mut GameServer| { &mut m.status },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer>(
+                    "GameServer",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer,
+        };
+        unsafe {
+            instance.get(GameServer::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer {
+    fn clear(&mut self) {
+        self.clear_object_meta();
+        self.clear_spec();
+        self.clear_status();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer_ObjectMeta {
+    // message fields
+    pub name: ::std::string::String,
+    pub namespace: ::std::string::String,
+    pub uid: ::std::string::String,
+    pub resource_version: ::std::string::String,
+    pub generation: i64,
+    pub creation_timestamp: i64,
+    pub deletion_timestamp: i64,
+    pub annotations: ::std::collections::HashMap<::std::string::String, ::std::string::String>,
+    pub labels: ::std::collections::HashMap<::std::string::String, ::std::string::String>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer_ObjectMeta {
+    pub fn new() -> GameServer_ObjectMeta {
+        ::std::default::Default::default()
+    }
+
+    // string name = 1;
+
+    pub fn clear_name(&mut self) {
+        self.name.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        &mut self.name
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.name, ::std::string::String::new())
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    // string namespace = 2;
+
+    pub fn clear_namespace(&mut self) {
+        self.namespace.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_namespace(&mut self, v: ::std::string::String) {
+        self.namespace = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_namespace(&mut self) -> &mut ::std::string::String {
+        &mut self.namespace
+    }
+
+    // Take field
+    pub fn take_namespace(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.namespace, ::std::string::String::new())
+    }
+
+    pub fn get_namespace(&self) -> &str {
+        &self.namespace
+    }
+
+    // string uid = 3;
+
+    pub fn clear_uid(&mut self) {
+        self.uid.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_uid(&mut self, v: ::std::string::String) {
+        self.uid = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_uid(&mut self) -> &mut ::std::string::String {
+        &mut self.uid
+    }
+
+    // Take field
+    pub fn take_uid(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.uid, ::std::string::String::new())
+    }
+
+    pub fn get_uid(&self) -> &str {
+        &self.uid
+    }
+
+    // string resource_version = 4;
+
+    pub fn clear_resource_version(&mut self) {
+        self.resource_version.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_resource_version(&mut self, v: ::std::string::String) {
+        self.resource_version = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_resource_version(&mut self) -> &mut ::std::string::String {
+        &mut self.resource_version
+    }
+
+    // Take field
+    pub fn take_resource_version(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.resource_version, ::std::string::String::new())
+    }
+
+    pub fn get_resource_version(&self) -> &str {
+        &self.resource_version
+    }
+
+    // int64 generation = 5;
+
+    pub fn clear_generation(&mut self) {
+        self.generation = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_generation(&mut self, v: i64) {
+        self.generation = v;
+    }
+
+    pub fn get_generation(&self) -> i64 {
+        self.generation
+    }
+
+    // int64 creation_timestamp = 6;
+
+    pub fn clear_creation_timestamp(&mut self) {
+        self.creation_timestamp = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_creation_timestamp(&mut self, v: i64) {
+        self.creation_timestamp = v;
+    }
+
+    pub fn get_creation_timestamp(&self) -> i64 {
+        self.creation_timestamp
+    }
+
+    // int64 deletion_timestamp = 7;
+
+    pub fn clear_deletion_timestamp(&mut self) {
+        self.deletion_timestamp = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_deletion_timestamp(&mut self, v: i64) {
+        self.deletion_timestamp = v;
+    }
+
+    pub fn get_deletion_timestamp(&self) -> i64 {
+        self.deletion_timestamp
+    }
+
+    // repeated .stable.agones.dev.sdk.GameServer.ObjectMeta.AnnotationsEntry annotations = 8;
+
+    pub fn clear_annotations(&mut self) {
+        self.annotations.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_annotations(&mut self, v: ::std::collections::HashMap<::std::string::String, ::std::string::String>) {
+        self.annotations = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_annotations(&mut self) -> &mut ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &mut self.annotations
+    }
+
+    // Take field
+    pub fn take_annotations(&mut self) -> ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        ::std::mem::replace(&mut self.annotations, ::std::collections::HashMap::new())
+    }
+
+    pub fn get_annotations(&self) -> &::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &self.annotations
+    }
+
+    // repeated .stable.agones.dev.sdk.GameServer.ObjectMeta.LabelsEntry labels = 9;
+
+    pub fn clear_labels(&mut self) {
+        self.labels.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_labels(&mut self, v: ::std::collections::HashMap<::std::string::String, ::std::string::String>) {
+        self.labels = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_labels(&mut self) -> &mut ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &mut self.labels
+    }
+
+    // Take field
+    pub fn take_labels(&mut self) -> ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        ::std::mem::replace(&mut self.labels, ::std::collections::HashMap::new())
+    }
+
+    pub fn get_labels(&self) -> &::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &self.labels
+    }
+}
+
+impl ::protobuf::Message for GameServer_ObjectMeta {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.name)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.namespace)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.uid)?;
+                },
+                4 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.resource_version)?;
+                },
+                5 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int64()?;
+                    self.generation = tmp;
+                },
+                6 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int64()?;
+                    self.creation_timestamp = tmp;
+                },
+                7 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int64()?;
+                    self.deletion_timestamp = tmp;
+                },
+                8 => {
+                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.annotations)?;
+                },
+                9 => {
+                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.labels)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.name.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.name);
+        }
+        if !self.namespace.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.namespace);
+        }
+        if !self.uid.is_empty() {
+            my_size += ::protobuf::rt::string_size(3, &self.uid);
+        }
+        if !self.resource_version.is_empty() {
+            my_size += ::protobuf::rt::string_size(4, &self.resource_version);
+        }
+        if self.generation != 0 {
+            my_size += ::protobuf::rt::value_size(5, self.generation, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.creation_timestamp != 0 {
+            my_size += ::protobuf::rt::value_size(6, self.creation_timestamp, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.deletion_timestamp != 0 {
+            my_size += ::protobuf::rt::value_size(7, self.deletion_timestamp, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(8, &self.annotations);
+        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(9, &self.labels);
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if !self.name.is_empty() {
+            os.write_string(1, &self.name)?;
+        }
+        if !self.namespace.is_empty() {
+            os.write_string(2, &self.namespace)?;
+        }
+        if !self.uid.is_empty() {
+            os.write_string(3, &self.uid)?;
+        }
+        if !self.resource_version.is_empty() {
+            os.write_string(4, &self.resource_version)?;
+        }
+        if self.generation != 0 {
+            os.write_int64(5, self.generation)?;
+        }
+        if self.creation_timestamp != 0 {
+            os.write_int64(6, self.creation_timestamp)?;
+        }
+        if self.deletion_timestamp != 0 {
+            os.write_int64(7, self.deletion_timestamp)?;
+        }
+        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(8, &self.annotations, os)?;
+        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(9, &self.labels, os)?;
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer_ObjectMeta {
+        GameServer_ObjectMeta::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "name",
+                    |m: &GameServer_ObjectMeta| { &m.name },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.name },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "namespace",
+                    |m: &GameServer_ObjectMeta| { &m.namespace },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.namespace },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "uid",
+                    |m: &GameServer_ObjectMeta| { &m.uid },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.uid },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "resource_version",
+                    |m: &GameServer_ObjectMeta| { &m.resource_version },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.resource_version },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
+                    "generation",
+                    |m: &GameServer_ObjectMeta| { &m.generation },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.generation },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
+                    "creation_timestamp",
+                    |m: &GameServer_ObjectMeta| { &m.creation_timestamp },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.creation_timestamp },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt64>(
+                    "deletion_timestamp",
+                    |m: &GameServer_ObjectMeta| { &m.deletion_timestamp },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.deletion_timestamp },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_map_accessor::<_, ::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(
+                    "annotations",
+                    |m: &GameServer_ObjectMeta| { &m.annotations },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.annotations },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_map_accessor::<_, ::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(
+                    "labels",
+                    |m: &GameServer_ObjectMeta| { &m.labels },
+                    |m: &mut GameServer_ObjectMeta| { &mut m.labels },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer_ObjectMeta>(
+                    "GameServer_ObjectMeta",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer_ObjectMeta {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer_ObjectMeta> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer_ObjectMeta,
+        };
+        unsafe {
+            instance.get(GameServer_ObjectMeta::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer_ObjectMeta {
+    fn clear(&mut self) {
+        self.clear_name();
+        self.clear_namespace();
+        self.clear_uid();
+        self.clear_resource_version();
+        self.clear_generation();
+        self.clear_creation_timestamp();
+        self.clear_deletion_timestamp();
+        self.clear_annotations();
+        self.clear_labels();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer_ObjectMeta {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer_ObjectMeta {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer_Spec {
+    // message fields
+    pub health: ::protobuf::SingularPtrField<GameServer_Spec_Health>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer_Spec {
+    pub fn new() -> GameServer_Spec {
+        ::std::default::Default::default()
+    }
+
+    // .stable.agones.dev.sdk.GameServer.Spec.Health health = 1;
+
+    pub fn clear_health(&mut self) {
+        self.health.clear();
+    }
+
+    pub fn has_health(&self) -> bool {
+        self.health.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_health(&mut self, v: GameServer_Spec_Health) {
+        self.health = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_health(&mut self) -> &mut GameServer_Spec_Health {
+        if self.health.is_none() {
+            self.health.set_default();
+        }
+        self.health.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_health(&mut self) -> GameServer_Spec_Health {
+        self.health.take().unwrap_or_else(|| GameServer_Spec_Health::new())
+    }
+
+    pub fn get_health(&self) -> &GameServer_Spec_Health {
+        self.health.as_ref().unwrap_or_else(|| GameServer_Spec_Health::default_instance())
+    }
+}
+
+impl ::protobuf::Message for GameServer_Spec {
+    fn is_initialized(&self) -> bool {
+        for v in &self.health {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.health)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.health.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.health.as_ref() {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer_Spec {
+        GameServer_Spec::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_Spec_Health>>(
+                    "health",
+                    |m: &GameServer_Spec| { &m.health },
+                    |m: &mut GameServer_Spec| { &mut m.health },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer_Spec>(
+                    "GameServer_Spec",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer_Spec {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer_Spec> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer_Spec,
+        };
+        unsafe {
+            instance.get(GameServer_Spec::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer_Spec {
+    fn clear(&mut self) {
+        self.clear_health();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer_Spec {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer_Spec {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer_Spec_Health {
+    // message fields
+    pub Disabled: bool,
+    pub PeriodSeconds: i32,
+    pub FailureThreshold: i32,
+    pub InitialDelaySeconds: i32,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer_Spec_Health {
+    pub fn new() -> GameServer_Spec_Health {
+        ::std::default::Default::default()
+    }
+
+    // bool Disabled = 1;
+
+    pub fn clear_Disabled(&mut self) {
+        self.Disabled = false;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_Disabled(&mut self, v: bool) {
+        self.Disabled = v;
+    }
+
+    pub fn get_Disabled(&self) -> bool {
+        self.Disabled
+    }
+
+    // int32 PeriodSeconds = 2;
+
+    pub fn clear_PeriodSeconds(&mut self) {
+        self.PeriodSeconds = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_PeriodSeconds(&mut self, v: i32) {
+        self.PeriodSeconds = v;
+    }
+
+    pub fn get_PeriodSeconds(&self) -> i32 {
+        self.PeriodSeconds
+    }
+
+    // int32 FailureThreshold = 3;
+
+    pub fn clear_FailureThreshold(&mut self) {
+        self.FailureThreshold = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_FailureThreshold(&mut self, v: i32) {
+        self.FailureThreshold = v;
+    }
+
+    pub fn get_FailureThreshold(&self) -> i32 {
+        self.FailureThreshold
+    }
+
+    // int32 InitialDelaySeconds = 4;
+
+    pub fn clear_InitialDelaySeconds(&mut self) {
+        self.InitialDelaySeconds = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_InitialDelaySeconds(&mut self, v: i32) {
+        self.InitialDelaySeconds = v;
+    }
+
+    pub fn get_InitialDelaySeconds(&self) -> i32 {
+        self.InitialDelaySeconds
+    }
+}
+
+impl ::protobuf::Message for GameServer_Spec_Health {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_bool()?;
+                    self.Disabled = tmp;
+                },
+                2 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int32()?;
+                    self.PeriodSeconds = tmp;
+                },
+                3 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int32()?;
+                    self.FailureThreshold = tmp;
+                },
+                4 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int32()?;
+                    self.InitialDelaySeconds = tmp;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if self.Disabled != false {
+            my_size += 2;
+        }
+        if self.PeriodSeconds != 0 {
+            my_size += ::protobuf::rt::value_size(2, self.PeriodSeconds, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.FailureThreshold != 0 {
+            my_size += ::protobuf::rt::value_size(3, self.FailureThreshold, ::protobuf::wire_format::WireTypeVarint);
+        }
+        if self.InitialDelaySeconds != 0 {
+            my_size += ::protobuf::rt::value_size(4, self.InitialDelaySeconds, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if self.Disabled != false {
+            os.write_bool(1, self.Disabled)?;
+        }
+        if self.PeriodSeconds != 0 {
+            os.write_int32(2, self.PeriodSeconds)?;
+        }
+        if self.FailureThreshold != 0 {
+            os.write_int32(3, self.FailureThreshold)?;
+        }
+        if self.InitialDelaySeconds != 0 {
+            os.write_int32(4, self.InitialDelaySeconds)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer_Spec_Health {
+        GameServer_Spec_Health::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
+                    "Disabled",
+                    |m: &GameServer_Spec_Health| { &m.Disabled },
+                    |m: &mut GameServer_Spec_Health| { &mut m.Disabled },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt32>(
+                    "PeriodSeconds",
+                    |m: &GameServer_Spec_Health| { &m.PeriodSeconds },
+                    |m: &mut GameServer_Spec_Health| { &mut m.PeriodSeconds },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt32>(
+                    "FailureThreshold",
+                    |m: &GameServer_Spec_Health| { &m.FailureThreshold },
+                    |m: &mut GameServer_Spec_Health| { &mut m.FailureThreshold },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt32>(
+                    "InitialDelaySeconds",
+                    |m: &GameServer_Spec_Health| { &m.InitialDelaySeconds },
+                    |m: &mut GameServer_Spec_Health| { &mut m.InitialDelaySeconds },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer_Spec_Health>(
+                    "GameServer_Spec_Health",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer_Spec_Health {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer_Spec_Health> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer_Spec_Health,
+        };
+        unsafe {
+            instance.get(GameServer_Spec_Health::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer_Spec_Health {
+    fn clear(&mut self) {
+        self.clear_Disabled();
+        self.clear_PeriodSeconds();
+        self.clear_FailureThreshold();
+        self.clear_InitialDelaySeconds();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer_Spec_Health {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer_Spec_Health {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer_Status {
+    // message fields
+    pub state: ::std::string::String,
+    pub address: ::std::string::String,
+    pub ports: ::protobuf::RepeatedField<GameServer_Status_Port>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer_Status {
+    pub fn new() -> GameServer_Status {
+        ::std::default::Default::default()
+    }
+
+    // string state = 1;
+
+    pub fn clear_state(&mut self) {
+        self.state.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_state(&mut self, v: ::std::string::String) {
+        self.state = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_state(&mut self) -> &mut ::std::string::String {
+        &mut self.state
+    }
+
+    // Take field
+    pub fn take_state(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.state, ::std::string::String::new())
+    }
+
+    pub fn get_state(&self) -> &str {
+        &self.state
+    }
+
+    // string address = 2;
+
+    pub fn clear_address(&mut self) {
+        self.address.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_address(&mut self, v: ::std::string::String) {
+        self.address = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_address(&mut self) -> &mut ::std::string::String {
+        &mut self.address
+    }
+
+    // Take field
+    pub fn take_address(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.address, ::std::string::String::new())
+    }
+
+    pub fn get_address(&self) -> &str {
+        &self.address
+    }
+
+    // repeated .stable.agones.dev.sdk.GameServer.Status.Port ports = 3;
+
+    pub fn clear_ports(&mut self) {
+        self.ports.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ports(&mut self, v: ::protobuf::RepeatedField<GameServer_Status_Port>) {
+        self.ports = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_ports(&mut self) -> &mut ::protobuf::RepeatedField<GameServer_Status_Port> {
+        &mut self.ports
+    }
+
+    // Take field
+    pub fn take_ports(&mut self) -> ::protobuf::RepeatedField<GameServer_Status_Port> {
+        ::std::mem::replace(&mut self.ports, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_ports(&self) -> &[GameServer_Status_Port] {
+        &self.ports
+    }
+}
+
+impl ::protobuf::Message for GameServer_Status {
+    fn is_initialized(&self) -> bool {
+        for v in &self.ports {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.state)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.address)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.ports)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.state.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.state);
+        }
+        if !self.address.is_empty() {
+            my_size += ::protobuf::rt::string_size(2, &self.address);
+        }
+        for value in &self.ports {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if !self.state.is_empty() {
+            os.write_string(1, &self.state)?;
+        }
+        if !self.address.is_empty() {
+            os.write_string(2, &self.address)?;
+        }
+        for v in &self.ports {
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer_Status {
+        GameServer_Status::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "state",
+                    |m: &GameServer_Status| { &m.state },
+                    |m: &mut GameServer_Status| { &mut m.state },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "address",
+                    |m: &GameServer_Status| { &m.address },
+                    |m: &mut GameServer_Status| { &mut m.address },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_Status_Port>>(
+                    "ports",
+                    |m: &GameServer_Status| { &m.ports },
+                    |m: &mut GameServer_Status| { &mut m.ports },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer_Status>(
+                    "GameServer_Status",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer_Status {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer_Status> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer_Status,
+        };
+        unsafe {
+            instance.get(GameServer_Status::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer_Status {
+    fn clear(&mut self) {
+        self.clear_state();
+        self.clear_address();
+        self.clear_ports();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer_Status {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer_Status {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct GameServer_Status_Port {
+    // message fields
+    pub name: ::std::string::String,
+    pub port: i32,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl GameServer_Status_Port {
+    pub fn new() -> GameServer_Status_Port {
+        ::std::default::Default::default()
+    }
+
+    // string name = 1;
+
+    pub fn clear_name(&mut self) {
+        self.name.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        &mut self.name
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.name, ::std::string::String::new())
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+
+    // int32 port = 2;
+
+    pub fn clear_port(&mut self) {
+        self.port = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_port(&mut self, v: i32) {
+        self.port = v;
+    }
+
+    pub fn get_port(&self) -> i32 {
+        self.port
+    }
+}
+
+impl ::protobuf::Message for GameServer_Status_Port {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.name)?;
+                },
+                2 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_int32()?;
+                    self.port = tmp;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if !self.name.is_empty() {
+            my_size += ::protobuf::rt::string_size(1, &self.name);
+        }
+        if self.port != 0 {
+            my_size += ::protobuf::rt::value_size(2, self.port, ::protobuf::wire_format::WireTypeVarint);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if !self.name.is_empty() {
+            os.write_string(1, &self.name)?;
+        }
+        if self.port != 0 {
+            os.write_int32(2, self.port)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> GameServer_Status_Port {
+        GameServer_Status_Port::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "name",
+                    |m: &GameServer_Status_Port| { &m.name },
+                    |m: &mut GameServer_Status_Port| { &mut m.name },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeInt32>(
+                    "port",
+                    |m: &GameServer_Status_Port| { &m.port },
+                    |m: &mut GameServer_Status_Port| { &mut m.port },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<GameServer_Status_Port>(
+                    "GameServer_Status_Port",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static GameServer_Status_Port {
+        static mut instance: ::protobuf::lazy::Lazy<GameServer_Status_Port> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const GameServer_Status_Port,
+        };
+        unsafe {
+            instance.get(GameServer_Status_Port::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for GameServer_Status_Port {
+    fn clear(&mut self) {
+        self.clear_name();
+        self.clear_port();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for GameServer_Status_Port {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for GameServer_Status_Port {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\tsdk.proto\x12\x15stable.agones.dev.sdk\x1a\x1cgoogle/api/annotations\
-    .proto\"\x07\n\x05Empty2\x97\x02\n\x03SDK\x12V\n\x05Ready\x12\x1c.stable\
-    .agones.dev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\"\x11\x82\xd3\
-    \xe4\x93\x02\x0b\"\x06/ready:\x01*\x12\\\n\x08Shutdown\x12\x1c.stable.ag\
-    ones.dev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\"\x14\x82\xd3\xe4\
-    \x93\x02\x0e\"\t/shutdown:\x01*\x12Z\n\x06Health\x12\x1c.stable.agones.d\
-    ev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\"\x12\x82\xd3\xe4\x93\
-    \x02\x0c\"\x07/health:\x01*(\x01B\x05Z\x03sdkJ\xd1\x0b\n\x06\x12\x04\x0e\
-    \0/\x01\n\xd2\x04\n\x01\x0c\x12\x03\x0e\0\x122\xc7\x04\x20Copyright\x202\
-    017\x20Google\x20Inc.\x20All\x20Rights\x20Reserved.\n\n\x20Licensed\x20u\
-    nder\x20the\x20Apache\x20License,\x20Version\x202.0\x20(the\x20\"License\
-    \");\n\x20you\x20may\x20not\x20use\x20this\x20file\x20except\x20in\x20co\
-    mpliance\x20with\x20the\x20License.\n\x20You\x20may\x20obtain\x20a\x20co\
-    py\x20of\x20the\x20License\x20at\n\n\x20\x20\x20\x20\x20http://www.apach\
-    e.org/licenses/LICENSE-2.0\n\n\x20Unless\x20required\x20by\x20applicable\
-    \x20law\x20or\x20agreed\x20to\x20in\x20writing,\x20software\n\x20distrib\
-    uted\x20under\x20the\x20License\x20is\x20distributed\x20on\x20an\x20\"AS\
-    \x20IS\"\x20BASIS,\n\x20WITHOUT\x20WARRANTIES\x20OR\x20CONDITIONS\x20OF\
-    \x20ANY\x20KIND,\x20either\x20express\x20or\x20implied.\n\x20See\x20the\
-    \x20License\x20for\x20the\x20specific\x20language\x20governing\x20permis\
-    sions\x20and\n\x20limitations\x20under\x20the\x20License.\n\n\x08\n\x01\
-    \x02\x12\x03\x10\x08\x1d\n\x08\n\x01\x08\x12\x03\x11\0\x1a\n\x0b\n\x04\
-    \x08\xe7\x07\0\x12\x03\x11\0\x1a\n\x0c\n\x05\x08\xe7\x07\0\x02\x12\x03\
-    \x11\x07\x11\n\r\n\x06\x08\xe7\x07\0\x02\0\x12\x03\x11\x07\x11\n\x0e\n\
-    \x07\x08\xe7\x07\0\x02\0\x01\x12\x03\x11\x07\x11\n\x0c\n\x05\x08\xe7\x07\
-    \0\x07\x12\x03\x11\x14\x19\n\t\n\x02\x03\0\x12\x03\x13\x07%\nM\n\x02\x06\
-    \0\x12\x04\x16\0,\x01\x1aA\x20SDK\x20service\x20to\x20be\x20used\x20in\
-    \x20the\x20GameServer\x20SDK\x20to\x20the\x20Pod\x20Sidecar\n\n\n\n\x03\
-    \x06\0\x01\x12\x03\x16\x08\x0b\n1\n\x04\x06\0\x02\0\x12\x04\x18\x04\x1d\
-    \x05\x1a#\x20Call\x20when\x20the\x20GameServer\x20is\x20ready\n\n\x0c\n\
-    \x05\x06\0\x02\0\x01\x12\x03\x18\x08\r\n\x0c\n\x05\x06\0\x02\0\x02\x12\
-    \x03\x18\x0f\x14\n\x0c\n\x05\x06\0\x02\0\x03\x12\x03\x18\x1f$\n\r\n\x05\
-    \x06\0\x02\0\x04\x12\x04\x19\x08\x1c\n\n\x10\n\x08\x06\0\x02\0\x04\xe7\
-    \x07\0\x12\x04\x19\x08\x1c\n\n\x10\n\t\x06\0\x02\0\x04\xe7\x07\0\x02\x12\
-    \x03\x19\x0f\x20\n\x11\n\n\x06\0\x02\0\x04\xe7\x07\0\x02\0\x12\x03\x19\
-    \x0f\x20\n\x12\n\x0b\x06\0\x02\0\x04\xe7\x07\0\x02\0\x01\x12\x03\x19\x10\
-    \x1f\n\x11\n\t\x06\0\x02\0\x04\xe7\x07\0\x08\x12\x04\x19#\x1c\t\n9\n\x04\
-    \x06\0\x02\x01\x12\x04\x1f\x04$\x05\x1a+\x20Call\x20when\x20the\x20GameS\
-    erver\x20is\x20shutting\x20down\n\n\x0c\n\x05\x06\0\x02\x01\x01\x12\x03\
-    \x1f\x08\x10\n\x0c\n\x05\x06\0\x02\x01\x02\x12\x03\x1f\x12\x17\n\x0c\n\
-    \x05\x06\0\x02\x01\x03\x12\x03\x1f\"'\n\r\n\x05\x06\0\x02\x01\x04\x12\
-    \x04\x20\x08#\n\n\x10\n\x08\x06\0\x02\x01\x04\xe7\x07\0\x12\x04\x20\x08#\
-    \n\n\x10\n\t\x06\0\x02\x01\x04\xe7\x07\0\x02\x12\x03\x20\x0f\x20\n\x11\n\
-    \n\x06\0\x02\x01\x04\xe7\x07\0\x02\0\x12\x03\x20\x0f\x20\n\x12\n\x0b\x06\
-    \0\x02\x01\x04\xe7\x07\0\x02\0\x01\x12\x03\x20\x10\x1f\n\x11\n\t\x06\0\
-    \x02\x01\x04\xe7\x07\0\x08\x12\x04\x20##\t\nW\n\x04\x06\0\x02\x02\x12\
-    \x04&\x04+\x05\x1aI\x20Send\x20a\x20Empty\x20every\x20d\x20Duration\x20t\
-    o\x20declare\x20that\x20this\x20GameSever\x20is\x20healthy\n\n\x0c\n\x05\
-    \x06\0\x02\x02\x01\x12\x03&\x08\x0e\n\x0c\n\x05\x06\0\x02\x02\x05\x12\
-    \x03&\x10\x16\n\x0c\n\x05\x06\0\x02\x02\x02\x12\x03&\x17\x1c\n\x0c\n\x05\
-    \x06\0\x02\x02\x03\x12\x03&',\n\r\n\x05\x06\0\x02\x02\x04\x12\x04'\x08*\
-    \x12\n\x10\n\x08\x06\0\x02\x02\x04\xe7\x07\0\x12\x04'\x08*\x12\n\x10\n\t\
-    \x06\0\x02\x02\x04\xe7\x07\0\x02\x12\x03'\x0f\x20\n\x11\n\n\x06\0\x02\
-    \x02\x04\xe7\x07\0\x02\0\x12\x03'\x0f\x20\n\x12\n\x0b\x06\0\x02\x02\x04\
-    \xe7\x07\0\x02\0\x01\x12\x03'\x10\x1f\n\x11\n\t\x06\0\x02\x02\x04\xe7\
-    \x07\0\x08\x12\x04'#*\x11\n\n\n\x02\x04\0\x12\x04.\0/\x01\n\n\n\x03\x04\
-    \0\x01\x12\x03.\x08\rb\x06proto3\
+    .proto\"\x07\n\x05Empty\"\xae\t\n\nGameServer\x12M\n\x0bobject_meta\x18\
+    \x01\x20\x01(\x0b2,.stable.agones.dev.sdk.GameServer.ObjectMetaR\nobject\
+    Meta\x12:\n\x04spec\x18\x02\x20\x01(\x0b2&.stable.agones.dev.sdk.GameSer\
+    ver.SpecR\x04spec\x12@\n\x06status\x18\x03\x20\x01(\x0b2(.stable.agones.\
+    dev.sdk.GameServer.StatusR\x06status\x1a\xa7\x04\n\nObjectMeta\x12\x12\n\
+    \x04name\x18\x01\x20\x01(\tR\x04name\x12\x1c\n\tnamespace\x18\x02\x20\
+    \x01(\tR\tnamespace\x12\x10\n\x03uid\x18\x03\x20\x01(\tR\x03uid\x12)\n\
+    \x10resource_version\x18\x04\x20\x01(\tR\x0fresourceVersion\x12\x1e\n\ng\
+    eneration\x18\x05\x20\x01(\x03R\ngeneration\x12-\n\x12creation_timestamp\
+    \x18\x06\x20\x01(\x03R\x11creationTimestamp\x12-\n\x12deletion_timestamp\
+    \x18\x07\x20\x01(\x03R\x11deletionTimestamp\x12_\n\x0bannotations\x18\
+    \x08\x20\x03(\x0b2=.stable.agones.dev.sdk.GameServer.ObjectMeta.Annotati\
+    onsEntryR\x0bannotations\x12P\n\x06labels\x18\t\x20\x03(\x0b28.stable.ag\
+    ones.dev.sdk.GameServer.ObjectMeta.LabelsEntryR\x06labels\x1a>\n\x10Anno\
+    tationsEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05va\
+    lue\x18\x02\x20\x01(\tR\x05value:\x028\x01\x1a9\n\x0bLabelsEntry\x12\x10\
+    \n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\
+    \tR\x05value:\x028\x01\x1a\xf8\x01\n\x04Spec\x12E\n\x06health\x18\x01\
+    \x20\x01(\x0b2-.stable.agones.dev.sdk.GameServer.Spec.HealthR\x06health\
+    \x1a\xa8\x01\n\x06Health\x12\x1a\n\x08Disabled\x18\x01\x20\x01(\x08R\x08\
+    Disabled\x12$\n\rPeriodSeconds\x18\x02\x20\x01(\x05R\rPeriodSeconds\x12*\
+    \n\x10FailureThreshold\x18\x03\x20\x01(\x05R\x10FailureThreshold\x120\n\
+    \x13InitialDelaySeconds\x18\x04\x20\x01(\x05R\x13InitialDelaySeconds\x1a\
+    \xad\x01\n\x06Status\x12\x14\n\x05state\x18\x01\x20\x01(\tR\x05state\x12\
+    \x18\n\x07address\x18\x02\x20\x01(\tR\x07address\x12C\n\x05ports\x18\x03\
+    \x20\x03(\x0b2-.stable.agones.dev.sdk.GameServer.Status.PortR\x05ports\
+    \x1a.\n\x04Port\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04name\x12\x12\n\
+    \x04port\x18\x02\x20\x01(\x05R\x04port2\xfe\x02\n\x03SDK\x12V\n\x05Ready\
+    \x12\x1c.stable.agones.dev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\
+    \"\x11\x82\xd3\xe4\x93\x02\x0b\"\x06/ready:\x01*\x12\\\n\x08Shutdown\x12\
+    \x1c.stable.agones.dev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\"\
+    \x14\x82\xd3\xe4\x93\x02\x0e\"\t/shutdown:\x01*\x12Z\n\x06Health\x12\x1c\
+    .stable.agones.dev.sdk.Empty\x1a\x1c.stable.agones.dev.sdk.Empty\"\x12\
+    \x82\xd3\xe4\x93\x02\x0c\"\x07/health:\x01*(\x01\x12e\n\rGetGameServer\
+    \x12\x1c.stable.agones.dev.sdk.Empty\x1a!.stable.agones.dev.sdk.GameServ\
+    er\"\x13\x82\xd3\xe4\x93\x02\r\x12\x0b/gameserverB\x05Z\x03sdkJ\xfe\x1e\
+    \n\x06\x12\x04\x0e\0c\x01\n\xd2\x04\n\x01\x0c\x12\x03\x0e\0\x122\xc7\x04\
+    \x20Copyright\x202017\x20Google\x20Inc.\x20All\x20Rights\x20Reserved.\n\
+    \n\x20Licensed\x20under\x20the\x20Apache\x20License,\x20Version\x202.0\
+    \x20(the\x20\"License\");\n\x20you\x20may\x20not\x20use\x20this\x20file\
+    \x20except\x20in\x20compliance\x20with\x20the\x20License.\n\x20You\x20ma\
+    y\x20obtain\x20a\x20copy\x20of\x20the\x20License\x20at\n\n\x20\x20\x20\
+    \x20\x20http://www.apache.org/licenses/LICENSE-2.0\n\n\x20Unless\x20requ\
+    ired\x20by\x20applicable\x20law\x20or\x20agreed\x20to\x20in\x20writing,\
+    \x20software\n\x20distributed\x20under\x20the\x20License\x20is\x20distri\
+    buted\x20on\x20an\x20\"AS\x20IS\"\x20BASIS,\n\x20WITHOUT\x20WARRANTIES\
+    \x20OR\x20CONDITIONS\x20OF\x20ANY\x20KIND,\x20either\x20express\x20or\
+    \x20implied.\n\x20See\x20the\x20License\x20for\x20the\x20specific\x20lan\
+    guage\x20governing\x20permissions\x20and\n\x20limitations\x20under\x20th\
+    e\x20License.\n\n\x08\n\x01\x02\x12\x03\x10\x08\x1d\n\x08\n\x01\x08\x12\
+    \x03\x11\0\x1a\n\x0b\n\x04\x08\xe7\x07\0\x12\x03\x11\0\x1a\n\x0c\n\x05\
+    \x08\xe7\x07\0\x02\x12\x03\x11\x07\x11\n\r\n\x06\x08\xe7\x07\0\x02\0\x12\
+    \x03\x11\x07\x11\n\x0e\n\x07\x08\xe7\x07\0\x02\0\x01\x12\x03\x11\x07\x11\
+    \n\x0c\n\x05\x08\xe7\x07\0\x07\x12\x03\x11\x14\x19\n\t\n\x02\x03\0\x12\
+    \x03\x13\x07%\nM\n\x02\x06\0\x12\x04\x16\02\x01\x1aA\x20SDK\x20service\
+    \x20to\x20be\x20used\x20in\x20the\x20GameServer\x20SDK\x20to\x20the\x20P\
+    od\x20Sidecar\n\n\n\n\x03\x06\0\x01\x12\x03\x16\x08\x0b\n1\n\x04\x06\0\
+    \x02\0\x12\x04\x18\x04\x1d\x05\x1a#\x20Call\x20when\x20the\x20GameServer\
+    \x20is\x20ready\n\n\x0c\n\x05\x06\0\x02\0\x01\x12\x03\x18\x08\r\n\x0c\n\
+    \x05\x06\0\x02\0\x02\x12\x03\x18\x0f\x14\n\x0c\n\x05\x06\0\x02\0\x03\x12\
+    \x03\x18\x1f$\n\r\n\x05\x06\0\x02\0\x04\x12\x04\x19\x08\x1c\n\n\x10\n\
+    \x08\x06\0\x02\0\x04\xe7\x07\0\x12\x04\x19\x08\x1c\n\n\x10\n\t\x06\0\x02\
+    \0\x04\xe7\x07\0\x02\x12\x03\x19\x0f\x20\n\x11\n\n\x06\0\x02\0\x04\xe7\
+    \x07\0\x02\0\x12\x03\x19\x0f\x20\n\x12\n\x0b\x06\0\x02\0\x04\xe7\x07\0\
+    \x02\0\x01\x12\x03\x19\x10\x1f\n\x11\n\t\x06\0\x02\0\x04\xe7\x07\0\x08\
+    \x12\x04\x19#\x1c\t\n9\n\x04\x06\0\x02\x01\x12\x04\x1f\x04$\x05\x1a+\x20\
+    Call\x20when\x20the\x20GameServer\x20is\x20shutting\x20down\n\n\x0c\n\
+    \x05\x06\0\x02\x01\x01\x12\x03\x1f\x08\x10\n\x0c\n\x05\x06\0\x02\x01\x02\
+    \x12\x03\x1f\x12\x17\n\x0c\n\x05\x06\0\x02\x01\x03\x12\x03\x1f\"'\n\r\n\
+    \x05\x06\0\x02\x01\x04\x12\x04\x20\x08#\n\n\x10\n\x08\x06\0\x02\x01\x04\
+    \xe7\x07\0\x12\x04\x20\x08#\n\n\x10\n\t\x06\0\x02\x01\x04\xe7\x07\0\x02\
+    \x12\x03\x20\x0f\x20\n\x11\n\n\x06\0\x02\x01\x04\xe7\x07\0\x02\0\x12\x03\
+    \x20\x0f\x20\n\x12\n\x0b\x06\0\x02\x01\x04\xe7\x07\0\x02\0\x01\x12\x03\
+    \x20\x10\x1f\n\x11\n\t\x06\0\x02\x01\x04\xe7\x07\0\x08\x12\x04\x20##\t\n\
+    W\n\x04\x06\0\x02\x02\x12\x04&\x04+\x05\x1aI\x20Send\x20a\x20Empty\x20ev\
+    ery\x20d\x20Duration\x20to\x20declare\x20that\x20this\x20GameSever\x20is\
+    \x20healthy\n\n\x0c\n\x05\x06\0\x02\x02\x01\x12\x03&\x08\x0e\n\x0c\n\x05\
+    \x06\0\x02\x02\x05\x12\x03&\x10\x16\n\x0c\n\x05\x06\0\x02\x02\x02\x12\
+    \x03&\x17\x1c\n\x0c\n\x05\x06\0\x02\x02\x03\x12\x03&',\n\r\n\x05\x06\0\
+    \x02\x02\x04\x12\x04'\x08*\x12\n\x10\n\x08\x06\0\x02\x02\x04\xe7\x07\0\
+    \x12\x04'\x08*\x12\n\x10\n\t\x06\0\x02\x02\x04\xe7\x07\0\x02\x12\x03'\
+    \x0f\x20\n\x11\n\n\x06\0\x02\x02\x04\xe7\x07\0\x02\0\x12\x03'\x0f\x20\n\
+    \x12\n\x0b\x06\0\x02\x02\x04\xe7\x07\0\x02\0\x01\x12\x03'\x10\x1f\n\x11\
+    \n\t\x06\0\x02\x02\x04\xe7\x07\0\x08\x12\x04'#*\x11\n4\n\x04\x06\0\x02\
+    \x03\x12\x04-\x041\x05\x1a&\x20Retrieve\x20the\x20current\x20GameServer\
+    \x20data\n\n\x0c\n\x05\x06\0\x02\x03\x01\x12\x03-\x08\x15\n\x0c\n\x05\
+    \x06\0\x02\x03\x02\x12\x03-\x17\x1c\n\x0c\n\x05\x06\0\x02\x03\x03\x12\
+    \x03-'1\n\r\n\x05\x06\0\x02\x03\x04\x12\x04.\x080\n\n\x10\n\x08\x06\0\
+    \x02\x03\x04\xe7\x07\0\x12\x04.\x080\n\n\x10\n\t\x06\0\x02\x03\x04\xe7\
+    \x07\0\x02\x12\x03.\x0f\x20\n\x11\n\n\x06\0\x02\x03\x04\xe7\x07\0\x02\0\
+    \x12\x03.\x0f\x20\n\x12\n\x0b\x06\0\x02\x03\x04\xe7\x07\0\x02\0\x01\x12\
+    \x03.\x10\x1f\n\x11\n\t\x06\0\x02\x03\x04\xe7\x07\0\x08\x12\x04.#0\t\n\n\
+    \n\x02\x04\0\x12\x044\05\x01\n\n\n\x03\x04\0\x01\x12\x034\x08\r\n\xa2\
+    \x01\n\x02\x04\x01\x12\x04:\0c\x01\x1a\x95\x01\x20A\x20GameServer\x20Cus\
+    tom\x20Resource\x20Definition\x20object\n\x20We\x20will\x20only\x20expor\
+    t\x20those\x20resources\x20that\x20make\x20the\x20most\n\x20sense.\x20Ca\
+    n\x20always\x20expand\x20to\x20more\x20as\x20needed.\n\n\n\n\x03\x04\x01\
+    \x01\x12\x03:\x08\x12\n\x0b\n\x04\x04\x01\x02\0\x12\x03;\x04\x1f\n\r\n\
+    \x05\x04\x01\x02\0\x04\x12\x04;\x04:\x14\n\x0c\n\x05\x04\x01\x02\0\x06\
+    \x12\x03;\x04\x0e\n\x0c\n\x05\x04\x01\x02\0\x01\x12\x03;\x0f\x1a\n\x0c\n\
+    \x05\x04\x01\x02\0\x03\x12\x03;\x1d\x1e\n\x0b\n\x04\x04\x01\x02\x01\x12\
+    \x03<\x04\x12\n\r\n\x05\x04\x01\x02\x01\x04\x12\x04<\x04;\x1f\n\x0c\n\
+    \x05\x04\x01\x02\x01\x06\x12\x03<\x04\x08\n\x0c\n\x05\x04\x01\x02\x01\
+    \x01\x12\x03<\t\r\n\x0c\n\x05\x04\x01\x02\x01\x03\x12\x03<\x10\x11\n\x0b\
+    \n\x04\x04\x01\x02\x02\x12\x03=\x04\x16\n\r\n\x05\x04\x01\x02\x02\x04\
+    \x12\x04=\x04<\x12\n\x0c\n\x05\x04\x01\x02\x02\x06\x12\x03=\x04\n\n\x0c\
+    \n\x05\x04\x01\x02\x02\x01\x12\x03=\x0b\x11\n\x0c\n\x05\x04\x01\x02\x02\
+    \x03\x12\x03=\x14\x15\n=\n\x04\x04\x01\x03\0\x12\x04@\x04L\x05\x1a/\x20r\
+    epresentation\x20of\x20the\x20K8s\x20ObjectMeta\x20resource\n\n\x0c\n\
+    \x05\x04\x01\x03\0\x01\x12\x03@\x0c\x16\n\r\n\x06\x04\x01\x03\0\x02\0\
+    \x12\x03A\x08\x18\n\x0f\n\x07\x04\x01\x03\0\x02\0\x04\x12\x04A\x08@\x18\
+    \n\x0e\n\x07\x04\x01\x03\0\x02\0\x05\x12\x03A\x08\x0e\n\x0e\n\x07\x04\
+    \x01\x03\0\x02\0\x01\x12\x03A\x0f\x13\n\x0e\n\x07\x04\x01\x03\0\x02\0\
+    \x03\x12\x03A\x16\x17\n\r\n\x06\x04\x01\x03\0\x02\x01\x12\x03B\x08\x1d\n\
+    \x0f\n\x07\x04\x01\x03\0\x02\x01\x04\x12\x04B\x08A\x18\n\x0e\n\x07\x04\
+    \x01\x03\0\x02\x01\x05\x12\x03B\x08\x0e\n\x0e\n\x07\x04\x01\x03\0\x02\
+    \x01\x01\x12\x03B\x0f\x18\n\x0e\n\x07\x04\x01\x03\0\x02\x01\x03\x12\x03B\
+    \x1b\x1c\n\r\n\x06\x04\x01\x03\0\x02\x02\x12\x03C\x08\x17\n\x0f\n\x07\
+    \x04\x01\x03\0\x02\x02\x04\x12\x04C\x08B\x1d\n\x0e\n\x07\x04\x01\x03\0\
+    \x02\x02\x05\x12\x03C\x08\x0e\n\x0e\n\x07\x04\x01\x03\0\x02\x02\x01\x12\
+    \x03C\x0f\x12\n\x0e\n\x07\x04\x01\x03\0\x02\x02\x03\x12\x03C\x15\x16\n\r\
+    \n\x06\x04\x01\x03\0\x02\x03\x12\x03D\x08$\n\x0f\n\x07\x04\x01\x03\0\x02\
+    \x03\x04\x12\x04D\x08C\x17\n\x0e\n\x07\x04\x01\x03\0\x02\x03\x05\x12\x03\
+    D\x08\x0e\n\x0e\n\x07\x04\x01\x03\0\x02\x03\x01\x12\x03D\x0f\x1f\n\x0e\n\
+    \x07\x04\x01\x03\0\x02\x03\x03\x12\x03D\"#\n\r\n\x06\x04\x01\x03\0\x02\
+    \x04\x12\x03E\x08\x1d\n\x0f\n\x07\x04\x01\x03\0\x02\x04\x04\x12\x04E\x08\
+    D$\n\x0e\n\x07\x04\x01\x03\0\x02\x04\x05\x12\x03E\x08\r\n\x0e\n\x07\x04\
+    \x01\x03\0\x02\x04\x01\x12\x03E\x0e\x18\n\x0e\n\x07\x04\x01\x03\0\x02\
+    \x04\x03\x12\x03E\x1b\x1c\n<\n\x06\x04\x01\x03\0\x02\x05\x12\x03G\x08%\
+    \x1a-\x20timestamp\x20is\x20in\x20Epoch\x20format,\x20unit:\x20seconds\n\
+    \n\x0f\n\x07\x04\x01\x03\0\x02\x05\x04\x12\x04G\x08E\x1d\n\x0e\n\x07\x04\
+    \x01\x03\0\x02\x05\x05\x12\x03G\x08\r\n\x0e\n\x07\x04\x01\x03\0\x02\x05\
+    \x01\x12\x03G\x0e\x20\n\x0e\n\x07\x04\x01\x03\0\x02\x05\x03\x12\x03G#$\n\
+    K\n\x06\x04\x01\x03\0\x02\x06\x12\x03I\x08%\x1a<\x20optional\x20deletion\
+    \x20timestamp\x20in\x20Epoch\x20format,\x20unit:\x20seconds\n\n\x0f\n\
+    \x07\x04\x01\x03\0\x02\x06\x04\x12\x04I\x08G%\n\x0e\n\x07\x04\x01\x03\0\
+    \x02\x06\x05\x12\x03I\x08\r\n\x0e\n\x07\x04\x01\x03\0\x02\x06\x01\x12\
+    \x03I\x0e\x20\n\x0e\n\x07\x04\x01\x03\0\x02\x06\x03\x12\x03I#$\n\r\n\x06\
+    \x04\x01\x03\0\x02\x07\x12\x03J\x08,\n\x0f\n\x07\x04\x01\x03\0\x02\x07\
+    \x04\x12\x04J\x08I%\n\x0e\n\x07\x04\x01\x03\0\x02\x07\x06\x12\x03J\x08\
+    \x1b\n\x0e\n\x07\x04\x01\x03\0\x02\x07\x01\x12\x03J\x1c'\n\x0e\n\x07\x04\
+    \x01\x03\0\x02\x07\x03\x12\x03J*+\n\r\n\x06\x04\x01\x03\0\x02\x08\x12\
+    \x03K\x08'\n\x0f\n\x07\x04\x01\x03\0\x02\x08\x04\x12\x04K\x08J,\n\x0e\n\
+    \x07\x04\x01\x03\0\x02\x08\x06\x12\x03K\x08\x1b\n\x0e\n\x07\x04\x01\x03\
+    \0\x02\x08\x01\x12\x03K\x1c\"\n\x0e\n\x07\x04\x01\x03\0\x02\x08\x03\x12\
+    \x03K%&\n\x0c\n\x04\x04\x01\x03\x01\x12\x04N\x04W\x05\n\x0c\n\x05\x04\
+    \x01\x03\x01\x01\x12\x03N\x0c\x10\n\r\n\x06\x04\x01\x03\x01\x02\0\x12\
+    \x03O\x08\x1a\n\x0f\n\x07\x04\x01\x03\x01\x02\0\x04\x12\x04O\x08N\x12\n\
+    \x0e\n\x07\x04\x01\x03\x01\x02\0\x06\x12\x03O\x08\x0e\n\x0e\n\x07\x04\
+    \x01\x03\x01\x02\0\x01\x12\x03O\x0f\x15\n\x0e\n\x07\x04\x01\x03\x01\x02\
+    \0\x03\x12\x03O\x18\x19\n\x0e\n\x06\x04\x01\x03\x01\x03\0\x12\x04Q\x08V\
+    \t\n\x0e\n\x07\x04\x01\x03\x01\x03\0\x01\x12\x03Q\x10\x16\n\x0f\n\x08\
+    \x04\x01\x03\x01\x03\0\x02\0\x12\x03R\x0c\x1e\n\x11\n\t\x04\x01\x03\x01\
+    \x03\0\x02\0\x04\x12\x04R\x0cQ\x18\n\x10\n\t\x04\x01\x03\x01\x03\0\x02\0\
+    \x05\x12\x03R\x0c\x10\n\x10\n\t\x04\x01\x03\x01\x03\0\x02\0\x01\x12\x03R\
+    \x11\x19\n\x10\n\t\x04\x01\x03\x01\x03\0\x02\0\x03\x12\x03R\x1c\x1d\n\
+    \x0f\n\x08\x04\x01\x03\x01\x03\0\x02\x01\x12\x03S\x0c$\n\x11\n\t\x04\x01\
+    \x03\x01\x03\0\x02\x01\x04\x12\x04S\x0cR\x1e\n\x10\n\t\x04\x01\x03\x01\
+    \x03\0\x02\x01\x05\x12\x03S\x0c\x11\n\x10\n\t\x04\x01\x03\x01\x03\0\x02\
+    \x01\x01\x12\x03S\x12\x1f\n\x10\n\t\x04\x01\x03\x01\x03\0\x02\x01\x03\
+    \x12\x03S\"#\n\x0f\n\x08\x04\x01\x03\x01\x03\0\x02\x02\x12\x03T\x0c'\n\
+    \x11\n\t\x04\x01\x03\x01\x03\0\x02\x02\x04\x12\x04T\x0cS$\n\x10\n\t\x04\
+    \x01\x03\x01\x03\0\x02\x02\x05\x12\x03T\x0c\x11\n\x10\n\t\x04\x01\x03\
+    \x01\x03\0\x02\x02\x01\x12\x03T\x12\"\n\x10\n\t\x04\x01\x03\x01\x03\0\
+    \x02\x02\x03\x12\x03T%&\n\x0f\n\x08\x04\x01\x03\x01\x03\0\x02\x03\x12\
+    \x03U\x0c*\n\x11\n\t\x04\x01\x03\x01\x03\0\x02\x03\x04\x12\x04U\x0cT'\n\
+    \x10\n\t\x04\x01\x03\x01\x03\0\x02\x03\x05\x12\x03U\x0c\x11\n\x10\n\t\
+    \x04\x01\x03\x01\x03\0\x02\x03\x01\x12\x03U\x12%\n\x10\n\t\x04\x01\x03\
+    \x01\x03\0\x02\x03\x03\x12\x03U()\n\x0c\n\x04\x04\x01\x03\x02\x12\x04Y\
+    \x04b\x05\n\x0c\n\x05\x04\x01\x03\x02\x01\x12\x03Y\x0c\x12\n\x0e\n\x06\
+    \x04\x01\x03\x02\x03\0\x12\x04Z\x08]\t\n\x0e\n\x07\x04\x01\x03\x02\x03\0\
+    \x01\x12\x03Z\x10\x14\n\x0f\n\x08\x04\x01\x03\x02\x03\0\x02\0\x12\x03[\
+    \x0c\x1c\n\x11\n\t\x04\x01\x03\x02\x03\0\x02\0\x04\x12\x04[\x0cZ\x16\n\
+    \x10\n\t\x04\x01\x03\x02\x03\0\x02\0\x05\x12\x03[\x0c\x12\n\x10\n\t\x04\
+    \x01\x03\x02\x03\0\x02\0\x01\x12\x03[\x13\x17\n\x10\n\t\x04\x01\x03\x02\
+    \x03\0\x02\0\x03\x12\x03[\x1a\x1b\n\x0f\n\x08\x04\x01\x03\x02\x03\0\x02\
+    \x01\x12\x03\\\x0c\x1b\n\x11\n\t\x04\x01\x03\x02\x03\0\x02\x01\x04\x12\
+    \x04\\\x0c[\x1c\n\x10\n\t\x04\x01\x03\x02\x03\0\x02\x01\x05\x12\x03\\\
+    \x0c\x11\n\x10\n\t\x04\x01\x03\x02\x03\0\x02\x01\x01\x12\x03\\\x12\x16\n\
+    \x10\n\t\x04\x01\x03\x02\x03\0\x02\x01\x03\x12\x03\\\x19\x1a\n\r\n\x06\
+    \x04\x01\x03\x02\x02\0\x12\x03_\x08\x19\n\x0f\n\x07\x04\x01\x03\x02\x02\
+    \0\x04\x12\x04_\x08]\t\n\x0e\n\x07\x04\x01\x03\x02\x02\0\x05\x12\x03_\
+    \x08\x0e\n\x0e\n\x07\x04\x01\x03\x02\x02\0\x01\x12\x03_\x0f\x14\n\x0e\n\
+    \x07\x04\x01\x03\x02\x02\0\x03\x12\x03_\x17\x18\n\r\n\x06\x04\x01\x03\
+    \x02\x02\x01\x12\x03`\x08\x1b\n\x0f\n\x07\x04\x01\x03\x02\x02\x01\x04\
+    \x12\x04`\x08_\x19\n\x0e\n\x07\x04\x01\x03\x02\x02\x01\x05\x12\x03`\x08\
+    \x0e\n\x0e\n\x07\x04\x01\x03\x02\x02\x01\x01\x12\x03`\x0f\x16\n\x0e\n\
+    \x07\x04\x01\x03\x02\x02\x01\x03\x12\x03`\x19\x1a\n\r\n\x06\x04\x01\x03\
+    \x02\x02\x02\x12\x03a\x08\x20\n\x0e\n\x07\x04\x01\x03\x02\x02\x02\x04\
+    \x12\x03a\x08\x10\n\x0e\n\x07\x04\x01\x03\x02\x02\x02\x06\x12\x03a\x11\
+    \x15\n\x0e\n\x07\x04\x01\x03\x02\x02\x02\x01\x12\x03a\x16\x1b\n\x0e\n\
+    \x07\x04\x01\x03\x02\x02\x02\x03\x12\x03a\x1e\x1fb\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

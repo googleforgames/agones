@@ -18,6 +18,8 @@ import (
 	"sync"
 	"testing"
 
+	"time"
+
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -39,7 +41,7 @@ func TestLocal(t *testing.T) {
 	stream := newMockStream()
 
 	go func() {
-		err := l.Health(stream)
+		err = l.Health(stream)
 		assert.Nil(t, err)
 		wg.Done()
 	}()
@@ -48,4 +50,27 @@ func TestLocal(t *testing.T) {
 	close(stream.msgs)
 
 	wg.Wait()
+
+	gs, err := l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+
+	expected := &sdk.GameServer{
+		ObjectMeta: &sdk.GameServer_ObjectMeta{
+			Name:              "local",
+			Namespace:         "default",
+			Uid:               "1234",
+			Generation:        1,
+			ResourceVersion:   "v1",
+			CreationTimestamp: time.Now().Unix(),
+			Labels:            map[string]string{"islocal": "true"},
+			Annotations:       map[string]string{"annotation": "true"},
+		},
+		Status: &sdk.GameServer_Status{
+			State:   "Ready",
+			Address: "127.0.0.1",
+			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
+		},
+	}
+
+	assert.Equal(t, expected, gs)
 }

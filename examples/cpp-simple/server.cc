@@ -55,7 +55,19 @@ int main() {
         std::cout << "Could not run Ready(): "+ status.error_message() + ". Exiting!" << std::endl;
         return -1;
     }
+
     std::cout << "...marked Ready" << std::endl;
+
+    std::cout << "Getting GameServer details..." << std::endl;
+    stable::agones::dev::sdk::GameServer gameserver;
+    status = sdk->GameServer(&gameserver);
+
+    if (!status.ok()) {
+        std::cout << "Could not run GameServer(): "+ status.error_message() + ". Exiting!" << std::endl;
+        return -1;
+    }
+
+    std::cout << "GameServer name: " << gameserver.object_meta().name() << std::endl;
 
     for (int i = 0; i < 10; i++) {
         int time = i*10;

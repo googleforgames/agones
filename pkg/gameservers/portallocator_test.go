@@ -16,10 +16,10 @@ package gameservers
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
-	"strconv"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
