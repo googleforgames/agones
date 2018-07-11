@@ -93,6 +93,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: {{ template "agones.fullname" . }}-cert
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
