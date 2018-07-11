@@ -18,6 +18,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: agones-controller
+  namespace: agones-system
   labels:
     app: agones
     chart: agones-0.3.0
@@ -28,6 +29,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-controller
+  namespace: agones-system
   labels:
     app: agones
     chart: agones-0.3.0
@@ -57,6 +59,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: agones-controller-access
+  namespace: agones-system
   labels:
     app: agones
     chart: agones-0.3.0
@@ -101,6 +104,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: agones-sdk
+  namespace: agones-system
   labels:
     app: agones
     chart: agones-0.3.0
@@ -613,6 +617,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: agones-controller-service
+  namespace: agones-system
   labels:
     component: controller
     app: agones
@@ -645,6 +650,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: agones-controller
+  namespace: agones-system
   labels:
     component: controller
     app: agones
@@ -781,6 +787,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: agones-manual-cert
+  namespace: agones-system
   labels:
     app: agones-manual
     chart: "agones-0.3.0"
