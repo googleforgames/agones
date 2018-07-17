@@ -22,6 +22,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"time"
 )
 
 func TestSDK(t *testing.T) {
@@ -58,13 +59,47 @@ func TestSDK(t *testing.T) {
 	assert.NotNil(t, gs)
 }
 
+func TestSDKWatchGameServer(t *testing.T) {
+	sm := &sdkMock{
+		wm: &watchMock{msgs: make(chan *sdk.GameServer, 5)},
+	}
+	s := SDK{
+		ctx:    context.Background(),
+		client: sm,
+	}
+
+	fixture := &sdk.GameServer{ObjectMeta: &sdk.GameServer_ObjectMeta{Name:"test-server"}}
+
+	updated := make(chan struct{}, 5)
+
+	err := s.WatchGameServer(func(gs *sdk.GameServer) {
+		assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+		updated <- struct{}{}
+	})
+	assert.Nil(t, err)
+
+	sm.wm.msgs <- fixture
+
+	select {
+	case <-updated:
+	case <-time.After(5 * time.Second):
+		assert.FailNow(t,"update handler should have fired")
+	}
+}
+
 var _ sdk.SDKClient = &sdkMock{}
 var _ sdk.SDK_HealthClient = &healthMock{}
+var _ sdk.SDK_WatchGameServerClient = &watchMock{}
 
 type sdkMock struct {
 	ready    bool
 	shutdown bool
 	hm       *healthMock
+	wm       *watchMock
+}
+
+func (m *sdkMock) WatchGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (sdk.SDK_WatchGameServerClient, error) {
+	return m.wm, nil
 }
 
 func (m *sdkMock) GetGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (*sdk.GameServer, error) {
@@ -119,5 +154,37 @@ func (h *healthMock) SendMsg(m interface{}) error {
 }
 
 func (h *healthMock) RecvMsg(m interface{}) error {
+	panic("implement me")
+}
+
+type watchMock struct {
+	msgs chan *sdk.GameServer
+}
+
+func (wm *watchMock) Recv() (*sdk.GameServer, error) {
+	return <- wm.msgs, nil
+}
+
+func (*watchMock) Header() (metadata.MD, error) {
+	panic("implement me")
+}
+
+func (*watchMock) Trailer() metadata.MD {
+	panic("implement me")
+}
+
+func (*watchMock) CloseSend() error {
+	panic("implement me")
+}
+
+func (*watchMock) Context() context.Context {
+	panic("implement me")
+}
+
+func (*watchMock) SendMsg(m interface{}) error {
+	panic("implement me")
+}
+
+func (*watchMock) RecvMsg(m interface{}) error {
 	panic("implement me")
 }

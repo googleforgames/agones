@@ -86,7 +86,7 @@ func main() {
 	defer cancel()
 
 	if ctlConf.IsLocal {
-		sdk.RegisterSDKServer(grpcServer, &gameservers.LocalSDKServer{})
+		sdk.RegisterSDKServer(grpcServer, gameservers.NewLocalSDKServer())
 	} else {
 		var config *rest.Config
 		config, err = rest.InClusterConfig()

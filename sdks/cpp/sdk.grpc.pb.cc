@@ -38,6 +38,7 @@ static const char* SDK_method_names[] = {
   "/stable.agones.dev.sdk.SDK/Shutdown",
   "/stable.agones.dev.sdk.SDK/Health",
   "/stable.agones.dev.sdk.SDK/GetGameServer",
+  "/stable.agones.dev.sdk.SDK/WatchGameServer",
 };
 
 std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -51,6 +52,7 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   , rpcmethod_Shutdown_(SDK_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_Health_(SDK_method_names[2], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
   , rpcmethod_GetGameServer_(SDK_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_WatchGameServer_(SDK_method_names[4], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) {
@@ -101,6 +103,18 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_GetGameServer_, context, request, false);
 }
 
+::grpc::ClientReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::WatchGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request) {
+  return ::grpc::internal::ClientReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), rpcmethod_WatchGameServer_, context, request);
+}
+
+::grpc::ClientAsyncReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::AsyncWatchGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq, void* tag) {
+  return ::grpc::internal::ClientAsyncReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_WatchGameServer_, context, request, true, tag);
+}
+
+::grpc::ClientAsyncReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::PrepareAsyncWatchGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_WatchGameServer_, context, request, false, nullptr);
+}
+
 SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[0],
@@ -122,6 +136,11 @@ SDK::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::GameServer>(
           std::mem_fn(&SDK::Service::GetGameServer), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[4],
+      ::grpc::internal::RpcMethod::SERVER_STREAMING,
+      new ::grpc::internal::ServerStreamingHandler< SDK::Service, ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::GameServer>(
+          std::mem_fn(&SDK::Service::WatchGameServer), this)));
 }
 
 SDK::Service::~Service() {
@@ -152,6 +171,13 @@ SDK::Service::~Service() {
   (void) context;
   (void) request;
   (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::WatchGameServer(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Empty* request, ::grpc::ServerWriter< ::stable::agones::dev::sdk::GameServer>* writer) {
+  (void) context;
+  (void) request;
+  (void) writer;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

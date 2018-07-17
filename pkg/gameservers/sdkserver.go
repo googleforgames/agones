@@ -66,6 +66,9 @@ type SDKServer struct {
 	healthLastUpdated      time.Time
 	healthFailureCount     int64
 	workerqueue            *workerqueue.WorkerQueue
+	streamMutex            sync.RWMutex
+	connectedStreams       []sdk.SDK_WatchGameServerServer
+	stop                   <-chan struct{}
 	recorder               record.EventRecorder
 }
 
@@ -100,10 +103,18 @@ func NewSDKServer(gameServerName, namespace string,
 		healthTimeout:          healthTimeout,
 		healthMutex:            sync.RWMutex{},
 		healthFailureCount:     0,
+		streamMutex:            sync.RWMutex{},
 	}
 
 	s.informerFactory = factory
 	s.logger = runtime.NewLoggerWithType(s)
+
+	gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(_, newObj interface{}) {
+			gs := newObj.(*stablev1alpha1.GameServer)
+			s.sendGameServerUpdate(gs)
+		},
+	})
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(s.logger.Infof)
@@ -171,7 +182,8 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 
 	s.informerFactory.Start(stop)
 	cache.WaitForCacheSync(stop, s.gameServerSynced)
-
+	// need this for streaming gRPC commands
+	s.stop = stop
 	s.workerqueue.Run(1, stop)
 }
 
@@ -237,12 +249,44 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 
 // GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
 func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
+	s.logger.Info("Received GetGameServer request")
 	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
 	}
 
 	return s.convert(gs), nil
+}
+
+// WatchGameServer sends events through the stream when changes occur to the
+// backing GameServer configuration / status
+func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
+	s.logger.Info("Received WatchGameServer request, adding stream to connectedStreams")
+	s.streamMutex.Lock()
+	s.connectedStreams = append(s.connectedStreams, stream)
+	s.streamMutex.Unlock()
+	// don't exit until we shutdown, because that will close the stream
+	<-s.stop
+	return nil
+}
+
+// sendGameServerUpdate sends a watch game server event
+func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
+	s.logger.Info("Sending GameServer Event to connectedStreams")
+
+	s.streamMutex.RLock()
+	defer s.streamMutex.RUnlock()
+
+	for _, stream := range s.connectedStreams {
+		err := stream.Send(s.convert(gs))
+		// We essentially ignoring any disconnected streams.
+		// I think this is fine, as disconnections shouldn't actually happen.
+		// but we should log them, just in case they do happen, and we can track it
+		if err != nil {
+			s.logger.WithError(errors.WithStack(err)).
+				Error("error sending game server update event")
+		}
+	}
 }
 
 // convert converts a K8s GameServer object, into a gRPC SDK GameServer object

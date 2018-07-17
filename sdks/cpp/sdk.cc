@@ -59,6 +59,18 @@ namespace agones {
         return stub->GetGameServer(context, request, response);
     }
 
+    grpc::Status SDK::WatchGameServer(const std::function<void(stable::agones::dev::sdk::GameServer)> callback) {
+        grpc::ClientContext *context = new grpc::ClientContext();
+        stable::agones::dev::sdk::Empty request;
+        stable::agones::dev::sdk::GameServer gameServer;
+
+        std::unique_ptr<grpc::ClientReader<stable::agones::dev::sdk::GameServer>> reader = stub->WatchGameServer(context, request);
+        while (reader->Read(&gameServer)) {
+            callback(gameServer);
+        }
+        return reader->Finish();
+    }
+
     grpc::Status SDK::Shutdown() {
         grpc::ClientContext *context = new grpc::ClientContext();
         context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));

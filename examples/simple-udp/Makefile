@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/udp-server:0.2
+server_tag = $(REPOSITORY)/udp-server:0.3
 package = agones.dev/agones/examples/simple-udp
 
 #   _____                    _

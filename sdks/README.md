@@ -61,6 +61,27 @@ specifically at the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the [examples](../examples).
 
+### WatchGameServer(function(gameserver){...})
+
+⚠️⚠️⚠️ **`WatchGameServer` is currently a development feature and has not been released** ⚠️⚠️⚠
+
+This executes the passed in callback with the current `GameServer` details whenever the underlying `GameServer` configuration is updated.
+This can be useful to track `GameServer > Status > State` changes, `metadata` changes, such as labels and annotations, and more.
+
+In combination with this SDK, manipulating [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can also be a useful way to communicate information through to running game server processes from outside those processes.
+This is especially useful when combined with `FleetAllocation` [applied metadata](../docs/fleet_spec.md#fleet-allocation-specification).  
+
+Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
+the returned object is limited to that configuration that was deemed useful. If there are
+areas that you feel are missing, please [file an issue](https://github.com/GoogleCloudPlatform/agones/issues) or pull request.
+
+The easiest way to see what is exposed, is to check the [`sdk.proto`](https://github.com/GoogleCloudPlatform/agones/blob/master/sdk.proto),
+specifically at the `message GameServer`.
+
+For language specific documentation, have a look at the respective source (linked above), 
+and the [examples](../examples).
+
 ## Local Development
 
 When the game server is running on Agones, the SDK communicates over TCP to a small

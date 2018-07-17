@@ -112,6 +112,23 @@
           "SDK"
         ]
       }
+    },
+    "/watch/gameserver": {
+      "get": {
+        "summary": "Send GameServer details whenever the GameServer is updated",
+        "operationId": "WatchGameServer",
+        "responses": {
+          "200": {
+            "description": "(streaming responses)",
+            "schema": {
+              "$ref": "#/definitions/sdkGameServer"
+            }
+          }
+        },
+        "tags": [
+          "SDK"
+        ]
+      }
     }
   },
   "definitions": {
