@@ -74,6 +74,25 @@ if (!status.ok()) {...}
 For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
 [C++ example](../../examples/cpp-simple).
 
+To get updates on the [backing `GameServer`](../README.md#gameserver) as they happen, 
+call `sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){...})`.
+
+⚠️⚠️⚠️ **`WatchGameServer` is currently a development feature and has not been released** ⚠️⚠️️⚠️ 
+
+This will call the passed in `std::function`
+synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer`
+is updated.
+
+```cpp
+sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
+    std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
+    std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
+});
+```
+
+For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
+[C++ example](../../examples/cpp-simple).
+
 ### Failure
 When running on Agones, the above functions should only fail under exceptional circumstances, so please 
 file a bug if it occurs.

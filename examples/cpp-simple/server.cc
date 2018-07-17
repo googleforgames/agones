@@ -33,6 +33,15 @@ void doHealth(agones::SDK *sdk) {
     }
 }
 
+// watch GameServer Updates
+void watchUpdates(agones::SDK *sdk) {
+    std::cout << "Starting to watch GameServer updates..." << std::endl;
+    sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
+        std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
+        std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
+    });
+}
+
 int main() {
     std::cout << "C++ Game Server has started!" << std::endl;
 
@@ -48,6 +57,7 @@ int main() {
     std::cout << "...handshake complete." << std::endl;
 
     std::thread health (doHealth, sdk);
+    std::thread watch (watchUpdates, sdk);
 
     std::cout << "Marking server as ready..." << std::endl;
     grpc::Status status = sdk->Ready();

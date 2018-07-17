@@ -42,6 +42,11 @@ namespace agones {
             // Marks the Game Server as ready to shutdown
             grpc::Status Shutdown();
 
+            // Watch the GameServer configuration, and fire the callback
+            // when an update occurs.
+            // This is a blocking function, and as such you will likely want to run it inside a thread.
+            grpc::Status WatchGameServer(const std::function<void(stable::agones::dev::sdk::GameServer)> callback);
+
             ~SDK();
 
         private:

@@ -16,7 +16,6 @@ package gameservers
 
 import (
 	"io"
-
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
@@ -25,12 +24,40 @@ import (
 	"golang.org/x/net/context"
 )
 
-var _ sdk.SDKServer = &LocalSDKServer{}
+var (
+	_ sdk.SDKServer = &LocalSDKServer{}
+
+	fixture = &sdk.GameServer{
+		ObjectMeta: &sdk.GameServer_ObjectMeta{
+			Name:              "local",
+			Namespace:         "default",
+			Uid:               "1234",
+			Generation:        1,
+			ResourceVersion:   "v1",
+			CreationTimestamp: time.Now().Unix(),
+			Labels:            map[string]string{"islocal": "true"},
+			Annotations:       map[string]string{"annotation": "true"},
+		},
+		Status: &sdk.GameServer_Status{
+			State:   "Ready",
+			Address: "127.0.0.1",
+			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
+		},
+	}
+)
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
 type LocalSDKServer struct {
+	watchPeriod time.Duration
+}
+
+// NewLocalSDKServer returns the default LocalSDKServer
+func NewLocalSDKServer() *LocalSDKServer {
+	return &LocalSDKServer{
+		watchPeriod: 5 * time.Second,
+	}
 }
 
 // Ready logs that the Ready request has been received
@@ -63,23 +90,24 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 // GetGameServer returns a dummy game server.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	logrus.Info("getting GameServer details")
-	gs := &sdk.GameServer{
-		ObjectMeta: &sdk.GameServer_ObjectMeta{
-			Name:              "local",
-			Namespace:         "default",
-			Uid:               "1234",
-			Generation:        1,
-			ResourceVersion:   "v1",
-			CreationTimestamp: time.Now().Unix(),
-			Labels:            map[string]string{"islocal": "true"},
-			Annotations:       map[string]string{"annotation": "true"},
-		},
-		Status: &sdk.GameServer_Status{
-			State:   "Ready",
-			Address: "127.0.0.1",
-			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
-		},
+	return fixture, nil
+}
+
+// WatchGameServer will return a dummy GameServer (with no changes), 3 times, every 5 seconds
+func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
+	logrus.Info("connected to watch GameServer...")
+	times := 3
+
+	for i := 0; i < times; i++ {
+		logrus.Info("Sending watched GameServer!")
+		err := stream.Send(fixture)
+		if err != nil {
+			logrus.WithError(err).Error("error sending gameserver")
+			return err
+		}
+
+		time.Sleep(l.watchPeriod)
 	}
 
-	return gs, nil
+	return nil
 }

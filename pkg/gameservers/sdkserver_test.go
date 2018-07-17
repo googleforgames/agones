@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
@@ -160,7 +161,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
-	stream := newMockStream()
+	stream := newEmptyMockStream()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -208,7 +209,7 @@ func TestSidecarHealthy(t *testing.T) {
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
-	stream := newMockStream()
+	stream := newEmptyMockStream()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -418,6 +419,108 @@ func TestSDKServerGetGameServer(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, result.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, result.ObjectMeta.Namespace)
 	assert.Equal(t, string(fixture.Status.State), result.Status.State)
+}
+
+func TestSDKServerWatchGameServer(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+	assert.Equal(t, stream, sc.connectedStreams[0])
+
+	stream = newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 2))
+	assert.Len(t, sc.connectedStreams, 2)
+	assert.Equal(t, stream, sc.connectedStreams[1])
+}
+
+func TestSDKServerSendGameServerUpdate(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	sc.stop = stop
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
+
+	sc.sendGameServerUpdate(fixture)
+
+	var sdkGS *sdk.GameServer
+	select {
+	case sdkGS = <-stream.msgs:
+	case <-time.After(3 * time.Second):
+		assert.Fail(t, "Event stream should not have timed out")
+	}
+
+	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
+}
+
+func waitConnectedStreamCount(sc *SDKServer, count int) error {
+	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
+		sc.streamMutex.RLock()
+		defer sc.streamMutex.RUnlock()
+		return len(sc.connectedStreams) == count, nil
+	})
+}
+
+func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream *gameServerMockStream) {
+	go func() {
+		err := sc.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+}
+
+func TestSDKServerUpdateEventHandler(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+
+	stop := make(chan struct{})
+	defer close(stop)
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
+		Spec: v1alpha1.GameServerSpec{},
+	}
+
+	// need to add it before it can be modified
+	fakeWatch.Add(fixture.DeepCopy())
+	fakeWatch.Modify(fixture.DeepCopy())
+
+	var sdkGS *sdk.GameServer
+	select {
+	case sdkGS = <-stream.msgs:
+	case <-time.After(3 * time.Second):
+		assert.Fail(t, "Event stream should not have timed out")
+	}
+
+	assert.NotNil(t, sdkGS)
+	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
 }
 
 func defaultSidecar(mocks agtesting.Mocks) (*SDKServer, error) {

@@ -432,7 +432,7 @@ void AddDescriptorsImpl() {
       "state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\005ports\030\003 "
       "\003(\0132-.stable.agones.dev.sdk.GameServer.S"
       "tatus.Port\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004port"
-      "\030\002 \001(\0052\376\002\n\003SDK\022V\n\005Ready\022\034.stable.agones."
+      "\030\002 \001(\0052\357\003\n\003SDK\022V\n\005Ready\022\034.stable.agones."
       "dev.sdk.Empty\032\034.stable.agones.dev.sdk.Em"
       "pty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022\\\n\010Shutdown\022\034.sta"
       "ble.agones.dev.sdk.Empty\032\034.stable.agones"
@@ -441,11 +441,13 @@ void AddDescriptorsImpl() {
       "table.agones.dev.sdk.Empty\"\022\202\323\344\223\002\014\"\007/hea"
       "lth:\001*(\001\022e\n\rGetGameServer\022\034.stable.agone"
       "s.dev.sdk.Empty\032!.stable.agones.dev.sdk."
-      "GameServer\"\023\202\323\344\223\002\r\022\013/gameserverB\005Z\003sdkb\006"
-      "proto3"
+      "GameServer\"\023\202\323\344\223\002\r\022\013/gameserver\022o\n\017Watch"
+      "GameServer\022\034.stable.agones.dev.sdk.Empty"
+      "\032!.stable.agones.dev.sdk.GameServer\"\031\202\323\344"
+      "\223\002\023\022\021/watch/gameserver0\001B\005Z\003sdkb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1406);
+      descriptor, 1519);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
   ::protobuf_google_2fapi_2fannotations_2eproto::AddDescriptors();

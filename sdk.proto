@@ -48,6 +48,12 @@ service SDK {
             get: "/gameserver"
         };
     }
+    // Send GameServer details whenever the GameServer is updated
+    rpc WatchGameServer (Empty) returns (stream GameServer) {
+        option (google.api.http) = {
+            get: "/watch/gameserver"
+        };
+    }
 }
 
 message Empty {

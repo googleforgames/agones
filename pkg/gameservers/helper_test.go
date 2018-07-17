@@ -26,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	netcontext "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -40,51 +41,6 @@ func newSingleContainerSpec() v1alpha1.GameServerSpec {
 			},
 		},
 	}
-}
-
-// mockStream is the mock of the SDK_HealthServer for streaming
-type mockStream struct {
-	msgs chan *sdk.Empty
-}
-
-func newMockStream() *mockStream {
-	return &mockStream{msgs: make(chan *sdk.Empty)}
-}
-
-func (m *mockStream) SendAndClose(*sdk.Empty) error {
-	return nil
-}
-
-func (m *mockStream) Recv() (*sdk.Empty, error) {
-	empty, ok := <-m.msgs
-	if ok {
-		return empty, nil
-	}
-	return empty, io.EOF
-}
-
-func (m *mockStream) SetHeader(metadata.MD) error {
-	panic("implement me")
-}
-
-func (m *mockStream) SendHeader(metadata.MD) error {
-	panic("implement me")
-}
-
-func (m *mockStream) SetTrailer(metadata.MD) {
-	panic("implement me")
-}
-
-func (m *mockStream) Context() context.Context {
-	panic("implement me")
-}
-
-func (m *mockStream) SendMsg(msg interface{}) error {
-	panic("implement me")
-}
-
-func (m *mockStream) RecvMsg(msg interface{}) error {
-	panic("implement me")
 }
 
 func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedStatus int) {
@@ -108,4 +64,89 @@ func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedS
 		return true, nil
 	})
 	assert.Nil(t, err, "Timeout on %s health check, %v", url, err)
+}
+
+// emptyMockStream is the mock of the SDK_HealthServer for streaming
+type emptyMockStream struct {
+	msgs chan *sdk.Empty
+}
+
+func newEmptyMockStream() *emptyMockStream {
+	return &emptyMockStream{msgs: make(chan *sdk.Empty)}
+}
+
+func (m *emptyMockStream) SendAndClose(*sdk.Empty) error {
+	return nil
+}
+
+func (m *emptyMockStream) Recv() (*sdk.Empty, error) {
+	empty, ok := <-m.msgs
+	if ok {
+		return empty, nil
+	}
+	return empty, io.EOF
+}
+
+func (m *emptyMockStream) SetHeader(metadata.MD) error {
+	panic("implement me")
+}
+
+func (m *emptyMockStream) SendHeader(metadata.MD) error {
+	panic("implement me")
+}
+
+func (m *emptyMockStream) SetTrailer(metadata.MD) {
+	panic("implement me")
+}
+
+func (m *emptyMockStream) Context() context.Context {
+	panic("implement me")
+}
+
+func (m *emptyMockStream) SendMsg(msg interface{}) error {
+	panic("implement me")
+}
+
+func (m *emptyMockStream) RecvMsg(msg interface{}) error {
+	panic("implement me")
+}
+
+type gameServerMockStream struct {
+	msgs chan *sdk.GameServer
+}
+
+// newGameServerMockStream implements SDK_WatchGameServerServer for testing
+func newGameServerMockStream() *gameServerMockStream {
+	return &gameServerMockStream{
+		msgs: make(chan *sdk.GameServer, 10),
+	}
+}
+
+func (m *gameServerMockStream) Send(gs *sdk.GameServer) error {
+	m.msgs <- gs
+	return nil
+}
+
+func (*gameServerMockStream) SetHeader(metadata.MD) error {
+	panic("implement me")
+}
+
+func (*gameServerMockStream) SendHeader(metadata.MD) error {
+	panic("implement me")
+}
+
+func (*gameServerMockStream) SetTrailer(metadata.MD) {
+	panic("implement me")
+}
+
+func (*gameServerMockStream) Context() netcontext.Context {
+	panic("implement me")
+}
+
+func (*gameServerMockStream) SendMsg(m interface{}) error {
+	panic("implement me")
+}
+
+func (*gameServerMockStream) RecvMsg(m interface{}) error {
+	panic("implement me")
 }

@@ -17,7 +17,6 @@ package gameservers
 import (
 	"sync"
 	"testing"
-
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
@@ -28,7 +27,7 @@ import (
 func TestLocal(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
-	l := LocalSDKServer{}
+	l := NewLocalSDKServer()
 
 	_, err := l.Ready(ctx, e)
 	assert.Nil(t, err, "Ready should not error")
@@ -38,7 +37,7 @@ func TestLocal(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	stream := newMockStream()
+	stream := newEmptyMockStream()
 
 	go func() {
 		err = l.Health(stream)
@@ -54,23 +53,26 @@ func TestLocal(t *testing.T) {
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
-	expected := &sdk.GameServer{
-		ObjectMeta: &sdk.GameServer_ObjectMeta{
-			Name:              "local",
-			Namespace:         "default",
-			Uid:               "1234",
-			Generation:        1,
-			ResourceVersion:   "v1",
-			CreationTimestamp: time.Now().Unix(),
-			Labels:            map[string]string{"islocal": "true"},
-			Annotations:       map[string]string{"annotation": "true"},
-		},
-		Status: &sdk.GameServer_Status{
-			State:   "Ready",
-			Address: "127.0.0.1",
-			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
-		},
-	}
+	assert.Equal(t, fixture, gs)
+}
 
-	assert.Equal(t, expected, gs)
+func TestLocalSDKServerWatchGameServer(t *testing.T) {
+	t.Parallel()
+
+	e := &sdk.Empty{}
+	l := NewLocalSDKServer()
+	l.watchPeriod = time.Second
+
+	stream := newGameServerMockStream()
+	err := l.WatchGameServer(e, stream)
+	assert.Nil(t, err)
+
+	for i := 0; i < 3; i++ {
+		select {
+		case msg := <-stream.msgs:
+			assert.Equal(t, fixture, msg)
+		case <-time.After(2 * l.watchPeriod):
+			assert.FailNow(t, "timeout on receiving messagess")
+		}
+	}
 }
