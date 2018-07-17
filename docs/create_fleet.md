@@ -341,7 +341,7 @@ If you want to use your own GameServer container make sure you have properly int
 
 ---
 
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 > Development version of the Fleet response
 

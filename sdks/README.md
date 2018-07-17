@@ -47,7 +47,7 @@ The GameServer state will be set `Shutdown` and the
 backing Pod will be deleted, if they have not shut themselves down already. 
 
 ### GameServer()
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 This returns most of the backing GameServer configuration and Status. This can be useful
 for instances where you may want to know Health check configuration, or the IP and Port

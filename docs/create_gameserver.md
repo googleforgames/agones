@@ -163,7 +163,7 @@ If you want to use your own GameServer container make sure you have properly int
 
 ---
 
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 > Development version of the GameServer description
 
@@ -181,13 +181,6 @@ Metadata:
     stable.agones.dev
   Generate Name:  simple-udp-jq8kd-
   Generation:     1
-  Owner References:
-    API Version:           stable.agones.dev/v1alpha1
-    Block Owner Deletion:  true
-    Controller:            true
-    Kind:                  GameServerSet
-    Name:                  simple-udp-jq8kd
-    UID:                   132a214e-7c70-11e8-b9be-08002703ef08
   Resource Version:        11978
   Self Link:               /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-jq8kd-q8dzg
   UID:                     132bb210-7c70-11e8-b9be-08002703ef08

@@ -1,4 +1,4 @@
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠
 
 # REST Game Server Client API
 
@@ -66,7 +66,7 @@ $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:5935
 
 ### GameServer
 
-⚠️⚠️⚠️ **/gameserver is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **/gameserver is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 Call when you want to retrieve the backing `GameServer` configuration details
 
