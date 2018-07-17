@@ -89,7 +89,7 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
 
 ---
 
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 > Development version of the Fleet spec
 

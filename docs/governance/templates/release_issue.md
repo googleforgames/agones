@@ -11,6 +11,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}.rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}.rc if release candidate)
+- [ ] Ensure the [helm `Chart` version values][chart] are correct (should be the {version} if a full release, {version}.rc if release candidate)
 - [ ] Run `make gen-install`
 - [ ] Ensure all example images exist on gcr.io/agones-images
 - [ ] If full release, update documentation with updated example images tags
@@ -33,6 +34,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
 
 [values]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/values.yaml#L33
+[chart]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/Chart.yaml
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
 [release-template]: https://github.com/GoogleCloudPlatform/agones/blob/master/docs/governance/templates/release.md
 [build-makefile]: https://github.com/GoogleCloudPlatform/agones/blob/master/build/Makefile

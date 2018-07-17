@@ -32,7 +32,7 @@ The command deploys Agones on the Kubernetes cluster with the default configurat
 
 > If you are installing a development build of Agones (i.e. not the 0.2.0 release), you will need to install Agones the following way:
 
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 ```bash
 $ cd install/helm/
