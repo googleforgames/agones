@@ -38,7 +38,7 @@ metadata:
 rules:
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
-  verbs: ["list", "update"]
+  verbs: ["list", "update", "watch"]
 ---
   {{- range .Values.gameservers.namespaces }}
 apiVersion: rbac.authorization.k8s.io/v1
