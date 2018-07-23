@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ForceUpdate 5 -- change here if you need to force a rebuild
+# ForceUpdate 6 -- change here if you need to force a rebuild
 
 # compiling proto + grpc takes an exceptionally long time
 # so we'll use a base from `base` - which is manually built using the below tag.
 FROM gcr.io/agones-images/grpc-cxx:1.12
 
 RUN apt-get update && \
-    apt-get install -y wget rsync make python bash-completion zip nano jq && \
+    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq && \
     apt-get clean
 
 # install go
@@ -39,17 +39,22 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && un
 ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 
 # RUN gcloud components update
-RUN gcloud components update && gcloud components install kubectl
+RUN gcloud components update
+# install kubectl without gcloud as we want the last version
+ENV KUBECTL_VER 1.11.0
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
+    chmod go+rx ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
 # install Helm package manager
 ENV HELM_VER 2.9.1
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
-  && tar -zxvf /tmp/helm.tar.gz -C /tmp \
-  && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
-  && chmod go+rx /usr/local/bin/helm \
-  && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
+    && tar -zxvf /tmp/helm.tar.gz -C /tmp \
+    && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
+    && chmod go+rx /usr/local/bin/helm \
+    && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install go-proto-gen 1.1
@@ -86,6 +91,19 @@ RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rust
 # install rust tooling for SDK generation
 RUN cargo install protobuf-codegen --vers 2.0.2
 RUN cargo install grpcio-compiler --vers 0.3.0
+
+# set up Consul.
+ENV CONSUL_VERSION=1.2.1
+ENV HASHICORP_RELEASES=https://releases.hashicorp.com
+RUN mkdir -p /tmp/build && \
+    wget ${HASHICORP_RELEASES}/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip \
+    -P /tmp/build/  && \
+    unzip -d /usr/local/bin/ /tmp/build/consul_${CONSUL_VERSION}_linux_amd64.zip && \
+    cd /tmp && \
+    rm -rf /tmp/build && \
+    chmod go+rx /usr/local/bin/consul && \
+    # tiny smoke test to ensure the binary we downloaded runs
+    consul version
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc

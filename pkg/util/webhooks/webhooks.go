@@ -78,7 +78,7 @@ func NewWebHook(certFile, keyFile string) *WebHook {
 func (wh *WebHook) Run(workers int, stop <-chan struct{}) error {
 	go func() {
 		<-stop
-		wh.server.Close() // nolint: errcheck
+		wh.server.Close() // nolint: errcheck,gosec
 	}()
 
 	wh.logger.WithField("webook", wh).Infof("https server started")

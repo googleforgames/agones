@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # Copyright 2017 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,16 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-.*
-!.gitignore
-!.helmignore
-!.gitattributes
-*.iml
-bin
-*.o
-tmp
-build/local-includes/*
-!build/local-includes/README.md
-/release
-debug.test
+echo "installing current release"
+DOCKER_RUN= make install
+echo "starting e2e test"
+DOCKER_RUN= make test-e2e
