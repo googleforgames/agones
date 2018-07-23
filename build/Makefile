@@ -46,6 +46,9 @@ GCP_CLUSTER_ZONE ?= us-west1-c
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
 
+# Game Server image to use while doing end-to-end tests
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.1
+
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
@@ -63,7 +66,7 @@ controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
-
+DOCKER_RUN ?= docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag)
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
 #  | | | \___ \   | || '_ \ / __| | | | |/ _` |/ _ \
@@ -85,6 +88,10 @@ include ./includes/$(osinclude)
 # personal includes, excluded from the git repository
 -include ./local-includes/*.mk
 
+ifdef DOCKER_RUN
+    ensure-build-image += ensure-build-image
+endif
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -102,11 +109,19 @@ build-images: build-controller-image build-agones-sdk-image
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: ensure-build-image test-go test-install-yaml
+test: $(ensure-build-image) test-go test-install-yaml
 
 # Run go tests
 test-go:
-	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/...
+	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/pkg/... \
+	$(agones_package)/sdks/...
+
+# Runs end-to-end tests on the current configured cluster
+# For minikube user the minikube-test-e2e targets
+test-e2e:
+	$(DOCKER_RUN) go test -v $(agones_package)/test/e2e/... \
+		--kubeconfig /root/.kube/config \
+		--gameserver-image=$(GS_TEST_IMAGE)
 
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
@@ -124,34 +139,34 @@ push: push-controller-image push-agones-sdk-image
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
-install: ensure-build-image
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm upgrade --install --namespace=agones-system \
+install: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm upgrade --install --recreate-pods --wait --namespace=agones-system \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		agones $(mount_path)/install/helm/agones/
 
 # Build a static binary for the gameserver controller
-build-controller-binary: ensure-build-image
+build-controller-binary: $(ensure-build-image)
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
 		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
 lint: LINT_TIMEOUT ?= 15m
-lint: ensure-build-image
+lint: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline=$(LINT_TIMEOUT) -t --skip vendor ./..."
 
 # Build the image for the gameserver controller
-build-controller-image: ensure-build-image build-controller-binary
+build-controller-image: $(ensure-build-image) build-controller-binary
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
-push-controller-image: ensure-build-image
+push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-agones-sdk-binary: ensure-build-image
+build-agones-sdk-binary: $(ensure-build-image)
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
 		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
@@ -162,38 +177,38 @@ build-agones-sdk-binary: ensure-build-image
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
 # Build the image for the gameserver sidecar
-build-agones-sdk-image: ensure-build-image build-agones-sdk-binary
+build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build the cpp sdk linux archive
-build-sdk-cpp: ensure-build-image
+build-sdk-cpp: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make build install archive VERSION=$(VERSION)
 
 # push the gameservers sidecar image
-push-agones-sdk-image: ensure-build-image
+push-agones-sdk-image: $(ensure-build-image)
 	docker push $(sidecar_tag)
 
 # Generate the static install script
-gen-install: ensure-build-image
+gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the SDK gRPC server and client code
-gen-gameservers-sdk-grpc: ensure-build-image
+gen-gameservers-sdk-grpc: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-go.sh
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-cpp.sh
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-rust.sh
 
 # Generate the client for our CustomResourceDefinition
-gen-crd-client: ensure-build-image
+gen-crd-client: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
-shell: ensure-build-image
+shell: $(ensure-build-image)
 	docker run -it --rm \
 		$(common_mounts) \
 		-w $(mount_path) \
@@ -286,7 +301,7 @@ gcloud-init: ensure-build-config
 gcloud-test-cluster: GCP_CLUSTER_LEGACYABAC ?= false
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
-gcloud-test-cluster: ensure-build-image
+gcloud-test-cluster: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
 		deployment-manager deployments create $(GCP_CLUSTER_NAME)  \
 		--properties cluster.zone:$(GCP_CLUSTER_ZONE),cluster.name:$(GCP_CLUSTER_NAME),cluster.nodePool.initialNodeCount:$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT),cluster.nodePool.machineType:$(GCP_CLUSTER_NODEPOOL_MACHINETYPE),cluster.legacyAbac:$(GCP_CLUSTER_LEGACYABAC)\
@@ -295,13 +310,31 @@ gcloud-test-cluster: ensure-build-image
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
 
-clean-gcloud-test-cluster: ensure-build-image
+clean-gcloud-test-cluster: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
 		deployment-manager deployments delete $(GCP_CLUSTER_NAME)
-	
+
+# Creates a gcloud cluster for end-to-end
+# it installs also a consul cluster to handle build system concurrency using a distributed lock
+gcloud-e2e-test-cluster: $(ensure-build-image)
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
+		deployment-manager deployments create e2e-test-cluster \
+		--config=$(mount_path)/build/gke-test-cluster/cluster-e2e.yml
+	GCP_CLUSTER_NAME=e2e-test-cluster GCP_CLUSTER_ZONE=us-west1-c $(MAKE) gcloud-auth-cluster
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		kubectl apply -f $(mount_path)/build/helm.yaml
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm --wait && \
+		 helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
+
+# Deletes the gcloud e2e cluster and cleanup any left pvc volumes
+clean-gcloud-e2e-test-cluster: $(ensure-build-image)
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm delete --purge consul && kubectl delete pvc -l component=consul-consul
+	GCP_CLUSTER_NAME=e2e-test-cluster $(MAKE) clean-gcloud-test-cluster
+
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')
-gcloud-auth-cluster: ensure-build-image
+gcloud-auth-cluster: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(GCP_CLUSTER_NAME)
 	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone $(GCP_CLUSTER_ZONE)
 	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME)
@@ -309,7 +342,7 @@ gcloud-auth-cluster: ensure-build-image
 
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
-gcloud-auth-docker: ensure-build-image
+gcloud-auth-docker: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(build_tag) gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
 
 # Clean the gcloud configuration
@@ -328,7 +361,7 @@ clean-gcloud-config:
 #
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
-minikube-test-cluster: ensure-build-image minikube-agones-profile
+minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 	# localkube bootstrapper fixes issues with profiles
 	$(MINIKUBE) start --kubernetes-version v1.10.0 --vm-driver $(MINIKUBE_DRIVER) \
 		--bootstrapper=localkube \
@@ -355,7 +388,7 @@ minikube-agones-profile:
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
-minikube-shell: ensure-build-image minikube-agones-profile
+minikube-shell: $(ensure-build-image) minikube-agones-profile
 	$(MAKE) shell DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS)"
 
 # Push the local Agones Docker images that have already been built
@@ -373,3 +406,7 @@ minikube-install: minikube-agones-profile
 # Use TAG to specify the image to transfer into minikube
 minikube-transfer-image:
 	docker save $(TAG) | ($(MINIKUBE_DOCKER_ENV) && docker load)
+
+# Runs e2e tests against our minikube
+minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
+minikube-test-e2e: minikube-agones-profile test-e2e 

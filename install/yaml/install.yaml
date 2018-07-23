@@ -757,7 +757,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-controller
@@ -769,6 +769,12 @@ metadata:
     release: agones-manual
     heritage: Tiller
 spec:
+  selector:
+    matchLabels:
+      stable.agones.dev/role: controller
+      app: agones
+      release: agones-manual
+      heritage: Tiller
   replicas: 1
   strategy:
     type: Recreate
@@ -777,7 +783,6 @@ spec:
       labels:
         stable.agones.dev/role: controller
         app: agones
-        chart: agones-0.4.0.rc
         release: agones-manual
         heritage: Tiller
     spec:
