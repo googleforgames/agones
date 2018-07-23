@@ -23,3 +23,4 @@ tmp
 build/local-includes/*
 !build/local-includes/README.md
 /release
+debug.test
