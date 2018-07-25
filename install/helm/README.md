@@ -18,21 +18,21 @@ To install the chart with the release name `my-release`:
 Download the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
 
 ```bash
-$ wget https://github.com/GoogleCloudPlatform/agones/releases/download/v0.2.0/agones-install-0.2.0.zip
-$ unzip agones-install-0.2.0.zip
+$ wget https://github.com/GoogleCloudPlatform/agones/releases/download/v0.3.0/agones-install-0.3.0.zip
+$ unzip agones-install-0.3.0.zip
 $ cd install/helm/
-$ helm install --name my-release agones
+$ helm install --name my-release --namespace agones-system agones
 ```
+
+_We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
+you can use the helm `--namespace` parameter to specify a different namespace._
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
 >
----
 
-> If you are installing a development build of Agones (i.e. not the 0.2.0 release), you will need to install Agones the following way:
-
-⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
+> If you are installing a development build of Agones (i.e. not the 0.3.0 release), you will need to install Agones the following way:
 
 ```bash
 $ cd install/helm/
@@ -40,9 +40,6 @@ $ helm install --name my-release --namespace agones-system agones --set agones.i
 ```
 
 The full list of available tags is [here](https://console.cloud.google.com/gcr/images/agones-images/)
-
-_We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
-you can use the helm `--namespace` parameter to specify a different namespace._
 
 ---
 
@@ -94,7 +91,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
-| `agones.image.tag`                                  | Global image tag for all images                                                                 | `0.2.0`                |
+| `agones.image.tag`                                  | Global image tag for all images                                                                 | `0.3.0`                |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |

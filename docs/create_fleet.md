@@ -83,34 +83,43 @@ API Version:  stable.agones.dev/v1alpha1
 Kind:         Fleet
 Metadata:
   Cluster Name:
-  Creation Timestamp:  2018-04-27T20:06:23Z
-  Generation:          0
-  Resource Version:    72035
+  Creation Timestamp:  2018-07-01T18:55:35Z
+  Generation:          1
+  Resource Version:    24685
   Self Link:           /apis/stable.agones.dev/v1alpha1/namespaces/default/fleets/simple-udp
-  UID:                 75832daa-4a56-11e8-925f-080027bb1955
+  UID:                 56710a91-7d60-11e8-b2dd-08002703ef08
 Spec:
   Replicas:  2
+  Strategy:
+    Rolling Update:
+      Max Surge:        25%
+      Max Unavailable:  25%
+    Type:               RollingUpdate
   Template:
     Metadata:
       Creation Timestamp:  <nil>
     Spec:
-      Container Port:  7654
       Health:
+      Ports:
+        Container Port:  7654
+        Name:            default
+        Port Policy:     dynamic
       Template:
         Metadata:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.1
+            Image:  gcr.io/agones-images/udp-server:0.2
             Name:   simple-udp
             Resources:
 Status:
-  Ready Replicas:  2
-  Replicas:        2
+  Allocated Replicas:  0
+  Ready Replicas:      2
+  Replicas:            2
 Events:
   Type    Reason                 Age   From              Message
   ----    ------                 ----  ----              -------
-  Normal  CreatingGameServerSet  8s    fleet-controller  Created GameServerSet simple-udp-jp8xw
+  Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
 ```
 
 If you look towards the bottom, you can see there is a section of `Status > Ready Replicas` which will tell you
@@ -160,65 +169,71 @@ apiVersion: stable.agones.dev/v1alpha1
 kind: FleetAllocation
 metadata:
   clusterName: ""
-  creationTimestamp: 2018-04-30T04:02:00Z
+  creationTimestamp: 2018-07-01T18:56:31Z
   generateName: simple-udp-
-  name: simple-udp-5g82v
+  generation: 1
+  name: simple-udp-l7dn9
   namespace: default
   ownerReferences:
   - apiVersion: stable.agones.dev/v1alpha1
     blockOwnerDeletion: true
     controller: true
     kind: GameServer
-    name: simple-udp-gwrsj-gzd9k
-    uid: fd2e889e-4c2a-11e8-a2db-0800273eb123
-  resourceVersion: "761"
-  selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations/simple-udp-5g82v
-  uid: 3bb689f3-4c2b-11e8-a2db-0800273eb123
+    name: simple-udp-wlqnd-s2xr5
+    uid: 5676a611-7d60-11e8-b2dd-08002703ef08
+  resourceVersion: "24719"
+  selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations/simple-udp-l7dn9
+  uid: 77c22f17-7d60-11e8-b2dd-08002703ef08
 spec:
   fleetName: simple-udp
 status:
   GameServer:
     metadata:
-      creationTimestamp: 2018-04-30T04:00:15Z
+      creationTimestamp: 2018-07-01T18:55:35Z
       finalizers:
       - stable.agones.dev
-      generateName: simple-udp-gwrsj-
+      generateName: simple-udp-wlqnd-
+      generation: 1
       labels:
-        stable.agones.dev/gameserverset: simple-udp-gwrsj
-      name: simple-udp-gwrsj-gzd9k
+        stable.agones.dev/gameserverset: simple-udp-wlqnd
+      name: simple-udp-wlqnd-s2xr5
       namespace: default
       ownerReferences:
       - apiVersion: stable.agones.dev/v1alpha1
         blockOwnerDeletion: true
         controller: true
         kind: GameServerSet
-        name: simple-udp-gwrsj
-        uid: c4181444-4c2a-11e8-a2db-0800273eb123
-      resourceVersion: "759"
-      selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-gwrsj-gzd9k
-      uid: fd2e889e-4c2a-11e8-a2db-0800273eb123
+        name: simple-udp-wlqnd
+        uid: 56731f1a-7d60-11e8-b2dd-08002703ef08
+      resourceVersion: "24716"
+      selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-wlqnd-s2xr5
+      uid: 5676a611-7d60-11e8-b2dd-08002703ef08
     spec:
-      PortPolicy: dynamic
       container: simple-udp
-      containerPort: 7654
       health:
         failureThreshold: 3
         initialDelaySeconds: 5
         periodSeconds: 5
-      hostPort: 7635
-      protocol: UDP
+      ports:
+      - containerPort: 7654
+        hostPort: 7604
+        name: default
+        portPolicy: dynamic
+        protocol: UDP
       template:
         metadata:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.1
+          - image: gcr.io/agones-images/udp-server:0.2
             name: simple-udp
             resources: {}
     status:
       address: 192.168.99.100
       nodeName: agones
-      port: 7635
+      ports:
+      - name: default
+        port: 7604
       state: Allocated
 ```
 
@@ -338,132 +353,3 @@ You have now deployed a new version of your game!
 ## Next Steps
 
 If you want to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).
-
----
-
-⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
-
-> Development version of the Fleet response
-
-```
-Name:         simple-udp
-Namespace:    default
-Labels:       <none>
-Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"stable.agones.dev/v1alpha1","kind":"Fleet","metadata":{"annotations":{},"name":"simple-udp","namespace":"default"},"spec":{"replicas":2,...
-API Version:  stable.agones.dev/v1alpha1
-Kind:         Fleet
-Metadata:
-  Cluster Name:
-  Creation Timestamp:  2018-07-01T18:55:35Z
-  Generation:          1
-  Resource Version:    24685
-  Self Link:           /apis/stable.agones.dev/v1alpha1/namespaces/default/fleets/simple-udp
-  UID:                 56710a91-7d60-11e8-b2dd-08002703ef08
-Spec:
-  Replicas:  2
-  Strategy:
-    Rolling Update:
-      Max Surge:        25%
-      Max Unavailable:  25%
-    Type:               RollingUpdate
-  Template:
-    Metadata:
-      Creation Timestamp:  <nil>
-    Spec:
-      Health:
-      Ports:
-        Container Port:  7654
-        Name:            default
-        Port Policy:     dynamic
-      Template:
-        Metadata:
-          Creation Timestamp:  <nil>
-        Spec:
-          Containers:
-            Image:  gcr.io/agones-images/udp-server:0.1
-            Name:   simple-udp
-            Resources:
-Status:
-  Allocated Replicas:  0
-  Ready Replicas:      2
-  Replicas:            2
-Events:
-  Type    Reason                 Age   From              Message
-  ----    ------                 ----  ----              -------
-  Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
-```
-
-> Development version of the Fleet Allocation response
-
-```
-apiVersion: stable.agones.dev/v1alpha1
-kind: FleetAllocation
-metadata:
-  clusterName: ""
-  creationTimestamp: 2018-07-01T18:56:31Z
-  generateName: simple-udp-
-  generation: 1
-  name: simple-udp-l7dn9
-  namespace: default
-  ownerReferences:
-  - apiVersion: stable.agones.dev/v1alpha1
-    blockOwnerDeletion: true
-    controller: true
-    kind: GameServer
-    name: simple-udp-wlqnd-s2xr5
-    uid: 5676a611-7d60-11e8-b2dd-08002703ef08
-  resourceVersion: "24719"
-  selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations/simple-udp-l7dn9
-  uid: 77c22f17-7d60-11e8-b2dd-08002703ef08
-spec:
-  fleetName: simple-udp
-status:
-  GameServer:
-    metadata:
-      creationTimestamp: 2018-07-01T18:55:35Z
-      finalizers:
-      - stable.agones.dev
-      generateName: simple-udp-wlqnd-
-      generation: 1
-      labels:
-        stable.agones.dev/gameserverset: simple-udp-wlqnd
-      name: simple-udp-wlqnd-s2xr5
-      namespace: default
-      ownerReferences:
-      - apiVersion: stable.agones.dev/v1alpha1
-        blockOwnerDeletion: true
-        controller: true
-        kind: GameServerSet
-        name: simple-udp-wlqnd
-        uid: 56731f1a-7d60-11e8-b2dd-08002703ef08
-      resourceVersion: "24716"
-      selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-wlqnd-s2xr5
-      uid: 5676a611-7d60-11e8-b2dd-08002703ef08
-    spec:
-      container: simple-udp
-      health:
-        failureThreshold: 3
-        initialDelaySeconds: 5
-        periodSeconds: 5
-      ports:
-      - containerPort: 7654
-        hostPort: 7604
-        name: default
-        portPolicy: dynamic
-        protocol: UDP
-      template:
-        metadata:
-          creationTimestamp: null
-        spec:
-          containers:
-          - image: gcr.io/agones-images/udp-server:0.1
-            name: simple-udp
-            resources: {}
-    status:
-      address: 192.168.99.100
-      nodeName: agones
-      ports:
-      - name: default
-        port: 7604
-      state: Allocated
-```
