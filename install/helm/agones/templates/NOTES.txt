@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.1
+        image: gcr.io/agones-images/udp-server:0.2
 
 Finally don't forget to explore our documentation and usage guides on how to develop and host dedicated game servers on top of Agones. :
 

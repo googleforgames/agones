@@ -1,5 +1,20 @@
 # Change Log
 
+## [v0.3.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.3.0) (2018-07-25)
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.3.0.rc...v0.3.0)
+
+**Fixed bugs:**
+
+- Missing `watch` permission in rbac for agones-sdk [\#300](https://github.com/GoogleCloudPlatform/agones/pull/300) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.3.0.rc [\#290](https://github.com/GoogleCloudPlatform/agones/issues/290)
+
+**Merged pull requests:**
+
+- Move back to 0.3.0 [\#292](https://github.com/GoogleCloudPlatform/agones/pull/292) ([markmandel](https://github.com/markmandel))
+
 ## [v0.3.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.3.0.rc) (2018-07-17)
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.2.0...v0.3.0.rc)
 

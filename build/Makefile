@@ -243,7 +243,7 @@ push-build-image:
 gen-changelog: RELEASE_VERSION ?= $(base_version)
 gen-changelog:
 	@read -p 'Github Token: ' TOKEN && \
-	docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator \
+	docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.14.3 \
 		GoogleCloudPlatform/agones --bug-labels=kind/bug --enhancement-labels=kind/feature \
 		--future-release "v$(RELEASE_VERSION)" \
 		--token=$$TOKEN

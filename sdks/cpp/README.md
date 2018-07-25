@@ -59,8 +59,6 @@ if (!status.ok()) { ... }
 For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
 [C++ example](../../examples/cpp-simple).
 
-⚠️⚠️⚠️ **sdk->GameServer(&gameserver) is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
-    
 To get the details on the [backing `GameServer`](../README.md#gameserver) call `sdk->GameServer(&gameserver)`,
 passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
 

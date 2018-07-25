@@ -1,5 +1,3 @@
-⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠
-
 # REST Game Server Client API
 
 This is the REST version of the Agones Game Server Client SDK. 
@@ -65,8 +63,6 @@ $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:5935
 ```
 
 ### GameServer
-
-⚠️⚠️⚠️ **/gameserver is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
 
 Call when you want to retrieve the backing `GameServer` configuration details
 

@@ -71,51 +71,56 @@ watch kubectl describe gameserver
 ```
 
 ```
-Name:         simple-udp
+Name:         simple-udp-jq8kd-q8dzg
 Namespace:    default
-Labels:       <none>
-Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"stable.agones.dev/v1alpha1","kind":"GameServer","metadata":{"annotations":{},"name":"simple-udp","namespace":"default"},"spec":{"contain...
+Labels:       stable.agones.dev/gameserverset=simple-udp-jq8kd
+Annotations:  <none>
 API Version:  stable.agones.dev/v1alpha1
 Kind:         GameServer
 Metadata:
   Cluster Name:
-  Creation Timestamp:  2018-03-01T20:43:36Z
+  Creation Timestamp:  2018-06-30T14:15:43Z
   Finalizers:
     stable.agones.dev
-  Generation:        0
-  Resource Version:  6238
-  Self Link:         /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp
-  UID:               372468b6-1d91-11e8-926e-fa163e0980b0
+  Generate Name:  simple-udp-jq8kd-
+  Generation:     1
+  Resource Version:        11978
+  Self Link:               /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-jq8kd-q8dzg
+  UID:                     132bb210-7c70-11e8-b9be-08002703ef08
 Spec:
-  Port Policy:     dynamic
-  Container:       simple-udp
-  Container Port:  7654
+  Container:  simple-udp
   Health:
     Failure Threshold:      3
     Initial Delay Seconds:  5
     Period Seconds:         5
-  Host Port:                7211
-  Protocol:                 UDP
+  Ports:
+    Container Port:  7654
+    Host Port:       7614
+    Name:            default
+    Port Policy:     dynamic
+    Protocol:        UDP
   Template:
     Metadata:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.1
+        Image:  gcr.io/agones-images/udp-server:0.2
         Name:   simple-udp
         Resources:
 Status:
-  Address:    10.130.65.212
-  Node Name:  dev-worker-03
-  Port:       7211
-  State:      Ready
+  Address:    192.168.99.100
+  Node Name:  agones
+  Ports:
+    Name:  default
+    Port:  7614
+  State:   Ready
 Events:
   Type    Reason          Age   From                   Message
   ----    ------          ----  ----                   -------
-  Normal  PortAllocation  11s   gameserver-controller  Port allocated
-  Normal  Creating        11s   gameserver-controller  Pod simple-udp-vwxpt created
-  Normal  Starting        11s   gameserver-controller  Synced
-  Normal  Ready           4s    gameserver-controller  Address and Port populated
+  Normal  PortAllocation  23s   gameserver-controller  Port allocated
+  Normal  Creating        23s   gameserver-controller  Pod simple-udp-jq8kd-q8dzg-9kww8 created
+  Normal  Starting        23s   gameserver-controller  Synced
+  Normal  Ready           20s   gameserver-controller  Address and Port populated
 ```
 
 If you look towards the bottom, you can see there is a `Status > State` value. We are waiting for it to move to `Ready`, which means that the game server is ready to accept connections.
@@ -160,62 +165,3 @@ If you run `kubectl describe gameserver` again - either the GameServer will be g
 ## Next Step
 
 If you want to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).
-
----
-
-⚠️⚠️⚠️ **This is currently a release candidate feature and has not been released** ⚠️⚠️⚠️
-
-> Development version of the GameServer description
-
-```bash
-Name:         simple-udp-jq8kd-q8dzg
-Namespace:    default
-Labels:       stable.agones.dev/gameserverset=simple-udp-jq8kd
-Annotations:  <none>
-API Version:  stable.agones.dev/v1alpha1
-Kind:         GameServer
-Metadata:
-  Cluster Name:
-  Creation Timestamp:  2018-06-30T14:15:43Z
-  Finalizers:
-    stable.agones.dev
-  Generate Name:  simple-udp-jq8kd-
-  Generation:     1
-  Resource Version:        11978
-  Self Link:               /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-jq8kd-q8dzg
-  UID:                     132bb210-7c70-11e8-b9be-08002703ef08
-Spec:
-  Container:  simple-udp
-  Health:
-    Failure Threshold:      3
-    Initial Delay Seconds:  5
-    Period Seconds:         5
-  Ports:
-    Container Port:  7654
-    Host Port:       7614
-    Name:            default
-    Port Policy:     dynamic
-    Protocol:        UDP
-  Template:
-    Metadata:
-      Creation Timestamp:  <nil>
-    Spec:
-      Containers:
-        Image:  gcr.io/agones-images/udp-server:0.1
-        Name:   simple-udp
-        Resources:
-Status:
-  Address:    192.168.99.100
-  Node Name:  agones
-  Ports:
-    Name:  default
-    Port:  7614
-  State:   Ready
-Events:
-  Type    Reason          Age   From                   Message
-  ----    ------          ----  ----                   -------
-  Normal  PortAllocation  23s   gameserver-controller  Port allocated
-  Normal  Creating        23s   gameserver-controller  Pod simple-udp-jq8kd-q8dzg-9kww8 created
-  Normal  Starting        23s   gameserver-controller  Synced
-  Normal  Ready           20s   gameserver-controller  Address and Port populated
-```
