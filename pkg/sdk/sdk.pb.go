@@ -335,6 +335,7 @@ type GameServer_Status struct {
 	State                string                    `protobuf:"bytes,1,opt,name=state" json:"state,omitempty"`
 	Address              string                    `protobuf:"bytes,2,opt,name=address" json:"address,omitempty"`
 	Ports                []*GameServer_Status_Port `protobuf:"bytes,3,rep,name=ports" json:"ports,omitempty"`
+	AllocationMeta       map[string]string         `protobuf:"bytes,4,rep,name=allocationMeta" json:"allocationMeta,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
 	XXX_unrecognized     []byte                    `json:"-"`
 	XXX_sizecache        int32                     `json:"-"`
@@ -376,6 +377,13 @@ func (m *GameServer_Status) GetAddress() string {
 		return m.Address
 	}
 	return ""
+}
+
+func (m *GameServer_Status) GetAllocationMeta() map[string]string {
+	if m != nil {
+		return m.AllocationMeta
+	}
+	return nil
 }
 
 func (m *GameServer_Status) GetPorts() []*GameServer_Status_Port {
@@ -441,6 +449,7 @@ func init() {
 	proto.RegisterType((*GameServer_Spec_Health)(nil), "stable.agones.dev.sdk.GameServer.Spec.Health")
 	proto.RegisterType((*GameServer_Status)(nil), "stable.agones.dev.sdk.GameServer.Status")
 	proto.RegisterType((*GameServer_Status_Port)(nil), "stable.agones.dev.sdk.GameServer.Status.Port")
+    proto.RegisterMapType((map[string]string)(nil), "stable.agones.dev.sdk.GameServer.Status.AllocationMetaEntry")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.

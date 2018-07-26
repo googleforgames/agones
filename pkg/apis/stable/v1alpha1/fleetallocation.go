@@ -43,6 +43,7 @@ type FleetAllocationList struct {
 // Allocation
 type FleetAllocationSpec struct {
 	FleetName string `json:"fleetName"`
+	Metadata map[string]string `json:"metadata"`
 }
 
 // FleetAllocationStatus will contain the
