@@ -272,6 +272,7 @@ func (s *SDKServer) convert(gs *stablev1alpha1.GameServer) *sdk.GameServer {
 		Status: &sdk.GameServer_Status{
 			State:   string(status.State),
 			Address: status.Address,
+			AllocationMeta: status.AllocationMeta,
 		},
 	}
 	if meta.DeletionTimestamp != nil {
