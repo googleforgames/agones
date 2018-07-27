@@ -145,6 +145,7 @@ func TestControllerAllocate(t *testing.T) {
 	c, m := newFakeController()
 	n := metav1.Now()
 	gsList[3].ObjectMeta.DeletionTimestamp = &n
+    am := map[string]string {"mode":"deathmatch"}
 
 	m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
@@ -172,25 +173,28 @@ func TestControllerAllocate(t *testing.T) {
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	gs, err := c.allocate(f)
+	gs, err := c.allocate(f, am)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+    assert.Equal(t, am, gs.Status.AllocationMeta)
 	assert.True(t, updated)
 
 	updated = false
-	gs, err = c.allocate(f)
+	gs, err = c.allocate(f, am)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+    assert.Equal(t, am, gs.Status.AllocationMeta)
 	assert.True(t, updated)
 
 	updated = false
-	gs, err = c.allocate(f)
+	gs, err = c.allocate(f, am)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+    assert.Equal(t, am, gs.Status.AllocationMeta)
 	assert.True(t, updated)
 
 	updated = false
-	_, err = c.allocate(f)
+	_, err = c.allocate(f, nil)
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrNoGameServerReady, err)
 	assert.False(t, updated)
@@ -230,7 +234,7 @@ func TestControllerAllocateMutex(t *testing.T) {
 	allocate := func() {
 		defer wg.Done()
 		for i := 1; i <= 10; i++ {
-			_, err := c.allocate(f)
+			_, err := c.allocate(f, nil)
 			assert.Nil(t, err)
 		}
 	}
