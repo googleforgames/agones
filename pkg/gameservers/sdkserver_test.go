@@ -349,7 +349,6 @@ func TestSDKServerConvert(t *testing.T) {
 				{Name: "default", Port: 12345},
 				{Name: "beacon", Port: 123123},
 			},
-			AllocationMeta: map[string]string{"key": "value"},
 		},
 	}
 
@@ -376,7 +375,6 @@ func TestSDKServerConvert(t *testing.T) {
 			assert.Equal(t, fp.Name, p.Name)
 			assert.Equal(t, fp.Port, p.Port)
 		}
-		assert.Equal(t, fixture.Status.AllocationMeta, sdkGs.Status.AllocationMeta)
 	}
 
 	sdkGs := sc.convert(fixture)
