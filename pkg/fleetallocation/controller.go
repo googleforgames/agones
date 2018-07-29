@@ -279,8 +279,11 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.Fleet
 
 	gsCopy := allocation.DeepCopy()
 	gsCopy.Status.State = stablev1alpha1.Allocated
-	c.patchMetadata(gsCopy, fam)
-
+    
+    if fam != nil {
+        c.patchMetadata(gsCopy, fam)
+    }
+    
 	gs, err := c.gameServerGetter.GameServers(f.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s", gsCopy.ObjectMeta.Name)
