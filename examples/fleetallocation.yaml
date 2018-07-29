@@ -32,5 +32,7 @@ spec:
   # Custom metadata that is added to game server status in the moment of allocation
   # You can use this to tell the server necessary session data
   metadata:
-    mode: deathmatch
-    map:  garden22
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22

@@ -43,7 +43,13 @@ type FleetAllocationList struct {
 // Allocation
 type FleetAllocationSpec struct {
 	FleetName string `json:"fleetName"`
-	Metadata map[string]string `json:"metadata"`
+	MetaPatch FleetAllocationMeta `json:"metadata"`
+}
+
+// FleetAllocationMeta is the metadata used to patch the GameServer metadata on allocation
+type FleetAllocationMeta struct {
+	Labels map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 // FleetAllocationStatus will contain the
