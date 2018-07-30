@@ -24,16 +24,19 @@ steps:
 - name: "make-docker"
   dir: "build"
   args: ["pull-build-image"] # pull the build image if it exists
-  id: pull-build-image
+- name: "make-docker"
+  dir: "build"
+  args: ["lint"] # pull the build image if it exists
+  id: lint
 - name: "make-docker"
   dir: "build"
   args: [ "test" ] # run tests
-  waitFor: ['pull-build-image']
+  waitFor: ['lint']
   id: tests
 - name: "make-docker"
   dir: "build"
   args: [ "build", "push" ] # build all the things, and push images
-  waitFor: ['pull-build-image']
+  waitFor: ['lint']
   id: build
 - name: 'gcr.io/cloud-builders/gsutil'
   dir: "sdks/cpp/bin"
