@@ -102,7 +102,7 @@ build-images: build-controller-image build-agones-sdk-image
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: ensure-build-image lint test-go test-install-yaml
+test: ensure-build-image test-go test-install-yaml
 
 # Run go tests
 test-go:
@@ -257,7 +257,7 @@ do-release: RELEASE_VERSION ?= $(base_version)
 do-release:
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 	git checkout -b release-$(RELEASE_VERSION)
-	$(MAKE) test
+	$(MAKE) lint test
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
