@@ -79,6 +79,14 @@ spec:
   # The name of the fleet to allocate from. Must be an existing Fleet in the same namespace
   # as this FleetAllocation
   fleetName: fleet-example
+  # Custom metadata that is added to game server status in the moment of allocation
+  # You can use this to tell the server necessary session data
+  # ⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22
 ```
 
 We recommend using `metadata > generateName`, to declare to Kubernetes that a unique
@@ -88,3 +96,6 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
 
 - `fleetName` is the name of an existing Fleet. If this doesn't exist, and error will be returned
   when the `FleetAllocation` is created
+- `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
+  the game server's metadata in the moment of allocation. 
+  ⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
