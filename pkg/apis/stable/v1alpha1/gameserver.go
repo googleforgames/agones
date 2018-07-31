@@ -164,7 +164,6 @@ type GameServerStatus struct {
 	Ports    []GameServerStatusPort `json:"ports"`
 	Address  string                 `json:"address"`
 	NodeName string                 `json:"nodeName"`
-	AllocationMeta map[string]string  `json:"allocationMeta,omitempty"`
 }
 
 // GameServerStatusPort shows the port that was allocated to a

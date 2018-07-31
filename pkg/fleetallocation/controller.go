@@ -134,7 +134,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error retrieving fleet %s", fa.Name)
 	}
 
-	gs, err := c.allocate(fleet, fa.Spec.Metadata)
+	gs, err := c.allocate(fleet)
 	if err != nil {
 		review.Response.Allowed = false
 		review.Response.Result = &metav1.Status{
@@ -250,7 +250,7 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 }
 
 // allocate allocated a GameServer from a given Fleet
-func (c *Controller) allocate(f *stablev1alpha1.Fleet, m map[string]string) (*stablev1alpha1.GameServer, error) {
+func (c *Controller) allocate(f *stablev1alpha1.Fleet) (*stablev1alpha1.GameServer, error) {
 	var allocation *stablev1alpha1.GameServer
 	// can only allocate one at a time, as we don't want two separate processes
 	// trying to allocate the same GameServer to different clients
@@ -279,12 +279,6 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet, m map[string]string) (*st
 
 	gsCopy := allocation.DeepCopy()
 	gsCopy.Status.State = stablev1alpha1.Allocated
-    
-    // make a clean copy of allocation metadata
-	gsCopy.Status.AllocationMeta = make(map[string]string)
-    for key, value := range m {
-        gsCopy.Status.AllocationMeta[key] = value
-    }
 
 	gs, err := c.gameServerGetter.GameServers(f.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {

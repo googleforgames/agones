@@ -78,7 +78,6 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 			State:   "Ready",
 			Address: "127.0.0.1",
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
-			AllocationMeta: map[string]string{"key": "value"},
 		},
 	}
 
