@@ -295,8 +295,6 @@ func TestSidecarHealthy(t *testing.T) {
 }
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
-	t.Parallel()
-
 	m := agtesting.NewMocks()
 	sc, err := NewSDKServer("test", "default",
 		false, 1*time.Second, 1, 0, m.KubeClient, m.AgonesClient)
