@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-controller
@@ -24,6 +24,12 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      stable.agones.dev/role: controller
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
   replicas: 1
   strategy:
     type: Recreate
@@ -32,7 +38,6 @@ spec:
       labels:
         stable.agones.dev/role: controller
         app: {{ template "agones.name" . }}
-        chart: {{ template "agones.chart" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
