@@ -50,33 +50,30 @@ var _ sdk.SDKServer = &SDKServer{}
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
 type SDKServer struct {
-	logger                 *logrus.Entry
-	gameServerName         string
-	namespace              string
-	informerFactory        externalversions.SharedInformerFactory
-	gameServerGetter       typedv1alpha1.GameServersGetter
-	gameServerLister       v1alpha1.GameServerLister
-	gameServerSynced       cache.InformerSynced
-	server                 *http.Server
-	clock                  clock.Clock
-	healthDisabled         bool
-	healthTimeout          time.Duration
-	healthFailureThreshold int64
-	healthMutex            sync.RWMutex
-	healthLastUpdated      time.Time
-	healthFailureCount     int64
-	workerqueue            *workerqueue.WorkerQueue
-	streamMutex            sync.RWMutex
-	connectedStreams       []sdk.SDK_WatchGameServerServer
-	stop                   <-chan struct{}
-	recorder               record.EventRecorder
+	logger             *logrus.Entry
+	gameServerName     string
+	namespace          string
+	informerFactory    externalversions.SharedInformerFactory
+	gameServerGetter   typedv1alpha1.GameServersGetter
+	gameServerLister   v1alpha1.GameServerLister
+	gameServerSynced   cache.InformerSynced
+	server             *http.Server
+	clock              clock.Clock
+	health             stablev1alpha1.Health
+	healthTimeout      time.Duration
+	healthMutex        sync.RWMutex
+	healthLastUpdated  time.Time
+	healthFailureCount int32
+	workerqueue        *workerqueue.WorkerQueue
+	streamMutex        sync.RWMutex
+	connectedStreams   []sdk.SDK_WatchGameServerServer
+	stop               <-chan struct{}
+	recorder           record.EventRecorder
 }
 
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
-func NewSDKServer(gameServerName, namespace string,
-	healthDisabled bool, healthTimeout time.Duration, healthFailureThreshold int64, healthInitialDelay time.Duration,
-	kubeClient kubernetes.Interface,
+func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
 
@@ -97,13 +94,10 @@ func NewSDKServer(gameServerName, namespace string,
 			Addr:    ":8080",
 			Handler: mux,
 		},
-		clock:                  clock.RealClock{},
-		healthDisabled:         healthDisabled,
-		healthFailureThreshold: healthFailureThreshold,
-		healthTimeout:          healthTimeout,
-		healthMutex:            sync.RWMutex{},
-		healthFailureCount:     0,
-		streamMutex:            sync.RWMutex{},
+		clock:              clock.RealClock{},
+		healthMutex:        sync.RWMutex{},
+		healthFailureCount: 0,
+		streamMutex:        sync.RWMutex{},
 	}
 
 	s.informerFactory = factory
@@ -140,7 +134,6 @@ func NewSDKServer(gameServerName, namespace string,
 		}
 	})
 
-	s.initHealthLastUpdated(healthInitialDelay)
 	s.workerqueue = workerqueue.NewWorkerQueue(
 		func(key string) error {
 			return s.updateState(stablev1alpha1.State(key))
@@ -161,7 +154,28 @@ func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (s *SDKServer) Run(stop <-chan struct{}) {
+func (s *SDKServer) Run(stop <-chan struct{}) error {
+	s.informerFactory.Start(stop)
+	cache.WaitForCacheSync(stop, s.gameServerSynced)
+
+	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	if err != nil {
+		return errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
+	}
+
+	// grab configuration details
+	s.health = gs.Spec.Health
+	s.logger.WithField("health",  s.health).Info("setting health configuration")
+	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
+	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
+
+	// start health checking running
+	if !s.health.Disabled {
+		s.logger.Info("Starting GameServer health checking")
+		go wait.Until(s.runHealth, s.healthTimeout, stop)
+	}
+
+	// then start the http endpoints
 	s.logger.Info("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
@@ -175,16 +189,10 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	if !s.healthDisabled {
-		s.logger.Info("Starting GameServer health checking")
-		go wait.Until(s.runHealth, s.healthTimeout, stop)
-	}
-
-	s.informerFactory.Start(stop)
-	cache.WaitForCacheSync(stop, s.gameServerSynced)
 	// need this for streaming gRPC commands
 	s.stop = stop
 	s.workerqueue.Run(1, stop)
+	return nil
 }
 
 // updateState sets the GameServer Status's state to the state
@@ -371,11 +379,11 @@ func (s *SDKServer) checkHealth() {
 // currently healthy or not based on the configured
 // failure count vs failure threshold
 func (s *SDKServer) healthy() bool {
-	if s.healthDisabled {
+	if s.health.Disabled {
 		return true
 	}
 
 	s.healthMutex.RLock()
 	defer s.healthMutex.RUnlock()
-	return s.healthFailureCount < s.healthFailureThreshold
+	return s.healthFailureCount < s.health.FailureThreshold
 }

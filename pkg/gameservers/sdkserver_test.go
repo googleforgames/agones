@@ -15,10 +15,9 @@
 package gameservers
 
 import (
-	"net/http"
+		"net/http"
 	"sync"
 	"testing"
-
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -34,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
-)
+	)
 
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
@@ -74,10 +73,14 @@ func TestSidecarRun(t *testing.T) {
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				gs := v1alpha1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+					Spec: v1alpha1.GameServerSpec{
+						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+					},
 					Status: v1alpha1.GameServerStatus{
 						State: v1alpha1.Starting,
 					},
 				}
+				gs.ApplyDefaults()
 				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -90,27 +93,35 @@ func TestSidecarRun(t *testing.T) {
 				return true, gs, nil
 			})
 
-			sc, err := NewSDKServer("test", "default",
-				false, time.Second, 1, 0, m.KubeClient, m.AgonesClient)
+			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+			wg := sync.WaitGroup{}
+			wg.Add(1)
 
-			go sc.Run(ctx.Done())
+			go func() {
+				err := sc.Run(ctx.Done())
+				assert.Nil(t, err)
+				wg.Done()
+			}()
 			v.f(sc, ctx)
-			timeout := time.After(10 * time.Second)
 
 			select {
 			case <-done:
-			case <-timeout:
+			case <-time.After(10 * time.Second):
 				assert.Fail(t, "Timeout on Run")
 			}
 
+			logrus.Info("attempting to find event recording")
 			for _, str := range v.recordings {
 				agtesting.AssertEventContains(t, m.FakeRecorder.Events, str)
 			}
+
+			cancel()
+			wg.Wait()
 		})
 	}
 }
@@ -157,7 +168,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
-	sc.healthDisabled = false
+	sc.health = v1alpha1.Health{Disabled: false}
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
@@ -203,6 +214,11 @@ func TestSidecarHealthy(t *testing.T) {
 
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
+	// manually set the values
+	sc.health = v1alpha1.Health{FailureThreshold: 1}
+	sc.healthTimeout = 5 * time.Second
+	sc.initHealthLastUpdated(0 * time.Second)
+
 	assert.Nil(t, err)
 
 	now := time.Now().UTC()
@@ -233,7 +249,7 @@ func TestSidecarHealthy(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			logrus.WithField("test", k).Infof("Test Running")
-			sc.healthDisabled = v.disabled
+			sc.health.Disabled = v.disabled
 			fc.SetTime(time.Now().UTC())
 			stream.msgs <- &sdk.Empty{}
 			err = waitForMessage(sc)
@@ -246,7 +262,7 @@ func TestSidecarHealthy(t *testing.T) {
 	}
 
 	t.Run("initial delay", func(t *testing.T) {
-		sc.healthDisabled = false
+		sc.health.Disabled = false
 		fc.SetTime(time.Now().UTC())
 		sc.initHealthLastUpdated(0)
 		sc.healthFailureCount = 0
@@ -266,15 +282,15 @@ func TestSidecarHealthy(t *testing.T) {
 	})
 
 	t.Run("health failure threshold", func(t *testing.T) {
-		sc.healthDisabled = false
-		sc.healthFailureThreshold = 3
+		sc.health.Disabled = false
+		sc.health.FailureThreshold = 3
 		fc.SetTime(time.Now().UTC())
 		sc.initHealthLastUpdated(0)
 		sc.healthFailureCount = 0
 
 		sc.checkHealth()
 		assert.True(t, sc.healthy())
-		assert.Equal(t, int64(0), sc.healthFailureCount)
+		assert.Equal(t, int32(0), sc.healthFailureCount)
 
 		fc.Step(10 * time.Second)
 		sc.checkHealth()
@@ -297,27 +313,50 @@ func TestSidecarHealthy(t *testing.T) {
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default",
-		false, 1*time.Second, 1, 0, m.KubeClient, m.AgonesClient)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 	assert.Nil(t, err)
 	now := time.Now().Add(time.Hour).UTC()
 	fc := clock.NewFakeClock(now)
 	// now we control time - so slow machines won't fail anymore
 	sc.clock = fc
-	sc.healthLastUpdated = now
-	sc.healthFailureCount = 0
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := v1alpha1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
+			Spec: v1alpha1.GameServerSpec{
+				Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+			},
+		}
+
+		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
-	go sc.Run(ctx.Done())
+	step := 2 * time.Second
+
+	go func() {
+		err := sc.Run(ctx.Done())
+		assert.Nil(t, err)
+		// gate
+		assert.Equal(t, 1*time.Second, sc.healthTimeout)
+		wg.Done()
+	}()
 
 	testHTTPHealth(t, "http://localhost:8080/healthz", "ok", http.StatusOK)
 	testHTTPHealth(t, "http://localhost:8080/gshealthz", "ok", http.StatusOK)
-	step := 2 * time.Second
+
+	assert.Equal(t, now, sc.healthLastUpdated)
+
 	fc.Step(step)
 	time.Sleep(step)
+	assert.False(t, sc.healthy())
 	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError)
+	cancel()
+	wg.Wait() // wait for go routine test results.
 }
 
 func TestSDKServerConvert(t *testing.T) {
@@ -469,21 +508,6 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
 }
 
-func waitConnectedStreamCount(sc *SDKServer, count int) error {
-	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
-		sc.streamMutex.RLock()
-		defer sc.streamMutex.RUnlock()
-		return len(sc.connectedStreams) == count, nil
-	})
-}
-
-func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream *gameServerMockStream) {
-	go func() {
-		err := sc.WatchGameServer(&sdk.Empty{}, stream)
-		assert.Nil(t, err)
-	}()
-}
-
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
@@ -523,9 +547,8 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
 }
 
-func defaultSidecar(mocks agtesting.Mocks) (*SDKServer, error) {
-	return NewSDKServer("test", "default",
-		true, 5*time.Second, 1, 0, mocks.KubeClient, mocks.AgonesClient)
+func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
+	return NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 }
 
 func waitForMessage(sc *SDKServer) error {
@@ -534,4 +557,19 @@ func waitForMessage(sc *SDKServer) error {
 		defer sc.healthMutex.RUnlock()
 		return sc.clock.Now().UTC() == sc.healthLastUpdated, nil
 	})
+}
+
+func waitConnectedStreamCount(sc *SDKServer, count int) error {
+	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
+		sc.streamMutex.RLock()
+		defer sc.streamMutex.RUnlock()
+		return len(sc.connectedStreams) == count, nil
+	})
+}
+
+func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream *gameServerMockStream) {
+	go func() {
+		err := sc.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
 }
