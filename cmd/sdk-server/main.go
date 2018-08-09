@@ -20,7 +20,6 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -46,12 +45,8 @@ const (
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag                  = "local"
-	addressFlag                = "address"
-	healthDisabledFlag         = "health-disabled"
-	healthTimeoutFlag          = "health-timeout"
-	healthInitialDelayFlag     = "health-initial-delay"
-	healthFailureThresholdFlag = "health-failure-threshold"
+	localFlag   = "local"
+	addressFlag = "address"
 )
 
 var (
@@ -107,14 +102,18 @@ func main() {
 		}
 
 		var s *gameservers.SDKServer
-		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
-			ctlConf.HealthDisabled, ctlConf.HealthTimeout, ctlConf.HealthFailureThreshold,
-			ctlConf.HealthInitialDelay, kubeClient, agonesClient)
+		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv),
+			viper.GetString(podNamespaceEnv), kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
 
-		go s.Run(ctx.Done())
+		go func() {
+			err := s.Run(ctx.Done())
+			if err != nil {
+				logger.WithError(err).Fatalf("Could not run sidecar")
+			}
+		}()
 		sdk.RegisterSDKServer(grpcServer, s)
 	}
 
@@ -159,49 +158,25 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 func parseEnvFlags() config {
 	viper.SetDefault(localFlag, false)
 	viper.SetDefault(addressFlag, "localhost")
-	viper.SetDefault(healthDisabledFlag, false)
-	viper.SetDefault(healthTimeoutFlag, 5)
-	viper.SetDefault(healthInitialDelayFlag, 5)
-	viper.SetDefault(healthFailureThresholdFlag, 3)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost")
-	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
-		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
-	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
-		"Set this or HEALTH_TIMEOUT env to the number of seconds that the health check times out at. Defaults to 5")
-	pflag.Int64(healthInitialDelayFlag, viper.GetInt64(healthInitialDelayFlag),
-		"Set this or HEALTH_INITIAL_DELAY env to the number of seconds that the health will wait before starting. Defaults to 5")
-	pflag.Int64(healthFailureThresholdFlag, viper.GetInt64(healthFailureThresholdFlag),
-		"Set this or HEALTH_FAILURE_THRESHOLD env to the number of times the health check needs to fail to be deemed unhealthy. Defaults to 3")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
-	runtime.Must(viper.BindEnv(healthDisabledFlag))
-	runtime.Must(viper.BindEnv(healthTimeoutFlag))
-	runtime.Must(viper.BindEnv(healthInitialDelayFlag))
-	runtime.Must(viper.BindEnv(healthFailureThresholdFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
-		IsLocal:                viper.GetBool(localFlag),
-		Address:                viper.GetString(addressFlag),
-		HealthDisabled:         viper.GetBool(healthDisabledFlag),
-		HealthTimeout:          time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second,
-		HealthInitialDelay:     time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second,
-		HealthFailureThreshold: viper.GetInt64(healthFailureThresholdFlag),
+		IsLocal: viper.GetBool(localFlag),
+		Address: viper.GetString(addressFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address                string
-	IsLocal                bool
-	HealthDisabled         bool
-	HealthTimeout          time.Duration
-	HealthInitialDelay     time.Duration
-	HealthFailureThreshold int64
+	Address string
+	IsLocal bool
 }

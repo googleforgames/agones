@@ -111,6 +111,9 @@ metadata:
     release: agones-manual
     heritage: Tiller
 rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
