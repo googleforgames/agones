@@ -39,6 +39,8 @@ static const char* SDK_method_names[] = {
   "/stable.agones.dev.sdk.SDK/Health",
   "/stable.agones.dev.sdk.SDK/GetGameServer",
   "/stable.agones.dev.sdk.SDK/WatchGameServer",
+  "/stable.agones.dev.sdk.SDK/SetLabel",
+  "/stable.agones.dev.sdk.SDK/SetAnnotation",
 };
 
 std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -53,6 +55,8 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   , rpcmethod_Health_(SDK_method_names[2], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
   , rpcmethod_GetGameServer_(SDK_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_WatchGameServer_(SDK_method_names[4], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
+  , rpcmethod_SetLabel_(SDK_method_names[5], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_SetAnnotation_(SDK_method_names[6], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) {
@@ -115,6 +119,30 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::ClientAsyncReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_WatchGameServer_, context, request, false, nullptr);
 }
 
+::grpc::Status SDK::Stub::SetLabel(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::stable::agones::dev::sdk::Empty* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetLabel_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncSetLabelRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetLabel_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::PrepareAsyncSetLabelRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetLabel_, context, request, false);
+}
+
+::grpc::Status SDK::Stub::SetAnnotation(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::stable::agones::dev::sdk::Empty* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetAnnotation_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetAnnotation_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::PrepareAsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetAnnotation_, context, request, false);
+}
+
 SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[0],
@@ -141,6 +169,16 @@ SDK::Service::Service() {
       ::grpc::internal::RpcMethod::SERVER_STREAMING,
       new ::grpc::internal::ServerStreamingHandler< SDK::Service, ::stable::agones::dev::sdk::Empty, ::stable::agones::dev::sdk::GameServer>(
           std::mem_fn(&SDK::Service::WatchGameServer), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[5],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::KeyValue, ::stable::agones::dev::sdk::Empty>(
+          std::mem_fn(&SDK::Service::SetLabel), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[6],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::KeyValue, ::stable::agones::dev::sdk::Empty>(
+          std::mem_fn(&SDK::Service::SetAnnotation), this)));
 }
 
 SDK::Service::~Service() {
@@ -178,6 +216,20 @@ SDK::Service::~Service() {
   (void) context;
   (void) request;
   (void) writer;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::SetLabel(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::KeyValue* request, ::stable::agones::dev::sdk::Empty* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::SetAnnotation(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::KeyValue* request, ::stable::agones::dev::sdk::Empty* response) {
+  (void) context;
+  (void) request;
+  (void) response;
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
 }
 

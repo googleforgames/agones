@@ -17,6 +17,7 @@ package gameservers
 import (
 	"io"
 	"time"
+	"sync"
 
 	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
@@ -50,14 +51,30 @@ var (
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
 type LocalSDKServer struct {
-	watchPeriod time.Duration
+	watchPeriod     time.Duration
+	update          chan struct{}
+	updateObservers sync.Map
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
 func NewLocalSDKServer() *LocalSDKServer {
-	return &LocalSDKServer{
-		watchPeriod: 5 * time.Second,
+	l := &LocalSDKServer{
+		watchPeriod:     5 * time.Second,
+		update:          make(chan struct{}),
+		updateObservers: sync.Map{},
 	}
+
+	go func() {
+		for value := range l.update {
+			logrus.Info("gameserver update received")
+			l.updateObservers.Range(func(observer, _ interface{}) bool {
+				observer.(chan struct{}) <- value
+				return true
+			})
+		}
+	}()
+
+	return l
 }
 
 // Ready logs that the Ready request has been received
@@ -87,6 +104,22 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 	}
 }
 
+// SetLabel applies a Label to the backing GameServer metadata
+func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
+	logrus.WithField("values", kv).Info("Setting label")
+	fixture.ObjectMeta.Labels[metadataPrefix+kv.Key] = kv.Value
+	l.update <- struct{}{}
+	return &sdk.Empty{}, nil
+}
+
+// SetAnnotation applies a Annotation to the backing GameServer metadata
+func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
+	logrus.WithField("values", kv).Info("Setting annotation")
+	fixture.ObjectMeta.Annotations[metadataPrefix+kv.Key] = kv.Value
+	l.update <- struct{}{}
+	return &sdk.Empty{}, nil
+}
+
 // GetGameServer returns a dummy game server.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	logrus.Info("getting GameServer details")
@@ -96,17 +129,32 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 // WatchGameServer will return a dummy GameServer (with no changes), 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	logrus.Info("connected to watch GameServer...")
-	times := 3
+	observer := make(chan struct{})
 
-	for i := 0; i < times; i++ {
-		logrus.Info("Sending watched GameServer!")
+	defer func() {
+		l.updateObservers.Delete(observer)
+		close(observer)
+	}()
+
+	l.updateObservers.Store(observer, true)
+
+	// on connect, send 3 events, as advertised
+	go func() {
+		times := 3
+
+		for i := 0; i < times; i++ {
+			logrus.Info("Sending watched GameServer!")
+			l.update <- struct{}{}
+			time.Sleep(l.watchPeriod)
+		}
+	}()
+
+	for range observer {
 		err := stream.Send(fixture)
 		if err != nil {
 			logrus.WithError(err).Error("error sending gameserver")
 			return err
 		}
-
-		time.Sleep(l.watchPeriod)
 	}
 
 	return nil

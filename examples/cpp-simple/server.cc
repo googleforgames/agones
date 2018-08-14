@@ -59,8 +59,22 @@ int main() {
     std::thread health (doHealth, sdk);
     std::thread watch (watchUpdates, sdk);
 
+    std::cout << "Setting a label" << std::endl;
+    grpc::Status status = sdk->SetLabel("test-label", "test-value");
+    if (!status.ok()) {
+        std::cout << "Could not run SetLabel(): "+ status.error_message() + ". Exiting!" << std::endl;
+        return -1;
+    }
+
+    std::cout << "Setting an annotation" << std::endl;
+    status = sdk->SetAnnotation("test-annotation", "test value");
+    if (!status.ok()) {
+        std::cout << "Could not run SetAnnotation(): "+ status.error_message() + ". Exiting!" << std::endl;
+        return -1;
+    }
+
     std::cout << "Marking server as ready..." << std::endl;
-    grpc::Status status = sdk->Ready();
+    status = sdk->Ready();
     if (!status.ok()) {
         std::cout << "Could not run Ready(): "+ status.error_message() + ". Exiting!" << std::endl;
         return -1;

@@ -79,4 +79,30 @@ namespace agones {
 
         return stub->Shutdown(context, request, &response);
     }
+
+    grpc::Status SDK::SetLabel(std::string key, std::string value) {
+        grpc::ClientContext *context = new grpc::ClientContext();
+        context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
+
+        stable::agones::dev::sdk::KeyValue request;
+        request.set_key(key);
+        request.set_value(value);
+
+        stable::agones::dev::sdk::Empty response;
+
+        return stub->SetLabel(context, request, &response);
+    }
+
+    grpc::Status SDK::SetAnnotation(std::string key, std::string value) {
+        grpc::ClientContext *context = new grpc::ClientContext();
+        context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
+
+        stable::agones::dev::sdk::KeyValue request;
+        request.set_key(key);
+        request.set_value(value);
+
+        stable::agones::dev::sdk::Empty response;
+
+        return stub->SetAnnotation(context, request, &response);
+    }
 }
