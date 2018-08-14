@@ -244,17 +244,18 @@ allocated a `GameServer` out of the fleet, and you can now connect your players 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
 ```
-kubectl describe gs | grep State
+kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
 ```
 
-This will get you a list of all the current `Status > State` of all the `GameSevers`.
+This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-  State:      Allocated
-  State:      Ready
-  State:      Ready
-  State:      Ready
-  State:      Ready
+NAME                     STATUS      IP               PORT
+simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   [map[name:default port:7136]]
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
+simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   [map[name:default port:7453]]
+simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   [map[name:default port:7228]]
+simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   [map[name:default port:7226]]
 ```
 
 ### 5. Scale down the Fleet
@@ -270,13 +271,14 @@ Run `kubectl edit fleet simple-udp` and replace `replicas: 5` with `replicas 0`,
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
-watch 'kubectl describe gs | grep State'
+watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
 ```
 
 Eventually, one by one they will be removed from the list, and you should simply see:
 
 ```
-  State:      Allocated
+NAME                     STATUS      IP               PORT
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
 ```
 
 That lone `Allocated` `GameServer` is left all alone, but still running!
@@ -290,7 +292,7 @@ Since we've only got one allocation, we'll just grab the details of the IP and p
 only allocated `GameServer`: 
 
 ```
-kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.GameServer.status.address}':'{.status.GameServer.status.port}'
+kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.GameServer.staatus.GameServer.status.ports[0].port}'
 ```
 
 This should output your Game Server IP address and port. (eg `10.130.65.208:7936`)
@@ -325,14 +327,17 @@ Let's also allocate ourselves a `GameServer`
 kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/fleetallocation.yaml -o yaml
 ```
 
-We should now have four `Ready` `GameServers` and one `Allocated`. We can check this by running `kubectl describe gs | grep State`.
+We should now have four `Ready` `GameServers` and one `Allocated`. 
+
+We can check this by running `kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports`.
 
 ```
-  State:      Allocated
-  State:      Ready
-  State:      Ready
-  State:      Ready
-  State:      Ready
+NAME                     STATUS      IP               PORT
+simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   [map[name:default port:7136]]
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
+simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   [map[name:default port:7453]]
+simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   [map[name:default port:7228]]
+simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   [map[name:default port:7226]]
 ```
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
@@ -344,7 +349,8 @@ with a Container Port of `6000`.
 
 > NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
 
-Run `watch 'kubectl describe gs | grep "Container Port"'` until you can see that there are
+Run `watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,CONTAINERPORT:.spec.ports[0].containerPort` 
+until you can see that there are
 one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
 is the new configuration.
 
