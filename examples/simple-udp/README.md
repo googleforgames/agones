@@ -1,6 +1,6 @@
 # Simple UDP Server
 
-A very simple UDP logging server and client, for the purposes of demoing and testing
+A very simple UDP logging server, for the purposes of demoing and testing
 running a UDP based server on Agones.
 
 ## Server
@@ -10,7 +10,5 @@ When it receives a text packet, it will send back "ACK:<text content>" as an ech
 
 If it receives the text "EXIT", then it will `sys.Exit(0)`
 
-## Client
-Client will read in from stdin and send each line to the server.
-
-Address defaults to `localhost:7654` but can be changed through the `address` flag.
+To learn how to deploy your edited version of go server to gcp, please check out this link: [Edit Your First Game Server (Go)](../../../docs/edit_first_game_server.md),
+or also look at the [`Makefile`](./Makefile).
