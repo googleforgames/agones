@@ -131,10 +131,15 @@ You might also be interested to see the `Events` section, which outlines when va
 Let's retrieve the IP address and the allocated port of your Game Server :
 
 ```
-kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.port}'
+kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
 ```
 
-This should ouput your Game Server IP address and port. (eg `10.130.65.208:7936`)
+This should ouput your Game Server IP address and ports, eg:
+
+```
+NAME         STATUS    IP               PORT
+simple-udp   Ready     192.168.99.100   [map[name:default port:7614]]
+```
 
 ### 3. Connect to the GameServer
 
