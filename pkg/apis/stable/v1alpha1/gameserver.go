@@ -110,8 +110,6 @@ type GameServerSpec struct {
 	// Container specifies which Pod container is the game server. Only required if there is more than one
 	// container defined
 	Container string `json:"container,omitempty"`
-	// GameServerPort is deprecated, to be removed in 0.4.0:
-	*GameServerPort `json:",inline,omitempty"`
 	// Ports are the array of ports that can be exposed via the game server
 	Ports []GameServerPort `json:"ports"`
 	// Health configures health checking
@@ -178,7 +176,6 @@ func (gs *GameServer) ApplyDefaults() {
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
 
 	gs.applyContainerDefaults()
-	gs.applyLegacyConversion()
 	gs.applyPortDefaults()
 	gs.applyStateDefaults()
 	gs.applyHealthDefaults()
@@ -213,14 +210,6 @@ func (gs *GameServer) applyStateDefaults() {
 		if gs.HasPortPolicy(Dynamic) {
 			gs.Status.State = PortAllocation
 		}
-	}
-}
-
-// applyLegacyConversion applies the legacy conversion
-func (gs *GameServer) applyLegacyConversion() {
-	if gs.Spec.GameServerPort != nil {
-		gs.Spec.Ports = append(gs.Spec.Ports, *gs.Spec.GameServerPort)
-		gs.Spec.GameServerPort = nil
 	}
 }
 
