@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# build
+FROM golang:1.10.3 as builder
+WORKDIR /go/src/simple-udp
+
+COPY examples/simple-udp/main.go .
+COPY . /go/src/agones.dev/agones
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
+
+# final image
 FROM alpine:3.7
 
 RUN adduser -D server
-
-COPY ./bin/server /home/server/server
-    
+COPY --from=builder /go/src/simple-udp/server /home/server/server
 RUN chown -R server /home/server && \
     chmod o+x /home/server/server
 
