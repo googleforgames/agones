@@ -89,10 +89,10 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
 					Container: "testing2",
-					GameServerPort: &GameServerPort{
+					Ports: []GameServerPort{{
 						Protocol:   "TCP",
 						PortPolicy: Static,
-					},
+					}},
 					Health: Health{
 						Disabled:            false,
 						PeriodSeconds:       12,
@@ -123,7 +123,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"set basic defaults on static gameserver": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					GameServerPort: &GameServerPort{PortPolicy: Static},
+					Ports: []GameServerPort{{PortPolicy: Static}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -161,11 +161,13 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		"convert from legacy single port to multiple": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					GameServerPort: &GameServerPort{
-						ContainerPort: 777,
-						HostPort:      777,
-						PortPolicy:    Static,
-						Protocol:      corev1.ProtocolTCP,
+					Ports: []GameServerPort{
+						{
+							ContainerPort: 777,
+							HostPort:      777,
+							PortPolicy:    Static,
+							Protocol:      corev1.ProtocolTCP,
+						},
 					},
 					Health: Health{Disabled: true},
 					Template: corev1.PodTemplateSpec{
@@ -235,10 +237,12 @@ func TestGameServerValidate(t *testing.T) {
 func TestGameServerPod(t *testing.T) {
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
 		Spec: GameServerSpec{
-			GameServerPort: &GameServerPort{
-				ContainerPort: 7777,
-				HostPort:      9999,
-				PortPolicy:    Static,
+			Ports: []GameServerPort{
+				{
+					ContainerPort: 7777,
+					HostPort:      9999,
+					PortPolicy:    Static,
+				},
 			},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
