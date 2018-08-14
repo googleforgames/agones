@@ -30,6 +30,7 @@ import (
 	// required to use gcloud login see: https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
+	"github.com/sirupsen/logrus"
 )
 
 // Framework is a testing framework
@@ -69,6 +70,8 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
 	}
+
+	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
 	readyGs, err := f.WaitForGameServerState(newGs, v1alpha1.Ready, 5*time.Minute)
 

@@ -47,7 +47,7 @@ GCP_CLUSTER_ZONE ?= us-west1-c
 MINIKUBE_PROFILE ?= agones
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.1
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.3
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -119,7 +119,7 @@ test-go:
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e: $(ensure-build-image)
-	$(DOCKER_RUN) go test -v $(agones_package)/test/e2e/... \
+	$(DOCKER_RUN) go test -v -race $(agones_package)/test/e2e/... \
 		--kubeconfig /root/.kube/config \
 		--gameserver-image=$(GS_TEST_IMAGE)
 

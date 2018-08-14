@@ -68,6 +68,20 @@ const METHOD_SDK_WATCH_GAME_SERVER: ::grpcio::Method<super::sdk::Empty, super::s
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
+const METHOD_SDK_SET_LABEL: ::grpcio::Method<super::sdk::KeyValue, super::sdk::Empty> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::Unary,
+    name: "/stable.agones.dev.sdk.SDK/SetLabel",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
+
+const METHOD_SDK_SET_ANNOTATION: ::grpcio::Method<super::sdk::KeyValue, super::sdk::Empty> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::Unary,
+    name: "/stable.agones.dev.sdk.SDK/SetAnnotation",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
+
 pub struct SdkClient {
     client: ::grpcio::Client,
 }
@@ -142,6 +156,38 @@ impl SdkClient {
     pub fn watch_game_server(&self, req: &super::sdk::Empty) -> ::grpcio::Result<::grpcio::ClientSStreamReceiver<super::sdk::GameServer>> {
         self.watch_game_server_opt(req, ::grpcio::CallOption::default())
     }
+
+    pub fn set_label_opt(&self, req: &super::sdk::KeyValue, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::Empty> {
+        self.client.unary_call(&METHOD_SDK_SET_LABEL, req, opt)
+    }
+
+    pub fn set_label(&self, req: &super::sdk::KeyValue) -> ::grpcio::Result<super::sdk::Empty> {
+        self.set_label_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn set_label_async_opt(&self, req: &super::sdk::KeyValue, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.client.unary_call_async(&METHOD_SDK_SET_LABEL, req, opt)
+    }
+
+    pub fn set_label_async(&self, req: &super::sdk::KeyValue) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.set_label_async_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn set_annotation_opt(&self, req: &super::sdk::KeyValue, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::Empty> {
+        self.client.unary_call(&METHOD_SDK_SET_ANNOTATION, req, opt)
+    }
+
+    pub fn set_annotation(&self, req: &super::sdk::KeyValue) -> ::grpcio::Result<super::sdk::Empty> {
+        self.set_annotation_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn set_annotation_async_opt(&self, req: &super::sdk::KeyValue, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.client.unary_call_async(&METHOD_SDK_SET_ANNOTATION, req, opt)
+    }
+
+    pub fn set_annotation_async(&self, req: &super::sdk::KeyValue) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.set_annotation_async_opt(req, ::grpcio::CallOption::default())
+    }
     pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
         self.client.spawn(f)
     }
@@ -153,6 +199,8 @@ pub trait Sdk {
     fn health(&self, ctx: ::grpcio::RpcContext, stream: ::grpcio::RequestStream<super::sdk::Empty>, sink: ::grpcio::ClientStreamingSink<super::sdk::Empty>);
     fn get_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::GameServer>);
     fn watch_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::ServerStreamingSink<super::sdk::GameServer>);
+    fn set_label(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn set_annotation(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
 }
 
 pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
@@ -176,6 +224,14 @@ pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let instance = s.clone();
     builder = builder.add_server_streaming_handler(&METHOD_SDK_WATCH_GAME_SERVER, move |ctx, req, resp| {
         instance.watch_game_server(ctx, req, resp)
+    });
+    let instance = s.clone();
+    builder = builder.add_unary_handler(&METHOD_SDK_SET_LABEL, move |ctx, req, resp| {
+        instance.set_label(ctx, req, resp)
+    });
+    let instance = s.clone();
+    builder = builder.add_unary_handler(&METHOD_SDK_SET_ANNOTATION, move |ctx, req, resp| {
+        instance.set_annotation(ctx, req, resp)
     });
     builder.build()
 }

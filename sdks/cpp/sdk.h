@@ -42,6 +42,14 @@ namespace agones {
             // Marks the Game Server as ready to shutdown
             grpc::Status Shutdown();
 
+            // SetLabel sets a metadata label on the `GameServer` with the prefix
+            // stable.agones.dev/sdk-
+            grpc::Status SetLabel(std::string key, std::string value);
+
+            // SetAnnotation sets a metadata annotation on the `GameServer` with the prefix
+            // stable.agones.dev/sdk-
+            grpc::Status SetAnnotation(std::string key, std::string value);
+
             // Watch the GameServer configuration, and fire the callback
             // when an update occurs.
             // This is a blocking function, and as such you will likely want to run it inside a thread.

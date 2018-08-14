@@ -46,6 +46,24 @@ This tells Agones to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 
 backing Pod will be deleted, if they have not shut themselves down already. 
 
+### SetLabel(key, value)
+⚠️⚠️⚠️ **`SetLabel` is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
+record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+
+> Note: There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+
+This can be useful if you want to information from your running game server process to be observable or searchable through the Kubernetes API.  
+
+### SetAnnotation(key, value)
+⚠️⚠️⚠️ **`SetAnnotation` is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
+`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+
+This can be useful if you want to information from your running game server process to be observable through the Kubernetes API.
+
 ### GameServer()
 This returns most of the backing GameServer configuration and Status. This can be useful
 for instances where you may want to know Health check configuration, or the IP and Port
@@ -63,7 +81,7 @@ and the [examples](../examples).
 
 ### WatchGameServer(function(gameserver){...})
 
-⚠️⚠️⚠️ **`WatchGameServer` is currently a development feature and has not been released** ⚠️⚠️⚠
+⚠️⚠️⚠️ **`WatchGameServer` is currently a development feature and has not been released** ⚠️⚠️⚠️
 
 This executes the passed in callback with the current `GameServer` details whenever the underlying `GameServer` configuration is updated.
 This can be useful to track `GameServer > Status > State` changes, `metadata` changes, such as labels and annotations, and more.

@@ -54,9 +54,32 @@ service SDK {
             get: "/watch/gameserver"
         };
     }
+
+    // Apply a Label to the backing GameServer metadata
+    rpc SetLabel(KeyValue) returns (Empty) {
+        option (google.api.http) = {
+			put: "/metadata/label"
+			body: "*"
+		};
+    }
+
+    // Apply a Annotation to the backing GameServer metadata
+    rpc SetAnnotation(KeyValue) returns (Empty) {
+        option (google.api.http) = {
+			put: "/metadata/annotation"
+			body: "*"
+		};
+    }
 }
 
+// I am Empty
 message Empty {
+}
+
+// Key, Value entry
+message KeyValue {
+    string key = 1;
+    string value = 2;
 }
 
 // A GameServer Custom Resource Definition object
