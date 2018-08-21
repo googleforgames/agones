@@ -118,7 +118,7 @@ test-go:
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
-test-e2e:
+test-e2e: $(ensure-build-image)
 	$(DOCKER_RUN) go test -v $(agones_package)/test/e2e/... \
 		--kubeconfig /root/.kube/config \
 		--gameserver-image=$(GS_TEST_IMAGE)
