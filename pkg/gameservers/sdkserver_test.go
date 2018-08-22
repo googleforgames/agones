@@ -15,7 +15,7 @@
 package gameservers
 
 import (
-		"net/http"
+	"net/http"
 	"sync"
 	"testing"
 	"time"
@@ -33,7 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
-	)
+)
 
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
