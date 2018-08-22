@@ -165,7 +165,7 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 
 	// grab configuration details
 	s.health = gs.Spec.Health
-	s.logger.WithField("health",  s.health).Info("setting health configuration")
+	s.logger.WithField("health", s.health).Info("setting health configuration")
 	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
 	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
 
