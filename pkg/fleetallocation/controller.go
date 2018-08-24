@@ -125,10 +125,14 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAllocation json: %s", obj.Raw)
 	}
 
-	fleet, err := c.fleetLister.Fleets(fa.ObjectMeta.Namespace).Get(fa.Spec.FleetName)
+	// When being called from the API the fa.ObjectMeta.Namespace isn't populated
+	// (whereas it is from kubectl). So make sure to pull the namespace from the review
+	fleet, err := c.fleetLister.Fleets(review.Request.Namespace).Get(fa.Spec.FleetName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithError(err).WithField("fleetName", fa.Name).Warn("Could not find fleet for allocation. Skipping.")
+			logrus.WithError(err).WithField("fleetName", fa.Name).
+				WithField("namespace", review.Request.Namespace).
+				Warn("Could not find fleet for allocation. Skipping.")
 			return review, nil
 		}
 		return review, errors.Wrapf(err, "error retrieving fleet %s", fa.Name)
@@ -205,7 +209,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 				Kind:  review.Request.Kind.Kind,
 				Causes: []metav1.StatusCause{
 					{Type: metav1.CauseTypeFieldValueNotFound,
-						Message: fmt.Sprintf("Cloud not find fleet %s", fa.Spec.FleetName),
+						Message: fmt.Sprintf("Could not find fleet %s in namespace %s", fa.Spec.FleetName, review.Request.Namespace),
 						Field:   "fleetName"}},
 			},
 		}

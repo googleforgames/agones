@@ -41,7 +41,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Parallel()
 	f, gsSet, gsList := defaultFixtures(3)
 
-	fa := v1alpha1.FleetAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: "default"},
+	fa := v1alpha1.FleetAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1"},
 		Spec: v1alpha1.FleetAllocationSpec{FleetName: f.ObjectMeta.Name}}
 
 	c, m := newFakeController()
@@ -303,6 +303,7 @@ func newAdmissionReview(fa v1alpha1.FleetAllocation) (admv1beta1.AdmissionReview
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
+			Namespace: "default",
 		},
 		Response: &admv1beta1.AdmissionResponse{Allowed: true},
 	}
