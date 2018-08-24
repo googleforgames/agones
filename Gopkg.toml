@@ -21,6 +21,10 @@
   version = "1.0.3"
 
 [[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.1.0"
+
+[[constraint]]
   name = "k8s.io/client-go"
   version = "7.0.0"
 
