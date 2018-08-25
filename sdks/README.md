@@ -126,11 +126,31 @@ To run in local mode, pass the flag `--local` to the executable.
 
 For example:
 
-```bash
+```console
 $ ./sidecar.linux.amd64 --local
-{"level":"info","local":true,"msg":"Starting sdk sidecar","port":59357,"time":"2017-12-22T16:09:03-08:00","version":"0.1-5217b21"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":""},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T18:01:58-07:00","version":"0.4.0-b44960a8"}
+{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T18:01:58-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T18:01:58-07:00"}
 {"level":"info","msg":"Ready request has been received!","time":"2017-12-22T16:09:19-08:00"}
 {"level":"info","msg":"Shutdown request has been received!","time":"2017-12-22T16:10:19-08:00"}
+```
+
+### Providing your own `GameServer` configuration for local development
+
+⚠️⚠️⚠️ **Providing your own `GameServer` is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+By default, the local sdk-server will create a dummy `GameServer` configuration that is used for `GameServer()`
+and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
+can be passed through as either `--file` or `-f` along with the `--local` flag.
+
+For example:
+
+```console
+$ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.yaml
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"../../../examples/simple-udp/gameserver.yaml"},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T17:56:39-07:00","version":"0.4.0-b44960a8"}
+{"level":"info","msg":"Reading GameServer configuration","path":"/home/user/workspace/agones/src/agones.dev/agones/examples/simple-udp/gameserver.yaml","source":"main","time":"2018-08-25T17:56:39-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 ```
 
 ### Writing your own SDK

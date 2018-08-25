@@ -385,7 +385,7 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 		return nil, err
 	}
 
-	return s.convert(gs), nil
+	return convert(gs), nil
 }
 
 // WatchGameServer sends events through the stream when changes occur to the
@@ -408,7 +408,7 @@ func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
 	defer s.streamMutex.RUnlock()
 
 	for _, stream := range s.connectedStreams {
-		err := stream.Send(s.convert(gs))
+		err := stream.Send(convert(gs))
 		// We essentially ignoring any disconnected streams.
 		// I think this is fine, as disconnections shouldn't actually happen.
 		// but we should log them, just in case they do happen, and we can track it
@@ -417,51 +417,6 @@ func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
 				Error("error sending game server update event")
 		}
 	}
-}
-
-// convert converts a K8s GameServer object, into a gRPC SDK GameServer object
-func (s *SDKServer) convert(gs *stablev1alpha1.GameServer) *sdk.GameServer {
-	meta := gs.ObjectMeta
-	status := gs.Status
-	health := gs.Spec.Health
-	result := &sdk.GameServer{
-		ObjectMeta: &sdk.GameServer_ObjectMeta{
-			Name:              meta.Name,
-			Namespace:         meta.Namespace,
-			Uid:               string(meta.UID),
-			ResourceVersion:   meta.ResourceVersion,
-			Generation:        meta.Generation,
-			CreationTimestamp: meta.CreationTimestamp.Unix(),
-			Annotations:       meta.Annotations,
-			Labels:            meta.Labels,
-		},
-		Spec: &sdk.GameServer_Spec{
-			Health: &sdk.GameServer_Spec_Health{
-				Disabled:            health.Disabled,
-				PeriodSeconds:       health.PeriodSeconds,
-				FailureThreshold:    health.FailureThreshold,
-				InitialDelaySeconds: health.InitialDelaySeconds,
-			},
-		},
-		Status: &sdk.GameServer_Status{
-			State:   string(status.State),
-			Address: status.Address,
-		},
-	}
-	if meta.DeletionTimestamp != nil {
-		result.ObjectMeta.DeletionTimestamp = meta.DeletionTimestamp.Unix()
-	}
-
-	// loop around and add all the ports
-	for _, p := range status.Ports {
-		grpcPort := &sdk.GameServer_Status_Port{
-			Name: p.Name,
-			Port: p.Port,
-		}
-		result.Status.Ports = append(result.Status.Ports, grpcPort)
-	}
-
-	return result
 }
 
 // runHealth actively checks the health, and if not
