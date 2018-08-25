@@ -16,9 +16,10 @@ package gameservers
 
 import (
 	"io"
-	"time"
 	"sync"
+	"time"
 
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -28,7 +29,7 @@ import (
 var (
 	_ sdk.SDKServer = &LocalSDKServer{}
 
-	fixture = &sdk.GameServer{
+	defaultGs = &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -51,17 +52,23 @@ var (
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
 type LocalSDKServer struct {
+	gs              *sdk.GameServer
 	watchPeriod     time.Duration
 	update          chan struct{}
 	updateObservers sync.Map
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
-func NewLocalSDKServer() *LocalSDKServer {
+func NewLocalSDKServer(gs *v1alpha1.GameServer) *LocalSDKServer {
 	l := &LocalSDKServer{
+		gs:              defaultGs,
 		watchPeriod:     5 * time.Second,
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
+	}
+
+	if gs != nil {
+		l.gs = convert(gs)
 	}
 
 	go func() {
@@ -107,7 +114,15 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 // SetLabel applies a Label to the backing GameServer metadata
 func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	logrus.WithField("values", kv).Info("Setting label")
-	fixture.ObjectMeta.Labels[metadataPrefix+kv.Key] = kv.Value
+
+	if l.gs.ObjectMeta == nil {
+		l.gs.ObjectMeta = &sdk.GameServer_ObjectMeta{}
+	}
+	if l.gs.ObjectMeta.Labels == nil {
+		l.gs.ObjectMeta.Labels = map[string]string{}
+	}
+
+	l.gs.ObjectMeta.Labels[metadataPrefix+kv.Key] = kv.Value
 	l.update <- struct{}{}
 	return &sdk.Empty{}, nil
 }
@@ -115,7 +130,15 @@ func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 // SetAnnotation applies a Annotation to the backing GameServer metadata
 func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	logrus.WithField("values", kv).Info("Setting annotation")
-	fixture.ObjectMeta.Annotations[metadataPrefix+kv.Key] = kv.Value
+
+	if l.gs.ObjectMeta == nil {
+		l.gs.ObjectMeta = &sdk.GameServer_ObjectMeta{}
+	}
+	if l.gs.ObjectMeta.Annotations == nil {
+		l.gs.ObjectMeta.Annotations = map[string]string{}
+	}
+
+	l.gs.ObjectMeta.Annotations[metadataPrefix+kv.Key] = kv.Value
 	l.update <- struct{}{}
 	return &sdk.Empty{}, nil
 }
@@ -123,7 +146,7 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 // GetGameServer returns a dummy game server.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	logrus.Info("getting GameServer details")
-	return fixture, nil
+	return l.gs, nil
 }
 
 // WatchGameServer will return a dummy GameServer (with no changes), 3 times, every 5 seconds
@@ -150,7 +173,7 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 	}()
 
 	for range observer {
-		err := stream.Send(fixture)
+		err := stream.Send(l.gs)
 		if err != nil {
 			logrus.WithError(err).Error("error sending gameserver")
 			return err

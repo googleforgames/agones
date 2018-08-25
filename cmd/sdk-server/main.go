@@ -19,19 +19,24 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -46,6 +51,7 @@ const (
 
 	// Flags (that can also be env vars)
 	localFlag   = "local"
+	fileFlag    = "file"
 	addressFlag = "address"
 )
 
@@ -81,7 +87,10 @@ func main() {
 	defer cancel()
 
 	if ctlConf.IsLocal {
-		sdk.RegisterSDKServer(grpcServer, gameservers.NewLocalSDKServer())
+		err = registerLocal(grpcServer, ctlConf)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not start local sdk server")
+		}
 	} else {
 		var config *rest.Config
 		config, err = rest.InClusterConfig()
@@ -124,6 +133,46 @@ func main() {
 	logger.Info("shutting down sdk server")
 }
 
+func registerLocal(grpcServer *grpc.Server, ctlConf config) error {
+	var local *gameservers.LocalSDKServer
+	if ctlConf.LocalFile != "" {
+		path, err := filepath.Abs(ctlConf.LocalFile)
+		if err != nil {
+			return err
+		}
+
+		if _, err = os.Stat(path); os.IsNotExist(err) {
+			return errors.Errorf("Could not find file: %s", path)
+		}
+
+		logger.WithField("path", path).Info("Reading GameServer configuration")
+		reader, err := os.Open(path) // nolint: gosec
+		if err != nil {
+			return err
+		}
+
+		var gs v1alpha1.GameServer
+		// 4096 is the number of bytes the YAMLOrJSONDecoder goes looking
+		// into the file to determine if it's JSON or YAML
+		// (JSON == has whitespace followed by an open brace).
+		// The Kubernetes uses 4096 bytes as its default, so that's what we'll
+		// use as well.
+		// https://github.com/kubernetes/kubernetes/blob/master/plugin/pkg/admission/podnodeselector/admission.go#L86
+		decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
+		err = decoder.Decode(&gs)
+		if err != nil {
+			return err
+		}
+		local = gameservers.NewLocalSDKServer(&gs)
+	} else {
+		local = gameservers.NewLocalSDKServer(nil)
+	}
+
+	sdk.RegisterSDKServer(grpcServer, local)
+
+	return nil
+}
+
 // runGrpc runs the grpc service
 func runGrpc(grpcServer *grpc.Server, lis net.Listener) {
 	logger.Info("Starting SDKServer grpc service...")
@@ -157,9 +206,11 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 // a configuration structure
 func parseEnvFlags() config {
 	viper.SetDefault(localFlag, false)
+	viper.SetDefault(fileFlag, "")
 	viper.SetDefault(addressFlag, "localhost")
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost")
 	pflag.Parse()
 
@@ -170,13 +221,15 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
-		IsLocal: viper.GetBool(localFlag),
-		Address: viper.GetString(addressFlag),
+		IsLocal:   viper.GetBool(localFlag),
+		Address:   viper.GetString(addressFlag),
+		LocalFile: viper.GetString(fileFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address string
-	IsLocal bool
+	Address   string
+	IsLocal   bool
+	LocalFile string
 }

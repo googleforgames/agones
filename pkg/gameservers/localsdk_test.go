@@ -19,15 +19,17 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestLocal(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
-	l := NewLocalSDKServer()
+	l := NewLocalSDKServer(nil)
 
 	_, err := l.Ready(ctx, e)
 	assert.Nil(t, err, "Ready should not error")
@@ -53,60 +55,109 @@ func TestLocal(t *testing.T) {
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
-	assert.Equal(t, fixture, gs)
+	assert.Equal(t, defaultGs, gs)
+}
+
+func TestLocalSDKWithGameServer(t *testing.T) {
+	ctx := context.Background()
+	e := &sdk.Empty{}
+
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
+	l := NewLocalSDKServer(fixture.DeepCopy())
+	gs, err := l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+
+	assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
 }
 
 func TestLocalSDKServerSetLabel(t *testing.T) {
-	ctx := context.Background()
-	e := &sdk.Empty{}
-	l := NewLocalSDKServer()
-	kv := &sdk.KeyValue{Key: "foo", Value: "bar"}
+	fixtures := map[string]struct {
+		gs *v1alpha1.GameServer
+	}{
+		"default": {
+			gs: nil,
+		},
+		"no annotation": {
+			gs: &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
+		},
+		"empty": {
+			gs: &v1alpha1.GameServer{},
+		},
+	}
 
-	stream := newGameServerMockStream()
-	go func() {
-		err := l.WatchGameServer(e, stream)
-		assert.Nil(t, err)
-	}()
+	for k,v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			ctx := context.Background()
+			e := &sdk.Empty{}
+			l := NewLocalSDKServer(v.gs)
+			kv := &sdk.KeyValue{Key: "foo", Value: "bar"}
 
-	_, err := l.SetLabel(ctx, kv)
-	assert.Nil(t, err)
+			stream := newGameServerMockStream()
+			go func() {
+				err := l.WatchGameServer(e, stream)
+				assert.Nil(t, err)
+			}()
 
-	gs, err := l.GetGameServer(ctx, e)
-	assert.Nil(t, err)
-	assert.Equal(t, gs.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
+			_, err := l.SetLabel(ctx, kv)
+			assert.Nil(t, err)
 
-	select {
-	case msg := <-stream.msgs:
-		assert.Equal(t, msg.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
-	case <-time.After(2 * l.watchPeriod):
-		assert.FailNow(t, "timeout on receiving messages")
+			gs, err := l.GetGameServer(ctx, e)
+			assert.Nil(t, err)
+			assert.Equal(t, gs.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
+
+			select {
+			case msg := <-stream.msgs:
+				assert.Equal(t, msg.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
+			case <-time.After(2 * l.watchPeriod):
+				assert.FailNow(t, "timeout on receiving messages")
+			}
+		})
 	}
 }
 
 func TestLocalSDKServerSetAnnotation(t *testing.T) {
-	ctx := context.Background()
-	e := &sdk.Empty{}
-	l := NewLocalSDKServer()
-	kv := &sdk.KeyValue{Key: "bar", Value: "foo"}
 
-	stream := newGameServerMockStream()
-	go func() {
-		err := l.WatchGameServer(e, stream)
-		assert.Nil(t, err)
-	}()
+	fixtures := map[string]struct {
+		gs *v1alpha1.GameServer
+	}{
+		"default": {
+			gs: nil,
+		},
+		"no annotation": {
+			gs: &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
+		},
+		"empty": {
+			gs: &v1alpha1.GameServer{},
+		},
+	}
 
-	_, err := l.SetAnnotation(ctx, kv)
-	assert.Nil(t, err)
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			ctx := context.Background()
+			e := &sdk.Empty{}
+			l := NewLocalSDKServer(v.gs)
+			kv := &sdk.KeyValue{Key: "bar", Value: "foo"}
 
-	gs, err := l.GetGameServer(ctx, e)
-	assert.Nil(t, err)
-	assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+			stream := newGameServerMockStream()
+			go func() {
+				err := l.WatchGameServer(e, stream)
+				assert.Nil(t, err)
+			}()
 
-	select {
-	case msg := <-stream.msgs:
-		assert.Equal(t, msg.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
-	case <-time.After(2 * l.watchPeriod):
-		assert.FailNow(t, "timeout on receiving messages")
+			_, err := l.SetAnnotation(ctx, kv)
+			assert.Nil(t, err)
+
+			gs, err := l.GetGameServer(ctx, e)
+			assert.Nil(t, err)
+			assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+
+			select {
+			case msg := <-stream.msgs:
+				assert.Equal(t, msg.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+			case <-time.After(2 * l.watchPeriod):
+				assert.FailNow(t, "timeout on receiving messages")
+			}
+		})
 	}
 }
 
@@ -114,7 +165,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
 	e := &sdk.Empty{}
-	l := NewLocalSDKServer()
+	l := NewLocalSDKServer(nil)
 	l.watchPeriod = time.Second
 
 	stream := newGameServerMockStream()
@@ -126,7 +177,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		select {
 		case msg := <-stream.msgs:
-			assert.Equal(t, fixture, msg)
+			assert.Equal(t, defaultGs, msg)
 		case <-time.After(2 * l.watchPeriod):
 			assert.FailNow(t, "timeout on receiving messages")
 		}
