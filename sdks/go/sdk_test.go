@@ -68,7 +68,7 @@ func TestSDKWatchGameServer(t *testing.T) {
 		client: sm,
 	}
 
-	fixture := &sdk.GameServer{ObjectMeta: &sdk.GameServer_ObjectMeta{Name:"test-server"}}
+	fixture := &sdk.GameServer{ObjectMeta: &sdk.GameServer_ObjectMeta{Name: "test-server"}}
 
 	updated := make(chan struct{}, 5)
 
@@ -83,8 +83,40 @@ func TestSDKWatchGameServer(t *testing.T) {
 	select {
 	case <-updated:
 	case <-time.After(5 * time.Second):
-		assert.FailNow(t,"update handler should have fired")
+		assert.FailNow(t, "update handler should have fired")
 	}
+}
+
+func TestSDKSetLabel(t *testing.T) {
+	t.Parallel()
+	sm := &sdkMock{
+		labels: map[string]string{},
+	}
+	s := SDK{
+		ctx:    context.Background(),
+		client: sm,
+	}
+
+	expected := "bar"
+	err := s.SetLabel("foo", expected)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, sm.labels["foo"])
+}
+
+func TestSDKSetAnnotation(t *testing.T) {
+	t.Parallel()
+	sm := &sdkMock{
+		annotations: map[string]string{},
+	}
+	s := SDK{
+		ctx:    context.Background(),
+		client: sm,
+	}
+
+	expected := "bar"
+	err := s.SetAnnotation("foo", expected)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, sm.annotations["foo"])
 }
 
 var _ sdk.SDKClient = &sdkMock{}
@@ -92,10 +124,22 @@ var _ sdk.SDK_HealthClient = &healthMock{}
 var _ sdk.SDK_WatchGameServerClient = &watchMock{}
 
 type sdkMock struct {
-	ready    bool
-	shutdown bool
-	hm       *healthMock
-	wm       *watchMock
+	ready       bool
+	shutdown    bool
+	hm          *healthMock
+	wm          *watchMock
+	labels      map[string]string
+	annotations map[string]string
+}
+
+func (m *sdkMock) SetLabel(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
+	m.labels[in.Key] = in.Value
+	return &sdk.Empty{}, nil
+}
+
+func (m *sdkMock) SetAnnotation(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
+	m.annotations[in.Key] = in.Value
+	return &sdk.Empty{}, nil
 }
 
 func (m *sdkMock) WatchGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc.CallOption) (sdk.SDK_WatchGameServerClient, error) {
@@ -162,7 +206,7 @@ type watchMock struct {
 }
 
 func (wm *watchMock) Recv() (*sdk.GameServer, error) {
-	return <- wm.msgs, nil
+	return <-wm.msgs, nil
 }
 
 func (*watchMock) Header() (metadata.MD, error) {

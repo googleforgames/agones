@@ -79,9 +79,26 @@ func (s *SDK) Health() error {
 	return errors.Wrap(s.health.Send(&sdk.Empty{}), "could not send Health ping")
 }
 
+// SetLabel sets a metadata label on the `GameServer` with the prefix
+// stable.agones.dev/sdk-
+func (s *SDK) SetLabel(key, value string) error {
+	kv := &sdk.KeyValue{Key: key, Value: value}
+	_, err := s.client.SetLabel(s.ctx, kv)
+	return errors.Wrap(err, "could not set label")
+}
+
+// SetAnnotation sets a metadata annotation on the `GameServer` with the prefix
+// stable.agones.dev/sdk-
+func (s *SDK) SetAnnotation(key, value string) error {
+	kv := &sdk.KeyValue{Key: key, Value: value}
+	_, err := s.client.SetAnnotation(s.ctx, kv)
+	return errors.Wrap(err, "could not set annotation")
+}
+
 // GameServer retrieve the GameServer details
 func (s *SDK) GameServer() (*sdk.GameServer, error) {
-	return s.client.GetGameServer(s.ctx, &sdk.Empty{})
+	gs, err := s.client.GetGameServer(s.ctx, &sdk.Empty{})
+	return gs, errors.Wrap(err, "could not retrieve gameserver")
 }
 
 // WatchGameServer asynchronously calls the given GameServerCallback with the current GameServer
@@ -98,12 +115,11 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 			var gs *sdk.GameServer
 			gs, err = stream.Recv()
 			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("error watching GameServer: %s\n", err.Error())
-				} else {
+				if err == io.EOF {
 					fmt.Println("gameserver event stream EOF received")
 					return
 				}
+				fmt.Printf("error watching GameServer: %s\n", err.Error())
 				// This is to wait for the reconnection, and not peg the CPU at 100%
 				time.Sleep(time.Second)
 				continue

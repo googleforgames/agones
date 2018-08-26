@@ -59,6 +59,60 @@
         ]
       }
     },
+    "/metadata/annotation": {
+      "put": {
+        "summary": "Apply a Annotation to the backing GameServer metadata",
+        "operationId": "SetAnnotation",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sdkKeyValue"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/metadata/label": {
+      "put": {
+        "summary": "Apply a Label to the backing GameServer metadata",
+        "operationId": "SetLabel",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sdkKeyValue"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
     "/ready": {
       "post": {
         "summary": "Call when the GameServer is ready",
@@ -235,7 +289,8 @@
       }
     },
     "sdkEmpty": {
-      "type": "object"
+      "type": "object",
+      "title": "I am Empty"
     },
     "sdkGameServer": {
       "type": "object",
@@ -251,6 +306,18 @@
         }
       },
       "description": "A GameServer Custom Resource Definition object\nWe will only export those resources that make the most\nsense. Can always expand to more as needed."
+    },
+    "sdkKeyValue": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "Key, Value entry"
     }
   }
 }

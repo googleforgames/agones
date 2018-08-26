@@ -38,30 +38,60 @@ import (
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
+	type expected struct {
+		state       v1alpha1.State
+		labels      map[string]string
+		annotations map[string]string
+		recordings  []string
+	}
+
 	fixtures := map[string]struct {
-		state      v1alpha1.State
-		f          func(*SDKServer, context.Context)
-		recordings []string
+		f        func(*SDKServer, context.Context)
+		expected expected
 	}{
 		"ready": {
-			state: v1alpha1.RequestReady,
 			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
+			expected: expected{
+				state: v1alpha1.RequestReady,
+			},
 		},
 		"shutdown": {
-			state: v1alpha1.Shutdown,
 			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
+			expected: expected{
+				state: v1alpha1.Shutdown,
+			},
 		},
 		"unhealthy": {
-			state: v1alpha1.Unhealthy,
 			f: func(sc *SDKServer, ctx context.Context) {
 				// we have a 1 second timeout
 				time.Sleep(2 * time.Second)
 			},
-			recordings: []string{string(v1alpha1.Unhealthy)},
+			expected: expected{
+				state:      v1alpha1.Unhealthy,
+				recordings: []string{string(v1alpha1.Unhealthy)},
+			},
+		},
+		"label": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "bar"})
+				assert.Nil(t, err)
+			},
+			expected: expected{
+				labels: map[string]string{metadataPrefix + "foo": "bar"},
+			},
+		},
+		"annotation": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test", Value: "annotation"})
+				assert.Nil(t, err)
+			},
+			expected: expected{
+				annotations: map[string]string{metadataPrefix + "test": "annotation"},
+			},
 		},
 	}
 
@@ -72,7 +102,9 @@ func TestSidecarRun(t *testing.T) {
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				gs := v1alpha1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default",
+					},
 					Spec: v1alpha1.GameServerSpec{
 						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 					},
@@ -88,7 +120,16 @@ func TestSidecarRun(t *testing.T) {
 				ua := action.(k8stesting.UpdateAction)
 				gs := ua.GetObject().(*v1alpha1.GameServer)
 
-				assert.Equal(t, v.state, gs.Status.State)
+				if v.expected.state != "" {
+					assert.Equal(t, v.expected.state, gs.Status.State)
+				}
+
+				for label, value := range v.expected.labels {
+					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+				}
+				for ann, value := range v.expected.annotations {
+					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+				}
 
 				return true, gs, nil
 			})
@@ -116,12 +157,91 @@ func TestSidecarRun(t *testing.T) {
 			}
 
 			logrus.Info("attempting to find event recording")
-			for _, str := range v.recordings {
+			for _, str := range v.expected.recordings {
 				agtesting.AssertEventContains(t, m.FakeRecorder.Events, str)
 			}
 
 			cancel()
 			wg.Wait()
+		})
+	}
+}
+
+func TestSDKServerSyncGameServer(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		state       v1alpha1.State
+		labels      map[string]string
+		annotations map[string]string
+	}
+
+	fixtures := map[string]struct {
+		expected expected
+		key      string
+	}{
+		"ready": {
+			key: string(updateState) + "/" + string(v1alpha1.Ready),
+			expected: expected{
+				state: v1alpha1.Ready,
+			},
+		},
+		"label": {
+			key: string(updateLabel) + "/foo/bar",
+			expected: expected{
+				labels: map[string]string{metadataPrefix + "foo": "bar"},
+			},
+		},
+		"annotation": {
+			key: string(updateAnnotation) + "/test/annotation",
+			expected: expected{
+				annotations: map[string]string{metadataPrefix + "test": "annotation"},
+			},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			sc, err := defaultSidecar(m)
+			assert.Nil(t, err)
+			updated := false
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{
+					UID:  "1234",
+					Name: sc.gameServerName, Namespace: sc.namespace,
+					Labels: map[string]string{}, Annotations: map[string]string{}},
+				}
+				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+			})
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				updated = true
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*v1alpha1.GameServer)
+
+				if v.expected.state != "" {
+					assert.Equal(t, v.expected.state, gs.Status.State)
+				}
+				for label, value := range v.expected.labels {
+					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+				}
+				for ann, value := range v.expected.annotations {
+					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+				}
+
+				return true, gs, nil
+			})
+
+			stop := make(chan struct{})
+			defer close(stop)
+			sc.informerFactory.Start(stop)
+			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+			err = sc.syncGameServer(v.key)
+			assert.Nil(t, err)
+			assert.True(t, updated, "should have updated")
+
 		})
 	}
 }

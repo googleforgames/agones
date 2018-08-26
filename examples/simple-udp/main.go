@@ -16,6 +16,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net"
@@ -23,9 +24,9 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/sdks/go"
-	"encoding/json"
 	coresdk "agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/sdks/go"
+	"strconv"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time
@@ -67,23 +68,12 @@ func main() {
 func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 	b := make([]byte, 1024)
 	for {
-		n, sender, err := conn.ReadFrom(b)
-		if err != nil {
-			log.Fatalf("Could not read from udp stream: %v", err)
-		}
-
-		txt := strings.TrimSpace(string(b[:n]))
-		log.Printf("Received packet from %v: %v", sender.String(), txt)
+		sender, txt := readPacket(conn, b)
 		switch txt {
+
 		// shuts down the gameserver
 		case "EXIT":
-			log.Printf("Received EXIT command. Exiting.")
-			// This tells Agones to shutdown this Game Server
-			shutdownErr := s.Shutdown()
-			if shutdownErr != nil {
-				log.Printf("Could not shutdown")
-			}
-			os.Exit(0)
+			exit(s)
 
 		// turns off the health pings
 		case "UNHEALTHY":
@@ -94,14 +84,46 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 
 		case "WATCH":
 			watchGameServerEvents(s)
+
+		case "LABEL":
+			setLabel(s)
+
+		case "ANNOTATION":
+			setAnnotation(s)
 		}
 
-		// echo it back
-		ack := "ACK: " + txt + "\n"
-		if _, err = conn.WriteTo([]byte(ack), sender); err != nil {
-			log.Fatalf("Could not write to udp stream: %v", err)
-		}
+		ack(conn, sender, txt)
 	}
+}
+
+// readPacket reads a string from the connection
+func readPacket(conn net.PacketConn, b []byte) (net.Addr, string) {
+	n, sender, err := conn.ReadFrom(b)
+	if err != nil {
+		log.Fatalf("Could not read from udp stream: %v", err)
+	}
+	txt := strings.TrimSpace(string(b[:n]))
+	log.Printf("Received packet from %v: %v", sender.String(), txt)
+	return sender, txt
+}
+
+// ack echoes it back, with an ACK
+func ack(conn net.PacketConn, sender net.Addr, txt string) {
+	ack := "ACK: " + txt + "\n"
+	if _, err := conn.WriteTo([]byte(ack), sender); err != nil {
+		log.Fatalf("Could not write to udp stream: %v", err)
+	}
+}
+
+// exit shutdowns the server
+func exit(s *sdk.SDK) {
+	log.Printf("Received EXIT command. Exiting.")
+	// This tells Agones to shutdown this Game Server
+	shutdownErr := s.Shutdown()
+	if shutdownErr != nil {
+		log.Printf("Could not shutdown")
+	}
+	os.Exit(0)
 }
 
 // writes the GameServer name to the connection UDP stream
@@ -135,6 +157,25 @@ func watchGameServerEvents(s *sdk.SDK) {
 	})
 	if err != nil {
 		log.Fatalf("Could not watch Game Server events, %v", err)
+	}
+}
+
+// setAnnotation sets a given annotation
+func setAnnotation(s *sdk.SDK) {
+	log.Print("Setting annotation")
+	err := s.SetAnnotation("timestamp", time.Now().UTC().String())
+	if err != nil {
+		log.Fatalf("could not set annotation: %v", err)
+	}
+}
+
+// setLabel sets a given label
+func setLabel(s *sdk.SDK) {
+	log.Print("Setting label")
+	// label values can only be alpha, - and .
+	err := s.SetLabel("timestamp", strconv.FormatInt(time.Now().Unix(), 10))
+	if err != nil {
+		log.Fatalf("could not set label: %v", err)
 	}
 }
 

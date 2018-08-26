@@ -56,6 +56,60 @@ func TestLocal(t *testing.T) {
 	assert.Equal(t, fixture, gs)
 }
 
+func TestLocalSDKServerSetLabel(t *testing.T) {
+	ctx := context.Background()
+	e := &sdk.Empty{}
+	l := NewLocalSDKServer()
+	kv := &sdk.KeyValue{Key: "foo", Value: "bar"}
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(e, stream)
+		assert.Nil(t, err)
+	}()
+
+	_, err := l.SetLabel(ctx, kv)
+	assert.Nil(t, err)
+
+	gs, err := l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
+
+	select {
+	case msg := <-stream.msgs:
+		assert.Equal(t, msg.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
+	case <-time.After(2 * l.watchPeriod):
+		assert.FailNow(t, "timeout on receiving messages")
+	}
+}
+
+func TestLocalSDKServerSetAnnotation(t *testing.T) {
+	ctx := context.Background()
+	e := &sdk.Empty{}
+	l := NewLocalSDKServer()
+	kv := &sdk.KeyValue{Key: "bar", Value: "foo"}
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(e, stream)
+		assert.Nil(t, err)
+	}()
+
+	_, err := l.SetAnnotation(ctx, kv)
+	assert.Nil(t, err)
+
+	gs, err := l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+
+	select {
+	case msg := <-stream.msgs:
+		assert.Equal(t, msg.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
+	case <-time.After(2 * l.watchPeriod):
+		assert.FailNow(t, "timeout on receiving messages")
+	}
+}
+
 func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
@@ -64,15 +118,17 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	l.watchPeriod = time.Second
 
 	stream := newGameServerMockStream()
-	err := l.WatchGameServer(e, stream)
-	assert.Nil(t, err)
+	go func() {
+		err := l.WatchGameServer(e, stream)
+		assert.Nil(t, err)
+	}()
 
 	for i := 0; i < 3; i++ {
 		select {
 		case msg := <-stream.msgs:
 			assert.Equal(t, fixture, msg)
 		case <-time.After(2 * l.watchPeriod):
-			assert.FailNow(t, "timeout on receiving messagess")
+			assert.FailNow(t, "timeout on receiving messages")
 		}
 	}
 }

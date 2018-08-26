@@ -55,7 +55,7 @@ namespace protobuf_sdk_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[9];
+  static const ::google::protobuf::internal::ParseTable schema[10];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -63,6 +63,8 @@ struct TableStruct {
 void AddDescriptors();
 void InitDefaultsEmptyImpl();
 void InitDefaultsEmpty();
+void InitDefaultsKeyValueImpl();
+void InitDefaultsKeyValue();
 void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUseImpl();
 void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse();
 void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUseImpl();
@@ -81,6 +83,7 @@ void InitDefaultsGameServerImpl();
 void InitDefaultsGameServer();
 inline void InitDefaults() {
   InitDefaultsEmpty();
+  InitDefaultsKeyValue();
   InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse();
   InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse();
   InitDefaultsGameServer_ObjectMeta();
@@ -122,6 +125,9 @@ extern GameServer_StatusDefaultTypeInternal _GameServer_Status_default_instance_
 class GameServer_Status_Port;
 class GameServer_Status_PortDefaultTypeInternal;
 extern GameServer_Status_PortDefaultTypeInternal _GameServer_Status_Port_default_instance_;
+class KeyValue;
+class KeyValueDefaultTypeInternal;
+extern KeyValueDefaultTypeInternal _KeyValue_default_instance_;
 }  // namespace sdk
 }  // namespace dev
 }  // namespace agones
@@ -225,6 +231,128 @@ class Empty : public ::google::protobuf::Message /* @@protoc_insertion_point(cla
 };
 // -------------------------------------------------------------------
 
+class KeyValue : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:stable.agones.dev.sdk.KeyValue) */ {
+ public:
+  KeyValue();
+  virtual ~KeyValue();
+
+  KeyValue(const KeyValue& from);
+
+  inline KeyValue& operator=(const KeyValue& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  KeyValue(KeyValue&& from) noexcept
+    : KeyValue() {
+    *this = ::std::move(from);
+  }
+
+  inline KeyValue& operator=(KeyValue&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const KeyValue& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const KeyValue* internal_default_instance() {
+    return reinterpret_cast<const KeyValue*>(
+               &_KeyValue_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    1;
+
+  void Swap(KeyValue* other);
+  friend void swap(KeyValue& a, KeyValue& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline KeyValue* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  KeyValue* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CopyFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void MergeFrom(const ::google::protobuf::Message& from) PROTOBUF_FINAL;
+  void CopyFrom(const KeyValue& from);
+  void MergeFrom(const KeyValue& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const PROTOBUF_FINAL;
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const PROTOBUF_FINAL;
+  void InternalSwap(KeyValue* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string key = 1;
+  void clear_key();
+  static const int kKeyFieldNumber = 1;
+  const ::std::string& key() const;
+  void set_key(const ::std::string& value);
+  #if LANG_CXX11
+  void set_key(::std::string&& value);
+  #endif
+  void set_key(const char* value);
+  void set_key(const char* value, size_t size);
+  ::std::string* mutable_key();
+  ::std::string* release_key();
+  void set_allocated_key(::std::string* key);
+
+  // string value = 2;
+  void clear_value();
+  static const int kValueFieldNumber = 2;
+  const ::std::string& value() const;
+  void set_value(const ::std::string& value);
+  #if LANG_CXX11
+  void set_value(::std::string&& value);
+  #endif
+  void set_value(const char* value);
+  void set_value(const char* value, size_t size);
+  ::std::string* mutable_value();
+  ::std::string* release_value();
+  void set_allocated_value(::std::string* value);
+
+  // @@protoc_insertion_point(class_scope:stable.agones.dev.sdk.KeyValue)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr key_;
+  ::google::protobuf::internal::ArenaStringPtr value_;
+  mutable int _cached_size_;
+  friend struct ::protobuf_sdk_2eproto::TableStruct;
+  friend void ::protobuf_sdk_2eproto::InitDefaultsKeyValueImpl();
+};
+// -------------------------------------------------------------------
+
 class GameServer_ObjectMeta_AnnotationsEntry_DoNotUse : public ::google::protobuf::internal::MapEntry<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse, 
     ::std::string, ::std::string,
     ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
@@ -302,7 +430,7 @@ class GameServer_ObjectMeta : public ::google::protobuf::Message /* @@protoc_ins
                &_GameServer_ObjectMeta_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    3;
+    4;
 
   void Swap(GameServer_ObjectMeta* other);
   friend void swap(GameServer_ObjectMeta& a, GameServer_ObjectMeta& b) {
@@ -506,7 +634,7 @@ class GameServer_Spec_Health : public ::google::protobuf::Message /* @@protoc_in
                &_GameServer_Spec_Health_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    5;
 
   void Swap(GameServer_Spec_Health* other);
   friend void swap(GameServer_Spec_Health& a, GameServer_Spec_Health& b) {
@@ -626,7 +754,7 @@ class GameServer_Spec : public ::google::protobuf::Message /* @@protoc_insertion
                &_GameServer_Spec_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    5;
+    6;
 
   void Swap(GameServer_Spec* other);
   friend void swap(GameServer_Spec& a, GameServer_Spec& b) {
@@ -730,7 +858,7 @@ class GameServer_Status_Port : public ::google::protobuf::Message /* @@protoc_in
                &_GameServer_Status_Port_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    6;
+    7;
 
   void Swap(GameServer_Status_Port* other);
   friend void swap(GameServer_Status_Port& a, GameServer_Status_Port& b) {
@@ -844,7 +972,7 @@ class GameServer_Status : public ::google::protobuf::Message /* @@protoc_inserti
                &_GameServer_Status_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    8;
 
   void Swap(GameServer_Status* other);
   friend void swap(GameServer_Status& a, GameServer_Status& b) {
@@ -981,7 +1109,7 @@ class GameServer : public ::google::protobuf::Message /* @@protoc_insertion_poin
                &_GameServer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(GameServer* other);
   friend void swap(GameServer& a, GameServer& b) {
@@ -1080,6 +1208,116 @@ class GameServer : public ::google::protobuf::Message /* @@protoc_insertion_poin
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
 // Empty
+
+// -------------------------------------------------------------------
+
+// KeyValue
+
+// string key = 1;
+inline void KeyValue::clear_key() {
+  key_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& KeyValue::key() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.KeyValue.key)
+  return key_.GetNoArena();
+}
+inline void KeyValue::set_key(const ::std::string& value) {
+  
+  key_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.KeyValue.key)
+}
+#if LANG_CXX11
+inline void KeyValue::set_key(::std::string&& value) {
+  
+  key_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:stable.agones.dev.sdk.KeyValue.key)
+}
+#endif
+inline void KeyValue::set_key(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  key_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:stable.agones.dev.sdk.KeyValue.key)
+}
+inline void KeyValue::set_key(const char* value, size_t size) {
+  
+  key_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:stable.agones.dev.sdk.KeyValue.key)
+}
+inline ::std::string* KeyValue::mutable_key() {
+  
+  // @@protoc_insertion_point(field_mutable:stable.agones.dev.sdk.KeyValue.key)
+  return key_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* KeyValue::release_key() {
+  // @@protoc_insertion_point(field_release:stable.agones.dev.sdk.KeyValue.key)
+  
+  return key_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void KeyValue::set_allocated_key(::std::string* key) {
+  if (key != NULL) {
+    
+  } else {
+    
+  }
+  key_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), key);
+  // @@protoc_insertion_point(field_set_allocated:stable.agones.dev.sdk.KeyValue.key)
+}
+
+// string value = 2;
+inline void KeyValue::clear_value() {
+  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& KeyValue::value() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.KeyValue.value)
+  return value_.GetNoArena();
+}
+inline void KeyValue::set_value(const ::std::string& value) {
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.KeyValue.value)
+}
+#if LANG_CXX11
+inline void KeyValue::set_value(::std::string&& value) {
+  
+  value_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:stable.agones.dev.sdk.KeyValue.value)
+}
+#endif
+inline void KeyValue::set_value(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:stable.agones.dev.sdk.KeyValue.value)
+}
+inline void KeyValue::set_value(const char* value, size_t size) {
+  
+  value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:stable.agones.dev.sdk.KeyValue.value)
+}
+inline ::std::string* KeyValue::mutable_value() {
+  
+  // @@protoc_insertion_point(field_mutable:stable.agones.dev.sdk.KeyValue.value)
+  return value_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* KeyValue::release_value() {
+  // @@protoc_insertion_point(field_release:stable.agones.dev.sdk.KeyValue.value)
+  
+  return value_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void KeyValue::set_allocated_value(::std::string* value) {
+  if (value != NULL) {
+    
+  } else {
+    
+  }
+  value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set_allocated:stable.agones.dev.sdk.KeyValue.value)
+}
 
 // -------------------------------------------------------------------
 
@@ -1861,6 +2099,8 @@ inline void GameServer::set_allocated_status(::stable::agones::dev::sdk::GameSer
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

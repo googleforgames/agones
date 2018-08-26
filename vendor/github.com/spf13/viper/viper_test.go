@@ -7,6 +7,7 @@ package viper
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
+	"github.com/spf13/afero"
 	"github.com/spf13/cast"
 
 	"github.com/spf13/pflag"
@@ -262,7 +265,7 @@ func TestDefault(t *testing.T) {
 	assert.Equal(t, "leather", Get("clothing.jacket"))
 }
 
-func TestUnmarshalling(t *testing.T) {
+func TestUnmarshaling(t *testing.T) {
 	SetConfigType("yaml")
 	r := bytes.NewReader(yamlExample)
 
@@ -417,7 +420,7 @@ func TestAutoEnvWithPrefix(t *testing.T) {
 	assert.Equal(t, "13", Get("bar"))
 }
 
-func TestSetEnvReplacer(t *testing.T) {
+func TestSetEnvKeyReplacer(t *testing.T) {
 	Reset()
 
 	AutomaticEnv()
@@ -500,6 +503,42 @@ func TestUnmarshal(t *testing.T) {
 		t.Fatalf("unable to decode into struct, %v", err)
 	}
 	assert.Equal(t, &config{Name: "Steve", Port: 1234, Duration: time.Second + time.Millisecond}, &C)
+}
+
+func TestUnmarshalWithDecoderOptions(t *testing.T) {
+	Set("credentials", "{\"foo\":\"bar\"}")
+
+	opt := DecodeHook(mapstructure.ComposeDecodeHookFunc(
+		mapstructure.StringToTimeDurationHookFunc(),
+		mapstructure.StringToSliceHookFunc(","),
+		// Custom Decode Hook Function
+		func(rf reflect.Kind, rt reflect.Kind, data interface{}) (interface{}, error) {
+			if rf != reflect.String || rt != reflect.Map {
+				return data, nil
+			}
+			m := map[string]string{}
+			raw := data.(string)
+			if raw == "" {
+				return m, nil
+			}
+			return m, json.Unmarshal([]byte(raw), &m)
+		},
+	))
+
+	type config struct {
+		Credentials map[string]string
+	}
+
+	var C config
+
+	err := Unmarshal(&C, opt)
+	if err != nil {
+		t.Fatalf("unable to decode into struct, %v", err)
+	}
+
+	assert.Equal(t, &config{
+		Credentials: map[string]string{"foo": "bar"},
+	}, &C)
 }
 
 func TestBindPFlags(t *testing.T) {
@@ -847,6 +886,190 @@ func TestSub(t *testing.T) {
 	assert.Equal(t, (*Viper)(nil), subv)
 }
 
+var hclWriteExpected = []byte(`"foos" = {
+  "foo" = {
+    "key" = 1
+  }
+
+  "foo" = {
+    "key" = 2
+  }
+
+  "foo" = {
+    "key" = 3
+  }
+
+  "foo" = {
+    "key" = 4
+  }
+}
+
+"id" = "0001"
+
+"name" = "Cake"
+
+"ppu" = 0.55
+
+"type" = "donut"`)
+
+func TestWriteConfigHCL(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("hcl")
+	err := v.ReadConfig(bytes.NewBuffer(hclExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.hcl"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.hcl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, hclWriteExpected, read)
+}
+
+var jsonWriteExpected = []byte(`{
+  "batters": {
+    "batter": [
+      {
+        "type": "Regular"
+      },
+      {
+        "type": "Chocolate"
+      },
+      {
+        "type": "Blueberry"
+      },
+      {
+        "type": "Devil's Food"
+      }
+    ]
+  },
+  "id": "0001",
+  "name": "Cake",
+  "ppu": 0.55,
+  "type": "donut"
+}`)
+
+func TestWriteConfigJson(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("json")
+	err := v.ReadConfig(bytes.NewBuffer(jsonExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.json"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, jsonWriteExpected, read)
+}
+
+var propertiesWriteExpected = []byte(`p_id = 0001
+p_type = donut
+p_name = Cake
+p_ppu = 0.55
+p_batters.batter.type = Regular
+`)
+
+func TestWriteConfigProperties(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("properties")
+	err := v.ReadConfig(bytes.NewBuffer(propertiesExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.properties"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.properties")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, propertiesWriteExpected, read)
+}
+
+func TestWriteConfigTOML(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	v := New()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("toml")
+	err := v.ReadConfig(bytes.NewBuffer(tomlExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.toml"); err != nil {
+		t.Fatal(err)
+	}
+
+	// The TOML String method does not order the contents.
+	// Therefore, we must read the generated file and compare the data.
+	v2 := New()
+	v2.SetFs(fs)
+	v2.SetConfigName("c")
+	v2.SetConfigType("toml")
+	v2.SetConfigFile("c.toml")
+	err = v2.ReadInConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, v.GetString("title"), v2.GetString("title"))
+	assert.Equal(t, v.GetString("owner.bio"), v2.GetString("owner.bio"))
+	assert.Equal(t, v.GetString("owner.dob"), v2.GetString("owner.dob"))
+	assert.Equal(t, v.GetString("owner.organization"), v2.GetString("owner.organization"))
+}
+
+var yamlWriteExpected = []byte(`age: 35
+beard: true
+clothing:
+  jacket: leather
+  pants:
+    size: large
+  trousers: denim
+eyes: brown
+hacker: true
+hobbies:
+- skateboarding
+- snowboarding
+- go
+name: steve
+`)
+
+func TestWriteConfigYAML(t *testing.T) {
+	v := New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+	v.SetConfigName("c")
+	v.SetConfigType("yaml")
+	err := v.ReadConfig(bytes.NewBuffer(yamlExample))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := v.WriteConfigAs("c.yaml"); err != nil {
+		t.Fatal(err)
+	}
+	read, err := afero.ReadFile(fs, "c.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, yamlWriteExpected, read)
+}
+
 var yamlMergeExampleTgt = []byte(`
 hello:
     pop: 37890
@@ -883,6 +1106,10 @@ func TestMergeConfig(t *testing.T) {
 		t.Fatalf("lagrenum != 765432101234567, = %d", pop)
 	}
 
+	if pop := v.GetInt32("hello.pop"); pop != int32(37890) {
+		t.Fatalf("pop != 37890, = %d", pop)
+	}
+
 	if pop := v.GetInt64("hello.lagrenum"); pop != int64(765432101234567) {
 		t.Fatalf("int64 lagrenum != 765432101234567, = %d", pop)
 	}
@@ -905,6 +1132,10 @@ func TestMergeConfig(t *testing.T) {
 
 	if pop := v.GetInt("hello.lagrenum"); pop != 7654321001234567 {
 		t.Fatalf("lagrenum != 7654321001234567, = %d", pop)
+	}
+
+	if pop := v.GetInt32("hello.pop"); pop != int32(45000) {
+		t.Fatalf("pop != 45000, = %d", pop)
 	}
 
 	if pop := v.GetInt64("hello.lagrenum"); pop != int64(7654321001234567) {

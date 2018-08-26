@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc. All Rights Reserved.
+# Copyright 2018 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# project specific
 .*
-!.gitignore
-!.helmignore
-!.gitattributes
-!.dockerignore
-*.iml
-bin
-*.o
-tmp
-build/local-includes/*
-!build/local-includes/README.md
+.idea
+*.zip
 /release
-debug.test
+bin
+/docs
+*.md
+*.amd64
+
+# Created by .ignore support plugin (hsz.mobi)
+### Go template
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
