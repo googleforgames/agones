@@ -61,6 +61,7 @@ type Controller struct {
 	crdGetter              v1beta1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
 	podLister              corelisterv1.PodLister
+	podSynced              cache.InformerSynced
 	gameServerGetter       getterv1alpha1.GameServersGetter
 	gameServerLister       listerv1alpha1.GameServerLister
 	gameServerSynced       cache.InformerSynced
@@ -68,6 +69,7 @@ type Controller struct {
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	workerqueue            *workerqueue.WorkerQueue
+	stop                   <-chan struct{}
 	recorder               record.EventRecorder
 }
 
@@ -84,6 +86,7 @@ func NewController(
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
+	pods := kubeInformerFactory.Core().V1().Pods()
 	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServers.Informer()
 
@@ -92,7 +95,8 @@ func NewController(
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
-		podLister:              kubeInformerFactory.Core().V1().Pods().Lister(),
+		podLister:              pods.Lister(),
+		podSynced:              pods.Informer().HasSynced,
 		gameServerGetter:       agonesClient.StableV1alpha1(),
 		gameServerLister:       gameServers.Lister(),
 		gameServerSynced:       gsInformer.HasSynced,
@@ -127,7 +131,7 @@ func NewController(
 	})
 
 	// track pod deletions, for when GameServers are deleted
-	kubeInformerFactory.Core().V1().Pods().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	pods.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		DeleteFunc: func(obj interface{}) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
 			pod, ok := obj.(*corev1.Pod)
@@ -221,6 +225,8 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 // Run the GameServer controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
+	c.stop = stop
+
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameservers.stable.agones.dev", c.logger)
 	if err != nil {
 		return err
@@ -361,6 +367,11 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 	}
 
 	c.logger.WithField("gs", gs).Info("Syncing Create State")
+
+	// Wait for pod cache sync, so that we don't end up with multiple pods for a GameServer
+	if !(cache.WaitForCacheSync(c.stop, c.podSynced)) {
+		return nil, errors.New("could not sync pod cache state")
+	}
 
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
 	ret, err := c.listGameServerPods(gs)
