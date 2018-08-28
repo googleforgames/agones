@@ -47,7 +47,7 @@ The GameServer state will be set `Shutdown` and the
 backing Pod will be deleted, if they have not shut themselves down already. 
 
 ### SetLabel(key, value)
-⚠️⚠️⚠️ **`SetLabel` is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **`SetLabel` is currently a release candidate feature** ⚠️⚠️⚠️
 
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
 record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
@@ -57,7 +57,7 @@ record that is stored in Kubernetes. To maintain isolation, the `key` value is a
 This can be useful if you want to information from your running game server process to be observable or searchable through the Kubernetes API.  
 
 ### SetAnnotation(key, value)
-⚠️⚠️⚠️ **`SetAnnotation` is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **`SetAnnotation` is currently a release candidate feature** ⚠️⚠️⚠️
 
 This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
 `Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
@@ -81,7 +81,7 @@ and the [examples](../examples).
 
 ### WatchGameServer(function(gameserver){...})
 
-⚠️⚠️⚠️ **`WatchGameServer` is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **`WatchGameServer` is currently a release candidate feature** ⚠️⚠️⚠️
 
 This executes the passed in callback with the current `GameServer` details whenever the underlying `GameServer` configuration is updated.
 This can be useful to track `GameServer > Status > State` changes, `metadata` changes, such as labels and annotations, and more.
@@ -137,7 +137,7 @@ $ ./sidecar.linux.amd64 --local
 
 ### Providing your own `GameServer` configuration for local development
 
-⚠️⚠️⚠️ **Providing your own `GameServer` is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **Providing your own `GameServer` is currently a release candidate feature** ⚠️⚠️⚠️
 
 By default, the local sdk-server will create a dummy `GameServer` configuration that is used for `GameServer()`
 and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this

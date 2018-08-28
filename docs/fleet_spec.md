@@ -81,7 +81,7 @@ spec:
   fleetName: fleet-example
   # Custom metadata that is added to game server status in the moment of allocation
   # You can use this to tell the server necessary session data
-  # ⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+  # ⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
   metadata:
     labels:
       mode: deathmatch
@@ -98,4 +98,4 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
   when the `FleetAllocation` is created
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation. 
-  ⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+  ⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
