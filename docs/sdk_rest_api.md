@@ -127,7 +127,7 @@ Response:
 
 ### Watch GameServer
 
-⚠️⚠️⚠️ **/watch/gameserver is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **/watch/gameserver is currently a release candidate feature** ⚠️⚠️⚠️
 
 Call this when you want to get updates of when the backing `GameServer` configuration is updated.
 

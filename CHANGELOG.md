@@ -1,6 +1,47 @@
 # Change Log
 
-## [v0.3.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.3.0) (2018-07-25)
+## [v0.4.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.4.0.rc) (2018-08-28)
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.3.0...v0.4.0.rc)
+
+**Implemented enhancements:**
+
+- When running the SDK sidecar in local mode, be able to specify the backing `GameServer` configuration [\#296](https://github.com/GoogleCloudPlatform/agones/issues/296)
+- Move Status \> Address & Status \> Ports population to `Creating` state processing [\#293](https://github.com/GoogleCloudPlatform/agones/issues/293)
+- Propagating game server process events to Agones system [\#279](https://github.com/GoogleCloudPlatform/agones/issues/279)
+- Session data propagation to dedicated server [\#277](https://github.com/GoogleCloudPlatform/agones/issues/277)
+- Ability to pass `GameServer` yaml/json to local sdk server [\#328](https://github.com/GoogleCloudPlatform/agones/pull/328) ([markmandel](https://github.com/markmandel))
+- Move Status \> Address & Ports population to `Creating` state processing [\#326](https://github.com/GoogleCloudPlatform/agones/pull/326) ([markmandel](https://github.com/markmandel))
+- Implement SDK SetLabel and SetAnnotation functionality [\#323](https://github.com/GoogleCloudPlatform/agones/pull/323) ([markmandel](https://github.com/markmandel))
+- Metadata propagation from fleet allocation to game server [\#312](https://github.com/GoogleCloudPlatform/agones/pull/312) ([victor-prodan](https://github.com/victor-prodan))
+- Features/e2e [\#315](https://github.com/GoogleCloudPlatform/agones/pull/315) ([Kuqd](https://github.com/Kuqd))
+- Implements SDK callback for GameServer updates [\#316](https://github.com/GoogleCloudPlatform/agones/pull/316) ([markmandel](https://github.com/markmandel))
+
+**Fixed bugs:**
+
+- Fleet allocation request could not find fleet [\#324](https://github.com/GoogleCloudPlatform/agones/issues/324)
+- Fleet Allocation via REST was failing [\#325](https://github.com/GoogleCloudPlatform/agones/pull/325) ([markmandel](https://github.com/markmandel))
+- Make sure the test-e2e ensures the build image. [\#322](https://github.com/GoogleCloudPlatform/agones/pull/322) ([markmandel](https://github.com/markmandel))
+- Update getting started guides with kubectl custom columns [\#319](https://github.com/GoogleCloudPlatform/agones/pull/319) ([markmandel](https://github.com/markmandel))
+- Fix bug: Disabled health checking not implemented [\#317](https://github.com/GoogleCloudPlatform/agones/pull/317) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.3.0 [\#304](https://github.com/GoogleCloudPlatform/agones/issues/304)
+- Change container builder steps to run concurrently [\#186](https://github.com/GoogleCloudPlatform/agones/issues/186)
+- Move Deployment in install script out of v1beta1 [\#173](https://github.com/GoogleCloudPlatform/agones/issues/173)
+- YAML packaging [\#101](https://github.com/GoogleCloudPlatform/agones/issues/101)
+
+**Merged pull requests:**
+
+- Added github.com/spf13/viper to dep toml [\#327](https://github.com/GoogleCloudPlatform/agones/pull/327) ([markmandel](https://github.com/markmandel))
+- Add Minikube instructions [\#321](https://github.com/GoogleCloudPlatform/agones/pull/321) ([slartibaartfast](https://github.com/slartibaartfast))
+- Convert Go example into multi-stage Docker build [\#320](https://github.com/GoogleCloudPlatform/agones/pull/320) ([markmandel](https://github.com/markmandel))
+- Removal of the legacy port configuration [\#318](https://github.com/GoogleCloudPlatform/agones/pull/318) ([markmandel](https://github.com/markmandel))
+- Fix flakiness with TestSidecarHTTPHealthCheck [\#313](https://github.com/GoogleCloudPlatform/agones/pull/313) ([markmandel](https://github.com/markmandel))
+- Move linting into it's own serial step [\#311](https://github.com/GoogleCloudPlatform/agones/pull/311) ([markmandel](https://github.com/markmandel))
+- Update to move from release to the next version \(0.4.0.rc\) [\#306](https://github.com/GoogleCloudPlatform/agones/pull/306) ([markmandel](https://github.com/markmandel))
+
+## [v0.3.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.3.0) (2018-07-26)
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.3.0.rc...v0.3.0)
 
 **Fixed bugs:**
@@ -13,6 +54,7 @@
 
 **Merged pull requests:**
 
+- Changes for release  0.3.0 [\#305](https://github.com/GoogleCloudPlatform/agones/pull/305) ([markmandel](https://github.com/markmandel))
 - Move back to 0.3.0 [\#292](https://github.com/GoogleCloudPlatform/agones/pull/292) ([markmandel](https://github.com/markmandel))
 
 ## [v0.3.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.3.0.rc) (2018-07-17)
