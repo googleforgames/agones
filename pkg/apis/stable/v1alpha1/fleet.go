@@ -56,6 +56,8 @@ type FleetSpec struct {
 	Replicas int32 `json:"replicas"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
+	// Autoscale strategy
+	Scaling FleetScalingPolicy `json:"scaling"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
 }
@@ -69,6 +71,29 @@ type FleetStatus struct {
 	// AllocatedReplicas are the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
+
+type FleetScalingPolicy struct {
+    // Type of scaling policy. Can be "Manual" or "Buffer". Default is Manual.
+    // +optional
+    Type FleetScalingPolicyType `json:"type,omitempty" protobuf:"bytes,1,opt,name=type,casttype=FleetScalingPolicyType"`
+    
+    // Maximum cap used for automatic scaling policies. Number of pods created by the fleet cannot exceed this number
+    // If 0 (default), cap is disabled
+    // +optional
+    MaxReplicas int32 `json:"maxReplicas"`
+}
+
+type FleetScalingPolicyType string
+
+const (
+    // Autoscaling is disabled, fleet is scaled manually using FleetSpec.Replicas
+    ManualFleetScalingPolicyType FleetScalingPolicyType = "Manual"
+    
+    // When using the simple buffer policy, the fleet will try to maintain a buffer of ready game server instances. 
+    // The size of this buffer is defined by FleetSpec.Replicas.
+    // Or in other words, for each allocated instance the fleet will start up a new one to replace it
+    RollingBufferFleetScalingPolicyType FleetScalingPolicyType = "RollingBuffer"
+)
 
 // GameServerSet returns a single GameServerSet for this Fleet definition
 func (f *Fleet) GameServerSet() *GameServerSet {
@@ -105,6 +130,10 @@ func (f *Fleet) ApplyDefaults() {
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 	}
 
+	if f.Spec.Scaling.Type == "" {
+		f.Spec.Scaling.Type = ManualFleetScalingPolicyType
+	}
+    
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
 		if f.Spec.Strategy.RollingUpdate == nil {
 			f.Spec.Strategy.RollingUpdate = &appsv1.RollingUpdateDeployment{}
