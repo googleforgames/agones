@@ -280,10 +280,9 @@ func (c *Controller) applyScalingOrDeploymentStrategy(fleet *stablev1alpha1.Flee
 	if len(rest) == 0 {
 		// no deployment in progress, we can run the autoscaling
 		return c.applyScalingPolicy(fleet, active)
-	} else {
-		// otherwise run the deployment strategy
-		return c.applyDeploymentStrategy(fleet, active, rest)
 	}
+	// otherwise run the deployment strategy
+	return c.applyDeploymentStrategy(fleet, active, rest)
 }
 
 // applyDeploymentStrategy applies the Fleet > Spec > Deployment strategy to all the non-active

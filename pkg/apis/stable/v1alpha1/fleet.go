@@ -72,6 +72,7 @@ type FleetStatus struct {
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
 
+// FleetScaling policy defined how to handle Horizontal Fleet Autoscaling
 type FleetScalingPolicy struct {
     // Type of scaling policy. Can be "Manual" or "Buffer". Default is Manual.
     // +optional
@@ -83,12 +84,14 @@ type FleetScalingPolicy struct {
     MaxReplicas int32 `json:"maxReplicas"`
 }
 
+// FleetScalingPolicyType defines the fleet autoscaling policy type
 type FleetScalingPolicyType string
 
 const (
-    // Autoscaling is disabled, fleet is scaled manually using FleetSpec.Replicas
+    // ManualFleetScalingPolicyType: Autoscaling is disabled, fleet is scaled manually using FleetSpec.Replicas
     ManualFleetScalingPolicyType FleetScalingPolicyType = "Manual"
     
+	// RollingBufferFleetScalingPolicyType
     // When using the simple buffer policy, the fleet will try to maintain a buffer of ready game server instances. 
     // The size of this buffer is defined by FleetSpec.Replicas.
     // Or in other words, for each allocated instance the fleet will start up a new one to replace it
