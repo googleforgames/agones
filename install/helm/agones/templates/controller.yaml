@@ -35,6 +35,10 @@ spec:
     type: Recreate
   template:
     metadata:
+{{- if .Values.agones.controller.generateTLS }}
+      annotations:
+        revision/tls-cert: {{ .Release.Revision | quote }}
+{{- end }}
       labels:
         stable.agones.dev/role: controller
         app: {{ template "agones.name" . }}

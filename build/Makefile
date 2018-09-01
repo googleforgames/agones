@@ -141,7 +141,7 @@ install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: $(ensure-build-image)
 	$(DOCKER_RUN) \
-		helm upgrade --install --recreate-pods --wait --namespace=agones-system \
+		helm upgrade --install --wait --namespace=agones-system \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		agones $(mount_path)/install/helm/agones/
 

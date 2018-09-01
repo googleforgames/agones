@@ -4,7 +4,7 @@ You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }
 
 Once ready you can create your first GameServer using our examples:
 
-'kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/gameserver.yaml'
+'kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/gameserver.yaml'
 
 An example GameServer that makes use of the controller:
 
