@@ -124,6 +124,13 @@ $ helm install --name my-release --namespace agones-system -f values.yaml agones
 
 > **Tip**: You can use the default [values.yaml](agones/values.yaml)
 
+## TLS Certificates
+
+By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command. 
+For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
+
+> **Tip**: You can use our script located at `cert/cert.sh` to generates them.
+
 ## Confirm Agones is running
 
 To confirm Agones is up and running, [go to the next section](../README.md#confirming-agones-started-successfully)
