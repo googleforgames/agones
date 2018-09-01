@@ -26,7 +26,7 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	typedv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listersv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -40,9 +40,18 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	k8sv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+)
+
+// Operation is a synchronisation action
+type Operation string
+
+const (
+	updateState      Operation = "updateState"
+	updateLabel      Operation = "updateLabel"
+	updateAnnotation Operation = "updateAnnotation"
 )
 
 var _ sdk.SDKServer = &SDKServer{}
@@ -50,30 +59,30 @@ var _ sdk.SDKServer = &SDKServer{}
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
 type SDKServer struct {
-	logger                 *logrus.Entry
-	gameServerName         string
-	namespace              string
-	informerFactory        externalversions.SharedInformerFactory
-	gameServerGetter       typedv1alpha1.GameServersGetter
-	gameServerLister       v1alpha1.GameServerLister
-	gameServerSynced       cache.InformerSynced
-	server                 *http.Server
-	clock                  clock.Clock
-	healthDisabled         bool
-	healthTimeout          time.Duration
-	healthFailureThreshold int64
-	healthMutex            sync.RWMutex
-	healthLastUpdated      time.Time
-	healthFailureCount     int64
-	workerqueue            *workerqueue.WorkerQueue
-	recorder               record.EventRecorder
+	logger             *logrus.Entry
+	gameServerName     string
+	namespace          string
+	informerFactory    externalversions.SharedInformerFactory
+	gameServerGetter   typedv1alpha1.GameServersGetter
+	gameServerLister   listersv1alpha1.GameServerLister
+	gameServerSynced   cache.InformerSynced
+	server             *http.Server
+	clock              clock.Clock
+	health             stablev1alpha1.Health
+	healthTimeout      time.Duration
+	healthMutex        sync.RWMutex
+	healthLastUpdated  time.Time
+	healthFailureCount int32
+	workerqueue        *workerqueue.WorkerQueue
+	streamMutex        sync.RWMutex
+	connectedStreams   []sdk.SDK_WatchGameServerServer
+	stop               <-chan struct{}
+	recorder           record.EventRecorder
 }
 
 // NewSDKServer creates a SDKServer that sets up an
 // InClusterConfig for Kubernetes
-func NewSDKServer(gameServerName, namespace string,
-	healthDisabled bool, healthTimeout time.Duration, healthFailureThreshold int64, healthInitialDelay time.Duration,
-	kubeClient kubernetes.Interface,
+func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interface,
 	agonesClient versioned.Interface) (*SDKServer, error) {
 	mux := http.NewServeMux()
 
@@ -94,20 +103,25 @@ func NewSDKServer(gameServerName, namespace string,
 			Addr:    ":8080",
 			Handler: mux,
 		},
-		clock:                  clock.RealClock{},
-		healthDisabled:         healthDisabled,
-		healthFailureThreshold: healthFailureThreshold,
-		healthTimeout:          healthTimeout,
-		healthMutex:            sync.RWMutex{},
-		healthFailureCount:     0,
+		clock:              clock.RealClock{},
+		healthMutex:        sync.RWMutex{},
+		healthFailureCount: 0,
+		streamMutex:        sync.RWMutex{},
 	}
 
 	s.informerFactory = factory
 	s.logger = runtime.NewLoggerWithType(s)
 
+	gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(_, newObj interface{}) {
+			gs := newObj.(*stablev1alpha1.GameServer)
+			s.sendGameServerUpdate(gs)
+		},
+	})
+
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(s.logger.Infof)
-	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
+	eventBroadcaster.StartRecordingToSink(&k8sv1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	s.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -129,11 +143,8 @@ func NewSDKServer(gameServerName, namespace string,
 		}
 	})
 
-	s.initHealthLastUpdated(healthInitialDelay)
 	s.workerqueue = workerqueue.NewWorkerQueue(
-		func(key string) error {
-			return s.updateState(stablev1alpha1.State(key))
-		},
+		s.syncGameServer,
 		s.logger,
 		strings.Join([]string{stable.GroupName, s.namespace, s.gameServerName}, "."))
 
@@ -150,7 +161,28 @@ func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (s *SDKServer) Run(stop <-chan struct{}) {
+func (s *SDKServer) Run(stop <-chan struct{}) error {
+	s.informerFactory.Start(stop)
+	cache.WaitForCacheSync(stop, s.gameServerSynced)
+
+	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	if err != nil {
+		return errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
+	}
+
+	// grab configuration details
+	s.health = gs.Spec.Health
+	s.logger.WithField("health", s.health).Info("setting health configuration")
+	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
+	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
+
+	// start health checking running
+	if !s.health.Disabled {
+		s.logger.Info("Starting GameServer health checking")
+		go wait.Until(s.runHealth, s.healthTimeout, stop)
+	}
+
+	// then start the http endpoints
 	s.logger.Info("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
@@ -164,15 +196,38 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	if !s.healthDisabled {
-		s.logger.Info("Starting GameServer health checking")
-		go wait.Until(s.runHealth, s.healthTimeout, stop)
+	// need this for streaming gRPC commands
+	s.stop = stop
+	s.workerqueue.Run(1, stop)
+	return nil
+}
+
+// syncGameServer synchronises the GameServer with the
+// requested operations
+// takes a key in the format of {operation}/{data}
+func (s *SDKServer) syncGameServer(key string) error {
+	op := strings.Split(key, "/")
+	rest := op[1:]
+
+	switch Operation(op[0]) {
+	case updateState:
+		return s.syncState(rest)
+	case updateLabel:
+		return s.syncLabel(rest)
+	case updateAnnotation:
+		return s.syncAnnotation(rest)
 	}
 
-	s.informerFactory.Start(stop)
-	cache.WaitForCacheSync(stop, s.gameServerSynced)
+	return errors.Errorf("could not sync game server key: %s", key)
+}
 
-	s.workerqueue.Run(1, stop)
+// syncState converts the string array into values for updateState
+func (s *SDKServer) syncState(rest []string) error {
+	if len(rest) == 0 {
+		return errors.New("could not sync state, as not state provided")
+	}
+
+	return s.updateState(stablev1alpha1.State(rest[0]))
 }
 
 // updateState sets the GameServer Status's state to the state
@@ -180,9 +235,9 @@ func (s *SDKServer) Run(stop <-chan struct{}) {
 func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	s.logger.WithField("state", state).Info("Updating state")
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
-	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	gs, err := s.gameServer()
 	if err != nil {
-		return errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
+		return err
 	}
 
 	// if the state is currently unhealthy, you can't go back to Ready
@@ -202,11 +257,80 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, state)
 }
 
+func (s *SDKServer) gameServer() (*stablev1alpha1.GameServer, error) {
+	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	return gs, errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
+}
+
+// syncLabel converts the string array values into values for
+// updateLabel
+func (s *SDKServer) syncLabel(rest []string) error {
+	if len(rest) < 2 {
+		return errors.Errorf("could not sync label: %#v", rest)
+	}
+
+	return s.updateLabel(rest[0], rest[1])
+}
+
+// updateLabel updates the label on this GameServer, with the prefix of
+// "stable.agones.dev/sdk-"
+func (s *SDKServer) updateLabel(key, value string) error {
+	s.logger.WithField("key", key).WithField("value", value).Info("updating label")
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+
+	gsCopy := gs.DeepCopy()
+	if gsCopy.ObjectMeta.Labels == nil {
+		gsCopy.ObjectMeta.Labels = map[string]string{}
+	}
+	gsCopy.ObjectMeta.Labels[metadataPrefix+key] = value
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+	return err
+}
+
+// syncAnnotation converts the string array values into values for
+// updateAnnotation
+func (s *SDKServer) syncAnnotation(rest []string) error {
+	if len(rest) < 2 {
+		return errors.Errorf("could not sync annotation: %#v", rest)
+	}
+
+	return s.updateAnnotation(rest[0], rest[1])
+}
+
+// updateAnnotation updates the Annotation on this GameServer, with the prefix of
+// "stable.agones.dev/sdk-"
+func (s *SDKServer) updateAnnotation(key, value string) error {
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+
+	gsCopy := gs.DeepCopy()
+	if gsCopy.ObjectMeta.Annotations == nil {
+		gsCopy.ObjectMeta.Annotations = map[string]string{}
+	}
+	gsCopy.ObjectMeta.Annotations[metadataPrefix+key] = value
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+	return err
+}
+
+// enqueueState enqueue a State change request into the
+// workerqueue
+func (s *SDKServer) enqueueState(state stablev1alpha1.State) {
+	key := string(updateState) + "/" + string(state)
+	s.workerqueue.Enqueue(cache.ExplicitKey(key))
+}
+
 // Ready enters the RequestReady state change for this GameServer into
 // the workqueue so it can be updated
 func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Ready request, adding to queue")
-	s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.RequestReady))
+	s.enqueueState(stablev1alpha1.RequestReady)
 	return e, nil
 }
 
@@ -214,7 +338,7 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 // the workqueue so it can be updated
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Shutdown request, adding to queue")
-	s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.Shutdown))
+	s.enqueueState(stablev1alpha1.Shutdown)
 	return e, nil
 }
 
@@ -235,59 +359,64 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 	}
 }
 
-// GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
-func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
-	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
-	if err != nil {
-		return nil, errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
-	}
-
-	return s.convert(gs), nil
+// SetLabel adds the Key/Value to be used to set the label with the metadataPrefix to the `GameServer`
+// metdata
+func (s *SDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
+	s.logger.WithField("values", kv).Info("Adding SetLabel to queue")
+	key := string(updateLabel) + "/" + kv.Key + "/" + kv.Value
+	s.workerqueue.Enqueue(cache.ExplicitKey(key))
+	return &sdk.Empty{}, nil
 }
 
-// convert converts a K8s GameServer object, into a gRPC SDK GameServer object
-func (s *SDKServer) convert(gs *stablev1alpha1.GameServer) *sdk.GameServer {
-	meta := gs.ObjectMeta
-	status := gs.Status
-	health := gs.Spec.Health
-	result := &sdk.GameServer{
-		ObjectMeta: &sdk.GameServer_ObjectMeta{
-			Name:              meta.Name,
-			Namespace:         meta.Namespace,
-			Uid:               string(meta.UID),
-			ResourceVersion:   meta.ResourceVersion,
-			Generation:        meta.Generation,
-			CreationTimestamp: meta.CreationTimestamp.Unix(),
-			Annotations:       meta.Annotations,
-			Labels:            meta.Labels,
-		},
-		Spec: &sdk.GameServer_Spec{
-			Health: &sdk.GameServer_Spec_Health{
-				Disabled:            health.Disabled,
-				PeriodSeconds:       health.PeriodSeconds,
-				FailureThreshold:    health.FailureThreshold,
-				InitialDelaySeconds: health.InitialDelaySeconds,
-			},
-		},
-		Status: &sdk.GameServer_Status{
-			State:   string(status.State),
-			Address: status.Address,
-		},
-	}
-	if meta.DeletionTimestamp != nil {
-		result.ObjectMeta.DeletionTimestamp = meta.DeletionTimestamp.Unix()
+// SetAnnotation adds the Key/Value to be used to set the annotations with the metadataPrefix to the `GameServer`
+// metdata
+func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
+	s.logger.WithField("values", kv).Info("Adding SetLabel to queue")
+	key := string(updateAnnotation) + "/" + kv.Key + "/" + kv.Value
+	s.workerqueue.Enqueue(cache.ExplicitKey(key))
+	return &sdk.Empty{}, nil
+}
+
+// GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
+func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
+	s.logger.Info("Received GetGameServer request")
+	gs, err := s.gameServer()
+	if err != nil {
+		return nil, err
 	}
 
-	// loop around and add all the ports
-	for _, p := range status.Ports {
-		grpcPort := &sdk.GameServer_Status_Port{
-			Name: p.Name,
-			Port: p.Port,
+	return convert(gs), nil
+}
+
+// WatchGameServer sends events through the stream when changes occur to the
+// backing GameServer configuration / status
+func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
+	s.logger.Info("Received WatchGameServer request, adding stream to connectedStreams")
+	s.streamMutex.Lock()
+	s.connectedStreams = append(s.connectedStreams, stream)
+	s.streamMutex.Unlock()
+	// don't exit until we shutdown, because that will close the stream
+	<-s.stop
+	return nil
+}
+
+// sendGameServerUpdate sends a watch game server event
+func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
+	s.logger.Info("Sending GameServer Event to connectedStreams")
+
+	s.streamMutex.RLock()
+	defer s.streamMutex.RUnlock()
+
+	for _, stream := range s.connectedStreams {
+		err := stream.Send(convert(gs))
+		// We essentially ignoring any disconnected streams.
+		// I think this is fine, as disconnections shouldn't actually happen.
+		// but we should log them, just in case they do happen, and we can track it
+		if err != nil {
+			s.logger.WithError(errors.WithStack(err)).
+				Error("error sending game server update event")
 		}
-		result.Status.Ports = append(result.Status.Ports, grpcPort)
 	}
-
-	return result
 }
 
 // runHealth actively checks the health, and if not
@@ -297,7 +426,7 @@ func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
 		s.logger.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
-		s.workerqueue.Enqueue(cache.ExplicitKey(stablev1alpha1.Unhealthy))
+		s.enqueueState(stablev1alpha1.Unhealthy)
 	}
 }
 
@@ -327,11 +456,11 @@ func (s *SDKServer) checkHealth() {
 // currently healthy or not based on the configured
 // failure count vs failure threshold
 func (s *SDKServer) healthy() bool {
-	if s.healthDisabled {
+	if s.health.Disabled {
 		return true
 	}
 
 	s.healthMutex.RLock()
 	defer s.healthMutex.RUnlock()
-	return s.healthFailureCount < s.healthFailureThreshold
+	return s.healthFailureCount < s.health.FailureThreshold
 }

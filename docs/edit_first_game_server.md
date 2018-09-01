@@ -1,15 +1,20 @@
 # Getting Started
-The following guide is for developers without Docker or Kubernetes experience, that want to use the simple-udp example as a starting point for a custom game server. Since this guide is for Google Kubernetes Engine, we welcome a Pull Request to expand this to include Minikube as well.
+The following guide is for developers without Docker or Kubernetes experience, that want to use the simple-udp example as a starting point for a custom game server. This guide addresses Google Kubernetes Engine and Minikube.  We would welcome a Pull Request to expand this to include other platforms as well.
 
 ## Prerequisites
 
 1. Downland and install Golang from https://golang.org/dl/.
 2. Install Docker from https://www.docker.com/get-docker.
-3. Follow the install instructions (if you haven't already) at [Install and configure Agones on Kubernetes](../install/README.md). At least, you should have "Setting up a Google Kubernetes Engine (GKE) cluster", "Enabling creation of RBAC resources" and "Installing Agones" done.
+3. Install Agones on GKE or Minikube.  
+
+To install on GKE, follow the install instructions (if you haven't already) at
+[Setting up a Google Kubernetes Engine (GKE) cluster](../install/README.md#setting-up-a-google-kubernetes-engine-gke-cluster). Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.
+
+To install locally on Minikube, read [Setting up a Minikube cluster](../install/README.md#setting-up-a-minikube-cluster).  Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.
 
 ## Modify the code and push another new image
 
-### Modify the source code
+### Modify the simple-udp example source source code
 Modify the main.go file. For example:
 
 Change main.go line 92:
@@ -21,29 +26,38 @@ ack := "ACK: " + txt + "\n"
 
 To:
 ```go
-ack := "ACK: Hi," + txt + "\n"
+ack := "ACK: Echo says " + txt + "\n"
 ```
-
 
 ### Build Server
 Since Docker image is using Alpine Linux, the "go build" command has to include few more environment variables.
 
 ```bash
-go get agones.dev/agones/pkg/sdk
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
+>> go get agones.dev/agones/pkg/sdk
+>> GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
 ```
 
-## Using Docker File without using Minikube
+## Using Docker File
 
 ### Create a new docker image
 ```bash
-docker build -t gcr.io/[PROJECT_ID]/agones-udp-server:0.2 .
+>> docker build -t gcr.io/[PROJECT_ID]/agones-udp-server:modified .
 ```
-Note that: you can change the image name "agones-udp-server" to something else.
 
-### Push the image to GCP Registry
+Note: you can change the image name "agones-udp-server" to something else.
+
+### If using GKE, push the image to GCP Registry
 ```bash
-docker push gcr.io/[PROJECT_ID]/agones-udp-server:0.2
+>> docker push gcr.io/[PROJECT_ID]/agones-udp-server:modified
+```
+
+Note: Review [Authentication Methods](https://cloud.google.com/container-registry/docs/advanced-authentication)
+for additional information regarding use of gcloud as a Docker credential helper
+and advanced authentication methods to the Google Container Registry.
+
+### If using Minikube, load the image into Minikube
+```bash
+>> docker save gcr.io/[PROJECT_ID]/agones-udp-server:modified | (eval $(minikube docker-env) && docker load)
 ```
 
 ### Modify gameserver.yaml
@@ -53,10 +67,10 @@ Modify the following line from gameserver.yaml to use the new configuration.
     spec:
       containers:
       - name: agones-simple-udp
-        image: gcr.io/[PROJECT_ID]/agones-udp-server:0.2
+        image: gcr.io/[PROJECT_ID]/agones-udp-server:modified
 ```
 
-### Deploy Server
+### If using GKE, deploy Server to GKE
 Apply the latest settings to kubernetes container.
 
 ```bash
@@ -64,18 +78,23 @@ Apply the latest settings to kubernetes container.
 >> gcloud container clusters get-credentials [CLUSTER_NAME]
 >> kubectl apply -f gameserver.yaml
 ```
+
+### If using Minikube, deploy the Server to Minikube
+```bash
+>> kubectl apply -f gameserver.yaml
+```
+
+
 ### Check the GameServer Status
 ```bash
 >> kubectl describe gameserver
 ```
 
 ### Verify
-Follow the instruction from this link: https://github.com/GoogleCloudPlatform/agones/blob/master/docs/create_gameserver.md.
-
-Let's retrieve the IP address and the allocated port of your Game Server :
+Let's retrieve the IP address and the allocated port of your Game Server:
 
 ```
-kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.port}'
+kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.ports[0].port}'
 ```
 
 You can now communicate with the Game Server :
@@ -86,11 +105,15 @@ You can now communicate with the Game Server :
 
 ```
 nc -u {IP} {PORT}
-Hello World !
-ACK: Hello World !
+Hello World!
+ACK:  Echo says  Hello World!
 EXIT
 ```
 
 You can finally type `EXIT` which tells the SDK to run the [Shutdown command](../sdks#shutdown), and therefore shuts down the `GameServer`.  
 
 If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
+
+## Next Steps
+
+If you want to perform rolling updates of modified game servers, see [Quickstart Create a Game Server Fleet](./create_fleet.md).

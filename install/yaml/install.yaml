@@ -21,7 +21,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -32,7 +32,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -62,7 +62,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -96,7 +96,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -107,10 +107,13 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
@@ -122,7 +125,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -157,7 +160,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -344,7 +347,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -393,7 +396,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -558,7 +561,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -735,7 +738,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -760,7 +763,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agones-controller
@@ -768,10 +771,16 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 spec:
+  selector:
+    matchLabels:
+      stable.agones.dev/role: controller
+      app: agones
+      release: agones-manual
+      heritage: Tiller
   replicas: 1
   strategy:
     type: Recreate
@@ -780,14 +789,13 @@ spec:
       labels:
         stable.agones.dev/role: controller
         app: agones
-        chart: agones-0.4.0.rc
         release: agones-manual
         heritage: Tiller
     spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:0.4.0.rc"
+        image: "gcr.io/agones-images/agones-controller:0.4.0"
         imagePullPolicy: IfNotPresent
         env:
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
@@ -799,7 +807,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:0.4.0.rc"
+          value: "gcr.io/agones-images/agones-sdk:0.4.0"
         livenessProbe:
           httpGet:
             path: /live
@@ -873,7 +881,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.4.0.rc
+    chart: agones-0.4.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -904,7 +912,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.4.0.rc"
+    chart: "agones-0.4.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

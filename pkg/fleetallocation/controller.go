@@ -125,16 +125,20 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAllocation json: %s", obj.Raw)
 	}
 
-	fleet, err := c.fleetLister.Fleets(fa.ObjectMeta.Namespace).Get(fa.Spec.FleetName)
+	// When being called from the API the fa.ObjectMeta.Namespace isn't populated
+	// (whereas it is from kubectl). So make sure to pull the namespace from the review
+	fleet, err := c.fleetLister.Fleets(review.Request.Namespace).Get(fa.Spec.FleetName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithError(err).WithField("fleetName", fa.Name).Warn("Could not find fleet for allocation. Skipping.")
+			logrus.WithError(err).WithField("fleetName", fa.Name).
+				WithField("namespace", review.Request.Namespace).
+				Warn("Could not find fleet for allocation. Skipping.")
 			return review, nil
 		}
 		return review, errors.Wrapf(err, "error retrieving fleet %s", fa.Name)
 	}
 
-	gs, err := c.allocate(fleet)
+	gs, err := c.allocate(fleet, &fa.Spec.MetaPatch)
 	if err != nil {
 		review.Response.Allowed = false
 		review.Response.Result = &metav1.Status{
@@ -205,7 +209,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 				Kind:  review.Request.Kind.Kind,
 				Causes: []metav1.StatusCause{
 					{Type: metav1.CauseTypeFieldValueNotFound,
-						Message: fmt.Sprintf("Cloud not find fleet %s", fa.Spec.FleetName),
+						Message: fmt.Sprintf("Could not find fleet %s in namespace %s", fa.Spec.FleetName, review.Request.Namespace),
 						Field:   "fleetName"}},
 			},
 		}
@@ -250,7 +254,7 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 }
 
 // allocate allocated a GameServer from a given Fleet
-func (c *Controller) allocate(f *stablev1alpha1.Fleet) (*stablev1alpha1.GameServer, error) {
+func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.FleetAllocationMeta) (*stablev1alpha1.GameServer, error) {
 	var allocation *stablev1alpha1.GameServer
 	// can only allocate one at a time, as we don't want two separate processes
 	// trying to allocate the same GameServer to different clients
@@ -280,6 +284,10 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet) (*stablev1alpha1.GameServ
 	gsCopy := allocation.DeepCopy()
 	gsCopy.Status.State = stablev1alpha1.Allocated
 
+	if fam != nil {
+		c.patchMetadata(gsCopy, fam)
+	}
+
 	gs, err := c.gameServerGetter.GameServers(f.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s", gsCopy.ObjectMeta.Name)
@@ -287,4 +295,26 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet) (*stablev1alpha1.GameServ
 	c.recorder.Eventf(gs, corev1.EventTypeNormal, string(gs.Status.State), "Allocated from Fleet %s", f.ObjectMeta.Name)
 
 	return gs, nil
+}
+
+// patch the labels and annotations of an allocated GameServer with metadata from a FleetAllocation
+func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam *stablev1alpha1.FleetAllocationMeta) {
+	// patch ObjectMeta labels
+	if fam.Labels != nil {
+		if gs.ObjectMeta.Labels == nil {
+			gs.ObjectMeta.Labels = make(map[string]string, len(fam.Labels))
+		}
+		for key, value := range fam.Labels {
+			gs.ObjectMeta.Labels[key] = value
+		}
+	}
+	// apply annotations patch
+	if fam.Annotations != nil {
+		if gs.ObjectMeta.Annotations == nil {
+			gs.ObjectMeta.Annotations = make(map[string]string, len(fam.Annotations))
+		}
+		for key, value := range fam.Annotations {
+			gs.ObjectMeta.Annotations[key] = value
+		}
+	}
 }

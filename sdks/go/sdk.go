@@ -23,9 +23,14 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"io"
 )
 
 const port = 59357
+
+// GameServerCallback is a function definition to be called
+// when a GameServer CRD has been changed
+type GameServerCallback func(gs *sdk.GameServer)
 
 // SDK is an instance of the Agones SDK
 type SDK struct {
@@ -39,7 +44,9 @@ type SDK struct {
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
 	addr := fmt.Sprintf("localhost:%d", port)
-	s := &SDK{ctx: context.Background()}
+	s := &SDK{
+		ctx: context.Background(),
+	}
 	// block for at least 30 seconds
 	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
 	defer cancel()
@@ -72,7 +79,53 @@ func (s *SDK) Health() error {
 	return errors.Wrap(s.health.Send(&sdk.Empty{}), "could not send Health ping")
 }
 
+// SetLabel sets a metadata label on the `GameServer` with the prefix
+// stable.agones.dev/sdk-
+func (s *SDK) SetLabel(key, value string) error {
+	kv := &sdk.KeyValue{Key: key, Value: value}
+	_, err := s.client.SetLabel(s.ctx, kv)
+	return errors.Wrap(err, "could not set label")
+}
+
+// SetAnnotation sets a metadata annotation on the `GameServer` with the prefix
+// stable.agones.dev/sdk-
+func (s *SDK) SetAnnotation(key, value string) error {
+	kv := &sdk.KeyValue{Key: key, Value: value}
+	_, err := s.client.SetAnnotation(s.ctx, kv)
+	return errors.Wrap(err, "could not set annotation")
+}
+
 // GameServer retrieve the GameServer details
 func (s *SDK) GameServer() (*sdk.GameServer, error) {
-	return s.client.GetGameServer(s.ctx, &sdk.Empty{})
+	gs, err := s.client.GetGameServer(s.ctx, &sdk.Empty{})
+	return gs, errors.Wrap(err, "could not retrieve gameserver")
+}
+
+// WatchGameServer asynchronously calls the given GameServerCallback with the current GameServer
+// configuration when the backing GameServer configuration is updated.
+// This function can be called multiple times to add more than one GameServerCallback.
+func (s *SDK) WatchGameServer(f GameServerCallback) error {
+	stream, err := s.client.WatchGameServer(s.ctx, &sdk.Empty{})
+	if err != nil {
+		return errors.Wrap(err, "could not watch gameserver")
+	}
+
+	go func() {
+		for {
+			var gs *sdk.GameServer
+			gs, err = stream.Recv()
+			if err != nil {
+				if err == io.EOF {
+					fmt.Println("gameserver event stream EOF received")
+					return
+				}
+				fmt.Printf("error watching GameServer: %s\n", err.Error())
+				// This is to wait for the reconnection, and not peg the CPU at 100%
+				time.Sleep(time.Second)
+				continue
+			}
+			f(gs)
+		}
+	}()
+	return nil
 }

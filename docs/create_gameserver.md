@@ -28,7 +28,7 @@ For the purpose of this guide we're going to use the [simple-udp](../examples/si
 Let's create a GameServer using the following command :
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/gameserver.yaml
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/gameserver.yaml
 ```
 
 You should see a successful ouput similar to this :
@@ -131,10 +131,15 @@ You might also be interested to see the `Events` section, which outlines when va
 Let's retrieve the IP address and the allocated port of your Game Server :
 
 ```
-kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.port}'
+kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
 ```
 
-This should ouput your Game Server IP address and port. (eg `10.130.65.208:7936`)
+This should ouput your Game Server IP address and ports, eg:
+
+```
+NAME         STATUS    IP               PORT
+simple-udp   Ready     192.168.99.100   [map[name:default port:7614]]
+```
 
 ### 3. Connect to the GameServer
 
@@ -142,12 +147,12 @@ This should ouput your Game Server IP address and port. (eg `10.130.65.208:7936`
   Cloud Shell for your terminal, UDP is blocked. For this step, we recommend
   SSH'ing into a running VM in your project, such as a Kubernetes node.
   You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
-  page to do this. 
+  page to do this.
 
 You can now communicate with the Game Server :
 
-> NOTE: if you do not have netcat installed 
-  (i.e. you get a response of `nc: command not found`), 
+> NOTE: if you do not have netcat installed
+  (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
 
 ```

@@ -41,7 +41,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Parallel()
 	f, gsSet, gsList := defaultFixtures(3)
 
-	fa := v1alpha1.FleetAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: "default"},
+	fa := v1alpha1.FleetAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1"},
 		Spec: v1alpha1.FleetAllocationSpec{FleetName: f.ObjectMeta.Name}}
 
 	c, m := newFakeController()
@@ -144,6 +144,10 @@ func TestControllerAllocate(t *testing.T) {
 	f, gsSet, gsList := defaultFixtures(4)
 	c, m := newFakeController()
 	n := metav1.Now()
+	l := map[string]string{"mode": "deathmatch"}
+	a := map[string]string{"map": "searide"}
+	fam := &v1alpha1.FleetAllocationMeta{Labels: l, Annotations: a}
+
 	gsList[3].ObjectMeta.DeletionTimestamp = &n
 
 	m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -172,25 +176,35 @@ func TestControllerAllocate(t *testing.T) {
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	gs, err := c.allocate(f)
+	gs, err := c.allocate(f, fam)
+	assert.Nil(t, err)
+	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+	assert.True(t, updated)
+	for key, value := range fam.Labels {
+		v, ok := gs.ObjectMeta.Labels[key]
+		assert.True(t, ok)
+		assert.Equal(t, v, value)
+	}
+	for key, value := range fam.Annotations {
+		v, ok := gs.ObjectMeta.Annotations[key]
+		assert.True(t, ok)
+		assert.Equal(t, v, value)
+	}
+
+	updated = false
+	gs, err = c.allocate(f, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
-	gs, err = c.allocate(f)
+	gs, err = c.allocate(f, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
-	gs, err = c.allocate(f)
-	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
-	assert.True(t, updated)
-
-	updated = false
-	_, err = c.allocate(f)
+	_, err = c.allocate(f, nil)
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrNoGameServerReady, err)
 	assert.False(t, updated)
@@ -230,7 +244,7 @@ func TestControllerAllocateMutex(t *testing.T) {
 	allocate := func() {
 		defer wg.Done()
 		for i := 1; i <= 10; i++ {
-			_, err := c.allocate(f)
+			_, err := c.allocate(f, nil)
 			assert.Nil(t, err)
 		}
 	}
@@ -289,6 +303,7 @@ func newAdmissionReview(fa v1alpha1.FleetAllocation) (admv1beta1.AdmissionReview
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
+			Namespace: "default",
 		},
 		Response: &admv1beta1.AdmissionResponse{Allowed: true},
 	}

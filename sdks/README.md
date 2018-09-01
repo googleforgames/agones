@@ -46,10 +46,49 @@ This tells Agones to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 
 backing Pod will be deleted, if they have not shut themselves down already. 
 
+### SetLabel(key, value)
+⚠️⚠️⚠️ **`SetLabel` is currently a release candidate feature** ⚠️⚠️⚠️
+
+This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
+record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+
+> Note: There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+
+This can be useful if you want to information from your running game server process to be observable or searchable through the Kubernetes API.  
+
+### SetAnnotation(key, value)
+⚠️⚠️⚠️ **`SetAnnotation` is currently a release candidate feature** ⚠️⚠️⚠️
+
+This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
+`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+
+This can be useful if you want to information from your running game server process to be observable through the Kubernetes API.
+
 ### GameServer()
 This returns most of the backing GameServer configuration and Status. This can be useful
 for instances where you may want to know Health check configuration, or the IP and Port
 the GameServer is currently allocated to.
+
+Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
+the returned object is limited to that configuration that was deemed useful. If there are
+areas that you feel are missing, please [file an issue](https://github.com/GoogleCloudPlatform/agones/issues) or pull request.
+
+The easiest way to see what is exposed, is to check the [`sdk.proto`](https://github.com/GoogleCloudPlatform/agones/blob/master/sdk.proto),
+specifically at the `message GameServer`.
+
+For language specific documentation, have a look at the respective source (linked above), 
+and the [examples](../examples).
+
+### WatchGameServer(function(gameserver){...})
+
+⚠️⚠️⚠️ **`WatchGameServer` is currently a release candidate feature** ⚠️⚠️⚠️
+
+This executes the passed in callback with the current `GameServer` details whenever the underlying `GameServer` configuration is updated.
+This can be useful to track `GameServer > Status > State` changes, `metadata` changes, such as labels and annotations, and more.
+
+In combination with this SDK, manipulating [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and
+[Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can also be a useful way to communicate information through to running game server processes from outside those processes.
+This is especially useful when combined with `FleetAllocation` [applied metadata](../docs/fleet_spec.md#fleet-allocation-specification).  
 
 Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
 the returned object is limited to that configuration that was deemed useful. If there are
@@ -87,11 +126,31 @@ To run in local mode, pass the flag `--local` to the executable.
 
 For example:
 
-```bash
+```console
 $ ./sidecar.linux.amd64 --local
-{"level":"info","local":true,"msg":"Starting sdk sidecar","port":59357,"time":"2017-12-22T16:09:03-08:00","version":"0.1-5217b21"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":""},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T18:01:58-07:00","version":"0.4.0-b44960a8"}
+{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T18:01:58-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T18:01:58-07:00"}
 {"level":"info","msg":"Ready request has been received!","time":"2017-12-22T16:09:19-08:00"}
 {"level":"info","msg":"Shutdown request has been received!","time":"2017-12-22T16:10:19-08:00"}
+```
+
+### Providing your own `GameServer` configuration for local development
+
+⚠️⚠️⚠️ **Providing your own `GameServer` is currently a release candidate feature** ⚠️⚠️⚠️
+
+By default, the local sdk-server will create a dummy `GameServer` configuration that is used for `GameServer()`
+and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
+can be passed through as either `--file` or `-f` along with the `--local` flag.
+
+For example:
+
+```console
+$ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.yaml
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"../../../examples/simple-udp/gameserver.yaml"},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T17:56:39-07:00","version":"0.4.0-b44960a8"}
+{"level":"info","msg":"Reading GameServer configuration","path":"/home/user/workspace/agones/src/agones.dev/agones/examples/simple-udp/gameserver.yaml","source":"main","time":"2018-08-25T17:56:39-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
+{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 ```
 
 ### Writing your own SDK

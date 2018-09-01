@@ -50,14 +50,41 @@ if the function completed successfully.
 
 For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
 
-
 ```cpp
 grpc::Status status = sdk->Shutdown();
 if (!status.ok()) { ... }
 ```
 
-For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the
-[C++ example](../../examples/cpp-simple).
+To [set a Label](../README.md#setlabelkey-value) on the backing `GameServer` call
+`sdk->SetLabel(key, value)`.
+
+⚠️⚠️⚠️ **`SetLabel` is currently a release candidate feature** ⚠️⚠️⚠️
+
+This will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+
+```cpp
+grpc::Status status = sdk->SetLabel("test-label", "test-value");
+if (!status.ok()) { ... }
+```
+
+To [set an Annotation](../README.md#setannotationkey-value) on the backing `GameServer` call
+`sdk->SetAnnotation(key, value)`.
+
+⚠️⚠️⚠️ **`SetAnnotation` is currently a release candidate feature** ⚠️⚠️⚠️
+
+This will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+
+```cpp
+status = sdk->SetAnnotation("test-annotation", "test value");
+if (!status.ok()) { ... }
+```
+
 
 To get the details on the [backing `GameServer`](../README.md#gameserver) call `sdk->GameServer(&gameserver)`,
 passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
@@ -69,6 +96,22 @@ if the function completed successfully.
 stable::agones::dev::sdk::GameServer gameserver;
 grpc::Status status = sdk->GameServer(&gameserver);
 if (!status.ok()) {...}
+```
+
+To get [updates on the backing `GameServer`](../README.md#watchgameserverfunctiongameserver) as they happen, 
+call `sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){...})`.
+
+⚠️⚠️⚠️ **`WatchGameServer` is currently a release candidate feature** ⚠️⚠️️⚠️ 
+
+This will call the passed in `std::function`
+synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer`
+is updated.
+
+```cpp
+sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
+    std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
+    std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
+});
 ```
 
 For more information, you can also read the [SDK Overview](../), check out [sdk.h](sdk.h) and also look at the

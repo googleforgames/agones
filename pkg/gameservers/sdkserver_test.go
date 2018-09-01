@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"sync"
 	"testing"
-
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -31,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
@@ -38,30 +38,60 @@ import (
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
+	type expected struct {
+		state       v1alpha1.State
+		labels      map[string]string
+		annotations map[string]string
+		recordings  []string
+	}
+
 	fixtures := map[string]struct {
-		state      v1alpha1.State
-		f          func(*SDKServer, context.Context)
-		recordings []string
+		f        func(*SDKServer, context.Context)
+		expected expected
 	}{
 		"ready": {
-			state: v1alpha1.RequestReady,
 			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
+			expected: expected{
+				state: v1alpha1.RequestReady,
+			},
 		},
 		"shutdown": {
-			state: v1alpha1.Shutdown,
 			f: func(sc *SDKServer, ctx context.Context) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
+			expected: expected{
+				state: v1alpha1.Shutdown,
+			},
 		},
 		"unhealthy": {
-			state: v1alpha1.Unhealthy,
 			f: func(sc *SDKServer, ctx context.Context) {
 				// we have a 1 second timeout
 				time.Sleep(2 * time.Second)
 			},
-			recordings: []string{string(v1alpha1.Unhealthy)},
+			expected: expected{
+				state:      v1alpha1.Unhealthy,
+				recordings: []string{string(v1alpha1.Unhealthy)},
+			},
+		},
+		"label": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "bar"})
+				assert.Nil(t, err)
+			},
+			expected: expected{
+				labels: map[string]string{metadataPrefix + "foo": "bar"},
+			},
+		},
+		"annotation": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test", Value: "annotation"})
+				assert.Nil(t, err)
+			},
+			expected: expected{
+				annotations: map[string]string{metadataPrefix + "test": "annotation"},
+			},
 		},
 	}
 
@@ -72,11 +102,17 @@ func TestSidecarRun(t *testing.T) {
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				gs := v1alpha1.GameServer{
-					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "test", Namespace: "default",
+					},
+					Spec: v1alpha1.GameServerSpec{
+						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+					},
 					Status: v1alpha1.GameServerStatus{
 						State: v1alpha1.Starting,
 					},
 				}
+				gs.ApplyDefaults()
 				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -84,32 +120,128 @@ func TestSidecarRun(t *testing.T) {
 				ua := action.(k8stesting.UpdateAction)
 				gs := ua.GetObject().(*v1alpha1.GameServer)
 
-				assert.Equal(t, v.state, gs.Status.State)
+				if v.expected.state != "" {
+					assert.Equal(t, v.expected.state, gs.Status.State)
+				}
+
+				for label, value := range v.expected.labels {
+					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+				}
+				for ann, value := range v.expected.annotations {
+					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+				}
 
 				return true, gs, nil
 			})
 
-			sc, err := NewSDKServer("test", "default",
-				false, time.Second, 1, 0, m.KubeClient, m.AgonesClient)
+			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
+			wg := sync.WaitGroup{}
+			wg.Add(1)
 
-			go sc.Run(ctx.Done())
+			go func() {
+				err := sc.Run(ctx.Done())
+				assert.Nil(t, err)
+				wg.Done()
+			}()
 			v.f(sc, ctx)
-			timeout := time.After(10 * time.Second)
 
 			select {
 			case <-done:
-			case <-timeout:
+			case <-time.After(10 * time.Second):
 				assert.Fail(t, "Timeout on Run")
 			}
 
-			for _, str := range v.recordings {
+			logrus.Info("attempting to find event recording")
+			for _, str := range v.expected.recordings {
 				agtesting.AssertEventContains(t, m.FakeRecorder.Events, str)
 			}
+
+			cancel()
+			wg.Wait()
+		})
+	}
+}
+
+func TestSDKServerSyncGameServer(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		state       v1alpha1.State
+		labels      map[string]string
+		annotations map[string]string
+	}
+
+	fixtures := map[string]struct {
+		expected expected
+		key      string
+	}{
+		"ready": {
+			key: string(updateState) + "/" + string(v1alpha1.Ready),
+			expected: expected{
+				state: v1alpha1.Ready,
+			},
+		},
+		"label": {
+			key: string(updateLabel) + "/foo/bar",
+			expected: expected{
+				labels: map[string]string{metadataPrefix + "foo": "bar"},
+			},
+		},
+		"annotation": {
+			key: string(updateAnnotation) + "/test/annotation",
+			expected: expected{
+				annotations: map[string]string{metadataPrefix + "test": "annotation"},
+			},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			sc, err := defaultSidecar(m)
+			assert.Nil(t, err)
+			updated := false
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{
+					UID:  "1234",
+					Name: sc.gameServerName, Namespace: sc.namespace,
+					Labels: map[string]string{}, Annotations: map[string]string{}},
+				}
+				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+			})
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				updated = true
+				ua := action.(k8stesting.UpdateAction)
+				gs := ua.GetObject().(*v1alpha1.GameServer)
+
+				if v.expected.state != "" {
+					assert.Equal(t, v.expected.state, gs.Status.State)
+				}
+				for label, value := range v.expected.labels {
+					assert.Equal(t, value, gs.ObjectMeta.Labels[label])
+				}
+				for ann, value := range v.expected.annotations {
+					assert.Equal(t, value, gs.ObjectMeta.Annotations[ann])
+				}
+
+				return true, gs, nil
+			})
+
+			stop := make(chan struct{})
+			defer close(stop)
+			sc.informerFactory.Start(stop)
+			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+			err = sc.syncGameServer(v.key)
+			assert.Nil(t, err)
+			assert.True(t, updated, "should have updated")
+
 		})
 	}
 }
@@ -156,11 +288,11 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
-	sc.healthDisabled = false
+	sc.health = v1alpha1.Health{Disabled: false}
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
-	stream := newMockStream()
+	stream := newEmptyMockStream()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -202,13 +334,18 @@ func TestSidecarHealthy(t *testing.T) {
 
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
+	// manually set the values
+	sc.health = v1alpha1.Health{FailureThreshold: 1}
+	sc.healthTimeout = 5 * time.Second
+	sc.initHealthLastUpdated(0 * time.Second)
+
 	assert.Nil(t, err)
 
 	now := time.Now().UTC()
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
-	stream := newMockStream()
+	stream := newEmptyMockStream()
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -232,7 +369,7 @@ func TestSidecarHealthy(t *testing.T) {
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			logrus.WithField("test", k).Infof("Test Running")
-			sc.healthDisabled = v.disabled
+			sc.health.Disabled = v.disabled
 			fc.SetTime(time.Now().UTC())
 			stream.msgs <- &sdk.Empty{}
 			err = waitForMessage(sc)
@@ -245,7 +382,7 @@ func TestSidecarHealthy(t *testing.T) {
 	}
 
 	t.Run("initial delay", func(t *testing.T) {
-		sc.healthDisabled = false
+		sc.health.Disabled = false
 		fc.SetTime(time.Now().UTC())
 		sc.initHealthLastUpdated(0)
 		sc.healthFailureCount = 0
@@ -265,15 +402,15 @@ func TestSidecarHealthy(t *testing.T) {
 	})
 
 	t.Run("health failure threshold", func(t *testing.T) {
-		sc.healthDisabled = false
-		sc.healthFailureThreshold = 3
+		sc.health.Disabled = false
+		sc.health.FailureThreshold = 3
 		fc.SetTime(time.Now().UTC())
 		sc.initHealthLastUpdated(0)
 		sc.healthFailureCount = 0
 
 		sc.checkHealth()
 		assert.True(t, sc.healthy())
-		assert.Equal(t, int64(0), sc.healthFailureCount)
+		assert.Equal(t, int32(0), sc.healthFailureCount)
 
 		fc.Step(10 * time.Second)
 		sc.checkHealth()
@@ -295,97 +432,51 @@ func TestSidecarHealthy(t *testing.T) {
 }
 
 func TestSidecarHTTPHealthCheck(t *testing.T) {
-	t.Parallel()
-
 	m := agtesting.NewMocks()
-	sc, err := NewSDKServer("test", "default",
-		false, 1*time.Second, 1, 0, m.KubeClient, m.AgonesClient)
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 	assert.Nil(t, err)
 	now := time.Now().Add(time.Hour).UTC()
 	fc := clock.NewFakeClock(now)
 	// now we control time - so slow machines won't fail anymore
 	sc.clock = fc
-	sc.healthLastUpdated = now
-	sc.healthFailureCount = 0
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := v1alpha1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
+			Spec: v1alpha1.GameServerSpec{
+				Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+			},
+		}
+
+		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
-	go sc.Run(ctx.Done())
+	step := 2 * time.Second
+
+	go func() {
+		err := sc.Run(ctx.Done())
+		assert.Nil(t, err)
+		// gate
+		assert.Equal(t, 1*time.Second, sc.healthTimeout)
+		wg.Done()
+	}()
 
 	testHTTPHealth(t, "http://localhost:8080/healthz", "ok", http.StatusOK)
 	testHTTPHealth(t, "http://localhost:8080/gshealthz", "ok", http.StatusOK)
-	step := 2 * time.Second
+
+	assert.Equal(t, now, sc.healthLastUpdated)
+
 	fc.Step(step)
 	time.Sleep(step)
+	assert.False(t, sc.healthy())
 	testHTTPHealth(t, "http://localhost:8080/gshealthz", "", http.StatusInternalServerError)
-}
-
-func TestSDKServerConvert(t *testing.T) {
-	t.Parallel()
-
-	fixture := &v1alpha1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{
-			CreationTimestamp: metav1.Now(),
-			Namespace:         "default",
-			Name:              "test",
-			Labels:            map[string]string{"foo": "bar"},
-			Annotations:       map[string]string{"stuff": "things"},
-			UID:               "1234",
-		},
-		Spec: v1alpha1.GameServerSpec{
-			Health: v1alpha1.Health{
-				Disabled:            false,
-				InitialDelaySeconds: 10,
-				FailureThreshold:    15,
-				PeriodSeconds:       20,
-			},
-		},
-		Status: v1alpha1.GameServerStatus{
-			NodeName: "george",
-			Address:  "127.0.0.1",
-			State:    "Ready",
-			Ports: []v1alpha1.GameServerStatusPort{
-				{Name: "default", Port: 12345},
-				{Name: "beacon", Port: 123123},
-			},
-		},
-	}
-
-	m := agtesting.NewMocks()
-	sc, err := defaultSidecar(m)
-	assert.Nil(t, err)
-
-	eq := func(t *testing.T, fixture *v1alpha1.GameServer, sdkGs *sdk.GameServer) {
-		assert.Equal(t, fixture.ObjectMeta.Name, sdkGs.ObjectMeta.Name)
-		assert.Equal(t, fixture.ObjectMeta.Namespace, sdkGs.ObjectMeta.Namespace)
-		assert.Equal(t, fixture.ObjectMeta.CreationTimestamp.Unix(), sdkGs.ObjectMeta.CreationTimestamp)
-		assert.Equal(t, string(fixture.ObjectMeta.UID), sdkGs.ObjectMeta.Uid)
-		assert.Equal(t, fixture.ObjectMeta.Labels, sdkGs.ObjectMeta.Labels)
-		assert.Equal(t, fixture.ObjectMeta.Annotations, sdkGs.ObjectMeta.Annotations)
-		assert.Equal(t, fixture.Spec.Health.Disabled, sdkGs.Spec.Health.Disabled)
-		assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, sdkGs.Spec.Health.InitialDelaySeconds)
-		assert.Equal(t, fixture.Spec.Health.FailureThreshold, sdkGs.Spec.Health.FailureThreshold)
-		assert.Equal(t, fixture.Spec.Health.PeriodSeconds, sdkGs.Spec.Health.PeriodSeconds)
-		assert.Equal(t, fixture.Status.Address, sdkGs.Status.Address)
-		assert.Equal(t, string(fixture.Status.State), sdkGs.Status.State)
-		assert.Len(t, sdkGs.Status.Ports, len(fixture.Status.Ports))
-		for i, fp := range fixture.Status.Ports {
-			p := sdkGs.Status.Ports[i]
-			assert.Equal(t, fp.Name, p.Name)
-			assert.Equal(t, fp.Port, p.Port)
-		}
-	}
-
-	sdkGs := sc.convert(fixture)
-	eq(t, fixture, sdkGs)
-	assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
-
-	now := metav1.Now()
-	fixture.DeletionTimestamp = &now
-	sdkGs = sc.convert(fixture)
-	eq(t, fixture, sdkGs)
-	assert.Equal(t, fixture.ObjectMeta.DeletionTimestamp.Unix(), sdkGs.ObjectMeta.DeletionTimestamp)
+	cancel()
+	wg.Wait() // wait for go routine test results.
 }
 
 func TestSDKServerGetGameServer(t *testing.T) {
@@ -422,9 +513,95 @@ func TestSDKServerGetGameServer(t *testing.T) {
 	assert.Equal(t, string(fixture.Status.State), result.Status.State)
 }
 
-func defaultSidecar(mocks agtesting.Mocks) (*SDKServer, error) {
-	return NewSDKServer("test", "default",
-		true, 5*time.Second, 1, 0, mocks.KubeClient, mocks.AgonesClient)
+func TestSDKServerWatchGameServer(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+	assert.Equal(t, stream, sc.connectedStreams[0])
+
+	stream = newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 2))
+	assert.Len(t, sc.connectedStreams, 2)
+	assert.Equal(t, stream, sc.connectedStreams[1])
+}
+
+func TestSDKServerSendGameServerUpdate(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	sc.stop = stop
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
+
+	sc.sendGameServerUpdate(fixture)
+
+	var sdkGS *sdk.GameServer
+	select {
+	case sdkGS = <-stream.msgs:
+	case <-time.After(3 * time.Second):
+		assert.Fail(t, "Event stream should not have timed out")
+	}
+
+	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
+}
+
+func TestSDKServerUpdateEventHandler(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+
+	stop := make(chan struct{})
+	defer close(stop)
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
+		Spec: v1alpha1.GameServerSpec{},
+	}
+
+	// need to add it before it can be modified
+	fakeWatch.Add(fixture.DeepCopy())
+	fakeWatch.Modify(fixture.DeepCopy())
+
+	var sdkGS *sdk.GameServer
+	select {
+	case sdkGS = <-stream.msgs:
+	case <-time.After(3 * time.Second):
+		assert.Fail(t, "Event stream should not have timed out")
+	}
+
+	assert.NotNil(t, sdkGS)
+	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
+}
+
+func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
+	return NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
 }
 
 func waitForMessage(sc *SDKServer) error {
@@ -433,4 +610,19 @@ func waitForMessage(sc *SDKServer) error {
 		defer sc.healthMutex.RUnlock()
 		return sc.clock.Now().UTC() == sc.healthLastUpdated, nil
 	})
+}
+
+func waitConnectedStreamCount(sc *SDKServer, count int) error {
+	return wait.PollImmediate(1*time.Second, 10*time.Second, func() (bool, error) {
+		sc.streamMutex.RLock()
+		defer sc.streamMutex.RUnlock()
+		return len(sc.connectedStreams) == count, nil
+	})
+}
+
+func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream *gameServerMockStream) {
+	go func() {
+		err := sc.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
 }

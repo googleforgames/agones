@@ -19,20 +19,24 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
-	"time"
 
 	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -46,12 +50,9 @@ const (
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag                  = "local"
-	addressFlag                = "address"
-	healthDisabledFlag         = "health-disabled"
-	healthTimeoutFlag          = "health-timeout"
-	healthInitialDelayFlag     = "health-initial-delay"
-	healthFailureThresholdFlag = "health-failure-threshold"
+	localFlag   = "local"
+	fileFlag    = "file"
+	addressFlag = "address"
 )
 
 var (
@@ -86,7 +87,10 @@ func main() {
 	defer cancel()
 
 	if ctlConf.IsLocal {
-		sdk.RegisterSDKServer(grpcServer, &gameservers.LocalSDKServer{})
+		err = registerLocal(grpcServer, ctlConf)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not start local sdk server")
+		}
 	} else {
 		var config *rest.Config
 		config, err = rest.InClusterConfig()
@@ -107,14 +111,18 @@ func main() {
 		}
 
 		var s *gameservers.SDKServer
-		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv), viper.GetString(podNamespaceEnv),
-			ctlConf.HealthDisabled, ctlConf.HealthTimeout, ctlConf.HealthFailureThreshold,
-			ctlConf.HealthInitialDelay, kubeClient, agonesClient)
+		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv),
+			viper.GetString(podNamespaceEnv), kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
 
-		go s.Run(ctx.Done())
+		go func() {
+			err := s.Run(ctx.Done())
+			if err != nil {
+				logger.WithError(err).Fatalf("Could not run sidecar")
+			}
+		}()
 		sdk.RegisterSDKServer(grpcServer, s)
 	}
 
@@ -123,6 +131,46 @@ func main() {
 
 	<-stop
 	logger.Info("shutting down sdk server")
+}
+
+func registerLocal(grpcServer *grpc.Server, ctlConf config) error {
+	var local *gameservers.LocalSDKServer
+	if ctlConf.LocalFile != "" {
+		path, err := filepath.Abs(ctlConf.LocalFile)
+		if err != nil {
+			return err
+		}
+
+		if _, err = os.Stat(path); os.IsNotExist(err) {
+			return errors.Errorf("Could not find file: %s", path)
+		}
+
+		logger.WithField("path", path).Info("Reading GameServer configuration")
+		reader, err := os.Open(path) // nolint: gosec
+		if err != nil {
+			return err
+		}
+
+		var gs v1alpha1.GameServer
+		// 4096 is the number of bytes the YAMLOrJSONDecoder goes looking
+		// into the file to determine if it's JSON or YAML
+		// (JSON == has whitespace followed by an open brace).
+		// The Kubernetes uses 4096 bytes as its default, so that's what we'll
+		// use as well.
+		// https://github.com/kubernetes/kubernetes/blob/master/plugin/pkg/admission/podnodeselector/admission.go#L86
+		decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
+		err = decoder.Decode(&gs)
+		if err != nil {
+			return err
+		}
+		local = gameservers.NewLocalSDKServer(&gs)
+	} else {
+		local = gameservers.NewLocalSDKServer(nil)
+	}
+
+	sdk.RegisterSDKServer(grpcServer, local)
+
+	return nil
 }
 
 // runGrpc runs the grpc service
@@ -158,50 +206,30 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 // a configuration structure
 func parseEnvFlags() config {
 	viper.SetDefault(localFlag, false)
+	viper.SetDefault(fileFlag, "")
 	viper.SetDefault(addressFlag, "localhost")
-	viper.SetDefault(healthDisabledFlag, false)
-	viper.SetDefault(healthTimeoutFlag, 5)
-	viper.SetDefault(healthInitialDelayFlag, 5)
-	viper.SetDefault(healthFailureThresholdFlag, 3)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
+	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost")
-	pflag.Bool(healthDisabledFlag, viper.GetBool(healthDisabledFlag),
-		"Set this, or HEALTH_ENABLED env, to 'true' to enable health checking on the GameServer. Defaults to 'true'")
-	pflag.Int64(healthTimeoutFlag, viper.GetInt64(healthTimeoutFlag),
-		"Set this or HEALTH_TIMEOUT env to the number of seconds that the health check times out at. Defaults to 5")
-	pflag.Int64(healthInitialDelayFlag, viper.GetInt64(healthInitialDelayFlag),
-		"Set this or HEALTH_INITIAL_DELAY env to the number of seconds that the health will wait before starting. Defaults to 5")
-	pflag.Int64(healthFailureThresholdFlag, viper.GetInt64(healthFailureThresholdFlag),
-		"Set this or HEALTH_FAILURE_THRESHOLD env to the number of times the health check needs to fail to be deemed unhealthy. Defaults to 3")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
-	runtime.Must(viper.BindEnv(healthDisabledFlag))
-	runtime.Must(viper.BindEnv(healthTimeoutFlag))
-	runtime.Must(viper.BindEnv(healthInitialDelayFlag))
-	runtime.Must(viper.BindEnv(healthFailureThresholdFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
-		IsLocal:                viper.GetBool(localFlag),
-		Address:                viper.GetString(addressFlag),
-		HealthDisabled:         viper.GetBool(healthDisabledFlag),
-		HealthTimeout:          time.Duration(viper.GetInt64(healthTimeoutFlag)) * time.Second,
-		HealthInitialDelay:     time.Duration(viper.GetInt64(healthInitialDelayFlag)) * time.Second,
-		HealthFailureThreshold: viper.GetInt64(healthFailureThresholdFlag),
+		IsLocal:   viper.GetBool(localFlag),
+		Address:   viper.GetString(addressFlag),
+		LocalFile: viper.GetString(fileFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address                string
-	IsLocal                bool
-	HealthDisabled         bool
-	HealthTimeout          time.Duration
-	HealthInitialDelay     time.Duration
-	HealthFailureThreshold int64
+	Address   string
+	IsLocal   bool
+	LocalFile string
 }

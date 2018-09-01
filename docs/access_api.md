@@ -226,6 +226,113 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
         "selfLink": "/apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers"
     }
 }
+
+# allocate a gameserver from a fleet named 'simple-udp'
+# (in 0.4.0 you won't need to specify the namespace in the FleetAllocation metadata config)
+
+$ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","metadata":{"generateName":"simple-udp-", "namespace": "default"},"spec":{"fleetName":"simple-udp"}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations
+
+{
+    "apiVersion": "stable.agones.dev/v1alpha1",
+    "kind": "FleetAllocation",
+    "metadata": {
+        "clusterName": "",
+        "creationTimestamp": "2018-08-22T17:08:30Z",
+        "generateName": "simple-udp-",
+        "generation": 1,
+        "name": "simple-udp-4xsrl",
+        "namespace": "default",
+        "ownerReferences": [
+            {
+                "apiVersion": "stable.agones.dev/v1alpha1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "GameServer",
+                "name": "simple-udp-296d5-4qcds",
+                "uid": "99832e51-a62b-11e8-b7bb-bc2623b75dea"
+            }
+        ],
+        "resourceVersion": "1228",
+        "selfLink": "/apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations/simple-udp-4xsrl",
+        "uid": "fe8717ae-a62d-11e8-b7bb-bc2623b75dea"
+    },
+    "spec": {
+        "fleetName": "simple-udp",
+        "metadata": {}
+    },
+    "status": {
+        "GameServer": {
+            "metadata": {
+                "creationTimestamp": "2018-08-22T16:51:22Z",
+                "finalizers": [
+                    "stable.agones.dev"
+                ],
+                "generateName": "simple-udp-296d5-",
+                "generation": 1,
+                "labels": {
+                    "stable.agones.dev/gameserverset": "simple-udp-296d5"
+                },
+                "name": "simple-udp-296d5-4qcds",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "stable.agones.dev/v1alpha1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "GameServerSet",
+                        "name": "simple-udp-296d5",
+                        "uid": "9980351b-a62b-11e8-b7bb-bc2623b75dea"
+                    }
+                ],
+                "resourceVersion": "1225",
+                "selfLink": "/apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-296d5-4qcds",
+                "uid": "99832e51-a62b-11e8-b7bb-bc2623b75dea"
+            },
+            "spec": {
+                "container": "simple-udp",
+                "health": {
+                    "failureThreshold": 3,
+                    "initialDelaySeconds": 5,
+                    "periodSeconds": 5
+                },
+                "ports": [
+                    {
+                        "containerPort": 7654,
+                        "hostPort": 7968,
+                        "name": "default",
+                        "portPolicy": "dynamic",
+                        "protocol": "UDP"
+                    }
+                ],
+                "template": {
+                    "metadata": {
+                        "creationTimestamp": null
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "image": "gcr.io/agones-images/udp-server:0.3",
+                                "name": "simple-udp",
+                                "resources": {}
+                            }
+                        ]
+                    }
+                }
+            },
+            "status": {
+                "address": "192.168.39.184",
+                "nodeName": "minikube",
+                "ports": [
+                    {
+                        "name": "default",
+                        "port": 7968
+                    }
+                ],
+                "state": "Allocated"
+            }
+        }
+    }
+}
 ```
 
 The [Verb Resources](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#verbs-on-resources)

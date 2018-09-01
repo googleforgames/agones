@@ -175,6 +175,8 @@ Now that the images are pushed, to install the development version (with all ima
 run `make install` and Agones will install the image that you just built and pushed on the test cluster you
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
+Finally to run end-to-end tests against your development version previously installed in your test cluster run `make test-e2e`, this will validate the whole application flow (from start to finish). If you're curious about how they work head to [tests/e2e](../test/e2e/)
+
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
 
@@ -226,6 +228,8 @@ For example:
 $ make minikube-transfer-image TAG=myimage:0.1
 ```
 
+Running end-to-end tests on minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a minikube cluster.
+
 ### Next Steps
 
 Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agones.
@@ -273,6 +277,13 @@ Pushes all built images up to the `$(REGISTRY)`
 
 #### `make install`
 Installs the current development version of Agones into the Kubernetes cluster
+
+### `make test-e2e`
+Runs end-to-end tests on the previously installed version of Agones.
+These tests validate Agones flow from start to finish.
+
+It uses the kube config (located by default in `~/.kube`) to target a Kubernetes cluster.
+See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on minikube.
 
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
@@ -348,6 +359,10 @@ via `make build` or `make build-images` into the "agones" minikube instance.
 #### `make minikube-install`
 Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
+
+### `make minikube-test-e2e`
+Runs end-to-end tests on the previously installed version of Agones.
+These tests validate Agones flow from start to finish.
 
 #### `make minikube-shell`
 Connecting to Minikube requires so enhanced permissions, so use this target

@@ -1,0 +1,44 @@
+# Copyright 2018 Google Inc. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+resources:
+- name: e2e-test-cluster
+  type: container.v1.cluster
+  properties:
+    zone: us-west1-c
+    cluster:
+      name: e2e-test-cluster
+      description: End to end tests cluster for Agones
+      initialClusterVersion: 1.10.5-gke.0
+      nodePools:
+        - name: "default"
+          initialNodeCount: 2
+          config:
+            machineType: n1-standard-1
+            tags:
+              - game-server
+            oauthScopes:
+              - https://www.googleapis.com/auth/devstorage.read_only
+              - https://www.googleapis.com/auth/compute
+              - https://www.googleapis.com/auth/cloud-platform
+- name: game-server-firewall
+  type: compute.beta.firewall
+  properties:
+    name: game-server
+    description: "Firewall to allow game server udp traffic"
+    targetTags:
+      - "game-server"
+    allowed:
+      - IPProtocol: udp
+        ports:
+          - "7000-8000"

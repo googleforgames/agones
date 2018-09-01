@@ -33,7 +33,7 @@ func TestGameServerSetGameServer(t *testing.T) {
 			Replicas: 10,
 			Template: GameServerTemplateSpec{
 				Spec: GameServerSpec{
-					GameServerPort: &GameServerPort{ContainerPort: 1234},
+					Ports: []GameServerPort{{ContainerPort: 1234}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{{Name: "container", Image: "myimage"}},
@@ -59,7 +59,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 		Spec: GameServerSetSpec{
 			Replicas: 10,
 			Template: GameServerTemplateSpec{
-				Spec: GameServerSpec{GameServerPort: &GameServerPort{ContainerPort: 1234}},
+				Spec: GameServerSpec{Ports: []GameServerPort{{ContainerPort: 1234}}},
 			},
 		},
 	}
@@ -74,7 +74,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
-	newGSS.Spec.Template.Spec.ContainerPort = 321
+	newGSS.Spec.Template.Spec.Ports[0].ContainerPort = 321
 	ok, causes = gsSet.ValidateUpdate(newGSS)
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)

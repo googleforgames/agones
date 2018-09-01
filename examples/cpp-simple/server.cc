@@ -33,6 +33,15 @@ void doHealth(agones::SDK *sdk) {
     }
 }
 
+// watch GameServer Updates
+void watchUpdates(agones::SDK *sdk) {
+    std::cout << "Starting to watch GameServer updates..." << std::endl;
+    sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
+        std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
+        std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
+    });
+}
+
 int main() {
     std::cout << "C++ Game Server has started!" << std::endl;
 
@@ -48,9 +57,24 @@ int main() {
     std::cout << "...handshake complete." << std::endl;
 
     std::thread health (doHealth, sdk);
+    std::thread watch (watchUpdates, sdk);
+
+    std::cout << "Setting a label" << std::endl;
+    grpc::Status status = sdk->SetLabel("test-label", "test-value");
+    if (!status.ok()) {
+        std::cout << "Could not run SetLabel(): "+ status.error_message() + ". Exiting!" << std::endl;
+        return -1;
+    }
+
+    std::cout << "Setting an annotation" << std::endl;
+    status = sdk->SetAnnotation("test-annotation", "test value");
+    if (!status.ok()) {
+        std::cout << "Could not run SetAnnotation(): "+ status.error_message() + ". Exiting!" << std::endl;
+        return -1;
+    }
 
     std::cout << "Marking server as ready..." << std::endl;
-    grpc::Status status = sdk->Ready();
+    status = sdk->Ready();
     if (!status.ok()) {
         std::cout << "Could not run Ready(): "+ status.error_message() + ". Exiting!" << std::endl;
         return -1;

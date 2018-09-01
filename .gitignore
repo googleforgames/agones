@@ -16,6 +16,7 @@
 !.gitignore
 !.helmignore
 !.gitattributes
+!.dockerignore
 *.iml
 bin
 *.o
@@ -23,3 +24,4 @@ tmp
 build/local-includes/*
 !build/local-includes/README.md
 /release
+debug.test

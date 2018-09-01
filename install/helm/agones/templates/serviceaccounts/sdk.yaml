@@ -36,6 +36,9 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
