@@ -30,7 +30,9 @@ tasks you may wish to accomplish.
       1. [Build Image Targets](#build-image-targets)
       1. [Google Cloud Platform](#google-cloud-platform)
       1. [Minikube](#minikube)
-   1. [Dependencies](#dependencies)      
+   1. [Dependencies](#dependencies)
+   1. [Troubleshooting](#troubleshooting)
+   
 <!-- ToC end -->
 
 ## Building on Different Platforms
@@ -96,6 +98,8 @@ and then run the tests.
 
 Building the build image may take a few minutes to download all the dependencies, so feel 
 free to make cup of tea or coffee at this point. ☕️ 
+
+**Note**: If you get build errors and you followed all the instructions so far, consult the [Troubleshooting](#troubleshooting) section
 
 The build image is only created the first time one of the make targets is executed, and will only rebuild if the build
 Dockerfile has changed.
@@ -375,3 +379,21 @@ Use TAG to specify the image to transfer into minikube
 ## Dependencies
 
 This project uses the [dep](https://github.com/golang/dep) as a dependency manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/Gopkg.toml).
+
+## Troubleshooting
+
+Frequent issues and possible solutions
+
+#### $GOPATH/$GOROOT error when building in WSL
+
+If you get this error when building Agones in WSL (`make build`, `make test` or any other related target):
+
+```can't load package: package agones.dev/agones/cmd/controller: cannot find package "agones.dev/agones/cmd/controller" in any of:
+       /usr/local/go/src/agones.dev/agones/cmd/controller (from $GOROOT)
+       /go/src/agones.dev/agones/cmd/controller (from $GOPATH)
+```
+
+- Are your project files on a different folder than C? If yes, then you should either move them on drive C or set up Docker for Windows to share your project drive as well
+- Did you set up the volume mount for Docker correctly? By default, drive C is mapped by WSL as /mnt/c, but Docker expects it as /c. You can test by executing `ls /c` in your linux shell. If you get an error, then follow the instructions for [setting up volume mount for Docker](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly#ensure-volume-mounts-work)
+
+
