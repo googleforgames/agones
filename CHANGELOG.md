@@ -1,5 +1,18 @@
 # Change Log
 
+## [v0.4.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.4.0) (2018-09-04)
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.4.0.rc...v0.4.0)
+
+**Closed issues:**
+
+- Release 0.4.0.rc [\#330](https://github.com/GoogleCloudPlatform/agones/issues/330)
+
+**Merged pull requests:**
+
+- Fix yaml file paths [\#339](https://github.com/GoogleCloudPlatform/agones/pull/339) ([oskoi](https://github.com/oskoi))
+- Add Troubleshooting section to Build doc [\#337](https://github.com/GoogleCloudPlatform/agones/pull/337) ([victor-prodan](https://github.com/victor-prodan))
+- Preparing for 0.4.0 release next week. [\#333](https://github.com/GoogleCloudPlatform/agones/pull/333) ([markmandel](https://github.com/markmandel))
+
 ## [v0.4.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.4.0.rc) (2018-08-28)
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.3.0...v0.4.0.rc)
 
@@ -19,6 +32,7 @@
 **Fixed bugs:**
 
 - Fleet allocation request could not find fleet [\#324](https://github.com/GoogleCloudPlatform/agones/issues/324)
+- Hotfix: Ensure multiple Pods don't get created for a GameServer [\#332](https://github.com/GoogleCloudPlatform/agones/pull/332) ([markmandel](https://github.com/markmandel))
 - Fleet Allocation via REST was failing [\#325](https://github.com/GoogleCloudPlatform/agones/pull/325) ([markmandel](https://github.com/markmandel))
 - Make sure the test-e2e ensures the build image. [\#322](https://github.com/GoogleCloudPlatform/agones/pull/322) ([markmandel](https://github.com/markmandel))
 - Update getting started guides with kubectl custom columns [\#319](https://github.com/GoogleCloudPlatform/agones/pull/319) ([markmandel](https://github.com/markmandel))
@@ -33,6 +47,7 @@
 
 **Merged pull requests:**
 
+- Changelog, and documentation changes for 0.4.0.rc [\#331](https://github.com/GoogleCloudPlatform/agones/pull/331) ([markmandel](https://github.com/markmandel))
 - Added github.com/spf13/viper to dep toml [\#327](https://github.com/GoogleCloudPlatform/agones/pull/327) ([markmandel](https://github.com/markmandel))
 - Add Minikube instructions [\#321](https://github.com/GoogleCloudPlatform/agones/pull/321) ([slartibaartfast](https://github.com/slartibaartfast))
 - Convert Go example into multi-stage Docker build [\#320](https://github.com/GoogleCloudPlatform/agones/pull/320) ([markmandel](https://github.com/markmandel))
