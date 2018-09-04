@@ -358,4 +358,7 @@ You have now deployed a new version of your game!
 
 ## Next Steps
 
-If you want to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).
+You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage. 
+See [Create a Fleet Autoscaler](./create_fleetautoscaler.md).
+
+Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).

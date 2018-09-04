@@ -84,6 +84,9 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
 			gs.Spec, gs.Name, err)
 	}
+	if len(readyGs.Status.Ports) == 0 {
+		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
+	}
 
 	return readyGs, nil
 }

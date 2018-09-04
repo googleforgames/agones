@@ -44,6 +44,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 ### Quickstarts:
  - [Create a Game Server](./docs/create_gameserver.md)
  - [Create a Game Server Fleet](./docs/create_fleet.md)
+ - [Create a Fleet Autoscaler](./docs/create_fleetautoscaler.md)
  - [Edit Your First Game Server (Go)](./docs/edit_first_game_server.md)
 
 ### Guides
