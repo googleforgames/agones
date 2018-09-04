@@ -261,11 +261,11 @@ This will install Agones in your cluster.
 ## Install with YAML
 
 We can install Agones to the cluster using the
-[install.yaml](https://github.com/GoogleCloudPlatform/agones/blob/release-0.3.0/install/yaml/install.yaml) file.
+[install.yaml](https://github.com/GoogleCloudPlatform/agones/blob/release-0.4.0/install/yaml/install.yaml) file.
 
 ```bash
 kubectl create namespace agones-system
-kubectl apply -f https://github.com/GoogleCloudPlatform/agones/raw/release-0.3.0/install/yaml/install.yaml
+kubectl apply -f https://github.com/GoogleCloudPlatform/agones/raw/release-0.4.0/install/yaml/install.yaml
 ```
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
