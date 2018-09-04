@@ -57,6 +57,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().Fleets().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("fleetallocations"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAllocations().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("fleetautoscalers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAutoscalers().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gameservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServers().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gameserversets"):
