@@ -58,8 +58,6 @@ if (!status.ok()) { ... }
 To [set a Label](../README.md#setlabelkey-value) on the backing `GameServer` call
 `sdk->SetLabel(key, value)`.
 
-⚠️⚠️⚠️ **`SetLabel` is currently a release candidate feature** ⚠️⚠️⚠️
-
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
@@ -72,8 +70,6 @@ if (!status.ok()) { ... }
 
 To [set an Annotation](../README.md#setannotationkey-value) on the backing `GameServer` call
 `sdk->SetAnnotation(key, value)`.
-
-⚠️⚠️⚠️ **`SetAnnotation` is currently a release candidate feature** ⚠️⚠️⚠️
 
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
@@ -100,8 +96,6 @@ if (!status.ok()) {...}
 
 To get [updates on the backing `GameServer`](../README.md#watchgameserverfunctiongameserver) as they happen, 
 call `sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){...})`.
-
-⚠️⚠️⚠️ **`WatchGameServer` is currently a release candidate feature** ⚠️⚠️️⚠️ 
 
 This will call the passed in `std::function`
 synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer`

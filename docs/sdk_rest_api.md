@@ -127,8 +127,6 @@ Response:
 
 ### Watch GameServer
 
-⚠️⚠️⚠️ **/watch/gameserver is currently a release candidate feature** ⚠️⚠️⚠️
-
 Call this when you want to get updates of when the backing `GameServer` configuration is updated.
 
 These updates will come as newline delimited JSON, send on each update. To that end, you will

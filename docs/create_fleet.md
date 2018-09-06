@@ -33,7 +33,7 @@ While not required, you may wish to go through the [Create a Game Server](create
 Let's create a Fleet using the following command :
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
 ```
 
 You should see a successful ouput similar to this :
@@ -109,7 +109,7 @@ Spec:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.2
+            Image:  gcr.io/agones-images/udp-server:0.3
             Name:   simple-udp
             Resources:
 Status:
@@ -157,7 +157,7 @@ In production, you would likely do this through a [Kubernetes API call](./access
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide](./fleet_spec.md#fleet-allocation-specification)
@@ -225,7 +225,7 @@ status:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.2
+          - image: gcr.io/agones-images/udp-server:0.3
             name: simple-udp
             resources: {}
     status:
@@ -324,7 +324,7 @@ Let's take this for a spin! Run `kubectl edit fleet simple-udp` and set the `rep
 Let's also allocate ourselves a `GameServer`
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/server/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 We should now have four `Ready` `GameServers` and one `Allocated`. 
