@@ -234,6 +234,52 @@ $ make minikube-transfer-image TAG=myimage:0.1
 
 Running end-to-end tests on minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a minikube cluster.
 
+### I Made A Change, Now What?
+
+Awesome! You took your first step to becoming a contributor!
+
+We have several things we can do at this point, some of which you have already seen!
+
+#### Rerun all the tests
+
+Check your code against the current test suite - run `make test` to see if your changes broke any of the current test
+suite.
+
+#### Lint your code
+
+Run `make lint` - this will run the linter over your code (the same as we do in CI), which will look for bad comments,
+errors that haven't been checked, and more. It's a great tool, but can take a while to complete, so you may want to
+run it sparingly.
+
+#### Build and install your changes on a cluster
+
+Assuming you already followed the above section, you should have some kind of test cluster already up, and running
+Agones. To build and install your changes on your cluster, you can repeat the steps you took above - but here's a nice
+single line command:
+
+##### GKE
+
+`make build-images gcloud-auth-docker push install`
+
+This will:
+1. Build the Agones images
+2. Authenticate against your project's GCR instance
+3. Push the image you built to it
+4. Install your version (replacing the current one, if there is one)
+
+You can now test your changes by hand, but also can run `make e2e-test` to run the automated tests as well
+
+##### minikube
+
+`make build-images minikube-push minikube-install`
+
+This will:
+1. Build the Agones images
+2. Transfer the Agones images into minikube
+4. Install your version (replacing the current one, if there is one)
+
+You can now test your changes by hand, but also can run `make minikube-e2e-test` to run the automated tests as well 
+
 ### Next Steps
 
 Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agones.
