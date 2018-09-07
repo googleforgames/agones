@@ -17,13 +17,13 @@ package sdk
 
 import (
 	"fmt"
+	"io"
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"io"
 )
 
 const port = 59357

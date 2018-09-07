@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// nolint:goconst
 package fleets
 
 import (
@@ -74,6 +75,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 		c, m := newFakeController()
 		gsSet := f.GameServerSet()
+
 		gsSet.ObjectMeta.Name = "gsSet1"
 		gsSet.ObjectMeta.UID = "4321"
 		gsSet.Spec.Replicas = f.Spec.Replicas
@@ -318,6 +320,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 	gsSet1.Status.AllocatedReplicas = 1
 
 	gsSet2 := fleet.GameServerSet()
+	// nolint:goconst
 	gsSet2.ObjectMeta.Name = "gsSet2"
 	gsSet2.Status.Replicas = 5
 	gsSet2.Status.ReadyReplicas = 5

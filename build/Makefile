@@ -155,7 +155,7 @@ build-controller-binary: $(ensure-build-image)
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"/root/gen-lint-exclude.sh && gometalinter --config .exclude.gometalinter.json --deadline=$(LINT_TIMEOUT) -t --skip vendor ./..."
+		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
 # Build the image for the gameserver controller
 build-controller-image: $(ensure-build-image) build-controller-binary

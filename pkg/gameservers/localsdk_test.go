@@ -70,6 +70,7 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
 }
 
+// nolint:dupl
 func TestLocalSDKServerSetLabel(t *testing.T) {
 	fixtures := map[string]struct {
 		gs *v1alpha1.GameServer
@@ -77,7 +78,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 		"default": {
 			gs: nil,
 		},
-		"no annotation": {
+		"no labels": {
 			gs: &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
 		},
 		"empty": {
@@ -115,6 +116,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	}
 }
 
+// nolint:dupl
 func TestLocalSDKServerSetAnnotation(t *testing.T) {
 
 	fixtures := map[string]struct {

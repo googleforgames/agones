@@ -51,6 +51,7 @@ func TestCreateConnect(t *testing.T) {
 	assert.Equal(t, reply, "ACK: Hello World !\n")
 }
 
+// nolint:dupl
 func TestSDKSetLabel(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
@@ -82,6 +83,7 @@ func TestSDKSetLabel(t *testing.T) {
 	assert.NotEmpty(t, gs.ObjectMeta.Labels["stable.agones.dev/sdk-timestamp"])
 }
 
+// nolint:dupl
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
