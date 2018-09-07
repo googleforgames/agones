@@ -24,13 +24,13 @@ import (
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	// required to use gcloud login see: https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
-	"github.com/sirupsen/logrus"
 )
 
 // Framework is a testing framework
@@ -90,7 +90,7 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 	var readyGs *v1alpha1.GameServer
 
 	err := wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
-		readyGs, pollErr = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, v1.GetOptions{})
+		readyGs, pollErr = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
 		if pollErr != nil {
 			return false, nil
@@ -109,10 +109,28 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 	return readyGs, nil
 }
 
+// WaitForFleetReady waits for the Fleet to count all the GameServers in it as Ready
+func (f *Framework) WaitForFleetReady(flt *v1alpha1.Fleet) error {
+	err := wait.PollImmediate(2*time.Second, 30*time.Second, func() (bool, error) {
+		fleet, err := f.AgonesClient.StableV1alpha1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+
+		return fleet.Status.ReadyReplicas == fleet.Spec.Replicas, nil
+	})
+	return err
+}
+
 // CleanUp Delete all agones resources in a given namespace
 func (f *Framework) CleanUp(ns string) error {
+	err := f.AgonesClient.StableV1alpha1().Fleets(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
 	return f.AgonesClient.StableV1alpha1().GameServers(ns).
-		DeleteCollection(&v1.DeleteOptions{}, v1.ListOptions{})
+		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
 }
 
 // PingGameServer pings a gameserver and returns its reply
