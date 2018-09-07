@@ -120,6 +120,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	c.logger.WithField("review", review).Info("creationMutationHandler")
 	obj := review.Request.Object
 	fa := &stablev1alpha1.FleetAllocation{}
+
 	err := json.Unmarshal(obj.Raw, fa)
 	if err != nil {
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAllocation json: %s", obj.Raw)

@@ -66,7 +66,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 	assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
-	assert.Contains(t, string(result.Response.Patch), "/status/GameServer")
+	assert.Contains(t, string(result.Response.Patch), "/status/gameServer")
 	assert.Contains(t, string(result.Response.Patch), "/metadata/ownerReferences")
 }
 

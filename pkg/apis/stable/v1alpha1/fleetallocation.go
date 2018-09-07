@@ -26,7 +26,7 @@ type FleetAllocation struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   FleetAllocationSpec   `json:"spec"`
-	Status FleetAllocationStatus `json:"status"`
+	Status FleetAllocationStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -56,7 +56,7 @@ type FleetAllocationMeta struct {
 // `GameServer` that has been allocated from
 // a Fleet
 type FleetAllocationStatus struct {
-	GameServer *GameServer
+	GameServer *GameServer `json:"gameServer,omitempty"`
 }
 
 // ValidateUpdate validates when an update occurs

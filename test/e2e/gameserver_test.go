@@ -27,8 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-const defaultNs = "default"
-
 func TestCreateConnect(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()

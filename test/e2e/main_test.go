@@ -25,6 +25,8 @@ import (
 	e2eframework "agones.dev/agones/test/e2e/framework"
 )
 
+const defaultNs = "default"
+
 var framework *e2eframework.Framework
 
 func TestMain(m *testing.M) {
