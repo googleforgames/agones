@@ -121,6 +121,7 @@ func NewController(
 // creationMutationHandler is the handler for the mutating webhook that sets the
 // the default values on the Fleet
 // Should only be called on fleet create operations.
+// nolint:dupl
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("creationMutationHandler")
 

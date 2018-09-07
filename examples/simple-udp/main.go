@@ -21,12 +21,12 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	coresdk "agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/sdks/go"
-	"strconv"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time

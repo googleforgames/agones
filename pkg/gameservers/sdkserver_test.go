@@ -297,7 +297,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		err := sc.Health(stream) // nolint: vetshadow
+		err := sc.Health(stream)
 		assert.Nil(t, err)
 		wg.Done()
 	}()
@@ -350,14 +350,14 @@ func TestSidecarHealthy(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		err := sc.Health(stream) // nolint: vetshadow
+		err := sc.Health(stream)
 		assert.Nil(t, err)
 		wg.Done()
 	}()
 
 	fixtures := map[string]struct {
-		disabled        bool
 		timeAdd         time.Duration
+		disabled        bool
 		expectedHealthy bool
 	}{
 		"disabled, under timeout": {disabled: true, timeAdd: time.Second, expectedHealthy: true},
@@ -620,7 +620,7 @@ func waitConnectedStreamCount(sc *SDKServer, count int) error {
 	})
 }
 
-func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream *gameServerMockStream) {
+func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream sdk.SDK_WatchGameServerServer) {
 	go func() {
 		err := sc.WatchGameServer(&sdk.Empty{}, stream)
 		assert.Nil(t, err)

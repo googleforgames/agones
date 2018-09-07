@@ -65,9 +65,11 @@ RUN mkdir -p /go/src/github.com/golang && cd /go/src/github.com/golang && \
     go install github.com/golang/protobuf/protoc-gen-go
 
 # install go tooling for development, building and testing
-RUN go get -u github.com/golang/dep/cmd/dep && \
-    go get -u github.com/alecthomas/gometalinter && \
-    /go/bin/gometalinter --install
+RUN go get -u github.com/golang/dep/cmd/dep
+
+# install golang-ci linter
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | \
+    bash -s -- -b $GOPATH/bin v1.10.2
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \

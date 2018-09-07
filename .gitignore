@@ -17,6 +17,7 @@
 !.helmignore
 !.gitattributes
 !.dockerignore
+!.golangci.yml
 *.iml
 bin
 *.o

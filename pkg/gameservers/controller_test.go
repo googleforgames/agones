@@ -41,6 +41,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+const ipFixture = "12.12.12.12"
+
 func TestControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
@@ -58,7 +60,6 @@ func TestControllerSyncGameServer(t *testing.T) {
 			},
 		}
 
-		ipFixture := "12.12.12.12"
 		node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"},
 			Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
 
@@ -430,7 +431,7 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
-		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return c.syncGameServerPortAllocationState(fixture)
 		})
 	})
@@ -444,7 +445,6 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		return fixture
 	}
 
-	ipFixture := "12.12.12.12"
 	node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: "node1"}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
 
 	t.Run("Syncing from Created State, with no issues", func(t *testing.T) {
@@ -563,7 +563,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
-		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return c.syncGameServerCreatingState(fixture)
 		})
 	})
@@ -654,7 +654,6 @@ func TestControllerApplyGameServerAddressAndPort(t *testing.T) {
 	t.Parallel()
 	c, m := newFakeController()
 
-	ipFixture := "12.12.12.12"
 	gsFixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingleContainerSpec(), Status: v1alpha1.GameServerStatus{State: v1alpha1.RequestReady}}
 	gsFixture.ApplyDefaults()
@@ -721,7 +720,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 	}
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
-		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return c.syncGameServerRequestReadyState(fixture)
 		})
 	})
@@ -762,7 +761,7 @@ func TestControllerSyncGameServerShutdownState(t *testing.T) {
 	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
-		testWithNonZeroDeletionTimestamp(t, v1alpha1.Shutdown, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 			return fixture, c.syncGameServerShutdownState(fixture)
 		})
 	})
@@ -911,11 +910,11 @@ func testNoChange(t *testing.T, state v1alpha1.State, f func(*Controller, *v1alp
 
 // testWithNonZeroDeletionTimestamp runs a test with a given state, but
 // the DeletionTimestamp set to Now()
-func testWithNonZeroDeletionTimestamp(t *testing.T, state v1alpha1.State, f func(*Controller, *v1alpha1.GameServer) (*v1alpha1.GameServer, error)) {
+func testWithNonZeroDeletionTimestamp(t *testing.T, f func(*Controller, *v1alpha1.GameServer) (*v1alpha1.GameServer, error)) {
 	c, mocks := newFakeController()
 	now := metav1.Now()
 	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", DeletionTimestamp: &now},
-		Spec: newSingleContainerSpec(), Status: v1alpha1.GameServerStatus{State: state}}
+		Spec: newSingleContainerSpec(), Status: v1alpha1.GameServerStatus{State: v1alpha1.Shutdown}}
 	fixture.ApplyDefaults()
 	updated := false
 	mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {

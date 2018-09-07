@@ -120,7 +120,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			// ports between 10 and 20
 			for i := 10; i <= 20; i++ {
 				var p int32
-				gs, err := pa.Allocate(fixture.DeepCopy()) // nolint: vetshadow
+				gs, err := pa.Allocate(fixture.DeepCopy())
 				assert.True(t, 10 <= gs.Spec.Ports[0].HostPort && gs.Spec.Ports[0].HostPort <= 20, "%v is not between 10 and 20", p)
 				assert.Nil(t, err)
 			}
@@ -159,7 +159,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			for i := 10; i <= 14; i++ {
 				copy := morePortFixture.DeepCopy()
 				copy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
-				gs, err := pa.Allocate(copy) // nolint: vetshadow
+				gs, err := pa.Allocate(copy)
 				logrus.WithField("uid", copy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
 				assert.Nil(t, err)
 				for _, p := range gs.Spec.Ports {
