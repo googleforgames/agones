@@ -43,6 +43,7 @@ KUBECONFIG ?= ~/.kube/config
 # The (gcloud) test cluster that is being worked against
 GCP_CLUSTER_NAME ?= test-cluster
 GCP_CLUSTER_ZONE ?= us-west1-c
+GCP_BUCKET_CHARTS ?= agones-chart
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
 
@@ -107,6 +108,31 @@ build: build-images build-sdks
 
 # build the docker images
 build-images: build-controller-image build-agones-sdk-image
+
+# package the current agones helm chart
+build-chart: RELEASE_VERSION ?= $(base_version)
+build-chart: CHART_DIR ?= install/helm/agones/
+build-chart: $(ensure-build-image)
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) bash -c \
+		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
+			helm init --client-only && helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
+
+# push the current chart to google cloud storage and update the index
+push-chart: $(ensure-build-image) build-chart
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) bash -c \
+		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
+		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
+		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
+		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
+
+# push a specific release useful to push previous missing release
+push-release-chart: RELEASE_VERSION ?= $(base_version)
+push-release-chart: $(ensure-build-image)
+	rm -rf /tmp/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
+	mkdir -p $(agones_path)/install/.helm-$(RELEASE_VERSION)/
+	cd /tmp && git clone --single-branch -b release-$(RELEASE_VERSION) git@github.com:GoogleCloudPlatform/agones.git
+	mv /tmp/agones/install/helm/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
+	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 
 #build all the sdks
 build-sdks: build-sdk-cpp
@@ -277,6 +303,7 @@ gen-changelog:
 # - Build binaries and images
 # - Creates sdk and binary archives, and moves the into the /release folder for upload
 # - Creates a zip of the install.yaml, LICENCE and README.md for installation
+# - Pushes the current chart version to the helm repository hosted on gcs.
 do-release: RELEASE_VERSION ?= $(base_version)
 do-release:
 	@echo "Starting release for version: $(RELEASE_VERSION)"
@@ -291,6 +318,7 @@ do-release:
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
+	$(MAKE) push-chart
 	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
