@@ -13,15 +13,11 @@ This chart install the Agones application and defines deployment on a [Kubernete
 
 > If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
 
-To install the chart with the release name `my-release`:
-
-Download the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
+To install the chart with the release name `my-release` using our stable helm repository:
 
 ```bash
-$ wget https://github.com/GoogleCloudPlatform/agones/releases/download/v0.4.0/agones-install-0.4.0.zip
-$ unzip agones-install-0.4.0.zip
-$ cd install/helm/
-$ helm install --name my-release --namespace agones-system agones
+$ helm repo add agones https://agones.dev/chart/stable
+$ helm install --name my-release --namespace agones-system agones/agones
 ```
 
 _We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
@@ -30,7 +26,7 @@ you can use the helm `--namespace` parameter to specify a different namespace._
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
 > **Tip**: List all releases using `helm list`
->
+
 
 > If you are installing a development build of Agones (i.e. not the 0.4.0 release), you will need to install Agones the following way:
 
@@ -51,7 +47,7 @@ For example to use `default` **and** `xbox` namespaces:
 
 ```bash
 $ kubectl create namespace xbox
-$ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-system --name my-release agones
+$ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-system --name my-release agones/agones
 ```
 
 > You need to create your namespaces before installing Agones.
@@ -60,7 +56,7 @@ If you want to add a new namespace afterward simply upgrade your release:
 
 ```bash
 $ kubectl create namespace ps4
-$ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones
+$ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones/agones
 ```
 
 ## RBAC
@@ -120,7 +116,7 @@ The above command sets the namespace where Agones is deployed to `mynamespace`. 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release --namespace agones-system -f values.yaml agones
+$ helm install --name my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
 > **Tip**: You can use the default [values.yaml](agones/values.yaml)

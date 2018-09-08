@@ -21,7 +21,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
 - [ ] Run `git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the the release branch)
-- [ ] Run `make do-release`. (if release candidate `make do-release RELEASE_VERSION={version}.rc`) to create and push the docker images.
+- [ ] Run `make do-release`. (if release candidate `make do-release RELEASE_VERSION={version}.rc`) to create and push the docker images and helm chart.
+- [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
 - [ ] Do a `helm install` and a smoke test to confirm everything is working.
 - [ ] Create a release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
