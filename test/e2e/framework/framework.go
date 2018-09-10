@@ -41,10 +41,11 @@ type Framework struct {
 	KubeClient      kubernetes.Interface
 	AgonesClient    versioned.Interface
 	GameServerImage string
+	PullSecret      string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig, gsimage string) (*Framework, error) {
+func New(kubeconfig, gsimage string, pullSecret string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -64,6 +65,7 @@ func New(kubeconfig, gsimage string) (*Framework, error) {
 		KubeClient:      kubeClient,
 		AgonesClient:    agonesClient,
 		GameServerImage: gsimage,
+		PullSecret:      pullSecret,
 	}, nil
 }
 

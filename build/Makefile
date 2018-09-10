@@ -38,8 +38,8 @@ release_registry = gcr.io/agones-images
 VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
 # The registry that is being used to store docker images
 REGISTRY ?= $(release_registry)
-# Where the kubectl configuration files are being stored
-KUBEPATH ?= ~/.kube
+# kubectl configuration to use
+KUBECONFIG ?= ~/.kube/config
 # The (gcloud) test cluster that is being worked against
 GCP_CLUSTER_NAME ?= test-cluster
 GCP_CLUSTER_ZONE ?= us-west1-c
@@ -54,10 +54,13 @@ mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
 agones_path := $(realpath $(build_path)/..)
 
+kubeconfig_path := $(dir $(KUBECONFIG))
+kubeconfig_file := $(notdir $(KUBECONFIG))
+
 agones_package = agones.dev/agones
 mount_path = /go/src/$(agones_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
-				-v $(KUBEPATH):/root/.kube \
+				-v $(kubeconfig_path):/root/.kube \
 				-v $(agones_path):$(mount_path)
 
 build_tag = agones-build:$(build_version)
@@ -66,7 +69,7 @@ controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
-DOCKER_RUN ?= docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag)
+DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag)
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
 #  | | | \___ \   | || '_ \ / __| | | | |/ _` |/ _ \
@@ -76,7 +79,7 @@ DOCKER_RUN ?= docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag)
 
 uname := $(shell uname -s)
 ifneq ($(findstring Microsoft,$(shell uname -r)),)
-    osinclude := windows.mk
+	osinclude := windows.mk
 else ifeq ($(uname),Linux)
 	osinclude := linux.mk
 else ifeq ($(uname),Darwin)
@@ -89,7 +92,7 @@ include ./includes/$(osinclude)
 -include ./local-includes/*.mk
 
 ifdef DOCKER_RUN
-    ensure-build-image += ensure-build-image
+	ensure-build-image += ensure-build-image
 endif
 
 #   _____                    _
@@ -120,8 +123,9 @@ test-go:
 # For minikube user the minikube-test-e2e targets
 test-e2e: $(ensure-build-image)
 	$(DOCKER_RUN) go test -v -race $(agones_package)/test/e2e/... \
-		--kubeconfig /root/.kube/config \
-		--gameserver-image=$(GS_TEST_IMAGE)
+		--kubeconfig /root/.kube/$(kubeconfig_file) \
+		--gameserver-image=$(GS_TEST_IMAGE) \
+		--pullsecret=$(IMAGE_PULL_SECRET)
 
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
@@ -139,11 +143,15 @@ push: push-controller-image push-agones-sdk-image
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
-install: $(ensure-build-image)
+install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait --namespace=agones-system \
-		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
+		helm upgrade --install --wait --namespace=agones-system\
+		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR),agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
 		agones $(mount_path)/install/helm/agones/
+
+uninstall: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm delete --purge agones
 
 # Build a static binary for the gameserver controller
 build-controller-binary: $(ensure-build-image)
@@ -212,6 +220,7 @@ shell: $(ensure-build-image)
 	docker run -it --rm \
 		$(common_mounts) \
 		-w $(mount_path) \
+		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" \
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) bash -l
 
@@ -234,7 +243,7 @@ clean-build-image:
 	docker rmi $(build_tag)
 
 ensure-build-config:
-	-mkdir -p $(KUBEPATH)
+	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.config/gcloud
 
 # create the build image if it doesn't exist
@@ -286,6 +295,26 @@ do-release:
 	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
+setup-test-cluster: $(ensure-build-image)
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
+
+clean-test-cluster: $(ensure-build-image) $(uninstall)
+	docker run --rm -it $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag) helm reset
+
+install-custom-pull-secret:
+	# if IMAGE_PULL_SECRET_FILE is specified, create the agones-system namespace and install the secret
+	@if [ "$(IMAGE_PULL_SECRET_FILE)" != "" ]; then \
+		echo "Creating agones-system namespace..." ;\
+		$(DOCKER_RUN) kubectl create namespace agones-system; \
+		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in agones-system namespace..."; \
+		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+			kubectl apply --namespace agones-system -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
+		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in default namespace..."; \
+		docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+			kubectl apply --namespace default -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
+	fi
+
 #    ____                   _         ____ _                 _
 #   / ___| ___   ___   __ _| | ___   / ___| | ___  _   _  __| |
 #  | |  _ / _ \ / _ \ / _` | |/ _ \ | |   | |/ _ \| | | |/ _` |
@@ -307,8 +336,7 @@ gcloud-test-cluster: $(ensure-build-image)
 		--properties cluster.zone:$(GCP_CLUSTER_ZONE),cluster.name:$(GCP_CLUSTER_NAME),cluster.nodePool.initialNodeCount:$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT),cluster.nodePool.machineType:$(GCP_CLUSTER_NODEPOOL_MACHINETYPE),cluster.legacyAbac:$(GCP_CLUSTER_LEGACYABAC)\
 		--template=$(mount_path)/build/gke-test-cluster/cluster.yml.jinja
 	$(MAKE) gcloud-auth-cluster
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
+	$(MAKE) setup-test-cluster
 
 clean-gcloud-test-cluster: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
@@ -361,6 +389,7 @@ clean-gcloud-config:
 #
 # Use MINIKUBE_DRIVER variable to change the VM driver
 # (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
+minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 	# localkube bootstrapper fixes issues with profiles
 	$(MINIKUBE) start --kubernetes-version v1.10.0 --vm-driver $(MINIKUBE_DRIVER) \
@@ -368,18 +397,15 @@ minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
 		--extra-config=apiserver.Authorization.Mode=RBAC
 	# wait until the master is up
-	until docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
+	until docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
 		do \
 			echo "Waiting for cluster to start..."; \
 			sleep 1; \
 		done
 	# this is needed for kubernetes component to work correctly while RBAC is enabled
-	-docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
+	-docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=kube-system:default
-	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
-		kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) --network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm init --service-account helm
+	$(MAKE) setup-test-cluster DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 	$(MAKE) minikube-post-start
 
 # switch to the agones cluster
@@ -409,4 +435,4 @@ minikube-transfer-image:
 
 # Runs e2e tests against our minikube
 minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
-minikube-test-e2e: minikube-agones-profile test-e2e 
+minikube-test-e2e: minikube-agones-profile test-e2e
