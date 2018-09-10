@@ -81,3 +81,7 @@ spec:
       - name: certs
         secret:
           secretName: {{ template "agones.fullname" . }}-cert
+{{- if .Values.agones.image.controller.pullSecret }}
+      imagePullSecrets:
+        - name: {{.Values.agones.image.controller.pullSecret}}
+{{- end }}

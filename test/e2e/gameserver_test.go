@@ -116,7 +116,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 }
 
 func defaultGameServer() *v1alpha1.GameServer {
-	return &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
+	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
 		Spec: v1alpha1.GameServerSpec{
 			Container: "udp-server",
 			Ports: []v1alpha1.GameServerPort{{
@@ -135,4 +135,11 @@ func defaultGameServer() *v1alpha1.GameServer {
 			},
 		},
 	}
+
+	if framework.PullSecret != "" {
+		gs.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{
+			Name: framework.PullSecret}}
+	}
+
+	return gs
 }

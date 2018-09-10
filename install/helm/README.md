@@ -94,6 +94,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `0.4.0`                |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
+| `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
 | `agones.controller.healthCheck.http.port`           | Port to use for liveness probe service                                                          | `8080`                 |
@@ -103,7 +104,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
-| `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["defaut"]`           |
+| `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
