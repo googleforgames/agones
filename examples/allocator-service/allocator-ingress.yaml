@@ -1,0 +1,18 @@
+# Create a single service Ingress resource
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: fleet-allocator-ingress
+  labels:
+    app: fleet-allocator
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
+    #kubernetes.io/ingress.global-static-ip-name: "allocator-static-ip"
+spec:
+  tls:
+  - secretName: allocatorsecret
+  backend:
+    serviceName: fleet-allocator-backend
+    servicePort: 8000
