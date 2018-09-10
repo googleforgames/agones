@@ -47,7 +47,7 @@ GCP_CLUSTER_ZONE ?= us-west1-c
 MINIKUBE_PROFILE ?= agones
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.3
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.4
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))

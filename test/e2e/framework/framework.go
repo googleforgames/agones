@@ -21,6 +21,8 @@ import (
 	"net"
 	"time"
 
+	"k8s.io/apimachinery/pkg/labels"
+
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
@@ -110,21 +112,79 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 	return readyGs, nil
 }
 
-// WaitForFleetReady waits for the Fleet to count all the GameServers in it as Ready
-func (f *Framework) WaitForFleetReady(flt *v1alpha1.Fleet) error {
-	err := wait.PollImmediate(2*time.Second, 30*time.Second, func() (bool, error) {
+// WaitForFleetCondition waits for the Fleet to be in a specific condition
+func (f *Framework) WaitForFleetCondition(flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) error {
+	err := wait.PollImmediate(2*time.Second, 120*time.Second, func() (bool, error) {
 		fleet, err := f.AgonesClient.StableV1alpha1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
 
-		return fleet.Status.ReadyReplicas == fleet.Spec.Replicas, nil
+		return condition(fleet), nil
 	})
 	return err
 }
 
-// CleanUp Delete all agones resources in a given namespace
+// ListGameServersFromFleet lists GameServers from a particular fleet
+func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.GameServer, error) {
+	var results []v1alpha1.GameServer
+
+	opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.FleetGameServerSetLabel: flt.ObjectMeta.Name}.String()}
+	gsSetList, err := f.AgonesClient.StableV1alpha1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
+	if err != nil {
+		return results, err
+	}
+
+	for _, gsSet := range gsSetList.Items {
+		opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
+		gsList, err := f.AgonesClient.StableV1alpha1().GameServers(flt.ObjectMeta.Namespace).List(opts)
+		if err != nil {
+			return results, err
+		}
+
+		results = append(results, gsList.Items...)
+	}
+
+	return results, nil
+}
+
+// FleetReadyCountCondition checks the ready count in a fleet
+func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
+	return func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.ReadyReplicas == amount
+	}
+}
+
+// WaitForFleetGameServersCondition wait for all GameServers for a given
+// fleet to match the spec.replicas and match a a condition
+func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond func(server v1alpha1.GameServer) bool) error {
+	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
+		gsList, err := f.ListGameServersFromFleet(flt)
+		if err != nil {
+			return false, err
+		}
+
+		if int32(len(gsList)) != flt.Spec.Replicas {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		for _, gs := range gsList {
+			if !cond(gs) {
+				return false, nil
+			}
+		}
+
+		return true, nil
+	})
+}
+
+// CleanUp Delete all Agones resources in a given namespace
 func (f *Framework) CleanUp(ns string) error {
+	logrus.Info("Done. Cleaning up now.")
 	err := f.AgonesClient.StableV1alpha1().Fleets(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
 	if err != nil {
 		return err

@@ -26,12 +26,15 @@ import (
 	"time"
 
 	coresdk "agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/sdks/go"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time
 // converts the bytes to a string, and logs the output
 func main() {
+	go doSignal()
+
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
@@ -63,6 +66,14 @@ func main() {
 	}
 
 	readWriteLoop(conn, stop, s)
+}
+
+// doSignal shutsdown on SIGTERM/SIGKILL
+func doSignal() {
+	stop := signals.NewStopChannel()
+	<-stop
+	log.Println("Exit signal received. Shutting down.")
+	os.Exit(0)
 }
 
 func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
