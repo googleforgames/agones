@@ -1,11 +1,12 @@
-# Getting Started
+# Quickstart Edit a Game Server
 The following guide is for developers without Docker or Kubernetes experience, that want to use the simple-udp example as a starting point for a custom game server. This guide addresses Google Kubernetes Engine and Minikube.  We would welcome a Pull Request to expand this to include other platforms as well.
 
 ## Prerequisites
 
-1. Downland and install Golang from https://golang.org/dl/.
-2. Install Docker from https://www.docker.com/get-docker.
-3. Install Agones on GKE or Minikube.  
+1. A [Go](https://golang.org/dl/) environment
+2. [Docker](https://www.docker.com/get-started/)
+3. Agones installed on GKE or Minikube
+4. kubectl properly configured
 
 To install on GKE, follow the install instructions (if you haven't already) at
 [Setting up a Google Kubernetes Engine (GKE) cluster](../install/README.md#setting-up-a-google-kubernetes-engine-gke-cluster). Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.
@@ -14,7 +15,7 @@ To install locally on Minikube, read [Setting up a Minikube cluster](../install/
 
 ## Modify the code and push another new image
 
-### Modify the simple-udp example source source code
+### Modify the simple-udp example source code
 Modify the main.go file. For example:
 
 Change main.go line 92:

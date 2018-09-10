@@ -1,0 +1,11 @@
+FROM alpine:3.7
+
+RUN adduser -D service
+
+COPY ./bin/service /home/service/service
+
+RUN chown -R service /home/service && \
+    chmod o+x /home/service/service
+
+USER service
+ENTRYPOINT /home/service/service
