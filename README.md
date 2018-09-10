@@ -18,14 +18,14 @@ This software is currently alpha, and subject to change. Not to be used in produ
 - Client SDKs for integration with dedicated game servers to work with Agones.
 
 ## Why does this project exist?
-For more details on why this project was written, read the 
+For more details on why this project was written, read the
 [announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
 
 ## Requirements
 - Kubernetes cluster version 1.9+
     - [Minikube](https://github.com/kubernetes/minikube), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) and [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and 
+    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
     [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
     admission controllers are required.
     We also recommend following the
@@ -51,6 +51,9 @@ Documentation and usage guides on how to develop and host dedicated game servers
  - [Integrating the Game Server SDK](sdks)
  - [GameServer Health Checking](./docs/health_checking.md)
  - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
+
+### Tutorials
+ - [Create an Allocator Service (Go)](./docs/create_allocator_service.md) - Learn to programmatically access Agones via the API
 
 ### Reference
 - [Game Server Specification](./docs/gameserver_spec.md)
@@ -80,7 +83,7 @@ Please read the [contributing](CONTRIBUTING.md) guide for directions on submitti
 
 See the [Developing, Testing and Building Agones](build/README.md) documentation for developing, testing and building Agones from source.
 
-The [Release Process](docs/governance/release_process.md) documentation displays the project's upcoming release calendar and release process. 
+The [Release Process](docs/governance/release_process.md) documentation displays the project's upcoming release calendar and release process.
 
 Agones is in active development - we would love your help in shaping its future!
 
