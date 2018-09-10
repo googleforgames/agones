@@ -1,15 +1,15 @@
 # Accessing Agones via the Kubernetes API
 
 It's likely that we will want to programmatically interact with Agones. Everything that can be done
-via the `kubectl` and yaml configurations can also be done via 
+via the `kubectl` and yaml configurations can also be done via
 the [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/).
 
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
 which can be accessed and manipulated through the Kubernetes API.
 
-Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/client-libraries/), however, 
-at time of writing, only 
-the [Go](https://github.com/kubernetes/client-go) and 
+Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/client-libraries/), however,
+at time of writing, only
+the [Go](https://github.com/kubernetes/client-go) and
 [Python](https://github.com/kubernetes-client/python/) clients are documented to support accessing CRDs.
 
 This can be found in the [Accessing a custom resource](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#accessing-a-custom-resource)
@@ -34,21 +34,21 @@ If you plan to run your code in the same cluster as the Agones install, have a l
 [in cluster configuration](https://github.com/kubernetes/client-go/tree/master/examples/in-cluster-client-configuration)
 example from the Kubernetes Client.
 
-If you plan to run your code outside the Kubernetes cluster as your Agones install, 
+If you plan to run your code outside the Kubernetes cluster as your Agones install,
 look at the [out of cluster configuration](https://github.com/kubernetes/client-go/tree/master/examples/out-of-cluster-client-configuration)
 example from the Kubernetes client.
 
 ### Example
 
 The following is an example of a in-cluster configuration, that creates a `Clientset` for Agones
-and then creates a `GameServer`. 
+and then creates a `GameServer`.
 
 ```go
 package main
 
 import (
 	"fmt"
-	
+
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
@@ -62,9 +62,9 @@ func main() {
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
-	
+
 	// Access to standard Kubernetes resources through the Kubernetes Clientset
-	// We don't actually need this for this example, but it's just here for 
+	// We don't actually need this for this example, but it's just here for
 	// illustrative purposes
 	kubeClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
@@ -92,7 +92,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	fmt.Printf("New game servers' name is: %s", newGS.ObjectMeta.Name)
 }
 
@@ -103,8 +103,8 @@ func main() {
 If there isn't a client written in your preferred language, it is always possible to communicate
 directly with Kubernetes API to interact with Agones.
 
-The Kubernetes API can be authenticated and exposed locally through the 
-[`kubectl proxy`](https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/) 
+The Kubernetes API can be authenticated and exposed locally through the
+[`kubectl proxy`](https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/)
 
 
 For example:
@@ -339,3 +339,8 @@ The [Verb Resources](https://github.com/kubernetes/community/blob/master/contrib
 section provide the more details on the API conventions that are used in the Kubernetes API.
 
 It may also be useful to look at the [API patterns for standard Kubernetes resources](https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#-strong-write-operations-strong--54).
+
+
+## Next Steps
+
+Learn how to interact with Agones programmatically through the API while creating an [Allocator Service](../docs/create_allocator_service.md).
