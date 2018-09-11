@@ -65,7 +65,8 @@ RUN mkdir -p /go/src/github.com/golang && cd /go/src/github.com/golang && \
     go install github.com/golang/protobuf/protoc-gen-go
 
 # install go tooling for development, building and testing
-RUN go get -u github.com/golang/dep/cmd/dep
+RUN go get -u github.com/golang/dep/cmd/dep && \
+    go get -u golang.org/x/tools/cmd/goimports
 
 # install golang-ci linter
 RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | \
