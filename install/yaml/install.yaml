@@ -190,6 +190,12 @@ spec:
                   enum:
                     - Recreate
                     - RollingUpdate
+            scaling:
+              properties:
+                type:
+                  enum:
+                    - Manual
+                    - RollingBuffer
             template:              
               required:
               - spec

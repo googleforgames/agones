@@ -233,7 +233,7 @@ func (c *Controller) syncFleet(key string) error {
 		active = fleet.GameServerSet()
 	}
 
-	replicas, err := c.applyDeploymentStrategy(fleet, active, rest)
+	replicas, err := c.applyScalingOrDeploymentStrategy(fleet, active, rest)
 	if err != nil {
 		return err
 	}
@@ -275,6 +275,15 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *st
 	}
 
 	return nil
+}
+
+func (c *Controller) applyScalingOrDeploymentStrategy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
+	if len(rest) == 0 {
+		// no deployment in progress, we can run the autoscaling
+		return c.applyScalingPolicy(fleet, active)
+	}
+	// otherwise run the deployment strategy
+	return c.applyDeploymentStrategy(fleet, active, rest)
 }
 
 // applyDeploymentStrategy applies the Fleet > Spec > Deployment strategy to all the non-active
@@ -429,6 +438,31 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 		break
 	}
 	return nil
+}
+
+func (c *Controller) applyScalingPolicy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet) (int32, error) {
+
+	switch fleet.Spec.Scaling.Type {
+	case stablev1alpha1.ManualFleetScalingPolicyType:
+		return c.applyManualScalingPolicy(fleet, active)
+	case stablev1alpha1.RollingBufferFleetScalingPolicyType:
+		return c.applyRollingBufferScalingPolicy(fleet, active)
+	}
+
+	return 0, errors.Errorf("unexpected scaling policy type: %s", fleet.Spec.Scaling.Type)
+}
+
+func (c *Controller) applyManualScalingPolicy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet) (int32, error) {
+	return fleet.Spec.Replicas, nil
+}
+
+func (c *Controller) applyRollingBufferScalingPolicy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet) (int32, error) {
+	c.logger.WithField("fleet", fleet.ObjectMeta.Name).WithField("fleetReplicas", fleet.Spec.Replicas).WithField("AllocatedReplicas", active.Status.AllocatedReplicas).WithField("MaxReplicas", fleet.Spec.Scaling.MaxReplicas).Info("applyRollingBufferScalingPolicy")
+	replicas := fleet.LowerBoundReplicas(fleet.Spec.Replicas + active.Status.AllocatedReplicas)
+	if fleet.Spec.Scaling.MaxReplicas > 0 && replicas > fleet.Spec.Scaling.MaxReplicas {
+		replicas = fleet.Spec.Scaling.MaxReplicas;
+	}
+	return replicas, nil
 }
 
 // updateFleetStatus gets the GameServerSets for this Fleet and then
