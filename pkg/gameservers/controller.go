@@ -132,13 +132,23 @@ func NewController(
 
 	// track pod deletions, for when GameServers are deleted
 	pods.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			oldPod := oldObj.(*corev1.Pod)
+			if isGameServerPod(oldPod) {
+				newPod := newObj.(*corev1.Pod)
+				//  node name has changed -- i.e. it has been scheduled
+				if oldPod.Spec.NodeName != newPod.Spec.NodeName {
+					owner := metav1.GetControllerOf(newPod)
+					c.workerqueue.Enqueue(cache.ExplicitKey(newPod.ObjectMeta.Namespace + "/" + owner.Name))
+				}
+			}
+		},
 		DeleteFunc: func(obj interface{}) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
 			pod, ok := obj.(*corev1.Pod)
-			if ok && v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
-				if owner := metav1.GetControllerOf(pod); owner != nil {
-					c.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
-				}
+			if ok && isGameServerPod(pod) {
+				owner := metav1.GetControllerOf(pod)
+				c.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
 			}
 		},
 	})
@@ -283,6 +293,9 @@ func (c *Controller) syncGameServer(key string) error {
 	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
 		return err
 	}
+	if gs, err = c.syncGameServerStartingState(gs); err != nil {
+		return err
+	}
 	if gs, err = c.syncGameServerRequestReadyState(gs); err != nil {
 		return err
 	}
@@ -380,34 +393,24 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 		return nil, err
 	}
 
-	var pod *corev1.Pod
 	if len(ret) == 0 {
-		gs, pod, err = c.createGameServerPod(gs)
+		gs, err = c.createGameServerPod(gs)
 		if err != nil || gs.Status.State == v1alpha1.Error {
 			return gs, err
 		}
-	} else {
-		pod = ret[0]
 	}
 
 	gsCopy := gs.DeepCopy()
-	gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
-	if err != nil {
-		return gs, err
-	}
-
 	gsCopy.Status.State = v1alpha1.Starting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
 	}
-
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and Port populated")
 	return gs, nil
 }
 
 // createGameServerPod creates the backing Pod for a given GameServer
-func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, *corev1.Pod, error) {
+func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 	sidecar := c.sidecar(gs)
 	var pod *corev1.Pod
 	pod, err := gs.Pod(sidecar)
@@ -416,7 +419,7 @@ func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.Gam
 	if err != nil {
 		c.logger.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
 		gs, err = c.moveToErrorState(gs, err.Error())
-		return gs, pod, err
+		return gs, err
 	}
 
 	c.addGameServerHealthCheck(gs, pod)
@@ -427,14 +430,14 @@ func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.Gam
 		if k8serrors.IsInvalid(err) {
 			c.logger.WithField("pod", pod).WithField("gameserver", gs).Errorf("Pod created is invalid")
 			gs, err = c.moveToErrorState(gs, err.Error())
-			return gs, nil, err
+			return gs, err
 		}
-		return gs, pod, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
+		return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 	}
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State),
 		fmt.Sprintf("Pod %s created", pod.ObjectMeta.Name))
 
-	return gs, pod, nil
+	return gs, nil
 }
 
 // sidecar creates the sidecar container for a given GameServer
@@ -498,6 +501,39 @@ func (c *Controller) addGameServerHealthCheck(gs *v1alpha1.GameServer, pod *core
 	}
 }
 
+// syncGameServerStartingState looks for a pod that has been scheduled for this GameServer
+// and then sets the Status > Address and Ports values.
+func (c *Controller) syncGameServerStartingState(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+	if !(gs.Status.State == v1alpha1.Starting && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+		return gs, nil
+	}
+
+	c.logger.WithField("gs", gs).Info("Syncing Starting State")
+
+	// there should be a pod (although it may not have a scheduled container),
+	// so if there is an error of any kind, then move this to queue backoff
+	pod, err := c.gameServerPod(gs)
+	if err != nil {
+		return nil, err
+	}
+
+	gsCopy := gs.DeepCopy()
+	// if we can't get the address, then go into queue backoff
+	gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
+	if err != nil {
+		return gs, err
+	}
+
+	gsCopy.Status.State = v1alpha1.Scheduled
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
+	}
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
+
+	return gs, nil
+}
+
 // applyGameServerAddressAndPort gets the backing Pod for the GamesServer,
 // and sets the allocated Address and Port values to it and returns it.
 func (c *Controller) applyGameServerAddressAndPort(gs *v1alpha1.GameServer, pod *corev1.Pod) (*v1alpha1.GameServer, error) {
@@ -530,12 +566,34 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 	c.logger.WithField("gs", gs).Info("Syncing RequestReady State")
 
 	gsCopy := gs.DeepCopy()
+
+	// if the address hasn't been populated, and the Ready request comes
+	// before the controller has had a chance to do it, then
+	// do it here instead
+	addressPopulated := false
+	if gs.Status.NodeName == "" {
+		addressPopulated = true
+		pod, err := c.gameServerPod(gs)
+		// errPodNotFound should never happen, and if it does -- something bad happened,
+		// so go into workerqueue backoff.
+		if err != nil {
+			return nil, err
+		}
+		gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
+		if err != nil {
+			return gs, err
+		}
+	}
+
 	gsCopy.Status.State = v1alpha1.Ready
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 	}
 
+	if addressPopulated {
+		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
+	}
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "SDK.Ready() executed")
 	return gs, nil
 }
@@ -634,4 +692,14 @@ func (c *Controller) address(pod *corev1.Pod) (string, error) {
 	}
 
 	return "", errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
+}
+
+// isGameServerPod returns if this Pod is a Pod that comes from a GameServer
+func isGameServerPod(pod *corev1.Pod) bool {
+	if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
+		owner := metav1.GetControllerOf(pod)
+		return owner != nil && owner.Kind == "GameServer"
+	}
+
+	return false
 }
