@@ -31,8 +31,11 @@ const (
 	// Creating is before the Pod for the GameServer is being created
 	Creating State = "Creating"
 	// Starting is for when the Pods for the GameServer are being
-	// created but have yet to register themselves as Ready
+	// created but are not yet Scheduled
 	Starting State = "Starting"
+	// Scheduled is for when we have determined that the Pod has been
+	// scheduled in the cluster -- basically, we have a NodeName
+	Scheduled State = "Scheduled"
 	// RequestReady is when the GameServer has declared that it is ready
 	RequestReady State = "RequestReady"
 	// Ready is when a GameServer is ready to take connections
