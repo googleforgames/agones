@@ -4,7 +4,7 @@ The SDKs are integration points for game servers with Agones itself.
 
 They are required for a game server to work with Agones.
 
-There are currently two support SDKs:
+The current supported SDKs are:
 - [C++](cpp)
 - [Go](https://godoc.org/agones.dev/agones/sdks/go)
 - [Rust](rust)
