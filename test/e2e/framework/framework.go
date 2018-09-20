@@ -208,6 +208,11 @@ func PingGameServer(msg, address string) (reply string, err error) {
 		return "", errors.Wrapf(err, "Could not write message %s", msg)
 	}
 	b := make([]byte, 1024)
+
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		return "", err
+	}
 	n, err := conn.Read(b)
 	if err != nil {
 		return "", err
