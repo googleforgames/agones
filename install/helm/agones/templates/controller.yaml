@@ -46,6 +46,10 @@ spec:
         heritage: {{ .Release.Service }}
     spec:
       serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
+{{- if .Values.agones.image.pullSecret }}
+      imagePullSecrets:
+      - name: agones-registrysecret
+{{- end }}
       containers:
       - name: agones-controller
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ .Values.agones.image.tag }}"
