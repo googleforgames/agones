@@ -19,17 +19,21 @@ tasks you may wish to accomplish.
    1. [Testing and Building](#testing-and-building)
       1. [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
       1. [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
+      1. [Running a Custom Test Environment](#running-a-custom-test-environment)
       1. [Next Steps](#next-steps)
    1. [Make Variable Reference](#make-variable-reference)
       1. [VERSION](#version)
       1. [REGISTRY](#registry)
-      1. [KUBEPATH](#kubepath)
+      1. [KUBECONFIG](#kubeconfig)
       1. [CLUSTER_NAME](#cluster_name)
+      1. [IMAGE_PULL_SECRET](#image_pull_secret)
+      1. [IMAGE_PULL_SECRET_FILE](#image_pull_secret_file)
    1. [Make Target Reference](#make-target-reference)
       1. [Development Targets](#development-targets)
       1. [Build Image Targets](#build-image-targets)
       1. [Google Cloud Platform](#google-cloud-platform)
       1. [Minikube](#minikube)
+      1. [Custom Environment](#custom-environment)
    1. [Dependencies](#dependencies)
    1. [Troubleshooting](#troubleshooting)
    
@@ -151,8 +155,8 @@ This will take several minutes to complete, but once done you can go to the Goog
 a cluster is up and running!
 
 To grab the kubectl authentication details for this cluster, run `make gcloud-auth-cluster`, which will generate the
-required Kubernetes security credentials for `kubectl`. This will be stored in `~/.kube` by default, but can also be
-overwritten by setting the `KUBEPATH` environment variable before running the command.
+required Kubernetes security credentials for `kubectl`. This will be stored in `~/.kube/config` by default, but can also be
+overwritten by setting the `KUBECONFIG` environment variable before running the command.
 
 Great! Now we are setup, let's try out the development shell, and see if our `kubectl` is working!
 
@@ -234,6 +238,39 @@ $ make minikube-transfer-image TAG=myimage:0.1
 
 Running end-to-end tests on minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a minikube cluster.
 
+### Running a Custom Test Environment
+
+This section is addressed to developers using a custom Kubernetes provider, a custom image repository and/or multiple test clusters.
+
+Prerequisites:
+- a(some) running k8s cluster(s)
+- Have kubeconfig file(s) ready
+- docker must be logged into the image repository you're going to use
+
+To begin, you need to set up the following environment variables:
+- `KUBECONFIG` should point to the kubeconfig file used to access the cluster; 
+   if unset, it defaults to `~/.kube/config`
+- `REGISTRY` should point to your image repository of your choice (i.e. gcr.io/<YOUR-PROJECT-ID>)
+- `IMAGE_PULL_SECRET` must contain the name of the secret required to pull the Agones images, 
+   in case you're using a custom repository; if unset, no pull secret will be used
+- `IMAGE_PULL_SECRET_FILE` must be initialized to the full path of the file containing
+   the secret for pulling the Agones images, in case of a custom image repository; 
+   if set, `make install` will install this secret in both the `agones-system` (for pulling the controller image)
+   and `default` (for pulling the sdk image) repositories
+   
+The second step is to prepare your cluster for the Agones deployments. Run `make setup-custom-test-cluster` to install helm in it.
+
+Now you're ready to begin the development/test cycle:
+- `make build` will build Agones
+- `make test` will run local tests
+- `make push` will push the Agones images to your image repository 
+- `make test-e2e` will run end-to-end tests in your cluster
+- `make install` will install/upgrade Agones into your cluster
+
+You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
+
+If you need to clean-up your cluster, you can use `make uninstall` to remove Agones and `make clean-custom-test-cluster` to reset helm.
+
 ### Next Steps
 
 Have a look in the [examples](../examples) folder to see examples of running Game Servers on Agones.
@@ -246,13 +283,22 @@ The version of this build. Version defaults to the short hash of the latest comm
 ### REGISTRY
 The registry that is being used to store docker images. Defaults to gcr.io/agones-images - the release + CI registry.
 
-### KUBEPATH
-The directory the kubectl configuration files are being stored for shell and kubectl targets. 
-Defaults to ~/.kube (where your Kubernetes configs are likely to already exist)
+### KUBECONFIG
+The Kubernetes config file used to access the cluster. Defaults to `~/.kube/config` - the file used by default by kubectl.
 
 ### CLUSTER_NAME
 The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`
 
+### IMAGE_PULL_SECRET
+The name of the secret required to pull the Agones images, if needed.
+If unset, no pull secret will be used.
+
+### IMAGE_PULL_SECRET_FILE
+The full path of the file containing the secret for pulling the Agones images, in case it's needed.
+
+If set, `make install` will install this secret in both the `agones-system` (for pulling the controller image)
+and `default` (for pulling the sdk image) repositories.
+   
 ## Make Target Reference
 
 All targets will create the build image if it is not present.
@@ -282,11 +328,15 @@ Pushes all built images up to the `$(REGISTRY)`
 #### `make install`
 Installs the current development version of Agones into the Kubernetes cluster
 
+#### `make uninstall`
+Removes Agones from the Kubernetes cluster
+
 ### `make test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
 
-It uses the kube config (located by default in `~/.kube`) to target a Kubernetes cluster.
+It uses the KUBECONFIG to target a Kubernetes cluster.
+
 See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on minikube.
 
 #### `make shell`
@@ -375,6 +425,14 @@ instead of `make shell` to start an interactive shell for development on Minikub
 #### `make minikube-transfer-image`
 Convenience target for transferring images into minikube.
 Use TAG to specify the image to transfer into minikube
+
+### Custom Environment
+
+#### `make setup-custom-test-cluster`
+Initializes your custom cluster for working with Agones, by installing Helm/Tiller.
+
+#### `make clean-custom-test-cluster`
+Cleans up your custom cluster by reseting Helm.
 
 ## Dependencies
 

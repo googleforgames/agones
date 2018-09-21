@@ -7,6 +7,7 @@ End-to-end (e2e) testing is automated testing for real user scenarios.
 Prerequisites:
 - a running k8s cluster (kube config is passed as arguments).
 - Have kubeconfig file ready.
+- (optional) set the `IMAGE_PULL_SECRET` env var to the secret name needed to pull the gameserver and/or Agones SDK images, if needed
 
 e2e tests are written as Go test. All go test techniques apply, e.g. picking
 what to run, timeout length. 

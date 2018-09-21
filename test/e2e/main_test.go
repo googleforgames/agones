@@ -35,6 +35,8 @@ func TestMain(m *testing.M) {
 		"kube config path, e.g. $HOME/.kube/config")
 	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.4",
 		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.4")
+	pullSecret := flag.String("pullsecret", "",
+		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 
 	flag.Parse()
 
@@ -43,7 +45,7 @@ func TestMain(m *testing.M) {
 		exitCode int
 	)
 
-	if framework, err = e2eframework.New(*kubeconfig, *gsimage); err != nil {
+	if framework, err = e2eframework.New(*kubeconfig, *gsimage, *pullSecret); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
