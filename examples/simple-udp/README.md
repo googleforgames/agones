@@ -10,5 +10,5 @@ When it receives a text packet, it will send back "ACK:<text content>" as an ech
 
 If it receives the text "EXIT", then it will `sys.Exit(0)`
 
-To learn how to deploy your edited version of go server to gcp, please check out this link: [Edit Your First Game Server (Go)](../../../docs/edit_first_game_server.md),
+To learn how to deploy your edited version of go server to gcp, please check out this link: [Edit Your First Game Server (Go)](../../../master/docs/edit_first_game_server.md),
 or also look at the [`Makefile`](./Makefile).
