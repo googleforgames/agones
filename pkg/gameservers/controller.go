@@ -17,6 +17,7 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -69,6 +70,7 @@ type Controller struct {
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	workerqueue            *workerqueue.WorkerQueue
+	allocationMutex        *sync.Mutex
 	stop                   <-chan struct{}
 	recorder               record.EventRecorder
 }
@@ -77,6 +79,7 @@ type Controller struct {
 func NewController(
 	wh *webhooks.WebHook,
 	health healthcheck.Handler,
+	allocationMutex *sync.Mutex,
 	minPort, maxPort int32,
 	sidecarImage string,
 	alwaysPullSidecarImage bool,
@@ -93,6 +96,7 @@ func NewController(
 	c := &Controller{
 		sidecarImage:           sidecarImage,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
+		allocationMutex:        allocationMutex,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
 		podLister:              pods.Lister(),
@@ -608,7 +612,9 @@ func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error 
 	// be explicit about where to delete. We only need to wait for the Pod to be removed, which we handle with our
 	// own finalizer.
 	p := metav1.DeletePropagationBackground
+	c.allocationMutex.Lock()
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
+	c.allocationMutex.Unlock()
 	if err != nil {
 		return errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
 	}

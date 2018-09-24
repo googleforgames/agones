@@ -63,13 +63,14 @@ type Controller struct {
 	fleetAllocationGetter getterv1alpha1.FleetAllocationsGetter
 	fleetAllocationLister listerv1alpha1.FleetAllocationLister
 	stop                  <-chan struct{}
-	allocationMutex       sync.Mutex
+	allocationMutex       *sync.Mutex
 	recorder              record.EventRecorder
 }
 
 // NewController returns a controller for a FleetAllocation
 func NewController(
 	wh *webhooks.WebHook,
+	allocationMutex *sync.Mutex,
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
@@ -85,7 +86,7 @@ func NewController(
 		fleetLister:           agonesInformer.Fleets().Lister(),
 		fleetAllocationGetter: agonesClient.StableV1alpha1(),
 		fleetAllocationLister: agonesInformer.FleetAllocations().Lister(),
-		allocationMutex:       sync.Mutex{},
+		allocationMutex:       allocationMutex,
 	}
 	c.logger = runtime.NewLoggerWithType(c)
 
