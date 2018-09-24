@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"agones.dev/agones/pkg"
@@ -90,14 +91,16 @@ func main() {
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
-	gsController := gameservers.NewController(wh, health,
+	allocationMutex := &sync.Mutex{}
+
+	gsController := gameservers.NewController(wh, health, allocationMutex,
 		ctlConf.minPort, ctlConf.maxPort, ctlConf.sidecarImage, ctlConf.alwaysPullSidecar,
 		kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
-	gsSetController := gameserversets.NewController(wh, health,
+	gsSetController := gameserversets.NewController(wh, health, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	fleetController := fleets.NewController(wh, health,
+	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
+	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	faController := fleetallocation.NewController(wh, kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	stop := signals.NewStopChannel()
 

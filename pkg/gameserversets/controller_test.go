@@ -17,6 +17,7 @@ package gameserversets
 import (
 	"encoding/json"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 
@@ -300,7 +301,7 @@ func TestSyncLessGameServers(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, list2, 11)
 
-	err = c.syncLessGameSevers(gsSet, list2, int32(-expected))
+	err = c.syncLessGameSevers(gsSet, int32(-expected))
 	assert.Nil(t, err)
 
 	// subtract one, because one is already deleted
@@ -481,7 +482,7 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{}, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

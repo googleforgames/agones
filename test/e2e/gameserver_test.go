@@ -130,7 +130,7 @@ func defaultGameServer() *v1alpha1.GameServer {
 					Containers: []corev1.Container{{
 						Name:            "udp-server",
 						Image:           framework.GameServerImage,
-						ImagePullPolicy: corev1.PullAlways}},
+						ImagePullPolicy: corev1.PullIfNotPresent}},
 				},
 			},
 		},

@@ -16,6 +16,7 @@ package gameserversets
 
 import (
 	"encoding/json"
+	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -60,6 +61,8 @@ type Controller struct {
 	gameServerSetLister listerv1alpha1.GameServerSetLister
 	gameServerSetSynced cache.InformerSynced
 	workerqueue         *workerqueue.WorkerQueue
+	allocationMutex     *sync.Mutex
+	stop                <-chan struct{}
 	recorder            record.EventRecorder
 }
 
@@ -67,6 +70,7 @@ type Controller struct {
 func NewController(
 	wh *webhooks.WebHook,
 	health healthcheck.Handler,
+	allocationMutex *sync.Mutex,
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
@@ -85,6 +89,7 @@ func NewController(
 		gameServerSetGetter: agonesClient.StableV1alpha1(),
 		gameServerSetLister: gameServerSets.Lister(),
 		gameServerSetSynced: gsSetInformer.HasSynced,
+		allocationMutex:     allocationMutex,
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -127,6 +132,8 @@ func NewController(
 // Run the GameServerSet controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
+	c.stop = stop
+
 	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameserversets."+stable.GroupName, c.logger)
 	if err != nil {
 		return err
@@ -236,7 +243,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 	if err := c.syncMoreGameServers(gsSet, diff); err != nil {
 		return err
 	}
-	if err := c.syncLessGameSevers(gsSet, list, diff); err != nil {
+	if err := c.syncLessGameSevers(gsSet, diff); err != nil {
 		return err
 	}
 	if err := c.syncGameServerSetState(gsSet, list); err != nil {
@@ -250,7 +257,9 @@ func (c *Controller) syncGameServerSet(key string) error {
 func (c *Controller) syncUnhealthyGameServers(gsSet *stablev1alpha1.GameServerSet, list []*stablev1alpha1.GameServer) error {
 	for _, gs := range list {
 		if gs.Status.State == stablev1alpha1.Unhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
+			c.allocationMutex.Lock()
 			err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, nil)
+			c.allocationMutex.Unlock()
 			if err != nil {
 				return errors.Wrapf(err, "error deleting gameserver %s", gs.ObjectMeta.Name)
 			}
@@ -280,7 +289,7 @@ func (c *Controller) syncMoreGameServers(gsSet *stablev1alpha1.GameServerSet, di
 }
 
 // syncLessGameSevers removes Ready GameServers from the set of GameServers
-func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, list []*stablev1alpha1.GameServer, diff int32) error {
+func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, diff int32) error {
 	if diff >= 0 {
 		return nil
 	}
@@ -288,6 +297,22 @@ func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, lis
 	diff = -diff
 	c.logger.WithField("diff", diff).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Deleting gameservers")
 	count := int32(0)
+
+	// don't allow allocation state for GameServers to change
+	c.allocationMutex.Lock()
+	defer c.allocationMutex.Unlock()
+
+	// make sure we are up to date with GameServer state
+	if !cache.WaitForCacheSync(c.stop, c.gameServerSynced) {
+		// if we can't sync the cache, then exit, and try and scale down
+		// again, and then we aren't blocking allocation at this time.
+		return errors.New("could not sync gameservers cache")
+	}
+
+	list, err := ListGameServersByGameServerSetOwner(c.gameServerLister, gsSet)
+	if err != nil {
+		return err
+	}
 
 	// count anything that is already being deleted
 	for _, gs := range list {

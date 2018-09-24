@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"testing"
 
 	"agones.dev/agones/pkg/apis/stable"
@@ -1093,7 +1094,8 @@ func testWithNonZeroDeletionTimestamp(t *testing.T, f func(*Controller, *v1alpha
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), 10, 20, "sidecar:dev", false,
+	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{},
+		10, 20, "sidecar:dev", false,
 		m.KubeClient, m.KubeInformationFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
