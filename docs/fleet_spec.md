@@ -15,6 +15,7 @@ metadata:
   name: fleet-example
 spec:
   replicas: 2
+  scheduling: Packed
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -53,6 +54,11 @@ This is a very common pattern in the Kubernetes ecosystem.
 The `spec` field is the actual `Fleet` specification and it is composed as follow:
 
 - `replicas` is the number of `GameServers` to keep Ready or Allocated in this Fleet
+- `scheduling`(⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️) defines how GameServers are organised across the cluster. Currently only affects Allocation, but will expand
+                 in future releases. Options include:
+                 "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+                 resources. "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+                 cluster. See [Scheduling and Autoscaling](scheduling_autoscaling.md) for more details.
 - `strategy` is the `GameServer` replacement strategy for when the `GameServer` template is edited.
   - `type` is replacement strategy for when the GameServer template is changed. Default option is "RollingUpdate", but "Recreate" is also available.
     - `RollingUpdate` will increment by `maxSurge` value on each iteration, while decrementing by `maxUnavailable` on each iteration, until all GameServers have been switched from one version to another.   

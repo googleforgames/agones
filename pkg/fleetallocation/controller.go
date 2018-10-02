@@ -20,7 +20,7 @@ import (
 	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -95,7 +95,7 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetallocation-controller"})
 
-	kind := stablev1alpha1.Kind("FleetAllocation")
+	kind := v1alpha1.Kind("FleetAllocation")
 	wh.AddHandler("/mutate", kind, admv1beta1.Create, c.creationMutationHandler)
 	wh.AddHandler("/validate", kind, admv1beta1.Create, c.creationValidationHandler)
 	wh.AddHandler("/validate", kind, admv1beta1.Update, c.mutationValidationHandler)
@@ -120,7 +120,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("creationMutationHandler")
 	obj := review.Request.Object
-	fa := &stablev1alpha1.FleetAllocation{}
+	fa := &v1alpha1.FleetAllocation{}
 
 	err := json.Unmarshal(obj.Raw, fa)
 	if err != nil {
@@ -157,10 +157,10 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	}
 
 	// When a GameServer is deleted, the FleetAllocation should go with it
-	ref := metav1.NewControllerRef(gs, stablev1alpha1.SchemeGroupVersion.WithKind("GameServer"))
+	ref := metav1.NewControllerRef(gs, v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
 	fa.ObjectMeta.OwnerReferences = append(fa.ObjectMeta.OwnerReferences, *ref)
 
-	fa.Status = stablev1alpha1.FleetAllocationStatus{GameServer: gs}
+	fa.Status = v1alpha1.FleetAllocationStatus{GameServer: gs}
 
 	newFA, err := json.Marshal(fa)
 	if err != nil {
@@ -191,7 +191,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("creationValidationHandler")
 	obj := review.Request.Object
-	fa := &stablev1alpha1.FleetAllocation{}
+	fa := &v1alpha1.FleetAllocation{}
 	if err := json.Unmarshal(obj.Raw, fa); err != nil {
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAllocation json: %s", obj.Raw)
 	}
@@ -225,8 +225,8 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("mutationValidationHandler")
 
-	newFA := &stablev1alpha1.FleetAllocation{}
-	oldFA := &stablev1alpha1.FleetAllocation{}
+	newFA := &v1alpha1.FleetAllocation{}
+	oldFA := &v1alpha1.FleetAllocation{}
 
 	if err := json.Unmarshal(review.Request.Object.Raw, newFA); err != nil {
 		return review, errors.Wrapf(err, "error unmarshalling new FleetAllocation json: %s", review.Request.Object.Raw)
@@ -256,8 +256,8 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 }
 
 // allocate allocated a GameServer from a given Fleet
-func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.FleetAllocationMeta) (*stablev1alpha1.GameServer, error) {
-	var allocation *stablev1alpha1.GameServer
+func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.FleetAllocationMeta) (*v1alpha1.GameServer, error) {
+	var allocation *v1alpha1.GameServer
 	// can only allocate one at a time, as we don't want two separate processes
 	// trying to allocate the same GameServer to different clients
 	c.allocationMutex.Lock()
@@ -272,11 +272,11 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.Fleet
 		return allocation, err
 	}
 
-	for _, gs := range gsList {
-		if gs.Status.State == stablev1alpha1.Ready && gs.ObjectMeta.DeletionTimestamp.IsZero() {
-			allocation = gs
-			break
-		}
+	switch f.Spec.Scheduling {
+	case v1alpha1.Packed:
+		allocation = findReadyGameServerForAllocation(gsList, packedComparator)
+	case v1alpha1.Distributed:
+		allocation = findReadyGameServerForAllocation(gsList, distributedComparator)
 	}
 
 	if allocation == nil {
@@ -284,7 +284,7 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.Fleet
 	}
 
 	gsCopy := allocation.DeepCopy()
-	gsCopy.Status.State = stablev1alpha1.Allocated
+	gsCopy.Status.State = v1alpha1.Allocated
 
 	if fam != nil {
 		c.patchMetadata(gsCopy, fam)
@@ -300,7 +300,7 @@ func (c *Controller) allocate(f *stablev1alpha1.Fleet, fam *stablev1alpha1.Fleet
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a FleetAllocation
-func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam *stablev1alpha1.FleetAllocationMeta) {
+func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam *v1alpha1.FleetAllocationMeta) {
 	// patch ObjectMeta labels
 	if fam.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {

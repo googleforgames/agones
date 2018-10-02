@@ -22,10 +22,26 @@ import (
 )
 
 const (
+	// Packed scheduling strategy will prioritise allocating GameServers
+	// on Nodes with the most Allocated, and then Ready GameServers
+	// to bin pack as many Allocated GameServers on a single node.
+	// This is most useful for dynamic Kubernetes clusters - such as on Cloud Providers.
+	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
+	Packed SchedulingStrategy = "Packed"
+
+	// Distributed scheduling strategy will prioritise allocating GameServers
+	// on Nodes with the least Allocated, and then Ready GameServers
+	// to distribute Allocated GameServers across many nodes.
+	// This is most useful for statically sized Kubernetes clusters - such as on physical hardware.
+	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
+	Distributed SchedulingStrategy = "Distributed"
+
 	// FleetGameServerSetLabel is the label that the name of the Fleet
 	// is set to on the GameServerSet the Fleet controls
 	FleetGameServerSetLabel = stable.GroupName + "/fleet"
 )
+
+type SchedulingStrategy string
 
 // +genclient
 // +genclient:noStatus
@@ -56,6 +72,8 @@ type FleetSpec struct {
 	Replicas int32 `json:"replicas"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
+	// Scheduling strategy. Defaults to "Packed".
+	Scheduling SchedulingStrategy `json:"scheduling"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
 }
@@ -103,6 +121,10 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 func (f *Fleet) ApplyDefaults() {
 	if f.Spec.Strategy.Type == "" {
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
+	}
+
+	if f.Spec.Scheduling == "" {
+		f.Spec.Scheduling = Packed
 	}
 
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
