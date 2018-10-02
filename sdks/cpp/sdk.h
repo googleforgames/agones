@@ -55,7 +55,6 @@ namespace agones {
             // This is a blocking function, and as such you will likely want to run it inside a thread.
             grpc::Status WatchGameServer(const std::function<void(stable::agones::dev::sdk::GameServer)> callback);
 
-            ~SDK();
 
         private:
             std::shared_ptr<grpc::Channel> channel;
