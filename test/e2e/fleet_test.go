@@ -39,25 +39,34 @@ const (
 func TestCreateFleetAndAllocate(t *testing.T) {
 	t.Parallel()
 
-	fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
-	flt, err := fleets.Create(defaultFleet())
-	if assert.Nil(t, err) {
-		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	fixtures := []v1alpha1.SchedulingStrategy{v1alpha1.Packed, v1alpha1.Distributed}
+
+	for _, strategy := range fixtures {
+		t.Run(string(strategy), func(t *testing.T) {
+			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleet := defaultFleet()
+			fleet.Spec.Scheduling = strategy
+			flt, err := fleets.Create(fleet)
+			if assert.Nil(t, err) {
+				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+			assert.Nil(t, err, "fleet not ready")
+
+			fa := &v1alpha1.FleetAllocation{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocatioon-", Namespace: defaultNs},
+				Spec: v1alpha1.FleetAllocationSpec{
+					FleetName: flt.ObjectMeta.Name,
+				},
+			}
+
+			fa, err = framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
+			assert.Nil(t, err)
+			assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+		})
+
 	}
-
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
-
-	fa := &v1alpha1.FleetAllocation{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocatioon-", Namespace: defaultNs},
-		Spec: v1alpha1.FleetAllocationSpec{
-			FleetName: flt.ObjectMeta.Name,
-		},
-	}
-
-	fa, err = framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
-	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
 }
 
 func TestScaleFleetUpAndDownWithAllocation(t *testing.T) {

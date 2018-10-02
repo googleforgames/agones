@@ -253,4 +253,6 @@ simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    [map[name:default port:7745]]
 
 ## Next Steps
 
+Read the advanced [Scheduling and Autoscaling](scheduling_autoscaling.md) guide, for more details on autoscaling. 
+
 If you want to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/). 

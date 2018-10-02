@@ -141,6 +141,8 @@ func TestControllerMutationValidationHandler(t *testing.T) {
 }
 
 func TestControllerAllocate(t *testing.T) {
+	t.Parallel()
+
 	f, gsSet, gsList := defaultFixtures(4)
 	c, m := newFakeController()
 	n := metav1.Now()
@@ -210,6 +212,98 @@ func TestControllerAllocate(t *testing.T) {
 	assert.False(t, updated)
 }
 
+func TestControllerAllocatePriority(t *testing.T) {
+	t.Parallel()
+
+	n1 := "node1"
+	n2 := "node2"
+
+	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, fleet *v1alpha1.Fleet)) {
+		f, gsSet, gsList := defaultFixtures(4)
+		c, m := newFakeController()
+
+		gsList[0].Status.NodeName = n1
+		gsList[1].Status.NodeName = n2
+		gsList[2].Status.NodeName = n1
+		gsList[3].Status.NodeName = n1
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.GameServerList{Items: gsList}, nil
+		})
+
+		gsWatch := watch.NewFake()
+		m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			gsWatch.Modify(gs)
+			return true, gs, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		t.Run(name, func(t *testing.T) {
+			test(t, c, f)
+		})
+	}
+
+	run(t, "packed", func(t *testing.T, c *Controller, f *v1alpha1.Fleet) {
+		// priority should be node1, then node2
+		gs, err := c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n2, gs.Status.NodeName)
+
+		// should have none left
+		_, err = c.allocate(f, nil)
+		assert.NotNil(t, err)
+	})
+
+	run(t, "distributed", func(t *testing.T, c *Controller, f *v1alpha1.Fleet) {
+		// make a copy, to avoid the race check
+		f = f.DeepCopy()
+		f.Spec.Scheduling = v1alpha1.Distributed
+		// should go node2, then node1
+		gs, err := c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n2, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		gs, err = c.allocate(f, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, n1, gs.Status.NodeName)
+
+		// should have none left
+		_, err = c.allocate(f, nil)
+		assert.NotNil(t, err)
+	})
+}
+
 func TestControllerAllocateMutex(t *testing.T) {
 	t.Parallel()
 
@@ -270,6 +364,7 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 			Template: v1alpha1.GameServerTemplateSpec{},
 		},
 	}
+	f.ApplyDefaults()
 	gsSet := f.GameServerSet()
 	gsSet.ObjectMeta.Name = "gsSet1"
 	var gsList []v1alpha1.GameServer

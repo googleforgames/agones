@@ -27,6 +27,13 @@ metadata:
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
   replicas: 2
+  # defines how GameServers are organised across the cluster. Currently only affects Allocation, but will expand
+  # in future releases. Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
   # a GameServer template - see:
   # https://github.com/GoogleCloudPlatform/agones/blob/master/docs/gameserver_spec.md for all the options
   strategy:
