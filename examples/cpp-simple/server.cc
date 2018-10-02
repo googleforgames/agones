@@ -110,5 +110,7 @@ int main() {
         }
     }
 
+    delete sdk;
+
     return 0;
 }
