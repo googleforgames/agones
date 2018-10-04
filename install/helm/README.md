@@ -108,7 +108,7 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 
 ```bash
 $ helm install --name my-release --namespace agones-system \
-  --set agones.namespace=mynamespace,gameservers.minPort=1000,gamesevers.maxPort=5000 agones
+  --set agones.namespace=mynamespace,gameservers.minPort=1000,gameservers.maxPort=5000 agones
 ```
 
 The above command sets the namespace where Agones is deployed to `mynamespace`. Additionally Agones will use a dynamic port allocation range of 1000-5000.
