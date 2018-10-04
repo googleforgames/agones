@@ -153,8 +153,7 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 [minikube]: https://github.com/kubernetes/minikube#installation
 [vb]: https://www.virtualbox.org
 
-> We recommend installing version [0.28.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.28.0),
-due to issues with other versions
+> We recommend installing version [0.29.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.29.0).
 
 ## Creating an `agones` profile
 
@@ -171,9 +170,8 @@ replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) o
 
 ```bash
 minikube start --kubernetes-version v1.10.0 --vm-driver virtualbox \
-    --bootstrapper=localkube \
-    --extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
-    --extra-config=apiserver.Authorization.Mode=RBAC
+		--extra-config=apiserver.admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+		--extra-config=apiserver.authorization-mode=RBAC
 ```
 
 > the --bootstrapper=localkube is required since we aren't using the `default` profile. ([bug](https://github.com/kubernetes/minikube/issues/2717))
