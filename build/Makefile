@@ -421,9 +421,8 @@ minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 	# localkube bootstrapper fixes issues with profiles
 	$(MINIKUBE) start --kubernetes-version v1.10.0 --vm-driver $(MINIKUBE_DRIVER) \
-		--bootstrapper=localkube \
-		--extra-config=apiserver.Admission.PluginNames=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
-		--extra-config=apiserver.Authorization.Mode=RBAC
+		--extra-config=apiserver.admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+		--extra-config=apiserver.authorization-mode=RBAC
 	# wait until the master is up
 	until docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
 		do \
