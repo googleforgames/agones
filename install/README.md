@@ -15,6 +15,10 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
    1. [Installing Minikube](#installing-minikube)
    1. [Creating an agones profile](#creating-an-agones-profile)
    1. [Starting Minikube](#starting-minikube)
+1. [Setting up an Amazon Web Services EKS cluster](#setting-up-an-amazon-web-services-eks-cluster)
+    1. [Create EKS Instance](#create-eks-instance)
+    1. [Ensure VPC CNI 1.2 is Running](#ensure-vpc-cni-12-is-running)
+    1. [Follow Normal Instructions to Install](#follow-normal-instructions-to-install)
 1. [Setting up an Azure Kubernetes Service (AKS) cluster](#setting-up-an-azure-kubernetes-service-aks-cluster)
     1. [Choosing your shell](#choosing-your-shell)
     1. [Creating the AKS cluster](#creating-the-aks-cluster)
@@ -173,6 +177,31 @@ minikube start --kubernetes-version v1.10.0 --vm-driver virtualbox \
 ```
 
 > the --bootstrapper=localkube is required since we aren't using the `default` profile. ([bug](https://github.com/kubernetes/minikube/issues/2717))
+
+# Setting up an Amazon Web Services EKS cluster
+
+## Create EKS Instance
+
+Create your EKS instance using the [Getting Started Guide](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html).
+
+## Ensure VPC CNI 1.2 is Running
+
+EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects). 
+
+In a console, run this command to get your current cni version
+
+```bash
+kubectl describe daemonset aws-node --namespace kube-system | grep Image | cut -d "/" -f 2
+```
+Output should be `amazon-k8s-cni:1.2.0` or newer. To upgrade to version 1.2, run the following command.
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/master/config/v1.2/aws-k8s-cni.yaml
+```
+
+## Follow Normal Instructions to Install
+
+Continue to [Installing Agones](#installing-agones).
 
 # Setting up an Azure Kubernetes Service (AKS) Cluster
 
