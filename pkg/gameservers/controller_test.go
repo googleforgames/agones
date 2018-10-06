@@ -949,7 +949,10 @@ func TestControllerAddress(t *testing.T) {
 				return true, &corev1.NodeList{Items: []corev1.Node{fixture.node}}, nil
 			})
 
-			_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+			v1 := mocks.KubeInformationFactory.Core().V1()
+			nodeSynced := v1.Nodes().Informer().HasSynced
+			podSynced := v1.Pods().Informer().HasSynced
+			_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, podSynced, nodeSynced)
 			defer cancel()
 
 			addr, err := c.address(&pod)
