@@ -21,13 +21,12 @@ import (
 	"net"
 	"time"
 
-	"k8s.io/apimachinery/pkg/labels"
-
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
@@ -119,7 +118,7 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 
 // WaitForFleetCondition waits for the Fleet to be in a specific condition
 func (f *Framework) WaitForFleetCondition(flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) error {
-	err := wait.PollImmediate(2*time.Second, 120*time.Second, func() (bool, error) {
+	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		fleet, err := f.AgonesClient.StableV1alpha1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
