@@ -1,5 +1,7 @@
 # Quickstart Create a Fleet Autoscaler
 
+⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
+
 This guide covers how you can quickly get started using Agones to create a Fleet 
 Autoscaler to manage your fleet size automatically, based on actual load.
 

@@ -292,11 +292,13 @@ push-build-image:
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
 gen-changelog:
-	@read -p 'Github Token: ' TOKEN && \
-	docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.14.3 \
-		GoogleCloudPlatform/agones --bug-labels=kind/bug --enhancement-labels=kind/feature \
+	read -p 'Github Token: ' TOKEN && \
+    docker run -it --rm -v "$(agones_path)":/project markmandel/github-changelog-generator \
+		--user=GoogleCloudPlatform --project=agones \
+		--bug-labels=kind/bug --enhancement-labels=kind/feature \
+		--breaking-labels=kind/breaking --security-labels=area/security \
 		--future-release "v$(RELEASE_VERSION)" \
-		--token=$$TOKEN
+		--token $$TOKEN
 
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
