@@ -22,6 +22,6 @@ Images available with this release:
 
 Helm chart available with this release:
 
-- [`helm install agones/agones --version {example-version}](https://agones.dev/chart/stable/agones-{example-version}.tgz)
+- [`helm install agones/agones --version {version}`](https://agones.dev/chart/stable/agones-{version}.tgz)
 
 > Make sure to add our stable helm repository using `helm repo add https://agones.dev/chart/stable`
