@@ -58,6 +58,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 ### Reference
 - [Game Server Specification](./docs/gameserver_spec.md)
 - [Fleet Specification](./docs/fleet_spec.md)
+- [Fleet Autoscaler Specification](./docs/fleetautoscaler_spec.md)
 
 ### Examples
 - [Full GameServer Configuration](./examples/gameserver.yaml)
