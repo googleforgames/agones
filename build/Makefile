@@ -58,10 +58,13 @@ agones_path := $(realpath $(build_path)/..)
 kubeconfig_path := $(dir $(KUBECONFIG))
 kubeconfig_file := $(notdir $(KUBECONFIG))
 
+helm_path := ~/.helm
+
 agones_package = agones.dev/agones
 mount_path = /go/src/$(agones_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(kubeconfig_path):/root/.kube \
+				-v $(helm_path):/root/.helm \
 				-v $(agones_path):$(mount_path)
 
 build_tag = agones-build:$(build_version)
@@ -271,6 +274,7 @@ clean-build-image:
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.config/gcloud
+	-mkdir -p $(helm_path)
 
 # create the build image if it doesn't exist
 ensure-build-image: ensure-build-config
