@@ -51,6 +51,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
  - [Integrating the Game Server SDK](sdks)
  - [GameServer Health Checking](./docs/health_checking.md)
  - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
+ - [Troubleshooting](./docs/troubleshooting.md)
 
 ### Tutorials
  - [Create an Allocator Service (Go)](./docs/create_allocator_service.md) - Learn to programmatically access Agones via the API
