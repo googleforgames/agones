@@ -6,7 +6,6 @@
 
 **Implemented enhancements:**
 
-- GameServer Safe Manual Cluster Node Scaling [\#365](https://github.com/GoogleCloudPlatform/agones/issues/365)
 - Improve support for developing in custom environments [\#348](https://github.com/GoogleCloudPlatform/agones/issues/348)
 - Agones helm repo [\#285](https://github.com/GoogleCloudPlatform/agones/issues/285)
 - Add Amazon EKS Agones Setup Instructions [\#372](https://github.com/GoogleCloudPlatform/agones/pull/372) ([GabeBigBoxVR](https://github.com/GabeBigBoxVR))
