@@ -1,8 +1,26 @@
 # Changelog
 
-## [v0.5.0.rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.5.0.rc) (2018-10-09)
+## [v0.5.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.5.0) (2018-10-16)
 
-[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.4.0...v0.5.0.rc)
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.5.0-rc...v0.5.0)
+
+**Fixed bugs:**
+
+- Tutorial fails @ Step 5 due to RBAC issues if you have capital letters in your gcloud account name [\#282](https://github.com/GoogleCloudPlatform/agones/issues/282)
+
+**Closed issues:**
+
+- Release 0.5.0.rc [\#378](https://github.com/GoogleCloudPlatform/agones/issues/378)
+
+**Merged pull requests:**
+
+- Troubleshooting guide for issues with Agones. [\#384](https://github.com/GoogleCloudPlatform/agones/pull/384) ([markmandel](https://github.com/markmandel))
+- Spec docs for FleetAutoscaler [\#381](https://github.com/GoogleCloudPlatform/agones/pull/381) ([markmandel](https://github.com/markmandel))
+- Post 0.5.0-rc updates [\#380](https://github.com/GoogleCloudPlatform/agones/pull/380) ([markmandel](https://github.com/markmandel))
+
+## [v0.5.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.5.0-rc) (2018-10-09)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.4.0...v0.5.0-rc)
 
 **Implemented enhancements:**
 
@@ -42,6 +60,7 @@
 
 **Merged pull requests:**
 
+- Release 0.5.0.rc changes [\#379](https://github.com/GoogleCloudPlatform/agones/pull/379) ([markmandel](https://github.com/markmandel))
 - Make WaitForFleetCondition take up to 5 minutes [\#377](https://github.com/GoogleCloudPlatform/agones/pull/377) ([markmandel](https://github.com/markmandel))
 - Fix for flaky test TestControllerAddress [\#376](https://github.com/GoogleCloudPlatform/agones/pull/376) ([markmandel](https://github.com/markmandel))
 - Fix typo [\#374](https://github.com/GoogleCloudPlatform/agones/pull/374) ([Maxpain177](https://github.com/Maxpain177))
