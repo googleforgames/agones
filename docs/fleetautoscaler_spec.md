@@ -1,7 +1,5 @@
 # Fleet Autoscaler Specification
 
-⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
-
 A `FleetAutoscaler`'s job is to automatically scale up and down a `Fleet` in response to demand.
 
 A full `FleetAutoscaler` specification is available below and in the 
