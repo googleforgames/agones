@@ -37,6 +37,8 @@ agones:
       pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
+      cpuRequest: 30m
+      cpuLimit: 0
       alwaysPull: false
 
 gameservers:

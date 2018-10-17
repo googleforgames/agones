@@ -15,12 +15,11 @@
 package workerqueue
 
 import (
-	"testing"
-	"time"
-
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+	"time"
 
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
