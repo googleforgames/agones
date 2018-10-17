@@ -859,16 +859,20 @@ spec:
         image: "gcr.io/agones-images/agones-controller:0.6.0-rc"
         imagePullPolicy: IfNotPresent
         env:
-        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: "false"
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
-          value: "7000" 
+          value: "7000"
         # maximum port that can be exposed to GameServer traffic
         - name: MAX_PORT
           value: "8000"
-        - name: SIDECAR # overwrite the GameServer sidecar image that is used
+        - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
           value: "gcr.io/agones-images/agones-sdk:0.6.0-rc"
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: "false"
+        - name: SIDECAR_CPU_REQUEST
+          value: "30m"
+        - name: SIDECAR_CPU_LIMIT
+          value: "0"
         livenessProbe:
           httpGet:
             path: /live

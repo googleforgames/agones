@@ -71,6 +71,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 
 ### Advanced
 - [Scheduling and Autoscaling](./docs/scheduling_autoscaling.md)
+- [Limiting CPU/Memory](./docs/limiting_resources.md)
 
 ## Get involved
 

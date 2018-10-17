@@ -15,12 +15,11 @@
 package webhooks
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"bytes"
-	"encoding/json"
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/admission/v1beta1"
