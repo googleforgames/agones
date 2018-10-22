@@ -92,6 +92,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
 | `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
+| `agones.image.sdk.cpuRequest`                       | (⚠️ Development feature ⚠️) the [cpu request][constraints] for sdk server container              | `30m`                  |
+| `agones.image.sdk.cpuLimit`                         | (⚠️ Development feature ⚠️) the [cpu limit][constraints] for the sdk server container            | `0` (none)             |
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
 | `agones.controller.healthCheck.http.port`           | Port to use for liveness probe service                                                          | `8080`                 |
 | `agones.controller.healthCheck.initialDelaySeconds` | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
@@ -103,6 +105,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
+
+[constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
