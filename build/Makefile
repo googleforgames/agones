@@ -325,7 +325,7 @@ do-release:
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 	$(MAKE) push-chart
-	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
+	$(MAKE) gcloud-auth-docker push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
