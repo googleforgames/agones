@@ -22,20 +22,6 @@ import (
 )
 
 const (
-	// Packed scheduling strategy will prioritise allocating GameServers
-	// on Nodes with the most Allocated, and then Ready GameServers
-	// to bin pack as many Allocated GameServers on a single node.
-	// This is most useful for dynamic Kubernetes clusters - such as on Cloud Providers.
-	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
-	Packed SchedulingStrategy = "Packed"
-
-	// Distributed scheduling strategy will prioritise allocating GameServers
-	// on Nodes with the least Allocated, and then Ready GameServers
-	// to distribute Allocated GameServers across many nodes.
-	// This is most useful for statically sized Kubernetes clusters - such as on physical hardware.
-	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
-	Distributed SchedulingStrategy = "Distributed"
-
 	// FleetGameServerSetLabel is the label that the name of the Fleet
 	// is set to on the GameServerSet the Fleet controls
 	FleetGameServerSetLabel = stable.GroupName + "/fleet"
@@ -93,7 +79,8 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet := &GameServerSet{
 		ObjectMeta: *f.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec: GameServerSetSpec{
-			Template: f.Spec.Template,
+			Template:   f.Spec.Template,
+			Scheduling: f.Spec.Scheduling,
 		},
 	}
 

@@ -4,7 +4,6 @@
 
 > Autoscaling is currently ongoing work within Agones. The work you see here is just the beginning.
 
-
 Table of Contents
 =================
 
@@ -36,6 +35,12 @@ To facilitate autoscaling, we need to combine several piece of concepts and func
 
 Allocation scheduling refers to the order in which `GameServers`, and specifically their backing `Pods` are chosen
 from across the Kubernetes cluster within a given `Fleet` when [allocation](./create_fleet.md#4-allocate-a-game-server-from-the-fleet) occurs.
+
+### Pod Scheduling
+
+Each `GameServer` is backed by a Kubernetes [`Pod`](https://kubernetes.io/docs/concepts/workloads/pods/pod/). Pod scheduling
+refers to the strategy that is in place that determines which node in the Kubernetes cluster the Pod is assigned to,
+when it is created.
 
 ## Fleet Scheduling
 
@@ -77,6 +82,15 @@ also affect `GameServer` `Pod` scheduling, and `Fleet` scale down scheduling as 
 Under the "Packed" strategy, allocation will prioritise allocating `GameServers` to nodes that are running on 
 Nodes that already have allocated `GameServers` running on them.
 
+#### Pod Scheduling Strategy
+
+Under the "Packed" strategy, Pods will be scheduled using the [`PodAffinity`](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity-beta-feature)
+with a `preferredDuringSchedulingIgnoredDuringExecution` affinity with [hostname](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#interlude-built-in-node-labels)
+topology. This attempts to group together `GameServer` Pods within as few nodes in the cluster as it can.
+
+> The default Kubernetes scheduler doesn't do a perfect job of packing, but it's a good enough job for what we need - 
+  at least at this stage. 
+
 ### Distributed
 
 ```yaml
@@ -111,3 +125,8 @@ also affect `GameServer` `Pod` scheduling, and `Fleet` scaledown scheduling as w
 
 Under the "Distributed" strategy, allocation will prioritise allocating `GameSerers` to nodes that have the least
 number of allocated `GameServers` on them.
+
+#### Pod Scheduling Strategy
+
+Under the "Distributed" strategy, `Pod` scheduling is provided by the default Kubernetes scheduler, which will attempt
+to distribute the `GameServer` `Pods` across as many nodes as possible.
