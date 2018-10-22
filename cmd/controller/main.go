@@ -40,20 +40,23 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 const (
-	sidecarFlag     = "sidecar"
-	pullSidecarFlag = "always-pull-sidecar"
-	minPortFlag     = "min-port"
-	maxPortFlag     = "max-port"
-	certFileFlag    = "cert-file"
-	keyFileFlag     = "key-file"
-	workers         = 2
-	defaultResync   = 30 * time.Second
+	sidecarImageFlag      = "sidecar-image"
+	sidecarCPURequestFlag = "sidecar-cpu-request"
+	sidecarCPULimitFlag   = "sidecar-cpu-limit"
+	pullSidecarFlag       = "always-pull-sidecar"
+	minPortFlag           = "min-port"
+	maxPortFlag           = "max-port"
+	certFileFlag          = "cert-file"
+	keyFileFlag           = "key-file"
+	workers               = 2
+	defaultResync         = 30 * time.Second
 )
 
 var (
@@ -63,6 +66,9 @@ var (
 // main starts the operator for the gameserver CRD
 func main() {
 	ctlConf := parseEnvFlags()
+	logger.WithField("version", pkg.Version).
+		WithField("ctlConf", ctlConf).Info("starting gameServer operator...")
+
 	if err := ctlConf.validate(); err != nil {
 		logger.WithError(err).Fatal("Could not create controller from environment or flags")
 	}
@@ -88,14 +94,15 @@ func main() {
 	}
 
 	health := healthcheck.NewHandler()
-	wh := webhooks.NewWebHook(ctlConf.certFile, ctlConf.keyFile)
+	wh := webhooks.NewWebHook(ctlConf.CertFile, ctlConf.KeyFile)
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	allocationMutex := &sync.Mutex{}
 
 	gsController := gameservers.NewController(wh, health, allocationMutex,
-		ctlConf.minPort, ctlConf.maxPort, ctlConf.sidecarImage, ctlConf.alwaysPullSidecar,
+		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
+		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
@@ -132,12 +139,16 @@ func parseEnvFlags() config {
 	}
 
 	base := filepath.Dir(exec)
-	viper.SetDefault(sidecarFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
+	viper.SetDefault(sidecarImageFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
+	viper.SetDefault(sidecarCPURequestFlag, "0")
+	viper.SetDefault(sidecarCPULimitFlag, "0")
 	viper.SetDefault(pullSidecarFlag, false)
 	viper.SetDefault(certFileFlag, filepath.Join(base, "certs/server.crt"))
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
 
-	pflag.String(sidecarFlag, viper.GetString(sidecarFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
+	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
+	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
+	pflag.String(sidecarCPURequestFlag, viper.GetString(sidecarCPURequestFlag), "Flag to overwrite the GameServer sidecar container's cpu request. Can also use SIDECAR_CPU_REQUEST env variable")
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
 	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
@@ -146,7 +157,9 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	runtime.Must(viper.BindEnv(sidecarFlag))
+	runtime.Must(viper.BindEnv(sidecarImageFlag))
+	runtime.Must(viper.BindEnv(sidecarCPULimitFlag))
+	runtime.Must(viper.BindEnv(sidecarCPURequestFlag))
 	runtime.Must(viper.BindEnv(pullSidecarFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
 	runtime.Must(viper.BindEnv(maxPortFlag))
@@ -154,47 +167,46 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
-	minPort := int32(viper.GetInt64(minPortFlag))
-	maxPort := int32(viper.GetInt64(maxPortFlag))
-	sidecarImage := viper.GetString(sidecarFlag)
-	alwaysPullSidecar := viper.GetBool(pullSidecarFlag)
-	keyFile := viper.GetString(keyFileFlag)
-	certFile := viper.GetString(certFileFlag)
+	request, err := resource.ParseQuantity(viper.GetString(sidecarCPURequestFlag))
+	if err != nil {
+		logger.WithError(err).Fatalf("could not parse %s", sidecarCPURequestFlag)
+	}
 
-	logger.WithField(sidecarFlag, sidecarImage).
-		WithField("minPort", minPort).
-		WithField("maxPort", maxPort).
-		WithField(keyFileFlag, keyFile).
-		WithField(certFileFlag, certFile).
-		WithField("alwaysPullSidecarImage", alwaysPullSidecar).
-		WithField("Version", pkg.Version).Info("starting gameServer operator...")
+	limit, err := resource.ParseQuantity(viper.GetString(sidecarCPULimitFlag))
+	if err != nil {
+		logger.WithError(err).Fatalf("could not parse %s", sidecarCPULimitFlag)
+	}
 
 	return config{
-		minPort:           minPort,
-		maxPort:           maxPort,
-		sidecarImage:      sidecarImage,
-		alwaysPullSidecar: alwaysPullSidecar,
-		keyFile:           keyFile,
-		certFile:          certFile,
+		MinPort:           int32(viper.GetInt64(minPortFlag)),
+		MaxPort:           int32(viper.GetInt64(maxPortFlag)),
+		SidecarImage:      viper.GetString(sidecarImageFlag),
+		SidecarCPURequest: request,
+		SidecarCPULimit:   limit,
+		AlwaysPullSidecar: viper.GetBool(pullSidecarFlag),
+		KeyFile:           viper.GetString(keyFileFlag),
+		CertFile:          viper.GetString(certFileFlag),
 	}
 }
 
 // config stores all required configuration to create a game server controller.
 type config struct {
-	minPort           int32
-	maxPort           int32
-	sidecarImage      string
-	alwaysPullSidecar bool
-	keyFile           string
-	certFile          string
+	MinPort           int32
+	MaxPort           int32
+	SidecarImage      string
+	SidecarCPURequest resource.Quantity
+	SidecarCPULimit   resource.Quantity
+	AlwaysPullSidecar bool
+	KeyFile           string
+	CertFile          string
 }
 
 // validate ensures the ctlConfig data is valid.
 func (c config) validate() error {
-	if c.minPort <= 0 || c.maxPort <= 0 {
+	if c.MinPort <= 0 || c.MaxPort <= 0 {
 		return errors.New("min Port and Max Port values are required")
 	}
-	if c.maxPort < c.minPort {
+	if c.MaxPort < c.MinPort {
 		return errors.New("max Port cannot be set less that the Min Port")
 	}
 	return nil

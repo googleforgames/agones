@@ -32,6 +32,7 @@ import (
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -707,6 +708,8 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 
 			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
 			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
+			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
+			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
 			assert.Len(t, pod.Spec.Containers[1].Env, 2, "2 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
@@ -1099,7 +1102,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	wh := webhooks.NewWebHook("", "")
 	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{},
 		10, 20, "sidecar:dev", false,
-		m.KubeClient, m.KubeInformationFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+		resource.MustParse("0.05"), resource.MustParse("0.1"), m.KubeClient, m.KubeInformationFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }
