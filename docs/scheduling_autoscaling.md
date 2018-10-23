@@ -7,14 +7,23 @@
 Table of Contents
 =================
 
-* [Fleet Autoscaling](#fleet-autoscaling)
-* [Autoscalng Concepts](#autoscalng-concepts)
-   * [Allocation Scheduling](#allocation-scheduling)
-* [Fleet Scheduling](#fleet-scheduling)
-   * [Packed](#packed)
-      * [Allocation Scheduling Strategy](#allocation-scheduling-strategy)
-   * [Distributed](#distributed)
-      * [Allocation Scheduling Stategy](#allocation-scheduling-stategy)
+   * [Scheduling and Autoscaling](#scheduling-and-autoscaling)
+   * [Table of Contents](#table-of-contents)
+      * [Fleet Autoscaling](#fleet-autoscaling)
+      * [Autoscaling Concepts](#autoscaling-concepts)
+         * [Allocation Scheduling](#allocation-scheduling)
+         * [Pod Scheduling](#pod-scheduling)
+         * [Fleet Scale Down Strategy](#fleet-scale-down-strategy)
+      * [Fleet Scheduling](#fleet-scheduling)
+         * [Packed](#packed)
+            * [Allocation Scheduling Strategy](#allocation-scheduling-strategy)
+            * [Pod Scheduling Strategy](#pod-scheduling-strategy)
+            * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-1)
+         * [Distributed](#distributed)
+            * [Allocation Scheduling Strategy](#allocation-scheduling-strategy-1)
+            * [Pod Scheduling Strategy](#pod-scheduling-strategy-1)
+            * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-2)
+
 
 Scheduling and autoscaling go hand in hand, as where in the cluster `GameServers` are provisioned
 impacts how to autoscale fleets up and down (or if you would even want to)
@@ -41,6 +50,11 @@ from across the Kubernetes cluster within a given `Fleet` when [allocation](./cr
 Each `GameServer` is backed by a Kubernetes [`Pod`](https://kubernetes.io/docs/concepts/workloads/pods/pod/). Pod scheduling
 refers to the strategy that is in place that determines which node in the Kubernetes cluster the Pod is assigned to,
 when it is created.
+
+### Fleet Scale Down Strategy
+
+Fleet Scale Down strategy refers to the order in which the `GameServers` that belong to a `Fleet` are deleted, 
+when Fleets are shrunk in size.
 
 ## Fleet Scheduling
 
@@ -74,8 +88,7 @@ for the infrastructure you use.
 It attempts to _pack_ as much as possible into the smallest set of nodes, to make
 scaling infrastructure down as easy as possible.
 
-Currently, Allocation scheduling is the only aspect this strategy affects, but in future releases it will
-also affect `GameServer` `Pod` scheduling, and `Fleet` scale down scheduling as well.
+This affects Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
 
 #### Allocation Scheduling Strategy
 
@@ -90,6 +103,11 @@ topology. This attempts to group together `GameServer` Pods within as few nodes 
 
 > The default Kubernetes scheduler doesn't do a perfect job of packing, but it's a good enough job for what we need - 
   at least at this stage. 
+
+#### Fleet Scale Down Strategy
+
+With the "Packed" strategy, Fleets will remove `Ready` `GameServers` from Nodes with the _least_ number of `Ready` and 
+`Allocated` `GameServers` on them. Attempting to empty Nodes so that they can be safely removed.
 
 ### Distributed
 
@@ -118,8 +136,7 @@ on bare metal, and the cluster size rarely changes, if at all.
 This attempts to distribute the load across the entire cluster as much as possible, to take advantage of the static
 size of the cluster.
 
-Currently, the only thing the scheduling strategy affects is Allocation scheduling, but in future releases it will
-also affect `GameServer` `Pod` scheduling, and `Fleet` scaledown scheduling as well.
+This affects Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
 
 #### Allocation Scheduling Strategy
 
@@ -130,3 +147,8 @@ number of allocated `GameServers` on them.
 
 Under the "Distributed" strategy, `Pod` scheduling is provided by the default Kubernetes scheduler, which will attempt
 to distribute the `GameServer` `Pods` across as many nodes as possible.
+
+#### Fleet Scale Down Strategy
+
+With the "Distributed" strategy, Fleets will remove `Ready` `GameServers` from Nodes with at random, to ensure
+a distributed load is maintained.

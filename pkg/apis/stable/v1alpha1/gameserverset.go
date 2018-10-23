@@ -57,7 +57,7 @@ type GameServerSetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling"`
+	Scheduling SchedulingStrategy `json:"scheduling,omitempty"`
 	// Template the GameServer template to apply for this GameServerSet
 	Template GameServerTemplateSpec `json:"template"`
 }

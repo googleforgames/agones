@@ -262,7 +262,7 @@ func TestSyncLessGameServers(t *testing.T) {
 
 	list := createGameServers(gsSet, 11)
 
-	// make some as unhealthy
+	// mark some as Allocated
 	list[0].Status.State = v1alpha1.Allocated
 	list[3].Status.State = v1alpha1.Allocated
 
@@ -301,7 +301,7 @@ func TestSyncLessGameServers(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, list2, 11)
 
-	err = c.syncLessGameSevers(gsSet, int32(-expected))
+	err = c.syncLessGameServers(gsSet, int32(-expected))
 	assert.Nil(t, err)
 
 	// subtract one, because one is already deleted
@@ -459,8 +459,9 @@ func defaultFixture() *v1alpha1.GameServerSet {
 	gsSet := &v1alpha1.GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test", UID: "1234"},
 		Spec: v1alpha1.GameServerSetSpec{
-			Replicas: 10,
-			Template: v1alpha1.GameServerTemplateSpec{},
+			Replicas:   10,
+			Scheduling: v1alpha1.Packed,
+			Template:   v1alpha1.GameServerTemplateSpec{},
 		},
 	}
 	return gsSet
