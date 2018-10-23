@@ -385,8 +385,10 @@ gcloud-e2e-test-cluster: $(ensure-build-image)
 	GCP_CLUSTER_NAME=e2e-test-cluster GCP_CLUSTER_ZONE=us-west1-c $(MAKE) gcloud-auth-cluster
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm --wait && \
-		 helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm init --service-account helm --wait
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
