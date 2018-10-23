@@ -118,7 +118,7 @@ type GameServerSpec struct {
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling"`
+	Scheduling SchedulingStrategy `json:"scheduling,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
 }

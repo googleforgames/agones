@@ -43,9 +43,15 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            scheduling:
+              type: string
+              enum:
+              - Packed
+              - Distributed
             strategy:
               properties:
                 type:
+                  type: string
                   enum:
                     - Recreate
                     - RollingUpdate

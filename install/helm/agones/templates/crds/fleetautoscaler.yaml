@@ -50,8 +50,9 @@ spec:
                 - type
               properties:
                 type:
+                  type: string
                   enum:
-                    - Buffer
+                  - Buffer
                 buffer:
                   required:
                     - maxReplicas
