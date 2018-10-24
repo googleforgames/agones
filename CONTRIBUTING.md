@@ -52,6 +52,11 @@ build system.
 See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
 how to edit and expand the build process.
 
+## Becoming an Approver on Agones
+
+If you are interested in becoming an Approver on the Agones project and getting commit access to the
+repository, we have a [community membership guide](./docs/governance/community_membership.md), that outlines the process.
+
 ### Additional Resources
 
 #### Extending Kubernetes
