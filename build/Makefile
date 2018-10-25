@@ -191,7 +191,7 @@ build-controller-binary: $(ensure-build-image)
 # use LINT_TIMEOUT to manipulate the linter timeout
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	docker run -t -e "TERM=xterm-256color" --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
 # Build the image for the gameserver controller
