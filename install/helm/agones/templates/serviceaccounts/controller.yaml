@@ -37,7 +37,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["events"]
-  verbs: ["create"]
+  verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["create", "delete", "list", "watch"]
