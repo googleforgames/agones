@@ -790,6 +790,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
       labels:
         stable.agones.dev/role: controller
         app: agones

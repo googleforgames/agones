@@ -22,6 +22,7 @@ agones:
   controller:
     resources: {}
     generateTLS: true
+    safeToEvict: false
     healthCheck:
       http:
         port: 8080

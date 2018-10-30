@@ -352,13 +352,18 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	pod.ObjectMeta.Annotations[GameServerContainerAnnotation] = gs.Spec.Container
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
+
+	if gs.Spec.Scheduling == Packed {
+		// This means that the autoscaler cannot remove the Node that this Pod is on.
+		// (and evict the Pod in the process)
+		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
+	}
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod
 // this sets the a PreferredDuringSchedulingIgnoredDuringExecution for GameServer
 // pods to a host topology. Basically doing a half decent job of packing GameServer
 // pods together.
-// TODO: update the scheduling doc
 func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 	if gs.Spec.Scheduling == Packed {
 		if pod.Spec.Affinity == nil {

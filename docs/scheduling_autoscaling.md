@@ -7,34 +7,56 @@
 Table of Contents
 =================
 
-   * [Scheduling and Autoscaling](#scheduling-and-autoscaling)
-   * [Table of Contents](#table-of-contents)
-      * [Fleet Autoscaling](#fleet-autoscaling)
-      * [Autoscaling Concepts](#autoscaling-concepts)
-         * [Allocation Scheduling](#allocation-scheduling)
-         * [Pod Scheduling](#pod-scheduling)
-         * [Fleet Scale Down Strategy](#fleet-scale-down-strategy)
-      * [Fleet Scheduling](#fleet-scheduling)
-         * [Packed](#packed)
-            * [Allocation Scheduling Strategy](#allocation-scheduling-strategy)
-            * [Pod Scheduling Strategy](#pod-scheduling-strategy)
-            * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-1)
-         * [Distributed](#distributed)
-            * [Allocation Scheduling Strategy](#allocation-scheduling-strategy-1)
-            * [Pod Scheduling Strategy](#pod-scheduling-strategy-1)
-            * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-2)
-
+  * [Kubernetes Cluster Autoscaler](#kubernetes-cluster-autoscaler)
+     * [Google Kubernetes Engine](#google-kubernetes-engine)
+     * [Azure Kubernetes Service](#azure-kubernetes-service)
+  * [Fleet Autoscaling](#fleet-autoscaling)
+  * [Autoscaling Concepts](#autoscaling-concepts)
+     * [Allocation Scheduling](#allocation-scheduling)
+     * [Pod Scheduling](#pod-scheduling)
+     * [Fleet Scale Down Strategy](#fleet-scale-down-strategy)
+  * [Fleet Scheduling](#fleet-scheduling)
+     * [Packed](#packed)
+        * [Allocation Scheduling Strategy](#allocation-scheduling-strategy)
+        * [Pod Scheduling Strategy](#pod-scheduling-strategy)
+        * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-1)
+     * [Distributed](#distributed)
+        * [Allocation Scheduling Strategy](#allocation-scheduling-strategy-1)
+        * [Pod Scheduling Strategy](#pod-scheduling-strategy-1)
+        * [Fleet Scale Down Strategy](#fleet-scale-down-strategy-2)
 
 Scheduling and autoscaling go hand in hand, as where in the cluster `GameServers` are provisioned
 impacts how to autoscale fleets up and down (or if you would even want to)
 
+## Cluster Autoscaler
+
+Kubernetes has a [cluster node autoscaler that works with a wide variety of cloud providers](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler).
+
+The default scheduling strategy (`Packed`) is designed to work with the Kubernetes autoscaler out of the box.
+
+The autoscaler will automatically add Nodes to the cluster when `GameServers` don't have room to be scheduled on the
+clusters, and then scale down when there are empty Nodes with no `GameServers` running on them.
+
+This means that scaling `Fleets` up and down can be used to control the size of the cluster, as the cluster autoscaler
+will adjust the size of the cluster to match the resource needs of one or more `Fleets` running on it.
+
+To enable and configure autoscaling on your cloud provider, check their [connector implementation](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler/cloudprovider),
+or their cloud specific documentation.
+
+### Google Kubernetes Engine
+* [Administering Clusters: Autoscaling a Cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler)
+* [Cluster Autoscaler](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler)
+
+### Azure Kubernetes Service
+* [Cluster Autoscaler on Azure Kubernetes Service (AKS) - Preview](https://docs.microsoft.com/en-us/azure/aks/autoscaler)
+
 ## Fleet Autoscaling
 
-Fleet autoscaling is currently the only type of autoscaling that exists in Agones. It is also only available as a simple
+Fleet autoscaling is the only type of autoscaling that exists in Agones. It is currently only available as a simple
 buffer autoscaling strategy. Have a look at the [Create a Fleet Autoscaler](create_fleetautoscaler.md) quickstart,
 and the [Fleet Autoscaler Specification](fleetautoscaler_spec.md) for details.
 
-Node scaling, and more sophisticated fleet autoscaling will be coming in future releases ([design](https://github.com/GoogleCloudPlatform/agones/issues/368))
+More sophisticated fleet autoscaling will be coming in future releases.
 
 ## Autoscaling Concepts
 
@@ -88,7 +110,13 @@ for the infrastructure you use.
 It attempts to _pack_ as much as possible into the smallest set of nodes, to make
 scaling infrastructure down as easy as possible.
 
-This affects Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
+This affects the Cluster autoscaler, Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
+
+#### Cluster Autoscaler
+
+To ensure that the Cluster Autoscaler doesn't attempt to evict and move `GameServer` `Pods` onto new Nodes during
+gameplay, Agones adds the annotation [`"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"`](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node)
+to the backing Pod.
 
 #### Allocation Scheduling Strategy
 
@@ -137,6 +165,10 @@ This attempts to distribute the load across the entire cluster as much as possib
 size of the cluster.
 
 This affects Allocation Scheduling, Pod Scheduling and Fleet Scale Down Scheduling.
+
+#### Cluster Autoscaler
+
+Since this strategy is not aimed at clusters that autoscale, this strategy does nothing for the cluster autoscaler.
 
 #### Allocation Scheduling Strategy
 
