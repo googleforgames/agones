@@ -285,6 +285,43 @@ func TestGameServerPod(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 
+func TestGameServerPodObjectMeta(t *testing.T) {
+	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
+		Spec: GameServerSpec{Container: "goat"}}
+
+	f := func(t *testing.T, gs *GameServer, pod *corev1.Pod) {
+		assert.Equal(t, gs.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
+		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
+		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+		assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+		assert.True(t, metav1.IsControlledBy(pod, gs))
+	}
+
+	t.Run("packed", func(t *testing.T) {
+		gs := fixture.DeepCopy()
+		gs.Spec.Scheduling = Packed
+		pod := &corev1.Pod{}
+
+		gs.podObjectMeta(pod)
+		f(t, gs, pod)
+
+		assert.Equal(t, "false", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
+	})
+
+	t.Run("distributed", func(t *testing.T) {
+		gs := fixture.DeepCopy()
+		gs.Spec.Scheduling = Distributed
+		pod := &corev1.Pod{}
+
+		gs.podObjectMeta(pod)
+		f(t, gs, pod)
+
+		assert.Equal(t, "", pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"])
+	})
+}
+
 func TestGameServerPodScheduling(t *testing.T) {
 	fixture := &corev1.Pod{Spec: corev1.PodSpec{}}
 

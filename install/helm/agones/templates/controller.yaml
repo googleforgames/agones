@@ -35,8 +35,9 @@ spec:
     type: Recreate
   template:
     metadata:
-{{- if .Values.agones.controller.generateTLS }}
       annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
+{{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
       labels:
