@@ -44,5 +44,10 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            scheduling:
+              type: string
+              enum:
+              - Packed
+              - Distributed
             template:
               {{- include "gameserver.validation" . | indent 14 }}

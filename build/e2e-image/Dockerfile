@@ -1,12 +1,12 @@
 FROM gcr.io/cloud-builders/gcloud-slim
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc make python jq zip && \
+    apt-get install -y wget psmisc make gcc python jq zip && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.10.3
+ENV GO_VERSION=1.11.1
 ENV GOPATH /go
 RUN wget -q https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
@@ -20,7 +20,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECT
     mv ./kubectl /usr/local/bin/kubectl
 
 # install Helm package manager
-ENV HELM_VER 2.9.1
+ENV HELM_VER 2.11.0
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \

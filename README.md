@@ -73,6 +73,9 @@ Documentation and usage guides on how to develop and host dedicated game servers
 - [Scheduling and Autoscaling](./docs/scheduling_autoscaling.md)
 - [Limiting CPU/Memory](./docs/limiting_resources.md)
 
+### Third Party Content
+- [Videos and Presentation](./docs/videos_presentations.md)
+
 ## Get involved
 
 - [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWQ2ZmY1Mjc4ZDQ4NDJhOGYxYTY2NTY0NjUwNjliYzVhMWFjYjMxM2RlMjg3NGU0M2E0YTYzNDIxNDMyZGNjMjU)

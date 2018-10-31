@@ -49,7 +49,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECT
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
 
 # install Helm package manager
-ENV HELM_VER 2.9.1
+ENV HELM_VER 2.11.0
 ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -69,8 +69,7 @@ RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u golang.org/x/tools/cmd/goimports
 
 # install golang-ci linter
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | \
-    bash -s -- -b $GOPATH/bin v1.10.2
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.10.2
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \

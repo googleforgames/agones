@@ -97,7 +97,6 @@ func NewPortAllocator(minPort, maxPort int32,
 		DeleteFunc: pa.syncDeleteGameServer,
 	})
 
-	// Experimental support for node adding/removal
 	pa.nodeInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			node := obj.(*corev1.Node)

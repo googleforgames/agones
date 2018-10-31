@@ -191,7 +191,7 @@ build-controller-binary: $(ensure-build-image)
 # use LINT_TIMEOUT to manipulate the linter timeout
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	docker run -t -e "TERM=xterm-256color" --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
 # Build the image for the gameserver controller
@@ -325,7 +325,7 @@ do-release:
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 	$(MAKE) push-chart
-	$(MAKE) gcloud-auth-docker push VERSION=$(RELEASE_VERSION)
+	$(MAKE) gcloud-auth-docker push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
@@ -385,8 +385,10 @@ gcloud-e2e-test-cluster: $(ensure-build-image)
 	GCP_CLUSTER_NAME=e2e-test-cluster GCP_CLUSTER_ZONE=us-west1-c $(MAKE) gcloud-auth-cluster
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm --wait && \
-		 helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm init --service-account helm --wait
+	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
