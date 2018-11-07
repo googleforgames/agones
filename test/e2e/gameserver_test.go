@@ -115,6 +115,32 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations["stable.agones.dev/sdk-timestamp"])
 }
 
+func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
+	t.Parallel()
+	nodes, err := framework.KubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	assert.Nil(t, err)
+
+	// gate
+	assert.True(t, len(nodes.Items) > 0)
+
+	gs := defaultGameServer()
+	gs.Spec.Ports[0].HostPort = 7515
+	gs.Spec.Ports[0].PortPolicy = v1alpha1.Static
+
+	gameServers := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs)
+
+	for range nodes.Items {
+		_, err := gameServers.Create(gs.DeepCopy())
+		assert.Nil(t, err)
+	}
+
+	newGs, err := gameServers.Create(gs.DeepCopy())
+	assert.Nil(t, err)
+
+	_, err = framework.WaitForGameServerState(newGs, v1alpha1.Unhealthy, 10*time.Second)
+	assert.Nil(t, err)
+}
+
 func defaultGameServer() *v1alpha1.GameServer {
 	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
 		Spec: v1alpha1.GameServerSpec{

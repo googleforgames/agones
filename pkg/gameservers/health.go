@@ -15,6 +15,8 @@
 package gameservers
 
 import (
+	"strings"
+
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -39,8 +41,8 @@ import (
 )
 
 // HealthController watches Pods, and applies
-// an Unhealthy state if the GameServer main container exits when in
-// a Ready state
+// an Unhealthy state if certain pods crash, or can't be assigned a port, and other
+// similar type conditions.
 type HealthController struct {
 	logger           *logrus.Entry
 	podSynced        cache.InformerSynced
@@ -75,15 +77,33 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
 			if owner := metav1.GetControllerOf(pod); owner != nil && owner.Kind == "GameServer" {
-				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.failedContainer(pod) {
+				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.isUnhealthy(pod) {
 					key := pod.ObjectMeta.Namespace + "/" + owner.Name
-					hc.logger.WithField("key", key).Info("GameServer container has terminated")
 					hc.workerqueue.Enqueue(cache.ExplicitKey(key))
 				}
 			}
 		},
 	})
 	return hc
+}
+
+// isUnhealthy returns if the Pod event is going
+// to cause the GameServer to become Unhealthy
+func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
+	return hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod)
+}
+
+// unschedulableWithNoFreePorts checks if the reason the Pod couldn't be scheduled
+// was because there weren't any free ports in the range specified
+func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodScheduled && cond.Reason == corev1.PodReasonUnschedulable {
+			if strings.Contains(cond.Message, "free ports") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // failedContainer checks each container, and determines if there was a failed
@@ -96,7 +116,6 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 		}
 	}
 	return false
-
 }
 
 // Run processes the rate limited queue.
@@ -126,7 +145,23 @@ func (hc *HealthController) syncGameServer(key string) error {
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
 	}
 
-	if gs.Status.State == v1alpha1.Ready {
+	var reason string
+	unhealthy := false
+
+	switch gs.Status.State {
+
+	case v1alpha1.Starting:
+		hc.logger.WithField("key", key).Info("GameServer cannot start on this port")
+		unhealthy = true
+		reason = "No nodes have free ports for the allocated ports"
+
+	case v1alpha1.Ready:
+		hc.logger.WithField("key", key).Info("GameServer container has terminated")
+		unhealthy = true
+		reason = "GameServer container terminated"
+	}
+
+	if unhealthy {
 		hc.logger.WithField("gs", gs).Infof("Marking GameServer as Unhealthy")
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = v1alpha1.Unhealthy
@@ -135,7 +170,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 			return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)
 		}
 
-		hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), "GameServer container terminated")
+		hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), reason)
 	}
 
 	return nil
