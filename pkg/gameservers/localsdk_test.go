@@ -15,6 +15,9 @@
 package gameservers
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -24,14 +27,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func TestLocal(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
-	l := NewLocalSDKServer(nil)
+	l, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
 
-	_, err := l.Ready(ctx, e)
+	_, err = l.Ready(ctx, e)
 	assert.Nil(t, err, "Ready should not error")
 
 	_, err = l.Shutdown(ctx, e)
@@ -63,7 +68,12 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	e := &sdk.Empty{}
 
 	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
-	l := NewLocalSDKServer(fixture.DeepCopy())
+	path, err := gsToTmpFile(fixture.DeepCopy())
+	assert.Nil(t, err)
+
+	l, err := NewLocalSDKServer(path)
+	assert.Nil(t, err)
+
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
@@ -72,6 +82,8 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 
 // nolint:dupl
 func TestLocalSDKServerSetLabel(t *testing.T) {
+	t.Parallel()
+
 	fixtures := map[string]struct {
 		gs *v1alpha1.GameServer
 	}{
@@ -90,16 +102,35 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			ctx := context.Background()
 			e := &sdk.Empty{}
-			l := NewLocalSDKServer(v.gs)
+			path, err := gsToTmpFile(v.gs)
+			assert.Nil(t, err)
+
+			l, err := NewLocalSDKServer(path)
+			assert.Nil(t, err)
 			kv := &sdk.KeyValue{Key: "foo", Value: "bar"}
 
 			stream := newGameServerMockStream()
+			wg := sync.WaitGroup{}
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
 
-			_, err := l.SetLabel(ctx, kv)
+			// make sure length of l.updateObservers is at least 1
+			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+				ret := false
+				l.updateObservers.Range(func(_, _ interface{}) bool {
+					ret = true
+					return false
+				})
+
+				return ret, nil
+			})
+			assert.Nil(t, err)
+
+			_, err = l.SetLabel(ctx, kv)
 			assert.Nil(t, err)
 
 			gs, err := l.GetGameServer(ctx, e)
@@ -109,15 +140,19 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 			select {
 			case msg := <-stream.msgs:
 				assert.Equal(t, msg.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
-			case <-time.After(2 * l.watchPeriod):
-				assert.FailNow(t, "timeout on receiving messages")
+			case <-time.After(10 * time.Second):
+				assert.Fail(t, "timeout on receiving messages")
 			}
+
+			l.Close()
+			wg.Wait()
 		})
 	}
 }
 
 // nolint:dupl
 func TestLocalSDKServerSetAnnotation(t *testing.T) {
+	t.Parallel()
 
 	fixtures := map[string]struct {
 		gs *v1alpha1.GameServer
@@ -137,16 +172,36 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			ctx := context.Background()
 			e := &sdk.Empty{}
-			l := NewLocalSDKServer(v.gs)
+			path, err := gsToTmpFile(v.gs)
+			assert.Nil(t, err)
+
+			l, err := NewLocalSDKServer(path)
+			assert.Nil(t, err)
+
 			kv := &sdk.KeyValue{Key: "bar", Value: "foo"}
 
 			stream := newGameServerMockStream()
+			wg := sync.WaitGroup{}
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
 
-			_, err := l.SetAnnotation(ctx, kv)
+			// make sure length of l.updateObservers is at least 1
+			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+				ret := false
+				l.updateObservers.Range(func(_, _ interface{}) bool {
+					ret = true
+					return false
+				})
+
+				return ret, nil
+			})
+			assert.Nil(t, err)
+
+			_, err = l.SetAnnotation(ctx, kv)
 			assert.Nil(t, err)
 
 			gs, err := l.GetGameServer(ctx, e)
@@ -156,9 +211,12 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 			select {
 			case msg := <-stream.msgs:
 				assert.Equal(t, msg.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
-			case <-time.After(2 * l.watchPeriod):
+			case <-time.After(10 * time.Second):
 				assert.FailNow(t, "timeout on receiving messages")
 			}
+
+			l.Close()
+			wg.Wait()
 		})
 	}
 }
@@ -166,9 +224,13 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
+	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
+	path, err := gsToTmpFile(fixture)
+	assert.Nil(t, err)
+
 	e := &sdk.Empty{}
-	l := NewLocalSDKServer(nil)
-	l.watchPeriod = time.Second
+	l, err := NewLocalSDKServer(path)
+	assert.Nil(t, err)
 
 	stream := newGameServerMockStream()
 	go func() {
@@ -176,12 +238,33 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 		assert.Nil(t, err)
 	}()
 
-	for i := 0; i < 3; i++ {
-		select {
-		case msg := <-stream.msgs:
-			assert.Equal(t, defaultGs, msg)
-		case <-time.After(2 * l.watchPeriod):
-			assert.FailNow(t, "timeout on receiving messages")
-		}
+	select {
+	case <-stream.msgs:
+		assert.Fail(t, "should not get a message")
+	case <-time.After(time.Second):
 	}
+
+	fixture.ObjectMeta.Annotations = map[string]string{"foo": "bar"}
+	j, err := json.Marshal(fixture)
+	assert.Nil(t, err)
+
+	err = ioutil.WriteFile(path, j, os.ModeDevice)
+	assert.Nil(t, err)
+
+	select {
+	case msg := <-stream.msgs:
+		assert.Equal(t, "bar", msg.ObjectMeta.Annotations["foo"])
+	case <-time.After(10 * time.Second):
+		assert.Fail(t, "timeout getting watch")
+	}
+}
+
+func gsToTmpFile(gs *v1alpha1.GameServer) (string, error) {
+	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
+	if err != nil {
+		return file.Name(), err
+	}
+
+	err = json.NewEncoder(file).Encode(gs)
+	return file.Name(), err
 }

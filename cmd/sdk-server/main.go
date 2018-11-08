@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"agones.dev/agones/pkg"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
@@ -36,7 +35,6 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -134,40 +132,24 @@ func main() {
 }
 
 func registerLocal(grpcServer *grpc.Server, ctlConf config) error {
-	var local *gameservers.LocalSDKServer
+	filePath := ""
+
 	if ctlConf.LocalFile != "" {
-		path, err := filepath.Abs(ctlConf.LocalFile)
+		var err error
+		filePath, err = filepath.Abs(ctlConf.LocalFile)
 		if err != nil {
 			return err
 		}
 
-		if _, err = os.Stat(path); os.IsNotExist(err) {
-			return errors.Errorf("Could not find file: %s", path)
+		if _, err = os.Stat(filePath); os.IsNotExist(err) {
+			return errors.Errorf("Could not find file: %s", filePath)
 		}
-
-		logger.WithField("path", path).Info("Reading GameServer configuration")
-		reader, err := os.Open(path) // nolint: gosec
-		if err != nil {
-			return err
-		}
-
-		var gs v1alpha1.GameServer
-		// 4096 is the number of bytes the YAMLOrJSONDecoder goes looking
-		// into the file to determine if it's JSON or YAML
-		// (JSON == has whitespace followed by an open brace).
-		// The Kubernetes uses 4096 bytes as its default, so that's what we'll
-		// use as well.
-		// https://github.com/kubernetes/kubernetes/blob/master/plugin/pkg/admission/podnodeselector/admission.go#L86
-		decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
-		err = decoder.Decode(&gs)
-		if err != nil {
-			return err
-		}
-		local = gameservers.NewLocalSDKServer(&gs)
-	} else {
-		local = gameservers.NewLocalSDKServer(nil)
 	}
 
+	local, err := gameservers.NewLocalSDKServer(filePath)
+	if err != nil {
+		return err
+	}
 	sdk.RegisterSDKServer(grpcServer, local)
 
 	return nil
