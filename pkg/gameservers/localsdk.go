@@ -16,14 +16,17 @@ package gameservers
 
 import (
 	"io"
+	"os"
 	"sync"
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
+	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 var (
@@ -52,23 +55,52 @@ var (
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
 type LocalSDKServer struct {
+	gsMutex         sync.RWMutex
 	gs              *sdk.GameServer
-	watchPeriod     time.Duration
 	update          chan struct{}
 	updateObservers sync.Map
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
-func NewLocalSDKServer(gs *v1alpha1.GameServer) *LocalSDKServer {
+// TODO: update all the tests at a later date
+func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
+		gsMutex:         sync.RWMutex{},
 		gs:              defaultGs,
-		watchPeriod:     5 * time.Second,
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
 	}
 
-	if gs != nil {
-		l.gs = convert(gs)
+	if filePath != "" {
+		err := l.setGameServerFromFilePath(filePath)
+		if err != nil {
+			return l, err
+		}
+
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			return l, err
+		}
+
+		go func() {
+			for event := range watcher.Events {
+				if event.Op == fsnotify.Write {
+					logrus.WithField("event", event).Info("File has been changed!")
+					err := l.setGameServerFromFilePath(filePath)
+					if err != nil {
+						logrus.WithError(err).Error("error setting GameServer from file")
+						continue
+					}
+					logrus.Info("Sending watched GameServer!")
+					l.update <- struct{}{}
+				}
+			}
+		}()
+
+		err = watcher.Add(filePath)
+		if err != nil {
+			logrus.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
+		}
 	}
 
 	go func() {
@@ -81,7 +113,7 @@ func NewLocalSDKServer(gs *v1alpha1.GameServer) *LocalSDKServer {
 		}
 	}()
 
-	return l
+	return l, nil
 }
 
 // Ready logs that the Ready request has been received
@@ -114,6 +146,8 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 // SetLabel applies a Label to the backing GameServer metadata
 func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	logrus.WithField("values", kv).Info("Setting label")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
 
 	if l.gs.ObjectMeta == nil {
 		l.gs.ObjectMeta = &sdk.GameServer_ObjectMeta{}
@@ -130,6 +164,8 @@ func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 // SetAnnotation applies a Annotation to the backing GameServer metadata
 func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
 	logrus.WithField("values", kv).Info("Setting annotation")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
 
 	if l.gs.ObjectMeta == nil {
 		l.gs.ObjectMeta = &sdk.GameServer_ObjectMeta{}
@@ -146,6 +182,8 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 // GetGameServer returns a dummy game server.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	logrus.Info("getting GameServer details")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
 	return l.gs, nil
 }
 
@@ -156,29 +194,56 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 
 	defer func() {
 		l.updateObservers.Delete(observer)
-		close(observer)
 	}()
 
 	l.updateObservers.Store(observer, true)
 
-	// on connect, send 3 events, as advertised
-	go func() {
-		times := 3
-
-		for i := 0; i < times; i++ {
-			logrus.Info("Sending watched GameServer!")
-			l.update <- struct{}{}
-			time.Sleep(l.watchPeriod)
-		}
-	}()
-
 	for range observer {
+		l.gsMutex.RLock()
 		err := stream.Send(l.gs)
+		l.gsMutex.RUnlock()
 		if err != nil {
 			logrus.WithError(err).Error("error sending gameserver")
 			return err
 		}
 	}
 
+	return nil
+}
+
+// Close tears down all the things
+func (l *LocalSDKServer) Close() {
+	l.updateObservers.Range(func(observer, _ interface{}) bool {
+		close(observer.(chan struct{}))
+		return true
+	})
+}
+
+func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
+	logrus.WithField("filePath", filePath).Info("Reading GameServer configuration")
+
+	reader, err := os.Open(filePath) // nolint: gosec
+	defer reader.Close()             // nolint: megacheck
+
+	if err != nil {
+		return err
+	}
+
+	var gs v1alpha1.GameServer
+	// 4096 is the number of bytes the YAMLOrJSONDecoder goes looking
+	// into the file to determine if it's JSON or YAML
+	// (JSON == has whitespace followed by an open brace).
+	// The Kubernetes uses 4096 bytes as its default, so that's what we'll
+	// use as well.
+	// https://github.com/kubernetes/kubernetes/blob/master/plugin/pkg/admission/podnodeselector/admission.go#L86
+	decoder := yaml.NewYAMLOrJSONDecoder(reader, 4096)
+	err = decoder.Decode(&gs)
+	if err != nil {
+		return err
+	}
+
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+	l.gs = convert(&gs)
 	return nil
 }
