@@ -50,28 +50,16 @@ include_directories(
 
 # Make sure we build gRPC before we build Agones
 add_dependencies(${PROJECT_NAME} ${GRPC_TARGET_NAME})
+
 # gRPC dependency libraries
 set(GRPC_LIBRARIES
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libgflags_nothreads.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libbenchmark.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libprotobuf.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libprotoc.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libprotobuf-lite.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libcares.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libgflags.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/lib/libz.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libaddress_sorting.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgpr.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc++_cronet.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc++.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc_cronet.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc_plugin_support.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc++_unsecure.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc.a
   ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc_unsecure.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/third_party/boringssl/decrepit/libdecrepit.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/third_party/boringssl/crypto/libcrypto.a
-  ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/third_party/boringssl/ssl/libssl.a
 )
 
 # Link against grpc dependencies
