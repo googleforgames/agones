@@ -365,16 +365,13 @@ func (c *Controller) syncGameServerPortAllocationState(gs *v1alpha1.GameServer) 
 		return gs, nil
 	}
 
-	gsCopy, err := c.portAllocator.Allocate(gs.DeepCopy())
-	if err != nil {
-		return gsCopy, errors.Wrapf(err, "error allocating port for GameServer %s", gsCopy.Name)
-	}
+	gsCopy := c.portAllocator.Allocate(gs.DeepCopy())
 
 	gsCopy.Status.State = v1alpha1.Creating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
 	c.logger.WithField("gs", gsCopy).Info("Syncing Port Allocation State")
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
 		// back in the pool, as it will get retried on the next pass
