@@ -114,29 +114,16 @@ type FleetAutoscalerStatus struct {
 	ScalingLimited bool `json:"scalingLimited"`
 }
 
-// ValidateUpdate validates when an update occurs
-func (fas *FleetAutoscaler) ValidateUpdate(new *FleetAutoscaler, causes []metav1.StatusCause) []metav1.StatusCause {
-	if fas.Spec.FleetName != new.Spec.FleetName {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "fleetName",
-			Message: "fleetName cannot be updated",
-		})
-	}
-
-	return new.ValidateAutoScalingSettings(causes)
-}
-
-// ValidateAutoScalingSettings validates the FleetAutoscaler scaling settings
-func (fas *FleetAutoscaler) ValidateAutoScalingSettings(causes []metav1.StatusCause) []metav1.StatusCause {
+// Validate validates the FleetAutoscaler scaling settings
+func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.StatusCause {
 	if fas.Spec.Policy.Type == BufferPolicyType {
-		causes = fas.Spec.Policy.Buffer.ValidateAutoScalingBufferPolicy(causes)
+		causes = fas.Spec.Policy.Buffer.ValidateBufferPolicy(causes)
 	}
 	return causes
 }
 
-// ValidateAutoScalingBufferPolicy validates the FleetAutoscaler Buffer policy settings
-func (b *BufferPolicy) ValidateAutoScalingBufferPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+// ValidateBufferPolicy validates the FleetAutoscaler Buffer policy settings
+func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
 	if b == nil {
 		return append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,

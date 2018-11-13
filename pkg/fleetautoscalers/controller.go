@@ -30,7 +30,6 @@ import (
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
@@ -90,8 +89,8 @@ func NewController(
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
 	kind := stablev1alpha1.Kind("FleetAutoscaler")
-	wh.AddHandler("/mutate", kind, admv1beta1.Create, c.creationMutationHandler)
-	wh.AddHandler("/validate", kind, admv1beta1.Update, c.mutationValidationHandler)
+	wh.AddHandler("/validate", kind, admv1beta1.Create, c.validationHandler)
+	wh.AddHandler("/validate", kind, admv1beta1.Update, c.validationHandler)
 
 	fasInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -120,10 +119,10 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	return nil
 }
 
-// creationMutationHandler will intercept when a FleetAutoscaler is created, and attach it to the requested Fleet
-// assuming that it exists. If not, it will reject the AdmissionReview.
-func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("creationMutationHandler")
+// validationHandler will intercept when a FleetAutoscaler is created, and
+// validate its settings.
+func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("validationHandler")
 	obj := review.Request.Object
 	fas := &stablev1alpha1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
@@ -132,7 +131,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	}
 
 	var causes []metav1.StatusCause
-	causes = fas.ValidateAutoScalingSettings(causes)
+	causes = fas.Validate(causes)
 	if len(causes) != 0 {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
@@ -143,99 +142,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		}
 		review.Response.Result = &metav1.Status{
 			Status:  metav1.StatusFailure,
-			Message: "FleetAutoscaler creation is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
-		return review, nil
-	}
-
-	// When being called from the API the fas.ObjectMeta.Namespace isn't populated
-	// (whereas it is from kubectl). So make sure to pull the namespace from the review
-	fleet, err := c.fleetLister.Fleets(review.Request.Namespace).Get(fas.Spec.FleetName)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			review.Response.Allowed = false
-			review.Response.Result = &metav1.Status{
-				Status:  metav1.StatusFailure,
-				Reason:  metav1.StatusReasonInvalid,
-				Message: "Invalid FleetAutoscaler",
-				Details: &metav1.StatusDetails{
-					Name:  review.Request.Name,
-					Group: review.Request.Kind.Group,
-					Kind:  review.Request.Kind.Kind,
-					Causes: []metav1.StatusCause{
-						{Type: metav1.CauseTypeFieldValueNotFound,
-							Message: fmt.Sprintf("Could not find fleet %s in namespace %s", fas.Spec.FleetName, review.Request.Namespace),
-							Field:   "fleetName"}},
-				},
-			}
-			return review, nil
-		}
-		return review, errors.Wrapf(err, "error retrieving fleet %s", fas.Name)
-	}
-
-	// Attach to the fleet
-	// When a Fleet is deleted, the FleetAutoscaler should go with it
-	ref := metav1.NewControllerRef(fleet, stablev1alpha1.SchemeGroupVersion.WithKind("Fleet"))
-	fas.ObjectMeta.OwnerReferences = append(fas.ObjectMeta.OwnerReferences, *ref)
-
-	// This event is relevant for both fleet and autoscaler, so we log it to both queues
-	c.recorder.Eventf(fleet, corev1.EventTypeNormal, "CreatingFleetAutoscaler", "Attached FleetAutoscaler %s to fleet %s", fas.ObjectMeta.Name, fas.Spec.FleetName)
-	c.recorder.Eventf(fas, corev1.EventTypeNormal, "CreatingFleetAutoscaler", "Attached FleetAutoscaler %s to fleet %s", fas.ObjectMeta.Name, fas.Spec.FleetName)
-
-	newFS, err := json.Marshal(fas)
-	if err != nil {
-		return review, errors.Wrapf(err, "error marshalling FleetAutoscaler %s to json", fas.ObjectMeta.Name)
-	}
-
-	patch, err := jsonpatch.CreatePatch(obj.Raw, newFS)
-	if err != nil {
-		return review, errors.Wrapf(err, "error creating patch for FleetAutoscaler %s", fas.ObjectMeta.Name)
-	}
-
-	json, err := json.Marshal(patch)
-	if err != nil {
-		return review, errors.Wrapf(err, "error creating json for patch for FleetAutoscaler %s", fas.ObjectMeta.Name)
-	}
-
-	c.logger.WithField("fas", fas.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
-
-	pt := admv1beta1.PatchTypeJSONPatch
-	review.Response.PatchType = &pt
-	review.Response.Patch = json
-
-	return review, nil
-}
-
-// mutationValidationHandler stops edits from happening to a
-// FleetAutoscaler fleetName value
-func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("mutationValidationHandler")
-
-	newFS := &stablev1alpha1.FleetAutoscaler{}
-	oldFS := &stablev1alpha1.FleetAutoscaler{}
-
-	if err := json.Unmarshal(review.Request.Object.Raw, newFS); err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling new FleetAutoscaler json: %s", review.Request.Object.Raw)
-	}
-
-	if err := json.Unmarshal(review.Request.OldObject.Raw, oldFS); err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling old FleetAutoscaler json: %s", review.Request.Object.Raw)
-	}
-
-	causes := oldFS.ValidateUpdate(newFS, nil)
-	if len(causes) != 0 {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
-		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "FleetAutoscaler update is invalid",
+			Message: "FleetAutoscaler is invalid",
 			Reason:  metav1.StatusReasonInvalid,
 			Details: &details,
 		}
@@ -270,36 +177,36 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 	fleet, err := c.fleetLister.Fleets(namespace).Get(fas.Spec.FleetName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithError(err).WithField("fleetAutoscalerName", fas.Name).
-				WithField("fleetName", fas.Spec.FleetName).
+			logrus.WithError(err).WithField("fleetAutoscaler", fas.Name).
+				WithField("fleet", fas.Spec.FleetName).
 				WithField("namespace", namespace).
 				Warn("Could not find fleet for autoscaler. Skipping.")
-			return errors.Wrapf(err, "fleet %s not found in namespace %s", fas.Spec.FleetName, namespace)
+
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "FailedGetFleet",
+				"could not fetch fleet: %s", fas.Spec.FleetName)
+
+			// don't retry. Pick it up next sync.
+			err = nil
 		}
-		result := errors.Wrapf(err, "error retrieving fleet %s from namespace %s", fas.Spec.FleetName, namespace)
-		err := c.updateStatusUnableToScale(fas)
-		if err != nil {
-			c.logger.WithError(err).WithField("fleetAutoscalerName", fas.Name).
-				Error("Failed to update FleetAutoscaler status")
+
+		if err := c.updateStatusUnableToScale(fas); err != nil {
+			return err
 		}
-		return result
+
+		return err
 	}
 
 	currentReplicas := fleet.Status.Replicas
 	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet)
 	if err != nil {
-		result := errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
-		err := c.updateStatusUnableToScale(fas)
-		if err != nil {
-			c.logger.WithError(err).WithField("fleetAutoscalerName", fas.Name).
-				Error("Failed to update FleetAutoscaler status")
+		if err := c.updateStatusUnableToScale(fas); err != nil {
+			return err
 		}
-		return result
+		return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 	}
 
 	// Scale the fleet to the new size
-	err = c.scaleFleet(fas, fleet, desiredReplicas)
-	if err != nil {
+	if err = c.scaleFleet(fas, fleet, desiredReplicas); err != nil {
 		return errors.Wrapf(err, "error autoscaling fleet %s to %d replicas", fas.Spec.FleetName, desiredReplicas)
 	}
 
@@ -336,6 +243,10 @@ func (c *Controller) updateStatus(fas *stablev1alpha1.FleetAutoscaler, currentRe
 	}
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
+		if scalingLimited {
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "ScalingLimited", "Scaling fleet %s was limited to maximum size of %d", fas.Spec.FleetName, desiredReplicas)
+		}
+
 		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).Update(fasCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating status for fleetautoscaler %s", fas.ObjectMeta.Name)
