@@ -160,6 +160,15 @@ By default, the local sdk-server will create a dummy `GameServer` configuration 
 and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
 can be passed through as either `--file` or `-f` along with the `--local` flag.
 
+If the `GamerServer` configuration file is changed while the local server is running,
+this will be picked up by the local server, and will change the current active configuration, as well as sending out
+events for `WatchGameServer()`. This is a useful way of testing functionality, such as changes of state from `Ready` to
+`Allocated` in your game server code.
+
+> File modification events can fire more than one for each save (for a variety of reasons), 
+but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
+happen when live as well.
+
 For example:
 
 ```console
@@ -169,6 +178,8 @@ $ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.ya
 {"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 {"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 ```
+
+
 
 ## Writing your own SDK
 
