@@ -163,6 +163,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -301,6 +303,7 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+
 ---
 # Source: agones/templates/crds/fleetallocation.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -327,6 +330,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -376,6 +381,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -444,6 +451,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -560,6 +569,7 @@ spec:
                   type: integer
                   minimum: 1
                   maximum: 2147483648
+
 ---
 # Source: agones/templates/crds/gameserverset.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -586,6 +596,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -718,6 +730,7 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
