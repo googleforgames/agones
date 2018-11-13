@@ -35,15 +35,28 @@ var (
 	gvk = metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
 )
 
-func TestControllerCreationMutationHandler(t *testing.T) {
+func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
-	t.Run("fleet scaler has a fleet", func(t *testing.T) {
+	t.Run("valid fleet autoscaler", func(t *testing.T) {
 		c, m := newFakeController()
-		fas, f := defaultFixtures()
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
-		})
+		fas, _ := defaultFixtures()
+		_, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		review, err := newAdmissionReview(*fas)
+		assert.Nil(t, err)
+
+		result, err := c.validationHandler(review)
+		assert.Nil(t, err)
+		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
+	})
+
+	t.Run("invalid fleet autoscaler", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+		// this make it invalid
+		fas.Spec.Policy.Buffer = nil
 
 		_, cancel := agtesting.StartInformers(m)
 		defer cancel()
@@ -51,60 +64,12 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		review, err := newAdmissionReview(*fas)
 		assert.Nil(t, err)
 
-		result, err := c.creationMutationHandler(review)
+		result, err := c.validationHandler(review)
 		assert.Nil(t, err)
-		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
-		assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
-		assert.Contains(t, string(result.Response.Patch), "/metadata/ownerReferences")
-	})
-
-	t.Run("fleet does not exist", func(t *testing.T) {
-		c, _ := newFakeController()
-		fas, _ := defaultFixtures()
-
-		review, err := newAdmissionReview(*fas)
-		assert.Nil(t, err)
-
-		result, err := c.creationMutationHandler(review)
-		assert.Nil(t, err)
-		assert.False(t, result.Response.Allowed)
-		assert.Equal(t, "fleetName", result.Response.Result.Details.Causes[0].Field)
-	})
-}
-
-func TestControllerMutationValidationHandler(t *testing.T) {
-	t.Parallel()
-	c, _ := newFakeController()
-
-	t.Run("same fleetName", func(t *testing.T) {
-		fas, _ := defaultFixtures()
-
-		review, err := newAdmissionReview(*fas)
-		assert.Nil(t, err)
-		review.Request.OldObject = *review.Request.Object.DeepCopy()
-
-		result, err := c.mutationValidationHandler(review)
-		assert.Nil(t, err)
-		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
-	})
-
-	t.Run("different fleetname", func(t *testing.T) {
-		fas, _ := defaultFixtures()
-
-		review, err := newAdmissionReview(*fas)
-		assert.Nil(t, err)
-		oldObject := fas.DeepCopy()
-		oldObject.Spec.FleetName = "changed"
-
-		json, err := json.Marshal(oldObject)
-		assert.Nil(t, err)
-		review.Request.OldObject = runtime.RawExtension{Raw: json}
-
-		result, err := c.mutationValidationHandler(review)
-		assert.Nil(t, err)
-		assert.False(t, result.Response.Allowed)
+		assert.False(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
+		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
 		assert.Equal(t, metav1.StatusReasonInvalid, result.Response.Result.Reason)
-		assert.NotNil(t, result.Response.Result.Details)
+		assert.NotEmpty(t, result.Response.Result.Details)
 	})
 }
 
@@ -162,6 +127,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "AutoScalingFleet")
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 
 	t.Run("scaling down", func(t *testing.T) {
@@ -215,6 +181,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "AutoScalingFleet")
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 
 	t.Run("no scaling no update", func(t *testing.T) {
@@ -249,6 +216,37 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		err := c.syncFleetAutoscaler(fas.ObjectMeta.Name)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+	})
+
+	t.Run("fleet not available", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+		fas.Status.DesiredReplicas = 10
+		fas.Status.CurrentReplicas = 5
+		updated := false
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.FleetAutoscalerList{Items: []v1alpha1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+			ca := action.(k8stesting.UpdateAction)
+			fas := ca.GetObject().(*v1alpha1.FleetAutoscaler)
+			assert.Equal(t, fas.Status.CurrentReplicas, int32(0))
+			assert.Equal(t, fas.Status.DesiredReplicas, int32(0))
+			return true, fas, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscaler("default/fas-1")
+		assert.Nil(t, err)
+		assert.True(t, updated)
+
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "FailedGetFleet")
 	})
 }
 
@@ -345,6 +343,15 @@ func TestControllerUpdateStatus(t *testing.T) {
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
+
+	t.Run("update with a scaling limit", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+
+		err := c.updateStatus(fas, 10, 20, true, true)
+		assert.Nil(t, err)
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingLimited")
+	})
 }
 
 func TestControllerUpdateStatusUnableToScale(t *testing.T) {
@@ -353,7 +360,7 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 	t.Run("must update", func(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
-		fas.Status.AbleToScale = true
+		fas.Status.DesiredReplicas = 10
 
 		fasUpdated := false
 

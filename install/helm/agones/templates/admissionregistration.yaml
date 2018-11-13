@@ -86,7 +86,6 @@ webhooks:
           - "gameservers"
           - "fleets"
           - "fleetallocations"
-          - "fleetautoscalers"
         apiVersions:
           - "v1alpha1"
         operations:

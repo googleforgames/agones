@@ -62,7 +62,6 @@ type LocalSDKServer struct {
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
-// TODO: update all the tests at a later date
 func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
