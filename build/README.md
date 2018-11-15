@@ -7,37 +7,70 @@ Rather than installing all the dependencies locally, you can test and build Agon
 built from the Dockerfile in this directory. There is an accompanying Makefile for all the common
 tasks you may wish to accomplish.
 
-<!-- ToC start -->
-# Table of Contents
+Table of Contents
+=================
 
-   1. [Table of Contents](#table-of-contents)
-   1. [Building on Different Platforms](#building-on-different-platforms)
-      1. [Linux](#linux)
-      1. [Windows](#windows)
-      1. [macOS](#macOS)
-   1. [GOPATH](#gopath)
-   1. [Testing and Building](#testing-and-building)
-      1. [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
-      1. [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
-      1. [Running a Custom Test Environment](#running-a-custom-test-environment)
-      1. [Next Steps](#next-steps)
-   1. [Make Variable Reference](#make-variable-reference)
-      1. [VERSION](#version)
-      1. [REGISTRY](#registry)
-      1. [KUBECONFIG](#kubeconfig)
-      1. [CLUSTER_NAME](#cluster_name)
-      1. [IMAGE_PULL_SECRET](#image_pull_secret)
-      1. [IMAGE_PULL_SECRET_FILE](#image_pull_secret_file)
-   1. [Make Target Reference](#make-target-reference)
-      1. [Development Targets](#development-targets)
-      1. [Build Image Targets](#build-image-targets)
-      1. [Google Cloud Platform](#google-cloud-platform)
-      1. [Minikube](#minikube)
-      1. [Custom Environment](#custom-environment)
-   1. [Dependencies](#dependencies)
-   1. [Troubleshooting](#troubleshooting)
-   
-<!-- ToC end -->
+  * [Building on Different Platforms](#building-on-different-platforms)
+     * [Linux](#linux)
+     * [Windows](#windows)
+     * [macOS](#macos)
+  * [GOPATH](#gopath)
+  * [Testing and Building](#testing-and-building)
+     * [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
+     * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
+     * [Running a Custom Test Environment](#running-a-custom-test-environment)
+     * [Next Steps](#next-steps)
+  * [Make Variable Reference](#make-variable-reference)
+     * [VERSION](#version)
+     * [REGISTRY](#registry)
+     * [KUBECONFIG](#kubeconfig)
+     * [CLUSTER_NAME](#cluster_name)
+     * [IMAGE_PULL_SECRET](#image_pull_secret)
+     * [IMAGE_PULL_SECRET_FILE](#image_pull_secret_file)
+  * [Make Target Reference](#make-target-reference)
+     * [Development Targets](#development-targets)
+        * [make build](#make-build)
+        * [make build-images](#make-build-images)
+        * [make build-sdks](#make-build-sdks)
+        * [make build-sdk-cpp](#make-build-sdk-cpp)
+        * [make test](#make-test)
+        * [make push](#make-push)
+        * [make install](#make-install)
+        * [make uninstall](#make-uninstall)
+        * [make test-e2e](#make-test-e2e)
+        * [make controller-portforward](#make-controller-portforward)
+        * [make pprof-web](#make-pprof-web)
+        * [make shell](#make-shell)
+        * [make godoc](#make-godoc)
+        * [make build-agones-controller-image](#make-build-agones-controller-image)
+        * [make build-agones-sdk-image](#make-build-agones-sdk-image)
+        * [make gen-install](#make-gen-install)
+        * [make gen-crd-client](#make-gen-crd-client)
+        * [make gen-gameservers-sdk-grpc](#make-gen-gameservers-sdk-grpc)
+     * [Build Image Targets](#build-image-targets)
+        * [make clean-config](#make-clean-config)
+        * [make clean-build-image](#make-clean-build-image)
+        * [make build-build-image](#make-build-build-image)
+     * [Google Cloud Platform](#google-cloud-platform)
+        * [make gcloud-init](#make-gcloud-init)
+        * [make gcloud-test-cluster](#make-gcloud-test-cluster)
+        * [make gcloud-auth-cluster](#make-gcloud-auth-cluster)
+        * [make gcloud-auth-docker](#make-gcloud-auth-docker)
+     * [Minikube](#minikube)
+        * [make minikube-test-cluster](#make-minikube-test-cluster)
+        * [make minikube-push](#make-minikube-push)
+        * [make minikube-install](#make-minikube-install)
+     * [make minikube-test-e2e](#make-minikube-test-e2e)
+        * [make minikube-shell](#make-minikube-shell)
+        * [make minikube-transfer-image](#make-minikube-transfer-image)
+        * [make minikube-controller-portforward](#make-minikube-controller-portforward)
+     * [Custom Environment](#custom-environment)
+        * [make setup-custom-test-cluster](#make-setup-custom-test-cluster)
+        * [make clean-custom-test-cluster](#make-clean-custom-test-cluster)
+  * [Dependencies](#dependencies)
+  * [Troubleshooting](#troubleshooting)
+        * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
+        * [I want to use pprof to profile the controller.](#i-want-to-use-pprof-to-profile-the-controller)
 
 ## Building on Different Platforms
 
@@ -330,13 +363,21 @@ Installs the current development version of Agones into the Kubernetes cluster
 #### `make uninstall`
 Removes Agones from the Kubernetes cluster
 
-### `make test-e2e`
+#### `make test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
 
 It uses the KUBECONFIG to target a Kubernetes cluster.
 
 See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on minikube.
+
+#### `make controller-portforward`
+Sets up port forwarding to a specified PORT var (defaults to 6060 for pprof) to the
+controller deployment.
+
+#### `make pprof-web`
+
+Start the web interface for pprof.
 
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
@@ -425,6 +466,10 @@ instead of `make shell` to start an interactive shell for development on Minikub
 Convenience target for transferring images into minikube.
 Use TAG to specify the image to transfer into minikube
 
+#### `make minikube-controller-portforward`
+The minikube version of [`make controller-portforward`](#make-controller-portforward) to setup
+port forwarding to the controller deployment.
+
 ### Custom Environment
 
 #### `make setup-custom-test-cluster`
@@ -453,4 +498,14 @@ If you get this error when building Agones in WSL (`make build`, `make test` or 
 - Are your project files on a different folder than C? If yes, then you should either move them on drive C or set up Docker for Windows to share your project drive as well
 - Did you set up the volume mount for Docker correctly? By default, drive C is mapped by WSL as /mnt/c, but Docker expects it as /c. You can test by executing `ls /c` in your linux shell. If you get an error, then follow the instructions for [setting up volume mount for Docker](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly#ensure-volume-mounts-work)
 
+#### I want to use pprof to profile the controller.
+
+Run `make build-images GO_BUILD_TAGS=profile` and this will build images with [pprof](https://golang.org/pkg/net/http/pprof/)
+enabled in the controller, which you can then push and install on your cluster.
+
+To get the pprof ui working, run `make controller-portforward` (or `minikube-controller-portforward` if you are on minikube),
+which will setup the port forwarding to the pprof http endpoint.
+
+Run `make pprof-web`, which will start the web interface. It may take a few minutes to start up, but it can be opened on
+[http://localhost:6060/ui](http://localhost:6060/ui).
 
