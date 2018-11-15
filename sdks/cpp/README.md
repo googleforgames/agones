@@ -126,23 +126,59 @@ headers as well as dynamic and static libraries that are needed for development 
 - `argonsdk-$(VERSION)-runtime-linux-arch_64.tar.gz`: This includes just the dynamic libraries that 
 are needed to run a binary compiled against the SDK and its dependencies.
 
-### Building the Libraries
-
-If you want to build the libraries from Agones source, 
-the `make` target `build-sdk-cpp` will compile both static and dynamic libraries for Debian/Linux
-for your usage, to be found in the `bin` directory inside this one.
-
-## Building From Source
-If you wish to compile from source, you will need to compile and install the following dependencies:
-
-- [gRPC](https://grpc.io), v1.8.x - [C++ compilation guide](https://github.com/grpc/grpc/blob/v1.8.x/INSTALL.md)
-- [protobuf](https://developers.google.com/protocol-buffers/), v3.5.0 - [C++ compilation guide](https://github.com/google/protobuf/blob/master/src/README.md)
-
-For convenience, it's worth noting that protobuf is include in gRPC's source code, in the `third_party`
-directory, and can be compiled from there, rather than being pulling down separately.
-
 ## Windows and macOS
 
 If you are building a server on Windows or macOS, and need a development build to run on
 that platform, at this time you will need to compile from source. Windows and macOS libraries
 for the C++ SDK for easier cross platform development are planned and will be provided in the near future.
+
+## Building From Source
+Agones' C++ SDK is built via CMake. The build is self-contained so no additional dependencies need to be installed or built manually. That said, your choice of platform will require a different set of development tools:
+
+### Windows
+
+You'll need to set up your development environment and install the following tools:
+
+- Visual Studio 2017/2015 for C++.
+- Install [Chocolatey](https://chocolatey.org/docs/installation) package manager.
+- Install required libraries by running `choco install git cmake activeperl golang yasm`
+
+Open a new developer terminal so that your path includes all the newly installed tools and then run the following command:
+```
+cd <agones_dir>\sdks\cpp; build_VS_2017.bat
+``` 
+
+This should build both Release and Debug versions of `agonessdk.dll`.
+
+Build Agones C++ SDK:
+
+- Clone Agones: "git clone https://github.com/GoogleCloudPlatform/agones.git agones"
+- Run "cd agones\sdks\cpp; build_VS_2017.bat"
+
+You might need to tweak the PATH system variable to include the installed commands' path so you can call them from the command prompt
+
+### Linux
+
+The following command will install the necessary packages required by CMake to build Agones:
+```
+sudo apt install git cmake golang yasm
+```
+
+Build Agones:
+```
+cd <agones_dir>/sdks/cpp; ./build.sh
+```
+
+### macOS
+
+On macOS you'll need to install a few additional packages required by the CMake build. This guide uses Homebrew to install them.
+
+First install [Homebrew](https://brew.sh/), and then run the following command:
+```
+brew install cmake go
+```
+
+Now build:
+```
+cd <agones_dir>/sdks/cpp; ./build.sh
+```

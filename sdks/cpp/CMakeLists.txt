@@ -30,7 +30,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/${CMAKE_BUILD
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/${CMAKE_BUILD_TYPE})
 
 if (MSVC)
-  # Required by gRPC when compiling on Windows
+  # Required by gRPC's headers when compiling on Windows
   add_definitions(-D_WIN32_WINNT=0x600)
 endif()
 
@@ -78,7 +78,6 @@ else()
     ${CMAKE_CURRENT_BINARY_DIR}/grpc/src/${GRPC_TARGET_NAME}-build/libgrpc_unsecure.a
   )
 endif()
-
 
 # Link against grpc dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE ${GRPC_LIBRARIES})
