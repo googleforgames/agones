@@ -27,13 +27,11 @@ const (
 	FleetGameServerSetLabel = stable.GroupName + "/fleet"
 )
 
-type SchedulingStrategy string
-
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Fleet is the data structure for a gameserver resource
+// Fleet is the data structure for a Fleet resource
 type Fleet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -44,7 +42,7 @@ type Fleet struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// FleetList is a list of GameServer resources
+// FleetList is a list of Fleet resources
 type FleetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -64,7 +62,7 @@ type FleetSpec struct {
 	Template GameServerTemplateSpec `json:"template"`
 }
 
-// FleetStatus is the status of a GameServerSet
+// FleetStatus is the status of a Fleet
 type FleetStatus struct {
 	// Replicas the total number of current GameServer replicas
 	Replicas int32 `json:"replicas"`

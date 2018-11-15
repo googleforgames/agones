@@ -58,10 +58,13 @@ type FleetAutoscalerPolicy struct {
 	Buffer *BufferPolicy `json:"buffer,omitempty"`
 }
 
+// FleetAutoscalerPolicyType is the policy for autoscaling
+// for a given Fleet
 type FleetAutoscalerPolicyType string
 
 const (
-	// Kill all existing pods before creating new ones.
+	// BufferPolicyType FleetAutoscalerPolicyType is a simple buffering strategy for Ready
+	// GameServers
 	BufferPolicyType FleetAutoscalerPolicyType = "Buffer"
 )
 
@@ -124,7 +127,7 @@ func (fas *FleetAutoscaler) ValidateUpdate(new *FleetAutoscaler, causes []metav1
 	return new.ValidateAutoScalingSettings(causes)
 }
 
-//ValidateAutoScalingSettings validates the FleetAutoscaler scaling settings
+// ValidateAutoScalingSettings validates the FleetAutoscaler scaling settings
 func (fas *FleetAutoscaler) ValidateAutoScalingSettings(causes []metav1.StatusCause) []metav1.StatusCause {
 	if fas.Spec.Policy.Type == BufferPolicyType {
 		causes = fas.Spec.Policy.Buffer.ValidateAutoScalingBufferPolicy(causes)
@@ -132,7 +135,7 @@ func (fas *FleetAutoscaler) ValidateAutoScalingSettings(causes []metav1.StatusCa
 	return causes
 }
 
-//ValidateAutoScalingSettings validates the FleetAutoscaler Buffer policy settings
+// ValidateAutoScalingBufferPolicy validates the FleetAutoscaler Buffer policy settings
 func (b *BufferPolicy) ValidateAutoScalingBufferPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
 	if b == nil {
 		return append(causes, metav1.StatusCause{
