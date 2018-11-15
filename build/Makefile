@@ -46,6 +46,7 @@ GCP_CLUSTER_ZONE ?= us-west1-c
 GCP_BUCKET_CHARTS ?= agones-chart
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
+GO_BUILD_TAGS ?= none
 
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.4
@@ -185,7 +186,8 @@ uninstall: $(ensure-build-image)
 # Build a static binary for the gameserver controller
 build-controller-binary: $(ensure-build-image)
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/controller/bin/controller -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/controller/bin/controller \
+	-a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -292,6 +294,18 @@ pull-build-image:
 push-build-image:
 	docker tag $(build_tag) $(build_remote_tag)
 	docker push $(build_remote_tag)
+
+# port forward the agones controller.
+# useful for pprof and stats viewing, etc
+controller-portforward: PORT ?= 6060
+controller-portforward:
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) -p $(PORT):$(PORT) $(build_tag) \
+		kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
+
+# start pprof with a web ui
+pprof-web:
+	docker run --rm -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+		go tool pprof -http :6061 http://localhost:6060
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
@@ -471,3 +485,7 @@ minikube-transfer-image:
 # Runs e2e tests against our minikube
 minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
 minikube-test-e2e: minikube-agones-profile test-e2e
+
+# minikube port forwarding
+minikube-controller-portforward:
+	$(MAKE) controller-portforward DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"

@@ -19,7 +19,7 @@
 FROM gcr.io/agones-images/grpc-cxx:1.12
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq && \
+    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq graphviz && \
     apt-get clean
 
 # install go
