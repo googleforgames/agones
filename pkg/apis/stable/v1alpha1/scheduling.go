@@ -29,3 +29,7 @@ const (
 	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
 	Distributed SchedulingStrategy = "Distributed"
 )
+
+// SchedulingStrategy is the strategy that a Fleet & GameServers will use
+// when scheduling GameServers' Pods across a cluster.
+type SchedulingStrategy string

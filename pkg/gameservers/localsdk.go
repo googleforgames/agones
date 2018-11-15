@@ -223,7 +223,7 @@ func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 	logrus.WithField("filePath", filePath).Info("Reading GameServer configuration")
 
 	reader, err := os.Open(filePath) // nolint: gosec
-	defer reader.Close()             // nolint: megacheck
+	defer reader.Close()             // nolint: megacheck,errcheck
 
 	if err != nil {
 		return err
