@@ -22,7 +22,6 @@
 
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/stubs/port.h>
-#include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/wire_format_lite_inl.h>
 #include <google/protobuf/descriptor.h>
@@ -34,6 +33,16 @@
 #include "third_party/protobuf/version.h"
 #endif
 // @@protoc_insertion_point(includes)
+
+namespace protobuf_sdk_2eproto {
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Spec_Health;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Status_Port;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Spec;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Status;
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_sdk_2eproto ::google::protobuf::internal::SCCInfo<2> scc_info_GameServer_ObjectMeta;
+}  // namespace protobuf_sdk_2eproto
 namespace stable {
 namespace agones {
 namespace dev {
@@ -93,14 +102,9 @@ class GameServerDefaultTypeInternal {
 }  // namespace agones
 }  // namespace stable
 namespace protobuf_sdk_2eproto {
-void InitDefaultsEmptyImpl() {
+static void InitDefaultsEmpty() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_Empty_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::Empty();
@@ -109,19 +113,12 @@ void InitDefaultsEmptyImpl() {
   ::stable::agones::dev::sdk::Empty::InitAsDefaultInstance();
 }
 
-void InitDefaultsEmpty() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsEmptyImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_Empty =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsEmpty}, {}};
 
-void InitDefaultsKeyValueImpl() {
+static void InitDefaultsKeyValue() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_KeyValue_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::KeyValue();
@@ -130,19 +127,12 @@ void InitDefaultsKeyValueImpl() {
   ::stable::agones::dev::sdk::KeyValue::InitAsDefaultInstance();
 }
 
-void InitDefaultsKeyValue() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsKeyValueImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_KeyValue =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsKeyValue}, {}};
 
-void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUseImpl() {
+static void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse();
@@ -150,19 +140,12 @@ void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUseImpl() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUseImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse}, {}};
 
-void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUseImpl() {
+static void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_ObjectMeta_LabelsEntry_DoNotUse_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse();
@@ -170,21 +153,12 @@ void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUseImpl() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUseImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse}, {}};
 
-void InitDefaultsGameServer_ObjectMetaImpl() {
+static void InitDefaultsGameServer_ObjectMeta() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_sdk_2eproto::InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse();
-  protobuf_sdk_2eproto::InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse();
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_ObjectMeta_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_ObjectMeta();
@@ -193,19 +167,14 @@ void InitDefaultsGameServer_ObjectMetaImpl() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_ObjectMeta() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_ObjectMetaImpl);
-}
+::google::protobuf::internal::SCCInfo<2> scc_info_GameServer_ObjectMeta =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 2, InitDefaultsGameServer_ObjectMeta}, {
+      &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse.base,
+      &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse.base,}};
 
-void InitDefaultsGameServer_Spec_HealthImpl() {
+static void InitDefaultsGameServer_Spec_Health() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_Spec_Health_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_Spec_Health();
@@ -214,20 +183,12 @@ void InitDefaultsGameServer_Spec_HealthImpl() {
   ::stable::agones::dev::sdk::GameServer_Spec_Health::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_Spec_Health() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_Spec_HealthImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Spec_Health =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_Spec_Health}, {}};
 
-void InitDefaultsGameServer_SpecImpl() {
+static void InitDefaultsGameServer_Spec() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_sdk_2eproto::InitDefaultsGameServer_Spec_Health();
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_Spec_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_Spec();
@@ -236,19 +197,13 @@ void InitDefaultsGameServer_SpecImpl() {
   ::stable::agones::dev::sdk::GameServer_Spec::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_Spec() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_SpecImpl);
-}
+::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Spec =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsGameServer_Spec}, {
+      &protobuf_sdk_2eproto::scc_info_GameServer_Spec_Health.base,}};
 
-void InitDefaultsGameServer_Status_PortImpl() {
+static void InitDefaultsGameServer_Status_Port() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_Status_Port_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_Status_Port();
@@ -257,20 +212,12 @@ void InitDefaultsGameServer_Status_PortImpl() {
   ::stable::agones::dev::sdk::GameServer_Status_Port::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_Status_Port() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_Status_PortImpl);
-}
+::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Status_Port =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_Status_Port}, {}};
 
-void InitDefaultsGameServer_StatusImpl() {
+static void InitDefaultsGameServer_Status() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_sdk_2eproto::InitDefaultsGameServer_Status_Port();
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_Status_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer_Status();
@@ -279,22 +226,13 @@ void InitDefaultsGameServer_StatusImpl() {
   ::stable::agones::dev::sdk::GameServer_Status::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer_Status() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServer_StatusImpl);
-}
+::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Status =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsGameServer_Status}, {
+      &protobuf_sdk_2eproto::scc_info_GameServer_Status_Port.base,}};
 
-void InitDefaultsGameServerImpl() {
+static void InitDefaultsGameServer() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_sdk_2eproto::InitDefaultsGameServer_ObjectMeta();
-  protobuf_sdk_2eproto::InitDefaultsGameServer_Spec();
-  protobuf_sdk_2eproto::InitDefaultsGameServer_Status();
   {
     void* ptr = &::stable::agones::dev::sdk::_GameServer_default_instance_;
     new (ptr) ::stable::agones::dev::sdk::GameServer();
@@ -303,9 +241,23 @@ void InitDefaultsGameServerImpl() {
   ::stable::agones::dev::sdk::GameServer::InitAsDefaultInstance();
 }
 
-void InitDefaultsGameServer() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsGameServerImpl);
+::google::protobuf::internal::SCCInfo<3> scc_info_GameServer =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 3, InitDefaultsGameServer}, {
+      &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta.base,
+      &protobuf_sdk_2eproto::scc_info_GameServer_Spec.base,
+      &protobuf_sdk_2eproto::scc_info_GameServer_Status.base,}};
+
+void InitDefaults() {
+  ::google::protobuf::internal::InitSCC(&scc_info_Empty.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_KeyValue.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_ObjectMeta.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_Spec_Health.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_Spec.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_Status_Port.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer_Status.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_GameServer.base);
 }
 
 ::google::protobuf::Metadata file_level_metadata[10];
@@ -422,15 +374,14 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
 
 void protobuf_AssignDescriptors() {
   AddDescriptors();
-  ::google::protobuf::MessageFactory* factory = NULL;
   AssignDescriptors(
-      "sdk.proto", schemas, file_default_instances, TableStruct::offsets, factory,
+      "sdk.proto", schemas, file_default_instances, TableStruct::offsets,
       file_level_metadata, NULL, NULL);
 }
 
 void protobuf_AssignDescriptorsOnce() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &protobuf_AssignDescriptors);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
 }
 
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
@@ -496,8 +447,8 @@ void AddDescriptorsImpl() {
 }
 
 void AddDescriptors() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
 }
 // Force AddDescriptors() to be called at dynamic initialization time.
 struct StaticDescriptorInitializer {
@@ -520,22 +471,19 @@ void Empty::InitAsDefaultInstance() {
 
 Empty::Empty()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsEmpty();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_Empty.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.Empty)
 }
 Empty::Empty(const Empty& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:stable.agones.dev.sdk.Empty)
 }
 
 void Empty::SharedCtor() {
-  _cached_size_ = 0;
 }
 
 Empty::~Empty() {
@@ -547,9 +495,7 @@ void Empty::SharedDtor() {
 }
 
 void Empty::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* Empty::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -557,17 +503,10 @@ const ::google::protobuf::Descriptor* Empty::descriptor() {
 }
 
 const Empty& Empty::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsEmpty();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_Empty.base);
   return *internal_default_instance();
 }
 
-Empty* Empty::New(::google::protobuf::Arena* arena) const {
-  Empty* n = new Empty;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void Empty::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.Empty)
@@ -584,7 +523,7 @@ bool Empty::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.Empty)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
   handle_unusual:
@@ -641,9 +580,7 @@ size_t Empty::ByteSizeLong() const {
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -696,7 +633,6 @@ void Empty::Swap(Empty* other) {
 void Empty::InternalSwap(Empty* other) {
   using std::swap;
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata Empty::GetMetadata() const {
@@ -716,16 +652,14 @@ const int KeyValue::kValueFieldNumber;
 
 KeyValue::KeyValue()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsKeyValue();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_KeyValue.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.KeyValue)
 }
 KeyValue::KeyValue(const KeyValue& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   key_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.key().size() > 0) {
@@ -741,7 +675,6 @@ KeyValue::KeyValue(const KeyValue& from)
 void KeyValue::SharedCtor() {
   key_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _cached_size_ = 0;
 }
 
 KeyValue::~KeyValue() {
@@ -755,9 +688,7 @@ void KeyValue::SharedDtor() {
 }
 
 void KeyValue::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* KeyValue::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -765,17 +696,10 @@ const ::google::protobuf::Descriptor* KeyValue::descriptor() {
 }
 
 const KeyValue& KeyValue::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsKeyValue();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_KeyValue.base);
   return *internal_default_instance();
 }
 
-KeyValue* KeyValue::New(::google::protobuf::Arena* arena) const {
-  KeyValue* n = new KeyValue;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void KeyValue::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.KeyValue)
@@ -794,7 +718,7 @@ bool KeyValue::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.KeyValue)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -944,9 +868,7 @@ size_t KeyValue::ByteSizeLong() const {
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -1006,10 +928,11 @@ void KeyValue::Swap(KeyValue* other) {
 }
 void KeyValue::InternalSwap(KeyValue* other) {
   using std::swap;
-  key_.Swap(&other->key_);
-  value_.Swap(&other->value_);
+  key_.Swap(&other->key_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  value_.Swap(&other->value_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata KeyValue::GetMetadata() const {
@@ -1070,16 +993,14 @@ const int GameServer_ObjectMeta::kLabelsFieldNumber;
 
 GameServer_ObjectMeta::GameServer_ObjectMeta()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer_ObjectMeta();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer.ObjectMeta)
 }
 GameServer_ObjectMeta::GameServer_ObjectMeta(const GameServer_ObjectMeta& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   annotations_.MergeFrom(from.annotations_);
   labels_.MergeFrom(from.labels_);
@@ -1113,7 +1034,6 @@ void GameServer_ObjectMeta::SharedCtor() {
   ::memset(&generation_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&deletion_timestamp_) -
       reinterpret_cast<char*>(&generation_)) + sizeof(deletion_timestamp_));
-  _cached_size_ = 0;
 }
 
 GameServer_ObjectMeta::~GameServer_ObjectMeta() {
@@ -1129,9 +1049,7 @@ void GameServer_ObjectMeta::SharedDtor() {
 }
 
 void GameServer_ObjectMeta::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer_ObjectMeta::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -1139,17 +1057,10 @@ const ::google::protobuf::Descriptor* GameServer_ObjectMeta::descriptor() {
 }
 
 const GameServer_ObjectMeta& GameServer_ObjectMeta::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer_ObjectMeta();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta.base);
   return *internal_default_instance();
 }
 
-GameServer_ObjectMeta* GameServer_ObjectMeta::New(::google::protobuf::Arena* arena) const {
-  GameServer_ObjectMeta* n = new GameServer_ObjectMeta;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer_ObjectMeta::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer.ObjectMeta)
@@ -1175,7 +1086,7 @@ bool GameServer_ObjectMeta::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer.ObjectMeta)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -1441,7 +1352,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
 
     if (output->IsSerializationDeterministic() &&
         this->annotations().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
+      ::std::unique_ptr<SortItem[]> items(
           new SortItem[this->annotations().size()]);
       typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
       size_type n = 0;
@@ -1451,7 +1362,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(annotations_.NewEntryWrapper(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
@@ -1460,7 +1371,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
       for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
           it = this->annotations().begin();
           it != this->annotations().end(); ++it) {
@@ -1494,7 +1405,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
 
     if (output->IsSerializationDeterministic() &&
         this->labels().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
+      ::std::unique_ptr<SortItem[]> items(
           new SortItem[this->labels().size()]);
       typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
       size_type n = 0;
@@ -1504,7 +1415,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(labels_.NewEntryWrapper(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
@@ -1513,7 +1424,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
       for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
           it = this->labels().begin();
           it != this->labels().end(); ++it) {
@@ -1620,7 +1531,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
 
     if (deterministic &&
         this->annotations().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
+      ::std::unique_ptr<SortItem[]> items(
           new SortItem[this->annotations().size()]);
       typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
       size_type n = 0;
@@ -1630,7 +1541,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(annotations_.NewEntryWrapper(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
@@ -1641,7 +1552,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
       for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
           it = this->annotations().begin();
           it != this->annotations().end(); ++it) {
@@ -1677,7 +1588,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
 
     if (deterministic &&
         this->labels().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
+      ::std::unique_ptr<SortItem[]> items(
           new SortItem[this->labels().size()]);
       typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
       size_type n = 0;
@@ -1687,7 +1598,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(labels_.NewEntryWrapper(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
@@ -1698,7 +1609,7 @@ void GameServer_ObjectMeta::SerializeWithCachedSizes(
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
+      ::std::unique_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
       for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
           it = this->labels().begin();
           it != this->labels().end(); ++it) {
@@ -1734,7 +1645,7 @@ size_t GameServer_ObjectMeta::ByteSizeLong() const {
   total_size += 1 *
       ::google::protobuf::internal::FromIntSize(this->annotations_size());
   {
-    ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
+    ::std::unique_ptr<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse> entry;
     for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
         it = this->annotations().begin();
         it != this->annotations().end(); ++it) {
@@ -1748,7 +1659,7 @@ size_t GameServer_ObjectMeta::ByteSizeLong() const {
   total_size += 1 *
       ::google::protobuf::internal::FromIntSize(this->labels_size());
   {
-    ::google::protobuf::scoped_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
+    ::std::unique_ptr<GameServer_ObjectMeta_LabelsEntry_DoNotUse> entry;
     for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
         it = this->labels().begin();
         it != this->labels().end(); ++it) {
@@ -1808,9 +1719,7 @@ size_t GameServer_ObjectMeta::ByteSizeLong() const {
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -1891,15 +1800,18 @@ void GameServer_ObjectMeta::InternalSwap(GameServer_ObjectMeta* other) {
   using std::swap;
   annotations_.Swap(&other->annotations_);
   labels_.Swap(&other->labels_);
-  name_.Swap(&other->name_);
-  namespace__.Swap(&other->namespace__);
-  uid_.Swap(&other->uid_);
-  resource_version_.Swap(&other->resource_version_);
+  name_.Swap(&other->name_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  namespace__.Swap(&other->namespace__, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  uid_.Swap(&other->uid_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  resource_version_.Swap(&other->resource_version_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(generation_, other->generation_);
   swap(creation_timestamp_, other->creation_timestamp_);
   swap(deletion_timestamp_, other->deletion_timestamp_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer_ObjectMeta::GetMetadata() const {
@@ -1921,16 +1833,14 @@ const int GameServer_Spec_Health::kInitialDelaySecondsFieldNumber;
 
 GameServer_Spec_Health::GameServer_Spec_Health()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer_Spec_Health();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer_Spec_Health.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer.Spec.Health)
 }
 GameServer_Spec_Health::GameServer_Spec_Health(const GameServer_Spec_Health& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&disabled_, &from.disabled_,
     static_cast<size_t>(reinterpret_cast<char*>(&initialdelayseconds_) -
@@ -1942,7 +1852,6 @@ void GameServer_Spec_Health::SharedCtor() {
   ::memset(&disabled_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&initialdelayseconds_) -
       reinterpret_cast<char*>(&disabled_)) + sizeof(initialdelayseconds_));
-  _cached_size_ = 0;
 }
 
 GameServer_Spec_Health::~GameServer_Spec_Health() {
@@ -1954,9 +1863,7 @@ void GameServer_Spec_Health::SharedDtor() {
 }
 
 void GameServer_Spec_Health::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer_Spec_Health::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -1964,17 +1871,10 @@ const ::google::protobuf::Descriptor* GameServer_Spec_Health::descriptor() {
 }
 
 const GameServer_Spec_Health& GameServer_Spec_Health::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer_Spec_Health();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer_Spec_Health.base);
   return *internal_default_instance();
 }
 
-GameServer_Spec_Health* GameServer_Spec_Health::New(::google::protobuf::Arena* arena) const {
-  GameServer_Spec_Health* n = new GameServer_Spec_Health;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer_Spec_Health::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer.Spec.Health)
@@ -1994,7 +1894,7 @@ bool GameServer_Spec_Health::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer.Spec.Health)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -2178,9 +2078,7 @@ size_t GameServer_Spec_Health::ByteSizeLong() const {
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -2249,7 +2147,6 @@ void GameServer_Spec_Health::InternalSwap(GameServer_Spec_Health* other) {
   swap(failurethreshold_, other->failurethreshold_);
   swap(initialdelayseconds_, other->initialdelayseconds_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer_Spec_Health::GetMetadata() const {
@@ -2270,16 +2167,14 @@ const int GameServer_Spec::kHealthFieldNumber;
 
 GameServer_Spec::GameServer_Spec()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer_Spec();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer_Spec.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer.Spec)
 }
 GameServer_Spec::GameServer_Spec(const GameServer_Spec& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   if (from.has_health()) {
     health_ = new ::stable::agones::dev::sdk::GameServer_Spec_Health(*from.health_);
@@ -2291,7 +2186,6 @@ GameServer_Spec::GameServer_Spec(const GameServer_Spec& from)
 
 void GameServer_Spec::SharedCtor() {
   health_ = NULL;
-  _cached_size_ = 0;
 }
 
 GameServer_Spec::~GameServer_Spec() {
@@ -2304,9 +2198,7 @@ void GameServer_Spec::SharedDtor() {
 }
 
 void GameServer_Spec::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer_Spec::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -2314,17 +2206,10 @@ const ::google::protobuf::Descriptor* GameServer_Spec::descriptor() {
 }
 
 const GameServer_Spec& GameServer_Spec::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer_Spec();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer_Spec.base);
   return *internal_default_instance();
 }
 
-GameServer_Spec* GameServer_Spec::New(::google::protobuf::Arena* arena) const {
-  GameServer_Spec* n = new GameServer_Spec;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer_Spec::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer.Spec)
@@ -2345,7 +2230,7 @@ bool GameServer_Spec::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer.Spec)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -2390,7 +2275,7 @@ void GameServer_Spec::SerializeWithCachedSizes(
   // .stable.agones.dev.sdk.GameServer.Spec.Health health = 1;
   if (this->has_health()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, *this->health_, output);
+      1, this->_internal_health(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -2411,7 +2296,7 @@ void GameServer_Spec::SerializeWithCachedSizes(
   if (this->has_health()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        1, *this->health_, deterministic, target);
+        1, this->_internal_health(), deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -2435,13 +2320,11 @@ size_t GameServer_Spec::ByteSizeLong() const {
   if (this->has_health()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->health_);
+        *health_);
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -2498,7 +2381,6 @@ void GameServer_Spec::InternalSwap(GameServer_Spec* other) {
   using std::swap;
   swap(health_, other->health_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer_Spec::GetMetadata() const {
@@ -2518,16 +2400,14 @@ const int GameServer_Status_Port::kPortFieldNumber;
 
 GameServer_Status_Port::GameServer_Status_Port()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer_Status_Port();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer_Status_Port.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer.Status.Port)
 }
 GameServer_Status_Port::GameServer_Status_Port(const GameServer_Status_Port& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.name().size() > 0) {
@@ -2540,7 +2420,6 @@ GameServer_Status_Port::GameServer_Status_Port(const GameServer_Status_Port& fro
 void GameServer_Status_Port::SharedCtor() {
   name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   port_ = 0;
-  _cached_size_ = 0;
 }
 
 GameServer_Status_Port::~GameServer_Status_Port() {
@@ -2553,9 +2432,7 @@ void GameServer_Status_Port::SharedDtor() {
 }
 
 void GameServer_Status_Port::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer_Status_Port::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -2563,17 +2440,10 @@ const ::google::protobuf::Descriptor* GameServer_Status_Port::descriptor() {
 }
 
 const GameServer_Status_Port& GameServer_Status_Port::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer_Status_Port();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer_Status_Port.base);
   return *internal_default_instance();
 }
 
-GameServer_Status_Port* GameServer_Status_Port::New(::google::protobuf::Arena* arena) const {
-  GameServer_Status_Port* n = new GameServer_Status_Port;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer_Status_Port::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer.Status.Port)
@@ -2592,7 +2462,7 @@ bool GameServer_Status_Port::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer.Status.Port)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -2729,9 +2599,7 @@ size_t GameServer_Status_Port::ByteSizeLong() const {
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -2790,10 +2658,10 @@ void GameServer_Status_Port::Swap(GameServer_Status_Port* other) {
 }
 void GameServer_Status_Port::InternalSwap(GameServer_Status_Port* other) {
   using std::swap;
-  name_.Swap(&other->name_);
+  name_.Swap(&other->name_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(port_, other->port_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer_Status_Port::GetMetadata() const {
@@ -2814,17 +2682,15 @@ const int GameServer_Status::kPortsFieldNumber;
 
 GameServer_Status::GameServer_Status()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer_Status();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer_Status.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer.Status)
 }
 GameServer_Status::GameServer_Status(const GameServer_Status& from)
   : ::google::protobuf::Message(),
       _internal_metadata_(NULL),
-      ports_(from.ports_),
-      _cached_size_(0) {
+      ports_(from.ports_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   state_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.state().size() > 0) {
@@ -2840,7 +2706,6 @@ GameServer_Status::GameServer_Status(const GameServer_Status& from)
 void GameServer_Status::SharedCtor() {
   state_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   address_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  _cached_size_ = 0;
 }
 
 GameServer_Status::~GameServer_Status() {
@@ -2854,9 +2719,7 @@ void GameServer_Status::SharedDtor() {
 }
 
 void GameServer_Status::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer_Status::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -2864,17 +2727,10 @@ const ::google::protobuf::Descriptor* GameServer_Status::descriptor() {
 }
 
 const GameServer_Status& GameServer_Status::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer_Status();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer_Status.base);
   return *internal_default_instance();
 }
 
-GameServer_Status* GameServer_Status::New(::google::protobuf::Arena* arena) const {
-  GameServer_Status* n = new GameServer_Status;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer_Status::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer.Status)
@@ -2894,7 +2750,7 @@ bool GameServer_Status::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer.Status)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -2934,7 +2790,8 @@ bool GameServer_Status::MergePartialFromCodedStream(
       case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(input, add_ports()));
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
+                input, add_ports()));
         } else {
           goto handle_unusual;
         }
@@ -2991,7 +2848,9 @@ void GameServer_Status::SerializeWithCachedSizes(
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->ports_size()); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, this->ports(static_cast<int>(i)), output);
+      3,
+      this->ports(static_cast<int>(i)),
+      output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -3081,9 +2940,7 @@ size_t GameServer_Status::ByteSizeLong() const {
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -3144,11 +3001,12 @@ void GameServer_Status::Swap(GameServer_Status* other) {
 }
 void GameServer_Status::InternalSwap(GameServer_Status* other) {
   using std::swap;
-  ports_.InternalSwap(&other->ports_);
-  state_.Swap(&other->state_);
-  address_.Swap(&other->address_);
+  CastToBase(&ports_)->InternalSwap(CastToBase(&other->ports_));
+  state_.Swap(&other->state_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  address_.Swap(&other->address_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer_Status::GetMetadata() const {
@@ -3175,16 +3033,14 @@ const int GameServer::kStatusFieldNumber;
 
 GameServer::GameServer()
   : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_sdk_2eproto::InitDefaultsGameServer();
-  }
+  ::google::protobuf::internal::InitSCC(
+      &protobuf_sdk_2eproto::scc_info_GameServer.base);
   SharedCtor();
   // @@protoc_insertion_point(constructor:stable.agones.dev.sdk.GameServer)
 }
 GameServer::GameServer(const GameServer& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+      _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   if (from.has_object_meta()) {
     object_meta_ = new ::stable::agones::dev::sdk::GameServer_ObjectMeta(*from.object_meta_);
@@ -3208,7 +3064,6 @@ void GameServer::SharedCtor() {
   ::memset(&object_meta_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&status_) -
       reinterpret_cast<char*>(&object_meta_)) + sizeof(status_));
-  _cached_size_ = 0;
 }
 
 GameServer::~GameServer() {
@@ -3223,9 +3078,7 @@ void GameServer::SharedDtor() {
 }
 
 void GameServer::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
 const ::google::protobuf::Descriptor* GameServer::descriptor() {
   ::protobuf_sdk_2eproto::protobuf_AssignDescriptorsOnce();
@@ -3233,17 +3086,10 @@ const ::google::protobuf::Descriptor* GameServer::descriptor() {
 }
 
 const GameServer& GameServer::default_instance() {
-  ::protobuf_sdk_2eproto::InitDefaultsGameServer();
+  ::google::protobuf::internal::InitSCC(&protobuf_sdk_2eproto::scc_info_GameServer.base);
   return *internal_default_instance();
 }
 
-GameServer* GameServer::New(::google::protobuf::Arena* arena) const {
-  GameServer* n = new GameServer;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void GameServer::Clear() {
 // @@protoc_insertion_point(message_clear_start:stable.agones.dev.sdk.GameServer)
@@ -3272,7 +3118,7 @@ bool GameServer::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:stable.agones.dev.sdk.GameServer)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -3341,19 +3187,19 @@ void GameServer::SerializeWithCachedSizes(
   // .stable.agones.dev.sdk.GameServer.ObjectMeta object_meta = 1;
   if (this->has_object_meta()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, *this->object_meta_, output);
+      1, this->_internal_object_meta(), output);
   }
 
   // .stable.agones.dev.sdk.GameServer.Spec spec = 2;
   if (this->has_spec()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, *this->spec_, output);
+      2, this->_internal_spec(), output);
   }
 
   // .stable.agones.dev.sdk.GameServer.Status status = 3;
   if (this->has_status()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, *this->status_, output);
+      3, this->_internal_status(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -3374,21 +3220,21 @@ void GameServer::SerializeWithCachedSizes(
   if (this->has_object_meta()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        1, *this->object_meta_, deterministic, target);
+        1, this->_internal_object_meta(), deterministic, target);
   }
 
   // .stable.agones.dev.sdk.GameServer.Spec spec = 2;
   if (this->has_spec()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        2, *this->spec_, deterministic, target);
+        2, this->_internal_spec(), deterministic, target);
   }
 
   // .stable.agones.dev.sdk.GameServer.Status status = 3;
   if (this->has_status()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        3, *this->status_, deterministic, target);
+        3, this->_internal_status(), deterministic, target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -3412,27 +3258,25 @@ size_t GameServer::ByteSizeLong() const {
   if (this->has_object_meta()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->object_meta_);
+        *object_meta_);
   }
 
   // .stable.agones.dev.sdk.GameServer.Spec spec = 2;
   if (this->has_spec()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->spec_);
+        *spec_);
   }
 
   // .stable.agones.dev.sdk.GameServer.Status status = 3;
   if (this->has_status()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->status_);
+        *status_);
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  SetCachedSize(cached_size);
   return total_size;
 }
 
@@ -3497,7 +3341,6 @@ void GameServer::InternalSwap(GameServer* other) {
   swap(spec_, other->spec_);
   swap(status_, other->status_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
 ::google::protobuf::Metadata GameServer::GetMetadata() const {
@@ -3511,5 +3354,39 @@ void GameServer::InternalSwap(GameServer* other) {
 }  // namespace dev
 }  // namespace agones
 }  // namespace stable
+namespace google {
+namespace protobuf {
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::Empty* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::Empty >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::Empty >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::KeyValue* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::KeyValue >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::KeyValue >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_ObjectMeta* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_ObjectMeta >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_ObjectMeta >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_Spec_Health* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_Spec_Health >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_Spec_Health >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_Spec* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_Spec >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_Spec >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_Status_Port* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_Status_Port >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_Status_Port >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer_Status* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer_Status >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer_Status >(arena);
+}
+template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::stable::agones::dev::sdk::GameServer* Arena::CreateMaybeMessage< ::stable::agones::dev::sdk::GameServer >(Arena* arena) {
+  return Arena::CreateInternal< ::stable::agones::dev::sdk::GameServer >(arena);
+}
+}  // namespace protobuf
+}  // namespace google
 
 // @@protoc_insertion_point(global_scope)
