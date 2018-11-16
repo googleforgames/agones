@@ -22,6 +22,8 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -50,8 +52,9 @@ spec:
                 - type
               properties:
                 type:
+                  type: string
                   enum:
-                    - Buffer
+                  - Buffer
                 buffer:
                   required:
                     - maxReplicas

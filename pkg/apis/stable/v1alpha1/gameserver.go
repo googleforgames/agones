@@ -117,6 +117,8 @@ type GameServerSpec struct {
 	Ports []GameServerPort `json:"ports"`
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
+	// Scheduling strategy. Defaults to "Packed".
+	Scheduling SchedulingStrategy `json:"scheduling,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
 }
@@ -182,6 +184,7 @@ func (gs *GameServer) ApplyDefaults() {
 	gs.applyPortDefaults()
 	gs.applyStateDefaults()
 	gs.applyHealthDefaults()
+	gs.applySchedulingDefaults()
 }
 
 // applyContainerDefaults applues the container defaults
@@ -227,6 +230,12 @@ func (gs *GameServer) applyPortDefaults() {
 		if p.Protocol == "" {
 			gs.Spec.Ports[i].Protocol = "UDP"
 		}
+	}
+}
+
+func (gs *GameServer) applySchedulingDefaults() {
+	if gs.Spec.Scheduling == "" {
+		gs.Spec.Scheduling = Packed
 	}
 }
 
@@ -289,32 +298,12 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 		ObjectMeta: *gs.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec:       *gs.Spec.Template.Spec.DeepCopy(),
 	}
-	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
-	// can be no collisions
-	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
-	pod.ObjectMeta.Name = ""
-	// Pods for GameServers need to stay in the same namespace
-	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
-	// Make sure these are blank, just in case
-	pod.ResourceVersion = ""
+
+	gs.podObjectMeta(pod)
+
 	if pod.Spec.ServiceAccountName == "" {
 		pod.Spec.ServiceAccountName = SidecarServiceAccountName
 	}
-	pod.UID = ""
-	if pod.ObjectMeta.Labels == nil {
-		pod.ObjectMeta.Labels = make(map[string]string, 2)
-	}
-	if pod.ObjectMeta.Annotations == nil {
-		pod.ObjectMeta.Annotations = make(map[string]string, 1)
-	}
-	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
-	// store the GameServer name as a label, for easy lookup later on
-	pod.ObjectMeta.Labels[GameServerPodLabel] = gs.ObjectMeta.Name
-	// store the GameServer container as an annotation, to make lookup at a Pod level easier
-	pod.ObjectMeta.Annotations[GameServerContainerAnnotation] = gs.Spec.Container
-
-	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
-	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
 	i, gsContainer, err := gs.FindGameServerContainer()
 	// this shouldn't happen, but if it does.
@@ -333,7 +322,67 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	pod.Spec.Containers[i] = gsContainer
 
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
+
+	gs.podScheduling(pod)
+
 	return pod, nil
+}
+
+// podObjectMeta configures the pod ObjectMeta details
+func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
+	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
+	// can be no collisions
+	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
+	pod.ObjectMeta.Name = ""
+	// Pods for GameServers need to stay in the same namespace
+	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
+	// Make sure these are blank, just in case
+	pod.ObjectMeta.ResourceVersion = ""
+	pod.ObjectMeta.UID = ""
+	if pod.ObjectMeta.Labels == nil {
+		pod.ObjectMeta.Labels = make(map[string]string, 2)
+	}
+	if pod.ObjectMeta.Annotations == nil {
+		pod.ObjectMeta.Annotations = make(map[string]string, 1)
+	}
+	pod.ObjectMeta.Labels[RoleLabel] = GameServerLabelRole
+	// store the GameServer name as a label, for easy lookup later on
+	pod.ObjectMeta.Labels[GameServerPodLabel] = gs.ObjectMeta.Name
+	// store the GameServer container as an annotation, to make lookup at a Pod level easier
+	pod.ObjectMeta.Annotations[GameServerContainerAnnotation] = gs.Spec.Container
+	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
+	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
+
+	if gs.Spec.Scheduling == Packed {
+		// This means that the autoscaler cannot remove the Node that this Pod is on.
+		// (and evict the Pod in the process)
+		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
+	}
+}
+
+// podScheduling applies the Fleet scheduling strategy to the passed in Pod
+// this sets the a PreferredDuringSchedulingIgnoredDuringExecution for GameServer
+// pods to a host topology. Basically doing a half decent job of packing GameServer
+// pods together.
+func (gs *GameServer) podScheduling(pod *corev1.Pod) {
+	if gs.Spec.Scheduling == Packed {
+		if pod.Spec.Affinity == nil {
+			pod.Spec.Affinity = &corev1.Affinity{}
+		}
+		if pod.Spec.Affinity.PodAffinity == nil {
+			pod.Spec.Affinity.PodAffinity = &corev1.PodAffinity{}
+		}
+
+		wpat := corev1.WeightedPodAffinityTerm{
+			Weight: 100,
+			PodAffinityTerm: corev1.PodAffinityTerm{
+				TopologyKey:   "kubernetes.io/hostname",
+				LabelSelector: &metav1.LabelSelector{MatchLabels: map[string]string{RoleLabel: GameServerLabelRole}},
+			},
+		}
+
+		pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, wpat)
+	}
 }
 
 // HasPortPolicy checks if there is a port with a given

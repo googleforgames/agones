@@ -22,6 +22,7 @@ agones:
   controller:
     resources: {}
     generateTLS: true
+    safeToEvict: false
     healthCheck:
       http:
         port: 8080
@@ -37,6 +38,8 @@ agones:
       pullPolicy: IfNotPresent
     sdk:
       name: agones-sdk
+      cpuRequest: 30m
+      cpuLimit: 0
       alwaysPull: false
 
 gameservers:

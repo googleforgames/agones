@@ -22,32 +22,16 @@ import (
 )
 
 const (
-	// Packed scheduling strategy will prioritise allocating GameServers
-	// on Nodes with the most Allocated, and then Ready GameServers
-	// to bin pack as many Allocated GameServers on a single node.
-	// This is most useful for dynamic Kubernetes clusters - such as on Cloud Providers.
-	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
-	Packed SchedulingStrategy = "Packed"
-
-	// Distributed scheduling strategy will prioritise allocating GameServers
-	// on Nodes with the least Allocated, and then Ready GameServers
-	// to distribute Allocated GameServers across many nodes.
-	// This is most useful for statically sized Kubernetes clusters - such as on physical hardware.
-	// In future versions, this will also impact Fleet scale down, and Pod Scheduling.
-	Distributed SchedulingStrategy = "Distributed"
-
 	// FleetGameServerSetLabel is the label that the name of the Fleet
 	// is set to on the GameServerSet the Fleet controls
 	FleetGameServerSetLabel = stable.GroupName + "/fleet"
 )
 
-type SchedulingStrategy string
-
 // +genclient
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Fleet is the data structure for a gameserver resource
+// Fleet is the data structure for a Fleet resource
 type Fleet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -58,7 +42,7 @@ type Fleet struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// FleetList is a list of GameServer resources
+// FleetList is a list of Fleet resources
 type FleetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -78,7 +62,7 @@ type FleetSpec struct {
 	Template GameServerTemplateSpec `json:"template"`
 }
 
-// FleetStatus is the status of a GameServerSet
+// FleetStatus is the status of a Fleet
 type FleetStatus struct {
 	// Replicas the total number of current GameServer replicas
 	Replicas int32 `json:"replicas"`
@@ -93,7 +77,8 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet := &GameServerSet{
 		ObjectMeta: *f.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec: GameServerSetSpec{
-			Template: f.Spec.Template,
+			Template:   f.Spec.Template,
+			Scheduling: f.Spec.Scheduling,
 		},
 	}
 

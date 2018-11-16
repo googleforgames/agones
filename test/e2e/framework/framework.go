@@ -152,7 +152,7 @@ func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.Ga
 	return results, nil
 }
 
-// FleetReadyCountCondition checks the ready count in a fleet
+// FleetReadyCount returns the ready count in a fleet
 func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
 	return func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.ReadyReplicas == amount

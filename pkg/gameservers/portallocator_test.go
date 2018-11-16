@@ -19,7 +19,6 @@ import (
 	"strconv"
 	"sync"
 	"testing"
-	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -54,6 +53,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
+		// (no longer an issue, but leave this here for posterity)
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
 		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
@@ -62,11 +62,11 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Nil(t, err)
 
 		// single port dynamic
-		_, err = pa.Allocate(fixture.DeepCopy())
+		pa.Allocate(fixture.DeepCopy())
 		assert.Nil(t, err)
 		assert.Equal(t, 1, countTotalAllocatedPorts(pa))
 
-		_, err = pa.Allocate(fixture.DeepCopy())
+		pa.Allocate(fixture.DeepCopy())
 		assert.Nil(t, err)
 		assert.Equal(t, 2, countTotalAllocatedPorts(pa))
 
@@ -74,7 +74,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		copy := fixture.DeepCopy()
 		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
 		assert.Len(t, copy.Spec.Ports, 2)
-		_, err = pa.Allocate(copy.DeepCopy())
+		pa.Allocate(copy.DeepCopy())
 		assert.Nil(t, err)
 		assert.Equal(t, 4, countTotalAllocatedPorts(pa))
 
@@ -82,7 +82,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		copy = copy.DeepCopy()
 		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
 		assert.Len(t, copy.Spec.Ports, 3)
-		_, err = pa.Allocate(copy)
+		pa.Allocate(copy)
 		assert.Nil(t, err)
 		assert.Equal(t, 7, countTotalAllocatedPorts(pa))
 
@@ -91,7 +91,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		expected := int32(9999)
 		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: v1alpha1.Static})
 		assert.Len(t, copy.Spec.Ports, 4)
-		_, err = pa.Allocate(copy)
+		pa.Allocate(copy)
 		assert.Nil(t, err)
 		assert.Equal(t, 10, countTotalAllocatedPorts(pa))
 		assert.Equal(t, v1alpha1.Static, copy.Spec.Ports[3].PortPolicy)
@@ -120,15 +120,16 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			// ports between 10 and 20
 			for i := 10; i <= 20; i++ {
 				var p int32
-				gs, err := pa.Allocate(fixture.DeepCopy())
+				gs := pa.Allocate(fixture.DeepCopy())
 				assert.True(t, 10 <= gs.Spec.Ports[0].HostPort && gs.Spec.Ports[0].HostPort <= 20, "%v is not between 10 and 20", p)
 				assert.Nil(t, err)
 			}
 		}
 
-		// now we should have none left
-		_, err = pa.Allocate(fixture.DeepCopy())
-		assert.Equal(t, ErrPortNotFound, err)
+		assert.Len(t, pa.portAllocations, 2)
+		gs := pa.Allocate(fixture.DeepCopy())
+		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
+		assert.Len(t, pa.portAllocations, 3)
 	})
 
 	t.Run("ports are all allocated with multiple ports per GameServers", func(t *testing.T) {
@@ -159,7 +160,8 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			for i := 10; i <= 14; i++ {
 				copy := morePortFixture.DeepCopy()
 				copy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
-				gs, err := pa.Allocate(copy)
+				gs := pa.Allocate(copy)
+				assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
 				logrus.WithField("uid", copy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
 				assert.Nil(t, err)
 				for _, p := range gs.Spec.Ports {
@@ -171,9 +173,10 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		}
 
 		logrus.WithField("allocated", countTotalAllocatedPorts(pa)).WithField("count", len(pa.portAllocations[0])+len(pa.portAllocations[1])).Info("How many allocated")
-		// now we should have none left
-		_, err = pa.Allocate(fixture.DeepCopy())
-		assert.Equal(t, ErrPortNotFound, err)
+		assert.Len(t, pa.portAllocations, 2)
+		gs := pa.Allocate(fixture.DeepCopy())
+		assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
+		assert.Len(t, pa.portAllocations, 3)
 	})
 
 	t.Run("ports are unique in a node", func(t *testing.T) {
@@ -191,7 +194,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Nil(t, err)
 		var ports []int32
 		for i := 10; i <= 20; i++ {
-			gs, err := pa.Allocate(fixture.DeepCopy())
+			gs := pa.Allocate(fixture.DeepCopy())
 			assert.Nil(t, err)
 			assert.NotContains(t, ports, gs.Spec.Ports[0].HostPort)
 			ports = append(ports, gs.Spec.Ports[0].HostPort)
@@ -202,7 +205,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	fixture := dynamicGameServerFixture()
 	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 110, m.KubeInformationFactory, m.AgonesInformerFactory)
+	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
 	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		nl := &corev1.NodeList{Items: []corev1.Node{n1, n2}}
@@ -214,12 +217,14 @@ func TestPortAllocatorMultithreadAllocate(t *testing.T) {
 	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 
-	for i := 0; i < 3; i++ {
+	// do this for more than the nodes that are pre-allocated, to make sure
+	// it works for dynamic node addition
+	for i := 0; i < 5; i++ {
 		wg.Add(1)
 		go func(i int) {
 			for x := 0; x < 10; x++ {
 				logrus.WithField("x", x).WithField("i", i).Info("allocating!")
-				gs, err := pa.Allocate(fixture.DeepCopy())
+				gs := pa.Allocate(fixture.DeepCopy())
 				for _, p := range gs.Spec.Ports {
 					assert.NotEmpty(t, p.HostPort)
 				}
@@ -252,7 +257,7 @@ func TestPortAllocatorDeAllocate(t *testing.T) {
 	assert.NotEmpty(t, fixture.Spec.Ports)
 
 	for i := 0; i <= 100; i++ {
-		gs, err := pa.Allocate(fixture.DeepCopy())
+		gs := pa.Allocate(fixture.DeepCopy())
 		assert.Nil(t, err)
 		port := gs.Spec.Ports[0]
 		assert.True(t, 10 <= port.HostPort && port.HostPort <= 20)
@@ -412,125 +417,6 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 	pa.mutex.RUnlock()
 }
 
-func TestPortAllocatorNodeEvents(t *testing.T) {
-	fixture := dynamicGameServerFixture()
-	m := agtesting.NewMocks()
-	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
-	nodeWatch := watch.NewFake()
-	gsWatch := watch.NewFake()
-	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
-	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-
-	received := make(chan string, 10)
-	defer close(received)
-
-	f := pa.workerqueue.SyncHandler
-	pa.workerqueue.SyncHandler = func(s string) error {
-		err := f(s)
-		assert.Nil(t, err, "sync handler failed")
-		received <- s
-		return nil
-	}
-
-	stop, cancel := agtesting.StartInformers(m)
-	defer cancel()
-
-	// Make sure the add's don't corrupt the sync
-	nodeWatch.Add(&n1)
-	nodeWatch.Add(&n2)
-
-	go func() {
-		err := pa.Run(stop)
-		assert.Nil(t, err)
-	}()
-
-	testReceived := func(expected, failMsg string) {
-		select {
-		case key := <-received:
-			assert.Equal(t, expected, key)
-		case <-time.After(3 * time.Second):
-			assert.FailNow(t, failMsg, "expected: %s", expected)
-		}
-	}
-
-	testReceived(n1.ObjectMeta.Name, "add node 1")
-	testReceived(n2.ObjectMeta.Name, "add node 2")
-
-	// add a game server
-	gs, err := pa.Allocate(fixture.DeepCopy())
-	port := gs.Spec.Ports[0].HostPort
-
-	assert.Nil(t, err)
-	gsWatch.Add(gs)
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 2)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-
-	// add the n3 node
-	logrus.Info("adding n3")
-	nodeWatch.Add(&n3)
-	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
-	testReceived(n3.ObjectMeta.Name, "add node 3")
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 3)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-
-	// mark the node as unscheduled
-	logrus.Info("unscheduling n3")
-	copy := n3.DeepCopy()
-	copy.Spec.Unschedulable = true
-	assert.True(t, copy.Spec.Unschedulable)
-	nodeWatch.Modify(copy)
-	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
-	testReceived(string(syncAllKey), "unscheduled node 3")
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 2)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-
-	// schedule the n3 node again
-	logrus.Info("scheduling n3")
-	copy = n3.DeepCopy()
-	copy.Spec.Unschedulable = false
-	nodeWatch.Modify(copy)
-	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
-	testReceived(string(syncAllKey), "scheduled node 3")
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 3)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-
-	// delete the n3 node
-	logrus.Info("deleting n3")
-	nodeWatch.Delete(n3.DeepCopy())
-	assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
-	testReceived(string(syncAllKey), "deleting node 3")
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 2)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-
-	// add the n1 node again, it shouldn't do anything
-	nodeWatch.Add(&n1)
-	select {
-	case <-received:
-		assert.FailNow(t, "adding back n1: event should not happen")
-	case <-time.After(time.Second):
-	}
-
-	pa.mutex.RLock()
-	assert.Len(t, pa.portAllocations, 2)
-	assert.Equal(t, 1, countAllocatedPorts(pa, port))
-	pa.mutex.RUnlock()
-}
-
 func TestNodePortAllocation(t *testing.T) {
 	t.Parallel()
 
@@ -541,8 +427,7 @@ func TestNodePortAllocation(t *testing.T) {
 		nl := &corev1.NodeList{Items: nodes}
 		return true, nl, nil
 	})
-	result, registry := pa.nodePortAllocation([]*corev1.Node{&n1, &n2, &n3})
-	assert.Len(t, registry, 3)
+	result := pa.nodePortAllocation([]*corev1.Node{&n1, &n2, &n3})
 	assert.Len(t, result, 3)
 	for _, n := range nodes {
 		ports, ok := result[n.ObjectMeta.Name]
@@ -568,6 +453,43 @@ func TestTakePortAllocation(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
+	t.Parallel()
+	m := agtesting.NewMocks()
+	pa := NewPortAllocator(10, 13, m.KubeInformationFactory, m.AgonesInformerFactory)
+
+	gs1 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+
+	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n2.ObjectMeta.Name}}
+
+	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 12}}, NodeName: n1.ObjectMeta.Name}}
+
+	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "3"},
+		Spec: v1alpha1.GameServerSpec{
+			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 13}},
+		},
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.PortAllocation, Ports: []v1alpha1.GameServerStatusPort{{Port: 13}}}}
+
+	allocations, nonReadyNodesPorts := pa.registerExistingGameServerPorts([]*v1alpha1.GameServer{gs1, gs2, gs3, gs4}, []*corev1.Node{&n1, &n2, &n3}, map[types.UID]bool{})
+
+	assert.Equal(t, []int32{13}, nonReadyNodesPorts)
+	assert.Equal(t, portAllocation{10: true, 11: false, 12: true, 13: false}, allocations[0])
+	assert.Equal(t, portAllocation{10: false, 11: true, 12: false, 13: false}, allocations[1])
+	assert.Equal(t, portAllocation{10: false, 11: false, 12: false, 13: false}, allocations[2])
 }
 
 func dynamicGameServerFixture() *v1alpha1.GameServer {

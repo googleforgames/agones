@@ -1,5 +1,27 @@
 # Agones Game Server Client SDKs
 
+
+Table of Contents
+=================
+
+  * [Overview](#overview)
+  * [Function Reference](#function-reference)
+     * [Ready()](#ready)
+     * [Health()](#health)
+     * [Shutdown()](#shutdown)
+     * [SetLabel(key, value)](#setlabelkey-value)
+     * [SetAnnotation(key, value)](#setannotationkey-value)
+     * [GameServer()](#gameserver)
+     * [WatchGameServer(function(gameserver){...})](#watchgameserverfunctiongameserver)
+  * [Local Development](#local-development)
+     * [Providing your own GameServer configuration for local development](#providing-your-own-gameserver-configuration-for-local-development)
+  * [Writing your own SDK](#writing-your-own-sdk)
+     * [gRPC Client Generation](#grpc-client-generation)
+     * [REST API Implementation](#rest-api-implementation)
+  * [Building the Local Tools](#building-the-local-tools)
+
+## Overview
+
 The SDKs are integration points for game servers with Agones itself.
 
 They are required for a game server to work with Agones.
@@ -138,6 +160,15 @@ By default, the local sdk-server will create a dummy `GameServer` configuration 
 and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
 can be passed through as either `--file` or `-f` along with the `--local` flag.
 
+If the `GamerServer` configuration file is changed while the local server is running,
+this will be picked up by the local server, and will change the current active configuration, as well as sending out
+events for `WatchGameServer()`. This is a useful way of testing functionality, such as changes of state from `Ready` to
+`Allocated` in your game server code.
+
+> File modification events can fire more than one for each save (for a variety of reasons), 
+but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
+happen when live as well.
+
 For example:
 
 ```console
@@ -148,17 +179,19 @@ $ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.ya
 {"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 ```
 
-### Writing your own SDK
+
+
+## Writing your own SDK
 
 If there isn't a SDK for the language and platform you are looking for, you have several options:
 
-#### gRPC Client Generation
+### gRPC Client Generation
 
 If client generation is well supported by [gRPC](https://grpc.io/docs/), then generate a client from the
 [sdk.proto](../sdk.proto), and look at the current [sdks](.) to see how the wrappers are implemented to make interaction
 with the SDK server simpler for the user.
 
-#### REST API Implementation
+### REST API Implementation
 
 If client generation is not well supported by gRPC, or if there are other complicating factors, implement the SDK through
 the [REST](../docs/sdk_rest_api.md) HTTP+JSON interface. This could be written by hand, or potentially generated from
@@ -166,7 +199,7 @@ the [Swagger/OpenAPI Spec](../sdk.swagger.json).
 
 Finally, if you build something that would be usable by the community, please submit a pull request!
 
-### Building the Local Tools
+## Building the Local Tools
 
 If you wish to build the binaries for local development from source
 the `make` target `build-agones-sdk-binary` will compile the necessary binaries

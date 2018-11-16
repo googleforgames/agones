@@ -19,7 +19,7 @@ import (
 	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -101,13 +101,13 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
 
-	wh.AddHandler("/validate", stablev1alpha1.Kind("GameServerSet"), admv1beta1.Update, c.updateValidationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("GameServerSet"), admv1beta1.Update, c.updateValidationHandler)
 
 	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			oldGss := oldObj.(*stablev1alpha1.GameServerSet)
-			newGss := newObj.(*stablev1alpha1.GameServerSet)
+			oldGss := oldObj.(*v1alpha1.GameServerSet)
+			newGss := newObj.(*v1alpha1.GameServerSet)
 			if oldGss.Spec.Replicas != newGss.Spec.Replicas {
 				c.workerqueue.Enqueue(newGss)
 			}
@@ -117,7 +117,7 @@ func NewController(
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.gameServerEventHandler,
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			gs := newObj.(*stablev1alpha1.GameServer)
+			gs := newObj.(*v1alpha1.GameServer)
 			// ignore if already being deleted
 			if gs.ObjectMeta.DeletionTimestamp == nil {
 				c.gameServerEventHandler(gs)
@@ -153,8 +153,8 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("updateValidationHandler")
 
-	newGss := &stablev1alpha1.GameServerSet{}
-	oldGss := &stablev1alpha1.GameServerSet{}
+	newGss := &v1alpha1.GameServerSet{}
+	oldGss := &v1alpha1.GameServerSet{}
 
 	newObj := review.Request.Object
 	if err := json.Unmarshal(newObj.Raw, newGss); err != nil {
@@ -190,7 +190,7 @@ func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) 
 }
 
 func (c *Controller) gameServerEventHandler(obj interface{}) {
-	gs := obj.(*stablev1alpha1.GameServer)
+	gs := obj.(*v1alpha1.GameServer)
 	ref := metav1.GetControllerOf(gs)
 	if ref == nil {
 		return
@@ -243,7 +243,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 	if err := c.syncMoreGameServers(gsSet, diff); err != nil {
 		return err
 	}
-	if err := c.syncLessGameSevers(gsSet, diff); err != nil {
+	if err := c.syncLessGameServers(gsSet, diff); err != nil {
 		return err
 	}
 	if err := c.syncGameServerSetState(gsSet, list); err != nil {
@@ -254,9 +254,9 @@ func (c *Controller) syncGameServerSet(key string) error {
 }
 
 // syncUnhealthyGameServers deletes any unhealthy game servers (that are not already being deleted)
-func (c *Controller) syncUnhealthyGameServers(gsSet *stablev1alpha1.GameServerSet, list []*stablev1alpha1.GameServer) error {
+func (c *Controller) syncUnhealthyGameServers(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
 	for _, gs := range list {
-		if gs.Status.State == stablev1alpha1.Unhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
+		if gs.Status.State == v1alpha1.Unhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 			c.allocationMutex.Lock()
 			err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, nil)
 			c.allocationMutex.Unlock()
@@ -271,7 +271,7 @@ func (c *Controller) syncUnhealthyGameServers(gsSet *stablev1alpha1.GameServerSe
 }
 
 // syncMoreGameServers adds diff more GameServers to the set
-func (c *Controller) syncMoreGameServers(gsSet *stablev1alpha1.GameServerSet, diff int32) error {
+func (c *Controller) syncMoreGameServers(gsSet *v1alpha1.GameServerSet, diff int32) error {
 	if diff <= 0 {
 		return nil
 	}
@@ -288,8 +288,8 @@ func (c *Controller) syncMoreGameServers(gsSet *stablev1alpha1.GameServerSet, di
 	return nil
 }
 
-// syncLessGameSevers removes Ready GameServers from the set of GameServers
-func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, diff int32) error {
+// syncLessGameServers removes Ready GameServers from the set of GameServers
+func (c *Controller) syncLessGameServers(gsSet *v1alpha1.GameServerSet, diff int32) error {
 	if diff >= 0 {
 		return nil
 	}
@@ -321,12 +321,16 @@ func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, dif
 		}
 	}
 
+	if gsSet.Spec.Scheduling == v1alpha1.Packed {
+		list = filterGameServersOnLeastFullNodes(list, diff)
+	}
+
 	for _, gs := range list {
 		if diff <= count {
 			return nil
 		}
 
-		if gs.Status.State != stablev1alpha1.Allocated {
+		if gs.Status.State != v1alpha1.Allocated {
 			err := c.gameServerGetter.GameServers(gs.Namespace).Delete(gs.ObjectMeta.Name, nil)
 			if err != nil {
 				return errors.Wrapf(err, "error deleting gameserver for gameserverset %s", gsSet.ObjectMeta.Name)
@@ -340,19 +344,19 @@ func (c *Controller) syncLessGameSevers(gsSet *stablev1alpha1.GameServerSet, dif
 }
 
 // syncGameServerSetState synchronises the GameServerSet State with active GameServer counts
-func (c *Controller) syncGameServerSetState(gsSet *stablev1alpha1.GameServerSet, list []*stablev1alpha1.GameServer) error {
+func (c *Controller) syncGameServerSetState(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
 	rc := int32(0)
 	ac := int32(0)
 	for _, gs := range list {
 		switch gs.Status.State {
-		case stablev1alpha1.Ready:
+		case v1alpha1.Ready:
 			rc++
-		case stablev1alpha1.Allocated:
+		case v1alpha1.Allocated:
 			ac++
 		}
 	}
 
-	status := stablev1alpha1.GameServerSetStatus{
+	status := v1alpha1.GameServerSetStatus{
 		Replicas:          int32(len(list)),
 		ReadyReplicas:     rc,
 		AllocatedReplicas: ac,

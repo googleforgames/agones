@@ -38,7 +38,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["events"]
-  verbs: ["create"]
+  verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["create", "delete", "list", "watch"]
@@ -163,6 +163,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -184,9 +186,15 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            scheduling:
+              type: string
+              enum:
+              - Packed
+              - Distributed
             strategy:
               properties:
                 type:
+                  type: string
                   enum:
                     - Recreate
                     - RollingUpdate
@@ -234,7 +242,7 @@ spec:
                     ports:
                       title: array of ports to expose on the game server container
                       type: array
-                      minItems: 0 # make this 1 in 0.4.0
+                      minItems: 1
                       required:
                         - containerPort
                       items:
@@ -268,34 +276,11 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
-                    portPolicy: # remove this in 0.4.0
-                      title: the port policy that will be applied to the game server
-                      description: |
-                          portPolicy has two options:
-                          - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                          - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                          port is available. When static is the policy specified, `hostPort` is required to be populated
+                    scheduling:
                       type: string
                       enum:
-                      - dynamic
-                      - static
-                    protocol: # remove this in 0.4.0
-                      title: Protocol being used. Defaults to UDP. TCP is the only other option
-                      type: string
-                      enum:
-                      - UDP
-                      - TCP
-                    containerPort: # remove this in 0.4.0
-                      title: The port that is being opened on the game server process
-                      type: integer
-                      minimum: 1
-                      maximum: 65535
-                    hostPort: # remove this in 0.4.0
-                      title: The port exposed on the host
-                      description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
-                      type: integer
-                      minimum: 1
-                      maximum: 65535
+                      - Packed
+                      - Distributed
                     health:
                       type: object
                       title: Health checking for the running game server
@@ -318,6 +303,7 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+
 ---
 # Source: agones/templates/crds/fleetallocation.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -344,6 +330,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -393,6 +381,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -421,8 +411,9 @@ spec:
                 - type
               properties:
                 type:
+                  type: string
                   enum:
-                    - Buffer
+                  - Buffer
                 buffer:
                   required:
                     - maxReplicas
@@ -460,6 +451,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -515,7 +508,7 @@ spec:
             ports:
               title: array of ports to expose on the game server container
               type: array
-              minItems: 0 # make this 1 in 0.4.0
+              minItems: 1
               required:
                 - containerPort
               items:
@@ -549,34 +542,11 @@ spec:
                     type: integer
                     minimum: 1
                     maximum: 65535
-            portPolicy: # remove this in 0.4.0
-              title: the port policy that will be applied to the game server
-              description: |
-                  portPolicy has two options:
-                  - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                  - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                  port is available. When static is the policy specified, `hostPort` is required to be populated
+            scheduling:
               type: string
               enum:
-              - dynamic
-              - static
-            protocol: # remove this in 0.4.0
-              title: Protocol being used. Defaults to UDP. TCP is the only other option
-              type: string
-              enum:
-              - UDP
-              - TCP
-            containerPort: # remove this in 0.4.0
-              title: The port that is being opened on the game server process
-              type: integer
-              minimum: 1
-              maximum: 65535
-            hostPort: # remove this in 0.4.0
-              title: The port exposed on the host
-              description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
-              type: integer
-              minimum: 1
-              maximum: 65535
+              - Packed
+              - Distributed
             health:
               type: object
               title: Health checking for the running game server
@@ -599,6 +569,7 @@ spec:
                   type: integer
                   minimum: 1
                   maximum: 2147483648
+
 ---
 # Source: agones/templates/crds/gameserverset.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -625,6 +596,8 @@ metadata:
     chart: agones-0.6.0-rc
     release: agones-manual
     heritage: Tiller
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -647,6 +620,11 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            scheduling:
+              type: string
+              enum:
+              - Packed
+              - Distributed
             template:              
               required:
               - spec
@@ -691,7 +669,7 @@ spec:
                     ports:
                       title: array of ports to expose on the game server container
                       type: array
-                      minItems: 0 # make this 1 in 0.4.0
+                      minItems: 1
                       required:
                         - containerPort
                       items:
@@ -725,34 +703,11 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
-                    portPolicy: # remove this in 0.4.0
-                      title: the port policy that will be applied to the game server
-                      description: |
-                          portPolicy has two options:
-                          - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                          - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                          port is available. When static is the policy specified, `hostPort` is required to be populated
+                    scheduling:
                       type: string
                       enum:
-                      - dynamic
-                      - static
-                    protocol: # remove this in 0.4.0
-                      title: Protocol being used. Defaults to UDP. TCP is the only other option
-                      type: string
-                      enum:
-                      - UDP
-                      - TCP
-                    containerPort: # remove this in 0.4.0
-                      title: The port that is being opened on the game server process
-                      type: integer
-                      minimum: 1
-                      maximum: 65535
-                    hostPort: # remove this in 0.4.0
-                      title: The port exposed on the host
-                      description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
-                      type: integer
-                      minimum: 1
-                      maximum: 65535
+                      - Packed
+                      - Distributed
                     health:
                       type: object
                       title: Health checking for the running game server
@@ -775,6 +730,7 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -847,6 +803,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
       labels:
         stable.agones.dev/role: controller
         app: agones
@@ -859,16 +817,20 @@ spec:
         image: "gcr.io/agones-images/agones-controller:0.6.0-rc"
         imagePullPolicy: IfNotPresent
         env:
-        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: "false"
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
-          value: "7000" 
+          value: "7000"
         # maximum port that can be exposed to GameServer traffic
         - name: MAX_PORT
           value: "8000"
-        - name: SIDECAR # overwrite the GameServer sidecar image that is used
+        - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
           value: "gcr.io/agones-images/agones-sdk:0.6.0-rc"
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: "false"
+        - name: SIDECAR_CPU_REQUEST
+          value: "30m"
+        - name: SIDECAR_CPU_LIMIT
+          value: "0"
         livenessProbe:
           httpGet:
             path: /live

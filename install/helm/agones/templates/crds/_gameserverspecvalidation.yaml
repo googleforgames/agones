@@ -57,7 +57,7 @@ properties:
       ports:
         title: array of ports to expose on the game server container
         type: array
-        minItems: 0 # make this 1 in 0.4.0
+        minItems: 1
         required:
           - containerPort
         items:
@@ -91,34 +91,11 @@ properties:
               type: integer
               minimum: 1
               maximum: 65535
-      portPolicy: # remove this in 0.4.0
-        title: the port policy that will be applied to the game server
-        description: |
-            portPolicy has two options:
-            - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-            - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-            port is available. When static is the policy specified, `hostPort` is required to be populated
+      scheduling:
         type: string
         enum:
-        - dynamic
-        - static
-      protocol: # remove this in 0.4.0
-        title: Protocol being used. Defaults to UDP. TCP is the only other option
-        type: string
-        enum:
-        - UDP
-        - TCP
-      containerPort: # remove this in 0.4.0
-        title: The port that is being opened on the game server process
-        type: integer
-        minimum: 1
-        maximum: 65535
-      hostPort: # remove this in 0.4.0
-        title: The port exposed on the host
-        description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
-        type: integer
-        minimum: 1
-        maximum: 65535
+        - Packed
+        - Distributed
       health:
         type: object
         title: Health checking for the running game server

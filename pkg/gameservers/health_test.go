@@ -52,6 +52,28 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	assert.False(t, hc.failedContainer(pod2))
 }
 
+func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+
+	gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs.ApplyDefaults()
+
+	pod, err := gs.Pod()
+	assert.Nil(t, err)
+
+	pod.Status.Conditions = []corev1.PodCondition{
+		{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
+			Message: "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports."},
+	}
+	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
+
+	pod.Status.Conditions[0].Message = "not a real reason"
+	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
+}
+
 func TestHealthControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
@@ -63,11 +85,18 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 		state    v1alpha1.State
 		expected expected
 	}{
-		"not ready": {
+		"started": {
 			state: v1alpha1.Starting,
 			expected: expected{
+				updated: true,
+				state:   v1alpha1.Unhealthy,
+			},
+		},
+		"scheduled": {
+			state: v1alpha1.Scheduled,
+			expected: expected{
 				updated: false,
-				state:   v1alpha1.Starting,
+				state:   v1alpha1.Scheduled,
 			},
 		},
 		"ready": {
@@ -83,6 +112,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			m := agtesting.NewMocks()
 			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+			hc.recorder = m.FakeRecorder
 
 			gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 				Status: v1alpha1.GameServerStatus{State: test.state}}
@@ -126,8 +156,11 @@ func TestHealthControllerRun(t *testing.T) {
 	m.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(podWatch, nil))
 
 	updated := make(chan bool)
+	defer close(updated)
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		defer close(updated)
+		defer func() {
+			updated <- true
+		}()
 		ua := action.(k8stesting.UpdateAction)
 		gsObj := ua.GetObject().(*v1alpha1.GameServer)
 		assert.Equal(t, v1alpha1.Unhealthy, gsObj.Status.State)
@@ -151,6 +184,26 @@ func TestHealthControllerRun(t *testing.T) {
 	pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gs.Spec.Container, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}
 	// gate
 	assert.True(t, hc.failedContainer(pod))
+	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
+
+	podWatch.Modify(pod)
+
+	select {
+	case <-updated:
+	case <-time.After(10 * time.Second):
+		assert.FailNow(t, "timeout on GameServer update")
+	}
+
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.Unhealthy))
+
+	pod.Status.ContainerStatuses = nil
+	pod.Status.Conditions = []corev1.PodCondition{
+		{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
+			Message: "0/4 nodes are available: 4 node(s) didn't have free ports for the requestedpod ports."},
+	}
+	// gate
+	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
+	assert.False(t, hc.failedContainer(pod))
 
 	podWatch.Modify(pod)
 

@@ -22,6 +22,8 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -43,9 +45,15 @@ spec:
             replicas:
               type: integer
               minimum: 0
+            scheduling:
+              type: string
+              enum:
+              - Packed
+              - Distributed
             strategy:
               properties:
                 type:
+                  type: string
                   enum:
                     - Recreate
                     - RollingUpdate

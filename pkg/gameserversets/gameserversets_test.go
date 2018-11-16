@@ -26,6 +26,43 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
+func TestFilterGameServersOnLeastFullNodes(t *testing.T) {
+	t.Parallel()
+
+	gsList := []*v1alpha1.GameServer{
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.Ready}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.Starting}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.Ready}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.Ready}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs5"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Allocated}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs6"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Allocated}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs7"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Ready}},
+	}
+
+	t.Run("normal", func(t *testing.T) {
+		limit := 4
+		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
+		assert.Len(t, result, limit)
+		assert.Equal(t, "gs1", result[0].Name)
+		assert.Equal(t, "n2", result[1].Status.NodeName)
+		assert.Equal(t, "n2", result[2].Status.NodeName)
+		assert.Equal(t, "n3", result[3].Status.NodeName)
+	})
+
+	t.Run("zero", func(t *testing.T) {
+		limit := 0
+		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
+		assert.Len(t, result, limit)
+	})
+
+	t.Run("negative", func(t *testing.T) {
+		limit := -1
+		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
+		assert.Len(t, result, 0)
+		assert.Empty(t, result)
+	})
+}
+
 func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	t.Parallel()
 

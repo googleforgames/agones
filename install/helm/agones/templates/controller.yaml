@@ -35,8 +35,9 @@ spec:
     type: Recreate
   template:
     metadata:
-{{- if .Values.agones.controller.generateTLS }}
       annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
+{{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
       labels:
@@ -51,16 +52,20 @@ spec:
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ .Values.agones.image.tag }}"
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
         env:
-        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
-          value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         # minimum port that can be exposed to GameServer traffic
         - name: MIN_PORT
-          value: {{ .Values.gameservers.minPort | quote }} 
+          value: {{ .Values.gameservers.minPort | quote }}
         # maximum port that can be exposed to GameServer traffic
         - name: MAX_PORT
           value: {{ .Values.gameservers.maxPort | quote }}
-        - name: SIDECAR # overwrite the GameServer sidecar image that is used
+        - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
           value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ .Values.agones.image.tag }}"
+        - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
+          value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
+        - name: SIDECAR_CPU_REQUEST
+          value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
+        - name: SIDECAR_CPU_LIMIT
+          value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
         livenessProbe:
           httpGet:
             path: /live

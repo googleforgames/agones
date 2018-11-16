@@ -16,9 +16,8 @@ package testing
 
 import (
 	"context"
-	"time"
-
 	gotesting "testing"
+	"time"
 
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"agones.dev/agones/pkg/client/informers/externalversions"
