@@ -17,9 +17,10 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	"net/http"
 	_ "net/http/pprof"
+
+	"github.com/sirupsen/logrus"
 )
 
 func init() {

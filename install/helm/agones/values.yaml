@@ -31,6 +31,24 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
+  ping:
+    install: true
+    replicas: 2
+    http:
+      expose: true
+      response: ok
+      port: 80
+      serviceType: LoadBalancer
+    udp:
+      expose: true
+      rateLimit: 20
+      port: 50000
+      serviceType: LoadBalancer
+    healthCheck:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
+      timeoutSeconds: 1
   image:
     registry: gcr.io/agones-images
     tag: 0.7.0-rc
@@ -42,6 +60,9 @@ agones:
       cpuRequest: 30m
       cpuLimit: 0
       alwaysPull: false
+    ping:
+      name: agones-ping
+      pullPolicy: IfNotPresent
 
 gameservers:
   namespaces:

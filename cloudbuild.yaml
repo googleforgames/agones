@@ -59,6 +59,6 @@ steps:
   dir: "build"
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 timeout: "1h"
-images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk']
+images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
 options:
  machineType: 'N1_HIGHCPU_8'
