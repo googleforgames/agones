@@ -54,7 +54,7 @@ This is a very common pattern in the Kubernetes ecosystem.
 The `spec` field is the actual `Fleet` specification and it is composed as follow:
 
 - `replicas` is the number of `GameServers` to keep Ready or Allocated in this Fleet
-- `scheduling`(⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️) defines how GameServers are organised across the cluster. Currently only affects Allocation, but will expand
+- `scheduling`(⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️) defines how GameServers are organised across the cluster. Currently only affects Allocation, but will expand
                  in future releases. Options include:
                  "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
                  resources. "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire

@@ -1,5 +1,50 @@
 # Changelog
 
+## [v0.6.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0-rc) (2018-11-20)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.5.0...v0.6.0-rc)
+
+**Implemented enhancements:**
+
+- Using the Cluster Autoscaler with Agones [\#368](https://github.com/GoogleCloudPlatform/agones/issues/368)
+- Agones sdk-server sidecar should have cpu and memory limits [\#344](https://github.com/GoogleCloudPlatform/agones/issues/344)
+- As developer, I want to emulate an allocation in local mode [\#314](https://github.com/GoogleCloudPlatform/agones/issues/314)
+- Document how to configure maximum number of pods/node that can be allocated [\#295](https://github.com/GoogleCloudPlatform/agones/issues/295)
+- Development tools to enable pprof [\#422](https://github.com/GoogleCloudPlatform/agones/pull/422) ([markmandel](https://github.com/markmandel))
+- Changes to the GameServer configuration are reflected in the local sdk server [\#413](https://github.com/GoogleCloudPlatform/agones/pull/413) ([markmandel](https://github.com/markmandel))
+- Mark GameServer Unhealthy if allocated HostPort isn't available [\#408](https://github.com/GoogleCloudPlatform/agones/pull/408) ([markmandel](https://github.com/markmandel))
+- Cluster Autoscaling: safe-to-evict=false annotations for GameServer Pods [\#405](https://github.com/GoogleCloudPlatform/agones/pull/405) ([markmandel](https://github.com/markmandel))
+- Packed: Fleet scaled down removes GameServers from least used Nodes [\#401](https://github.com/GoogleCloudPlatform/agones/pull/401) ([markmandel](https://github.com/markmandel))
+- Packed: PreferredDuringSchedulingIgnoredDuringExecution PodAffinity with a HostName topology [\#397](https://github.com/GoogleCloudPlatform/agones/pull/397) ([markmandel](https://github.com/markmandel))
+- Specify CPU Request for the SDK Server Sidecar [\#390](https://github.com/GoogleCloudPlatform/agones/pull/390) ([markmandel](https://github.com/markmandel))
+- Mount point for helm config [\#383](https://github.com/GoogleCloudPlatform/agones/pull/383) ([markmandel](https://github.com/markmandel))
+- Add crd-install helm hook to crds templates [\#375](https://github.com/GoogleCloudPlatform/agones/pull/375) ([smoya](https://github.com/smoya))
+- Prioritise Allocation from Nodes with Allocated/Ready GameServers [\#370](https://github.com/GoogleCloudPlatform/agones/pull/370) ([markmandel](https://github.com/markmandel))
+
+**Fixed bugs:**
+
+- Admission webhook "mutations.stable.agones.dev" errors with Invalid FleetAutoscaler [\#406](https://github.com/GoogleCloudPlatform/agones/issues/406)
+- Ports should always be allocated to a GameServer [\#415](https://github.com/GoogleCloudPlatform/agones/pull/415) ([markmandel](https://github.com/markmandel))
+- Apparently patching events is a thing. [\#402](https://github.com/GoogleCloudPlatform/agones/pull/402) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.5.0 [\#387](https://github.com/GoogleCloudPlatform/agones/issues/387)
+
+**Merged pull requests:**
+
+- More stringent linting rules \(and update linter\) [\#417](https://github.com/GoogleCloudPlatform/agones/pull/417) ([markmandel](https://github.com/markmandel))
+- FleetAutoscaler can be targeted at Non Existent Fleets [\#416](https://github.com/GoogleCloudPlatform/agones/pull/416) ([markmandel](https://github.com/markmandel))
+- Adding colour to the linter, because colours are pretty. [\#400](https://github.com/GoogleCloudPlatform/agones/pull/400) ([markmandel](https://github.com/markmandel))
+- Process to become an reviewer/approver on Agones. [\#399](https://github.com/GoogleCloudPlatform/agones/pull/399) ([markmandel](https://github.com/markmandel))
+- Update Helm to 2.11.0 [\#396](https://github.com/GoogleCloudPlatform/agones/pull/396) ([markmandel](https://github.com/markmandel))
+- Make sure do-release always uses the release\_registry [\#394](https://github.com/GoogleCloudPlatform/agones/pull/394) ([markmandel](https://github.com/markmandel))
+- Adding third part videos and presentations. [\#393](https://github.com/GoogleCloudPlatform/agones/pull/393) ([markmandel](https://github.com/markmandel))
+- TOC for the SDK integration and tooling [\#392](https://github.com/GoogleCloudPlatform/agones/pull/392) ([markmandel](https://github.com/markmandel))
+- Set test clusters to base version. GKE will work out the rest. [\#391](https://github.com/GoogleCloudPlatform/agones/pull/391) ([markmandel](https://github.com/markmandel))
+- Post 0.5.0 Updates [\#389](https://github.com/GoogleCloudPlatform/agones/pull/389) ([markmandel](https://github.com/markmandel))
+- Update to Go 1.11.1 [\#385](https://github.com/GoogleCloudPlatform/agones/pull/385) ([markmandel](https://github.com/markmandel))
+
 ## [v0.5.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.5.0) (2018-10-16)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.5.0-rc...v0.5.0)
@@ -14,6 +59,7 @@
 
 **Merged pull requests:**
 
+- Change for the 0.5.0 release. [\#388](https://github.com/GoogleCloudPlatform/agones/pull/388) ([markmandel](https://github.com/markmandel))
 - Troubleshooting guide for issues with Agones. [\#384](https://github.com/GoogleCloudPlatform/agones/pull/384) ([markmandel](https://github.com/markmandel))
 - Spec docs for FleetAutoscaler [\#381](https://github.com/GoogleCloudPlatform/agones/pull/381) ([markmandel](https://github.com/markmandel))
 - Post 0.5.0-rc updates [\#380](https://github.com/GoogleCloudPlatform/agones/pull/380) ([markmandel](https://github.com/markmandel))
