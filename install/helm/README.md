@@ -95,6 +95,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.sdk.cpuRequest`                       | The [cpu request][constraints] for sdk server container                                         | `30m`                  |
 | `agones.image.sdk.cpuLimit`                         | The [cpu limit][constraints] for the sdk server container                                       | `0` (none)             |
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
+| `agones.image.ping.name`                            | ( ⚠️ development feature ⚠️ ) Image name for the ping service                                    | `agones-ping`          |
+| `agones.image.ping.pullPolicy`                      | ( ⚠️ development feature ⚠️ ) Image pull policy for the ping service                             | `IfNotPresent`         |
 | `agones.controller.healthCheck.http.port`           | Port to use for liveness probe service                                                          | `8080`                 |
 | `agones.controller.healthCheck.initialDelaySeconds` | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
 | `agones.controller.healthCheck.periodSeconds`       | Seconds between every liveness probe (in seconds)                                               | `3`                    |
@@ -102,11 +104,27 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
+| `agones.ping.install`                               | ( ⚠️ development feature ⚠️ ) Whether to install the [ping service][ping]                        | `true`                 |
+| `agones.ping.replicas`                              | ( ⚠️ development feature ⚠️ ) The number of replicas to run in the deployment                    | `2`                    | 
+| `agones.ping.http.expose`                           | ( ⚠️ development feature ⚠️ ) Expose the http ping service via a Service                         | `true`                 | 
+| `agones.ping.http.response`                         | ( ⚠️ development feature ⚠️ ) The string response returned from the http service                 | `ok`                   | 
+| `agones.ping.http.port`                             | ( ⚠️ development feature ⚠️ ) The port to expose on the service                                  | `80`                   |
+| `agones.ping.http.serviceType`                      | ( ⚠️ development feature ⚠️ ) The [Service Type][service] of the HTTP Service                    | `LoadBalancer`         |
+| `agones.ping.udp.expose`                            | ( ⚠️ development feature ⚠️ ) Expose the udp ping service via a Service                          | `true`                 | 
+| `agones.ping.udp.rateLimit`                         | ( ⚠️ development feature ⚠️ ) Number of UDP packets the ping service handles per instance, per second, per sender    | `20`            | 
+| `agones.ping.udp.port`                              | ( ⚠️ development feature ⚠️ ) The port to expose on the service                                  | `80`                   |
+| `agones.ping.udp.serviceType`                       | ( ⚠️ development feature ⚠️ ) The [Service Type][service] of the UDP Service                     | `LoadBalancer`         |
+| `agones.ping.healthCheck.initialDelaySeconds`       | ( ⚠️ development feature ⚠️ ) Initial delay before performing the first probe (in seconds)       | `3`                    |
+| `agones.ping.healthCheck.periodSeconds`             | ( ⚠️ development feature ⚠️ ) Seconds between every liveness probe (in seconds)                  | `3`                    |
+| `agones.ping.healthCheck.failureThreshold`          | ( ⚠️ development feature ⚠️ ) Number of times before giving up (in seconds)                      | `3`                    |
+| `agones.ping.healthCheck.timeoutSeconds`            | ( ⚠️ development feature ⚠️ ) Number of seconds after which the probe times out (in seconds)     | `1`                    |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
+[ping]: ../../docs/ping_service.md
+[service]: https://kubernetes.io/docs/concepts/services-networking/service/
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

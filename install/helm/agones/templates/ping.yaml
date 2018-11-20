@@ -1,0 +1,108 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.agones.ping.install }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-ping
+  namespace: {{ .Release.Namespace }}
+  labels:
+    component: ping
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      stable.agones.dev/role: ping
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  replicas: {{ .Values.agones.ping.replicas }}
+  template:
+    metadata:
+      labels:
+        stable.agones.dev/role: ping
+        app: {{ template "agones.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      containers:
+        - name: agones-ping
+          image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ .Values.agones.image.tag }}"
+          imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /live
+            initialDelaySeconds: {{ .Values.agones.ping.healthCheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.agones.ping.healthCheck.periodSeconds }}
+            failureThreshold: {{ .Values.agones.ping.healthCheck.failureThreshold }}
+            timeoutSeconds: {{ .Values.agones.ping.healthCheck.timeoutSeconds }}
+          env:
+          - name: HTTP_RESPONSE
+            value: {{ .Values.agones.ping.http.response | quote }}
+          - name: UDP_RATE_LIMIT
+            value: {{ .Values.agones.ping.udp.rateLimit | quote }}
+  {{- if .Values.agones.ping.http.expose }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-ping-http-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    component: ping
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    stable.agones.dev/role: ping
+  ports:
+    - port: {{ .Values.agones.ping.http.port }}
+      name: http
+      targetPort: 8080
+      protocol: TCP
+  type: {{ .Values.agones.ping.http.serviceType }}
+  {{- end }}
+
+  {{- if .Values.agones.ping.udp.expose }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-ping-udp-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    component: ping
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    stable.agones.dev/role: ping
+  ports:
+    - port: {{ .Values.agones.ping.udp.port }}
+      name: udp
+      targetPort: 8080
+      protocol: UDP
+  type: {{ .Values.agones.ping.udp.serviceType }}
+  {{- end }}
+
+{{- end }}

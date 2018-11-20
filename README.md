@@ -50,6 +50,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 ### Guides
  - [Integrating the Game Server SDK](sdks)
  - [GameServer Health Checking](./docs/health_checking.md)
+ - [Latency Testing with Multiple Clusters](./docs/ping_service.md)
  - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
  - [Troubleshooting](./docs/troubleshooting.md)
 

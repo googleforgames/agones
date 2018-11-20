@@ -849,6 +849,107 @@ spec:
           secretName: agones-manual-cert
 
 ---
+# Source: agones/templates/ping.yaml
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-ping
+  namespace: agones-system
+  labels:
+    component: ping
+    app: agones
+    chart: agones-0.7.0-rc
+    release: agones-manual
+    heritage: Tiller
+spec:
+  selector:
+    matchLabels:
+      stable.agones.dev/role: ping
+      app: agones
+      release: agones-manual
+      heritage: Tiller
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        stable.agones.dev/role: ping
+        app: agones
+        release: agones-manual
+        heritage: Tiller
+    spec:
+      containers:
+        - name: agones-ping
+          image: "gcr.io/agones-images/agones-ping:0.7.0-rc"
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /live
+            initialDelaySeconds: 3
+            periodSeconds: 3
+            failureThreshold: 3
+            timeoutSeconds: 1
+          env:
+          - name: HTTP_RESPONSE
+            value: "ok"
+          - name: UDP_RATE_LIMIT
+            value: "20"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-ping-http-service
+  namespace: agones-system
+  labels:
+    component: ping
+    app: agones
+    chart: agones-0.7.0-rc
+    release: agones-manual
+    heritage: Tiller
+spec:
+  selector:
+    stable.agones.dev/role: ping
+  ports:
+    - port: 80
+      name: http
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-ping-udp-service
+  namespace: agones-system
+  labels:
+    component: ping
+    app: agones
+    chart: agones-0.7.0-rc
+    release: agones-manual
+    heritage: Tiller
+spec:
+  selector:
+    stable.agones.dev/role: ping
+  ports:
+    - port: 50000
+      name: udp
+      targetPort: 8080
+      protocol: UDP
+  type: LoadBalancer
+---
 # Source: agones/templates/hooks/post_delete_hook.yaml
 
 

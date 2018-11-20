@@ -72,6 +72,7 @@ build_tag = agones-build:$(build_version)
 build_remote_tag = $(REGISTRY)/$(build_tag)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
+ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag)
@@ -111,7 +112,7 @@ endif
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-agones-sdk-image
+build-images: build-controller-image build-agones-sdk-image build-ping-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -147,7 +148,7 @@ test: $(ensure-build-image) test-go test-install-yaml
 # Run go tests
 test-go:
 	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/pkg/... \
-	$(agones_package)/sdks/...
+	$(agones_package)/sdks/... $(agones_package)/cmd/...
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
@@ -168,20 +169,25 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-agones-sdk-image
+push: push-controller-image push-agones-sdk-image push-ping-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
+install: PING_SERVICE_TYPE := "LoadBalancer"
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\
-		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY),agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR),agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
+		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
+		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
+		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
+		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
 		agones $(mount_path)/install/helm/agones/
 
 uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \
 		helm delete --purge agones
+
 
 # Build a static binary for the gameserver controller
 build-controller-binary: $(ensure-build-image)
@@ -218,6 +224,20 @@ build-agones-sdk-binary: $(ensure-build-image)
 # Build the image for the gameserver sidecar
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
+
+# Build a static binary for the ping service
+build-ping-binary: $(ensure-build-image)
+	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
+	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/ping/bin/ping \
+	-a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+
+# Pushes up the ping image
+push-ping-image: $(ensure-build-image)
+	docker push $(ping_tag)
+
+# Build the image for the ping service
+build-ping-image: $(ensure-build-image) build-ping-binary
+	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build the cpp sdk linux archive
 build-sdk-cpp: $(ensure-build-image)
@@ -471,11 +491,13 @@ minikube-shell: $(ensure-build-image) minikube-agones-profile
 minikube-push: minikube-agones-profile
 	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
 	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
+	$(MAKE) minikube-transfer-image TAG=$(ping_tag)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: minikube-agones-profile
-	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
+	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort
 
 minikube-uninstall: $(ensure-build-image) minikube-agones-profile
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"

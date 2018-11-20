@@ -385,11 +385,14 @@ Run a bash shell with the developer tools (go tooling, kubectl, etc) and source 
 #### `make godoc`
 Run a container with godoc (search index enabled)
 
-#### `make build-agones-controller-image`
+#### `make build-controller-image`
 Compile the gameserver controller and then build the docker image
 
 #### `make build-agones-sdk-image`
 Compile the gameserver sidecar and then build the docker image
+
+#### `make build-ping-image`
+Compile the ping binary and then build the docker image
 
 #### `make gen-install`
 Generate the `/install/yaml/install.yaml` from the Helm template
