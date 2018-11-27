@@ -89,22 +89,17 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 	}
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
-	})
-	m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet}}, nil
-	})
+
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.GameServerList{Items: gsList}, nil
 	})
 
 	informer := m.AgonesInformerFactory.Stable().V1alpha1()
 	_, cancel := agtesting.StartInformers(m,
-		informer.Fleets().Informer().HasSynced, informer.GameServerSets().Informer().HasSynced, informer.GameServers().Informer().HasSynced)
+		informer.GameServers().Informer().HasSynced)
 	defer cancel()
 
-	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister(), informer.GameServerSets().Lister(), f)
+	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister(), f)
 	assert.Nil(t, err)
 	assert.Len(t, list, len(gsList), "Retrieved list should be same size as original")
 
