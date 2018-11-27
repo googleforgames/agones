@@ -22,9 +22,9 @@ import (
 )
 
 const (
-	// FleetGameServerSetLabel is the label that the name of the Fleet
-	// is set to on the GameServerSet the Fleet controls
-	FleetGameServerSetLabel = stable.GroupName + "/fleet"
+	// FleetNameLabel is the label that the name of the Fleet
+	// is set to on GameServerSet and GameServer  the Fleet controls
+	FleetNameLabel = stable.GroupName + "/fleet"
 )
 
 // +genclient
@@ -97,7 +97,7 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 		gsSet.ObjectMeta.Labels = make(map[string]string, 1)
 	}
 
-	gsSet.ObjectMeta.Labels[FleetGameServerSetLabel] = f.ObjectMeta.Name
+	gsSet.ObjectMeta.Labels[FleetNameLabel] = f.ObjectMeta.Name
 
 	return gsSet
 }

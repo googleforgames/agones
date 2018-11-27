@@ -28,6 +28,9 @@ func TestGameServerSetGameServer(t *testing.T) {
 			Name:      "test",
 			Namespace: "namespace",
 			UID:       "1234",
+			Labels: map[string]string{
+				FleetNameLabel: "fleetname",
+			},
 		},
 		Spec: GameServerSetSpec{
 			Replicas: 10,
@@ -49,6 +52,8 @@ func TestGameServerSetGameServer(t *testing.T) {
 	assert.Equal(t, gsSet.ObjectMeta.Namespace, gs.ObjectMeta.Namespace)
 	assert.Equal(t, gsSet.ObjectMeta.Name+"-", gs.ObjectMeta.GenerateName)
 	assert.Equal(t, gsSet.ObjectMeta.Name, gs.ObjectMeta.Labels[GameServerSetGameServerLabel])
+	assert.Equal(t, gsSet.ObjectMeta.Labels[FleetNameLabel], gs.ObjectMeta.Labels[FleetNameLabel])
+
 	assert.Equal(t, gs.Spec, gsSet.Spec.Template.Spec)
 	assert.True(t, v1.IsControlledBy(gs, &gsSet))
 }

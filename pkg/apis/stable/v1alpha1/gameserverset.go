@@ -109,10 +109,10 @@ func (gsSet *GameServerSet) GameServer() *GameServer {
 	gs.ObjectMeta.OwnerReferences = append(gs.ObjectMeta.OwnerReferences, *ref)
 
 	if gs.ObjectMeta.Labels == nil {
-		gs.ObjectMeta.Labels = make(map[string]string, 1)
+		gs.ObjectMeta.Labels = make(map[string]string, 2)
 	}
 
 	gs.ObjectMeta.Labels[GameServerSetGameServerLabel] = gsSet.ObjectMeta.Name
-
+	gs.ObjectMeta.Labels[FleetNameLabel] = gsSet.ObjectMeta.Labels[FleetNameLabel]
 	return gs
 }

@@ -19,7 +19,6 @@ package fleets
 import (
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
-	"agones.dev/agones/pkg/gameserversets"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -28,7 +27,7 @@ import (
 // ListGameServerSetsByFleetOwner lists all the GameServerSets for a given
 // Fleet
 func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1alpha1.GameServerSetLister, f *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServerSet, error) {
-	list, err := gameServerSetLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetGameServerSetLabel: f.ObjectMeta.Name}))
+	list, err := gameServerSetLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}))
 	if err != nil {
 		return list, errors.Wrapf(err, "error listing gameserversets for fleet %s", f.ObjectMeta.Name)
 	}
@@ -46,21 +45,11 @@ func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1alpha1.GameServe
 // ListGameServersByFleetOwner lists all GameServers that belong to a fleet through the
 // GameServer -> GameServerSet -> Fleet owner chain
 func ListGameServersByFleetOwner(gameServerLister listerv1alpha1.GameServerLister,
-	gameServerSetLister listerv1alpha1.GameServerSetLister, fleet *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServer, error) {
-	var result []*stablev1alpha1.GameServer
+	fleet *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServer, error) {
 
-	gsSetList, err := ListGameServerSetsByFleetOwner(gameServerSetLister, fleet)
+	list, err := gameServerLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetNameLabel: fleet.ObjectMeta.Name}))
 	if err != nil {
-		return result, err
+		return list, errors.Wrapf(err, "error listing gameservers for fleets %s", fleet.ObjectMeta.Name)
 	}
-
-	for _, gsSet := range gsSetList {
-		gsList, err := gameserversets.ListGameServersByGameServerSetOwner(gameServerLister, gsSet)
-		if err != nil {
-			return result, err
-		}
-		result = append(result, gsList...)
-	}
-
-	return result, nil
+	return list, nil
 }

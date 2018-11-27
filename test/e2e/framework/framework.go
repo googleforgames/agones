@@ -133,7 +133,7 @@ func (f *Framework) WaitForFleetCondition(flt *v1alpha1.Fleet, condition func(fl
 func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.GameServer, error) {
 	var results []v1alpha1.GameServer
 
-	opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.FleetGameServerSetLabel: flt.ObjectMeta.Name}.String()}
+	opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}.String()}
 	gsSetList, err := f.AgonesClient.StableV1alpha1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
 	if err != nil {
 		return results, err

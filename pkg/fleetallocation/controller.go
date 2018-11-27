@@ -267,7 +267,7 @@ func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.FleetAllocationMe
 	if !cache.WaitForCacheSync(c.stop, c.gameServerSynced) {
 		return allocation, errors.New("error syncing GameServer cache")
 	}
-	gsList, err := fleets.ListGameServersByFleetOwner(c.gameServerLister, c.gameServerSetLister, f)
+	gsList, err := fleets.ListGameServersByFleetOwner(c.gameServerLister, f)
 	if err != nil {
 		return allocation, err
 	}
