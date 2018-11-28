@@ -1,6 +1,14 @@
 # Changelog
 
-## [v0.6.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0-rc) (2018-11-20)
+## [v0.6.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0) (2018-11-28)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.6.0-rc...v0.6.0)
+
+**Closed issues:**
+
+- Release 0.6.0.rc [\#424](https://github.com/GoogleCloudPlatform/agones/issues/424)
+
+## [v0.6.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0-rc) (2018-11-21)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.5.0...v0.6.0-rc)
 
@@ -33,6 +41,7 @@
 
 **Merged pull requests:**
 
+- Release 0.6.0-rc [\#425](https://github.com/GoogleCloudPlatform/agones/pull/425) ([markmandel](https://github.com/markmandel))
 - More stringent linting rules \(and update linter\) [\#417](https://github.com/GoogleCloudPlatform/agones/pull/417) ([markmandel](https://github.com/markmandel))
 - FleetAutoscaler can be targeted at Non Existent Fleets [\#416](https://github.com/GoogleCloudPlatform/agones/pull/416) ([markmandel](https://github.com/markmandel))
 - Adding colour to the linter, because colours are pretty. [\#400](https://github.com/GoogleCloudPlatform/agones/pull/400) ([markmandel](https://github.com/markmandel))

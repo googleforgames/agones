@@ -1,7 +1,5 @@
 # Scheduling and Autoscaling
 
-⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
-
 > Autoscaling is currently ongoing work within Agones. The work you see here is just the beginning.
 
 Table of Contents

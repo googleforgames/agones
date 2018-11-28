@@ -92,8 +92,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
 | `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
-| `agones.image.sdk.cpuRequest`                       | (⚠️ release candidate feature ⚠️) the [cpu request][constraints] for sdk server container              | `30m`                  |
-| `agones.image.sdk.cpuLimit`                         | (⚠️ release candidate feature ⚠️) the [cpu limit][constraints] for the sdk server container            | `0` (none)             |
+| `agones.image.sdk.cpuRequest`                       | The [cpu request][constraints] for sdk server container                                         | `30m`                  |
+| `agones.image.sdk.cpuLimit`                         | The [cpu limit][constraints] for the sdk server container                                       | `0` (none)             |
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
 | `agones.controller.healthCheck.http.port`           | Port to use for liveness probe service                                                          | `8080`                 |
 | `agones.controller.healthCheck.initialDelaySeconds` | Initial delay before performing the first probe (in seconds)                                    | `3`                    |

@@ -29,8 +29,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
   - [ ] Attach all assets found in the `release` folder to the release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the github release)
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
-- [ ] Ensure the [helm `tag` value][values] is set to the next version (should be the {version} if a full release, {version}-rc if release candidate)
-- [ ] Ensure the [helm `Chart` version values][chart] is set to the next version (should be the {version} if a full release, {version}-rc if release candidate)
+- [ ] Ensure the [helm `tag` value][values] is set to the next version (should be the {version}+0.1 if a full release, {version}+0.1-rc if release candidate)
+- [ ] Ensure the [helm `Chart` version values][chart] is set to the next version (should be the {version}+0.1 if a full release, {version}+0.1-rc if release candidate)
 - [ ] Run `make gen-install`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
