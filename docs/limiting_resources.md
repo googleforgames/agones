@@ -45,8 +45,6 @@ If you do not set a limit or request, the default is set my Kubernetes at a 100m
 
 ## SDK GameServer sidecar
 
-⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
-
 You may also want to tweak the CPU request or limits on the SDK `GameServer` sidecar process that spins up alongside
 each game server container.
 
