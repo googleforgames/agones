@@ -849,6 +849,22 @@ spec:
           secretName: agones-manual-cert
 
 ---
+# Source: agones/templates/hooks/post_delete_hook.yaml
+
+
+---
+# Source: agones/templates/hooks/pre_delete_hook.yaml
+
+
+---
+# Source: agones/templates/hooks/sa.yaml
+
+
+---
+# Source: agones/templates/hooks/scripts.yaml
+
+
+---
 # Source: agones/templates/admissionregistration.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
 #

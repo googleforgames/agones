@@ -231,7 +231,7 @@ push-agones-sdk-image: $(ensure-build-image)
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
-		--set agones.controller.generateTLS=false \
+		--set agones.controller.generateTLS=false --set agones.enableHelmCleanupHooks=false \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the SDK gRPC server and client code
@@ -476,6 +476,9 @@ minikube-push: minikube-agones-profile
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: minikube-agones-profile
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false IMAGE_PULL_POLICY=IfNotPresent
+
+minikube-uninstall: $(ensure-build-image) minikube-agones-profile
+	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
 # Convenience target for transferring images into minikube.
 # Use TAG to specify the image to transfer into minikube
