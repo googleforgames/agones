@@ -50,7 +50,7 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	assert.Equal(t, "", gsSet.ObjectMeta.Name)
 	assert.Equal(t, f.ObjectMeta.Namespace, gsSet.ObjectMeta.Namespace)
 	assert.Equal(t, f.ObjectMeta.Name+"-", gsSet.ObjectMeta.GenerateName)
-	assert.Equal(t, f.ObjectMeta.Name, gsSet.ObjectMeta.Labels[FleetGameServerSetLabel])
+	assert.Equal(t, f.ObjectMeta.Name, gsSet.ObjectMeta.Labels[FleetNameLabel])
 	assert.Equal(t, int32(0), gsSet.Spec.Replicas)
 	assert.Equal(t, f.Spec.Scheduling, gsSet.Spec.Scheduling)
 	assert.Equal(t, f.Spec.Template, gsSet.Spec.Template)
