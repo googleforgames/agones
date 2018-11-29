@@ -65,6 +65,7 @@ Documentation and usage guides on how to develop and host dedicated game servers
 - [Full GameServer Configuration](./examples/gameserver.yaml)
 - [Full Fleet Configuration](./examples/fleet.yaml)
 - [Full Fleet Allocation Configuration](./examples/fleetallocation.yaml)
+- [Full Autoscaler Configuration](./examples/fleetautoscaler.yaml)
 - [Simple UDP](./examples/simple-udp) (Go) - simple server and client that send UDP packets back and forth.
 - [CPP Simple](./examples/cpp-simple) (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
 - [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.
