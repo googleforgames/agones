@@ -34,3 +34,4 @@ maintainers:
    url: https://groups.google.com/forum/#!forum/agones-discuss
 engine: gotpl
 icon: https://github.com/GoogleCloudPlatform/agones/raw/master/docs/agones.png
+tillerVersion: ">2.10.0"
