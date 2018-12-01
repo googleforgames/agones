@@ -15,7 +15,7 @@
 
 #
 # This image is manually built (for now)
-# as gcr.io/agones-images/grpc-cxx:1.12
+# as gcr.io/agones-images/grpc-cxx:1.16.1
 #
 
 FROM debian:stretch
@@ -26,14 +26,14 @@ RUN apt-get update && apt-get install -y \
   && apt-get clean
 
 # install protobuf first, then grpc
-ENV GRPC_RELEASE_TAG v1.12.x
-RUN git clone -b ${GRPC_RELEASE_TAG} https://github.com/grpc/grpc /var/local/git/grpc && \
+ENV GRPC_RELEASE_TAG v1.16.1
+RUN git clone -b ${GRPC_RELEASE_TAG} --depth=5 https://github.com/grpc/grpc /var/local/git/grpc && \
 		cd /var/local/git/grpc && \
     git submodule update --init && \
     echo "--- installing protobuf ---" && \
     cd third_party/protobuf && \
     ./autogen.sh && ./configure --enable-shared && \
-    make -j$(nproc) && make -j$(nproc) check && make install && make clean && ldconfig && \
+    make -j$(nproc) && make install && make clean && ldconfig && \
     echo "--- installing grpc ---" && \
     cd /var/local/git/grpc && \
     make -j$(nproc) && make install && make clean && ldconfig

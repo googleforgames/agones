@@ -109,7 +109,7 @@ Spec:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.4
+            Image:  gcr.io/agones-images/udp-server:0.5
             Name:   simple-udp
             Resources:
 Status:
@@ -225,7 +225,7 @@ status:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.4
+          - image: gcr.io/agones-images/udp-server:0.5
             name: simple-udp
             resources: {}
     status:

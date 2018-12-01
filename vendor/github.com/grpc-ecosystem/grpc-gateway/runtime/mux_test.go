@@ -176,6 +176,28 @@ func TestMuxServeHTTP(t *testing.T) {
 			respStatus:  http.StatusOK,
 			respContent: "POST /foo:bar",
 		},
+		{
+			patterns: []stubPattern{
+				{
+					method: "GET",
+					ops:    []int{int(utilities.OpLitPush), 0, int(utilities.OpPush), 0, int(utilities.OpConcatN), 1, int(utilities.OpCapture), 1},
+					pool:   []string{"foo", "id"},
+				},
+				{
+					method: "GET",
+					ops:    []int{int(utilities.OpLitPush), 0, int(utilities.OpPush), 0, int(utilities.OpConcatN), 1, int(utilities.OpCapture), 1},
+					pool:   []string{"foo", "id"},
+					verb:   "verb",
+				},
+			},
+			reqMethod: "GET",
+			reqPath:   "/foo/bar:verb",
+			headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			respStatus:  http.StatusOK,
+			respContent: "GET /foo/{id=*}:verb",
+		},
 	} {
 		mux := runtime.NewServeMux()
 		for _, p := range spec.patterns {

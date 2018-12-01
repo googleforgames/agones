@@ -32,10 +32,10 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/alts/core"
-	"google.golang.org/grpc/credentials/alts/core/handshaker"
-	"google.golang.org/grpc/credentials/alts/core/handshaker/service"
-	altspb "google.golang.org/grpc/credentials/alts/core/proto/grpc_gcp"
+	core "google.golang.org/grpc/credentials/alts/internal"
+	"google.golang.org/grpc/credentials/alts/internal/handshaker"
+	"google.golang.org/grpc/credentials/alts/internal/handshaker/service"
+	altspb "google.golang.org/grpc/credentials/alts/internal/proto/grpc_gcp"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -66,7 +66,7 @@ var (
 	// ErrUntrustedPlatform is returned from ClientHandshake and
 	// ServerHandshake is running on a platform where the trustworthiness of
 	// the handshaker service is not guaranteed.
-	ErrUntrustedPlatform = errors.New("untrusted platform")
+	ErrUntrustedPlatform = errors.New("ALTS: untrusted platform. ALTS is only supported on GCP")
 )
 
 // AuthInfo exposes security information from the ALTS handshake to the
@@ -131,7 +131,6 @@ func DefaultServerOptions() *ServerOptions {
 // It implements credentials.TransportCredentials interface.
 type altsTC struct {
 	info      *credentials.ProtocolInfo
-	hsAddr    string
 	side      core.Side
 	accounts  []string
 	hsAddress string
@@ -191,6 +190,7 @@ func (g *altsTC) ClientHandshake(ctx context.Context, addr string, rawConn net.C
 	}()
 
 	opts := handshaker.DefaultClientHandshakerOptions()
+	opts.TargetName = addr
 	opts.TargetServiceAccounts = g.accounts
 	opts.RPCVersions = &altspb.RpcProtocolVersions{
 		MaxRpcVersion: maxRPCVersion,
@@ -269,8 +269,16 @@ func (g *altsTC) Info() credentials.ProtocolInfo {
 
 func (g *altsTC) Clone() credentials.TransportCredentials {
 	info := *g.info
+	var accounts []string
+	if g.accounts != nil {
+		accounts = make([]string, len(g.accounts))
+		copy(accounts, g.accounts)
+	}
 	return &altsTC{
-		info: &info,
+		info:      &info,
+		side:      g.side,
+		hsAddress: g.hsAddress,
+		accounts:  accounts,
 	}
 }
 

@@ -50,7 +50,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{0}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -72,8 +72,8 @@ var xxx_messageInfo_Empty proto.InternalMessageInfo
 
 // Key, Value entry
 type KeyValue struct {
-	Key                  string   `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
-	Value                string   `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
+	Key                  string   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value                string   `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -83,7 +83,7 @@ func (m *KeyValue) Reset()         { *m = KeyValue{} }
 func (m *KeyValue) String() string { return proto.CompactTextString(m) }
 func (*KeyValue) ProtoMessage()    {}
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{1}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{1}
 }
 func (m *KeyValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
@@ -121,9 +121,9 @@ func (m *KeyValue) GetValue() string {
 // We will only export those resources that make the most
 // sense. Can always expand to more as needed.
 type GameServer struct {
-	ObjectMeta           *GameServer_ObjectMeta `protobuf:"bytes,1,opt,name=object_meta,json=objectMeta" json:"object_meta,omitempty"`
-	Spec                 *GameServer_Spec       `protobuf:"bytes,2,opt,name=spec" json:"spec,omitempty"`
-	Status               *GameServer_Status     `protobuf:"bytes,3,opt,name=status" json:"status,omitempty"`
+	ObjectMeta           *GameServer_ObjectMeta `protobuf:"bytes,1,opt,name=object_meta,json=objectMeta,proto3" json:"object_meta,omitempty"`
+	Spec                 *GameServer_Spec       `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`
+	Status               *GameServer_Status     `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
 	XXX_unrecognized     []byte                 `json:"-"`
 	XXX_sizecache        int32                  `json:"-"`
@@ -133,7 +133,7 @@ func (m *GameServer) Reset()         { *m = GameServer{} }
 func (m *GameServer) String() string { return proto.CompactTextString(m) }
 func (*GameServer) ProtoMessage()    {}
 func (*GameServer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2}
 }
 func (m *GameServer) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer.Unmarshal(m, b)
@@ -176,17 +176,17 @@ func (m *GameServer) GetStatus() *GameServer_Status {
 
 // representation of the K8s ObjectMeta resource
 type GameServer_ObjectMeta struct {
-	Name            string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Namespace       string `protobuf:"bytes,2,opt,name=namespace" json:"namespace,omitempty"`
-	Uid             string `protobuf:"bytes,3,opt,name=uid" json:"uid,omitempty"`
-	ResourceVersion string `protobuf:"bytes,4,opt,name=resource_version,json=resourceVersion" json:"resource_version,omitempty"`
-	Generation      int64  `protobuf:"varint,5,opt,name=generation" json:"generation,omitempty"`
+	Name            string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Namespace       string `protobuf:"bytes,2,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Uid             string `protobuf:"bytes,3,opt,name=uid,proto3" json:"uid,omitempty"`
+	ResourceVersion string `protobuf:"bytes,4,opt,name=resource_version,json=resourceVersion,proto3" json:"resource_version,omitempty"`
+	Generation      int64  `protobuf:"varint,5,opt,name=generation,proto3" json:"generation,omitempty"`
 	// timestamp is in Epoch format, unit: seconds
-	CreationTimestamp int64 `protobuf:"varint,6,opt,name=creation_timestamp,json=creationTimestamp" json:"creation_timestamp,omitempty"`
+	CreationTimestamp int64 `protobuf:"varint,6,opt,name=creation_timestamp,json=creationTimestamp,proto3" json:"creation_timestamp,omitempty"`
 	// optional deletion timestamp in Epoch format, unit: seconds
-	DeletionTimestamp    int64             `protobuf:"varint,7,opt,name=deletion_timestamp,json=deletionTimestamp" json:"deletion_timestamp,omitempty"`
-	Annotations          map[string]string `protobuf:"bytes,8,rep,name=annotations" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Labels               map[string]string `protobuf:"bytes,9,rep,name=labels" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	DeletionTimestamp    int64             `protobuf:"varint,7,opt,name=deletion_timestamp,json=deletionTimestamp,proto3" json:"deletion_timestamp,omitempty"`
+	Annotations          map[string]string `protobuf:"bytes,8,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Labels               map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
 	XXX_sizecache        int32             `json:"-"`
@@ -196,7 +196,7 @@ func (m *GameServer_ObjectMeta) Reset()         { *m = GameServer_ObjectMeta{} }
 func (m *GameServer_ObjectMeta) String() string { return proto.CompactTextString(m) }
 func (*GameServer_ObjectMeta) ProtoMessage()    {}
 func (*GameServer_ObjectMeta) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2, 0}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 0}
 }
 func (m *GameServer_ObjectMeta) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_ObjectMeta.Unmarshal(m, b)
@@ -280,7 +280,7 @@ func (m *GameServer_ObjectMeta) GetLabels() map[string]string {
 }
 
 type GameServer_Spec struct {
-	Health               *GameServer_Spec_Health `protobuf:"bytes,1,opt,name=health" json:"health,omitempty"`
+	Health               *GameServer_Spec_Health `protobuf:"bytes,1,opt,name=health,proto3" json:"health,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
 	XXX_unrecognized     []byte                  `json:"-"`
 	XXX_sizecache        int32                   `json:"-"`
@@ -290,7 +290,7 @@ func (m *GameServer_Spec) Reset()         { *m = GameServer_Spec{} }
 func (m *GameServer_Spec) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Spec) ProtoMessage()    {}
 func (*GameServer_Spec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2, 1}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 1}
 }
 func (m *GameServer_Spec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Spec.Unmarshal(m, b)
@@ -318,10 +318,10 @@ func (m *GameServer_Spec) GetHealth() *GameServer_Spec_Health {
 }
 
 type GameServer_Spec_Health struct {
-	Disabled             bool     `protobuf:"varint,1,opt,name=Disabled" json:"Disabled,omitempty"`
-	PeriodSeconds        int32    `protobuf:"varint,2,opt,name=PeriodSeconds" json:"PeriodSeconds,omitempty"`
-	FailureThreshold     int32    `protobuf:"varint,3,opt,name=FailureThreshold" json:"FailureThreshold,omitempty"`
-	InitialDelaySeconds  int32    `protobuf:"varint,4,opt,name=InitialDelaySeconds" json:"InitialDelaySeconds,omitempty"`
+	Disabled             bool     `protobuf:"varint,1,opt,name=Disabled,proto3" json:"Disabled,omitempty"`
+	PeriodSeconds        int32    `protobuf:"varint,2,opt,name=PeriodSeconds,proto3" json:"PeriodSeconds,omitempty"`
+	FailureThreshold     int32    `protobuf:"varint,3,opt,name=FailureThreshold,proto3" json:"FailureThreshold,omitempty"`
+	InitialDelaySeconds  int32    `protobuf:"varint,4,opt,name=InitialDelaySeconds,proto3" json:"InitialDelaySeconds,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -331,7 +331,7 @@ func (m *GameServer_Spec_Health) Reset()         { *m = GameServer_Spec_Health{}
 func (m *GameServer_Spec_Health) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Spec_Health) ProtoMessage()    {}
 func (*GameServer_Spec_Health) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2, 1, 0}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 1, 0}
 }
 func (m *GameServer_Spec_Health) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Spec_Health.Unmarshal(m, b)
@@ -380,9 +380,9 @@ func (m *GameServer_Spec_Health) GetInitialDelaySeconds() int32 {
 }
 
 type GameServer_Status struct {
-	State                string                    `protobuf:"bytes,1,opt,name=state" json:"state,omitempty"`
-	Address              string                    `protobuf:"bytes,2,opt,name=address" json:"address,omitempty"`
-	Ports                []*GameServer_Status_Port `protobuf:"bytes,3,rep,name=ports" json:"ports,omitempty"`
+	State                string                    `protobuf:"bytes,1,opt,name=state,proto3" json:"state,omitempty"`
+	Address              string                    `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	Ports                []*GameServer_Status_Port `protobuf:"bytes,3,rep,name=ports,proto3" json:"ports,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
 	XXX_unrecognized     []byte                    `json:"-"`
 	XXX_sizecache        int32                     `json:"-"`
@@ -392,7 +392,7 @@ func (m *GameServer_Status) Reset()         { *m = GameServer_Status{} }
 func (m *GameServer_Status) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Status) ProtoMessage()    {}
 func (*GameServer_Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2, 2}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 2}
 }
 func (m *GameServer_Status) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Status.Unmarshal(m, b)
@@ -434,8 +434,8 @@ func (m *GameServer_Status) GetPorts() []*GameServer_Status_Port {
 }
 
 type GameServer_Status_Port struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Port                 int32    `protobuf:"varint,2,opt,name=port" json:"port,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Port                 int32    `protobuf:"varint,2,opt,name=port,proto3" json:"port,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -445,7 +445,7 @@ func (m *GameServer_Status_Port) Reset()         { *m = GameServer_Status_Port{}
 func (m *GameServer_Status_Port) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Status_Port) ProtoMessage()    {}
 func (*GameServer_Status_Port) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_1ced06a751c91178, []int{2, 2, 0}
+	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 2, 0}
 }
 func (m *GameServer_Status_Port) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Status_Port.Unmarshal(m, b)
@@ -500,8 +500,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for SDK service
-
+// SDKClient is the client API for SDK service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SDKClient interface {
 	// Call when the GameServer is ready
 	Ready(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
@@ -529,7 +530,7 @@ func NewSDKClient(cc *grpc.ClientConn) SDKClient {
 
 func (c *sDKClient) Ready(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := grpc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/Ready", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/Ready", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -538,7 +539,7 @@ func (c *sDKClient) Ready(ctx context.Context, in *Empty, opts ...grpc.CallOptio
 
 func (c *sDKClient) Shutdown(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := grpc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/Shutdown", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/Shutdown", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -546,7 +547,7 @@ func (c *sDKClient) Shutdown(ctx context.Context, in *Empty, opts ...grpc.CallOp
 }
 
 func (c *sDKClient) Health(ctx context.Context, opts ...grpc.CallOption) (SDK_HealthClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_SDK_serviceDesc.Streams[0], c.cc, "/stable.agones.dev.sdk.SDK/Health", opts...)
+	stream, err := c.cc.NewStream(ctx, &_SDK_serviceDesc.Streams[0], "/stable.agones.dev.sdk.SDK/Health", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -581,7 +582,7 @@ func (x *sDKHealthClient) CloseAndRecv() (*Empty, error) {
 
 func (c *sDKClient) GetGameServer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*GameServer, error) {
 	out := new(GameServer)
-	err := grpc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/GetGameServer", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/GetGameServer", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -589,7 +590,7 @@ func (c *sDKClient) GetGameServer(ctx context.Context, in *Empty, opts ...grpc.C
 }
 
 func (c *sDKClient) WatchGameServer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (SDK_WatchGameServerClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_SDK_serviceDesc.Streams[1], c.cc, "/stable.agones.dev.sdk.SDK/WatchGameServer", opts...)
+	stream, err := c.cc.NewStream(ctx, &_SDK_serviceDesc.Streams[1], "/stable.agones.dev.sdk.SDK/WatchGameServer", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -622,7 +623,7 @@ func (x *sDKWatchGameServerClient) Recv() (*GameServer, error) {
 
 func (c *sDKClient) SetLabel(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := grpc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/SetLabel", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/SetLabel", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -631,15 +632,14 @@ func (c *sDKClient) SetLabel(ctx context.Context, in *KeyValue, opts ...grpc.Cal
 
 func (c *sDKClient) SetAnnotation(ctx context.Context, in *KeyValue, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := grpc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/SetAnnotation", in, out, c.cc, opts...)
+	err := c.cc.Invoke(ctx, "/stable.agones.dev.sdk.SDK/SetAnnotation", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for SDK service
-
+// SDKServer is the server API for SDK service.
 type SDKServer interface {
 	// Call when the GameServer is ready
 	Ready(context.Context, *Empty) (*Empty, error)
@@ -838,9 +838,9 @@ var _SDK_serviceDesc = grpc.ServiceDesc{
 	Metadata: "sdk.proto",
 }
 
-func init() { proto.RegisterFile("sdk.proto", fileDescriptor_sdk_1ced06a751c91178) }
+func init() { proto.RegisterFile("sdk.proto", fileDescriptor_sdk_d3fbd562dbd9fd17) }
 
-var fileDescriptor_sdk_1ced06a751c91178 = []byte{
+var fileDescriptor_sdk_d3fbd562dbd9fd17 = []byte{
 	// 789 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xef, 0x6e, 0xe3, 0x44,
 	0x10, 0x97, 0x1b, 0xdb, 0x4d, 0xc6, 0x94, 0xa6, 0xdb, 0x20, 0xf9, 0xac, 0x8a, 0x2b, 0x16, 0x42,

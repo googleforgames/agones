@@ -20,10 +20,12 @@
 #include "sdk.pb.h"
 #include "sdk.grpc.pb.h"
 
+#include <functional>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/impl/codegen/channel_interface.h>
 #include <grpcpp/impl/codegen/client_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
 #include <grpcpp/impl/codegen/method_handler_impl.h>
 #include <grpcpp/impl/codegen/rpc_service_method.h>
 #include <grpcpp/impl/codegen/service_type.h>
@@ -63,6 +65,10 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Ready_, context, request, response);
 }
 
+void SDK::Stub::experimental_async::Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Ready_, context, request, response, std::move(f));
+}
+
 ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncReadyRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Ready_, context, request, true);
 }
@@ -73,6 +79,10 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
 
 ::grpc::Status SDK::Stub::Shutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Shutdown_, context, request, response);
+}
+
+void SDK::Stub::experimental_async::Shutdown(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Shutdown_, context, request, response, std::move(f));
 }
 
 ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncShutdownRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
@@ -99,6 +109,10 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_GetGameServer_, context, request, response);
 }
 
+void SDK::Stub::experimental_async::GetGameServer(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty* request, ::stable::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_GetGameServer_, context, request, response, std::move(f));
+}
+
 ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::GameServer>* SDK::Stub::AsyncGetGameServerRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::grpc::CompletionQueue* cq) {
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::GameServer>::Create(channel_.get(), cq, rpcmethod_GetGameServer_, context, request, true);
 }
@@ -123,6 +137,10 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetLabel_, context, request, response);
 }
 
+void SDK::Stub::experimental_async::SetLabel(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue* request, ::stable::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetLabel_, context, request, response, std::move(f));
+}
+
 ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncSetLabelRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetLabel_, context, request, true);
 }
@@ -133,6 +151,10 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
 
 ::grpc::Status SDK::Stub::SetAnnotation(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::stable::agones::dev::sdk::Empty* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_SetAnnotation_, context, request, response);
+}
+
+void SDK::Stub::experimental_async::SetAnnotation(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue* request, ::stable::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_SetAnnotation_, context, request, response, std::move(f));
 }
 
 ::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncSetAnnotationRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::KeyValue& request, ::grpc::CompletionQueue* cq) {

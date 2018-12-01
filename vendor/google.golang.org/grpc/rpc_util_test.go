@@ -30,9 +30,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/encoding"
 	protoenc "google.golang.org/grpc/encoding/proto"
+	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/status"
 	perfpb "google.golang.org/grpc/test/codec_perf"
-	"google.golang.org/grpc/transport"
 )
 
 type fullReader struct {
@@ -105,23 +105,25 @@ func TestEncode(t *testing.T) {
 	for _, test := range []struct {
 		// input
 		msg proto.Message
-		cp  Compressor
 		// outputs
 		hdr  []byte
 		data []byte
 		err  error
 	}{
-		{nil, nil, []byte{0, 0, 0, 0, 0}, []byte{}, nil},
+		{nil, []byte{0, 0, 0, 0, 0}, []byte{}, nil},
 	} {
-		hdr, data, err := encode(encoding.GetCodec(protoenc.Name), test.msg, nil, nil, nil)
-		if err != test.err || !bytes.Equal(hdr, test.hdr) || !bytes.Equal(data, test.data) {
-			t.Fatalf("encode(_, _, %v, _) = %v, %v, %v\nwant %v, %v, %v", test.cp, hdr, data, err, test.hdr, test.data, test.err)
+		data, err := encode(encoding.GetCodec(protoenc.Name), test.msg)
+		if err != test.err || !bytes.Equal(data, test.data) {
+			t.Errorf("encode(_, %v) = %v, %v; want %v, %v", test.msg, data, err, test.data, test.err)
+			continue
+		}
+		if hdr, _ := msgHeader(data, nil); !bytes.Equal(hdr, test.hdr) {
+			t.Errorf("msgHeader(%v, false) = %v; want %v", data, hdr, test.hdr)
 		}
 	}
 }
 
 func TestCompress(t *testing.T) {
-
 	bestCompressor, err := NewGZIPCompressorWithLevel(gzip.BestCompression)
 	if err != nil {
 		t.Fatalf("Could not initialize gzip compressor with best compression.")
@@ -175,8 +177,8 @@ func TestToRPCErr(t *testing.T) {
 		// outputs
 		errOut error
 	}{
-		{transport.StreamError{Code: codes.Unknown, Desc: ""}, status.Error(codes.Unknown, "")},
 		{transport.ErrConnClosing, status.Error(codes.Unavailable, transport.ErrConnClosing.Desc)},
+		{io.ErrUnexpectedEOF, status.Error(codes.Internal, io.ErrUnexpectedEOF.Error())},
 	} {
 		err := toRPCErr(test.errIn)
 		if _, ok := status.FromError(err); !ok {
@@ -214,12 +216,12 @@ func TestParseDialTarget(t *testing.T) {
 func bmEncode(b *testing.B, mSize int) {
 	cdc := encoding.GetCodec(protoenc.Name)
 	msg := &perfpb.Buffer{Body: make([]byte, mSize)}
-	encodeHdr, encodeData, _ := encode(cdc, msg, nil, nil, nil)
-	encodedSz := int64(len(encodeHdr) + len(encodeData))
+	encodeData, _ := encode(cdc, msg)
+	encodedSz := int64(len(encodeData))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		encode(cdc, msg, nil, nil, nil)
+		encode(cdc, msg)
 	}
 	b.SetBytes(encodedSz)
 }

@@ -1,6 +1,7 @@
 package genswagger
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -9,7 +10,6 @@ import (
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/descriptor"
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/httprule"
-	"fmt"
 )
 
 func crossLinkFixture(f *descriptor.File) *descriptor.File {
@@ -697,6 +697,11 @@ func TestTemplateToSwaggerPath(t *testing.T) {
 		{"/{test=prefix/that/has/multiple/parts/to/it/*}", "/{test}"},
 		{"/{test1}/{test2}", "/{test1}/{test2}"},
 		{"/{test1}/{test2}/", "/{test1}/{test2}/"},
+		{"/{name=prefix/*}", "/{name=prefix/*}"},
+		{"/{name=prefix1/*/prefix2/*}", "/{name=prefix1/*/prefix2/*}"},
+		{"/{user.name=prefix/*}", "/{user.name=prefix/*}"},
+		{"/{user.name=prefix1/*/prefix2/*}", "/{user.name=prefix1/*/prefix2/*}"},
+		{"/{parent=prefix/*}/children", "/{parent=prefix/*}/children"},
 	}
 
 	for _, data := range tests {
@@ -773,6 +778,7 @@ func TestFQMNtoSwaggerName(t *testing.T) {
 func TestSchemaOfField(t *testing.T) {
 	type test struct {
 		field    *descriptor.Field
+		refs     refMap
 		expected schemaCore
 	}
 
@@ -784,6 +790,7 @@ func TestSchemaOfField(t *testing.T) {
 					Type: protodescriptor.FieldDescriptorProto_TYPE_STRING.Enum(),
 				},
 			},
+			refs: make(refMap),
 			expected: schemaCore{
 				Type: "string",
 			},
@@ -796,6 +803,7 @@ func TestSchemaOfField(t *testing.T) {
 					Label: protodescriptor.FieldDescriptorProto_LABEL_REPEATED.Enum(),
 				},
 			},
+			refs: make(refMap),
 			expected: schemaCore{
 				Type: "array",
 				Items: &swaggerItemsObject{
@@ -811,6 +819,7 @@ func TestSchemaOfField(t *testing.T) {
 					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
 				},
 			},
+			refs: make(refMap),
 			expected: schemaCore{
 				Type: "string",
 			},
@@ -824,6 +833,7 @@ func TestSchemaOfField(t *testing.T) {
 					Label:    protodescriptor.FieldDescriptorProto_LABEL_REPEATED.Enum(),
 				},
 			},
+			refs: make(refMap),
 			expected: schemaCore{
 				Type: "array",
 				Items: &swaggerItemsObject{
@@ -834,11 +844,124 @@ func TestSchemaOfField(t *testing.T) {
 		{
 			field: &descriptor.Field{
 				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.BytesValue"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "string",
+				Format: "bytes",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.Int32Value"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "integer",
+				Format: "int32",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.UInt32Value"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "integer",
+				Format: "int64",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.Int64Value"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "string",
+				Format: "int64",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.UInt64Value"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "string",
+				Format: "uint64",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.FloatValue"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "number",
+				Format: "float",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.DoubleValue"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "number",
+				Format: "double",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
+					Name:     proto.String("wrapped_field"),
+					TypeName: proto.String(".google.protobuf.BoolValue"),
+					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
+				},
+			},
+			refs: make(refMap),
+			expected: schemaCore{
+				Type:   "boolean",
+				Format: "boolean",
+			},
+		},
+		{
+			field: &descriptor.Field{
+				FieldDescriptorProto: &protodescriptor.FieldDescriptorProto{
 					Name:     proto.String("message_field"),
 					TypeName: proto.String(".example.Message"),
 					Type:     protodescriptor.FieldDescriptorProto_TYPE_MESSAGE.Enum(),
 				},
 			},
+			refs: refMap{".example.Message": struct{}{}},
 			expected: schemaCore{
 				Ref: "#/definitions/exampleMessage",
 			},
@@ -875,7 +998,8 @@ func TestSchemaOfField(t *testing.T) {
 	})
 
 	for _, test := range tests {
-		actual := schemaOfField(test.field, reg)
+		refs := make(refMap)
+		actual := schemaOfField(test.field, reg, refs)
 		if e, a := test.expected.Type, actual.Type; e != a {
 			t.Errorf("Expected schemaOfField(%v).Type = %s, actual: %s", test.field, e, a)
 		}
@@ -884,6 +1008,9 @@ func TestSchemaOfField(t *testing.T) {
 		}
 		if e, a := test.expected.Items.getType(), actual.Items.getType(); e != a {
 			t.Errorf("Expected schemaOfField(%v).Items.Type = %v, actual.Type: %v", test.field, e, a)
+		}
+		if !reflect.DeepEqual(refs, test.refs) {
+			t.Errorf("Expected schemaOfField(%v) to add refs %v, not %v", test.field, test.refs, refs)
 		}
 	}
 }

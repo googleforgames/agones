@@ -22,7 +22,6 @@
 
 #include <google/protobuf/stubs/common.h>
 #include <google/protobuf/stubs/port.h>
-#include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/wire_format_lite_inl.h>
 #include <google/protobuf/descriptor.h>
@@ -34,26 +33,32 @@
 #include "third_party/protobuf/version.h"
 #endif
 // @@protoc_insertion_point(includes)
+
+namespace protobuf_google_2fapi_2fhttp_2eproto {
+extern PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule;
+}  // namespace protobuf_google_2fapi_2fhttp_2eproto
 namespace google {
 namespace api {
 }  // namespace api
 }  // namespace google
 namespace protobuf_google_2fapi_2fannotations_2eproto {
+void InitDefaults() {
+}
+
 const ::google::protobuf::uint32 TableStruct::offsets[1] = {};
 static const ::google::protobuf::internal::MigrationSchema* schemas = NULL;
 static const ::google::protobuf::Message* const* file_default_instances = NULL;
 
 void protobuf_AssignDescriptors() {
   AddDescriptors();
-  ::google::protobuf::MessageFactory* factory = NULL;
   AssignDescriptors(
-      "google/api/annotations.proto", schemas, file_default_instances, TableStruct::offsets, factory,
+      "google/api/annotations.proto", schemas, file_default_instances, TableStruct::offsets,
       NULL, NULL, NULL);
 }
 
 void protobuf_AssignDescriptorsOnce() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &protobuf_AssignDescriptors);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
 }
 
 void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
@@ -82,8 +87,8 @@ void AddDescriptorsImpl() {
 }
 
 void AddDescriptors() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
+  static ::google::protobuf::internal::once_flag once;
+  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
 }
 // Force AddDescriptors() to be called at dynamic initialization time.
 struct StaticDescriptorInitializer {
@@ -100,6 +105,10 @@ namespace api {
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace api
+}  // namespace google
+namespace google {
+namespace protobuf {
+}  // namespace protobuf
 }  // namespace google
 
 // @@protoc_insertion_point(global_scope)
