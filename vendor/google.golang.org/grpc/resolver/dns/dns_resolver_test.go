@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2017 gRPC authors.
+ * Copyright 2018 gRPC authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/internal/leakcheck"
 	"google.golang.org/grpc/resolver"
-	"google.golang.org/grpc/test/leakcheck"
 )
 
 func TestMain(m *testing.M) {
@@ -46,7 +47,7 @@ type testClientConn struct {
 	target string
 	m1     sync.Mutex
 	addrs  []resolver.Address
-	a      int
+	a      int // how many times NewAddress() has been called
 	m2     sync.Mutex
 	sc     string
 	s      int
@@ -76,6 +77,30 @@ func (t *testClientConn) getSc() (string, int) {
 	t.m2.Lock()
 	defer t.m2.Unlock()
 	return t.sc, t.s
+}
+
+type testResolver struct {
+}
+
+func (*testResolver) LookupHost(ctx context.Context, host string) ([]string, error) {
+	return hostLookup(host)
+}
+
+func (*testResolver) LookupSRV(ctx context.Context, service, proto, name string) (string, []*net.SRV, error) {
+	return srvLookup(service, proto, name)
+}
+
+func (*testResolver) LookupTXT(ctx context.Context, host string) ([]string, error) {
+	return txtLookup(host)
+}
+
+func replaceNetFunc() func() {
+	oldResolver := defaultResolver
+	defaultResolver = &testResolver{}
+
+	return func() {
+		defaultResolver = oldResolver
+	}
 }
 
 var hostLookupTbl = struct {
@@ -815,7 +840,7 @@ func testIPResolver(t *testing.T) {
 		{"127.0.0.1:12345", []resolver.Address{{Addr: "127.0.0.1:12345"}}},
 		{"::1", []resolver.Address{{Addr: "[::1]" + colonDefaultPort}}},
 		{"[::1]:12345", []resolver.Address{{Addr: "[::1]:12345"}}},
-		{"[::1]:", []resolver.Address{{Addr: "[::1]:443"}}},
+		{"[::1]", []resolver.Address{{Addr: "[::1]:443"}}},
 		{"2001:db8:85a3::8a2e:370:7334", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]" + colonDefaultPort}}},
 		{"[2001:db8:85a3::8a2e:370:7334]", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]" + colonDefaultPort}}},
 		{"[2001:db8:85a3::8a2e:370:7334]:12345", []resolver.Address{{Addr: "[2001:db8:85a3::8a2e:370:7334]:12345"}}},
@@ -867,6 +892,7 @@ func TestResolveFunc(t *testing.T) {
 		{"www.google.com", nil},
 		{"foo.bar:12345", nil},
 		{"127.0.0.1", nil},
+		{"::", nil},
 		{"127.0.0.1:12345", nil},
 		{"[::1]:80", nil},
 		{"[2001:db8:a0b:12f0::1]:21", nil},
@@ -875,7 +901,8 @@ func TestResolveFunc(t *testing.T) {
 		{"[fe80::1%lo0]:80", nil},
 		{"golang.org:http", nil},
 		{"[2001:db8::1]:http", nil},
-		{":", nil},
+		{"[2001:db8::1]:", errEndsWithColon},
+		{":", errEndsWithColon},
 		{"", errMissingAddr},
 		{"[2001:db8:a0b:12f0::1", errForInvalidTarget},
 	}
@@ -933,4 +960,61 @@ func TestDisableServiceConfig(t *testing.T) {
 		}
 		r.Close()
 	}
+}
+
+func TestDNSResolverRetry(t *testing.T) {
+	b := NewBuilder()
+	target := "ipv4.single.fake"
+	cc := &testClientConn{target: target}
+	r, err := b.Build(resolver.Target{Endpoint: target}, cc, resolver.BuildOption{})
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	var addrs []resolver.Address
+	for {
+		addrs, _ = cc.getAddress()
+		if len(addrs) == 1 {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	want := []resolver.Address{{Addr: "1.2.3.4" + colonDefaultPort}}
+	if !reflect.DeepEqual(want, addrs) {
+		t.Errorf("Resolved addresses of target: %q = %+v, want %+v\n", target, addrs, want)
+	}
+	// mutate the host lookup table so the target has 0 address returned.
+	revertTbl := mutateTbl(target)
+	// trigger a resolve that will get empty address list
+	r.ResolveNow(resolver.ResolveNowOption{})
+	for {
+		addrs, _ = cc.getAddress()
+		if len(addrs) == 0 {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	revertTbl()
+	// wait for the retry to happen in two seconds.
+	timer := time.NewTimer(2 * time.Second)
+	for {
+		b := false
+		select {
+		case <-timer.C:
+			b = true
+		default:
+			addrs, _ = cc.getAddress()
+			if len(addrs) == 1 {
+				b = true
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		if b {
+			break
+		}
+	}
+	if !reflect.DeepEqual(want, addrs) {
+		t.Errorf("Resolved addresses of target: %q = %+v, want %+v\n", target, addrs, want)
+	}
+	r.Close()
 }

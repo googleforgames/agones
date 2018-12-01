@@ -46,11 +46,15 @@
 
 [[constraint]]
   name = "google.golang.org/grpc"
-  version = "1.12.0"
+  version = "1.16.0"
+
+[[override]]
+  name = "golang.org/x/sys"
+  revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
 [[constraint]]
   name = "github.com/golang/protobuf"
-  version = "1.1.0"
+  version = "1.2.0"
 
 [[constraint]]
   branch = "master"
@@ -60,6 +64,6 @@
   branch = "master"
   name = "github.com/heptiolabs/healthcheck"
 
-[[constraint]]
+[[override]]
   name = "github.com/grpc-ecosystem/grpc-gateway"
-  version = "1.4.1"
+  version = "1.5.1"

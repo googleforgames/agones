@@ -58,7 +58,7 @@ func request_FlowCombination_StreamEmptyRpc_0(ctx context.Context, marshaler run
 	var metadata runtime.ServerMetadata
 	stream, err := client.StreamEmptyRpc(ctx)
 	if err != nil {
-		grpclog.Printf("Failed to start streaming: %v", err)
+		grpclog.Infof("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
 	dec := marshaler.NewDecoder(req.Body)
@@ -69,22 +69,22 @@ func request_FlowCombination_StreamEmptyRpc_0(ctx context.Context, marshaler run
 			break
 		}
 		if err != nil {
-			grpclog.Printf("Failed to decode request: %v", err)
+			grpclog.Infof("Failed to decode request: %v", err)
 			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 		}
 		if err = stream.Send(&protoReq); err != nil {
-			grpclog.Printf("Failed to send request: %v", err)
+			grpclog.Infof("Failed to send request: %v", err)
 			return nil, metadata, err
 		}
 	}
 
 	if err := stream.CloseSend(); err != nil {
-		grpclog.Printf("Failed to terminate client stream: %v", err)
+		grpclog.Infof("Failed to terminate client stream: %v", err)
 		return nil, metadata, err
 	}
 	header, err := stream.Header()
 	if err != nil {
-		grpclog.Printf("Failed to get header from client: %v", err)
+		grpclog.Infof("Failed to get header from client: %v", err)
 		return nil, metadata, err
 	}
 	metadata.HeaderMD = header
@@ -99,7 +99,7 @@ func request_FlowCombination_StreamEmptyStream_0(ctx context.Context, marshaler 
 	var metadata runtime.ServerMetadata
 	stream, err := client.StreamEmptyStream(ctx)
 	if err != nil {
-		grpclog.Printf("Failed to start streaming: %v", err)
+		grpclog.Infof("Failed to start streaming: %v", err)
 		return nil, metadata, err
 	}
 	dec := marshaler.NewDecoder(req.Body)
@@ -110,18 +110,18 @@ func request_FlowCombination_StreamEmptyStream_0(ctx context.Context, marshaler 
 			return err
 		}
 		if err != nil {
-			grpclog.Printf("Failed to decode request: %v", err)
+			grpclog.Infof("Failed to decode request: %v", err)
 			return err
 		}
 		if err := stream.Send(&protoReq); err != nil {
-			grpclog.Printf("Failed to send request: %v", err)
+			grpclog.Infof("Failed to send request: %v", err)
 			return err
 		}
 		return nil
 	}
 	if err := handleSend(); err != nil {
 		if cerr := stream.CloseSend(); cerr != nil {
-			grpclog.Printf("Failed to terminate client stream: %v", cerr)
+			grpclog.Infof("Failed to terminate client stream: %v", cerr)
 		}
 		if err == io.EOF {
 			return stream, metadata, nil
@@ -135,12 +135,12 @@ func request_FlowCombination_StreamEmptyStream_0(ctx context.Context, marshaler 
 			}
 		}
 		if err := stream.CloseSend(); err != nil {
-			grpclog.Printf("Failed to terminate client stream: %v", err)
+			grpclog.Infof("Failed to terminate client stream: %v", err)
 		}
 	}()
 	header, err := stream.Header()
 	if err != nil {
-		grpclog.Printf("Failed to get header from client: %v", err)
+		grpclog.Infof("Failed to get header from client: %v", err)
 		return nil, metadata, err
 	}
 	metadata.HeaderMD = header
@@ -995,14 +995,14 @@ func RegisterFlowCombinationHandlerFromEndpoint(ctx context.Context, mux *runtim
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -1016,8 +1016,8 @@ func RegisterFlowCombinationHandler(ctx context.Context, mux *runtime.ServeMux, 
 	return RegisterFlowCombinationHandlerClient(ctx, mux, NewFlowCombinationClient(conn))
 }
 
-// RegisterFlowCombinationHandler registers the http handlers for service FlowCombination to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "FlowCombinationClient".
+// RegisterFlowCombinationHandlerClient registers the http handlers for service FlowCombination
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "FlowCombinationClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "FlowCombinationClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "FlowCombinationClient" to call the correct interceptors.

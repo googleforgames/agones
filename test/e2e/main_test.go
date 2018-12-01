@@ -33,8 +33,8 @@ func TestMain(m *testing.M) {
 	usr, _ := user.Current()
 	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
 		"kube config path, e.g. $HOME/.kube/config")
-	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.4",
-		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.4")
+	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.5",
+		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.5")
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 
