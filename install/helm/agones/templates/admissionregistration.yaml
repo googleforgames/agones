@@ -51,6 +51,7 @@ webhooks:
           - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"
+          - "gameserverallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -86,6 +87,7 @@ webhooks:
           - "gameservers"
           - "fleets"
           - "fleetallocations"
+          - "gameserverallocations"
         apiVersions:
           - "v1alpha1"
         operations:

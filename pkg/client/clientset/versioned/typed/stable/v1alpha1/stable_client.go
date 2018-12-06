@@ -31,6 +31,7 @@ type StableV1alpha1Interface interface {
 	FleetAllocationsGetter
 	FleetAutoscalersGetter
 	GameServersGetter
+	GameServerAllocationsGetter
 	GameServerSetsGetter
 }
 
@@ -53,6 +54,10 @@ func (c *StableV1alpha1Client) FleetAutoscalers(namespace string) FleetAutoscale
 
 func (c *StableV1alpha1Client) GameServers(namespace string) GameServerInterface {
 	return newGameServers(c, namespace)
+}
+
+func (c *StableV1alpha1Client) GameServerAllocations(namespace string) GameServerAllocationInterface {
+	return newGameServerAllocations(c, namespace)
 }
 
 func (c *StableV1alpha1Client) GameServerSets(namespace string) GameServerSetInterface {

@@ -150,21 +150,21 @@ func (hc *HealthController) syncGameServer(key string) error {
 
 	switch gs.Status.State {
 
-	case v1alpha1.Starting:
+	case v1alpha1.GameServerStateStarting:
 		hc.logger.WithField("key", key).Info("GameServer cannot start on this port")
 		unhealthy = true
 		reason = "No nodes have free ports for the allocated ports"
 
-	case v1alpha1.Ready:
+	case v1alpha1.GameServerStateReady:
 		hc.logger.WithField("key", key).Info("GameServer container has terminated")
 		unhealthy = true
 		reason = "GameServer container terminated"
 	}
 
 	if unhealthy {
-		hc.logger.WithField("gs", gs).Infof("Marking GameServer as Unhealthy")
+		hc.logger.WithField("gs", gs).Infof("Marking GameServer as GameServerStateUnhealthy")
 		gsCopy := gs.DeepCopy()
-		gsCopy.Status.State = v1alpha1.Unhealthy
+		gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
 
 		if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
 			return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)

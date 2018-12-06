@@ -148,7 +148,7 @@ func TestControllerAllocate(t *testing.T) {
 	n := metav1.Now()
 	l := map[string]string{"mode": "deathmatch"}
 	a := map[string]string{"map": "searide"}
-	fam := &v1alpha1.FleetAllocationMeta{Labels: l, Annotations: a}
+	fam := &v1alpha1.MetaPatch{Labels: l, Annotations: a}
 
 	gsList[3].ObjectMeta.DeletionTimestamp = &n
 
@@ -169,7 +169,7 @@ func TestControllerAllocate(t *testing.T) {
 		ua := action.(k8stesting.UpdateAction)
 		gs := ua.GetObject().(*v1alpha1.GameServer)
 		updated = true
-		assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+		assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
 		gsWatch.Modify(gs)
 
 		return true, gs, nil
@@ -180,7 +180,7 @@ func TestControllerAllocate(t *testing.T) {
 
 	gs, err := c.allocate(f, fam)
 	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 	for key, value := range fam.Labels {
 		v, ok := gs.ObjectMeta.Labels[key]
@@ -196,13 +196,13 @@ func TestControllerAllocate(t *testing.T) {
 	updated = false
 	gs, err = c.allocate(f, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
 	gs, err = c.allocate(f, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, gs.Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
@@ -371,7 +371,7 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 	for i := 1; i <= gsLen; i++ {
 		gs := gsSet.GameServer()
 		gs.ObjectMeta.Name = "gs" + strconv.Itoa(i)
-		gs.Status.State = v1alpha1.Ready
+		gs.Status.State = v1alpha1.GameServerStateReady
 		gsList = append(gsList, *gs)
 	}
 	return f, gsSet, gsList

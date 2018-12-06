@@ -77,7 +77,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 
 	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
-	readyGs, err := f.WaitForGameServerState(newGs, v1alpha1.Ready, 5*time.Minute)
+	readyGs, err := f.WaitForGameServerState(newGs, v1alpha1.GameServerStateReady, 5*time.Minute)
 
 	if err != nil {
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
@@ -91,7 +91,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 }
 
 // WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires
-func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alpha1.State,
+func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alpha1.GameServerState,
 	timeout time.Duration) (*v1alpha1.GameServer, error) {
 	var pollErr error
 	var readyGs *v1alpha1.GameServer
@@ -190,6 +190,11 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond f
 func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Done. Cleaning up now.")
 	err := f.AgonesClient.StableV1alpha1().Fleets(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	err = f.AgonesClient.StableV1alpha1().GameServerAllocations(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
 	if err != nil {
 		return err
 	}

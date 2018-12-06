@@ -24,10 +24,10 @@ import (
 )
 
 // GameServerCount  is the count of gameserver per current state and per fleet name
-type GameServerCount map[stablev1alpha1.State]map[string]int64
+type GameServerCount map[stablev1alpha1.GameServerState]map[string]int64
 
 // increment adds the count of gameservers for a given fleetName and state
-func (c GameServerCount) increment(fleetName string, state stablev1alpha1.State) {
+func (c GameServerCount) increment(fleetName string, state stablev1alpha1.GameServerState) {
 	fleets, ok := c[state]
 	if !ok {
 		fleets = map[string]int64{}

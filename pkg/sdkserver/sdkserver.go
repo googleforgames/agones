@@ -227,12 +227,12 @@ func (s *SDKServer) syncState(rest []string) error {
 		return errors.New("could not sync state, as not state provided")
 	}
 
-	return s.updateState(stablev1alpha1.State(rest[0]))
+	return s.updateState(stablev1alpha1.GameServerState(rest[0]))
 }
 
 // updateState sets the GameServer Status's state to the state
 // that has been passed through
-func (s *SDKServer) updateState(state stablev1alpha1.State) error {
+func (s *SDKServer) updateState(state stablev1alpha1.GameServerState) error {
 	s.logger.WithField("state", state).Info("Updating state")
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := s.gameServer()
@@ -241,8 +241,8 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	}
 
 	// if the state is currently unhealthy, you can't go back to Ready
-	if gs.Status.State == stablev1alpha1.Unhealthy {
-		s.logger.Info("State already unhealthy. Skipping update.")
+	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
+		s.logger.Info("GameServerState already unhealthy. Skipping update.")
 		return nil
 	}
 
@@ -250,7 +250,7 @@ func (s *SDKServer) updateState(state stablev1alpha1.State) error {
 	_, err = gameServers.Update(gs)
 
 	// state specific work here
-	if gs.Status.State == stablev1alpha1.Unhealthy {
+	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
 		s.recorder.Event(gs, corev1.EventTypeWarning, string(gs.Status.State), "No longer healthy")
 	}
 
@@ -321,7 +321,7 @@ func (s *SDKServer) updateAnnotation(key, value string) error {
 
 // enqueueState enqueue a State change request into the
 // workerqueue
-func (s *SDKServer) enqueueState(state stablev1alpha1.State) {
+func (s *SDKServer) enqueueState(state stablev1alpha1.GameServerState) {
 	key := string(updateState) + "/" + string(state)
 	s.workerqueue.Enqueue(cache.ExplicitKey(key))
 }
@@ -330,7 +330,7 @@ func (s *SDKServer) enqueueState(state stablev1alpha1.State) {
 // the workqueue so it can be updated
 func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Ready request, adding to queue")
-	s.enqueueState(stablev1alpha1.RequestReady)
+	s.enqueueState(stablev1alpha1.GameServerStateRequestReady)
 	return e, nil
 }
 
@@ -338,7 +338,7 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 // the workqueue so it can be updated
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Info("Received Shutdown request, adding to queue")
-	s.enqueueState(stablev1alpha1.Shutdown)
+	s.enqueueState(stablev1alpha1.GameServerStateShutdown)
 	return e, nil
 }
 
@@ -426,7 +426,7 @@ func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
 		s.logger.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
-		s.enqueueState(stablev1alpha1.Unhealthy)
+		s.enqueueState(stablev1alpha1.GameServerStateUnhealthy)
 	}
 }
 

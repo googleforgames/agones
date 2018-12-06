@@ -39,7 +39,7 @@ func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.State
+		state       v1alpha1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 		recordings  []string
@@ -54,7 +54,7 @@ func TestSidecarRun(t *testing.T) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state: v1alpha1.RequestReady,
+				state: v1alpha1.GameServerStateRequestReady,
 			},
 		},
 		"shutdown": {
@@ -62,7 +62,7 @@ func TestSidecarRun(t *testing.T) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state: v1alpha1.Shutdown,
+				state: v1alpha1.GameServerStateShutdown,
 			},
 		},
 		"unhealthy": {
@@ -71,8 +71,8 @@ func TestSidecarRun(t *testing.T) {
 				time.Sleep(2 * time.Second)
 			},
 			expected: expected{
-				state:      v1alpha1.Unhealthy,
-				recordings: []string{string(v1alpha1.Unhealthy)},
+				state:      v1alpha1.GameServerStateUnhealthy,
+				recordings: []string{string(v1alpha1.GameServerStateUnhealthy)},
 			},
 		},
 		"label": {
@@ -109,7 +109,7 @@ func TestSidecarRun(t *testing.T) {
 						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 					},
 					Status: v1alpha1.GameServerStatus{
-						State: v1alpha1.Starting,
+						State: v1alpha1.GameServerStateStarting,
 					},
 				}
 				gs.ApplyDefaults()
@@ -171,7 +171,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.State
+		state       v1alpha1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 	}
@@ -181,9 +181,9 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 		key      string
 	}{
 		"ready": {
-			key: string(updateState) + "/" + string(v1alpha1.Ready),
+			key: string(updateState) + "/" + string(v1alpha1.GameServerStateReady),
 			expected: expected{
-				state: v1alpha1.Ready,
+				state: v1alpha1.GameServerStateReady,
 			},
 		},
 		"label": {
@@ -260,7 +260,7 @@ func TestSidecarUpdateState(t *testing.T) {
 			gs := v1alpha1.GameServer{
 				ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
 				Status: v1alpha1.GameServerStatus{
-					State: v1alpha1.Unhealthy,
+					State: v1alpha1.GameServerStateUnhealthy,
 				},
 			}
 			return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
@@ -275,7 +275,7 @@ func TestSidecarUpdateState(t *testing.T) {
 		sc.informerFactory.Start(stop)
 		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
-		err = sc.updateState(v1alpha1.Ready)
+		err = sc.updateState(v1alpha1.GameServerStateReady)
 		assert.Nil(t, err)
 		assert.False(t, updated)
 	})
@@ -488,7 +488,7 @@ func TestSDKServerGetGameServer(t *testing.T) {
 			Namespace: "default",
 		},
 		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.Ready,
+			State: v1alpha1.GameServerStateReady,
 		},
 	}
 

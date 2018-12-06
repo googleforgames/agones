@@ -39,7 +39,7 @@ func TestCreateConnect(t *testing.T) {
 	assert.NotEmpty(t, readyGs.Status.Ports[0].Port)
 	assert.NotEmpty(t, readyGs.Status.Address)
 	assert.NotEmpty(t, readyGs.Status.NodeName)
-	assert.Equal(t, readyGs.Status.State, v1alpha1.Ready)
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 
 	reply, err := e2eframework.PingGameServer("Hello World !", fmt.Sprintf("%s:%d", readyGs.Status.Address,
 		readyGs.Status.Ports[0].Port))
@@ -60,7 +60,7 @@ func TestSDKSetLabel(t *testing.T) {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
 
-	assert.Equal(t, readyGs.Status.State, v1alpha1.Ready)
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 	reply, err := e2eframework.PingGameServer("LABEL", fmt.Sprintf("%s:%d", readyGs.Status.Address,
 		readyGs.Status.Ports[0].Port))
 
@@ -92,7 +92,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
 
-	assert.Equal(t, readyGs.Status.State, v1alpha1.Ready)
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 	reply, err := e2eframework.PingGameServer("ANNOTATION", fmt.Sprintf("%s:%d", readyGs.Status.Address,
 		readyGs.Status.Ports[0].Port))
 
@@ -137,7 +137,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	newGs, err := gameServers.Create(gs.DeepCopy())
 	assert.Nil(t, err)
 
-	_, err = framework.WaitForGameServerState(newGs, v1alpha1.Unhealthy, 10*time.Second)
+	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
 	assert.Nil(t, err)
 }
 

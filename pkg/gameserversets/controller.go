@@ -260,7 +260,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 // syncUnhealthyGameServers deletes any unhealthy game servers (that are not already being deleted)
 func (c *Controller) syncUnhealthyGameServers(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
 	for _, gs := range list {
-		if gs.Status.State == v1alpha1.Unhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
+		if gs.Status.State == v1alpha1.GameServerStateUnhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
 			c.allocationMutex.Lock()
 			err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, nil)
 			c.allocationMutex.Unlock()
@@ -334,7 +334,7 @@ func (c *Controller) syncLessGameServers(gsSet *v1alpha1.GameServerSet, diff int
 			return nil
 		}
 
-		if gs.Status.State != v1alpha1.Allocated {
+		if gs.Status.State != v1alpha1.GameServerStateAllocated {
 			err := c.gameServerGetter.GameServers(gs.Namespace).Delete(gs.ObjectMeta.Name, nil)
 			if err != nil {
 				return errors.Wrapf(err, "error deleting gameserver for gameserverset %s", gsSet.ObjectMeta.Name)
@@ -352,11 +352,13 @@ func (c *Controller) syncGameServerSetState(gsSet *v1alpha1.GameServerSet, list 
 	rc := int32(0)
 	ac := int32(0)
 	for _, gs := range list {
-		switch gs.Status.State {
-		case v1alpha1.Ready:
-			rc++
-		case v1alpha1.Allocated:
-			ac++
+		if gs.ObjectMeta.DeletionTimestamp.IsZero() {
+			switch gs.Status.State {
+			case v1alpha1.GameServerStateReady:
+				rc++
+			case v1alpha1.GameServerStateAllocated:
+				ac++
+			}
 		}
 	}
 

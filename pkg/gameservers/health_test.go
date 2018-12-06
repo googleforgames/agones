@@ -79,31 +79,31 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 	type expected struct {
 		updated bool
-		state   v1alpha1.State
+		state   v1alpha1.GameServerState
 	}
 	fixtures := map[string]struct {
-		state    v1alpha1.State
+		state    v1alpha1.GameServerState
 		expected expected
 	}{
 		"started": {
-			state: v1alpha1.Starting,
+			state: v1alpha1.GameServerStateStarting,
 			expected: expected{
 				updated: true,
-				state:   v1alpha1.Unhealthy,
+				state:   v1alpha1.GameServerStateUnhealthy,
 			},
 		},
 		"scheduled": {
-			state: v1alpha1.Scheduled,
+			state: v1alpha1.GameServerStateScheduled,
 			expected: expected{
 				updated: false,
-				state:   v1alpha1.Scheduled,
+				state:   v1alpha1.GameServerStateScheduled,
 			},
 		},
 		"ready": {
-			state: v1alpha1.Ready,
+			state: v1alpha1.GameServerStateReady,
 			expected: expected{
 				updated: true,
-				state:   v1alpha1.Unhealthy,
+				state:   v1alpha1.GameServerStateUnhealthy,
 			},
 		},
 	}
@@ -163,12 +163,12 @@ func TestHealthControllerRun(t *testing.T) {
 		}()
 		ua := action.(k8stesting.UpdateAction)
 		gsObj := ua.GetObject().(*v1alpha1.GameServer)
-		assert.Equal(t, v1alpha1.Unhealthy, gsObj.Status.State)
+		assert.Equal(t, v1alpha1.GameServerStateUnhealthy, gsObj.Status.State)
 		return true, gsObj, nil
 	})
 
 	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}}
 	gs.ApplyDefaults()
 	pod, err := gs.Pod()
 	assert.Nil(t, err)
@@ -194,7 +194,7 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.Unhealthy))
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
 
 	pod.Status.ContainerStatuses = nil
 	pod.Status.Conditions = []corev1.PodCondition{
@@ -213,5 +213,5 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.Unhealthy))
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
 }

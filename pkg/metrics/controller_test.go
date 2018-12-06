@@ -34,10 +34,10 @@ func TestControllerGameServerCount(t *testing.T) {
 	c := newFakeController()
 	defer c.close()
 
-	gs1 := gameServer("test-fleet", v1alpha1.Creating)
+	gs1 := gameServer("test-fleet", v1alpha1.GameServerStateCreating)
 	c.gsWatch.Add(gs1)
 	gs1 = gs1.DeepCopy()
-	gs1.Status.State = v1alpha1.Ready
+	gs1.Status.State = v1alpha1.GameServerStateReady
 	c.gsWatch.Modify(gs1)
 
 	c.sync()
@@ -45,10 +45,10 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.report()
 
 	gs1 = gs1.DeepCopy()
-	gs1.Status.State = v1alpha1.Shutdown
+	gs1.Status.State = v1alpha1.GameServerStateShutdown
 	c.gsWatch.Modify(gs1)
-	c.gsWatch.Add(gameServer("", v1alpha1.PortAllocation))
-	c.gsWatch.Add(gameServer("", v1alpha1.PortAllocation))
+	c.gsWatch.Add(gameServer("", v1alpha1.GameServerStatePortAllocation))
+	c.gsWatch.Add(gameServer("", v1alpha1.GameServerStatePortAllocation))
 
 	c.sync()
 	c.collect()
@@ -109,7 +109,7 @@ func TestControllerFleetAllocationTotal(t *testing.T) {
 		fa.Status.GameServer = nil
 		c.faWatch.Add(fa)
 		faUpdated := fa.DeepCopy()
-		faUpdated.Status.GameServer = gameServer("test", v1alpha1.Allocated)
+		faUpdated.Status.GameServer = gameServer("test", v1alpha1.GameServerStateAllocated)
 		c.faWatch.Modify(faUpdated)
 		// make sure we count only one event
 		c.faWatch.Modify(faUpdated)
@@ -119,7 +119,7 @@ func TestControllerFleetAllocationTotal(t *testing.T) {
 		fa.Status.GameServer = nil
 		c.faWatch.Add(fa)
 		faUpdated := fa.DeepCopy()
-		faUpdated.Status.GameServer = gameServer("test2", v1alpha1.Allocated)
+		faUpdated.Status.GameServer = gameServer("test2", v1alpha1.GameServerStateAllocated)
 		c.faWatch.Modify(faUpdated)
 	}
 	c.sync()
@@ -139,18 +139,18 @@ func TestControllerGameServersTotal(t *testing.T) {
 	c.run(t)
 
 	// deleted gs should not be counted
-	gs := gameServer("deleted", v1alpha1.Creating)
+	gs := gameServer("deleted", v1alpha1.GameServerStateCreating)
 	c.gsWatch.Add(gs)
 	c.gsWatch.Delete(gs)
 
-	generateGsEvents(16, v1alpha1.Creating, "test", c.gsWatch)
-	generateGsEvents(15, v1alpha1.Scheduled, "test", c.gsWatch)
-	generateGsEvents(10, v1alpha1.Starting, "test", c.gsWatch)
-	generateGsEvents(1, v1alpha1.Unhealthy, "test", c.gsWatch)
-	generateGsEvents(19, v1alpha1.Creating, "", c.gsWatch)
-	generateGsEvents(18, v1alpha1.Scheduled, "", c.gsWatch)
-	generateGsEvents(16, v1alpha1.Starting, "", c.gsWatch)
-	generateGsEvents(1, v1alpha1.Unhealthy, "", c.gsWatch)
+	generateGsEvents(16, v1alpha1.GameServerStateCreating, "test", c.gsWatch)
+	generateGsEvents(15, v1alpha1.GameServerStateScheduled, "test", c.gsWatch)
+	generateGsEvents(10, v1alpha1.GameServerStateStarting, "test", c.gsWatch)
+	generateGsEvents(1, v1alpha1.GameServerStateUnhealthy, "test", c.gsWatch)
+	generateGsEvents(19, v1alpha1.GameServerStateCreating, "", c.gsWatch)
+	generateGsEvents(18, v1alpha1.GameServerStateScheduled, "", c.gsWatch)
+	generateGsEvents(16, v1alpha1.GameServerStateStarting, "", c.gsWatch)
+	generateGsEvents(1, v1alpha1.GameServerStateUnhealthy, "", c.gsWatch)
 
 	c.sync()
 	c.report()

@@ -51,8 +51,15 @@ rules:
   resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["patch"]
+- apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers"]
   verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["stable.agones.dev"]
+  resources: ["gameserverallocations"]
+  verbs: ["list", "watch",  "delete"]
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

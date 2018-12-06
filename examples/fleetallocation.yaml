@@ -13,6 +13,8 @@
 # limitations under the License.
 
 #
+# (Deprecated: See GameServerAllocation for a replacement)
+#
 # Full example of a FleetAllocation - this is used to allocate a GameServer
 # out of a Fleet so it can be handed to a set of players to play on.
 #

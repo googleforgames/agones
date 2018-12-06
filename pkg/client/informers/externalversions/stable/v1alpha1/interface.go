@@ -32,6 +32,8 @@ type Interface interface {
 	FleetAutoscalers() FleetAutoscalerInformer
 	// GameServers returns a GameServerInformer.
 	GameServers() GameServerInformer
+	// GameServerAllocations returns a GameServerAllocationInformer.
+	GameServerAllocations() GameServerAllocationInformer
 	// GameServerSets returns a GameServerSetInformer.
 	GameServerSets() GameServerSetInformer
 }
@@ -65,6 +67,11 @@ func (v *version) FleetAutoscalers() FleetAutoscalerInformer {
 // GameServers returns a GameServerInformer.
 func (v *version) GameServers() GameServerInformer {
 	return &gameServerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// GameServerAllocations returns a GameServerAllocationInformer.
+func (v *version) GameServerAllocations() GameServerAllocationInformer {
+	return &gameServerAllocationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GameServerSets returns a GameServerSetInformer.
