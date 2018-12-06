@@ -50,6 +50,14 @@ type GameServerListerExpansion interface{}
 // GameServerNamespaceLister.
 type GameServerNamespaceListerExpansion interface{}
 
+// GameServerAllocationListerExpansion allows custom methods to be added to
+// GameServerAllocationLister.
+type GameServerAllocationListerExpansion interface{}
+
+// GameServerAllocationNamespaceListerExpansion allows custom methods to be added to
+// GameServerAllocationNamespaceLister.
+type GameServerAllocationNamespaceListerExpansion interface{}
+
 // GameServerSetListerExpansion allows custom methods to be added to
 // GameServerSetLister.
 type GameServerSetListerExpansion interface{}

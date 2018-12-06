@@ -30,6 +30,7 @@ import (
 	"agones.dev/agones/pkg/fleetallocation"
 	"agones.dev/agones/pkg/fleetautoscalers"
 	"agones.dev/agones/pkg/fleets"
+	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
@@ -133,11 +134,13 @@ func main() {
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
+	gasController := gameserverallocations.NewController(wh, health, allocationMutex, kubeClient,
+		kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs := []runner{
-		wh, gsController, gsSetController, fleetController, faController, fasController, metricsController, server,
+		wh, gsController, gsSetController, fleetController, faController, fasController, metricsController, gasController, server,
 	}
 
 	stop := signals.NewStopChannel()

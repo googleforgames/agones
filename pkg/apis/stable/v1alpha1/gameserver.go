@@ -15,7 +15,10 @@
 package v1alpha1
 
 import (
+	"encoding/json"
 	"fmt"
+
+	"github.com/mattbaird/jsonpatch"
 
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/pkg/errors"
@@ -25,32 +28,32 @@ import (
 )
 
 const (
-	// PortAllocation is for when a dynamically allocating GameServer
+	// GameServerStatePortAllocation is for when a dynamically allocating GameServer
 	// is being created, an open port needs to be allocated
-	PortAllocation State = "PortAllocation"
-	// Creating is before the Pod for the GameServer is being created
-	Creating State = "Creating"
-	// Starting is for when the Pods for the GameServer are being
+	GameServerStatePortAllocation GameServerState = "PortAllocation"
+	// GameServerStateCreating is before the Pod for the GameServer is being created
+	GameServerStateCreating GameServerState = "Creating"
+	// GameServerStateStarting is for when the Pods for the GameServer are being
 	// created but are not yet Scheduled
-	Starting State = "Starting"
-	// Scheduled is for when we have determined that the Pod has been
+	GameServerStateStarting GameServerState = "Starting"
+	// GameServerStateScheduled is for when we have determined that the Pod has been
 	// scheduled in the cluster -- basically, we have a NodeName
-	Scheduled State = "Scheduled"
-	// RequestReady is when the GameServer has declared that it is ready
-	RequestReady State = "RequestReady"
-	// Ready is when a GameServer is ready to take connections
+	GameServerStateScheduled GameServerState = "Scheduled"
+	// GameServerStateRequestReady is when the GameServer has declared that it is ready
+	GameServerStateRequestReady GameServerState = "RequestReady"
+	// GameServerStateReady is when a GameServer is ready to take connections
 	// from Game clients
-	Ready State = "Ready"
-	// Shutdown is when the GameServer has shutdown and everything needs to be
+	GameServerStateReady GameServerState = "Ready"
+	// GameServerStateShutdown is when the GameServer has shutdown and everything needs to be
 	// deleted from the cluster
-	Shutdown State = "Shutdown"
-	// Error is when something has gone with the Gameserver and
+	GameServerStateShutdown GameServerState = "Shutdown"
+	// GameServerStateError is when something has gone wrong with the Gameserver and
 	// it cannot be resolved
-	Error State = "Error"
-	// Unhealthy is when the GameServer has failed its health checks
-	Unhealthy State = "Unhealthy"
-	// Allocated is when the GameServer has been allocated to a session
-	Allocated State = "Allocated"
+	GameServerStateError GameServerState = "Error"
+	// GameServerStateUnhealthy is when the GameServer has failed its health checks
+	GameServerStateUnhealthy GameServerState = "Unhealthy"
+	// GameServerStateAllocated is when the GameServer has been allocated to a session
+	GameServerStateAllocated GameServerState = "Allocated"
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
@@ -122,8 +125,8 @@ type GameServerSpec struct {
 	Template corev1.PodTemplateSpec `json:"template"`
 }
 
-// State is the state for the GameServer
-type State string
+// GameServerState is the state for the GameServer
+type GameServerState string
 
 // PortPolicy is the port policy for the GameServer
 type PortPolicy string
@@ -161,8 +164,8 @@ type GameServerPort struct {
 
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
-	// State is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State    State                  `json:"state"`
+	// GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
+	State    GameServerState        `json:"state"`
 	Ports    []GameServerStatusPort `json:"ports"`
 	Address  string                 `json:"address"`
 	NodeName string                 `json:"nodeName"`
@@ -211,9 +214,9 @@ func (gs *GameServer) applyHealthDefaults() {
 // applyStateDefaults applies state defaults
 func (gs *GameServer) applyStateDefaults() {
 	if gs.Status.State == "" {
-		gs.Status.State = Creating
+		gs.Status.State = GameServerStateCreating
 		if gs.HasPortPolicy(Dynamic) {
-			gs.Status.State = PortAllocation
+			gs.Status.State = GameServerStatePortAllocation
 		}
 	}
 }
@@ -410,4 +413,28 @@ func (gs *GameServer) CountPorts(policy PortPolicy) int {
 		}
 	}
 	return count
+}
+
+// Patch creates a JSONPatch to move the current GameServer
+// to the passed in delta GameServer
+func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
+	var result []byte
+
+	oldJSON, err := json.Marshal(gs)
+	if err != nil {
+		return result, errors.Wrapf(err, "error marshalling to json current GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	newJSON, err := json.Marshal(delta)
+	if err != nil {
+		return result, errors.Wrapf(err, "error marshalling to json delta GameServer %s", delta.ObjectMeta.Name)
+	}
+
+	patch, err := jsonpatch.CreatePatch(oldJSON, newJSON)
+	if err != nil {
+		return result, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
+	}
+
+	result, err = json.Marshal(patch)
+	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }

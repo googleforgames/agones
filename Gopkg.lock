@@ -20,6 +20,14 @@
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:4216202f4088a73e2982df875e2f0d1401137bbc248e57391e70547af167a18a"
+  name = "github.com/evanphx/json-patch"
+  packages = ["."]
+  pruneopts = ""
+  revision = "72bf35d0ff611848c1dc9df0f976c81192392fa5"
+  version = "v4.1.0"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
@@ -761,6 +769,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/evanphx/json-patch",
     "github.com/fsnotify/fsnotify",
     "github.com/golang/protobuf/proto",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",

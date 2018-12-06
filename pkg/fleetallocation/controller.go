@@ -222,6 +222,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 
 // mutationValidationHandler stops edits from happening to a
 // FleetAllocation fleetName value
+// nolint: dupl
 func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	c.logger.WithField("review", review).Info("mutationValidationHandler")
 
@@ -256,7 +257,7 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 }
 
 // allocate allocated a GameServer from a given Fleet
-func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.FleetAllocationMeta) (*v1alpha1.GameServer, error) {
+func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.MetaPatch) (*v1alpha1.GameServer, error) {
 	var allocation *v1alpha1.GameServer
 	// can only allocate one at a time, as we don't want two separate processes
 	// trying to allocate the same GameServer to different clients
@@ -284,7 +285,7 @@ func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.FleetAllocationMe
 	}
 
 	gsCopy := allocation.DeepCopy()
-	gsCopy.Status.State = v1alpha1.Allocated
+	gsCopy.Status.State = v1alpha1.GameServerStateAllocated
 
 	if fam != nil {
 		c.patchMetadata(gsCopy, fam)
@@ -300,7 +301,7 @@ func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.FleetAllocationMe
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a FleetAllocation
-func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam *v1alpha1.FleetAllocationMeta) {
+func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam *v1alpha1.MetaPatch) {
 	// patch ObjectMeta labels
 	if fam.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {

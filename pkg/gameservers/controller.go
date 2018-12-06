@@ -361,16 +361,16 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *v1alpha1.GameServer) (*
 
 // syncGameServerPortAllocationState gives a port to a dynamically allocating GameServer
 func (c *Controller) syncGameServerPortAllocationState(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-	if !(gs.Status.State == v1alpha1.PortAllocation && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !(gs.Status.State == v1alpha1.GameServerStatePortAllocation && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
 	gsCopy := c.portAllocator.Allocate(gs.DeepCopy())
 
-	gsCopy.Status.State = v1alpha1.Creating
+	gsCopy.Status.State = v1alpha1.GameServerStateCreating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
-	c.logger.WithField("gs", gsCopy).Info("Syncing Port Allocation State")
+	c.logger.WithField("gs", gsCopy).Info("Syncing Port Allocation GameServerState")
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
@@ -385,7 +385,7 @@ func (c *Controller) syncGameServerPortAllocationState(gs *v1alpha1.GameServer) 
 // syncGameServerCreatingState checks if the GameServer is in the Creating state, and if so
 // creates a Pod for the GameServer and moves the state to Starting
 func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-	if !(gs.Status.State == v1alpha1.Creating && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !(gs.Status.State == v1alpha1.GameServerStateCreating && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
@@ -404,13 +404,13 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 
 	if len(ret) == 0 {
 		gs, err = c.createGameServerPod(gs)
-		if err != nil || gs.Status.State == v1alpha1.Error {
+		if err != nil || gs.Status.State == v1alpha1.GameServerStateError {
 			return gs, err
 		}
 	}
 
 	gsCopy := gs.DeepCopy()
-	gsCopy.Status.State = v1alpha1.Starting
+	gsCopy.Status.State = v1alpha1.GameServerStateStarting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
@@ -523,11 +523,11 @@ func (c *Controller) addGameServerHealthCheck(gs *v1alpha1.GameServer, pod *core
 // syncGameServerStartingState looks for a pod that has been scheduled for this GameServer
 // and then sets the Status > Address and Ports values.
 func (c *Controller) syncGameServerStartingState(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-	if !(gs.Status.State == v1alpha1.Starting && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !(gs.Status.State == v1alpha1.GameServerStateStarting && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
-	c.logger.WithField("gs", gs).Info("Syncing Starting State")
+	c.logger.WithField("gs", gs).Info("Syncing Starting GameServerState")
 
 	// there should be a pod (although it may not have a scheduled container),
 	// so if there is an error of any kind, then move this to queue backoff
@@ -543,7 +543,7 @@ func (c *Controller) syncGameServerStartingState(gs *v1alpha1.GameServer) (*v1al
 		return gs, err
 	}
 
-	gsCopy.Status.State = v1alpha1.Scheduled
+	gsCopy.Status.State = v1alpha1.GameServerStateScheduled
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
@@ -577,8 +577,8 @@ func (c *Controller) applyGameServerAddressAndPort(gs *v1alpha1.GameServer, pod 
 // and then adds the IP and Port information to the Status and marks the GameServer
 // as Ready
 func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
-	if !(gs.Status.State == v1alpha1.RequestReady && gs.ObjectMeta.DeletionTimestamp.IsZero()) ||
-		gs.Status.State == v1alpha1.Unhealthy {
+	if !(gs.Status.State == v1alpha1.GameServerStateRequestReady && gs.ObjectMeta.DeletionTimestamp.IsZero()) ||
+		gs.Status.State == v1alpha1.GameServerStateUnhealthy {
 		return gs, nil
 	}
 
@@ -604,7 +604,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 		}
 	}
 
-	gsCopy.Status.State = v1alpha1.Ready
+	gsCopy.Status.State = v1alpha1.GameServerStateReady
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
@@ -619,7 +619,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 
 // syncGameServerShutdownState deletes the GameServer (and therefore the backing Pod) if it is in shutdown state
 func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error {
-	if !(gs.Status.State == v1alpha1.Shutdown && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !(gs.Status.State == v1alpha1.GameServerStateShutdown && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return nil
 	}
 
@@ -640,7 +640,7 @@ func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error 
 // moveToErrorState moves the GameServer to the error state
 func (c *Controller) moveToErrorState(gs *v1alpha1.GameServer, msg string) (*v1alpha1.GameServer, error) {
 	copy := gs.DeepCopy()
-	copy.Status.State = v1alpha1.Error
+	copy.Status.State = v1alpha1.GameServerStateError
 
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
 	if err != nil {

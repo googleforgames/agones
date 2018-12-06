@@ -110,7 +110,7 @@ func TestControllerWatchGameServers(t *testing.T) {
 	}
 
 	gsCopy = gs.DeepCopy()
-	gsCopy.Status.State = v1alpha1.Unhealthy
+	gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
 	logrus.Info("modify gs - unhealthy")
 	gsWatch.Modify(gsCopy.DeepCopy())
 	assert.Equal(t, expected, f())
@@ -127,7 +127,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		list := createGameServers(gsSet, 5)
 
 		// make some as unhealthy
-		list[0].Status.State = v1alpha1.Unhealthy
+		list[0].Status.State = v1alpha1.GameServerStateUnhealthy
 
 		deleted := false
 		count := 0
@@ -195,17 +195,17 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 
 	gs1 := gsSet.GameServer()
 	gs1.ObjectMeta.Name = "test-1"
-	gs1.Status = v1alpha1.GameServerStatus{State: v1alpha1.Unhealthy}
+	gs1.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateUnhealthy}
 
 	gs2 := gsSet.GameServer()
 	gs2.ObjectMeta.Name = "test-2"
-	gs2.Status = v1alpha1.GameServerStatus{State: v1alpha1.Ready}
+	gs2.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}
 
 	gs3 := gsSet.GameServer()
 	gs3.ObjectMeta.Name = "test-3"
 	now := metav1.Now()
 	gs3.ObjectMeta.DeletionTimestamp = &now
-	gs3.Status = v1alpha1.GameServerStatus{State: v1alpha1.Ready}
+	gs3.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}
 
 	deleted := false
 
@@ -263,16 +263,16 @@ func TestSyncLessGameServers(t *testing.T) {
 	list := createGameServers(gsSet, 11)
 
 	// mark some as Allocated
-	list[0].Status.State = v1alpha1.Allocated
-	list[3].Status.State = v1alpha1.Allocated
+	list[0].Status.State = v1alpha1.GameServerStateAllocated
+	list[3].Status.State = v1alpha1.GameServerStateAllocated
 
 	// make the last one already being deleted
 	now := metav1.Now()
 	list[10].ObjectMeta.DeletionTimestamp = &now
 
 	// gate
-	assert.Equal(t, v1alpha1.Allocated, list[0].Status.State)
-	assert.Equal(t, v1alpha1.Allocated, list[3].Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, list[0].Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, list[3].Status.State)
 	assert.False(t, list[10].ObjectMeta.DeletionTimestamp.IsZero())
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -285,7 +285,7 @@ func TestSyncLessGameServers(t *testing.T) {
 		for _, gs := range list {
 			if gs.ObjectMeta.Name == da.GetName() {
 				found = true
-				assert.NotEqual(t, gs.Status.State, v1alpha1.Allocated)
+				assert.NotEqual(t, gs.Status.State, v1alpha1.GameServerStateAllocated)
 			}
 		}
 		assert.True(t, found)
@@ -344,7 +344,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 			return true, nil, nil
 		})
 
-		list := []*v1alpha1.GameServer{{Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready}}}
+		list := []*v1alpha1.GameServer{{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}}}
 		err := c.syncGameServerSetState(gsSet, list)
 		assert.Nil(t, err)
 		assert.True(t, updated)
@@ -368,14 +368,14 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 		})
 
 		list := []*v1alpha1.GameServer{
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Starting}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Unhealthy}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.PortAllocation}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Error}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Allocated}},
-			{Status: v1alpha1.GameServerStatus{State: v1alpha1.Allocated}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateStarting}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateUnhealthy}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStatePortAllocation}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateError}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateAllocated}},
+			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateAllocated}},
 		}
 		err := c.syncGameServerSetState(gsSet, list)
 		assert.Nil(t, err)
@@ -473,7 +473,7 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 	for i := 0; i < size; i++ {
 		gs := gsSet.GameServer()
 		gs.Name = gs.GenerateName + strconv.Itoa(i)
-		gs.Status = v1alpha1.GameServerStatus{State: v1alpha1.Ready}
+		gs.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}
 		list = append(list, *gs)
 	}
 	return list

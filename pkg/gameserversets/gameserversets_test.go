@@ -30,13 +30,13 @@ func TestFilterGameServersOnLeastFullNodes(t *testing.T) {
 	t.Parallel()
 
 	gsList := []*v1alpha1.GameServer{
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.Ready}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.Starting}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.Ready}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.Ready}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs5"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Allocated}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs6"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Allocated}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs7"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.Ready}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.GameServerStateStarting}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.GameServerStateReady}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs5"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateAllocated}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs6"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateAllocated}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "gs7"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateReady}},
 	}
 
 	t.Run("normal", func(t *testing.T) {

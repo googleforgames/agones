@@ -3,6 +3,23 @@
 This guide covers how you can quickly get started using Agones to create a Fleet
 of warm GameServers ready for you to allocate out of and play on!
 
+
+Table of Contents
+=================
+
+  * [Prerequisites](#prerequisites)
+  * [Objectives](#objectives)
+     * [1. Create a Fleet](#1-create-a-fleet)
+     * [2. Fetch the Fleet status](#2-fetch-the-fleet-status)
+     * [3. Scale up the Fleet](#3-scale-up-the-fleet)
+     * [4. Allocate a Game Server from the Fleet](#4-allocate-a-game-server-from-the-fleet)
+        * [GameServerAllocation](#gameserverallocation)
+        * [FleetAllocation](#fleetallocation)
+     * [5. Scale down the Fleet](#5-scale-down-the-fleet)
+     * [6. Connect to the GameServer](#6-connect-to-the-gameserver)
+     * [7. Deploy a new version of the GameServer on the Fleet](#7-deploy-a-new-version-of-the-gameserver-on-the-fleet)
+  * [Next Steps](#next-steps)
+
 ## Prerequisites
 
 The following prerequisites are required to create a GameServer:
@@ -146,13 +163,105 @@ simple-udp-xvp4n-i6bnm   36s
 
 ### 4. Allocate a Game Server from the Fleet
 
-Since we have a fleet of warm gameservers, we need a way to request one of them for usage!
+Since we have a fleet of warm gameservers, we need a way to request one of them for usage, and mark that it has
+players access it (and therefore, it should not be deleted until they are finished with it).
 
-We can do this through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
-and also move it to the `Allocated` state.
-
-In production, you would likely do this through a [Kubernetes API call](./access_api.md), but we can also
+> In production, you would likely do the following through a [Kubernetes API call](./access_api.md), but we can also
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
+
+#### GameServerAllocation
+
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
+return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
+which demarcates that it has players on it, and should not be removed until `SDK.Shutdown()` is called, or it is manually deleted.
+
+It is worth noting that there is nothing specific that ties a `GameServerAllocation`. A `GameServerAllocation` uses
+a [lable selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to determine what
+group of `GameServers` it will attempt to allocate out of. That being said, a `Fleet` and `GameServerAllocation`
+are often used in conjunction.
+
+[This example](../examples/simple-udp/gameserverallocation.yaml) uses the label selector to specifically target the `simple-udp` fleet that we just created.
+
+```
+kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/gameserverallocation.yaml -o yaml
+```
+
+For the full details of the YAML file head to the [Fleet Specification Guide](./fleet_spec.md#gameserver-allocation-specification)
+
+You should get back a response that looks like the following:
+
+```yaml
+apiVersion: stable.agones.dev/v1alpha1
+kind: GameServerAllocation
+metadata:
+  creationTimestamp: 2018-12-31T22:52:41Z
+  generateName: simple-udp-
+  generation: 1
+  name: simple-udp-czw2b
+  namespace: default
+  ownerReferences:
+  - apiVersion: stable.agones.dev/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: GameServer
+    name: simple-udp-sdhzn-r4d6x
+    uid: b0ad460b-0d4e-11e9-9986-dcbf85d40d0b
+  resourceVersion: "4085"
+  selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/gameserverallocations/simple-udp-czw2b
+  uid: c7547505-0d4e-11e9-9986-dcbf85d40d0b
+spec:
+  metadata: {}
+  required:
+    matchLabels:
+      stable.agones.dev/fleet: simple-udp
+  scheduling: Packed
+status:
+  address: 192.168.122.205
+  gameServerName: simple-udp-sdhzn-r4d6x
+  nodeName: minikube
+  ports:
+  - name: default
+    port: 7623
+  state: Allocated
+```
+
+If you look at the `status` section, there are several things to take note of. The `state` value will tell if
+a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
+
+However, we see that the `status.state` value was set to `Allocated`. 
+This means you have been successfully allocated a `GameServer` out of the fleet, and you can now connect your players to it!
+
+You can see various immutable details of the `GameServer` in the status - the `address`, `ports` and the name
+of the `GameServer`, in case you want to use it to retrieve more details.
+
+We can also check to see how many `GameServers` you have `Allocated` vs `Ready` with the following command
+("gs" is shorthand for "gameserver").
+
+```
+kubectl get gs
+```
+
+This will get you a list of all the current `GameSevers` and their `Status.State`.
+
+```
+NAME                     STATE       ADDRESS           PORT      NODE       AGE
+simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191      minikube   52m
+simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752      minikube   53m
+simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623      minikube   52m
+simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709      minikube   53m
+simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478      minikube   52m
+```
+
+#### FleetAllocation
+
+> Fleet Allocation is **deprecated** in version 0.8.0, and will be removed in the 0.10.0 release.
+  Migrate to using GameServer Allocation instead.
+
+
+We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
+and also move it to the `Allocated` state.
 
 ```
 kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml
@@ -356,9 +465,9 @@ You have now deployed a new version of your game!
 
 ## Next Steps
 
-You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
+- Have a look at the [GameServerAllocation specification](./fleet_spec.md#gameserver-allocation-specification), and see
+how the extra functionality can enable smoke testing, server information communication, and more.
+- You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
 See [Create a Fleet Autoscaler](./create_fleetautoscaler.md).
-
-Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).
-
-If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service](./create_allocator_service.md) tutorial.
+- Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK](../sdks/).
+- If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service](./create_allocator_service.md) tutorial.

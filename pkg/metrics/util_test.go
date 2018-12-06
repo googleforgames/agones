@@ -97,7 +97,7 @@ type fakeController struct {
 	cancel     context.CancelFunc
 }
 
-func gameServer(fleetName string, state v1alpha1.State) *v1alpha1.GameServer {
+func gameServer(fleetName string, state v1alpha1.GameServerState) *v1alpha1.GameServer {
 	lbs := map[string]string{}
 	if fleetName != "" {
 		lbs[v1alpha1.FleetNameLabel] = fleetName
@@ -116,9 +116,9 @@ func gameServer(fleetName string, state v1alpha1.State) *v1alpha1.GameServer {
 	return gs
 }
 
-func generateGsEvents(count int, state v1alpha1.State, fleetName string, fakew *watch.FakeWatcher) {
+func generateGsEvents(count int, state v1alpha1.GameServerState, fleetName string, fakew *watch.FakeWatcher) {
 	for i := 0; i < count; i++ {
-		gs := gameServer(fleetName, v1alpha1.State(""))
+		gs := gameServer(fleetName, v1alpha1.GameServerState(""))
 		fakew.Add(gs)
 		gsUpdated := gs.DeepCopy()
 		gsUpdated.Status.State = state
@@ -139,7 +139,7 @@ func fleetAllocation(fleetName string) *v1alpha1.FleetAllocation {
 			FleetName: fleetName,
 		},
 		Status: v1alpha1.FleetAllocationStatus{
-			GameServer: gameServer(fleetName, v1alpha1.Allocated),
+			GameServer: gameServer(fleetName, v1alpha1.GameServerStateAllocated),
 		},
 	}
 }

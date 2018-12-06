@@ -294,32 +294,32 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 		gs2 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 		gs3 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n3.ObjectMeta.Name}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n3.ObjectMeta.Name}}
 		gs4 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
 		gs5 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", UID: "5"},
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
 		gs6 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", UID: "6"},
 			Spec: v1alpha1.GameServerSpec{
 				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Static, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.Creating}}
+			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
 		gsl := &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}}
 		return true, gsl, nil
 	})
@@ -356,22 +356,22 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n1.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n1.ObjectMeta.Name}}
 	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 
 	pa := NewPortAllocator(10, 20, m.KubeInformationFactory, m.AgonesInformerFactory)
 
@@ -464,25 +464,25 @@ func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 
 	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n2.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n2.ObjectMeta.Name}}
 
 	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready, Ports: []v1alpha1.GameServerStatusPort{{Port: 12}}, NodeName: n1.ObjectMeta.Name}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 12}}, NodeName: n1.ObjectMeta.Name}}
 
 	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "3"},
 		Spec: v1alpha1.GameServerSpec{
 			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 13}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.PortAllocation, Ports: []v1alpha1.GameServerStatusPort{{Port: 13}}}}
+		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStatePortAllocation, Ports: []v1alpha1.GameServerStatusPort{{Port: 13}}}}
 
 	allocations, nonReadyNodesPorts := pa.registerExistingGameServerPorts([]*v1alpha1.GameServer{gs1, gs2, gs3, gs4}, []*corev1.Node{&n1, &n2, &n3}, map[types.UID]bool{})
 

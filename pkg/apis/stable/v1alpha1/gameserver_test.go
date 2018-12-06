@@ -54,7 +54,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 
 	type expected struct {
 		protocol   corev1.Protocol
-		state      State
+		state      GameServerState
 		policy     PortPolicy
 		health     Health
 		scheduling SchedulingStrategy
@@ -76,7 +76,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      PortAllocation,
+				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
 				scheduling: Packed,
 				health: Health{
@@ -133,7 +133,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      Creating,
+				state:      GameServerStateCreating,
 				policy:     Static,
 				scheduling: Packed,
 				health: Health{
@@ -155,7 +155,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      PortAllocation,
+				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
 				scheduling: Packed,
 				health: Health{
@@ -181,7 +181,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   corev1.ProtocolTCP,
-				state:      Creating,
+				state:      GameServerStateCreating,
 				policy:     Static,
 				scheduling: Packed,
 				health:     Health{Disabled: true},
@@ -256,7 +256,7 @@ func TestGameServerPod(t *testing.T) {
 					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
 				},
 			},
-		}, Status: GameServerStatus{State: Creating}}
+		}, Status: GameServerStatus{State: GameServerStateCreating}}
 	fixture.ApplyDefaults()
 
 	pod, err := fixture.Pod()
@@ -355,4 +355,17 @@ func TestGameServerCountPorts(t *testing.T) {
 
 	assert.Equal(t, 3, fixture.CountPorts(Dynamic))
 	assert.Equal(t, 1, fixture.CountPorts(Static))
+}
+
+func TestGameServerPatch(t *testing.T) {
+	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
+		Spec: GameServerSpec{Container: "goat"}}
+
+	delta := fixture.DeepCopy()
+	delta.Spec.Container = "bear"
+
+	patch, err := fixture.Patch(delta)
+	assert.Nil(t, err)
+
+	assert.Contains(t, string(patch), `{"op":"replace","path":"/spec/container","value":"bear"}`)
 }

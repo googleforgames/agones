@@ -83,7 +83,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/joonix/log"
-  
+
 [[constraint]]
   name = "go.opencensus.io"
   version = "0.18.0"
@@ -91,3 +91,7 @@
 [[override]]
   name = "github.com/prometheus/client_golang"
   version = "0.9.2"
+
+[[constraint]]
+  name = "github.com/evanphx/json-patch"
+  version = "4.1.0"

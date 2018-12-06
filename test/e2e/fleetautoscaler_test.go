@@ -78,7 +78,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	fa := getAllocation(flt)
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
 	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
 	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
@@ -279,7 +279,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fa := getAllocation(flt)
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
 	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
 	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})

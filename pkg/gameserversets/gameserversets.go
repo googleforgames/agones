@@ -47,7 +47,7 @@ func filterGameServersOnLeastFullNodes(gsList []*v1alpha1.GameServer, limit int3
 	// per node, so we can use this as a shortlist to delete from
 	for _, gs := range gsList {
 		if gs.DeletionTimestamp.IsZero() &&
-			(gs.Status.State == v1alpha1.Allocated || gs.Status.State == v1alpha1.Ready) {
+			(gs.Status.State == v1alpha1.GameServerStateAllocated || gs.Status.State == v1alpha1.GameServerStateReady) {
 			_, ok := nodeMap[gs.Status.NodeName]
 			if !ok {
 				node := &node{name: gs.Status.NodeName}
@@ -56,7 +56,7 @@ func filterGameServersOnLeastFullNodes(gsList []*v1alpha1.GameServer, limit int3
 			}
 
 			nodeMap[gs.Status.NodeName].total++
-			if gs.Status.State == v1alpha1.Ready {
+			if gs.Status.State == v1alpha1.GameServerStateReady {
 				nodeMap[gs.Status.NodeName].ready = append(nodeMap[gs.Status.NodeName].ready, gs)
 			}
 		}

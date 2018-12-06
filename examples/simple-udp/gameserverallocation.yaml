@@ -1,0 +1,32 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Usually you would define a Fleet rather than a GameServerSet
+# directly. This is here mostly for testing purposes
+
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: GameServerAllocation
+metadata:
+  # We recommend using the following to generate a unique name when creating Allocations
+  # This will need to be created with `kubectl create` if using the command line tooling
+  generateName: simple-udp-
+spec:
+  # GameServer selector from which to choose GameServers from.
+  # GameServers still have the hard requirement to be `Ready` to be allocated from
+  # however we can also make available `matchExpressions` for even greater
+  # flexibility.
+  # Below is an example of a GameServer allocated against a given fleet.
+  required:
+    matchLabels:
+      stable.agones.dev/fleet: simple-udp

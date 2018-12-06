@@ -27,6 +27,7 @@ type nodeCount struct {
 
 // findReadyGameServerForAllocation is a O(n) implementation to find a GameServer with priority
 // defined in the comparator function.
+// nolint: dupl
 func findReadyGameServerForAllocation(gsList []*v1alpha1.GameServer, comparator func(bestCount, currentCount *nodeCount) bool) *v1alpha1.GameServer {
 	counts := map[string]*nodeCount{}
 	// track potential gameservers, one for each node
@@ -37,15 +38,15 @@ func findReadyGameServerForAllocation(gsList []*v1alpha1.GameServer, comparator 
 	// per node, so we can use that as a short list to allocate from
 	for _, gs := range gsList {
 		if gs.DeletionTimestamp.IsZero() &&
-			(gs.Status.State == v1alpha1.Allocated || gs.Status.State == v1alpha1.Ready) {
+			(gs.Status.State == v1alpha1.GameServerStateAllocated || gs.Status.State == v1alpha1.GameServerStateReady) {
 			_, ok := counts[gs.Status.NodeName]
 			if !ok {
 				counts[gs.Status.NodeName] = &nodeCount{}
 			}
 
-			if gs.Status.State == v1alpha1.Allocated {
+			if gs.Status.State == v1alpha1.GameServerStateAllocated {
 				counts[gs.Status.NodeName].allocated++
-			} else if gs.Status.State == v1alpha1.Ready {
+			} else if gs.Status.State == v1alpha1.GameServerStateReady {
 				counts[gs.Status.NodeName].ready++
 				allocatableGameServers[gs.Status.NodeName] = gs
 			}
