@@ -163,8 +163,6 @@ metadata:
     chart: agones-0.7.0-rc
     release: agones-manual
     heritage: Tiller
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -303,7 +301,6 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
-
 ---
 # Source: agones/templates/crds/fleetallocation.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -330,8 +327,6 @@ metadata:
     chart: agones-0.7.0-rc
     release: agones-manual
     heritage: Tiller
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -354,7 +349,6 @@ spec:
               minLength: 1
               maxLength: 63
               pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-
 ---
 # Source: agones/templates/crds/fleetautoscaler.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -381,8 +375,6 @@ metadata:
     chart: agones-0.7.0-rc
     release: agones-manual
     heritage: Tiller
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -424,7 +416,6 @@ spec:
                     maxReplicas:
                       type: integer
                       minimum: 1
-
 ---
 # Source: agones/templates/crds/gameserver.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -451,8 +442,6 @@ metadata:
     chart: agones-0.7.0-rc
     release: agones-manual
     heritage: Tiller
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -596,8 +585,6 @@ metadata:
     chart: agones-0.7.0-rc
     release: agones-manual
     heritage: Tiller
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -730,7 +717,6 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
-
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -949,10 +935,6 @@ spec:
       targetPort: 8080
       protocol: UDP
   type: LoadBalancer
----
-# Source: agones/templates/hooks/post_delete_hook.yaml
-
-
 ---
 # Source: agones/templates/hooks/pre_delete_hook.yaml
 

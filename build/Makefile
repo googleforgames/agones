@@ -175,6 +175,7 @@ push: push-controller-image push-agones-sdk-image push-ping-image
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: PING_SERVICE_TYPE := "LoadBalancer"
+install: CRD_CLEANUP := true
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\
@@ -182,6 +183,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
+		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		agones $(mount_path)/install/helm/agones/
 
 uninstall: $(ensure-build-image)
@@ -251,7 +253,8 @@ push-agones-sdk-image: $(ensure-build-image)
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
-		--set agones.controller.generateTLS=false --set agones.enableHelmCleanupHooks=false \
+		--set agones.controller.generateTLS=false \
+		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the SDK gRPC server and client code

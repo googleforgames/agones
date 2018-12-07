@@ -1,4 +1,4 @@
-{{- if .Values.agones.enableHelmCleanupHooks }}
+{{- if .Values.agones.crds.cleanupOnDelete }}
 # Copyright 2018 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,9 +44,6 @@ metadata:
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": before-hook-creation
 rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["delete"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers", "gameservers", "gameserversets"]
   verbs: ["delete", "list" ]

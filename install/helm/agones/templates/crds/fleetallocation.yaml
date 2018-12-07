@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if .Values.agones.crds.install }}
+
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -22,8 +24,6 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-  annotations:
-    "helm.sh/hook": "crd-install"
 spec:
   group: stable.agones.dev
   version: v1alpha1
@@ -46,3 +46,5 @@ spec:
               minLength: 1
               maxLength: 63
               pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+
+{{- end }}

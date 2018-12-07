@@ -1,4 +1,4 @@
-{{- if .Values.agones.enableHelmCleanupHooks }}
+{{- if .Values.agones.crds.cleanupOnDelete }}
 # Copyright 2018 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,22 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: delete-crds
-  labels:
-    app.kubernetes.io/managed-by: {{.Release.Service | quote }}
-    app.kubernetes.io/instance: {{.Release.Name | quote }}
-    helm.sh/chart: "{{.Chart.Name}}-{{.Chart.Version}}"
-  annotations:
-    "helm.sh/hook": pre-delete
-    "helm.sh/hook-weight": "-3"
-    "helm.sh/hook-delete-policy": before-hook-creation
-data:
-  delete_crds.sh: |
-{{ .Files.Get "scripts/delete_crds.sh" | indent 4 }}
----
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -16,7 +16,9 @@
 
 agones:
   rbacEnabled: true
-  enableHelmCleanupHooks: true
+  crds:
+    install: true
+    cleanupOnDelete: true
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
