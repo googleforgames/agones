@@ -35,7 +35,7 @@ release_registry = gcr.io/agones-images
 #
 
 # Version defaults to the short hash of the latest commit
-VERSION ?= $(base_version)-$(shell git rev-parse --short HEAD)
+VERSION ?= $(base_version)-$(shell git rev-parse --short=7 HEAD)
 # The registry that is being used to store docker images
 REGISTRY ?= $(release_registry)
 # kubectl configuration to use
