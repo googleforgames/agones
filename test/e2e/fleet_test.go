@@ -24,7 +24,7 @@ import (
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -64,6 +64,54 @@ func TestCreateFleetAndAllocate(t *testing.T) {
 			fa, err = framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
 			assert.Nil(t, err)
 			assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+		})
+
+	}
+}
+
+// Can't allocate more GameServers if a fleet is fully used.
+func TestCreateFullFleetAndCantAllocate(t *testing.T) {
+	t.Parallel()
+
+	fixtures := []v1alpha1.SchedulingStrategy{v1alpha1.Packed, v1alpha1.Distributed}
+
+	for _, strategy := range fixtures {
+		t.Run(string(strategy), func(t *testing.T) {
+			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleet := defaultFleet()
+			fleet.Spec.Scheduling = strategy
+			flt, err := fleets.Create(fleet)
+			if assert.Nil(t, err) {
+				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+			assert.Nil(t, err, "fleet not ready")
+
+			fa := &v1alpha1.FleetAllocation{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocatioon-", Namespace: defaultNs},
+				Spec: v1alpha1.FleetAllocationSpec{
+					FleetName: flt.ObjectMeta.Name,
+				},
+			}
+
+			for i := 0; i < replicasCount; i++ {
+				fa2, err := framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
+				assert.Nil(t, err)
+				assert.Equal(t, v1alpha1.Allocated, fa2.Status.GameServer.Status.State)
+			}
+
+			err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == replicasCount
+			})
+			assert.Nil(t, err)
+
+			fa2, err := framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
+			assert.NotNil(t, err)
+
+			//Internal error occurred: admission webhook \"mutations.stable.agones.dev\" denied the request: NotFound"
+			logrus.WithField("error", err).Info("Allocation error: fully used fleet")
+			assert.Nil(t, fa2.Status.GameServer)
 		})
 
 	}
@@ -318,6 +366,8 @@ func scaleFleet(f *v1alpha1.Fleet, scale int32) (*v1alpha1.Fleet, error) {
 	return framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
 }
 
+const replicasCount = 3
+
 // defaultFleet returns a default fleet configuration
 func defaultFleet() *v1alpha1.Fleet {
 	gs := defaultGameServer()
@@ -325,7 +375,7 @@ func defaultFleet() *v1alpha1.Fleet {
 	return &v1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-", Namespace: defaultNs},
 		Spec: v1alpha1.FleetSpec{
-			Replicas: 3,
+			Replicas: replicasCount,
 			Template: v1alpha1.GameServerTemplateSpec{
 				Spec: gs.Spec,
 			},
