@@ -24,16 +24,17 @@ import (
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
-	key   = "test-state"
-	red   = "red"
-	green = "green"
+	key           = "test-state"
+	red           = "red"
+	green         = "green"
+	replicasCount = 3
 )
 
 func TestCreateFleetAndAllocate(t *testing.T) {
@@ -55,7 +56,7 @@ func TestCreateFleetAndAllocate(t *testing.T) {
 			assert.Nil(t, err, "fleet not ready")
 
 			fa := &v1alpha1.FleetAllocation{
-				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocatioon-", Namespace: defaultNs},
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
 				Spec: v1alpha1.FleetAllocationSpec{
 					FleetName: flt.ObjectMeta.Name,
 				},
@@ -64,6 +65,52 @@ func TestCreateFleetAndAllocate(t *testing.T) {
 			fa, err = framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
 			assert.Nil(t, err)
 			assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+		})
+
+	}
+}
+
+// Can't allocate more GameServers if a fleet is fully used.
+func TestCreateFullFleetAndCantAllocate(t *testing.T) {
+	t.Parallel()
+
+	fixtures := []v1alpha1.SchedulingStrategy{v1alpha1.Packed, v1alpha1.Distributed}
+
+	for _, strategy := range fixtures {
+		t.Run(string(strategy), func(t *testing.T) {
+			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleet := defaultFleet()
+			fleet.Spec.Scheduling = strategy
+			flt, err := fleets.Create(fleet)
+			if assert.Nil(t, err) {
+				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+			assert.Nil(t, err, "fleet not ready")
+
+			fa := &v1alpha1.FleetAllocation{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
+				Spec: v1alpha1.FleetAllocationSpec{
+					FleetName: flt.ObjectMeta.Name,
+				},
+			}
+
+			for i := 0; i < replicasCount; i++ {
+				fa2, err := framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
+				assert.Nil(t, err)
+				assert.Equal(t, v1alpha1.Allocated, fa2.Status.GameServer.Status.State)
+			}
+
+			err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == replicasCount
+			})
+			assert.Nil(t, err)
+
+			fa2, err := framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
+			assert.NotNil(t, err)
+
+			assert.Nil(t, fa2.Status.GameServer)
 		})
 
 	}
@@ -134,12 +181,12 @@ func TestFleetUpdates(t *testing.T) {
 	fixtures := map[string]func() *v1alpha1.Fleet{
 		"recreate": func() *v1alpha1.Fleet {
 			flt := defaultFleet()
-			flt.Spec.Strategy.Type = v1.RecreateDeploymentStrategyType
+			flt.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 			return flt
 		},
 		"rolling": func() *v1alpha1.Fleet {
 			flt := defaultFleet()
-			flt.Spec.Strategy.Type = v1.RollingUpdateDeploymentStrategyType
+			flt.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 			return flt
 		},
 	}
@@ -269,7 +316,7 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 
 		fleet := func() *v1alpha1.Fleet {
 			flt := defaultFleet()
-			flt.Spec.Strategy.Type = v1.RecreateDeploymentStrategyType
+			flt.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
 
 			return flt
@@ -291,7 +338,7 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 
 		fleet := func() *v1alpha1.Fleet {
 			flt := defaultFleet()
-			flt.Spec.Strategy.Type = v1.RollingUpdateDeploymentStrategyType
+			flt.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
 
 			return flt
@@ -325,7 +372,7 @@ func defaultFleet() *v1alpha1.Fleet {
 	return &v1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-", Namespace: defaultNs},
 		Spec: v1alpha1.FleetSpec{
-			Replicas: 3,
+			Replicas: replicasCount,
 			Template: v1alpha1.GameServerTemplateSpec{
 				Spec: gs.Spec,
 			},
