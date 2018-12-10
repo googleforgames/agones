@@ -190,7 +190,11 @@ func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) 
 }
 
 func (c *Controller) gameServerEventHandler(obj interface{}) {
-	gs := obj.(*v1alpha1.GameServer)
+	gs, ok := obj.(*v1alpha1.GameServer)
+	if !ok {
+		return
+	}
+
 	ref := metav1.GetControllerOf(gs)
 	if ref == nil {
 		return
