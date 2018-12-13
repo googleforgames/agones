@@ -25,6 +25,22 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.gameServer.status.state
+    name: State
+    type: string
+  - JSONPath: .status.gameServer.status.address
+    name: Address
+    type: string
+  - JSONPath: .status.gameServer.status.ports[0].port
+    name: Port
+    type: string
+  - JSONPath: .status.gameServer.status.nodeName
+    name: Node
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
