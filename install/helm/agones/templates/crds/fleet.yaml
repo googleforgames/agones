@@ -25,6 +25,25 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.scheduling
+    name: Scheduling
+    type: string
+  - JSONPath: .spec.replicas
+    name: Desired
+    type: integer
+  - JSONPath: .status.replicas
+    name: Current
+    type: integer
+  - JSONPath: .status.allocatedReplicas
+    name: Allocated
+    type: integer
+  - JSONPath: .status.readyReplicas
+    name: Ready
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
