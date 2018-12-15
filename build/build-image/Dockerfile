@@ -47,7 +47,7 @@ RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rust
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.11.1
+ENV GO_VERSION=1.11.4
 ENV GOPATH /go
 RUN wget -q https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
