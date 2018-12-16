@@ -5,9 +5,9 @@ This chart install the Agones application and defines deployment on a [Kubernete
 ## Prerequisites
 
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
-- Kubernetes 1.9+
+- Kubernetes 1.11+
 - Role-based access controls (RBAC) activated
-- MutatingAdmissionWebhook admission controller activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
+- MutatingAdmissionWebhook and ValidatingAdmissionWebhook admission controllers activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
 
 ## Installing the Chart
 

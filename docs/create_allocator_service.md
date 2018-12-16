@@ -16,9 +16,6 @@ The type of service we will be learning about could be used by a game client to 
 4. A local copy of the [allocator service](https://github.com/GoogleCloudPlatform/agones/tree/master/examples/allocator-service)
 5. A repository for Docker images, such as [Docker Hub](https://hub.docker.com/) or [GC Container Registry](https://cloud.google.com/container-registry/)
 
-
->NOTE: Agones requires Kubernetes versions 1.9 with role-based access controls (RBAC) and MutatingAdmissionWebhook features activated. To check your version, enter `kubectl version`.
-
 To install on GKE, follow the install instructions (if you haven't already) at
 [Setting up a Google Kubernetes Engine (GKE) cluster](../install/README.md#setting-up-a-google-kubernetes-engine-gke-cluster). Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.
 

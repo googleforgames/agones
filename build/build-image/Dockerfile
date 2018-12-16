@@ -64,8 +64,8 @@ ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 # RUN gcloud components update
 RUN gcloud components update
 
-# install kubectl without gcloud as we want the last version
-ENV KUBECTL_VER 1.10.0
+# overwrite kubectl as we want a specific version
+ENV KUBECTL_VER 1.11.5
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
@@ -107,7 +107,7 @@ RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.s
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
-    git clone -b kubernetes-1.10.5 --depth=3 https://github.com/kubernetes/code-generator.git
+    git clone -b kubernetes-1.11.5 --depth=3 https://github.com/kubernetes/code-generator.git
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc

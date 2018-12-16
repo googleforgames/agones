@@ -224,8 +224,6 @@ This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, ru
 Because Minikube runs on a virtualisation layer on the host, some of the standard build and development Make targets
 need to be replaced by Minikube specific targets.
 
-> We recommend installing version [0.29.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.29.0).
-
 First, [install Minikube](https://github.com/kubernetes/minikube#installation), which may also require you to install
 a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as well.
 Check the [Building on Different Platforms](#building-on-different-platforms) above for details on what virtualisation 

@@ -20,15 +20,15 @@ import (
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConvert(t *testing.T) {
 	t.Parallel()
 
 	fixture := &v1alpha1.GameServer{
-		ObjectMeta: v1.ObjectMeta{
-			CreationTimestamp: v1.Now(),
+		ObjectMeta: metav1.ObjectMeta{
+			CreationTimestamp: metav1.Now(),
 			Namespace:         "default",
 			Name:              "test",
 			Labels:            map[string]string{"foo": "bar"},
@@ -79,7 +79,7 @@ func TestConvert(t *testing.T) {
 	eq(t, fixture, sdkGs)
 	assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
 
-	now := v1.Now()
+	now := metav1.Now()
 	fixture.DeletionTimestamp = &now
 	sdkGs = convert(fixture)
 	eq(t, fixture, sdkGs)

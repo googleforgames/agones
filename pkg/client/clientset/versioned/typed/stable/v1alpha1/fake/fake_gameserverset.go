@@ -62,7 +62,7 @@ func (c *FakeGameServerSets) List(opts v1.ListOptions) (result *v1alpha1.GameSer
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.GameServerSetList{}
+	list := &v1alpha1.GameServerSetList{ListMeta: obj.(*v1alpha1.GameServerSetList).ListMeta}
 	for _, item := range obj.(*v1alpha1.GameServerSetList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -93,6 +93,18 @@ func (c *FakeGameServerSets) Create(gameServerSet *v1alpha1.GameServerSet) (resu
 func (c *FakeGameServerSets) Update(gameServerSet *v1alpha1.GameServerSet) (result *v1alpha1.GameServerSet, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(gameserversetsResource, c.ns, gameServerSet), &v1alpha1.GameServerSet{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.GameServerSet), err
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeGameServerSets) UpdateStatus(gameServerSet *v1alpha1.GameServerSet) (*v1alpha1.GameServerSet, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "status", c.ns, gameServerSet), &v1alpha1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err

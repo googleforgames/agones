@@ -98,7 +98,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.10 \
+gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
   --no-enable-legacy-authorization \
   --tags=game-server \
   --enable-basic-auth \
@@ -110,7 +110,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.10 \
 
 Flag explanations:
 
-* cluster-version: Agones requires Kubernetes version 1.9+. Once the default version reaches 1.9, this will no longer be necessary.
+* cluster-version: Agones requires Kubernetes version 1.11+.
 * no-enable-legacy-authorization: This enables RBAC, the authorization scheme used by Agones to control access to resources.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * enable-basic-auth/password: Sets the master auth scheme for interacting with the cluster.
@@ -152,8 +152,6 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 
 [minikube]: https://github.com/kubernetes/minikube#installation
 [vb]: https://www.virtualbox.org
-
-> We recommend installing version [0.29.0 of minikube](https://github.com/kubernetes/minikube/releases/tag/v0.29.0).
 
 ## Creating an `agones` profile
 
@@ -225,8 +223,8 @@ AKS_LOCATION=westeurope     # Azure region in which you'll deploy your AKS clust
 az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
 
 # Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
-# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.9.6. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A1_v2 --kubernetes-version 1.9.6 --enable-rbac
+# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.11. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A1_v2 --kubernetes-version 1.11 --enable-rbac
 
 # Install kubectl
 sudo az aks install-cli

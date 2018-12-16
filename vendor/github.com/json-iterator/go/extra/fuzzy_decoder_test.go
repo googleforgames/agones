@@ -37,6 +37,8 @@ func Test_any_to_int64(t *testing.T) {
 	should.Equal(int64(10), val)
 	should.Nil(jsoniter.UnmarshalFromString(`10`, &val))
 	should.Equal(int64(10), val)
+	should.Nil(jsoniter.UnmarshalFromString(`""`, &val))
+	should.Equal(int64(0), val)
 
 	// bool part
 	should.Nil(jsoniter.UnmarshalFromString(`false`, &val))
@@ -356,4 +358,36 @@ func Test_bad_case(t *testing.T) {
 	err := jsoniter.UnmarshalFromString(jsonstr, &a)
 	should := require.New(t)
 	should.Nil(err)
+}
+
+func Test_null_to_string(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message string
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_int(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message int
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_float32(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message float32
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
+}
+
+func Test_null_to_float64(t *testing.T) {
+	should := require.New(t)
+	body := []byte(`null`)
+	var message float64
+	err := jsoniter.Unmarshal(body, &message)
+	should.NoError(err)
 }

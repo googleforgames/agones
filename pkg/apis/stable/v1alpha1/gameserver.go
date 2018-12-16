@@ -80,7 +80,6 @@ var (
 )
 
 // +genclient
-// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GameServer is the data structure for a gameserver resource
