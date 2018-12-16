@@ -37,6 +37,7 @@ type FleetAutoscalersGetter interface {
 type FleetAutoscalerInterface interface {
 	Create(*v1alpha1.FleetAutoscaler) (*v1alpha1.FleetAutoscaler, error)
 	Update(*v1alpha1.FleetAutoscaler) (*v1alpha1.FleetAutoscaler, error)
+	UpdateStatus(*v1alpha1.FleetAutoscaler) (*v1alpha1.FleetAutoscaler, error)
 	Delete(name string, options *v1.DeleteOptions) error
 	DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error
 	Get(name string, options v1.GetOptions) (*v1alpha1.FleetAutoscaler, error)
@@ -114,6 +115,22 @@ func (c *fleetAutoscalers) Update(fleetAutoscaler *v1alpha1.FleetAutoscaler) (re
 		Namespace(c.ns).
 		Resource("fleetautoscalers").
 		Name(fleetAutoscaler.Name).
+		Body(fleetAutoscaler).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+
+func (c *fleetAutoscalers) UpdateStatus(fleetAutoscaler *v1alpha1.FleetAutoscaler) (result *v1alpha1.FleetAutoscaler, err error) {
+	result = &v1alpha1.FleetAutoscaler{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("fleetautoscalers").
+		Name(fleetAutoscaler.Name).
+		SubResource("status").
 		Body(fleetAutoscaler).
 		Do().
 		Into(result)

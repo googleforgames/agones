@@ -22,7 +22,7 @@ import (
 	"github.com/sirupsen/logrus"
 	apiv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -30,7 +30,7 @@ import (
 // Has a deadline of 60 seconds for this to occur.
 func WaitForEstablishedCRD(crdGetter extv1beta1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
 	return wait.PollImmediate(time.Second, 60*time.Second, func() (done bool, err error) {
-		crd, err := crdGetter.Get(name, v1.GetOptions{})
+		crd, err := crdGetter.Get(name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

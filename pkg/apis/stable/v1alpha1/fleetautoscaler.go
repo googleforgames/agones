@@ -18,7 +18,6 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 import "k8s.io/apimachinery/pkg/util/intstr"
 
 // +genclient
-// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // FleetAutoscaler is the data structure for a FleetAutoscaler resource

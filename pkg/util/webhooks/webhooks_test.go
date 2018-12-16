@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"k8s.io/api/admission/v1beta1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -97,7 +97,7 @@ func TestWebHookAddHandler(t *testing.T) {
 			defer close(stop)
 
 			fixture := v1beta1.AdmissionReview{Request: &v1beta1.AdmissionRequest{
-				Kind:      v1.GroupVersionKind{Kind: "kind", Group: "group", Version: "version"},
+				Kind:      metav1.GroupVersionKind{Kind: "kind", Group: "group", Version: "version"},
 				Operation: v1beta1.Create,
 				UID:       "1234"}}
 

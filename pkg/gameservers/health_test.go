@@ -22,7 +22,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
@@ -34,7 +34,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	m := agtesting.NewMocks()
 	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-	gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
@@ -58,7 +58,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	m := agtesting.NewMocks()
 	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
 
-	gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
@@ -114,7 +114,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
 			hc.recorder = m.FakeRecorder
 
-			gs := v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+			gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 				Status: v1alpha1.GameServerStatus{State: test.state}}
 			gs.ApplyDefaults()
 
@@ -167,7 +167,7 @@ func TestHealthControllerRun(t *testing.T) {
 		return true, gsObj, nil
 	})
 
-	gs := &v1alpha1.GameServer{ObjectMeta: v1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
 		Status: v1alpha1.GameServerStatus{State: v1alpha1.Ready}}
 	gs.ApplyDefaults()
 	pod, err := gs.Pod()

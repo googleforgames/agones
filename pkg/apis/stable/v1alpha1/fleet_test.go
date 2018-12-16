@@ -20,12 +20,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestFleetGameServerSetGameServer(t *testing.T) {
 	f := Fleet{
-		ObjectMeta: v1.ObjectMeta{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "namespace",
 			UID:       "1234",
@@ -54,7 +54,7 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 	assert.Equal(t, int32(0), gsSet.Spec.Replicas)
 	assert.Equal(t, f.Spec.Scheduling, gsSet.Spec.Scheduling)
 	assert.Equal(t, f.Spec.Template, gsSet.Spec.Template)
-	assert.True(t, v1.IsControlledBy(gsSet, &f))
+	assert.True(t, metav1.IsControlledBy(gsSet, &f))
 }
 
 func TestFleetApplyDefaults(t *testing.T) {

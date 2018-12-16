@@ -62,7 +62,7 @@ func (c *FakeFleetAllocations) List(opts v1.ListOptions) (result *v1alpha1.Fleet
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.FleetAllocationList{}
+	list := &v1alpha1.FleetAllocationList{ListMeta: obj.(*v1alpha1.FleetAllocationList).ListMeta}
 	for _, item := range obj.(*v1alpha1.FleetAllocationList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
@@ -93,6 +93,18 @@ func (c *FakeFleetAllocations) Create(fleetAllocation *v1alpha1.FleetAllocation)
 func (c *FakeFleetAllocations) Update(fleetAllocation *v1alpha1.FleetAllocation) (result *v1alpha1.FleetAllocation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(fleetallocationsResource, c.ns, fleetAllocation), &v1alpha1.FleetAllocation{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.FleetAllocation), err
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *FakeFleetAllocations) UpdateStatus(fleetAllocation *v1alpha1.FleetAllocation) (*v1alpha1.FleetAllocation, error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(fleetallocationsResource, "status", c.ns, fleetAllocation), &v1alpha1.FleetAllocation{})
 
 	if obj == nil {
 		return nil, err

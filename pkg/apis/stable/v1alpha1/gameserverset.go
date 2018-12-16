@@ -28,7 +28,6 @@ const (
 )
 
 // +genclient
-// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GameServerSet is the data structure a set of GameServers

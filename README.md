@@ -22,7 +22,7 @@ For more details on why this project was written, read the
 [announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
 
 ## Requirements
-- Kubernetes cluster version 1.9+
+- Kubernetes cluster version 1.11+
     - [Minikube](https://github.com/kubernetes/minikube), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) and [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
     [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and

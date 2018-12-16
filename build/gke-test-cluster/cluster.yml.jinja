@@ -21,7 +21,7 @@ resources:
     cluster:
       name: {{ properties["cluster.name"] }}
       description: Test cluster for Agones
-      initialClusterVersion: "1.10"
+      initialClusterVersion: "1.11"
       nodePools:
         - name: "default"
           initialNodeCount: {{ properties["cluster.nodePool.initialNodeCount"] }}
