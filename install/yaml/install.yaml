@@ -164,6 +164,25 @@ metadata:
     release: agones-manual
     heritage: Tiller
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.scheduling
+    name: Scheduling
+    type: string
+  - JSONPath: .spec.replicas
+    name: Desired
+    type: integer
+  - JSONPath: .status.replicas
+    name: Current
+    type: integer
+  - JSONPath: .status.allocatedReplicas
+    name: Allocated
+    type: integer
+  - JSONPath: .status.readyReplicas
+    name: Ready
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
@@ -328,6 +347,22 @@ metadata:
     release: agones-manual
     heritage: Tiller
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.gameServer.status.state
+    name: State
+    type: string
+  - JSONPath: .status.gameServer.status.address
+    name: Address
+    type: string
+  - JSONPath: .status.gameServer.status.ports[0].port
+    name: Port
+    type: string
+  - JSONPath: .status.gameServer.status.nodeName
+    name: Node
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
@@ -349,6 +384,7 @@ spec:
               minLength: 1
               maxLength: 63
               pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+
 ---
 # Source: agones/templates/crds/fleetautoscaler.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -446,6 +482,22 @@ spec:
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
+  additionalPrinterColumns:
+  - JSONPath: .status.state
+    name: State
+    type: string
+  - JSONPath: .status.address
+    name: Address
+    type: string
+  - JSONPath: .status.ports[0].port
+    name: Port
+    type: string
+  - JSONPath: .status.nodeName
+    name: Node
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   names:
     kind: GameServer
     plural: gameservers
@@ -586,6 +638,25 @@ metadata:
     release: agones-manual
     heritage: Tiller
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.scheduling
+    name: Scheduling
+    type: string
+  - JSONPath: .spec.replicas
+    name: Desired
+    type: integer
+  - JSONPath: .status.replicas
+    name: Current
+    type: integer
+  - JSONPath: .status.allocatedReplicas
+    name: Allocated
+    type: integer
+  - JSONPath: .status.readyReplicas
+    name: Ready
+    type: integer
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: stable.agones.dev
   version: v1alpha1
   scope: Namespaced
