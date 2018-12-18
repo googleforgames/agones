@@ -1,0 +1,37 @@
+# Copyright 2018 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Full example of a FleetAutoscaler - this is used to scale a Fleet
+# automatically depending on load
+#
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: FleetAutoscaler
+metadata:
+  name: webhook-fleet-autoscaler
+spec:
+  fleetName: simple-udp
+  policy:
+    # type of the policy - this example is Webhook
+    type: Webhook
+    # parameters for the webhook policy - this is a WebhookClientConfig, as per other K8s webhooks
+    webhook:
+      # use a service, or URL
+      service:
+        name: autoscaler-webhook-service
+        namespace: default
+        path: scale
+      # optional for URL defined webhooks
+      # url: ""
+      # caBundle: TBD (optional, if you want to provide your own ca cert to test against)

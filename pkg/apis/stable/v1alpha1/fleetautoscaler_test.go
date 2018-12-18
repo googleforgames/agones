@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -99,9 +100,60 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 		assert.Equal(t, "bufferSize", causes[0].Field)
 	})
 }
+func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
+	t.Parallel()
+
+	t.Run("good service value", func(t *testing.T) {
+		fas := webhookFixture()
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 0)
+	})
+
+	t.Run("good url value", func(t *testing.T) {
+		fas := webhookFixture()
+		causes := fas.Validate(nil)
+		url := "http://good.example.com"
+		fas.Spec.Policy.Webhook.URL = &url
+		fas.Spec.Policy.Webhook.Service = nil
+
+		assert.Len(t, causes, 0)
+	})
+
+	t.Run("bad URL and service value", func(t *testing.T) {
+		fas := webhookFixture()
+		fas.Spec.Policy.Webhook.URL = nil
+		fas.Spec.Policy.Webhook.Service = nil
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "url", causes[0].Field)
+	})
+
+	t.Run("both URL and service value are used - fail", func(t *testing.T) {
+
+		fas := webhookFixture()
+		url := "123"
+		fas.Spec.Policy.Webhook.URL = &url
+
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "url", causes[0].Field)
+	})
+
+}
 
 func defaultFixture() *FleetAutoscaler {
-	return &FleetAutoscaler{
+	return customFixture(BufferPolicyType)
+}
+
+func webhookFixture() *FleetAutoscaler {
+	return customFixture(WebhookPolicyType)
+}
+
+func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
+	res := &FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{Name: "test"},
 		Spec: FleetAutoscalerSpec{
 			FleetName: "testing",
@@ -114,4 +166,19 @@ func defaultFixture() *FleetAutoscaler {
 			},
 		},
 	}
+	switch t {
+	case BufferPolicyType:
+	case WebhookPolicyType:
+		res.Spec.Policy.Type = WebhookPolicyType
+		res.Spec.Policy.Buffer = nil
+		url := "/scale"
+		res.Spec.Policy.Webhook = &WebhookPolicy{
+			Service: &admregv1b.ServiceReference{
+				Name:      "service1",
+				Namespace: "default",
+				Path:      &url,
+			},
+		}
+	}
+	return res
 }
