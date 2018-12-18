@@ -17,11 +17,24 @@
 package fleetautoscalers
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math"
+	"net/http"
+	"strings"
+	"time"
 
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/uuid"
 )
+
+var client = http.Client{
+	Timeout: 15 * time.Second,
+}
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
 func computeDesiredFleetSize(fas *stablev1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet) (int32, bool, error) {
@@ -29,8 +42,69 @@ func computeDesiredFleetSize(fas *stablev1alpha1.FleetAutoscaler, f *stablev1alp
 	switch fas.Spec.Policy.Type {
 	case stablev1alpha1.BufferPolicyType:
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
+	case stablev1alpha1.WebhookPolicyType:
+		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
+	return f.Status.Replicas, false, errors.New("wrong policy type")
+}
+
+func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
+	faReq := v1alpha1.FleetAutoscaleReview{
+		Request: &v1alpha1.FleetAutoscaleRequest{
+			UID:       uuid.NewUUID(),
+			Name:      f.Name,
+			Namespace: f.Namespace,
+			Status:    f.Status,
+		},
+		Response: nil,
+	}
+	b, err := json.Marshal(faReq)
+	url := ""
+	if w.URL != nil {
+		url = *w.URL
+	}
+	var faResp v1alpha1.FleetAutoscaleReview
+	servicePath := ""
+	if w.Service != nil {
+		if w.Service.Path != nil {
+			servicePath = *w.Service.Path
+		}
+		if err != nil {
+			return f.Status.Replicas, false, err
+		}
+
+		if w.Service.Namespace == "" {
+			w.Service.Namespace = "default"
+		}
+		url = fmt.Sprintf("http://%s.%s.svc:8000/%s", w.Service.Name, w.Service.Namespace, servicePath)
+	}
+	if url == "" {
+		return f.Status.Replicas, false, errors.New("URL was not provided")
+	}
+	res, err := client.Post(
+		url,
+		"application/json",
+		strings.NewReader(string(b)),
+	)
+	if err != nil {
+		return f.Status.Replicas, false, err
+	}
+	defer res.Body.Close() // nolint: errcheck
+	if res.StatusCode != http.StatusOK {
+		return f.Status.Replicas, false, errors.New("bad status code from the server")
+	}
+	result, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return f.Status.Replicas, false, err
+	}
+	err = json.Unmarshal(result, &faResp)
+	if err != nil {
+		return f.Status.Replicas, false, err
+	}
+	if faResp.Response.Scale {
+		return faResp.Response.Replicas, false, nil
+	}
 	return f.Status.Replicas, false, nil
 }
 

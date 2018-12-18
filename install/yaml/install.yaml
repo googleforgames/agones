@@ -442,6 +442,7 @@ spec:
                   type: string
                   enum:
                   - Buffer
+                  - Webhook
                 buffer:
                   required:
                     - maxReplicas
@@ -452,6 +453,18 @@ spec:
                     maxReplicas:
                       type: integer
                       minimum: 1
+                webhook:
+                  properties:
+                    service:
+                      properties:
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                        path:
+                          type: string
+                    url:
+                      type: string
 ---
 # Source: agones/templates/crds/gameserver.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.

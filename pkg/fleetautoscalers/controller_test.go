@@ -25,6 +25,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -65,6 +66,45 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		assert.Nil(t, err)
 
 		result, err := c.validationHandler(review)
+		assert.Nil(t, err)
+		assert.False(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
+		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
+		assert.Equal(t, metav1.StatusReasonInvalid, result.Response.Result.Reason)
+		assert.NotEmpty(t, result.Response.Result.Details)
+	})
+}
+
+func TestWebhookControllerCreationValidationHandler(t *testing.T) {
+	t.Parallel()
+
+	t.Run("valid fleet autoscaler", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultWebhookFixtures()
+		_, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		review, err := newAdmissionReview(*fas)
+		assert.Nil(t, err)
+
+		result, err := c.validationHandler(review)
+		assert.Nil(t, err)
+		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
+	})
+
+	t.Run("invalid fleet autoscaler", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultWebhookFixtures()
+		// this make it invalid
+		fas.Spec.Policy.Webhook = nil
+
+		_, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		review, err := newAdmissionReview(*fas)
+		assert.Nil(t, err)
+
+		result, err := c.validationHandler(review)
+		fmt.Printf("%+v", result)
 		assert.Nil(t, err)
 		assert.False(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
@@ -439,6 +479,21 @@ func defaultFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
 					MaxReplicas: 100,
 				},
 			},
+		},
+	}
+
+	return fas, f
+}
+
+func defaultWebhookFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
+	fas, f := defaultFixtures()
+	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
+	fas.Spec.Policy.Buffer = nil
+	url := "/autoscaler"
+	fas.Spec.Policy.Webhook = &v1alpha1.WebhookPolicy{
+		Service: &admregv1b.ServiceReference{
+			Name: "fleetautoscaler-service",
+			Path: &url,
 		},
 	}
 

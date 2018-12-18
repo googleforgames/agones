@@ -23,6 +23,8 @@ import (
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -220,4 +222,106 @@ func getAllocation(f *v1alpha1.Fleet) *v1alpha1.FleetAllocation {
 			FleetName: f.ObjectMeta.Name,
 		},
 	}
+}
+
+//Test fleetautoscaler with webhook policy type
+// scaling from Replicas equals to 1 to 2
+func TestAutoscalerWebhook(t *testing.T) {
+	t.Parallel()
+	pod, svc := defaultAutoscalerWebhook()
+	pod, err := framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod)
+	if assert.Nil(t, err) {
+		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		// if we could not create the autoscaler, their is no point going further
+		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+	}
+	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
+	if assert.Nil(t, err) {
+		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		// if we could not create the autoscaler, their is no point going further
+		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+	}
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+	fleets := alpha1.Fleets(defaultNs)
+	flt := defaultFleet()
+	initialReplicasCount := int32(1)
+	flt.Spec.Replicas = initialReplicasCount
+	flt, err = fleets.Create(flt)
+	if assert.Nil(t, err) {
+		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	assert.Nil(t, err, "fleet not ready")
+
+	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
+	fas := defaultFleetAutoscaler(flt)
+	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
+	fas.Spec.Policy.Buffer = nil
+	path := "scale"
+	fas.Spec.Policy.Webhook = &v1alpha1.WebhookPolicy{
+		Service: &admregv1b.ServiceReference{
+			Name:      svc.ObjectMeta.Name,
+			Namespace: defaultNs,
+			Path:      &path,
+		},
+	}
+	fas, err = fleetautoscalers.Create(fas)
+	if assert.Nil(t, err) {
+		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		// if we could not create the autoscaler, their is no point going further
+		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+	}
+	fa := getAllocation(flt)
+	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
+	assert.Nil(t, err)
+	assert.Equal(t, v1alpha1.Allocated, fa.Status.GameServer.Status.State)
+	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 1
+	})
+	assert.Nil(t, err)
+
+	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.Replicas > initialReplicasCount
+	})
+	assert.Nil(t, err)
+}
+
+func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
+	l := make(map[string]string)
+	l["app"] = "autoscaler-webhook"
+	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{
+		GenerateName: "auto-webhook",
+		Namespace:    defaultNs,
+		Labels:       l,
+	},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{{Name: "webhook",
+				Image:           "gcr.io/agones-images/autoscaler-webhook:0.1",
+				ImagePullPolicy: corev1.PullAlways,
+				Ports: []corev1.ContainerPort{{
+					ContainerPort: 8000,
+					Name:          "autoscaler",
+				}},
+			}},
+		},
+	}
+	m := make(map[string]string)
+	m["app"] = "autoscaler-webhook"
+	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{GenerateName: "auto-webhook", Namespace: defaultNs},
+		Spec: corev1.ServiceSpec{
+			Selector: m,
+			Ports: []corev1.ServicePort{{
+				Name:       "newport",
+				Port:       8000,
+				TargetPort: intstr.IntOrString{StrVal: "autoscaler"},
+			}},
+		},
+	}
+
+	return pod, service
 }

@@ -14,8 +14,12 @@
 
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-import "k8s.io/apimachinery/pkg/util/intstr"
+import (
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -55,6 +59,9 @@ type FleetAutoscalerPolicy struct {
 	// Buffer policy config params. Present only if FleetAutoscalerPolicyType = Buffer.
 	// +optional
 	Buffer *BufferPolicy `json:"buffer,omitempty"`
+	// Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.
+	// +optional
+	Webhook *WebhookPolicy `json:"webhook,omitempty"`
 }
 
 // FleetAutoscalerPolicyType is the policy for autoscaling
@@ -65,6 +72,9 @@ const (
 	// BufferPolicyType FleetAutoscalerPolicyType is a simple buffering strategy for Ready
 	// GameServers
 	BufferPolicyType FleetAutoscalerPolicyType = "Buffer"
+	// WebhookPolicyType is a simple webhook strategy used for horizontal fleet scaling
+	// GameServers
+	WebhookPolicyType FleetAutoscalerPolicyType = "Webhook"
 )
 
 // BufferPolicy controls the desired behavior of the buffer policy.
@@ -91,6 +101,11 @@ type BufferPolicy struct {
 	BufferSize intstr.IntOrString `json:"bufferSize"`
 }
 
+// WebhookPolicy controls the desired behavior of the webhook policy.
+// It contains the description of the webhook autoscaler service
+// used to form url which is accessible inside the cluster
+type WebhookPolicy admregv1b.WebhookClientConfig
+
 // FleetAutoscalerStatus defines the current status of a FleetAutoscaler
 type FleetAutoscalerStatus struct {
 	// CurrentReplicas is the current number of gameserver replicas
@@ -113,10 +128,73 @@ type FleetAutoscalerStatus struct {
 	ScalingLimited bool `json:"scalingLimited"`
 }
 
+// FleetAutoscaleRequest defines the request to webhook autoscaler endpoint
+type FleetAutoscaleRequest struct {
+	// UID is an identifier for the individual request/response. It allows us to distinguish instances of requests which are
+	// otherwise identical (parallel requests, requests when earlier requests did not modify etc)
+	// The UID is meant to track the round trip (request/response) between the Autoscaler and the WebHook, not the user request.
+	// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
+	UID types.UID `json:"uid"`
+	// Name is the name of the Fleet being scaled
+	Name string `json:"name"`
+	// Namespace is the namespace associated with the request (if any).
+	Namespace string `json:"namespace"`
+	// The Fleet's status values
+	Status FleetStatus `json:"status"`
+}
+
+// FleetAutoscaleResponse defines the response of webhook autoscaler endpoint
+type FleetAutoscaleResponse struct {
+	// UID is an identifier for the individual request/response.
+	// This should be copied over from the corresponding FleetAutoscaleRequest.
+	UID types.UID `json:"uid"`
+	// Set to false if no scaling should occur to the Fleet
+	Scale bool `json:"scale"`
+	// The targeted replica count
+	Replicas int32 `json:"replicas"`
+}
+
+// FleetAutoscaleReview is passed to the webhook with a populated Request value,
+// and then returned with a populated Response.
+type FleetAutoscaleReview struct {
+	Request  *FleetAutoscaleRequest  `json:"request"`
+	Response *FleetAutoscaleResponse `json:"response"`
+}
+
 // Validate validates the FleetAutoscaler scaling settings
 func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.StatusCause {
-	if fas.Spec.Policy.Type == BufferPolicyType {
+	switch fas.Spec.Policy.Type {
+	case BufferPolicyType:
 		causes = fas.Spec.Policy.Buffer.ValidateBufferPolicy(causes)
+
+	case WebhookPolicyType:
+		causes = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(causes)
+	}
+	return causes
+}
+
+// ValidateWebhookPolicy validates the FleetAutoscaler Webhook policy settings
+func (w *WebhookPolicy) ValidateWebhookPolicy(causes []metav1.StatusCause) []metav1.StatusCause {
+	if w == nil {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "webhook",
+			Message: "webhook policy config params are missing",
+		})
+	}
+	if w.Service == nil && w.URL == nil {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueNotFound,
+			Field:   "url",
+			Message: "url should be provided",
+		})
+	}
+	if w.Service != nil && w.URL != nil {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueNotFound,
+			Field:   "url",
+			Message: "service and url cannot be used simultaneously",
+		})
 	}
 	return causes
 }
