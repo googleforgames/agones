@@ -290,7 +290,7 @@ Since we've only got one allocation, we'll just grab the details of the IP and p
 only allocated `GameServer`:
 
 ```
-kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.GameServer.staatus.GameServer.status.ports[0].port}'
+kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.gameServer.status.ports[0].port}'
 ```
 
 This should output your Game Server IP address and port. (eg `10.130.65.208:7936`)
