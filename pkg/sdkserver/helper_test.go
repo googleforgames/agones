@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package sdkserver
 
 import (
 	"context"
@@ -22,26 +22,13 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	netcontext "golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
-
-func newSingleContainerSpec() v1alpha1.GameServerSpec {
-	return v1alpha1.GameServerSpec{
-		Ports: []v1alpha1.GameServerPort{{ContainerPort: 7777, HostPort: 9999, PortPolicy: v1alpha1.Static}},
-		Template: corev1.PodTemplateSpec{
-			Spec: corev1.PodSpec{
-				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
-			},
-		},
-	}
-}
 
 func testHTTPHealth(t *testing.T, url string, expectedResponse string, expectedStatus int) {
 	// do a poll, because this code could run before the health check becomes live
