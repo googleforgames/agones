@@ -101,6 +101,21 @@ ifdef DOCKER_RUN
 	ensure-build-image += ensure-build-image
 endif
 
+# When performing full build, always rebuild go packages and compress more
+ifdef FULL_BUILD
+	go_rebuild_flags = -a
+	zip_flags = -9
+endif
+
+ifndef FULL_BUILD
+	# keep a cache of files built by Go across docker invocations in a local directory.
+	common_mounts += -v $(build_path)/.gocache:/root/.cache/go-build
+	go_rebuild_flags =
+
+	# do not compress files in zips, slightly faster
+	zip_flags = -0
+endif
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -195,7 +210,7 @@ uninstall: $(ensure-build-image)
 build-controller-binary: $(ensure-build-image)
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
 	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/controller/bin/controller \
-	-a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -213,15 +228,24 @@ push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-agones-sdk-binary: $(ensure-build-image)
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 -a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
-	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_version_flags) $(agones_package)/cmd/sdk-server
-	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_version_flags) $(agones_package)/cmd/sdk-server
-	docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip \
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin 
+	docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+
+# build the static binary for the gamesever sidecar for Linux
+build-agones-sdk-binary-linux: $(ensure-build-image)
+	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+
+# build the static binary for the gamesever sidecar for Darwin (macOS)
+build-agones-sdk-binary-darwin: $(ensure-build-image)
+	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+
+# build the windows binary for the gamesever sidecar for Windows
+build-agones-sdk-binary-windows: $(ensure-build-image)
+	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
+		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
@@ -231,7 +255,7 @@ build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
 build-ping-binary: $(ensure-build-image)
 	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
 	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/ping/bin/ping \
-	-a $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Pushes up the ping image
 push-ping-image: $(ensure-build-image)
@@ -351,11 +375,11 @@ do-release: RELEASE_VERSION ?= $(base_version)
 do-release:
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 	git checkout -b release-$(RELEASE_VERSION)
-	$(MAKE) lint test
+	$(MAKE) lint test FULL_BUILD=1
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
-	$(MAKE) build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry)
+	$(MAKE) build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
