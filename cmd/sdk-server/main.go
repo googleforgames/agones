@@ -25,8 +25,8 @@ import (
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -108,8 +108,8 @@ func main() {
 			logger.WithError(err).Fatalf("Could not create the agones api clientset")
 		}
 
-		var s *gameservers.SDKServer
-		s, err = gameservers.NewSDKServer(viper.GetString(gameServerNameEnv),
+		var s *sdkserver.SDKServer
+		s, err = sdkserver.NewSDKServer(viper.GetString(gameServerNameEnv),
 			viper.GetString(podNamespaceEnv), kubeClient, agonesClient)
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
@@ -146,7 +146,7 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) error {
 		}
 	}
 
-	local, err := gameservers.NewLocalSDKServer(filePath)
+	local, err := sdkserver.NewLocalSDKServer(filePath)
 	if err != nil {
 		return err
 	}

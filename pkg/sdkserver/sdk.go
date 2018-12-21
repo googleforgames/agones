@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameservers
+package sdkserver
 
 import (
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
