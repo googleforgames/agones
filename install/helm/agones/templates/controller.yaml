@@ -40,6 +40,11 @@ spec:
 {{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.enabled) }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.agones.controller.http.port | quote }}
+        prometheus.io/path: "/metrics"
+{{- end }}
       labels:
         stable.agones.dev/role: controller
         app: {{ template "agones.name" . }}
@@ -64,12 +69,14 @@ spec:
           value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         - name: SIDECAR_CPU_REQUEST
           value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
+        - name: METRICS
+          value: {{ .Values.agones.metrics.enabled | quote }}
         - name: SIDECAR_CPU_LIMIT
           value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
         livenessProbe:
           httpGet:
             path: /live
-            port: {{ .Values.agones.controller.healthCheck.http.port }}
+            port: {{ .Values.agones.controller.http.port }}
           initialDelaySeconds: {{ .Values.agones.controller.healthCheck.initialDelaySeconds }}
           periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
           failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}

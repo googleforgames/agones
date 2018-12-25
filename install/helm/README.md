@@ -86,6 +86,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.rbacEnabled`                                | Creates RBAC resources. Must be set for any cluster configured with RBAC                        | `true`                 |
 | `agones.crds.install`                               | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart. | `true` |
 | `agones.crds.cleanupOnDelete`                       | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion | `true`          |  
+| `agones.metrics.enabled`                            | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
+| `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -99,7 +101,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
 | `agones.image.ping.name`                            | ( ⚠️ development feature ⚠️ ) Image name for the ping service                                    | `agones-ping`          |
 | `agones.image.ping.pullPolicy`                      | ( ⚠️ development feature ⚠️ ) Image pull policy for the ping service                             | `IfNotPresent`         |
-| `agones.controller.healthCheck.http.port`           | Port to use for liveness probe service                                                          | `8080`                 |
+| `agones.controller.http.port`                       | Port to use for liveness probe service and metrics                                              | `8080`                 |
 | `agones.controller.healthCheck.initialDelaySeconds` | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
 | `agones.controller.healthCheck.periodSeconds`       | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.controller.healthCheck.failureThreshold`    | Number of times before giving up (in seconds)                                                   | `3`                    |

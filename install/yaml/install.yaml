@@ -810,7 +810,7 @@ metadata:
   name: agones-controller-service
   namespace: agones-system
   labels:
-    component: controller
+    stable.agones.dev/role: controller
     app: agones
     chart: agones-0.7.0-rc
     release: agones-manual
@@ -819,8 +819,11 @@ spec:
   selector:
     stable.agones.dev/role: controller
   ports:
-    - port: 443
+    - name: webhooks
+      port: 443
       targetPort: 8081
+    - name: web
+      port: 8080
 ---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -862,6 +865,9 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
       labels:
         stable.agones.dev/role: controller
         app: agones
@@ -886,6 +892,8 @@ spec:
           value: "false"
         - name: SIDECAR_CPU_REQUEST
           value: "30m"
+        - name: METRICS
+          value: "true"
         - name: SIDECAR_CPU_LIMIT
           value: "0"
         livenessProbe:

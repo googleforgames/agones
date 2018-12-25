@@ -348,7 +348,7 @@ push-build-image:
 
 # port forward the agones controller.
 # useful for pprof and stats viewing, etc
-controller-portforward: PORT ?= 6060
+controller-portforward: PORT ?= 8080
 controller-portforward:
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) \
 		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)"  -p $(PORT):$(PORT) $(build_tag) \
@@ -395,6 +395,7 @@ do-release:
 	git push -u upstream release-$(RELEASE_VERSION)
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
+setup-test-cluster: DOCKER_RUN_ARGS+=--network=host
 setup-test-cluster: $(ensure-build-image)
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/helm.yaml
 	$(DOCKER_RUN) helm init --wait --service-account helm
@@ -570,7 +571,7 @@ kind-delete-cluster:
 	kind delete cluster --name $(KIND_PROFILE)
 
 # start an interactive shell with kubectl configured to target the kind cluster
- kind-shell: $(ensure-build-image)
+kind-shell: $(ensure-build-image)
 	$(MAKE) shell KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
 	 DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)"
 

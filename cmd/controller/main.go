@@ -32,21 +32,24 @@ import (
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
+	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
+	enableMetricsFlag     = "metrics"
 	sidecarImageFlag      = "sidecar-image"
 	sidecarCPURequestFlag = "sidecar-cpu-request"
 	sidecarCPULimitFlag   = "sidecar-cpu-limit"
@@ -55,6 +58,7 @@ const (
 	maxPortFlag           = "max-port"
 	certFileFlag          = "cert-file"
 	keyFileFlag           = "key-file"
+	kubeconfigFlag        = "kubeconfig"
 	workers               = 2
 	defaultResync         = 30 * time.Second
 )
@@ -73,7 +77,8 @@ func main() {
 		logger.WithError(err).Fatal("Could not create controller from environment or flags")
 	}
 
-	clientConf, err := rest.InClusterConfig()
+	// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
+	clientConf, err := clientcmd.BuildConfigFromFlags("", ctlConf.KubeConfig)
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
@@ -93,10 +98,29 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	health := healthcheck.NewHandler()
 	wh := webhooks.NewWebHook(ctlConf.CertFile, ctlConf.KeyFile)
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+
+	server := &httpServer{}
+	var health healthcheck.Handler
+	var metricsController *metrics.Controller
+
+	if ctlConf.Metrics {
+		registry := prom.NewRegistry()
+		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not create register prometheus exporter")
+		}
+		server.Handle("/metrics", metricHandler)
+		health = healthcheck.NewMetricsHandler(registry, "agones")
+		metricsController = metrics.NewController(kubeClient, agonesClient, agonesInformerFactory)
+
+	} else {
+		health = healthcheck.NewHandler()
+	}
+
+	server.Handle("/", health)
 
 	allocationMutex := &sync.Mutex{}
 
@@ -112,15 +136,19 @@ func main() {
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
+	rs := []runner{
+		wh, gsController, gsSetController, fleetController, faController, fasController, metricsController, server,
+	}
+
 	stop := signals.NewStopChannel()
 
 	kubeInformationFactory.Start(stop)
 	agonesInformerFactory.Start(stop)
 
-	rs := []runner{
-		wh, gsController, gsSetController, fleetController, faController, fasController, healthServer{handler: health},
-	}
 	for _, r := range rs {
+		if r == nil {
+			continue
+		}
 		go func(rr runner) {
 			if runErr := rr.Run(workers, stop); runErr != nil {
 				logger.WithError(runErr).Fatalf("could not start runner: %s", reflect.TypeOf(rr))
@@ -145,6 +173,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(pullSidecarFlag, false)
 	viper.SetDefault(certFileFlag, filepath.Join(base, "certs/server.crt"))
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
+	viper.SetDefault(enableMetricsFlag, true)
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -154,6 +183,8 @@ func parseEnvFlags() config {
 	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
+	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
+	pflag.Bool(enableMetricsFlag, viper.GetBool(enableMetricsFlag), "Flag to activate metrics of Agones. Can also use METRICS env variable.")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -165,6 +196,8 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(maxPortFlag))
 	runtime.Must(viper.BindEnv(keyFileFlag))
 	runtime.Must(viper.BindEnv(certFileFlag))
+	runtime.Must(viper.BindEnv(kubeconfigFlag))
+	runtime.Must(viper.BindEnv(enableMetricsFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	request, err := resource.ParseQuantity(viper.GetString(sidecarCPURequestFlag))
@@ -186,6 +219,8 @@ func parseEnvFlags() config {
 		AlwaysPullSidecar: viper.GetBool(pullSidecarFlag),
 		KeyFile:           viper.GetString(keyFileFlag),
 		CertFile:          viper.GetString(certFileFlag),
+		KubeConfig:        viper.GetString(kubeconfigFlag),
+		Metrics:           viper.GetBool(enableMetricsFlag),
 	}
 }
 
@@ -197,8 +232,10 @@ type config struct {
 	SidecarCPURequest resource.Quantity
 	SidecarCPULimit   resource.Quantity
 	AlwaysPullSidecar bool
+	Metrics           bool
 	KeyFile           string
 	CertFile          string
+	KubeConfig        string
 }
 
 // validate ensures the ctlConfig data is valid.
@@ -216,21 +253,21 @@ type runner interface {
 	Run(workers int, stop <-chan struct{}) error
 }
 
-type healthServer struct {
-	handler http.Handler
+type httpServer struct {
+	http.ServeMux
 }
 
-func (h healthServer) Run(workers int, stop <-chan struct{}) error {
-	logger.Info("Starting health check...")
+func (h *httpServer) Run(workers int, stop <-chan struct{}) error {
+	logger.Info("Starting http server...")
 	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: h.handler,
+		Handler: h,
 	}
 	defer srv.Close() // nolint: errcheck
 
 	if err := srv.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
-			logger.WithError(err).Info("health check: http server closed")
+			logger.WithError(err).Info("http server closed")
 		} else {
 			wrappedErr := errors.Wrap(err, "Could not listen on :8080")
 			runtime.HandleError(logger.WithError(wrappedErr), wrappedErr)

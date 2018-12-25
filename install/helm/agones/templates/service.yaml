@@ -18,7 +18,7 @@ metadata:
   name: agones-controller-service
   namespace: {{ .Release.Namespace }}
   labels:
-    component: controller
+    stable.agones.dev/role: controller
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
@@ -27,5 +27,8 @@ spec:
   selector:
     stable.agones.dev/role: controller
   ports:
-    - port: 443
+    - name: webhooks
+      port: 443
       targetPort: 8081
+    - name: web
+      port: {{ .Values.agones.controller.http.port }}
