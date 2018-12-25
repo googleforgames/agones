@@ -15,6 +15,9 @@
 # Declare variables to be passed into your templates.
 
 agones:
+  metrics:
+    enabled: true
+    prometheusServiceDiscovery: true
   rbacEnabled: true
   crds:
     install: true
@@ -26,9 +29,9 @@ agones:
     resources: {}
     generateTLS: true
     safeToEvict: false
+    http:
+      port: 8080
     healthCheck:
-      http:
-        port: 8080
       initialDelaySeconds: 3
       periodSeconds: 3
       failureThreshold: 3
