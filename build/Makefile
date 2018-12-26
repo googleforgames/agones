@@ -494,8 +494,7 @@ clean-gcloud-config:
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 	# localkube bootstrapper fixes issues with profiles
-	$(MINIKUBE) start --kubernetes-version v1.10.0 --vm-driver $(MINIKUBE_DRIVER) \
-		--extra-config=apiserver.admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota \
+	$(MINIKUBE) start --kubernetes-version v1.11.5 --vm-driver $(MINIKUBE_DRIVER) \
 		--extra-config=apiserver.authorization-mode=RBAC
 	# wait until the master is up
 	until docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
