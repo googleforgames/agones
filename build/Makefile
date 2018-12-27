@@ -48,6 +48,10 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 
+# kind cluster name to use
+KIND_PROFILE ?= agones
+KIND_CONTAINER_NAME=kind-$(KIND_PROFILE)-control-plane
+
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.5
 
@@ -346,8 +350,9 @@ push-build-image:
 # useful for pprof and stats viewing, etc
 controller-portforward: PORT ?= 6060
 controller-portforward:
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) -p $(PORT):$(PORT) $(build_tag) \
-		kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) \
+		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)"  -p $(PORT):$(PORT) $(build_tag) \
+			kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
 
 # start pprof with a web ui
 pprof-web:
@@ -391,8 +396,8 @@ do-release:
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
 
 setup-test-cluster: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) helm init --service-account helm
+	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/helm.yaml
+	$(DOCKER_RUN) helm init --wait --service-account helm
 
 clean-test-cluster: $(ensure-build-image) $(uninstall)
 	docker run --rm -it $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag) helm reset
@@ -541,3 +546,63 @@ minikube-test-e2e: minikube-agones-profile test-e2e
 # minikube port forwarding
 minikube-controller-portforward:
 	$(MAKE) controller-portforward DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
+
+#   _  ___           _ 
+#  | |/ (_)_ __   __| |
+#  | ' /| | '_ \ / _` |
+#  | . \| | | | | (_| |
+#  |_|\_\_|_| |_|\__,_|
+
+# creates a kind cluster for use with agones
+# Kind stand for Kubernetes IN Docker
+# You can change the cluster name using KIND_PROFILE env var                                   
+kind-test-cluster: DOCKER_RUN_ARGS+=--network=host
+kind-test-cluster: $(ensure-build-image) 
+	@if [ -z $$(kind get clusters | grep $(KIND_PROFILE)) ]; then\
+		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
+		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.11.3 --wait 5m;\
+	fi
+	$(MAKE) setup-test-cluster KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
+
+# deletes the kind agones cluster
+# useful if you're want to start from scratch
+kind-delete-cluster:
+	kind delete cluster --name $(KIND_PROFILE)
+
+# start an interactive shell with kubectl configured to target the kind cluster
+ kind-shell: $(ensure-build-image)
+	$(MAKE) shell KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+	 DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)"
+
+# installs the current dev version of agones
+# you should build-images and kind-push first.
+kind-install: 
+	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")"
+
+# pushses the current dev version of agones to the kind single node cluster.
+kind-push:
+	BUNDLE_FILE=$$(mktemp -d)/agones.tar.gz; \
+	docker save \
+		$(sidecar_tag) \
+		$(controller_tag) \
+		$(ping_tag) \
+		-o $$BUNDLE_FILE; \
+	docker cp $$BUNDLE_FILE $(KIND_CONTAINER_NAME):/agones.tar.gz; \
+	docker exec $(KIND_CONTAINER_NAME) docker load -i /agones.tar.gz; \
+	rm -f $$BUNDLE_FILE
+
+# Runs e2e tests against our kind cluster
+kind-test-e2e: 
+kind-test-e2e: 
+	$(MAKE) KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS=--network=host \
+		test-e2e
+
+# kind port forwarding
+kind-controller-portforward:
+	$(MAKE) controller-portforward \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS="--network=host"
