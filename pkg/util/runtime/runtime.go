@@ -19,6 +19,7 @@ package runtime
 import (
 	"fmt"
 
+	joonix "github.com/joonix/log"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -33,12 +34,7 @@ type stackTracer interface {
 
 // replace the standard glog error logger, with a logrus one
 func init() {
-
-	logrus.SetFormatter(&logrus.JSONFormatter{
-		FieldMap: logrus.FieldMap{
-			logrus.FieldKeyLevel: "severity",
-		},
-	})
+	logrus.SetFormatter(&joonix.FluentdFormatter{})
 
 	runtime.ErrorHandlers[0] = func(err error) {
 		if stackTrace, ok := err.(stackTracer); ok {
