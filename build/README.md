@@ -18,6 +18,7 @@ Table of Contents
   * [Testing and Building](#testing-and-building)
      * [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
      * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
+     * [Running a Test Kind cluster](#running-a-test-kind-cluster)
      * [Running a Custom Test Environment](#running-a-custom-test-environment)
      * [Next Steps](#next-steps)
   * [Make Variable Reference](#make-variable-reference)
@@ -64,6 +65,13 @@ Table of Contents
         * [make minikube-shell](#make-minikube-shell)
         * [make minikube-transfer-image](#make-minikube-transfer-image)
         * [make minikube-controller-portforward](#make-minikube-controller-portforward)
+     * [Kind](#Kind)
+        * [make kind-test-cluster](#make-kind-test-cluster)
+        * [make kind-push](#make-kind-push)
+        * [make kind-install](#make-kind-install)
+     * [make kind-test-e2e](#make-kind-test-e2e)
+        * [make kind-shell](#make-kind-shell)
+        * [make kind-controller-portforward](#make-kind-controller-portforward)
      * [Custom Environment](#custom-environment)
         * [make setup-custom-test-cluster](#make-setup-custom-test-cluster)
         * [make clean-custom-test-cluster](#make-clean-custom-test-cluster)
@@ -268,6 +276,42 @@ $ make minikube-transfer-image TAG=myimage:0.1
 
 Running end-to-end tests on minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a minikube cluster.
 
+### Running a Test Kind cluster
+ This will setup a [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) cluster named agones by default.
+
+Because Kind runs on a docker on the host, some of the standard build and development Make targets
+need to be replaced by kind specific targets.
+
+If you have [go](https://golang.org/) and [docker](https://www.docker.com/) installed `go get sigs.k8s.io/kind` is all you need !
+
+Next we will create the Agones Kind cluster. Run `make kind-test-cluster` to create the `agones` Kubernetes cluster.
+
+This will also setup helm and a kubeconfig, the kubeconfig location can found using the following command `kind get kubeconfig-path --name=agones` assuming you're using the default `KIND_PROFILE`.
+
+You can verify that your new cluster information by running (if you don't have kubectl you can skip to the shell section):
+
+```
+KUBECONFIG=$(kind get kubeconfig-path --name=agones) kubectl cluster-info
+```
+
+Great! Now we are setup, we also provide a development shell with a handful set of tools like kubectl and helm.
+
+Run `make kind-shell` to enter the development shell. You should see a bash shell that has you as the root user.
+Enter `kubectl get pods` and press enter. You should see that you have no resources currently, but otherwise see no errors.
+Assuming that all works, let's exit the shell by typing `exit` and hitting enter, and look at a building, pushing and installing Agones on Kind next.
+
+You may remember in the first part of this walkthrough, we ran `make build`, which created all the images and binaries
+we needed to work with Agones locally. We can push these images them straight into kind very easily!
+
+Run `make kind-push` which will send all of Agones's docker images from your local Docker into the Agones Kind container.
+
+Now that the images are pushed, to install the development version,
+run `make kind-install` and Agones will install the images that you built and pushed to the Agones Kind cluster.
+
+Running end-to-end tests on Kind is done via the `make kind-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Kind cluster.
+
+If you are having performance issues, check out these docs [here](https://github.com/kubernetes-sigs/kind/tree/master/docs/user#creating-a-cluster)
+
 ### Running a Custom Test Environment
 
 This section is addressed to developers using a custom Kubernetes provider, a custom image repository and/or multiple test clusters.
@@ -469,6 +513,38 @@ Use TAG to specify the image to transfer into minikube
 
 #### `make minikube-controller-portforward`
 The minikube version of [`make controller-portforward`](#make-controller-portforward) to setup
+port forwarding to the controller deployment.
+
+### Kind
+
+[Kind - kubernetes in docker](https://github.com/kubernetes-sigs/kind) is a tool for running local Kubernetes clusters using Docker container "nodes".
+Kind is primarily designed for testing Kubernetes 1.11+, initially targeting the [conformance tests](https://github.com/kubernetes/community/blob/master/contributors/devel/conformance-tests.md).
+
+Since Kind runs locally, there are some targets that need to be used instead of the standard ones above.
+
+#### `make kind-test-cluster`
+Starts a local kubernetes cluster, you can delete it with `make kind-delete-cluster`
+
+Use KIND_PROFILE variable to change the name of the cluster.
+
+#### `make kind-push`
+Push the local Agones Docker images that have already been built 
+via `make build` or `make build-images` into the "agones" Kind cluster.
+
+#### `make kind-install`
+Installs the current development version of Agones into the Kubernetes cluster.
+Use this instead of `make install`, as it disables PullAlways on the install.yaml
+
+### `make kind-test-e2e`
+Runs end-to-end tests on the previously installed version of Agones.
+These tests validate Agones flow from start to finish.
+
+#### `make kind-shell`
+Connecting to Kind requires so enhanced permissions, so use this target
+instead of `make shell` to start an interactive shell for development on Kind.
+
+#### `make kind-controller-portforward`
+The Kind version of [`make controller-portforward`](#make-controller-portforward) to setup
 port forwarding to the controller deployment.
 
 ### Custom Environment
