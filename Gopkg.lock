@@ -183,6 +183,14 @@
   version = "v0.3.5"
 
 [[projects]]
+  branch = "master"
+  digest = "1:67af90f6f6551eed6e14b16833c68ff9e6a3d1e11ea296df70693b24744c24d1"
+  name = "github.com/joonix/log"
+  packages = ["."]
+  pruneopts = ""
+  revision = "d2d3f2f4a80658c67a0bc44021dcac30f3017c06"
+
+[[projects]]
   digest = "1:b79fc583e4dc7055ed86742e22164ac41bf8c0940722dbcb600f1a3ace1a8cb5"
   name = "github.com/json-iterator/go"
   packages = ["."]
@@ -838,6 +846,7 @@
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
     "github.com/heptiolabs/healthcheck",
+    "github.com/joonix/log",
     "github.com/mattbaird/jsonpatch",
     "github.com/pkg/errors",
     "github.com/sirupsen/logrus",
