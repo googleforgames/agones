@@ -12,73 +12,24 @@ _Agones, is derived from the Greek word agōn which roughly translates to “con
 ## Disclaimer
 This software is currently alpha, and subject to change. Not to be used in production systems.
 
-## Major Features
-- Be able to define a `GameServer` within Kubernetes - either through yaml or via the API
-- Manage GameServer lifecycles - including health checking and connection information.
-- Client SDKs for integration with dedicated game servers to work with Agones.
-
 ## Why does this project exist?
+Agones replaces usual bespoke or proprietary cluster management and game server scaling solutions with a [Kubernetes](https://kubernetes.io/) cluster
+that includes the Agones custom _[Kubernetes Controller](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#custom-controllers)_ and matching [Custom Resource Definitions](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions) for _GameServers_, _Fleets_ and more.
+
+With Agones, Kubernetes gets native abilities to create, run, manage and scale dedicated game server processes within Kubernetes clusters using standard Kubernetes tooling and APIs. This model also allows any matchmaker to interact directly with Agones via the Kubernetes API to provision a dedicated a game server.
+
 For more details on why this project was written, read the
 [announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
 
-## Requirements
-- Kubernetes cluster version 1.11+
-    - [Minikube](https://github.com/kubernetes/minikube), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) and [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) have been tested
-    - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
-    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
-    admission controllers are required.
-    We also recommend following the
-    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
-- Firewall access for the range of ports that Game Servers can be connected to in the cluster.
-- Game Servers must have the [project SDK](sdks) integrated, to manage Game Server state, health checking, etc.
-
-## Installation
-
-Follow [these instructions](install/README.md) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
+## Major Features
+- Define a single `GameServer`, and/or large game server `Fleets` within Kubernetes - either through yaml or via the API
+- Manage GameServer lifecycles - including health checking and connection information.
+- `Fleet` Autoscaling capabilities that integrate with Kubernetes' native cluster autoscaling
+- Gameserver specific metric exports and dashboards for ops teams
 
 ## Usage
 
-Documentation and usage guides on how to develop and host dedicated game servers on top of Agones.
-
-### Quickstarts:
- - [Create a Game Server](./docs/create_gameserver.md)
- - [Create a Game Server Fleet](./docs/create_fleet.md)
- - [Create a Fleet Autoscaler](./docs/create_fleetautoscaler.md)
- - [Create a Webhook for FleetAutoscaler](./docs/create_webhook_fleetautoscaler.md)
- - [Edit Your First Game Server (Go)](./docs/edit_first_game_server.md)
-
-### Guides
- - [Integrating the Game Server SDK](sdks)
- - [GameServer Health Checking](./docs/health_checking.md)
- - [Latency Testing with Multiple Clusters](./docs/ping_service.md)
- - [Accessing Agones via the Kubernetes API](./docs/access_api.md)
- - [Troubleshooting](./docs/troubleshooting.md)
-
-### Tutorials
- - [Create an Allocator Service (Go)](./docs/create_allocator_service.md) - Learn to programmatically access Agones via the API
-
-### Reference
-- [Game Server Specification](./docs/gameserver_spec.md)
-- [Fleet Specification](./docs/fleet_spec.md)
-- [Fleet Autoscaler Specification](./docs/fleetautoscaler_spec.md)
-- [Metrics](./docs/metrics.md)
-
-### Examples
-- [Full GameServer Configuration](./examples/gameserver.yaml)
-- [Full Fleet Configuration](./examples/fleet.yaml)
-- [Full Fleet Allocation Configuration](./examples/fleetallocation.yaml)
-- [Full Autoscaler Configuration](./examples/fleetautoscaler.yaml)
-- [Simple UDP](./examples/simple-udp) (Go) - simple server and client that send UDP packets back and forth.
-- [CPP Simple](./examples/cpp-simple) (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
-- [Xonotic](./examples/xonotic) - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.
-
-### Advanced
-- [Scheduling and Autoscaling](./docs/scheduling_autoscaling.md)
-- [Limiting CPU/Memory](./docs/limiting_resources.md)
-
-### Third Party Content
-- [Videos and Presentation](./docs/videos_presentations.md)
+Documentation can be found on the [Agones website](https://agones.dev/site/docs/).
 
 ## Get involved
 
@@ -92,7 +43,7 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 
 ## Development and Contribution
 
-Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones.
+Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones, and community membership governance.
 
 See the [Developing, Testing and Building Agones](build/README.md) documentation for developing, testing and building Agones from source.
 

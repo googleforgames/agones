@@ -1,0 +1,69 @@
++++
+title = "Agones"
+linkTitle = "Agones"
+
++++
+
+{{< blocks/cover title="Host, run and scale dedicated game servers on Kubernetes" image_anchor="top" height="full" color="orange" >}}
+<div class="mx-auto">
+	<a class="btn btn-lg btn-primary mr-3 mb-4" href="{{< relref "/docs" >}}">
+		Learn More <i class="fas fa-arrow-alt-circle-right ml-2"></i>
+	</a>
+	<a class="btn btn-lg btn-secondary mr-3 mb-4" href="https://github.com/GoogleCloudPlatform/agones/releases">
+		Releases <i class="fab fa-github ml-2 "></i>
+	</a>
+	<p class="lead mt-5">Multiplayer dedicated game servers anywhere</p>
+	<div class="mx-auto mt-5">
+		{{< blocks/link-down color="info" >}}
+	</div>
+</div>
+{{< /blocks/cover >}}
+
+{{% blocks/lead color="primary" %}}
+<strong>What is Agones?</strong>
+
+Agones is an open source project that is built to be a batteries-included, dedicated game server scaling and
+orchestration platform. It is built as a native extension of [Kubernetes](https://kubernetes.io), with the flexibility you need to tailor
+it to the requirements of your multiplayer game. Anywhere you can run Kubernetes, you can run Agones.
+
+{{% /blocks/lead %}}
+
+{{< blocks/section color="dark" >}}
+{{% blocks/feature icon="fas fa-file-code" title="Fleets of GameServers" url="./docs/getting-started/" %}}
+Define Fleets of GameServers, autoscaling and more, through YAML or the Kubernetes API.
+{{% /blocks/feature %}}
+
+
+{{% blocks/feature icon="fas fa-wrench" title="Integrated SDK" url="./docs/guides/client-sdks/" %}}
+Integrated SDK for managing game server lifecyle, health and configuration.
+
+Tools for local development included!
+{{% /blocks/feature %}}
+
+
+{{% blocks/feature icon="fas fa-chart-area" title="Metrics" url="./docs/guides/metrics/" %}}
+Integration with [OpenCensus](https://opencensus.io/)
+for backend agnostic game server metrics and monitoring
+{{% /blocks/feature %}}
+
+
+{{< /blocks/section >}}
+
+{{< blocks/section  >}}
+{{% blocks/feature icon="fab fa-slack" title="Join us on Slack" url="https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWQ2ZmY1Mjc4ZDQ4NDJhOGYxYTY2NTY0NjUwNjliYzVhMWFjYjMxM2RlMjg3NGU0M2E0YTYzNDIxNDMyZGNjMjU" %}}
+Join the community on Slack
+{{% /blocks/feature %}}
+
+{{% blocks/feature icon="fab fa-github" title="Contributions welcome!" url="https://github.com/GoogleCloudPlatform/agones" %}}
+  We do a [Pull Request](https://github.com/GoogleCloudPlatform/agones/pulls) contributions workflow on **GitHub**.
+
+  New users are always welcome!
+{{% /blocks/feature %}}
+
+
+{{% blocks/feature icon="fab fa-twitter" title="Follow us on Twitter!" url="https://twitter.com/agonesdev" %}}
+For announcement of latest features etc.
+{{% /blocks/feature %}}
+
+{{< /blocks/section >}}
+
