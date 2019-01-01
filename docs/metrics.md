@@ -37,7 +37,7 @@ Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://
 ### Stackdriver
 
 We don't yet support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/) but you can still use the Prometheus Stackdriver integration by following these [instructions](https://cloud.google.com/monitoring/kubernetes-engine/prometheus).
-Annotations required by this integration can be activated by setting the `agones.metrics.prometheusServiceDiscovery` to true (default) via the [helm chart value](../install/helm/README.md#configuration).
+Annotations required by this integration can be activated by setting the `agones.metrics.prometheusServiceDiscovery` to true (default) via the [helm chart value](../install/helm/agones/README.md#configuration).
 
 ## Metrics available
 
