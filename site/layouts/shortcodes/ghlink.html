@@ -1,0 +1,2 @@
+{{- $branch := .Get "branch" | default $.Page.Site.Params.release_branch }}
+<a href="{{$.Page.Site.Params.github_repo}}/blob/{{ $branch }}/{{.Get "href"}}" target="_blank">{{.Inner}}</a>

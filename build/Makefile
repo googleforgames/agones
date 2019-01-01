@@ -121,6 +121,15 @@ ifndef FULL_BUILD
 	zip_flags = -0
 endif
 
+#   ___            _           _
+#  |_ _|_ __   ___| |_   _  __| | ___ ___
+#   | || '_ \ / __| | | | |/ _` |/ _ \ __|
+#   | || | | | (__| | |_| | (_| |  __\__ \
+#  |___|_| |_|\___|_|\__,_|\__,_|\___|___/
+#
+
+include ./includes/website.mk
+
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
 #    | |/ _` | '__/ _` |/ _ \ __/ __|
@@ -163,7 +172,7 @@ push-release-chart: $(ensure-build-image)
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: $(ensure-build-image) test-go test-install-yaml
+test: $(ensure-build-image) test-go test-install-yaml site-test
 
 # Run go tests
 test-go:
@@ -636,7 +645,6 @@ kind-push:
 	rm -f $$BUNDLE_FILE
 
 # Runs e2e tests against our kind cluster
-kind-test-e2e: 
 kind-test-e2e: 
 	$(MAKE) KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
 		DOCKER_RUN_ARGS=--network=host \

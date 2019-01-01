@@ -10,7 +10,7 @@ It will
 
 ## Running by minikube
 
-First of all, you have to configure Agones on minikude. Check out [these instructions](https://github.com/GoogleCloudPlatform/agones/blob/3b856a4b90862a3ea183643869f81801d4468220/install/README.md).
+First of all, you have to configure Agones on minikude. Check out [these instructions](https://agones.dev/site/docs/installation/#setting-up-a-minikube-cluster).
 
 ```
 $ eval $(minikube docker-env)
