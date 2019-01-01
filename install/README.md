@@ -305,7 +305,7 @@ Also, we can install Agones using [Helm][helm] package manager. If you want more
 options see the [Helm installation guide for Agones][agones-install-guide]
 
 [helm]: https://docs.helm.sh
-[agones-install-guide]: helm/README.md
+[agones-install-guide]: helm/agones/README.md
 
 ## Confirming Agones started successfully
 

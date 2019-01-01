@@ -12,7 +12,7 @@ for the purpose of timing how long the rountrip takes for information to be retu
 
 By default, Agones installs [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/) for
 both HTTP and the UDP ping endpoints. These can be disabled entirely,
-or disabled individually. See the [Helm install guide](../install/helm/README.md) for the parameters to pass through,
+or disabled individually. See the [Helm install guide](../install/helm/agones/README.md) for the parameters to pass through,
 as well as configuration options. 
 
 The ping services as all installed under the `agones-system` namespace.

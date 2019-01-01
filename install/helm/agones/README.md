@@ -127,7 +127,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
-[ping]: ../../docs/ping_service.md
+[ping]: ../../../docs/ping_service.md
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
@@ -145,7 +145,7 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 $ helm install --name my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
-> **Tip**: You can use the default [values.yaml](agones/values.yaml)
+> **Tip**: You can use the default [values.yaml](values.yaml)
 
 ## TLS Certificates
 
@@ -156,4 +156,4 @@ For most used cases the controller would have required a restart anyway (eg: con
 
 ## Confirm Agones is running
 
-To confirm Agones is up and running, [go to the next section](../README.md#confirming-agones-started-successfully)
+To confirm Agones is up and running, [go to the next section](../../README.md#confirming-agones-started-successfully)
