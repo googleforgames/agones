@@ -7,6 +7,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 
 - [ ] Review closed issues have appropriate tags.
 - [ ] Review closed issues have been applied to the current milestone.
+- [ ] Review closed PRs have appropriate tags.
+- [ ] Review closed PRs have been applied to the current milestone.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
@@ -20,7 +22,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] If full release, update install docs with the new release version
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
-- [ ] Run `git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the the release branch)
+- [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the the release branch)
 - [ ] Run `make do-release`. (if release candidate `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
 - [ ] Do a `helm install` and a smoke test to confirm everything is working.
@@ -30,7 +32,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the github release)
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] Ensure the [helm `tag` value][values] is set to the next version (should be the {version}+0.1 if a full release, {version}+0.1-rc if release candidate)
-- [ ] Ensure the [helm `Chart` version values][chart] is set to the next version (should be the {version}+0.1 if a full release, {version}+0.1-rc if release candidate)
+- [ ] Ensure the [helm `Chart` version values][chart] is set to the next version (should be the {version}+0.1 if a full release, {version} if release candidate)
 - [ ] Run `make gen-install`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
