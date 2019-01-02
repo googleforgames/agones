@@ -1,5 +1,7 @@
 # Quickstart Create a Fleet Autoscaler with Webhook Policy
 
+⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
+
 This guide covers how you can create webhook fleet autoscaler policy.
 The main difference from the Buffer policy is that the logic on how many target replicas you need is delegated to a separate pod.
 This type of Autoscaler would send an HTTP request to the webhook endpoint every sync period (which is currently 30s) with a JSON body, and scale the target fleet based on the data that is returned.

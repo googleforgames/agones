@@ -1,5 +1,61 @@
 # Changelog
 
+## [v0.7.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.7.0-rc) (2019-01-02)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.6.0...v0.7.0-rc)
+
+**Breaking changes:**
+
+- Update to Kubernetes 1.11 [\#447](https://github.com/GoogleCloudPlatform/agones/pull/447) ([markmandel](https://github.com/markmandel))
+- Remove crd-install hook, as it break CRD updates [\#441](https://github.com/GoogleCloudPlatform/agones/pull/441) ([markmandel](https://github.com/markmandel))
+
+**Implemented enhancements:**
+
+- Delete crds, and fleets, gameservers etc on deletion of Helm chart [\#426](https://github.com/GoogleCloudPlatform/agones/issues/426)
+- `GameServers` should have the Fleet name in a label for easy retrieval [\#411](https://github.com/GoogleCloudPlatform/agones/issues/411)
+- Horizontal Fleet Autoscaling [\#334](https://github.com/GoogleCloudPlatform/agones/issues/334)
+- Add webhook functionality into FleetAutoscaler [\#460](https://github.com/GoogleCloudPlatform/agones/pull/460) ([aLekSer](https://github.com/aLekSer))
+- Adds Kind local cluster support with documentation [\#458](https://github.com/GoogleCloudPlatform/agones/pull/458) ([Kuqd](https://github.com/Kuqd))
+- Adds OpenCensus metrics integration. [\#457](https://github.com/GoogleCloudPlatform/agones/pull/457) ([Kuqd](https://github.com/Kuqd))
+- added incremental build option to Makefile to speed up rebuilds [\#454](https://github.com/GoogleCloudPlatform/agones/pull/454) ([jkowalski](https://github.com/jkowalski))
+- CRD: added additionalPrinterColumns to GameServer for kubectl [\#444](https://github.com/GoogleCloudPlatform/agones/pull/444) ([jkowalski](https://github.com/jkowalski))
+- Adding explicit length of git revision in Makefile and E2E Can't Allocate test  [\#440](https://github.com/GoogleCloudPlatform/agones/pull/440) ([aLekSer](https://github.com/aLekSer))
+- Pinger service for Multiple Cluster Latency Measurement. [\#434](https://github.com/GoogleCloudPlatform/agones/pull/434) ([markmandel](https://github.com/markmandel))
+
+**Fixed bugs:**
+
+- This should fail e2e in any command fails [\#462](https://github.com/GoogleCloudPlatform/agones/pull/462) ([markmandel](https://github.com/markmandel))
+- Apply fix for goroutines leak [\#461](https://github.com/GoogleCloudPlatform/agones/pull/461) ([aLekSer](https://github.com/aLekSer))
+- GameServerSets: DeleteFunc could receive a DeletedFinalStateUnknown [\#442](https://github.com/GoogleCloudPlatform/agones/pull/442) ([markmandel](https://github.com/markmandel))
+
+**Security fixes:**
+
+- \[Security\] Upgrade Go to 1.11.4 [\#446](https://github.com/GoogleCloudPlatform/agones/pull/446) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Controller logging consistency  [\#456](https://github.com/GoogleCloudPlatform/agones/issues/456)
+- Add Agones to helm hub [\#450](https://github.com/GoogleCloudPlatform/agones/issues/450)
+- Add support for Kind cluster [\#448](https://github.com/GoogleCloudPlatform/agones/issues/448)
+- Move SDK server code from pkg/gameservers to a separate package [\#445](https://github.com/GoogleCloudPlatform/agones/issues/445)
+- Helm chart for 0.6.0 do not work on Helm v2.9.1 due crd-install hook [\#431](https://github.com/GoogleCloudPlatform/agones/issues/431)
+- Release 0.6.0 [\#428](https://github.com/GoogleCloudPlatform/agones/issues/428)
+
+**Merged pull requests:**
+
+- Move the README.md into /agones/ so it's in the Helm Chart [\#466](https://github.com/GoogleCloudPlatform/agones/pull/466) ([markmandel](https://github.com/markmandel))
+- Convert to using Fluentdformatter [\#463](https://github.com/GoogleCloudPlatform/agones/pull/463) ([markmandel](https://github.com/markmandel))
+- Upgrade minikube to K8s 1.11 [\#459](https://github.com/GoogleCloudPlatform/agones/pull/459) ([markmandel](https://github.com/markmandel))
+- pkg/sdkserver: added doc.go [\#452](https://github.com/GoogleCloudPlatform/agones/pull/452) ([jkowalski](https://github.com/jkowalski))
+- Split pkg/gameservers into two  [\#451](https://github.com/GoogleCloudPlatform/agones/pull/451) ([jkowalski](https://github.com/jkowalski))
+- Copy/paste fix [\#449](https://github.com/GoogleCloudPlatform/agones/pull/449) ([joeholley](https://github.com/joeholley))
+- Delete crds, and fleets, gameservers etc on deletion of Helm chart [\#437](https://github.com/GoogleCloudPlatform/agones/pull/437) ([EricFortin](https://github.com/EricFortin))
+- Update gRPC to v1.16.1 [\#435](https://github.com/GoogleCloudPlatform/agones/pull/435) ([markmandel](https://github.com/markmandel))
+- adds minimun tiller version in chart and update doc [\#433](https://github.com/GoogleCloudPlatform/agones/pull/433) ([Kuqd](https://github.com/Kuqd))
+- README: Autoscaler example link [\#432](https://github.com/GoogleCloudPlatform/agones/pull/432) ([markmandel](https://github.com/markmandel))
+- Post 0.6.0 updates [\#430](https://github.com/GoogleCloudPlatform/agones/pull/430) ([markmandel](https://github.com/markmandel))
+- add fleet name to gameservers labels [\#427](https://github.com/GoogleCloudPlatform/agones/pull/427) ([Kuqd](https://github.com/Kuqd))
+
 ## [v0.6.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0) (2018-11-28)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.6.0-rc...v0.6.0)
@@ -7,6 +63,10 @@
 **Closed issues:**
 
 - Release 0.6.0.rc [\#424](https://github.com/GoogleCloudPlatform/agones/issues/424)
+
+**Merged pull requests:**
+
+- Release 0.6.0 updates. [\#429](https://github.com/GoogleCloudPlatform/agones/pull/429) ([markmandel](https://github.com/markmandel))
 
 ## [v0.6.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.6.0-rc) (2018-11-21)
 
