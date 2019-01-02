@@ -66,6 +66,7 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
                       If not specified, the "default" would be used
       - `path` is an optional URL path which will be sent in any request to this service. (i. e. /scale)
     - `url` gives the location of the webhook, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. The `host` should not refer to a service running in the cluster; use the `service` field instead.  (optional, instead of service)
+    - `caBundle` (⚠️ ** development feature ** ⚠️) is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.
 
 Note: only one `buffer` or `webhook` could be defined for FleetAutoscaler which is based on the `type` field.
 
@@ -76,6 +77,8 @@ Webhook endpoint is used to delegate the scaling logic to a separate pod or serv
 
 FleetAutoscaler would send a request to the webhook endpoint every sync period (which is currently 30s) with a JSON body, and scale the target fleet based on the data that is returned.
 JSON payload with a FleetAutoscaleReview data structure would be sent to webhook endpoint and received from it with FleetAutoscaleResponse field populated. FleetAutoscaleResponse contains target Replica count which would trigger scaling of the fleet according to it.
+
+In order to define the path to your Webhook you can use either `URL` or `service`. Note that `caBundle` parameter is required if you use HTTPS for webhook fleetautoscaler, `caBundle` should be omitted if you want to use HTTP webhook server.
 
 The connection to this webhook endpoint should be defined in `FleetAutoscaler` using Webhook policy type.
 
@@ -122,6 +125,7 @@ type FleetStatus struct {
 }
 ```
 
+For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by presense of `caBundle`.
 The example of the webhook written in Go could be found [here](../examples/autoscaler-webhook/main.go).
 
 It implements the [scaling logic](../examples/autoscaler-webhook/README.md) based on the percentage of allocated gameservers in a fleet.

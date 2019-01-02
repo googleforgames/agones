@@ -17,11 +17,14 @@
 package fleetautoscalers
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -60,9 +63,9 @@ func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet
 		Response: nil,
 	}
 	b, err := json.Marshal(faReq)
-	url := ""
+	urlStr := ""
 	if w.URL != nil {
-		url = *w.URL
+		urlStr = *w.URL
 	}
 	var faResp v1alpha1.FleetAutoscaleReview
 	servicePath := ""
@@ -77,13 +80,37 @@ func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet
 		if w.Service.Namespace == "" {
 			w.Service.Namespace = "default"
 		}
-		url = fmt.Sprintf("http://%s.%s.svc:8000/%s", w.Service.Name, w.Service.Namespace, servicePath)
+		scheme := "http://"
+		if w.CABundle != nil {
+			scheme = "https://"
+		}
+		urlStr = fmt.Sprintf("%s%s.%s.svc:8000/%s", scheme, w.Service.Name, w.Service.Namespace, servicePath)
 	}
-	if url == "" {
+	if urlStr == "" {
 		return f.Status.Replicas, false, errors.New("URL was not provided")
 	}
+
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return f.Status.Replicas, false, err
+	}
+
+	// We could have multiple fleetautoscalers with different CABundles defined,
+	// so we switch client.Transport before each POST request
+	if u.Scheme == "https" {
+		rootCAs := x509.NewCertPool()
+		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
+			return f.Status.Replicas, false, errors.New("No certs appended from caBundle")
+		}
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: rootCAs,
+			},
+		}
+		client.Transport = tr
+	}
 	res, err := client.Post(
-		url,
+		urlStr,
 		"application/json",
 		strings.NewReader(string(b)),
 	)

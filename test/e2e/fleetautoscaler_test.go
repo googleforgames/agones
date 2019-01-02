@@ -236,15 +236,16 @@ func TestAutoscalerWebhook(t *testing.T) {
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
-		// if we could not create the autoscaler, their is no point going further
-		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+		// if we could not create the webhook pod, there is no point going further
+		assert.FailNow(t, "Failed creating webhook pod, aborting TestAutoscalerWebhook")
 	}
+	svc.ObjectMeta.Name = "test-service"
 	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
-		// if we could not create the autoscaler, their is no point going further
-		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+		// if we could not create the webhook service, there is no point going further
+		assert.FailNow(t, "Failed creating webhook service, aborting TestAutoscalerWebhook")
 	}
 
 	alpha1 := framework.AgonesClient.StableV1alpha1()
@@ -276,8 +277,174 @@ func TestAutoscalerWebhook(t *testing.T) {
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
+		// if we could not create the autoscaler, there is no point going further
+		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
+	}
+	fa := getAllocation(flt)
+	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
+	assert.Nil(t, err)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
+	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 1
+	})
+	assert.Nil(t, err)
+
+	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.Replicas > initialReplicasCount
+	})
+	assert.Nil(t, err)
+}
+
+var webhookKey = `
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEA2a+qgmnbyKsKHe/ayQSF17966ghXickvFJr8MtHsAVVfDPTu
+K50wmDN5IlkIf5IHqM/4imtw2LXGgFlGIlIsytF8Cy8gW4nqJjZY0XSNmmnJF3Mc
+O62Ptys0+JxsRqjkpkHzxV7atAdVUWqPzz97UPhcf62qUWxw/zyjA1InTj+kDxMZ
+KzCqhetgCW2IGSsb6h4zub/3My/TytP+aDY5P5hHEl1C2ZNvLt+lweaF9TAQ3Pi1
+XCIpp0HIHg0CviDMOxtKO44v+ZuYyuwBJ07f5ny/jzA3+BDmcXiH2drb4EjMzpEk
+7oWfYpkoso++YB7JlDZBAON0ryaetgCHkuw8wwIDAQABAoIBAAOIvpPvdAoF/NwP
+kNXCpQmjqjMyf3lVMtZ6za1lixdac3iaYWOD4c4Wx9iu6Vxo2ob7GWXl6KccDGT5
+DhJwkxmX3ROxaC0USCDmsPp1kfb30LP4wnSVlMe8g9elcnyTMWMhnvuNVq+ljtUL
+jdonhbEC1z2bbDB2Oj9qlJrxMoIqrqzLAE2ibC7hS9P70NKjAjgof6kWYLaMv7Bs
+o6ONlrJL8jBfYDd82GZOXQf81WzMbV1wA6waiArSOKLrpDngnjGN38whCKg3R8yC
+ysmCAzazSZpPmoiA9roNfcSxIsA8NFPWqTY8bOBlFnh+dm2qBPmfeUTgN8O+d+eM
+gsAhCgECgYEA7kxq5A81SZDGoJuVYbeU74ORy1O6KfJ21nqJSABnxQp4tmOLSTSE
+PT/UxVRVHCln1YlaZG0TGvrjLN9HOc8STJWfwORN+Dh2p37IlF6gkwrCWS6kWI5H
+N9vxgxgI5m1p+Y1p4OOdgqTy2NlTjmK5tiwO0MErHwY1LwJSTcVByiECgYEA6dtG
+vZ42nFA3WCTJhRG/WdWImg/gzBE2hqfKsoJ1Xw/qhBhO8jgNTB913Pmhby2Afj8T
+dnB0EyjwD2vwVgrDafNr0BOutJEJ/dvgObRHJjDHzPhQ9nwxzpSDNkblV0jGoTL1
+7iwyblkWOVUpMti3NS1W3Oqrq1LAcC3OZPUs0mMCgYBpIVuTC8aVkwKePqWTu7tA
+Q8phaqnZ8bdN/jdshYlCW9FPnfEINdwVbYDAIel+iCHgCj3PynNAVuk8lbDFpz5K
+fURChDaFyNtIH9373xd2Z6vATpyA2RxAX49YJ5Vdm23ChAnvBlwqE/1zf8WmLpYB
+8cQDgwU0Jbf26k5HMzxIIQKBgFHiui6DS9QIMpjmqLmzsTEfmCl6Ddjm3hTghBVl
+oPuccx219U7TWbSh/39U2bY4VJngNExwq/RZjVWZEhrOwgZDeijt+2q2rqz5ZNZP
+zeoNgqi++nqUmkwfrKJAyOV7UjH3yi2PxEjnYOTKcRag0+YG7jeE5H+lBkVBhNfN
+EdjJAoGAfNI/In1n1XG9n0N+fidouSGPBWL8zt+peQ6YvWNzyq5tlpfQeatwRbZJ
+9vgyqxHWpiYZs44pjM9oahT4KeHO0OUqNQw9DLc4jNC6+eb/FwGNM1d7bft9s+e5
+rney13WRt3xasYCzx0cl6+zJXI3DcY48O82EdI5am9vWsFpfzVc=
+-----END RSA PRIVATE KEY-----`
+
+var caPem = `
+-----BEGIN CERTIFICATE-----
+MIICuDCCAaACCQCodpAMm9SwJjANBgkqhkiG9w0BAQsFADAeMQswCQYDVQQGEwJV
+UzEPMA0GA1UECwwGQWdvbmVzMB4XDTE5MDEwNDExNTE0NFoXDTIxMTAyNDExNTE0
+NFowHjELMAkGA1UEBhMCVVMxDzANBgNVBAsMBkFnb25lczCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBANCHyvwC96pd9SvAa1B/Eh6zG1x0KKWOiXm78Irx
++6yXwyaZl1Z5qQ1mFh98LHeYRd0YX3E2gzVylZoRU+kVDK4TsEsWKMPUiuZ41Ekt
+po+alCzjP2ivsDfZ8a/vpr/wYgakXkVjPThjJROqNqHudN26UqAIbsNMZhRLd9QE
+qKJ4O6aG5S1MSjdTFTqelrbf+CqsJhymdB3flFEEouq1Jj1KDhB4WZSSm/UJzB6G
+4u3cpeBmcLUQGm6fQGobEA+yJZLhEWqpkwvUggB6dsXO1dSHexafiC9ETXlUtTag
+5SbNy5hadVQUwgnwSBvv4vGKuQLWqgWsBrk0yZYxJNAoEyECAwEAATANBgkqhkiG
+9w0BAQsFAAOCAQEAQ2H3ibQqf3A3DKiuxbHIDdnYzNVvgGaDZpiVr3nhrnyvle5X
+GOaFm+27QF4VWoE36CLhXdzDZS8lJHcOXQnJ9O7cjOc91VhuKcfHx0KOaSZ0ySkT
+vlKWk9A4Wh4a4AqYJW7gpTTtuPZrvw8Tk/n1ZXFNaWAx7yENNuWb88h4dAD5ZO4s
+G9HrHvZnM3WC1AQp4CyZF5rCR6vEE9ddRiJor33zKe4hFBo7BENIYesseYqE+dp3
++H8MnK84Wx1TgSyVJy8yLmqiu2ui8ch1Hfxt8Zcpx7up6HFKFTlN9AyvTiv1a0X/
+DU95y10v/hNW4Xzn02G4hkr8siGnHG+PJkOxAw==
+-----END CERTIFICATE-----`
+
+var webhookCrt = `
+-----BEGIN CERTIFICATE-----
+MIIC6TCCAdECCQCLqOrlK/jyADANBgkqhkiG9w0BAQsFADAeMQswCQYDVQQGEwJV
+UzEPMA0GA1UECwwGQWdvbmVzMB4XDTE5MDEwNDEzMzczOVoXDTIwMDUxODEzMzcz
+OVowTzEPMA0GA1UECgwGQWdvbmVzMQ8wDQYDVQQLDAZBZ29uZXMxKzApBgNVBAMM
+ImF1dG9zY2FsZXItdGxzLXNlcnZpY2UuZGVmYXVsdC5zdmMwggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQDZr6qCadvIqwod79rJBIXXv3rqCFeJyS8Umvwy
+0ewBVV8M9O4rnTCYM3kiWQh/kgeoz/iKa3DYtcaAWUYiUizK0XwLLyBbieomNljR
+dI2aackXcxw7rY+3KzT4nGxGqOSmQfPFXtq0B1VRao/PP3tQ+Fx/rapRbHD/PKMD
+UidOP6QPExkrMKqF62AJbYgZKxvqHjO5v/czL9PK0/5oNjk/mEcSXULZk28u36XB
+5oX1MBDc+LVcIimnQcgeDQK+IMw7G0o7ji/5m5jK7AEnTt/mfL+PMDf4EOZxeIfZ
+2tvgSMzOkSTuhZ9imSiyj75gHsmUNkEA43SvJp62AIeS7DzDAgMBAAEwDQYJKoZI
+hvcNAQELBQADggEBAJXHdBh7fw62+fhNsbNbq6HAzigDjf2LrvmuIWlQE6qQnGkx
+TVgf+ZnSxvv5u+inOVNkPwbQtoMlWqSBgHMFj3O2mFVnWvO1nj0ajzSN6GAZszws
+ZUy8FCRIJbbyqhNsjB/x0ZXM4cpotgtuIe55h7psZU13f7GAuxE8E5anc44Tdufw
+ccYzVogM+wEna/pHPOo3ITR4c2k7zVgrr75LkFokUK0fsgFVJ4zTsMP+kQ/UTVmt
+kpXqAOUeQx4ZfwM0FI5Yj3Ox5/AsdZ/hNzszjnPFyjKAp+AWjCiDu6VcgFj+WW0L
+T1HcD9NOEIwRUO04DY86+P4d0TFY/SwxAiMnwBQ=
+-----END CERTIFICATE-----`
+
+func TestTlsWebhook(t *testing.T) {
+	t.Parallel()
+	secretName := "autoscalersecret"
+	secr := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: secretName,
+		},
+		Type: corev1.SecretTypeTLS,
+		Data: make(map[string][]byte),
+	}
+
+	secr.Data[corev1.TLSCertKey] = []byte(webhookCrt)
+	secr.Data[corev1.TLSPrivateKeyKey] = []byte(webhookKey)
+
+	secrets := framework.KubeClient.CoreV1().Secrets(defaultNs)
+	secr, err := secrets.Create(secr)
+	if assert.Nil(t, err) {
+		defer secrets.Delete(secr.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	pod, svc := defaultAutoscalerWebhook()
+	pod.Spec.Volumes = make([]corev1.Volume, 1)
+	pod.Spec.Volumes[0] = corev1.Volume{
+		Name: "secret-volume",
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: secretName,
+			},
+		},
+	}
+	pod.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{{
+		Name:      "secret-volume",
+		MountPath: "/home/service/certs",
+	}}
+	pod, err = framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod)
+	if assert.Nil(t, err) {
+		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		// if we could not create the webhook, there is no point going further
+		assert.FailNow(t, "Failed creating webhook pod, aborting TestTlsWebhook")
+	}
+	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
+	if assert.Nil(t, err) {
+		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		// if we could not create the service, there is no point going further
+		assert.FailNow(t, "Failed creating service, aborting TestTlsWebhook")
+	}
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+	fleets := alpha1.Fleets(defaultNs)
+	flt := defaultFleet()
+	initialReplicasCount := int32(1)
+	flt.Spec.Replicas = initialReplicasCount
+	flt, err = fleets.Create(flt)
+	if assert.Nil(t, err) {
+		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	assert.Nil(t, err, "fleet not ready")
+
+	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
+	fas := defaultFleetAutoscaler(flt)
+	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
+	fas.Spec.Policy.Buffer = nil
+	path := "scale"
+
+	fas.Spec.Policy.Webhook = &v1alpha1.WebhookPolicy{
+		Service: &admregv1b.ServiceReference{
+			Name:      svc.ObjectMeta.Name,
+			Namespace: defaultNs,
+			Path:      &path,
+		},
+		CABundle: []byte(caPem),
+	}
+	fas, err = fleetautoscalers.Create(fas)
+	if assert.Nil(t, err) {
+		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
 		// if we could not create the autoscaler, their is no point going further
-		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
+		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	fa := getAllocation(flt)
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
@@ -297,14 +464,15 @@ func TestAutoscalerWebhook(t *testing.T) {
 func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
 	l["app"] = "autoscaler-webhook"
-	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{
-		GenerateName: "auto-webhook",
-		Namespace:    defaultNs,
-		Labels:       l,
-	},
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "auto-webhook",
+			Namespace:    defaultNs,
+			Labels:       l,
+		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "gcr.io/agones-images/autoscaler-webhook:0.1",
+				Image:           "gcr.io/agones-images/autoscaler-webhook:0.2",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,
@@ -315,7 +483,8 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	}
 	m := make(map[string]string)
 	m["app"] = "autoscaler-webhook"
-	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{GenerateName: "auto-webhook", Namespace: defaultNs},
+	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name: "autoscaler-tls-service", Namespace: defaultNs},
 		Spec: corev1.ServiceSpec{
 			Selector: m,
 			Ports: []corev1.ServicePort{{

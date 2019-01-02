@@ -17,20 +17,24 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
+	"os"
+	"strconv"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
 )
 
-// Constants which define thresholds to trigger scalling up and scale factor
-const (
+// Parameters which define thresholds to trigger scalling up and scale factor
+var (
 	replicaUpperThreshold = 0.7
 	replicaLowerThreshold = 0.3
-	scaleFactor           = 2
-	minReplicasCount      = 2
+	scaleFactor           = 2.
+	minReplicasCount      = int32(2)
 )
 
 // Variables for the logger
@@ -38,17 +42,79 @@ var (
 	logger = runtime.NewLoggerWithSource("main")
 )
 
+// Get all parameters from ENV variables
+// Extra check is performed not to fall into the infinite loop:
+// replicaDownTrigger < replicaUpperThreshold/scaleFactor
+func getEnvVariables() {
+	if ep := os.Getenv("SCALE_FACTOR"); ep != "" {
+		factor, err := strconv.ParseFloat(ep, 64)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not parse environment SCALE_FACTOR variable")
+		} else if factor > 1 {
+			scaleFactor = factor
+		}
+	}
+
+	if ep := os.Getenv("REPLICA_UPSCALE_TRIGGER"); ep != "" {
+		replicaUpTrigger, err := strconv.ParseFloat(ep, 64)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not parse environment REPLICA_UPSCALE_TRIGGER variable")
+		} else if replicaUpTrigger > 0.1 {
+			replicaUpperThreshold = replicaUpTrigger
+		}
+	}
+
+	if ep := os.Getenv("REPLICA_DOWNSCALE_TRIGGER"); ep != "" {
+		replicaDownTrigger, err := strconv.ParseFloat(ep, 64)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not parse environment REPLICA_DOWNSCALE_TRIGGER variable")
+		} else if replicaDownTrigger < replicaUpperThreshold/scaleFactor {
+			replicaLowerThreshold = replicaDownTrigger
+		}
+	}
+
+	if ep := os.Getenv("MIN_REPLICAS_COUNT"); ep != "" {
+		minReplicas, err := strconv.ParseInt(ep, 10, 32)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not parse environment MIN_REPLICAS_COUNT variable")
+		} else if minReplicas >= 0 {
+			minReplicasCount = int32(minReplicas)
+		}
+	}
+	// Extra check: In order not to fall into infinite loop
+	// we change down scale trigger, so that after we scale up
+	// fleet does not immediately scales down and vice versa
+	if replicaLowerThreshold >= replicaUpperThreshold/scaleFactor {
+		replicaLowerThreshold = replicaUpperThreshold / (scaleFactor + 1)
+	}
+}
+
 // Main will set up an http server and three endpoints
 func main() {
+	port := flag.String("port", "8000", "The port to listen to TCP requests")
+	flag.Parse()
+	if ep := os.Getenv("PORT"); ep != "" {
+		port = &ep
+	}
+	getEnvVariables()
+	// Run the HTTP server using the bound certificate and key for TLS
 	// Serve 200 status on /health for k8s health checks
 	http.HandleFunc("/health", handleHealth)
 
 	// Return the target replica count which is used by Webhook fleet autoscaling policy
 	http.HandleFunc("/scale", handleAutoscale)
 
-	logger.Info("Starting HTTP server on port 8000")
-	if err := http.ListenAndServe(":8000", nil); err != nil {
-		logger.WithError(err).Fatal("HTTP server failed to run")
+	_, err := os.Stat("/home/service/certs/tls.crt")
+	if err == nil {
+		logger.Info("Starting HTTPS server on port ", *port)
+		if err := http.ListenAndServeTLS(":"+*port, "/home/service/certs/tls.crt", "/home/service/certs/tls.key", nil); err != nil {
+			logger.WithError(err).Fatal("HTTPS server failed to run")
+		}
+	} else {
+		logger.Info("Starting HTTP server on port ", *port)
+		if err := http.ListenAndServe(":"+*port, nil); err != nil {
+			logger.WithError(err).Fatal("HTTP server failed to run")
+		}
 	}
 }
 
@@ -87,15 +153,16 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if faReq.Request.Status.Replicas != 0 {
-		allocatedPercent := float32(faReq.Request.Status.AllocatedReplicas) / float32(faReq.Request.Status.Replicas)
+		allocatedPercent := float64(faReq.Request.Status.AllocatedReplicas) / float64(faReq.Request.Status.Replicas)
 		if allocatedPercent > replicaUpperThreshold {
 			// After scaling we would have percentage of 0.7/2 = 0.35 > replicaLowerThreshold
 			// So we won't scale down immediately after scale up
+			currentReplicas := float64(faReq.Request.Status.Replicas)
 			faResp.Scale = true
-			faResp.Replicas = faReq.Request.Status.Replicas * scaleFactor
+			faResp.Replicas = int32(math.Ceil(currentReplicas * scaleFactor))
 		} else if allocatedPercent < replicaLowerThreshold && faReq.Request.Status.Replicas > minReplicasCount {
 			faResp.Scale = true
-			faResp.Replicas = faReq.Request.Status.Replicas / scaleFactor
+			faResp.Replicas = int32(math.Ceil(float64(faReq.Request.Status.Replicas) / scaleFactor))
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")

@@ -4,6 +4,8 @@ This guide covers how you can create webhook fleet autoscaler policy.
 The main difference from the Buffer policy is that the logic on how many target replicas you need is delegated to a separate pod.
 This type of Autoscaler would send an HTTP request to the webhook endpoint every sync period (which is currently 30s) with a JSON body, and scale the target fleet based on the data that is returned.
 
+# Chapter 1 Configuring HTTP fleetautoscaler webhook
+
 ## Prerequisites
 
 It is assumed that you have read the instructions to [Create a Game Server Fleet](./create_fleet.md)
@@ -234,6 +236,193 @@ NAME                     STATUS      IP               PORT
 simple-udp-884fg-6q5sk   Ready       35.247.117.202   7373
 simple-udp-884fg-b7l58   Allocated   35.247.117.202   7766
 ```
+
+### 8. Cleanup
+You can delete the autoscaler service and associated resources with the following commands.
+
+```
+kubeclt delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service.yaml
+```
+
+
+Removing the fleet:
+```
+kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+```
+
+
+# Chapter 2 Configuring HTTPS fleetautoscaler webhook with CA Bundle
+
+⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+
+## Objectives
+
+Using TLS and CA bundle we can establish trusted communication between Fleetautoscaler and Webhook which controls size of the fleet (Replicas count). The certificate of the webhook should be signed by Certificate Authority provided in fleetautoscaler yaml configuration file. Which eliminates the possibility to perform man in the middle attack when using HTTP connection to a webhook which can be located inside or outside of our cluster.
+
+Description of common steps with Chapter 1 would be ommited for simplicity, you can see pervious chapter for the details.
+
+### 1. Deploy the fleet
+
+Run a fleet in a cluster:
+```
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+```
+
+### 2. Create X509 Root and Webhook certificates
+
+The procedure of generating Self-signed CA certificate taken from [here](https://datacenteroverlords.com/2012/03/01/creating-your-own-ssl-certificate-authority/)
+
+The first step is to create the private root key:
+```
+openssl genrsa -out rootCA.key 2048
+```
+
+The next step is to self-sign this certificate:
+```
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.pem
+```
+
+This will start an interactive script which will ask you for various bits of information. Fill it out as you see fit.
+
+Every webhook that you wish to install a trusted certificate will need to go through this process. First, just like with the root CA step, you’ll need to create a private key (different from the root CA):
+```
+openssl genrsa -out webhook.key 2048
+```
+
+Once the key is created, you’ll generate the certificate signing request, use valid hostname which is `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` when prompted:
+```
+openssl req -new -key webhook.key -out webhook.csr
+```
+
+Once that’s done, you’ll sign the CSR, which requires the CA root key:
+```
+openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256
+```
+This would generate webhook.crt certificate
+
+Add secret which later would be mounted to autoscaler-webhook-tls pod.
+```
+kubectl create secret tls autoscalersecret --cert=webhook.crt --key=webhook.key
+```
+
+You need to put Base64-encoded string into caBundle field in your fleetautoscaler yaml configuration:
+```
+base64 -i ./rootCA.pem
+```
+
+Copy the output of the command above and replace the caBundle field in your text editor:
+```
+vim $GOPATH/src/agones.dev/agones/examples/webhookfleetautoscalertls.yaml
+```
+
+### 3. Deploy a Webhook service for autoscaling
+
+Run next command to create a service and a Webhook pod in a cluster:
+```
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
+```
+
+To check that it is running and liveness probe is fine:
+```
+kubectl describe pod autoscaler-webhook-tls
+```
+
+Wait for the Running status results:
+```
+Name:               autoscaler-webhook-tls-f74c9bff7-ssrsc
+Namespace:          default
+...
+Status:         Running
+```
+
+### 4. Create a Fleet Autoscaler
+
+Let's create a Fleet Autoscaler using the following command:
+
+```
+kubectl apply -f $GOPATH/src/agones.dev/agones/examples/webhookfleetautoscalertls.yaml
+```
+
+### 5. See the fleet and autoscaler status.
+
+In order to track the list of gameservers which run in your fleet you can run this command in a separate terminal tab:
+
+```
+ watch "kubectl get gs -n default"
+```
+
+### 6. Allocate two Game Servers from the Fleet to trigger scale up
+
+If you're interested in more details for game server allocation, you should consult the [Create a Game Server Fleet](./create_fleet.md) page.
+Here we only interested in triggering allocations to see the autoscaler in action.
+
+```
+for i in {0..2} ; do kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
+```
+
+### 7. Check new Autoscaler and Fleet status
+
+Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
+
+```
+kubectl describe fleetautoscaler  webhook-fleetautoscaler-tls
+```
+
+The last part should look similar to this:
+
+```Spec:
+  Fleet Name:  simple-udp
+  Policy:
+    Type:  Webhook
+    Webhook:
+      Ca Bundle:  LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN1RENDQWFBQ0NRQ29kcEFNbTlTd0pqQU5CZ2txaGtpRzl3MEJBUXNGQURBZU1Rc3dDUVlEVlFRR0V3SlYKVXpFUE1BMEdBMVVFQ3d3R1FXZHZibVZ6TUI0WERURTVNREV3TkRFeE5URTBORm9YRFRJeE1UQXlOREV4TlRFMApORm93SGpFTE1Ba0dBMVVFQmhNQ1ZWTXhEekFOQmdOVkJBc01Ca0ZuYjI1bGN6Q0NBU0l3RFFZSktvWklodmNOCkFRRUJCUUFEZ2dFUEFEQ0NBUW9DZ2dFQkFOQ0h5dndDOTZwZDlTdkFhMUIvRWg2ekcxeDBLS1dPaVhtNzhJcngKKzZ5WHd5YVpsMVo1cVExbUZoOThMSGVZUmQwWVgzRTJnelZ5bFpvUlUra1ZESzRUc0VzV0tNUFVpdVo0MUVrdApwbythbEN6alAyaXZzRGZaOGEvdnByL3dZZ2FrWGtWalBUaGpKUk9xTnFIdWROMjZVcUFJYnNOTVpoUkxkOVFFCnFLSjRPNmFHNVMxTVNqZFRGVHFlbHJiZitDcXNKaHltZEIzZmxGRUVvdXExSmoxS0RoQjRXWlNTbS9VSnpCNkcKNHUzY3BlQm1jTFVRR202ZlFHb2JFQSt5SlpMaEVXcXBrd3ZVZ2dCNmRzWE8xZFNIZXhhZmlDOUVUWGxVdFRhZwo1U2JOeTVoYWRWUVV3Z253U0J2djR2R0t1UUxXcWdXc0JyazB5Wll4Sk5Bb0V5RUNBd0VBQVRBTkJna3Foa2lHCjl3MEJBUXNGQUFPQ0FRRUFRMkgzaWJRcWYzQTNES2l1eGJISURkbll6TlZ2Z0dhRFpwaVZyM25ocm55dmxlNVgKR09hRm0rMjdRRjRWV29FMzZDTGhYZHpEWlM4bEpIY09YUW5KOU83Y2pPYzkxVmh1S2NmSHgwS09hU1oweVNrVAp2bEtXazlBNFdoNGE0QXFZSlc3Z3BUVHR1UFpydnc4VGsvbjFaWEZOYVdBeDd5RU5OdVdiODhoNGRBRDVaTzRzCkc5SHJIdlpuTTNXQzFBUXA0Q3laRjVyQ1I2dkVFOWRkUmlKb3IzM3pLZTRoRkJvN0JFTklZZXNzZVlxRStkcDMKK0g4TW5LODRXeDFUZ1N5Vkp5OHlMbXFpdTJ1aThjaDFIZnh0OFpjcHg3dXA2SEZLRlRsTjlBeXZUaXYxYTBYLwpEVTk1eTEwdi9oTlc0WHpuMDJHNGhrcjhzaUduSEcrUEprT3hBdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+      Service:    <nil>
+      URL:        https://autoscaler-tls-service.default.svc:8000/scale
+Events:
+  Type    Reason            Age   From                        Message
+  ----    ------            ----  ----                        -------
+  Normal  AutoScalingFleet  5s   fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 4
+```
+
+You can see that the fleet size has increased in particular case doubled to 4 gameservers (based on our custom logic in our webhook), the autoscaler having compensated for the two allocated instances.
+Last Scale Time has been updated and a scaling event has been logged.
+
+Double-check the actual number of game server instances and status by running:
+
+```
+ kubectl get gs -n default
+```
+
+This will get you a list of all the current `GameSevers` and their `Status > State`.
+
+```
+NAME                     STATE       ADDRESS         PORT      NODE                                      AGE
+simple-udp-njmr7-2t4nx   Ready       35.203.159.68   7330      gke-test-cluster2-default-55044752-zt63   1m
+simple-udp-njmr7-65rp6   Allocated   35.203.159.68   7294      gke-test-cluster2-default-55044752-zt63   4m
+simple-udp-njmr7-klgtt   Ready       35.203.159.68   7323      gke-test-cluster2-default-55044752-zt63   1m
+simple-udp-njmr7-lglsr   Allocated   35.203.159.68   7009      gke-test-cluster2-default-55044752-zt63   4m
+```
+
+### 8. Cleanup
+You can delete the autoscaler service and associated resources with the following commands.
+
+```
+kubeclt delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
+```
+
+Removing x509 key secret:
+```
+kubectl delete secret autoscalersecret
+```
+
+Removing the fleet:
+```
+kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+```
+
+## Comments 
+
+Note that now secure communication is established and we can trust our webhook. If we need to use server outside of the kubernetes cluster we can use other Root certificate authority and put it into as caBundle parameter in fleetautoscaler configuration (in pem format, base64-encoded).
 
 ## Next Steps
 
