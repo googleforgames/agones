@@ -1,6 +1,6 @@
 # Latency Testing with Multiple Clusters
 
-⚠️⚠️⚠️ **This is currently a development feature and has not been released** ⚠️⚠️⚠️
+⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
 
 When running multiple Agones clusters around the world, you may need to have clients determine which cluster
 to connect to based on latency.
