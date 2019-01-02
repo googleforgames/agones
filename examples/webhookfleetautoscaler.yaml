@@ -34,4 +34,4 @@ spec:
         path: scale
       # optional for URL defined webhooks
       # url: ""
-      # caBundle: TBD (optional, if you want to provide your own ca cert to test against)
+      # caBundle:  optional, used for HTTPS webhook type

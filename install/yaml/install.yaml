@@ -472,6 +472,7 @@ spec:
                           type: string
                     url:
                       type: string
+
 ---
 # Source: agones/templates/crds/gameserver.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.

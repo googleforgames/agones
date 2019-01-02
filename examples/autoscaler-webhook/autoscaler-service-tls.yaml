@@ -17,12 +17,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: autoscaler-webhook-service
+  name: autoscaler-tls-service
   labels:
-    app: autoscaler-webhook
+    app: autoscaler-webhook-tls
 spec:
   selector:
-    app: autoscaler-webhook
+    app: autoscaler-webhook-tls
   ports:
   - port: 8000
     protocol: TCP
@@ -33,33 +33,49 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: autoscaler-webhook
+  name: autoscaler-webhook-tls
   namespace: default
   labels:
-    app: autoscaler-webhook
+    app: autoscaler-webhook-tls
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: autoscaler-webhook
+      app: autoscaler-webhook-tls
   template:
     metadata:
       labels:
-        app: autoscaler-webhook
+        app: autoscaler-webhook-tls
     spec:
       #serviceAccount: autoscaler-webhook
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: autoscalersecret
       containers:
       - name: autoscaler-webhook
         image: gcr.io/agones-images/autoscaler-webhook:0.2
         imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /home/service/certs
+          name: secret-volume
         ports:
         - name: autoscaler
           containerPort: 8000
         livenessProbe:
           httpGet:
-            scheme: HTTP
+            scheme: HTTPS
             path: /health
             port: 8000
           initialDelaySeconds: 3
           periodSeconds: 5
+        env:
+        - name: MIN_REPLICAS_COUNT
+          value: "2"
+        - name: REPLICA_UPSCALE_TRIGGER
+          value: "0.7"
+        - name: REPLICA_DOWNSCALE_TRIGGER
+          value: "0.3"
+        - name: "SCALE_FACTOR"
+          value: "2"
 

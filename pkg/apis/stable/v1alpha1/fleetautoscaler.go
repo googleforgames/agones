@@ -15,6 +15,9 @@
 package v1alpha1
 
 import (
+	"crypto/x509"
+	"net/url"
+
 	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -195,6 +198,36 @@ func (w *WebhookPolicy) ValidateWebhookPolicy(causes []metav1.StatusCause) []met
 			Field:   "url",
 			Message: "service and url cannot be used simultaneously",
 		})
+	}
+	if w.CABundle != nil {
+		rootCAs := x509.NewCertPool()
+		//Check that CABundle provided is correctly encoded certificate
+		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "caBundle",
+				Message: "CA Bundle is not valid",
+			})
+		}
+	}
+	if w.URL != nil {
+		u, err := url.Parse(*w.URL)
+		if err != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "url",
+				Message: "url is not valid",
+			})
+		} else if u.Scheme == "https" {
+			if w.CABundle == nil {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueNotFound,
+					Field:   "caBundle",
+					Message: "CABundle should be provided if HTTPS webhook is used",
+				})
+			}
+		}
+
 	}
 	return causes
 }
