@@ -353,18 +353,31 @@ push-build-image:
 	docker tag $(build_tag) $(build_remote_tag)
 	docker push $(build_remote_tag)
 
-# port forward the agones controller.
-# useful for pprof and stats viewing, etc
-controller-portforward: PORT ?= 8080
-controller-portforward:
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) \
-		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)"  -p $(PORT):$(PORT) $(build_tag) \
-			kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
-
 # start pprof with a web ui
 pprof-web:
 	docker run --rm -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go tool pprof -http :6061 http://localhost:6060
+
+# setup prometheus in the current cluster by default Persistent Volume Claims are requested.
+setup-prometheus: PVC ?= true
+setup-prometheus:
+	$(DOCKER_RUN) \
+		helm upgrade --install --wait prom stable/prometheus --namespace metrics \
+		--set alertmanager.enabled=false,pushgateway.enabled=false \
+		--set kubeStateMetrics.enabled=false,nodeExporter.enabled=false \
+		--set pushgateway.enabled=false \
+		--set server.global.scrape_interval=30s,server.persistentVolume.enabled=$(PVC)
+
+# setup grafana in the current cluster with datasource and dashboards ready for use with agones
+# by default Persistent Volume Claims are requested.
+setup-grafana: PVC ?= true
+setup-grafana: PASSWORD ?= admin
+setup-grafana:
+	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
+	$(DOCKER_RUN) \
+		helm upgrade --install --wait grafana stable/grafana  --namespace metrics \
+		--set persistence.enabled=$(PVC) \
+		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
@@ -550,10 +563,31 @@ minikube-transfer-image:
 minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
 minikube-test-e2e: minikube-agones-profile test-e2e
 
+# prometheus on minkube 
+# we have to disable PVC as it's not supported on minkube.
+minkube-setup-prometheus:
+	$(MAKE) setup-prometheus \
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
+# grafana on minkube with dashboards and prometheus datasource installed.
+# we have to disable PVC as it's not supported on minkube.
+minkube-setup-grafana:
+	$(MAKE) setup-grafana \
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
 # minikube port forwarding
 minikube-controller-portforward:
 	$(MAKE) controller-portforward DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
+# minikube port forwarding grafana
+minikube-grafana-portforward:
+	$(MAKE) grafana-portforward \
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
+# minikube port forwarding for prometheus web ui
+minikube-prometheus-portforward:
+	$(MAKE) prometheus-portforward \
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
 #   _  ___           _ 
 #  | |/ (_)_ __   __| |
@@ -608,8 +642,34 @@ kind-test-e2e:
 		DOCKER_RUN_ARGS=--network=host \
 		test-e2e
 
-# kind port forwarding
+# prometheus on kind 
+# we have to disable PVC as it's not supported on kind.
+kind-setup-prometheus:
+	$(MAKE) setup-prometheus \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS="--network=host" PVC=false
+
+# grafana on kind with dashboards and prometheus datasource installed.
+# we have to disable PVC as it's not supported on kind.
+kind-setup-grafana:
+	$(MAKE) setup-grafana \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS="--network=host" PVC=false
+
+# kind port forwarding controller web
 kind-controller-portforward:
 	$(MAKE) controller-portforward \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS="--network=host"
+
+# kind port forwarding grafana
+kind-grafana-portforward:
+	$(MAKE) grafana-portforward \
+		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
+		DOCKER_RUN_ARGS="--network=host"
+
+# kind port forwarding for prometheus web ui
+kind-prometheus-portforward:
+	$(MAKE) prometheus-portforward \
 		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
 		DOCKER_RUN_ARGS="--network=host"

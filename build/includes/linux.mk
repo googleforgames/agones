@@ -46,3 +46,25 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 
 # Does not do anything
 minikube-post-start:
+# kubectl > 1.11 may have --address flag, but for the time being,
+# we will use --network=host, as port-forward binds to localhost
+
+# port forward the agones controller.
+# useful for pprof and stats viewing, etc
+controller-portforward: PORT ?= 8080
+controller-portforward: DOCKER_RUN_ARGS+=--network=host
+controller-portforward:
+	$(DOCKER_RUN) \
+		kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
+
+# portforward prometheus web ui
+prometheus-portforward: DOCKER_RUN_ARGS+=--network=host
+prometheus-portforward:
+	$(DOCKER_RUN) \
+		kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
+
+# portforward grafana
+grafana-portforward: DOCKER_RUN_ARGS+=--network=host
+grafana-portforward:
+	$(DOCKER_RUN) \
+		kubectl port-forward deployments/grafana 3000 -n metrics
