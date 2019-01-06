@@ -1,0 +1,15 @@
+service:
+    port: 3000
+sidecar:
+    dashboards:
+        enabled: true
+plugins: grafana-piechart-panel
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prom-prometheus-server.metrics.svc.cluster.local:80/
+      access: proxy
+      isDefault: true

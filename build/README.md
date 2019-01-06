@@ -39,6 +39,10 @@ Table of Contents
         * [make install](#make-install)
         * [make uninstall](#make-uninstall)
         * [make test-e2e](#make-test-e2e)
+        * [make setup-prometheus](#make-setup-prometheus)
+        * [make setup-grafana](#make-setup-grafana)
+        * [make prometheus-portforward](#make-prometheus-portforward)
+        * [make grafana-portforward](#make-grafana-portforward)
         * [make controller-portforward](#make-controller-portforward)
         * [make pprof-web](#make-pprof-web)
         * [make shell](#make-shell)
@@ -61,6 +65,10 @@ Table of Contents
         * [make minikube-test-cluster](#make-minikube-test-cluster)
         * [make minikube-push](#make-minikube-push)
         * [make minikube-install](#make-minikube-install)
+        * [make minikube-setup-prometheus](#make-minikube-setup-prometheus)
+        * [make minikube-setup-grafana](#make-minikube-setup-grafana)
+        * [make minikube-prometheus-portforward](#make-minikube-prometheus-portforward)
+        * [make minikube-grafana-portforward](#make-minikube-grafana-portforward)
      * [make minikube-test-e2e](#make-minikube-test-e2e)
         * [make minikube-shell](#make-minikube-shell)
         * [make minikube-transfer-image](#make-minikube-transfer-image)
@@ -69,6 +77,10 @@ Table of Contents
         * [make kind-test-cluster](#make-kind-test-cluster)
         * [make kind-push](#make-kind-push)
         * [make kind-install](#make-kind-install)
+        * [make kind-setup-prometheus](#make-kind-setup-prometheus)
+        * [make kind-setup-grafana](#make-kind-setup-grafana)
+        * [make kind-prometheus-portforward](#make-kind-prometheus-portforward)
+        * [make kind-grafana-portforward](#make-kind-grafana-portforward)
      * [make kind-test-e2e](#make-kind-test-e2e)
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
@@ -413,8 +425,45 @@ It uses the KUBECONFIG to target a Kubernetes cluster.
 
 See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on minikube.
 
+#### `make setup-prometheus`
+
+Install Prometheus server using [stable/prometheus](https://github.com/helm/charts/tree/master/stable/prometheus) chart into the current cluster.
+
+By default all exporters and alertmanager is disabled.
+
+You can use this to collect Agones [Metrics](../docs/metrics.md).
+
+See [`make minikube-setup-prometheus`](#make-minikube-setup-prometheus) and [`make kind-setup-prometheus`](#make-kind-setup-prometheus) to run the installation on Minikube or Kind.
+
+#### `make setup-grafana`
+
+Install Gafrana server using [stable/grafana](https://github.com/helm/charts/tree/master/stable/grafana) chart into the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).
+
+You can set your own password using the `PASSWORD` environement variable.
+
+See [`make minikube-setup-grafana`](#make-minikube-setup-grafana) and [`make kind-setup-grafana`](#make-kind-setup-grafana) to run the installation on Minikube or Kind.
+
+#### `make prometheus-portforward`
+
+Sets up port forwarding to the
+Prometheus deployment (port 9090 Prometheus UI).
+
+On Windows and MacOS you will need to have installed [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
+
+See [`make minikube-prometheus-portforward`](#make-minikube-prometheus-portforward) and [`make kind-prometheus-portforward`](#make-minikube-prometheus-portforward) to run  on Minikube or Kind.
+
+#### `make grafana-portforward`
+
+Sets up port forwarding to the
+grafana deployment (port 3000 UI).
+
+On Windows and MacOS you will need to have installed [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
+
+See [`make minikube-grafana-portforward`](#make-minikube-grafana-portforward) and [`make kind-grafana-portforward`](#make-minikube-grafana-portforward) to run  on Minikube or Kind.
+
 #### `make controller-portforward`
-Sets up port forwarding to a specified PORT var (defaults to 6060 for pprof) to the
+
+Sets up port forwarding to a specified PORT var (defaults to 8080 for controller metrics) to the
 controller deployment.
 
 #### `make pprof-web`
@@ -499,6 +548,25 @@ via `make build` or `make build-images` into the "agones" minikube instance.
 Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
 
+#### `make minikube-setup-prometheus`
+Installs prometheus metric backend into the Kubernetes cluster.
+Use this instead of `make setup-prometheus`, as it disables Persistent Volume Claim.
+
+#### `make minikube-setup-grafana`
+
+Installs grafana into the Kubernetes cluster.
+Use this instead of `make setup-grafana`, as it disables Persistent Volume Claim.
+
+#### `make minikube-prometheus-portforward`
+
+The minikube version of [`make prometheus-portforward`](#make-prometheus-portforward) to setup
+port forwarding to the prometheus deployment.  
+
+#### `make minikube-grafana-portforward`
+
+The minikube version of [`make grafana-portforward`](#make-grafana-portforward) to setup
+port forwarding to the grafana deployment.  
+
 ### `make minikube-test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
@@ -534,6 +602,27 @@ via `make build` or `make build-images` into the "agones" Kind cluster.
 #### `make kind-install`
 Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
+
+#### `make kind-setup-prometheus`
+
+Installs prometheus metric backend into the Kubernetes cluster.
+Use this instead of `make setup-prometheus`, as it disables Persistent Volume Claim.
+
+#### `make kind-setup-grafana`
+
+Installs grafana into the Kubernetes cluster.
+Use this instead of `make setup-grafana`, as it disables Persistent Volume Claim.
+
+#### `make kind-prometheus-portforward`
+
+The minikube version of [`make prometheus-portforward`](#make-prometheus-portforward) to setup
+port forwarding to the prometheus deployment.  
+
+#### `make kind-grafana-portforward`
+
+The minikube version of [`make grafana-portforward`](#make-grafana-portforward) to setup
+port forwarding to the grafana deployment.  
+
 
 ### `make kind-test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.

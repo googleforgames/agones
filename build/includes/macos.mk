@@ -46,3 +46,17 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 
 # Does nothing
 minikube-post-start:
+
+# port forward the agones controller.
+# useful for pprof and stats viewing, etc
+controller-portforward: PORT ?= 8080
+controller-portforward:
+	kubectl port-forward deployments/agones-controller -n agones-system $(PORT)
+
+# portforward prometheus web ui
+prometheus-portforward:
+	kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
+
+# portforward prometheus web ui
+grafana-portforward:
+	kubectl port-forward deployments/grafana 3000 -n metrics
