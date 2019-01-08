@@ -27,6 +27,9 @@ agones:
     sdk: agones-sdk
   controller:
     resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
     generateTLS: true
     safeToEvict: false
     http:
@@ -38,6 +41,10 @@ agones:
       timeoutSeconds: 1
   ping:
     install: true
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
     replicas: 2
     http:
       expose: true

@@ -107,6 +107,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.failureThreshold`    | Number of times before giving up (in seconds)                                                   | `3`                    |
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
+| `agones.controller.nodeSelector`                    | (⚠️ **development feature**⚠️) Controller [node labels](nodeSelector) for pod assignment                                       | `{}`                   |
+| `agones.controller.tolerations`                     | (⚠️ **development feature**⚠️) Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
+| `agones.controller.affinity`                        | (⚠️ **development feature**⚠️) Controller [affinity](affinity) settings for pod assignment                                     | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
 | `agones.ping.install`                               | Whether to install the [ping service][ping]                                                     | `true`                 |
 | `agones.ping.replicas`                              | The number of replicas to run in the deployment                                                 | `2`                    | 
@@ -122,6 +125,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.healthCheck.periodSeconds`             | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.ping.healthCheck.failureThreshold`          | Number of times before giving up (in seconds)                                                   | `3`                    |
 | `agones.ping.healthCheck.timeoutSeconds`            | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
+| `agones.ping.resources`                             | (⚠️ **development feature**⚠️) Ping pods resource requests/limit                                                                      |`{}`                   |
+| `agones.ping.nodeSelector`                          | (⚠️ **development feature**⚠️) Ping [node labels](nodeSelector) for pod assignment                                                    | `{}`                   |
+| `agones.ping.tolerations`                           | (⚠️ **development feature**⚠️) Ping [toleration][toleration] labels for pod assignment                                                | `[]`                   |
+| `agones.ping.affinity`                              | (⚠️ **development feature**⚠️) Ping [affinity](affinity) settings for pod assignment                                                  | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
@@ -129,6 +136,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [ping]: ../../../docs/ping_service.md
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
+[nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+[toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+[affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
