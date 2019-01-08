@@ -51,6 +51,18 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
+      {{- if .Values.agones.controller.affinity }}
+      affinity:
+{{ toYaml .Values.agones.controller.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.controller.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.agones.controller.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.controller.tolerations }}
+      tolerations:
+{{ toYaml .Values.agones.controller.tolerations | indent 8 }}
+      {{- end }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
       containers:
       - name: agones-controller
