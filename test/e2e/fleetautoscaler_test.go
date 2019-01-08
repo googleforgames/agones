@@ -126,7 +126,8 @@ func TestAutoscalerStressCreate(t *testing.T) {
 	r := rand.New(rand.NewSource(1783))
 
 	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
-	for i := 0; i < 30; i++ {
+
+	for i := 0; i < 5; i++ {
 		fas := defaultFleetAutoscaler(flt)
 		bufferSize := r.Int31n(5)
 		minReplicas := r.Int31n(5)
@@ -141,33 +142,35 @@ func TestAutoscalerStressCreate(t *testing.T) {
 			fas.Spec.Policy.Buffer.MinReplicas <= fas.Spec.Policy.Buffer.MaxReplicas &&
 			(fas.Spec.Policy.Buffer.MinReplicas == 0 || fas.Spec.Policy.Buffer.MinReplicas >= bufferSize)
 
-		fas, err := fleetautoscalers.Create(fas)
-		if err == nil {
-			assert.True(t, valid,
-				fmt.Sprintf("FleetAutoscaler created even if the parameters are NOT valid: %d %d %d",
-					bufferSize,
-					fas.Spec.Policy.Buffer.MinReplicas,
-					fas.Spec.Policy.Buffer.MaxReplicas))
+		// create a closure to have defered delete func called on each loop iteration.
+		func() {
+			fas, err := fleetautoscalers.Create(fas)
+			if err == nil {
+				defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
+				assert.True(t, valid,
+					fmt.Sprintf("FleetAutoscaler created even if the parameters are NOT valid: %d %d %d",
+						bufferSize,
+						fas.Spec.Policy.Buffer.MinReplicas,
+						fas.Spec.Policy.Buffer.MaxReplicas))
 
-			expectedReplicas := bufferSize
-			if expectedReplicas < fas.Spec.Policy.Buffer.MinReplicas {
-				expectedReplicas = fas.Spec.Policy.Buffer.MinReplicas
+				expectedReplicas := bufferSize
+				if expectedReplicas < fas.Spec.Policy.Buffer.MinReplicas {
+					expectedReplicas = fas.Spec.Policy.Buffer.MinReplicas
+				}
+				if expectedReplicas > fas.Spec.Policy.Buffer.MaxReplicas {
+					expectedReplicas = fas.Spec.Policy.Buffer.MaxReplicas
+				}
+				// the fleet autoscaler should scale the fleet now to expectedReplicas
+				err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(expectedReplicas))
+				assert.Nil(t, err, fmt.Sprintf("fleet did not sync with autoscaler, expected %d ready replicas", expectedReplicas))
+			} else {
+				assert.False(t, valid,
+					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
+						bufferSize,
+						minReplicas,
+						maxReplicas, err))
 			}
-			if expectedReplicas > fas.Spec.Policy.Buffer.MaxReplicas {
-				expectedReplicas = fas.Spec.Policy.Buffer.MaxReplicas
-			}
-			// the fleet autoscaler should scale the fleet now to expectedReplicas
-			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(expectedReplicas))
-			assert.Nil(t, err, fmt.Sprintf("fleet did not sync with autoscaler, expected %d ready replicas", expectedReplicas))
-
-			fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
-		} else {
-			assert.False(t, valid,
-				fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d",
-					bufferSize,
-					minReplicas,
-					maxReplicas))
-		}
+		}()
 	}
 }
 

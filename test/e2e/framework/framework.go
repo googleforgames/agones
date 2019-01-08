@@ -199,6 +199,11 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
+	err = f.AgonesClient.StableV1alpha1().FleetAllocations(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
 	return f.AgonesClient.StableV1alpha1().GameServers(ns).
 		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
 }
