@@ -2,7 +2,7 @@
 
 Like any other Kubernetes resource you describe a GameServer's desired state via a specification written in YAML or JSON to the Kubernetes API. The Agones controller will then change the actual state to the desired state.
 
-A full GameServer specification is available below and in the [example folder](https://github.com/GoogleCloudPlatform/agones/blob/release-0.6.0/examples/gameserver.yaml) for reference :
+A full GameServer specification is available below and in the [example folder](https://github.com/GoogleCloudPlatform/agones/blob/release-0.7.0/examples/gameserver.yaml) for reference :
 
 ```
 apiVersion: "stable.agones.dev/v1alpha1"

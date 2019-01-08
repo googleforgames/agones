@@ -1,7 +1,5 @@
 # Metrics
 
-⚠️⚠️⚠️ **This is currently a release candidate feature** ⚠️⚠️⚠️
-
 Agones controller exposes metrics via [OpenCensus](https://opencensus.io/). OpenCensus is a single distribution of libraries that collect metrics and distributed traces from your services, we only use it for metrics but it will allow us to support multiple exporters in the future.
 
 We choose to start with Prometheus as this is the most popular with Kubernetes but it is also compatible with Stackdriver.

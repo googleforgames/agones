@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.7.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.7.0) (2019-01-08)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.7.0-rc...v0.7.0)
+
+**Closed issues:**
+
+- Release 0.7.0-rc [\#467](https://github.com/GoogleCloudPlatform/agones/issues/467)
+
+**Merged pull requests:**
+
+- Preparation for 0.7.0 [\#470](https://github.com/GoogleCloudPlatform/agones/pull/470) ([markmandel](https://github.com/markmandel))
+
 ## [v0.7.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.7.0-rc) (2019-01-02)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.6.0...v0.7.0-rc)
@@ -43,6 +55,7 @@
 
 **Merged pull requests:**
 
+- Release 0.7.0-rc [\#468](https://github.com/GoogleCloudPlatform/agones/pull/468) ([markmandel](https://github.com/markmandel))
 - Move the README.md into /agones/ so it's in the Helm Chart [\#466](https://github.com/GoogleCloudPlatform/agones/pull/466) ([markmandel](https://github.com/markmandel))
 - Convert to using Fluentdformatter [\#463](https://github.com/GoogleCloudPlatform/agones/pull/463) ([markmandel](https://github.com/markmandel))
 - Upgrade minikube to K8s 1.11 [\#459](https://github.com/GoogleCloudPlatform/agones/pull/459) ([markmandel](https://github.com/markmandel))
