@@ -46,3 +46,15 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation](./health_checking.md).
 - `template` the [pod spec template](https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+
+## GameServer State Diagram
+
+The following diagram shows the lifecycle of a `GameServer`. 
+
+Game Servers are created through Kubernetes API (either directly or through a [Fleet](fleet_spec.md)) and their state transitions are orchestrated by:
+
+- GameServer controller, which allocates ports, launches Pods backing game servers and manages their lifetime
+- Allocation controller, which marks game servers as `Allocated` to handle a game session
+- SDK, which manages health checking and shutdown of a game server session
+
+![GameServer State Diagram](gameserver-states.png)

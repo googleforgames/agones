@@ -59,6 +59,7 @@ GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.5
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
 agones_path := $(realpath $(build_path)/..)
+docs_path := $(agones_path)/docs
 
 kubeconfig_path := $(dir $(KUBECONFIG))
 kubeconfig_file := $(notdir $(KUBECONFIG))
@@ -295,6 +296,12 @@ gen-gameservers-sdk-grpc: $(ensure-build-image)
 gen-crd-client: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
+
+doc-images: $(docs_path)/gameserver-states.png
+
+%.png: %.dot
+	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	  'dot -Tpng /dev/stdin' < $< > $@.tmp && mv $@.tmp $@
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
