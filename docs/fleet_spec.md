@@ -73,7 +73,7 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 
 A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet`
 
-A full `Fleet` specification is available below and in the 
+A full `FleetAllocation` specification is available below and in the 
 [example folder](../examples/fleetallocation.yaml) for reference :
 
 ```yaml
@@ -99,7 +99,7 @@ name for the `FleetAllocation` is generated when the `FleetAllocation` is create
 
 The `spec` field is the actual `FleetAllocation` specification and it is composed as follow:
 
-- `fleetName` is the name of an existing Fleet. If this doesn't exist, and error will be returned
+- `fleetName` is the name of an existing Fleet. If this doesn't exist, an error will be returned
   when the `FleetAllocation` is created
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation.
