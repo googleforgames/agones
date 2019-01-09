@@ -40,10 +40,26 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
+      {{- if .Values.agones.ping.affinity }}
+      affinity:
+{{ toYaml .Values.agones.ping.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.ping.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.agones.ping.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.ping.tolerations }}
+      tolerations:
+{{ toYaml .Values.agones.ping.tolerations | indent 8 }}
+      {{- end }}
       containers:
         - name: agones-ping
           image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ .Values.agones.image.tag }}"
           imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
+{{- if .Values.agones.ping.resources }}
+          resources:
+{{ toYaml .Values.agones.ping.resources | indent 12 }}
+{{- end }}
           livenessProbe:
             httpGet:
               port: 8080
