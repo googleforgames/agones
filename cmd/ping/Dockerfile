@@ -17,10 +17,7 @@ FROM alpine:3.8
 RUN apk --update add ca-certificates && \
     adduser -D agones
 
-COPY ./bin/ping /home/agones/ping
-
-RUN chown -R agones /home/agones && \
-    chmod o+x /home/agones/ping
+COPY --chown=agones:root ./bin/ping /home/agones/ping
 
 USER agones
 ENTRYPOINT ["/home/agones/ping"]
