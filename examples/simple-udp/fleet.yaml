@@ -28,3 +28,10 @@ spec:
           containers:
           - name: simple-udp
             image: gcr.io/agones-images/udp-server:0.5
+            resources:
+              requests:
+                memory: "64Mi"
+                cpu: "20m"
+              limits:
+                memory: "64Mi"
+                cpu: "20m"
