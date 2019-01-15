@@ -65,12 +65,12 @@ func (c *fakeController) close() {
 	}
 }
 
-func (c *fakeController) report() {
-	// hacky: unregistering views force view collections
-	// so to not have to wait for the reporting period to hit we can
-	// unregister and register again
-	c.unRegisterViews()
-	c.registerViews()
+// hacky: unregistering views force view collections
+// so to not have to wait for the reporting period to hit we can
+// unregister and register again
+func report() {
+	unRegisterViews()
+	registerViews()
 }
 
 func (c *fakeController) run(t *testing.T) {

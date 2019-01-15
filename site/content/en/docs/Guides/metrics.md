@@ -23,8 +23,11 @@ Table of Contents
   - [Installation](#installation)
     - [Prometheus installation](#prometheus-installation)
     - [Grafana installation](#grafana-installation)
+<<<<<<< HEAD
     - [Stackdriver installation](#stackdriver-installation)
   - [Adding more metrics](#adding-more-metrics)
+=======
+>>>>>>> add client-go metrics and grafana dashboards
   
 ## Backend integrations
 
@@ -96,6 +99,14 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 - {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="master" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
 
 - {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="master" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
+
+{{% feature publishVersion="0.8.0" %}}
+- {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="master" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
+
+- {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="master" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
+
+- {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="master" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
+{{% /feature %}}
 
 Dashboard screenshots :
 
@@ -227,24 +238,3 @@ Permissions problem example from controller logs:
 Failed to export to Stackdriver: rpc error: code = PermissionDenied desc = Permission monitoring.metricDescriptors.create denied (or the resource may not exist).
 ```
 {{% /feature %}}
-
-## Adding more metrics
-
-If you want to contribute and add more metrics we recommend to use shared informers (cache) as it is currently implemented in the {{< ghlink href="pkg/metrics/controller.go" branch="master" >}}metrics controller{{< /ghlink >}}. 
-Using shared informers allows to keep metrics code in one place and doesn't overload the Kubernetes API.
-
-However there is some cases where you will have to add code inside your ressource controller (eg. latency metrics), you should minize metrics code in your controller by adding specific functions in the metrics packages as shown below.
-
-```golang
-package metrics
-
-import "go.opencensus.io/stats"
-
-...
-
-func RecordSomeLatency(latency int64,ressourceName string) {
-    stats.RecordWithTags(....)
-}
-```
-
-
