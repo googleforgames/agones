@@ -28,7 +28,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
-	"go.opencensus.io/stats/view"
 	"go.opencensus.io/tag"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -42,7 +41,11 @@ var (
 	MetricResyncPeriod = time.Second * 1
 )
 
-// Controller is a metrics controller
+func init() {
+	registerViews()
+}
+
+// Controller is a metrics controller collecting Agones state metrics
 type Controller struct {
 	logger           *logrus.Entry
 	gameServerLister listerv1alpha1.GameServerLister
@@ -109,24 +112,7 @@ func NewController(
 		UpdateFunc: c.recordGameServerStatusChanges,
 	}, 0)
 
-	c.registerViews()
 	return c
-}
-
-// register all our views to OpenCensus
-func (c *Controller) registerViews() {
-	for _, v := range views {
-		if err := view.Register(v); err != nil {
-			c.logger.WithError(err).Error("could not register view")
-		}
-	}
-}
-
-// unregister views, this is only useful for tests as it trigger reporting.
-func (c *Controller) unRegisterViews() {
-	for _, v := range views {
-		view.Unregister(v)
-	}
 }
 
 func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
@@ -172,9 +158,9 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 	// recording buffer policy
 	if fas.Spec.Policy.Buffer != nil {
 		// recording limits
-		c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "max")},
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "max")},
 			fasBufferLimitsCountStats.M(int64(fas.Spec.Policy.Buffer.MaxReplicas)))
-		c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "min")},
+		recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "min")},
 			fasBufferLimitsCountStats.M(int64(fas.Spec.Policy.Buffer.MinReplicas)))
 
 		// recording size
@@ -183,13 +169,13 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 			sizeString := fas.Spec.Policy.Buffer.BufferSize.StrVal
 			if sizeString != "" {
 				if size, err := strconv.Atoi(sizeString[:len(sizeString)-1]); err == nil {
-					c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "percentage")},
+					recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "percentage")},
 						fasBufferSizeStats.M(int64(size)))
 				}
 			}
 		} else {
 			// as count
-			c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "count")},
+			recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "count")},
 				fasBufferSizeStats.M(int64(fas.Spec.Policy.Buffer.BufferSize.IntVal)))
 		}
 	}
@@ -240,20 +226,14 @@ func (c *Controller) recordFleetReplicas(fleetName string, total, allocated, rea
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName))
 
-	c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
 		fleetsReplicasCountStats.M(int64(total)))
-	c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated")},
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "allocated")},
 		fleetsReplicasCountStats.M(int64(allocated)))
-	c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "ready")},
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "ready")},
 		fleetsReplicasCountStats.M(int64(ready)))
-	c.recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
+	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "desired")},
 		fleetsReplicasCountStats.M(int64(desired)))
-}
-
-func (c *Controller) recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Measurement) {
-	if err := stats.RecordWithTags(ctx, mutators, ms...); err != nil {
-		c.logger.WithError(err).Warn("error while recoding stats")
-	}
 }
 
 // recordGameServerStatusChanged records gameserver status changes, however since it's based
@@ -278,7 +258,7 @@ func (c *Controller) recordGameServerStatusChanges(old, new interface{}) {
 		if fleetName == "" {
 			fleetName = "none"
 		}
-		c.recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
+		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
 	}
 }
@@ -296,7 +276,7 @@ func (c *Controller) recordFleetAllocationChanges(old, new interface{}) {
 	// fleet allocations are added without gameserver allocated
 	// but then get modified on successful allocation with their gameserver
 	if oldFa.Status.GameServer == nil && newFa.Status.GameServer != nil {
-		c.recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, newFa.Spec.FleetName)},
+		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, newFa.Spec.FleetName)},
 			fleetAllocationTotalStats.M(1))
 	}
 }
@@ -339,7 +319,7 @@ func (c *Controller) collectFleetAllocationCounts() {
 	}
 
 	for fleetName, count := range c.faCount {
-		c.recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyFleetName, fleetName)},
+		recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyFleetName, fleetName)},
 			fleetAllocationCountStats.M(count))
 	}
 }
