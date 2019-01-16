@@ -104,8 +104,8 @@ func main() {
 	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{}
+	var rs []runner
 	var health healthcheck.Handler
-	var metricsController *metrics.Controller
 
 	if ctlConf.Metrics {
 		registry := prom.NewRegistry()
@@ -115,8 +115,7 @@ func main() {
 		}
 		server.Handle("/metrics", metricHandler)
 		health = healthcheck.NewMetricsHandler(registry, "agones")
-		metricsController = metrics.NewController(kubeClient, agonesClient, agonesInformerFactory)
-
+		rs = append(rs, metrics.NewController(kubeClient, agonesClient, agonesInformerFactory))
 	} else {
 		health = healthcheck.NewHandler()
 	}
@@ -139,9 +138,8 @@ func main() {
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
-	rs := []runner{
-		wh, gsController, gsSetController, fleetController, faController, fasController, metricsController, gasController, server,
-	}
+	rs = append(rs,
+		wh, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
 
 	stop := signals.NewStopChannel()
 
@@ -149,9 +147,6 @@ func main() {
 	agonesInformerFactory.Start(stop)
 
 	for _, r := range rs {
-		if r == nil {
-			continue
-		}
 		go func(rr runner) {
 			if runErr := rr.Run(workers, stop); runErr != nil {
 				logger.WithError(runErr).Fatalf("could not start runner: %s", reflect.TypeOf(rr))
