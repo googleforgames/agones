@@ -19,7 +19,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -149,7 +148,7 @@ func main() {
 	for _, r := range rs {
 		go func(rr runner) {
 			if runErr := rr.Run(workers, stop); runErr != nil {
-				logger.WithError(runErr).Fatalf("could not start runner: %s", reflect.TypeOf(rr))
+				logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
 			}
 		}(r)
 	}
