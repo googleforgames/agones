@@ -40,7 +40,7 @@ spec:
 {{- if .Values.agones.controller.generateTLS }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
-{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.enabled) }}
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
         prometheus.io/port: {{ .Values.agones.controller.http.port | quote }}
         prometheus.io/path: "/metrics"
@@ -82,8 +82,12 @@ spec:
           value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         - name: SIDECAR_CPU_REQUEST
           value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
-        - name: METRICS
-          value: {{ .Values.agones.metrics.enabled | quote }}
+        - name: PROMETHEUS_EXPORTER
+          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
+        - name: STACKDRIVER_EXPORTER
+          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: GCP_PROJECT_ID
+          value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: SIDECAR_CPU_LIMIT
           value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
         livenessProbe:

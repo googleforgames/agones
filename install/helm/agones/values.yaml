@@ -16,8 +16,10 @@
 
 agones:
   metrics:
-    enabled: true
+    prometheusEnabled: true
     prometheusServiceDiscovery: true
+    stackdriverEnabled: false
+    stackdriverProjectID: ""
   rbacEnabled: true
   crds:
     install: true

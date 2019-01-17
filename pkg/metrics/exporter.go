@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/stackdriver"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
@@ -41,7 +42,40 @@ func RegisterPrometheusExporter(registry *prom.Registry) (http.Handler, error) {
 		return nil, err
 	}
 	view.RegisterExporter(pe)
-	// since we're using prometheus we can report faster as we're only exposing metrics in memory
-	view.SetReportingPeriod(1 * time.Second)
+
 	return pe, nil
+}
+
+// RegisterStackdriverExporter register a Stackdriver exporter to OpenCensus.
+// It will add Agones metrics into Stackdriver on Google Cloud.
+func RegisterStackdriverExporter(projectID string) (sd *stackdriver.Exporter, err error) {
+	// Default project will be used
+	sd, err = stackdriver.NewExporter(stackdriver.Options{
+		ProjectID: projectID,
+		// MetricPrefix helps uniquely identify your metrics.
+		MetricPrefix: "agones",
+	})
+	if err != nil {
+		return
+	}
+
+	// Register it as a metrics exporter
+	view.RegisterExporter(sd)
+	return
+}
+
+// SetReportingPeriod set appropriate reporting period which depends on exporters
+// we are going to use
+func SetReportingPeriod(prometheus, stackdriver bool) {
+	// if we're using only prometheus we can report faster as we're only exposing metrics in memory
+	reportingPeriod := 1 * time.Second
+	if stackdriver {
+		// There is a limitation on Stackdriver that reporting should
+		// be equal or more than 1 minute
+		reportingPeriod = 60 * time.Second
+	}
+
+	if stackdriver || prometheus {
+		view.SetReportingPeriod(reportingPeriod)
+	}
 }
