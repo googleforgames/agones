@@ -60,7 +60,7 @@ or to hide a section from 0.8.0 onward:
 
 ```markdown
 {{\% feature expiryVersion="0.8.0" %}}
-  This is my special content that she be hidden <= 0.8.0
+  This is my special content that will be hidden >= 0.8.0
 {{\% /feature %}}
 ```
 
