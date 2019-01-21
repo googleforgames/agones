@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
@@ -113,6 +114,8 @@ func TestSDKSetAnnotation(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations["stable.agones.dev/sdk-timestamp"])
+
+	assert.NotEmpty(t, gs.ObjectMeta.Annotations[stable.VersionAnnotation])
 }
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {

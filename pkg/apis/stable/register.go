@@ -17,4 +17,7 @@ package stable
 const (
 	// GroupName is the Scheme Group Name for Agones Custom Resource Definitions
 	GroupName = "stable.agones.dev"
+	// VersionAnnotation is the key for version annotation
+	// associated with the CRD
+	VersionAnnotation = GroupName + "/sdk-version"
 )
