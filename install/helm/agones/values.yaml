@@ -25,11 +25,23 @@ agones:
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
+  priorityClassName: agones-system
   controller:
     resources: {}
     nodeSelector: {}
-    tolerations: []
-    affinity: {}
+    tolerations:
+    - key: "stable.agones.dev/agones-system"
+      operator: "Equal"
+      value: "true"
+      effect: "NoExecute"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
     generateTLS: true
     safeToEvict: false
     http:
@@ -43,8 +55,19 @@ agones:
     install: true
     resources: {}
     nodeSelector: {}
-    tolerations: []
-    affinity: {}
+    tolerations:
+    - key: "stable.agones.dev/agones-system"
+      operator: "Equal"
+      value: "true"
+      effect: "NoExecute"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
     replicas: 2
     http:
       expose: true
