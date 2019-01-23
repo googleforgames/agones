@@ -8,7 +8,7 @@ RUN apt-get update && \
 WORKDIR /usr/local
 ENV GO_VERSION=1.11.1
 ENV GOPATH /go
-RUN wget -q https://redirector.gvt1.com/edgedl/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
