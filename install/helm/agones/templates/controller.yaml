@@ -63,6 +63,7 @@ spec:
       tolerations:
 {{ toYaml .Values.agones.controller.tolerations | indent 8 }}
       {{- end }}
+      priorityClassName: {{ .Values.agones.priorityClassName }}
       serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
       containers:
       - name: agones-controller

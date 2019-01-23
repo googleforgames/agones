@@ -1013,6 +1013,22 @@ spec:
         release: agones-manual
         heritage: Tiller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
+            weight: 1
+        
+      tolerations:
+        - effect: NoExecute
+          key: stable.agones.dev/agones-system
+          operator: Equal
+          value: "true"
+        
+      priorityClassName: agones-system
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
@@ -1094,6 +1110,22 @@ spec:
         release: agones-manual
         heritage: Tiller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
+            weight: 1
+        
+      tolerations:
+        - effect: NoExecute
+          key: stable.agones.dev/agones-system
+          operator: Equal
+          value: "true"
+        
+      priorityClassName: agones-system
       containers:
         - name: agones-ping
           image: "gcr.io/agones-images/agones-ping:0.8.0-rc"
@@ -1153,6 +1185,16 @@ spec:
       targetPort: 8080
       protocol: UDP
   type: LoadBalancer
+---
+# Source: agones/templates/priority-class.yaml
+apiVersion: scheduling.k8s.io/v1beta1
+kind: PriorityClass
+metadata:
+  name: agones-system
+value: 1000000
+globalDefault: false
+description: "This priority class should be used for Agones service pods only."
+
 ---
 # Source: agones/templates/hooks/pre_delete_hook.yaml
 
