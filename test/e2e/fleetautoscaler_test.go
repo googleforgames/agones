@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
@@ -29,6 +30,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+var deletePropagationForeground = metav1.DeletePropagationForeground
+
+var waitForDeletion = &metav1.DeleteOptions{
+	PropagationPolicy: &deletePropagationForeground,
+}
 
 func TestAutoscalerBasicFunctions(t *testing.T) {
 	t.Parallel()
@@ -239,7 +246,11 @@ func TestAutoscalerWebhook(t *testing.T) {
 		// if we could not create the webhook pod, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestAutoscalerWebhook")
 	}
-	svc.ObjectMeta.Name = "test-service"
+	svc.ObjectMeta.GenerateName = "test-service-"
+
+	// since we're using statically-named service, perform a best-effort delete of a previous service
+	framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion) // nolint:errcheck
+
 	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
@@ -365,10 +376,9 @@ T1HcD9NOEIwRUO04DY86+P4d0TFY/SwxAiMnwBQ=
 
 func TestTlsWebhook(t *testing.T) {
 	t.Parallel()
-	secretName := "autoscalersecret"
 	secr := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: secretName,
+			GenerateName: "autoscalersecret-",
 		},
 		Type: corev1.SecretTypeTLS,
 		Data: make(map[string][]byte),
@@ -389,7 +399,7 @@ func TestTlsWebhook(t *testing.T) {
 		Name: "secret-volume",
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: secretName,
+				SecretName: secr.ObjectMeta.Name,
 			},
 		},
 	}
@@ -404,6 +414,10 @@ func TestTlsWebhook(t *testing.T) {
 		// if we could not create the webhook, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestTlsWebhook")
 	}
+
+	// since we're using statically-named service, perform a best-effort delete of a previous service
+	framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion) // nolint:errcheck
+
 	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
@@ -463,7 +477,8 @@ func TestTlsWebhook(t *testing.T) {
 
 func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
-	l["app"] = "autoscaler-webhook"
+	appName := fmt.Sprintf("autoscaler-webhook-%v", time.Now().UnixNano())
+	l["app"] = appName
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "auto-webhook",
@@ -482,9 +497,12 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 		},
 	}
 	m := make(map[string]string)
-	m["app"] = "autoscaler-webhook"
-	service := &corev1.Service{ObjectMeta: metav1.ObjectMeta{
-		Name: "autoscaler-tls-service", Namespace: defaultNs},
+	m["app"] = appName
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "autoscaler-tls-service",
+			Namespace: defaultNs,
+		},
 		Spec: corev1.ServiceSpec{
 			Selector: m,
 			Ports: []corev1.ServicePort{{
