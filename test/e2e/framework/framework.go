@@ -189,23 +189,31 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond f
 // CleanUp Delete all Agones resources in a given namespace
 func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Done. Cleaning up now.")
-	err := f.AgonesClient.StableV1alpha1().Fleets(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	alpha1 := f.AgonesClient.StableV1alpha1()
+	do := &metav1.DeleteOptions{}
+	options := metav1.ListOptions{}
+	err := alpha1.Fleets(ns).DeleteCollection(do, options)
 	if err != nil {
 		return err
 	}
 
-	err = f.AgonesClient.StableV1alpha1().GameServerAllocations(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	err = alpha1.GameServerAllocations(ns).DeleteCollection(do, options)
 	if err != nil {
 		return err
 	}
 
-	err = f.AgonesClient.StableV1alpha1().FleetAllocations(ns).DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	err = alpha1.FleetAllocations(ns).DeleteCollection(do, options)
 	if err != nil {
 		return err
 	}
 
-	return f.AgonesClient.StableV1alpha1().GameServers(ns).
-		DeleteCollection(&metav1.DeleteOptions{}, metav1.ListOptions{})
+	err = alpha1.FleetAutoscalers(ns).DeleteCollection(do, options)
+	if err != nil {
+		return err
+	}
+
+	return alpha1.GameServers(ns).
+		DeleteCollection(do, options)
 }
 
 // PingGameServer pings a gameserver and returns its reply
