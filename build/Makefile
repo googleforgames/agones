@@ -121,6 +121,26 @@ ifndef FULL_BUILD
 	zip_flags = -0
 endif
 
+GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build
+GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
+GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
+
+go_build_base_path=$(mount_path)
+
+ifdef LOCAL_GO
+	# use local Go tooling, which greatly speeds up incremental rebuils, in particular on macOS
+	# Note that agones.dev must be in GOPATH
+	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 go build
+	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 go build
+	go_build_base_path=$(agones_path)/..
+endif
+
+ZIP_SDK=docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
+ifdef LOCAL_ZIP
+	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
+endif
+
 #   ___            _           _
 #  |_ _|_ __   ___| |_   _  __| | ___ ___
 #   | || '_ \ / __| | | | |/ _` |/ _ \ __|
@@ -222,8 +242,8 @@ uninstall: $(ensure-build-image)
 
 # Build a static binary for the gameserver controller
 build-controller-binary: $(ensure-build-image)
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/controller/bin/controller \
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
@@ -243,23 +263,23 @@ push-controller-image: $(ensure-build-image)
 
 # build the static binary for the gamesever sidecar
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin 
-	docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags) \
+	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
 # build the static binary for the gamesever sidecar for Linux
 build-agones-sdk-binary-linux: $(ensure-build-image)
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+	$(GO_BUILD_LINUX_AMD64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 
 # build the static binary for the gamesever sidecar for Darwin (macOS)
 build-agones-sdk-binary-darwin: $(ensure-build-image)
-	docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+	$(GO_BUILD_DARWIN_AMD64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # build the windows binary for the gamesever sidecar for Windows
 build-agones-sdk-binary-windows: $(ensure-build-image)
-	docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build \
-		-o $(mount_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+	$(GO_BUILD_WINDOWS_AMD64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
@@ -267,8 +287,8 @@ build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
 
 # Build a static binary for the ping service
 build-ping-binary: $(ensure-build-image)
-	docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build \
-	-tags $(GO_BUILD_TAGS) -o $(mount_path)/cmd/ping/bin/ping \
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Pushes up the ping image
