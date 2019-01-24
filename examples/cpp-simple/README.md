@@ -9,4 +9,5 @@ It will
 - After 60 seconds, call `SDK::Shutdown()` to shut the server down.
 
 ## Building
-Depends on the [`sdks/cpp`](../../sdks/cpp) SDK and its dependencies have been compiled and installed. 
+
+Depends on the [`sdks/cpp`](https://agones.dev/site/docs/guides/client-sdks/cpp/) SDK and its dependencies have been compiled and installed. 

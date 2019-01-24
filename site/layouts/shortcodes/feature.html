@@ -1,0 +1,6 @@
+{{- $version := getenv "RELEASE_VERSION" | default $.Page.Site.Params.release_version }}
+{{- $publishVersion := (.Get "publishVersion" ) | default "0.0.0" }}
+{{- $expiryVersion := (.Get "expiryVersion") | default "9999.0.0"}}
+{{- if and (ge $version $publishVersion) (lt $version $expiryVersion) }}
+{{.Inner}}
+{{- end}}

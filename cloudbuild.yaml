@@ -30,9 +30,30 @@ steps:
   id: lint
 - name: "make-docker"
   dir: "build"
-  args: [ "test" ] # run tests
+  args: [ "-j", "3", "test" ] # run tests, in parallel
   waitFor: ['lint']
   id: tests
+
+#
+# Site preview
+#
+
+- name: "make-docker" # build a preview of the website
+  id: "site-static"
+  dir: "build"
+  args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=preview"]
+  waitFor: ['tests']
+- name: "ubuntu" # fake a new gopath
+  id: "site-gopath"
+  args: ["bash", "-c", "mkdir -p ./go/src && mv ./site ./go/src && cp -r ./vendor/gopkg.in ./go/src && ls -a ./go/src/site"]
+- name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
+  id: "deploy-site-static"
+  dir: "go/src/site"
+  args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
+  waitFor: ['site-gopath']
+  env:
+    - GOPATH=/workspace/go
+
 - name: "make-docker"
   dir: "build"
   args: [ "build", "push" ] # build all the things, and push images

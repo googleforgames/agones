@@ -1,0 +1,13 @@
+<section id="pageContent">
+  {{- range $.Page.Sections.ByWeight }}
+    <li>
+      <a href="{{.Permalink}}">{{.Title}}</a>
+    </li>
+  {{- end }}
+
+  {{- range $.Page.Paginator.Pages.ByWeight }}
+    <li>
+      <a href="{{.Permalink}}">{{.Title}}</a>
+    </li>
+  {{- end }}
+</section>
