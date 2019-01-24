@@ -26,9 +26,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 var deletePropagationForeground = metav1.DeletePropagationForeground
@@ -246,10 +248,8 @@ func TestAutoscalerWebhook(t *testing.T) {
 		// if we could not create the webhook pod, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestAutoscalerWebhook")
 	}
+	svc.ObjectMeta.Name = ""
 	svc.ObjectMeta.GenerateName = "test-service-"
-
-	// since we're using statically-named service, perform a best-effort delete of a previous service
-	framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion) // nolint:errcheck
 
 	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
 	if assert.Nil(t, err) {
@@ -388,7 +388,7 @@ func TestTlsWebhook(t *testing.T) {
 	secr.Data[corev1.TLSPrivateKeyKey] = []byte(webhookKey)
 
 	secrets := framework.KubeClient.CoreV1().Secrets(defaultNs)
-	secr, err := secrets.Create(secr)
+	secr, err := secrets.Create(secr.DeepCopy())
 	if assert.Nil(t, err) {
 		defer secrets.Delete(secr.ObjectMeta.Name, nil) // nolint:errcheck
 	}
@@ -407,7 +407,7 @@ func TestTlsWebhook(t *testing.T) {
 		Name:      "secret-volume",
 		MountPath: "/home/service/certs",
 	}}
-	pod, err = framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod)
+	pod, err = framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod.DeepCopy())
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
@@ -416,9 +416,19 @@ func TestTlsWebhook(t *testing.T) {
 	}
 
 	// since we're using statically-named service, perform a best-effort delete of a previous service
-	framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion) // nolint:errcheck
+	err = framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion)
+	if err != nil {
+		assert.True(t, k8serrors.IsNotFound(err))
+	}
 
-	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
+	// making sure the service is really gone.
+	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
+		_, err := framework.KubeClient.CoreV1().Services(defaultNs).Get(svc.ObjectMeta.Name, metav1.GetOptions{})
+		return k8serrors.IsNotFound(err), nil
+	})
+	assert.Nil(t, err)
+
+	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc.DeepCopy())
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
@@ -431,7 +441,7 @@ func TestTlsWebhook(t *testing.T) {
 	flt := defaultFleet()
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
-	flt, err = fleets.Create(flt)
+	flt, err = fleets.Create(flt.DeepCopy())
 	if assert.Nil(t, err) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
@@ -453,7 +463,7 @@ func TestTlsWebhook(t *testing.T) {
 		},
 		CABundle: []byte(caPem),
 	}
-	fas, err = fleetautoscalers.Create(fas)
+	fas, err = fleetautoscalers.Create(fas.DeepCopy())
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
@@ -461,7 +471,7 @@ func TestTlsWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	fa := getAllocation(flt)
-	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
+	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa.DeepCopy())
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
 	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
