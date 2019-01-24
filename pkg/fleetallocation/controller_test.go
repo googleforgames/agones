@@ -56,7 +56,11 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		return true, &v1alpha1.GameServerList{Items: gsList}, nil
 	})
 
-	_, cancel := agtesting.StartInformers(m)
+	alpha1 := m.AgonesInformerFactory.Stable().V1alpha1()
+	fltSynced := alpha1.Fleets().Informer().HasSynced
+	gsSetSynced := alpha1.GameServerSets().Informer().HasSynced
+	gsSynced := alpha1.GameServers().Informer().HasSynced
+	_, cancel := agtesting.StartInformers(m, fltSynced, gsSetSynced, gsSynced)
 	defer cancel()
 
 	review, err := newAdmissionReview(fa)
