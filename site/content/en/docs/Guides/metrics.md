@@ -118,14 +118,27 @@ Prometheus is an open source monitoring solution, we will use it to store Agones
 Let's install Prometheus using the [helm stable](https://github.com/helm/charts/tree/master/stable/prometheus) repository.
 
 ```bash
-helm install --wait --name prom stable/prometheus --namespace metrics \
-  --set pushgateway.enabled=false \
-  --set kubeStateMetrics.enabled=false,nodeExporter.enabled=false
+helm upgrade --install --wait prom stable/prometheus --namespace metrics \
+    --set server.global.scrape_interval=30s \
+    --set server.persistentVolume.enabled=true \
+    --set server.persistentVolume.size=64Gi \
+    -f ./build/prometheus.yaml
 ```
 
 > You can also run our {{< ghlink href="/build/Makefile" branch="master" branch="master" >}}Makefile{{< /ghlink >}} target `make setup-prometheus`
 or `make kind-setup-prometheus` and `make minikube-setup-prometheus` for {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}}
 and {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="master" >}}Minikube{{< /ghlink >}}.
+
+For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers are scheduled. If you use `make setup-prometheus` to set up Prometheus, it will schedule Prometheus pods on nodes tainted with `stable.agones.dev/agones-metrics=true:NoExecute` and labeled with `stable.agones.dev/agones-metrics=true` if available.
+
+As an example, to set up dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
+
+```
+gcloud container node-pools create agones-metrics --cluster=... --zone=... \
+  --node-taints stable.agones.dev/agones-metrics=true:NoExecute \
+  --node-labels stable.agones.dev/agones-metrics=true \
+  --num-nodes=1
+```
 
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.
 
