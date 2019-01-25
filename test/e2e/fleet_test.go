@@ -25,6 +25,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -290,9 +291,66 @@ func TestFleetUpdates(t *testing.T) {
 	}
 }
 
+func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
+	t.Parallel()
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	gsSpec := defaultGameServer().Spec
+	oldPort := int32(7111)
+	gsSpec.Ports = []v1alpha1.GameServerPort{{
+		ContainerPort: oldPort,
+		Name:          "gameport",
+		PortPolicy:    v1alpha1.Dynamic,
+		Protocol:      corev1.ProtocolUDP,
+	}}
+	flt := fleetWithGameServerSpec(gsSpec)
+	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	assert.Nil(t, err, "could not create fleet")
+	defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+
+	assert.Equal(t, int32(replicasCount), flt.Spec.Replicas)
+
+	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	assert.Nil(t, err, "fleet not ready")
+
+	// get an allocation
+	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+		Spec: v1alpha1.GameServerAllocationSpec{
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+		}}
+
+	gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
+	assert.Nil(t, err, "cloud not create gameserver allocation")
+	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
+	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.AllocatedReplicas == 1
+	})
+	assert.Nil(t, err, "could not allocate a gameserver")
+
+	flt, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.Name, metav1.GetOptions{})
+	assert.Nil(t, err, "could not get fleet")
+
+	// Update the configuration of the gameservers of the fleet, i.e. container port.
+	// The changes should only be rolled out to gameservers in ready state, but not the allocated gameserver.
+	newPort := int32(7222)
+	fltCopy := flt.DeepCopy()
+	fltCopy.Spec.Template.Spec.Ports[0].ContainerPort = newPort
+
+	_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
+	assert.Nil(t, err, "could not update fleet")
+
+	err = framework.WaitForFleetGameServersCondition(flt, func(gs v1alpha1.GameServer) bool {
+		containerPort := gs.Spec.Ports[0].ContainerPort
+		return (gs.Name == gsa.Status.GameServerName && containerPort == oldPort) ||
+			(gs.Name != gsa.Status.GameServerName && containerPort == newPort)
+	})
+	assert.Nil(t, err, "gameservers don't have expected container port")
+}
+
 // TestFleetAllocationDuringGameServerDeletion is built to specifically
 // test for race conditions of allocations when doing scale up/down,
-// rolling updates, etc. Failures my not happen ALL the time -- as that is the
+// rolling updates, etc. Failures may not happen ALL the time -- as that is the
 // nature of race conditions.
 // nolint: dupl
 func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
@@ -416,7 +474,7 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 
 // TestGameServerAllocationDuringGameServerDeletion is built to specifically
 // test for race conditions of allocations when doing scale up/down,
-// rolling updates, etc. Failures my not happen ALL the time -- as that is the
+// rolling updates, etc. Failures may not happen ALL the time -- as that is the
 // nature of race conditions.
 // nolint: dupl
 func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
@@ -548,13 +606,17 @@ func scaleFleet(f *v1alpha1.Fleet, scale int32) (*v1alpha1.Fleet, error) {
 // defaultFleet returns a default fleet configuration
 func defaultFleet() *v1alpha1.Fleet {
 	gs := defaultGameServer()
+	return fleetWithGameServerSpec(gs.Spec)
+}
 
+// fleetWithGameServerSpec returns a fleet with specified gameserver spec
+func fleetWithGameServerSpec(gsSpec v1alpha1.GameServerSpec) *v1alpha1.Fleet {
 	return &v1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-", Namespace: defaultNs},
 		Spec: v1alpha1.FleetSpec{
 			Replicas: replicasCount,
 			Template: v1alpha1.GameServerTemplateSpec{
-				Spec: gs.Spec,
+				Spec: gsSpec,
 			},
 		},
 	}
