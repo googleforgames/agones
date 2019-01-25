@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -124,6 +125,11 @@ func (f *Fleet) ApplyDefaults() {
 			f.Spec.Strategy.RollingUpdate.MaxUnavailable = &def
 		}
 	}
+	// Add Agones version into Fleet Annotations
+	if f.ObjectMeta.Annotations == nil {
+		f.ObjectMeta.Annotations = make(map[string]string, 1)
+	}
+	f.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 }
 
 // UpperBoundReplicas returns whichever is smaller,

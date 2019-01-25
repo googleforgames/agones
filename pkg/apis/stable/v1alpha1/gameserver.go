@@ -20,6 +20,7 @@ import (
 
 	"github.com/mattbaird/jsonpatch"
 
+	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -360,6 +361,15 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 		// (and evict the Pod in the process)
 		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
 	}
+
+	// Add Agones version into Pod Annotations
+	pod.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
+	if gs.ObjectMeta.Annotations == nil {
+		gs.ObjectMeta.Annotations = make(map[string]string, 1)
+	}
+	// VersionAnnotation is the annotation that stores
+	// the version of sdk which runs in a sidecar
+	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod
