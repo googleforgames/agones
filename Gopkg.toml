@@ -95,3 +95,7 @@
 [[constraint]]
   name = "github.com/evanphx/json-patch"
   version = "4.1.0"
+
+[[constraint]]
+  name = "contrib.go.opencensus.io/exporter/stackdriver"
+  version = "v0.8.0"

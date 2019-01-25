@@ -49,18 +49,20 @@ import (
 )
 
 const (
-	enableMetricsFlag     = "metrics"
-	sidecarImageFlag      = "sidecar-image"
-	sidecarCPURequestFlag = "sidecar-cpu-request"
-	sidecarCPULimitFlag   = "sidecar-cpu-limit"
-	pullSidecarFlag       = "always-pull-sidecar"
-	minPortFlag           = "min-port"
-	maxPortFlag           = "max-port"
-	certFileFlag          = "cert-file"
-	keyFileFlag           = "key-file"
-	kubeconfigFlag        = "kubeconfig"
-	workers               = 2
-	defaultResync         = 30 * time.Second
+	enableStackdriverMetricsFlag = "stackdriver-exporter"
+	enablePrometheusMetricsFlag  = "prometheus-exporter"
+	projectIDFlag                = "gcp-project-id"
+	sidecarImageFlag             = "sidecar-image"
+	sidecarCPURequestFlag        = "sidecar-cpu-request"
+	sidecarCPULimitFlag          = "sidecar-cpu-limit"
+	pullSidecarFlag              = "always-pull-sidecar"
+	minPortFlag                  = "min-port"
+	maxPortFlag                  = "max-port"
+	certFileFlag                 = "cert-file"
+	keyFileFlag                  = "key-file"
+	kubeconfigFlag               = "kubeconfig"
+	workers                      = 2
+	defaultResync                = 30 * time.Second
 )
 
 var (
@@ -106,17 +108,37 @@ func main() {
 	var rs []runner
 	var health healthcheck.Handler
 
-	if ctlConf.Metrics {
+	// Stackdriver metrics
+	if ctlConf.Stackdriver {
+		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register stackdriver exporter")
+		}
+		// It is imperative to invoke flush before your main function exits
+		defer sd.Flush()
+	}
+
+	// Prometheus metrics
+	if ctlConf.PrometheusMetrics {
 		registry := prom.NewRegistry()
 		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
 		if err != nil {
-			logger.WithError(err).Fatal("Could not create register prometheus exporter")
+			logger.WithError(err).Fatal("Could not register prometheus exporter")
 		}
 		server.Handle("/metrics", metricHandler)
 		health = healthcheck.NewMetricsHandler(registry, "agones")
-		rs = append(rs, metrics.NewController(kubeClient, agonesClient, agonesInformerFactory))
 	} else {
 		health = healthcheck.NewHandler()
+	}
+
+	// If we are using Prometheus only exporter we can make reporting more often,
+	// every 1 seconds, if we are using Stackdriver we would use 60 seconds reporting period,
+	// which is a requirements of Stackdriver, otherwise most of time series would be invalid for Stackdriver
+	metrics.SetReportingPeriod(ctlConf.PrometheusMetrics, ctlConf.Stackdriver)
+
+	// Add metrics controller only if we configure one of metrics exporters
+	if ctlConf.PrometheusMetrics || ctlConf.Stackdriver {
+		rs = append(rs, metrics.NewController(kubeClient, agonesClient, agonesInformerFactory))
 	}
 
 	server.Handle("/", health)
@@ -170,7 +192,9 @@ func parseEnvFlags() config {
 	viper.SetDefault(pullSidecarFlag, false)
 	viper.SetDefault(certFileFlag, filepath.Join(base, "certs/server.crt"))
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
-	viper.SetDefault(enableMetricsFlag, true)
+	viper.SetDefault(enablePrometheusMetricsFlag, true)
+	viper.SetDefault(enableStackdriverMetricsFlag, false)
+	viper.SetDefault(projectIDFlag, "")
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -181,7 +205,9 @@ func parseEnvFlags() config {
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
 	pflag.String(certFileFlag, viper.GetString(certFileFlag), "Optional. Path to the crt file")
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
-	pflag.Bool(enableMetricsFlag, viper.GetBool(enableMetricsFlag), "Flag to activate metrics of Agones. Can also use METRICS env variable.")
+	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
+	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
+	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -194,7 +220,9 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(keyFileFlag))
 	runtime.Must(viper.BindEnv(certFileFlag))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
-	runtime.Must(viper.BindEnv(enableMetricsFlag))
+	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
+	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
+	runtime.Must(viper.BindEnv(projectIDFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	request, err := resource.ParseQuantity(viper.GetString(sidecarCPURequestFlag))
@@ -217,7 +245,9 @@ func parseEnvFlags() config {
 		KeyFile:           viper.GetString(keyFileFlag),
 		CertFile:          viper.GetString(certFileFlag),
 		KubeConfig:        viper.GetString(kubeconfigFlag),
-		Metrics:           viper.GetBool(enableMetricsFlag),
+		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:      viper.GetString(projectIDFlag),
 	}
 }
 
@@ -229,10 +259,12 @@ type config struct {
 	SidecarCPURequest resource.Quantity
 	SidecarCPULimit   resource.Quantity
 	AlwaysPullSidecar bool
-	Metrics           bool
+	PrometheusMetrics bool
+	Stackdriver       bool
 	KeyFile           string
 	CertFile          string
 	KubeConfig        string
+	GCPProjectID      string
 }
 
 // validate ensures the ctlConfig data is valid.
