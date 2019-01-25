@@ -489,9 +489,10 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
 	appName := fmt.Sprintf("autoscaler-webhook-%v", time.Now().UnixNano())
 	l["app"] = appName
+	l[e2e.AutoCleanupLabelKey] = e2e.AutoCleanupLabelValue
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "auto-webhook",
+			GenerateName: "auto-webhook-",
 			Namespace:    defaultNs,
 			Labels:       l,
 		},

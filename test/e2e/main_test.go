@@ -49,6 +49,13 @@ func TestMain(m *testing.M) {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
+
+	// run cleanup before tests, to ensure no resources from previous runs exist.
+	err = framework.CleanUp(defaultNs)
+	if err != nil {
+		log.Printf("failed to cleanup resources: %v\n", err)
+	}
+
 	defer func() {
 		err = framework.CleanUp(defaultNs)
 		if err != nil {
