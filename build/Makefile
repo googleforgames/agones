@@ -389,23 +389,24 @@ pprof-web:
 
 # setup prometheus in the current cluster by default Persistent Volume Claims are requested.
 setup-prometheus: PVC ?= true
+setup-prometheus: PV_SIZE ?= 64Gi
+setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait prom stable/prometheus --namespace metrics \
-		--set alertmanager.enabled=false,pushgateway.enabled=false \
-		--set kubeStateMetrics.enabled=false,nodeExporter.enabled=false \
-		--set pushgateway.enabled=false \
-		--set server.global.scrape_interval=30s,server.persistentVolume.enabled=$(PVC)
+		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
+		-f $(mount_path)/build/prometheus.yaml
 
 # setup grafana in the current cluster with datasource and dashboards ready for use with agones
 # by default Persistent Volume Claims are requested.
 setup-grafana: PVC ?= true
+setup-grafana: PV_SIZE ?= 64Gi
 setup-grafana: PASSWORD ?= admin
 setup-grafana:
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait grafana stable/grafana  --namespace metrics \
-		--set persistence.enabled=$(PVC) \
+		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
 # generate a changelog using github-changelog-generator
