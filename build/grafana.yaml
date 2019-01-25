@@ -1,5 +1,18 @@
 service:
-    port: 3000
+  port: 3000
+tolerations:
+- key: "stable.agones.dev/agones-metrics"
+  operator: "Equal"
+  value: "true"
+  effect: "NoExecute"
+affinity:
+  nodeAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 1
+      preference:
+        matchExpressions:
+          - key: stable.agones.dev/agones-metrics
+            operator: Exists
 sidecar:
     dashboards:
         enabled: true
