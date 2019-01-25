@@ -140,7 +140,9 @@ helm upgrade --install --wait prom stable/prometheus --namespace metrics \
 or `make kind-setup-prometheus` and `make minikube-setup-prometheus` for {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}}
 and {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="master" >}}Minikube{{< /ghlink >}}.
 
-For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers are scheduled. If you use `make setup-prometheus` to set up Prometheus, it will schedule Prometheus pods on nodes tainted with `stable.agones.dev/agones-metrics=true:NoExecute` and labeled with `stable.agones.dev/agones-metrics=true` if available.
+For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers
+are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="master" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
+tainted with `stable.agones.dev/agones-metrics=true:NoExecute` and labeled with `stable.agones.dev/agones-metrics=true` if available.
 
 As an example, to set up dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
 
