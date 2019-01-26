@@ -130,13 +130,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
 | `agones.ping.install`                               | Whether to install the [ping service][ping]                                                     | `true`                 |
-| `agones.ping.replicas`                              | The number of replicas to run in the deployment                                                 | `2`                    | 
-| `agones.ping.http.expose`                           | Expose the http ping service via a Service                                                      | `true`                 | 
-| `agones.ping.http.response`                         | The string response returned from the http service                                              | `ok`                   | 
+| `agones.ping.replicas`                              | The number of replicas to run in the deployment                                                 | `2`                    |
+| `agones.ping.http.expose`                           | Expose the http ping service via a Service                                                      | `true`                 |
+| `agones.ping.http.response`                         | The string response returned from the http service                                              | `ok`                   |
 | `agones.ping.http.port`                             | The port to expose on the service                                                               | `80`                   |
 | `agones.ping.http.serviceType`                      | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
-| `agones.ping.udp.expose`                            | Expose the udp ping service via a Service                                                       | `true`                 | 
-| `agones.ping.udp.rateLimit`                         | Number of UDP packets the ping service handles per instance, per second, per sender             | `20`                   | 
+| `agones.ping.udp.expose`                            | Expose the udp ping service via a Service                                                       | `true`                 |
+| `agones.ping.udp.rateLimit`                         | Number of UDP packets the ping service handles per instance, per second, per sender             | `20`                   |
 | `agones.ping.udp.port`                              | The port to expose on the service                                                               | `80`                   |
 | `agones.ping.udp.serviceType`                       | The [Service Type][service] of the UDP Service                                                  | `LoadBalancer`         |
 | `agones.ping.healthCheck.initialDelaySeconds`       | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
@@ -162,6 +162,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.nodeSelector`                          | Ping [node labels](nodeSelector) for pod assignment                                             | `{}`                   |
 | `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
 | `agones.ping.affinity`                              | Ping [affinity](affinity) settings for pod assignment                                           | `{}`                   |
+| `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
+| `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
+| `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
+
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 {{% /feature %}}
 
