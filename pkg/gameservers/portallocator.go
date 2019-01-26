@@ -172,11 +172,22 @@ func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer 
 // DeAllocate marks the given port as no longer allocated
 func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
 	// skip if it wasn't previously allocated
-	if _, ok := pa.gameServerRegistry[gs.ObjectMeta.UID]; !ok {
+
+	found := func() bool {
+		pa.mutex.RLock()
+		defer pa.mutex.RUnlock()
+		if _, ok := pa.gameServerRegistry[gs.ObjectMeta.UID]; ok {
+			return true
+		}
+		return false
+	}
+
+	if !found() {
 		pa.logger.WithField("gs", gs.ObjectMeta.Name).
 			Info("Did not allocate this GameServer. Ignoring for DeAllocation")
 		return
 	}
+
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 	for _, p := range gs.Spec.Ports {
