@@ -42,7 +42,7 @@ func TestControllerGameServerCount(t *testing.T) {
 
 	c.sync()
 	c.collect()
-	c.report()
+	report()
 
 	gs1 = gs1.DeepCopy()
 	gs1.Status.State = v1alpha1.GameServerStateShutdown
@@ -52,7 +52,7 @@ func TestControllerGameServerCount(t *testing.T) {
 
 	c.sync()
 	c.collect()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(gsCountExpected), "agones_gameservers_count"))
 }
@@ -74,7 +74,7 @@ func TestControllerFleetAllocationCount(t *testing.T) {
 
 	c.sync()
 	c.collect()
-	c.report()
+	report()
 
 	c.faWatch.Delete(fa1)
 	c.faWatch.Add(fleetAllocation("test-fleet"))
@@ -82,7 +82,7 @@ func TestControllerFleetAllocationCount(t *testing.T) {
 
 	c.sync()
 	c.collect()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(faCountExpected), "agones_fleet_allocations_count"))
 }
@@ -123,7 +123,7 @@ func TestControllerFleetAllocationTotal(t *testing.T) {
 		c.faWatch.Modify(faUpdated)
 	}
 	c.sync()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(faTotalExpected), "agones_fleet_allocations_total"))
 }
@@ -153,7 +153,7 @@ func TestControllerGameServersTotal(t *testing.T) {
 	generateGsEvents(1, v1alpha1.GameServerStateUnhealthy, "", c.gsWatch)
 
 	c.sync()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(gsTotalExpected), "agones_gameservers_total"))
 }
@@ -179,7 +179,7 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 	c.fleetWatch.Delete(fd)
 
 	c.sync()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(fleetReplicasCountExpected), "agones_fleets_replicas_count"))
 }
@@ -216,7 +216,7 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 	c.fasWatch.Delete(fasDeleted)
 
 	c.sync()
-	c.report()
+	report()
 
 	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(fasStateExpected),
 		"agones_fleet_autoscalers_able_to_scale", "agones_fleet_autoscalers_buffer_limits", "agones_fleet_autoscalers_buffer_size",
