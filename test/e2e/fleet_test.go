@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -445,7 +446,7 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
-				assert.Nil(t, err)
+				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
 
@@ -467,9 +468,16 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
-				assert.Nil(t, err)
+				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
+}
+
+func assertSuccessOrUpdateConflict(t *testing.T, err error) {
+	if !k8serrors.IsConflict(err) {
+		// update conflicts are sometimes ok, we simply lost the race.
+		assert.Nil(t, err)
+	}
 }
 
 // TestGameServerAllocationDuringGameServerDeletion is built to specifically
@@ -567,7 +575,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
-				assert.Nil(t, err)
+				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
 
@@ -589,7 +597,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
 				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
-				assert.Nil(t, err)
+				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
 }
