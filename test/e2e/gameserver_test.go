@@ -88,10 +88,12 @@ func TestSDKSetLabel(t *testing.T) {
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
+	annotation := "stable.agones.dev/sdk-timestamp"
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
+	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 	reply, err := e2eframework.PingGameServer("ANNOTATION", fmt.Sprintf("%s:%d", readyGs.Status.Address,
@@ -109,12 +111,13 @@ func TestSDKSetAnnotation(t *testing.T) {
 		if err != nil {
 			return true, err
 		}
-		return gs.ObjectMeta.Annotations != nil, nil
+
+		_, ok := gs.ObjectMeta.Annotations[annotation]
+		return ok, nil
 	})
 
 	assert.Nil(t, err)
-	assert.NotEmpty(t, gs.ObjectMeta.Annotations["stable.agones.dev/sdk-timestamp"])
-
+	assert.NotEmpty(t, gs.ObjectMeta.Annotations[annotation])
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[stable.VersionAnnotation])
 }
 
