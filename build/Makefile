@@ -601,7 +601,7 @@ minkube-setup-prometheus:
 
 # grafana on minkube with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on minkube.
-minkube-setup-grafana:
+minikube-setup-grafana:
 	$(MAKE) setup-grafana \
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
