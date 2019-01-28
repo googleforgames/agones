@@ -11,24 +11,6 @@ If you need another exporter, check the [list of supported](https://opencensus.i
 
 We plan to support multiple exporters in the future via environement variables and helm flags.
 
-Table of Contents
-=================
-  - [Backend integrations](#backend-integrations)
-    - [Prometheus](#prometheus)
-    - [Prometheus Operator](#prometheus-operator)
-    - [Stackdriver](#stackdriver)
-  - [Metrics available](#metrics-available)
-  - [Dashboard](#dashboard)
-    - [Grafana Dashboards](#grafana-dashboards)
-  - [Installation](#installation)
-    - [Prometheus installation](#prometheus-installation)
-    - [Grafana installation](#grafana-installation)
-<<<<<<< HEAD
-    - [Stackdriver installation](#stackdriver-installation)
-  - [Adding more metrics](#adding-more-metrics)
-=======
->>>>>>> add client-go metrics and grafana dashboards
-  
 ## Backend integrations
 
 ### Prometheus
