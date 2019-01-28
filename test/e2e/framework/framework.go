@@ -35,6 +35,12 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// special labels that can be put on pods to trigger automatic cleanup.
+const (
+	AutoCleanupLabelKey   = "stable.agones.dev/e2e-test-auto-cleanup"
+	AutoCleanupLabelValue = "true"
+)
+
 // Framework is a testing framework
 type Framework struct {
 	KubeClient      kubernetes.Interface
@@ -186,34 +192,51 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond f
 	})
 }
 
-// CleanUp Delete all Agones resources in a given namespace
+// CleanUp Delete all Agones resources in a given namespace.
 func (f *Framework) CleanUp(ns string) error {
-	logrus.Info("Done. Cleaning up now.")
+	logrus.Info("Cleaning up now.")
+	defer logrus.Info("Finished cleanup.")
 	alpha1 := f.AgonesClient.StableV1alpha1()
-	do := &metav1.DeleteOptions{}
-	options := metav1.ListOptions{}
-	err := alpha1.Fleets(ns).DeleteCollection(do, options)
+	deleteOptions := &metav1.DeleteOptions{}
+	listOptions := metav1.ListOptions{}
+
+	// find and delete pods created by tests and labeled with our special label
+	pods := f.KubeClient.CoreV1().Pods(ns)
+	podList, err := pods.List(metav1.ListOptions{
+		LabelSelector: AutoCleanupLabelKey + "=" + AutoCleanupLabelValue,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = alpha1.GameServerAllocations(ns).DeleteCollection(do, options)
+	for _, p := range podList.Items {
+		if err = pods.Delete(p.ObjectMeta.Name, deleteOptions); err != nil {
+			return err
+		}
+	}
+
+	err = alpha1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	err = alpha1.FleetAllocations(ns).DeleteCollection(do, options)
+	err = alpha1.GameServerAllocations(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	err = alpha1.FleetAutoscalers(ns).DeleteCollection(do, options)
+	err = alpha1.FleetAllocations(ns).DeleteCollection(deleteOptions, listOptions)
+	if err != nil {
+		return err
+	}
+
+	err = alpha1.FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
 	return alpha1.GameServers(ns).
-		DeleteCollection(do, options)
+		DeleteCollection(deleteOptions, listOptions)
 }
 
 // PingGameServer pings a gameserver and returns its reply
