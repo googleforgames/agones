@@ -90,6 +90,12 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: SIDECAR_CPU_LIMIT
           value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
+        - name: NUM_WORKERS
+          value: {{ .Values.agones.controller.numWorkers | quote }}
+        - name: API_SERVER_QPS
+          value: {{ .Values.agones.controller.apiServerQPS | quote }}
+        - name: API_SERVER_QPS_BURST
+          value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
         livenessProbe:
           httpGet:
             path: /live
