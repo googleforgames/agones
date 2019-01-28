@@ -395,6 +395,7 @@ setup-prometheus:
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait prom stable/prometheus --namespace metrics \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
+		$(HELM_ARGS) \
 		-f $(mount_path)/build/prometheus.yaml
 
 # setup grafana in the current cluster with datasource and dashboards ready for use with agones
@@ -676,7 +677,8 @@ kind-test-e2e:
 kind-setup-prometheus:
 	$(MAKE) setup-prometheus \
 		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host" PVC=false
+		DOCKER_RUN_ARGS="--network=host" PVC=false \
+		HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
 
 # grafana on kind with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on kind.
