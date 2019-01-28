@@ -133,7 +133,7 @@ ifdef LOCAL_GO
 	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 go build
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 go build
-	go_build_base_path=$(agones_path)/..
+	go_build_base_path=$(agones_path)
 endif
 
 ZIP_SDK=docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
