@@ -46,7 +46,9 @@ resources:
             labels:
               stable.agones.dev/agones-system: "true"
             taints:
-              - key: stable.agones.dev/agones-system
+              - key: "stable.agones.dev/agones-system"
+                value: "true"
+                effect: "NO_EXECUTE"
         - name: "agones-metrics"
           initialNodeCount: 1
           config:
@@ -59,7 +61,7 @@ resources:
             labels:
               stable.agones.dev/agones-metrics: "true"
             taints:
-              - key: stable.agones.dev/agones-metrics
+              - key: "stable.agones.dev/agones-metrics"
                 value: "true"
                 effect: "NO_EXECUTE"
       masterAuth:
