@@ -17,4 +17,4 @@ set -e
 echo "installing current release"
 DOCKER_RUN= make install
 echo "starting e2e test"
-DOCKER_RUN= make test-e2e
+DOCKER_RUN= make test-e2e ARGS=-parallel=32
