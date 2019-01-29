@@ -1,0 +1,47 @@
+# Copyright 2019 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# Google Cloud Builder -- Push site to production
+# on merge with master
+#
+
+steps:
+
+#
+# Creates the initial make + docker build platform
+#
+
+- name: "ubuntu"
+  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+- name: "gcr.io/cloud-builders/docker"
+  args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
+- name: "make-docker"
+  dir: "build"
+  args: ["pull-build-image"] # since we are past CI build, we can assume that the build image exists.
+
+#
+# Build site and deploy
+#
+
+- name: "make-docker" # build production version of the site
+  dir: "build"
+  args: ["site-static", "site-gen-app-yaml", "ENV=HUGO_ENV=production"]
+- name: "ubuntu" # fake a new gopath
+  args: ["bash", "-c", "mkdir -p ./go/src && mv ./site ./go/src && cp -r ./vendor/gopkg.in ./go/src && ls -a ./go/src/site"]
+- name: "gcr.io/cloud-builders/gcloud" # deploy the website
+  dir: "go/src/site"
+  args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
+  env:
+    - GOPATH=/workspace/go
