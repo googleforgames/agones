@@ -148,5 +148,6 @@ steps:
 
 timeout: "1h"
 images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
+logsBucket: "gs://agones-build-logs"
 options:
  machineType: 'N1_HIGHCPU_8'
