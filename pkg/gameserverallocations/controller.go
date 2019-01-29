@@ -72,7 +72,7 @@ type Controller struct {
 // findComparator is a comparator function specifically for the
 // findReadyGameServerForAllocation method for determining
 // scheduling strategy
-type findComparator func(bestCount, currentCount *NodeCount) bool
+type findComparator func(bestCount, currentCount NodeCount) bool
 
 // NewController returns a controller for a GameServerAllocation
 func NewController(wh *webhooks.WebHook,
@@ -380,8 +380,8 @@ func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAl
 	for nodeName, gs := range allocationSet {
 		count := counts[nodeName]
 		// bestGS == nil: if there is no best GameServer, then this node & GameServer is the always the best
-		if bestGS == nil || comparator(bestCount, count) {
-			bestCount = count
+		if bestGS == nil || comparator(*bestCount, count) {
+			bestCount = &count
 			bestGS = gs
 		}
 	}
