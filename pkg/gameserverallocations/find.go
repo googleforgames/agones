@@ -16,7 +16,7 @@ package gameserverallocations
 
 // packedComparator prioritises Nodes with GameServers that are allocated, and then Nodes with the most
 // Ready GameServers -- this will bin pack allocated game servers together.
-func packedComparator(bestCount, currentCount *NodeCount) bool {
+func packedComparator(bestCount, currentCount NodeCount) bool {
 	if currentCount.allocated == bestCount.allocated && currentCount.ready > bestCount.ready {
 		return true
 	} else if currentCount.allocated > bestCount.allocated {
@@ -28,6 +28,6 @@ func packedComparator(bestCount, currentCount *NodeCount) bool {
 
 // distributedComparator is the inverse of the packed comparator,
 // looking to distribute allocated gameservers on as many nodes as possible.
-func distributedComparator(bestCount, currentCount *NodeCount) bool {
+func distributedComparator(bestCount, currentCount NodeCount) bool {
 	return !packedComparator(bestCount, currentCount)
 }
