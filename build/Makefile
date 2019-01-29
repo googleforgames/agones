@@ -125,6 +125,15 @@ GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
 
+RACE_DETECTOR_ARGS=-race
+
+ifdef NO_RACE_DETECTOR
+  RACE_DETECTOR_ARGS=
+endif
+
+GO_TEST=$(DOCKER_RUN) go test -v $(RACE_DETECTOR_ARGS)
+GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
+
 go_build_base_path=$(mount_path)
 
 ifdef LOCAL_GO
@@ -133,6 +142,8 @@ ifdef LOCAL_GO
 	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
 	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 go build
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 go build
+	GO_TEST=go test -v $(RACE_DETECTOR_ARGS)
+	GO_E2E_TEST_ARGS=
 	go_build_base_path=$(agones_path)
 endif
 
@@ -196,14 +207,13 @@ test: $(ensure-build-image) test-go test-install-yaml site-test
 
 # Run go tests
 test-go:
-	docker run --rm $(common_mounts) $(build_tag) go test -race $(agones_package)/pkg/... \
-	$(agones_package)/sdks/... $(agones_package)/cmd/...
+	$(GO_TEST) $(agones_package)/pkg/... \
+	    $(agones_package)/sdks/... $(agones_package)/cmd/...
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e: $(ensure-build-image)
-	$(DOCKER_RUN) go test -v -race $(ARGS) $(agones_package)/test/e2e/... \
-		--kubeconfig /root/.kube/$(kubeconfig_file) \
+	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET)
 
