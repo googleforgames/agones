@@ -149,12 +149,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 {{% feature publishVersion="0.8.0" %}}
 **New Configuration Features:**
- 
+
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics              | `false`                 |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver            | ``                 |
+| `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
+| `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
 | `agones.controller.nodeSelector`                    | Controller [node labels](nodeSelector) for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity](affinity) settings for pod assignment                                     | `{}`                   |
@@ -194,7 +196,7 @@ $ helm install --name my-release --namespace agones-system -f values.yaml agones
 
 ## TLS Certificates
 
-By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command. 
+By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
 For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 > **Tip**: You can use our script located at `cert/cert.sh` to generates them.

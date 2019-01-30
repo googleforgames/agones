@@ -21,6 +21,8 @@ agones:
     stackdriverEnabled: false
     stackdriverProjectID: ""
   rbacEnabled: true
+  registerServiceAccounts: true
+  registerWebhooks: true
   crds:
     install: true
     cleanupOnDelete: true
@@ -108,4 +110,5 @@ gameservers:
   namespaces:
   - default
   minPort: 7000
-  maxPort: 8000 
+  maxPort: 8000
+
