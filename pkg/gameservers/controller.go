@@ -129,6 +129,7 @@ func NewController(
 
 	wh.AddHandler("/mutate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationMutationHandler)
 	wh.AddHandler("/validate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationValidationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("GameServer"), admv1beta1.Update, c.mutationValidationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -222,6 +223,29 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
+	review = c.validateGameServerForAdmission(review, gs)
+
+	return review, nil
+}
+
+// mutationValidationHandler that validates a GameServer when it is created
+// Should only be called on gameserver create operations.
+func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("mutationValidationHandler")
+
+	obj := review.Request.Object
+	newGs := &v1alpha1.GameServer{}
+	err := json.Unmarshal(obj.Raw, newGs)
+	if err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
+	}
+
+	review = c.validateGameServerForAdmission(review, newGs)
+
+	return review, nil
+}
+
+func (c *Controller) validateGameServerForAdmission(review admv1beta1.AdmissionReview, gs *v1alpha1.GameServer) admv1beta1.AdmissionReview {
 	ok, causes := gs.Validate()
 	if !ok {
 		review.Response.Allowed = false
@@ -239,10 +263,8 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 		}
 
 		c.logger.WithField("review", review).Info("Invalid GameServer")
-		return review, nil
 	}
-
-	return review, nil
+	return review
 }
 
 // Run the GameServer controller. Will block until stop is closed.

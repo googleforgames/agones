@@ -1260,6 +1260,7 @@ webhooks:
       - apiGroups:
           - stable.agones.dev
         resources:
+          - "gameservers"
           - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"

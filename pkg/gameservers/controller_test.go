@@ -48,6 +48,10 @@ const (
 	nodeFixtureName = "node1"
 )
 
+var (
+	GameServerKind = metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
+)
+
 func TestControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
@@ -249,7 +253,6 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Parallel()
 
 	c, _ := newFakeController()
-	gvk := metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
 
 	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 		Spec: newSingleContainerSpec()}
@@ -258,7 +261,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	assert.Nil(t, err)
 	review := admv1beta1.AdmissionReview{
 		Request: &admv1beta1.AdmissionRequest{
-			Kind:      gvk,
+			Kind:      GameServerKind,
 			Operation: admv1beta1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
@@ -295,7 +298,6 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
 
 	c, _ := newFakeController()
-	gvk := metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
 
 	t.Run("valid gameserver", func(t *testing.T) {
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
@@ -306,7 +308,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		assert.Nil(t, err)
 		review := admv1beta1.AdmissionReview{
 			Request: &admv1beta1.AdmissionRequest{
-				Kind:      gvk,
+				Kind:      GameServerKind,
 				Operation: admv1beta1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
@@ -339,7 +341,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		assert.Nil(t, err)
 		review := admv1beta1.AdmissionReview{
 			Request: &admv1beta1.AdmissionRequest{
-				Kind:      gvk,
+				Kind:      GameServerKind,
 				Operation: admv1beta1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
@@ -349,6 +351,78 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		}
 
 		result, err := c.creationValidationHandler(review)
+		assert.Nil(t, err)
+		assert.False(t, result.Response.Allowed)
+		assert.Equal(t, metav1.StatusFailure, review.Response.Result.Status)
+		assert.Equal(t, metav1.StatusReasonInvalid, review.Response.Result.Reason)
+		assert.Equal(t, review.Request.Kind.Kind, result.Response.Result.Details.Kind)
+		assert.Equal(t, review.Request.Kind.Group, result.Response.Result.Details.Group)
+		assert.NotEmpty(t, result.Response.Result.Details.Causes)
+	})
+}
+
+func TestControllerMutationValidationHandler(t *testing.T) {
+	t.Parallel()
+
+	t.Run("valid gameserver", func(t *testing.T) {
+		c, _ := newFakeController()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: v1alpha1.GameServerSpec{
+				Ports: []v1alpha1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+				},
+				},
+			},
+		}
+		fixture.ApplyDefaults()
+		raw, err := json.Marshal(fixture)
+		assert.Nil(t, err)
+		review := admv1beta1.AdmissionReview{
+			Request: &admv1beta1.AdmissionRequest{
+				Kind:      GameServerKind,
+				Operation: admv1beta1.Update,
+				Object: runtime.RawExtension{
+					Raw: raw,
+				},
+			},
+			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		}
+
+		result, err := c.mutationValidationHandler(review)
+		assert.Nil(t, err)
+		assert.True(t, result.Response.Allowed)
+	})
+	t.Run("invalid gameserver", func(t *testing.T) {
+		c, _ := newFakeController()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: v1alpha1.GameServerSpec{
+				Container: "NOPE!",
+				Ports:     []v1alpha1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{Name: "container", Image: "container/image"},
+							{Name: "container2", Image: "container/image"},
+						},
+					},
+				},
+			},
+		}
+		raw, err := json.Marshal(fixture)
+		assert.Nil(t, err)
+		review := admv1beta1.AdmissionReview{
+			Request: &admv1beta1.AdmissionRequest{
+				Kind:      GameServerKind,
+				Operation: admv1beta1.Update,
+				Object: runtime.RawExtension{
+					Raw: raw,
+				},
+			},
+			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		}
+
+		result, err := c.mutationValidationHandler(review)
 		assert.Nil(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, metav1.StatusFailure, review.Response.Result.Status)
