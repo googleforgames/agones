@@ -166,11 +166,18 @@ func (ac *AllocationCounter) Run(stop <-chan struct{}) error {
 }
 
 // Counts returns the NodeCount map in a thread safe way
-func (ac *AllocationCounter) Counts() map[string]*NodeCount {
+func (ac *AllocationCounter) Counts() map[string]NodeCount {
 	ac.countMutex.RLock()
 	defer ac.countMutex.RUnlock()
 
-	return ac.counts
+	result := make(map[string]NodeCount, len(ac.counts))
+
+	// return a copy, so it's thread safe
+	for k, v := range ac.counts {
+		result[k] = *v
+	}
+
+	return result
 }
 
 func (ac *AllocationCounter) inc(gs *v1alpha1.GameServer, ready, allocated int64) {

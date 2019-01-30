@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.11.4 as builder
+FROM golang:1.11.5 as builder
 WORKDIR /go/src/simple-udp
 
 COPY examples/simple-udp/main.go .
