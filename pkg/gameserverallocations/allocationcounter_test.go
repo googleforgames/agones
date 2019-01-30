@@ -177,6 +177,7 @@ func TestAllocationCounterRun(t *testing.T) {
 	assert.Nil(t, err)
 
 	counts := ac.Counts()
+
 	assert.Len(t, counts, 2)
 	assert.Equal(t, int64(1), counts[n1].ready)
 	assert.Equal(t, int64(2), counts[n1].allocated)

@@ -1,6 +1,6 @@
 
 ---
-title: "Welcome to the new Agones Webite!"
+title: "Welcome to the new Agones Website!"
 linkTitle: "New Agones Website!"
 date: 2019-01-17
 description: >
