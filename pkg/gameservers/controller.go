@@ -223,7 +223,8 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
-	review = c.validateGameServerForAdmission(review, gs)
+	ok, causes := gs.Validate()
+	review = c.validateGameServerForAdmission(review, ok, causes)
 
 	return review, nil
 }
@@ -239,14 +240,13 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 	if err != nil {
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
-
-	review = c.validateGameServerForAdmission(review, newGs)
+	ok, causes := newGs.ValidateUpdate()
+	review = c.validateGameServerForAdmission(review, ok, causes)
 
 	return review, nil
 }
 
-func (c *Controller) validateGameServerForAdmission(review admv1beta1.AdmissionReview, gs *v1alpha1.GameServer) admv1beta1.AdmissionReview {
-	ok, causes := gs.Validate()
+func (c *Controller) validateGameServerForAdmission(review admv1beta1.AdmissionReview, ok bool, causes []metav1.StatusCause) admv1beta1.AdmissionReview {
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{

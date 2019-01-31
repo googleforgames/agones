@@ -240,6 +240,45 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Contains(t, fields, "main.hostPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 }
+func TestGameServerValidateUpdate(t *testing.T) {
+	gs := GameServer{
+		Spec: GameServerSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+	}
+	gs.ApplyDefaults()
+	ok, causes := gs.ValidateUpdate()
+	assert.True(t, ok)
+	assert.Empty(t, causes)
+
+	gs = GameServer{
+		Status: GameServerStatus{
+			State: GameServerStatePortAllocation,
+		},
+		Spec: GameServerSpec{
+			Container: "",
+			Ports: []GameServerPort{{
+				Name:       "main",
+				HostPort:   5001,
+				PortPolicy: Dynamic,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "testing", Image: "testing/image"},
+					{Name: "anothertest", Image: "testing/image"},
+				}}}},
+	}
+	ok, causes = gs.ValidateUpdate()
+	var fields []string
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	assert.Len(t, causes, 3)
+	assert.Contains(t, fields, "container")
+	assert.Contains(t, fields, "main.hostPort")
+	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+}
 
 func TestGameServerPod(t *testing.T) {
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},

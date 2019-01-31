@@ -248,15 +248,6 @@ func (gs *GameServer) applySchedulingDefaults() {
 func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 	var causes []metav1.StatusCause
 
-	// make sure a name is specified when there is multiple containers in the pod.
-	if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "container",
-			Message: "Container is required when using multiple containers in the pod template",
-		})
-	}
-
 	// no host port when using dynamic PortPolicy
 	for _, p := range gs.Spec.Ports {
 		if p.HostPort > 0 && p.PortPolicy == Dynamic {
@@ -268,6 +259,45 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 		}
 	}
 
+	return gs.validateConfig(causes)
+}
+
+// ValidateUpdate validates the GameServer configuration after the initial GameServer has been created.
+// If a GameServer is invalid there will be > 0 values in
+// the returned array
+func (gs *GameServer) ValidateUpdate() (bool, []metav1.StatusCause) {
+	var causes []metav1.StatusCause
+
+	// no host port when using dynamic PortPolicy only if we are still allocating a port.
+	if gs.Status.State == GameServerStatePortAllocation || gs.Status.State == "" {
+		for _, p := range gs.Spec.Ports {
+			if p.HostPort > 0 && p.PortPolicy == Dynamic {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueInvalid,
+					Field:   fmt.Sprintf("%s.hostPort", p.Name),
+					Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+				})
+			}
+		}
+	}
+
+	return gs.validateConfig(causes)
+}
+
+// validate performs validation for any mutation that occurs on a GameServer.
+// changes related to initial state should be written in Validate().
+func (gs *GameServer) validateConfig(additionalCauses []metav1.StatusCause) (bool, []metav1.StatusCause) {
+	var causes []metav1.StatusCause
+
+	// make sure a name is specified when there is multiple containers in the pod.
+	if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "container",
+			Message: "Container is required when using multiple containers in the pod template",
+		})
+	}
+
 	// make sure the container value points to a valid container
 	_, _, err := gs.FindGameServerContainer()
 	if err != nil {
@@ -277,7 +307,7 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 			Message: err.Error(),
 		})
 	}
-
+	causes = append(causes, additionalCauses...)
 	return len(causes) == 0, causes
 }
 
