@@ -48,20 +48,18 @@ We have a `feature` shortcode that can be used to show, or hide sections of page
 
 For example, to show a section only from 0.8.0 forwards: 
 
-> remove the initial "\" in front of the % - needed to escape the shortcode
-
 ```markdown
-{{\% feature publishVersion="0.8.0" %}}
+{{%/* feature publishVersion="0.8.0" */%}}
   This is my special content that should only display >= 0.8.0
-{{\% /feature %}}
+{{%/* /feature */%}}
 ```
 
 or to hide a section from 0.8.0 onward:
 
 ```markdown
-{{\% feature expiryVersion="0.8.0" %}}
+{{%/* feature expiryVersion="0.8.0" */%}}
   This is my special content that will be hidden >= 0.8.0
-{{\% /feature %}}
+{{%/* /feature */%}}
 ```
 
 > Due to [this hugo bug](https://github.com/gohugoio/hugo/issues/4695) headers wrapped in this shortcode will
