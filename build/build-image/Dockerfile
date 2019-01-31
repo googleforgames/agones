@@ -19,7 +19,8 @@
 FROM gcr.io/agones-images/grpc-cxx:1.16.1
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq graphviz linkchecker gettext-base && \
+    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq graphviz linkchecker \
+            gettext-base plantuml && \
     apt-get clean
 
 #   _

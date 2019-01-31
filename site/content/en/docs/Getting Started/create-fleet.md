@@ -479,5 +479,7 @@ how the extra functionality can enable smoke testing, server information communi
 
   - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
 See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).
+  - Have a look at the [GameServer Creation, Allocation and Shutdown Lifecycle]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) diagram,
+    to give you a good overview of how all the pieces fit together - from creating to integrating with a matchmaker.
   - Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
   - If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}) tutorial.

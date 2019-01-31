@@ -59,7 +59,7 @@ GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.5
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
 agones_path := $(realpath $(build_path)/..)
-docs_path := $(agones_path)/docs
+site_path := $(agones_path)/site
 
 kubeconfig_path := $(dir $(KUBECONFIG))
 kubeconfig_file := $(notdir $(KUBECONFIG))
@@ -336,11 +336,17 @@ gen-crd-client: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
 
-doc-images: $(docs_path)/gameserver-states.png
+site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 
-%.png: %.dot
+# generate pngs from dot files
+%.dot.png: %.dot
 	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 	  'dot -Tpng /dev/stdin' < $< > $@.tmp && mv $@.tmp $@
+
+# general pngs from puml files
+%.puml.png: %.puml
+	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		'plantuml -pipe' < $< > $@
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.

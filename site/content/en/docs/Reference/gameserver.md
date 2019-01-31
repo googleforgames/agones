@@ -63,4 +63,4 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 - Allocation controller, which marks game servers as `Allocated` to handle a game session
 - SDK, which manages health checking and shutdown of a game server session
 
-![GameServer State Diagram](../../../diagrams/gameserver-states.png)
+![GameServer State Diagram](../../../diagrams/gameserver-states.dot.png)
