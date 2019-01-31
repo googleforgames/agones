@@ -146,6 +146,7 @@ steps:
   dir: "cmd/sdk-server/bin"
   args: ['cp', '*.zip', 'gs://agones-artifacts/sdk-server']
 
+tags: ['ci']
 timeout: "1h"
 images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
