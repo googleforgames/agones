@@ -16,6 +16,7 @@
 {{- $altName1 := printf "agones-controller-service.%s"  .Release.Namespace }}
 {{- $altName2 := printf "agones-controller-service.%s.svc" .Release.Namespace }}
 {{- $cert := genSignedCert $cn nil (list $altName1 $altName2) 3650 $ca }}
+{{- if .Values.agones.registerWebhooks }}
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
@@ -93,6 +94,7 @@ webhooks:
           - "v1alpha1"
         operations:
           - CREATE
+{{- end }}
 ---
 apiVersion: v1
 kind: Secret
