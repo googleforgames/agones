@@ -45,3 +45,4 @@ steps:
   args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
+tags: ["site"]
