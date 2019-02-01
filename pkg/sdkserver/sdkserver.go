@@ -258,10 +258,12 @@ func (s *SDKServer) updateState() error {
 		return nil
 	}
 
+	//UpdateStatus
 	s.gsUpdateMutex.RLock()
 	gs.Status.State = s.gsState
 	s.gsUpdateMutex.RUnlock()
-	_, err = gameServers.Update(gs)
+	// Status changes are ignored on the main resource endpoint.
+	_, err = gameServers.UpdateStatus(gs)
 
 	// state specific work here
 	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
