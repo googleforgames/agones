@@ -107,7 +107,7 @@ func main() {
 
 	wh := webhooks.NewWebHook(ctlConf.CertFile, ctlConf.KeyFile)
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
-	kubeInformationFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{}
 	var rs []runner
@@ -153,14 +153,14 @@ func main() {
 	gsController := gameservers.NewController(wh, health, allocationMutex,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
-		kubeClient, kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	gasController := gameserverallocations.NewController(wh, health, allocationMutex, kubeClient,
-		kubeInformationFactory, extClient, agonesClient, agonesInformerFactory)
+		kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
@@ -169,7 +169,7 @@ func main() {
 
 	stop := signals.NewStopChannel()
 
-	kubeInformationFactory.Start(stop)
+	kubeInformerFactory.Start(stop)
 	agonesInformerFactory.Start(stop)
 
 	for _, r := range rs {
