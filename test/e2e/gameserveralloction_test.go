@@ -41,8 +41,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-			assert.Nil(t, err, "fleet not ready")
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "gsa-"},
 				Spec: v1alpha1.GameServerAllocationSpec{
@@ -74,8 +73,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-			assert.Nil(t, err, "fleet not ready")
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 				Spec: v1alpha1.GameServerAllocationSpec{
@@ -91,10 +89,9 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
-			assert.Nil(t, err)
 
 			gsa, err = framework.AgonesClient.StableV1alpha1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
 			if assert.Nil(t, err) {
@@ -166,11 +163,8 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.FailNow(t, "could not create second fleet")
 	}
 
-	err = framework.WaitForFleetCondition(preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
-
-	err = framework.WaitForFleetCondition(required, e2e.FleetReadyCount(required.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
+	framework.WaitForFleetCondition(t, required, e2e.FleetReadyCount(required.Spec.Replicas))
 
 	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: v1alpha1.GameServerAllocationSpec{
@@ -220,8 +214,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	assert.Nil(t, err)
 
 	// now wait for another one to come along
-	err = framework.WaitForFleetCondition(preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready, after delete")
+	framework.WaitForFleetCondition(t, preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
 
 	gsa3, err := framework.AgonesClient.StableV1alpha1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
 	if assert.Nil(t, err) {

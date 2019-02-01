@@ -54,8 +54,7 @@ func TestCreateFleetAndFleetAllocate(t *testing.T) {
 				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-			assert.Nil(t, err, "fleet not ready")
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			fa := &v1alpha1.FleetAllocation{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
@@ -88,8 +87,7 @@ func TestCreateFullFleetAndCantFleetAllocate(t *testing.T) {
 				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-			assert.Nil(t, err, "fleet not ready")
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			fa := &v1alpha1.FleetAllocation{
 				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
@@ -104,10 +102,9 @@ func TestCreateFullFleetAndCantFleetAllocate(t *testing.T) {
 				assert.Equal(t, v1alpha1.GameServerStateAllocated, fa2.Status.GameServer.Status.State)
 			}
 
-			err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
-			assert.Nil(t, err)
 
 			fa2, err := framework.AgonesClient.StableV1alpha1().FleetAllocations(defaultNs).Create(fa)
 			assert.NotNil(t, err)
@@ -131,16 +128,14 @@ func TestScaleFleetUpAndDownWithFleetAllocation(t *testing.T) {
 
 	assert.Equal(t, int32(1), flt.Spec.Replicas)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// scale up
 	flt, err = scaleFleet(flt, 3)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(3), flt.Spec.Replicas)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// get an allocation
 	fa := &v1alpha1.FleetAllocation{
@@ -153,28 +148,24 @@ func TestScaleFleetUpAndDownWithFleetAllocation(t *testing.T) {
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err)
 
 	// scale down, with allocation
 	flt, err = scaleFleet(flt, 1)
 	assert.Nil(t, err)
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(0))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	// delete the allocated GameServer
 	gp := int64(1)
 	err = alpha1.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(1))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0
 	})
-	assert.Nil(t, err)
 }
 
 func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
@@ -190,16 +181,14 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 
 	assert.Equal(t, int32(1), flt.Spec.Replicas)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// scale up
 	flt, err = scaleFleet(flt, 3)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(3), flt.Spec.Replicas)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// get an allocation
 	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
@@ -210,28 +199,24 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 	gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err)
 
 	// scale down, with allocation
 	flt, err = scaleFleet(flt, 1)
 	assert.Nil(t, err)
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(0))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	// delete the allocated GameServer
 	gp := int64(1)
 	err = alpha1.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(1))
-	assert.Nil(t, err)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0
 	})
-	assert.Nil(t, err)
 }
 
 func TestFleetUpdates(t *testing.T) {
@@ -312,8 +297,7 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 
 	assert.Equal(t, int32(replicasCount), flt.Spec.Replicas)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// get an allocation
 	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
@@ -324,10 +308,9 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
 	assert.Nil(t, err, "cloud not create gameserver allocation")
 	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err, "could not allocate a gameserver")
 
 	flt, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.Name, metav1.GetOptions{})
 	assert.Nil(t, err, "could not get fleet")
@@ -371,8 +354,7 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 
 		assert.Equal(t, size, flt.Spec.Replicas)
 
-		err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-		assert.Nil(t, err, "fleet not ready")
+		framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 		var allocs []*v1alpha1.GameServer
 
@@ -502,8 +484,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 
 		assert.Equal(t, size, flt.Spec.Replicas)
 
-		err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-		assert.Nil(t, err, "fleet not ready")
+		framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 		var allocs []string
 
