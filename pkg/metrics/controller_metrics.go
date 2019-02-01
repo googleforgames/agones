@@ -32,6 +32,8 @@ var (
 	fleetAllocationCountStats = stats.Int64("fleet_allocations/count", "The count of fleet allocations", "1")
 	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
 	fleetAllocationTotalStats = stats.Int64("fleet_allocations/total", "The total of fleet allocations", "1")
+	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
+	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
 
 	stateViews = []*view.View{
 		&view.View{
@@ -110,6 +112,19 @@ var (
 			Description: "The total of gameservers",
 			Aggregation: view.Count(),
 			TagKeys:     []tag.Key{keyType, keyFleetName},
+		},
+		&view.View{
+			Name:        "nodes_count",
+			Measure:     nodesCountStats,
+			Description: "The count of nodes in the cluster",
+			Aggregation: view.LastValue(),
+			TagKeys:     []tag.Key{keyEmpty},
+		},
+		&view.View{
+			Name:        "gameservers_node_count",
+			Measure:     gsPerNodesCountStats,
+			Description: "The count of gameservers per node in the cluster",
+			Aggregation: view.Distribution(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 40, 50, 60, 70, 80, 90, 100, 110, 120),
 		},
 	}
 )
