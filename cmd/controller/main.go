@@ -143,7 +143,7 @@ func main() {
 
 	// Add metrics controller only if we configure one of metrics exporters
 	if ctlConf.PrometheusMetrics || ctlConf.Stackdriver {
-		rs = append(rs, metrics.NewController(kubeClient, agonesClient, agonesInformerFactory))
+		rs = append(rs, metrics.NewController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory))
 	}
 
 	server.Handle("/", health)

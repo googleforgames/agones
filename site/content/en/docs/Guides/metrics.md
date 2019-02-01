@@ -54,19 +54,21 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 
 ## Metrics available
 
-| Name                                            | Description                                                         | Type    |
-|-------------------------------------------------|---------------------------------------------------------------------|---------|
-| agones_gameservers_count                        | The number of gameservers per fleet and status                      | gauge   |
-| agones_fleet_allocations_count                  | The number of fleet allocations per fleet                           | gauge   |
-| agones_gameservers_total                        | The total of gameservers per fleet and status                       | counter |
-| agones_fleet_allocations_total                  | The total of fleet allocations per fleet                            | counter |
-| agones_fleets_replicas_count                    | The number of replicas per fleet (total, desired, ready, allocated) | gauge   |
-| agones_fleet_autoscalers_able_to_scale          | The fleet autoscaler can access the fleet to scale                  | gauge   |
-| agones_fleet_autoscalers_buffer_limits          | he limits of buffer based fleet autoscalers (min, max)              | gauge   |
-| agones_fleet_autoscalers_buffer_size            | The buffer size of fleet autoscalers (count or percentage)          | gauge   |
-| agones_fleet_autoscalers_current_replicas_count | The current replicas count as seen by autoscalers                   | gauge   |
-| agones_fleet_autoscalers_desired_replicas_count | The desired replicas count as seen by autoscalers                   | gauge   |
-| agones_fleet_autoscalers_limited                | The fleet autoscaler is capped (1)                                  | gauge   |
+| Name                                            | Description                                                         | Type      |
+|-------------------------------------------------|---------------------------------------------------------------------|-----------|
+| agones_gameservers_count                        | The number of gameservers per fleet and status                      | gauge     |
+| agones_fleet_allocations_count                  | The number of fleet allocations per fleet                           | gauge     |
+| agones_gameservers_total                        | The total of gameservers per fleet and status                       | counter   |
+| agones_fleet_allocations_total                  | The total of fleet allocations per fleet                            | counter   |
+| agones_fleets_replicas_count                    | The number of replicas per fleet (total, desired, ready, allocated) | gauge     |
+| agones_fleet_autoscalers_able_to_scale          | The fleet autoscaler can access the fleet to scale                  | gauge     |
+| agones_fleet_autoscalers_buffer_limits          | he limits of buffer based fleet autoscalers (min, max)              | gauge     |
+| agones_fleet_autoscalers_buffer_size            | The buffer size of fleet autoscalers (count or percentage)          | gauge     |
+| agones_fleet_autoscalers_current_replicas_count | The current replicas count as seen by autoscalers                   | gauge     |
+| agones_fleet_autoscalers_desired_replicas_count | The desired replicas count as seen by autoscalers                   | gauge     |
+| agones_fleet_autoscalers_limited                | The fleet autoscaler is capped (1)                                  | gauge     |
+| agones_gameservers_node_count                   | The distribution of gameservers per node                            | histogram |
+| agones_nodes_count                              | The count of nodes empty and with gameservers                       | gauge     |
 
 ## Dashboard
 
@@ -78,11 +80,16 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 
 - {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="master" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations , game servers statuses, fleets replicas) with optional fleet name filtering.
 
+{{% feature publishVersion="0.8.0" %}}
+- {{< ghlink href="/build/grafana/dashboard-allocations.yaml" branch="master" >}}Agones GameServer Allocations{{< /ghlink >}} displays Agones gameservers allocations rates and counts per fleet.
+{{% /feature %}}
+
 - {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="master" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
 
 - {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="master" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
 
 {{% feature publishVersion="0.8.0" %}}
+
 - {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="master" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="master" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
