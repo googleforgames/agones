@@ -121,7 +121,7 @@ func TestAllocationCountNodeEvents(t *testing.T) {
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
 	gsSynced := m.AgonesInformerFactory.Stable().V1alpha1().GameServers().Informer().HasSynced
-	nodeSynced := m.KubeInformationFactory.Core().V1().Nodes().Informer().HasSynced
+	nodeSynced := m.KubeInformerFactory.Core().V1().Nodes().Informer().HasSynced
 
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
@@ -188,6 +188,6 @@ func TestAllocationCounterRun(t *testing.T) {
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeAllocationCounter() (*AllocationCounter, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	c := NewAllocationCounter(m.KubeInformationFactory, m.AgonesInformerFactory)
+	c := NewAllocationCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	return c, m
 }

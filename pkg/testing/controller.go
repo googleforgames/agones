@@ -35,12 +35,12 @@ import (
 
 // Mocks is a holder for all my fakes and Mocks
 type Mocks struct {
-	KubeClient             *kubefake.Clientset
-	KubeInformationFactory informers.SharedInformerFactory
-	ExtClient              *extfake.Clientset
-	AgonesClient           *agonesfake.Clientset
-	AgonesInformerFactory  externalversions.SharedInformerFactory
-	FakeRecorder           *record.FakeRecorder
+	KubeClient            *kubefake.Clientset
+	KubeInformerFactory   informers.SharedInformerFactory
+	ExtClient             *extfake.Clientset
+	AgonesClient          *agonesfake.Clientset
+	AgonesInformerFactory externalversions.SharedInformerFactory
+	FakeRecorder          *record.FakeRecorder
 }
 
 // NewMocks creates a new set of fakes and mocks.
@@ -49,12 +49,12 @@ func NewMocks() Mocks {
 	agonesClient := &agonesfake.Clientset{}
 
 	m := Mocks{
-		KubeClient:             kubeClient,
-		KubeInformationFactory: informers.NewSharedInformerFactory(kubeClient, 30*time.Second),
-		ExtClient:              &extfake.Clientset{},
-		AgonesClient:           agonesClient,
-		AgonesInformerFactory:  externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second),
-		FakeRecorder:           record.NewFakeRecorder(100),
+		KubeClient:            kubeClient,
+		KubeInformerFactory:   informers.NewSharedInformerFactory(kubeClient, 30*time.Second),
+		ExtClient:             &extfake.Clientset{},
+		AgonesClient:          agonesClient,
+		AgonesInformerFactory: externalversions.NewSharedInformerFactory(agonesClient, 30*time.Second),
+		FakeRecorder:          record.NewFakeRecorder(100),
 	}
 	return m
 }
@@ -64,7 +64,7 @@ func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{},
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	stop := ctx.Done()
 
-	mocks.KubeInformationFactory.Start(stop)
+	mocks.KubeInformerFactory.Start(stop)
 	mocks.AgonesInformerFactory.Start(stop)
 
 	logrus.Info("Wait for cache sync")
