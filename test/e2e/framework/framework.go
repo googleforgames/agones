@@ -19,6 +19,7 @@ package framework
 import (
 	"fmt"
 	"net"
+	"testing"
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -122,8 +123,10 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 	return readyGs, nil
 }
 
-// WaitForFleetCondition waits for the Fleet to be in a specific condition
-func (f *Framework) WaitForFleetCondition(flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) error {
+// WaitForFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
+func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) {
+	t.Helper()
+	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		fleet, err := f.AgonesClient.StableV1alpha1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
@@ -132,7 +135,10 @@ func (f *Framework) WaitForFleetCondition(flt *v1alpha1.Fleet, condition func(fl
 
 		return condition(fleet), nil
 	})
-	return err
+	if err != nil {
+		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
+		t.Fatal("error waiting for fleet condition")
+	}
 }
 
 // ListGameServersFromFleet lists GameServers from a particular fleet
@@ -161,6 +167,7 @@ func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.Ga
 // FleetReadyCount returns the ready count in a fleet
 func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
 	return func(fleet *v1alpha1.Fleet) bool {
+		logrus.Infof("fleet %v has %v/%v ready replicas", fleet.Name, fleet.Status.ReadyReplicas, amount)
 		return fleet.Status.ReadyReplicas == amount
 	}
 }
