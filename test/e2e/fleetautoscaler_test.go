@@ -69,10 +69,10 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), bufferSize+2, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
-	bufferSize = int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	// min replicas is now higher than buffer size, will scale to that level
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fas.Spec.Policy.Buffer.MinReplicas))
 
-	// patch the autoscaler to remove MinReplicas and watch the fleet scale down
+	// patch the autoscaler to remove MinReplicas and watch the fleet scale down to bufferSize
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), 0, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
