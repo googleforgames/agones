@@ -32,7 +32,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -56,7 +56,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -111,7 +111,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	for name, test := range fixtures {
 		t.Run(name, func(t *testing.T) {
 			m := agtesting.NewMocks()
-			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 			hc.recorder = m.FakeRecorder
 
 			gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
@@ -146,7 +146,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 func TestHealthControllerRun(t *testing.T) {
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformationFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	hc.recorder = m.FakeRecorder
 
 	gsWatch := watch.NewFake()
