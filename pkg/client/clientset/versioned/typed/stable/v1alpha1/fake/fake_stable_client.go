@@ -44,10 +44,6 @@ func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerIn
 	return &FakeGameServers{c, namespace}
 }
 
-func (c *FakeStableV1alpha1) GameServerAllocations(namespace string) v1alpha1.GameServerAllocationInterface {
-	return &FakeGameServerAllocations{c, namespace}
-}
-
 func (c *FakeStableV1alpha1) GameServerSets(namespace string) v1alpha1.GameServerSetInterface {
 	return &FakeGameServerSets{c, namespace}
 }

@@ -58,8 +58,6 @@ func addKnownTypes(scheme *k8sruntime.Scheme) error {
 		&FleetList{},
 		&FleetAllocation{},
 		&FleetAllocationList{},
-		&GameServerAllocation{},
-		&GameServerAllocationList{},
 		&FleetAutoscaler{},
 		&FleetAutoscalerList{},
 	)

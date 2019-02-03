@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"agones.dev/agones/pkg/apis"
+
 	"agones.dev/agones/pkg/apis/stable"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
@@ -60,7 +62,7 @@ type GameServerSetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling,omitempty"`
+	Scheduling apis.SchedulingStrategy `json:"scheduling,omitempty"`
 	// Template the GameServer template to apply for this GameServerSet
 	Template GameServerTemplateSpec `json:"template"`
 }

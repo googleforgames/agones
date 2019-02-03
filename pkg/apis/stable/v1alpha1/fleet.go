@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,7 +63,7 @@ type FleetSpec struct {
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling"`
+	Scheduling apis.SchedulingStrategy `json:"scheduling"`
 	// Template the GameServer template to apply for this Fleet
 	Template GameServerTemplateSpec `json:"template"`
 }
@@ -114,7 +115,7 @@ func (f *Fleet) ApplyDefaults() {
 	}
 
 	if f.Spec.Scheduling == "" {
-		f.Spec.Scheduling = Packed
+		f.Spec.Scheduling = apis.Packed
 	}
 
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {

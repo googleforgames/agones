@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"sync"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -274,9 +275,9 @@ func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.MetaPatch) (*v1al
 	}
 
 	switch f.Spec.Scheduling {
-	case v1alpha1.Packed:
+	case apis.Packed:
 		allocation = findReadyGameServerForAllocation(gsList, packedComparator)
-	case v1alpha1.Distributed:
+	case apis.Distributed:
 		allocation = findReadyGameServerForAllocation(gsList, distributedComparator)
 	}
 

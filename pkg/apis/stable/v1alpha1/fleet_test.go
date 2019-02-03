@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/apis"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +34,7 @@ func TestFleetGameServerSetGameServer(t *testing.T) {
 		},
 		Spec: FleetSpec{
 			Replicas:   10,
-			Scheduling: Packed,
+			Scheduling: apis.Packed,
 			Template: GameServerTemplateSpec{
 				Spec: GameServerSpec{
 					Ports: []GameServerPort{{ContainerPort: 1234}},
@@ -69,7 +70,7 @@ func TestFleetApplyDefaults(t *testing.T) {
 	assert.Equal(t, appsv1.RollingUpdateDeploymentStrategyType, f.Spec.Strategy.Type)
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxUnavailable.String())
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxSurge.String())
-	assert.Equal(t, Packed, f.Spec.Scheduling)
+	assert.Equal(t, apis.Packed, f.Spec.Scheduling)
 }
 
 func TestFleetUpperBoundReplicas(t *testing.T) {

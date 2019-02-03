@@ -17,9 +17,12 @@ package fleetallocation
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"sync"
 	"testing"
+
+	"agones.dev/agones/pkg/apis"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -284,7 +287,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 	run(t, "distributed", func(t *testing.T, c *Controller, f *v1alpha1.Fleet) {
 		// make a copy, to avoid the race check
 		f = f.DeepCopy()
-		f.Spec.Scheduling = v1alpha1.Distributed
+		f.Spec.Scheduling = apis.Distributed
 		// should go node2, then node1
 		gs, err := c.allocate(f, nil)
 		assert.Nil(t, err)
@@ -384,7 +387,7 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook("", "")
+	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, &sync.Mutex{}, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m

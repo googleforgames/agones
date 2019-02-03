@@ -27,21 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-type testServer struct {
-	server *httptest.Server
-}
-
-func (ts *testServer) Close() error {
-	ts.server.Close()
-	return nil
-}
-
-// ListenAndServeTLS(certFile, keyFile string) error
-func (ts *testServer) ListenAndServeTLS(certFile, keyFile string) error {
-	ts.server.StartTLS()
-	return nil
-}
-
 func TestWebHookAddHandler(t *testing.T) {
 	t.Parallel()
 
@@ -102,9 +87,9 @@ func TestWebHookAddHandler(t *testing.T) {
 				UID:       "1234"}}
 
 			callCount := 0
-			wh := NewWebHook("", "")
-			ts := &testServer{server: httptest.NewUnstartedServer(wh.mux)}
-			wh.server = ts
+			mux := http.NewServeMux()
+			ts := httptest.NewUnstartedServer(mux)
+			wh := NewWebHook(mux)
 
 			for _, th := range handles.handlers {
 				wh.AddHandler("/test", th.gk, th.op, func(review v1beta1.AdmissionReview) (v1beta1.AdmissionReview, error) {
@@ -115,14 +100,14 @@ func TestWebHookAddHandler(t *testing.T) {
 				})
 			}
 
-			err := wh.Run(0, stop)
-			assert.Nil(t, err)
+			ts.StartTLS()
+			defer ts.Close()
 
-			client := ts.server.Client()
-			url := ts.server.URL + "/test"
+			client := ts.Client()
+			url := ts.URL + "/test"
 
 			buf := &bytes.Buffer{}
-			err = json.NewEncoder(buf).Encode(fixture)
+			err := json.NewEncoder(buf).Encode(fixture)
 			assert.Nil(t, err)
 
 			r, err := http.NewRequest("GET", url, buf)

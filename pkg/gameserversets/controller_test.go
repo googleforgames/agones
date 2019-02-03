@@ -16,10 +16,12 @@ package gameserversets
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -549,7 +551,7 @@ func defaultFixture() *v1alpha1.GameServerSet {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test", UID: "1234"},
 		Spec: v1alpha1.GameServerSetSpec{
 			Replicas:   10,
-			Scheduling: v1alpha1.Packed,
+			Scheduling: apis.Packed,
 			Template:   v1alpha1.GameServerTemplateSpec{},
 		},
 	}
@@ -571,7 +573,7 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook("", "")
+	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m

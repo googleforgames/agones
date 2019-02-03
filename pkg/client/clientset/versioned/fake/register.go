@@ -19,6 +19,7 @@
 package fake
 
 import (
+	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -50,5 +51,6 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
+	allocationv1alpha1.AddToScheme(scheme)
 	stablev1alpha1.AddToScheme(scheme)
 }

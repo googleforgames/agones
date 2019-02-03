@@ -121,10 +121,11 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers. 
 This could be a single Fleet, multiple Fleets, or a self managed group of GameServers.
 
-A full `GameServerAllocation` specification is available below and in the 
-{{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
+A full `GameServerAllocation` specification is available below and in 
+the {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
 
+{{% feature expiryVersion="0.9.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: GameServerAllocation
@@ -158,9 +159,55 @@ spec:
     annotations:
       map:  garden22
 ```
+{{% /feature %}}
 
+{{% feature publishVersion="0.9.0" %}}
+```yaml
+apiVersion: "allocation.agones.dev/v1alpha1"
+kind: GameServerAllocation
+spec:
+  required:
+    matchLabels:
+      game: my-game
+    matchExpressions:
+      - {key: tier, operator: In, values: [cache]}
+  # ordered list of preferred allocations 
+  # This also support `matchExpressions`
+  preferred:
+    - matchLabels:
+        stable.agones.dev/fleet: green-fleet
+    - matchLabels:
+        stable.agones.dev/fleet: blue-fleet
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
+  # Optional custom metadata that is added to the game server at allocation
+  # You can use this to tell the server necessary session data
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22
+```
+{{% /feature %}}
+
+{{% feature expiryVersion="0.9.0" %}}
 We recommend using `metadata > generateName`, to declare to Kubernetes that a unique
 name for the `GameServerAllocation` is generated when the `GameServerAllocation` is created.
+{{% /feature %}}
+
+{{% feature publishVersion="0.9.0" %}}
+For performance reasons, `GameServerAlloction` is a *create only resource*, and is not stored and therefore doesn't need a `metadata.name` value.
+This also means that it cannot be retrieved via get or list after it the allocation operation is complete. 
+
+When using `kubectl`, use `-o yaml` at the end to see
+the output. For example:
+`kubectl create allocation.yaml -o yaml`
+{{% /feature %}}
 
 The `spec` field is the actual `GameServerAllocation` specification and it is composed as follow:
 

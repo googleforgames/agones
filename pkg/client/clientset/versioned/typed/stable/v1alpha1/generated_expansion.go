@@ -26,6 +26,4 @@ type FleetAutoscalerExpansion interface{}
 
 type GameServerExpansion interface{}
 
-type GameServerAllocationExpansion interface{}
-
 type GameServerSetExpansion interface{}

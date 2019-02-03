@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"testing"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -63,7 +64,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		state      GameServerState
 		policy     PortPolicy
 		health     Health
-		scheduling SchedulingStrategy
+		scheduling apis.SchedulingStrategy
 	}
 	data := map[string]struct {
 		gameServer GameServer
@@ -84,7 +85,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				protocol:   "UDP",
 				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
-				scheduling: Packed,
+				scheduling: apis.Packed,
 				health: Health{
 					Disabled:            false,
 					FailureThreshold:    3,
@@ -120,7 +121,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				protocol:   "TCP",
 				state:      "TestState",
 				policy:     Static,
-				scheduling: Packed,
+				scheduling: apis.Packed,
 				health: Health{
 					Disabled:            false,
 					FailureThreshold:    10,
@@ -141,7 +142,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				protocol:   "UDP",
 				state:      GameServerStateCreating,
 				policy:     Static,
-				scheduling: Packed,
+				scheduling: apis.Packed,
 				health: Health{
 					Disabled:            false,
 					FailureThreshold:    3,
@@ -163,7 +164,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				protocol:   "UDP",
 				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
-				scheduling: Packed,
+				scheduling: apis.Packed,
 				health: Health{
 					Disabled: true,
 				},
@@ -189,7 +190,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				protocol:   corev1.ProtocolTCP,
 				state:      GameServerStateCreating,
 				policy:     Static,
-				scheduling: Packed,
+				scheduling: apis.Packed,
 				health:     Health{Disabled: true},
 			},
 		},
@@ -357,7 +358,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 
 	t.Run("packed", func(t *testing.T) {
 		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = Packed
+		gs.Spec.Scheduling = apis.Packed
 		pod := &corev1.Pod{}
 
 		gs.podObjectMeta(pod)
@@ -368,7 +369,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 
 	t.Run("distributed", func(t *testing.T) {
 		gs := fixture.DeepCopy()
-		gs.Spec.Scheduling = Distributed
+		gs.Spec.Scheduling = apis.Distributed
 		pod := &corev1.Pod{}
 
 		gs.podObjectMeta(pod)
@@ -382,7 +383,7 @@ func TestGameServerPodScheduling(t *testing.T) {
 	fixture := &corev1.Pod{Spec: corev1.PodSpec{}}
 
 	t.Run("packed", func(t *testing.T) {
-		gs := &GameServer{Spec: GameServerSpec{Scheduling: Packed}}
+		gs := &GameServer{Spec: GameServerSpec{Scheduling: apis.Packed}}
 		pod := fixture.DeepCopy()
 		gs.podScheduling(pod)
 
@@ -394,7 +395,7 @@ func TestGameServerPodScheduling(t *testing.T) {
 	})
 
 	t.Run("distributed", func(t *testing.T) {
-		gs := &GameServer{Spec: GameServerSpec{Scheduling: Distributed}}
+		gs := &GameServer{Spec: GameServerSpec{Scheduling: apis.Distributed}}
 		pod := fixture.DeepCopy()
 		gs.podScheduling(pod)
 		assert.Empty(t, pod.Spec.Affinity)

@@ -240,11 +240,6 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
-	err = alpha1.GameServerAllocations(ns).DeleteCollection(deleteOptions, listOptions)
-	if err != nil {
-		return err
-	}
-
 	err = alpha1.FleetAllocations(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err

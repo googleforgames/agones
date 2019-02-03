@@ -20,7 +20,7 @@
 # multiple Fleets, or a self managed group of GameServers.
 #
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "allocation.agones.dev/v1alpha1"
 kind: GameServerAllocation
 metadata:
   # We recommend using the following to generate a unique name when creating Allocations

@@ -101,6 +101,14 @@
   version = "v0.8.0"
 
 [[constraint]]
+  name = "github.com/go-openapi/spec"
+  version = "0.18.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/munnerz/goautoneg"
+
+[[constraint]]
   name = "fortio.org/fortio"
   version = "1.3.1"
 

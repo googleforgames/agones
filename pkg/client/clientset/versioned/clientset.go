@@ -19,6 +19,7 @@
 package versioned
 
 import (
+	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -27,6 +28,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Allocation() allocationv1alpha1.AllocationV1alpha1Interface
 	StableV1alpha1() stablev1alpha1.StableV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Stable() stablev1alpha1.StableV1alpha1Interface
@@ -36,7 +40,19 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	stableV1alpha1 *stablev1alpha1.StableV1alpha1Client
+	allocationV1alpha1 *allocationv1alpha1.AllocationV1alpha1Client
+	stableV1alpha1     *stablev1alpha1.StableV1alpha1Client
+}
+
+// AllocationV1alpha1 retrieves the AllocationV1alpha1Client
+func (c *Clientset) AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface {
+	return c.allocationV1alpha1
+}
+
+// Deprecated: Allocation retrieves the default version of AllocationClient.
+// Please explicitly pick a version.
+func (c *Clientset) Allocation() allocationv1alpha1.AllocationV1alpha1Interface {
+	return c.allocationV1alpha1
 }
 
 // StableV1alpha1 retrieves the StableV1alpha1Client
@@ -66,6 +82,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.allocationV1alpha1, err = allocationv1alpha1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.stableV1alpha1, err = stablev1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -82,6 +102,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.allocationV1alpha1 = allocationv1alpha1.NewForConfigOrDie(c)
 	cs.stableV1alpha1 = stablev1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
@@ -91,6 +112,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.allocationV1alpha1 = allocationv1alpha1.New(c)
 	cs.stableV1alpha1 = stablev1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
