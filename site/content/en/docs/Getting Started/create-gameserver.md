@@ -49,15 +49,15 @@ kubectl get gameservers
 It should look something like this:
 
 ```
-NAME         AGE
-simple-udp   5m
+NAME             STATE     ADDRESS          PORT   NODE     AGE
+simple-udp       Ready     192.168.99.100   7614   minikube  5m
 ```
 
 You can also see the [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) that got created by running `kubectl get pods`, the Pod will be prefixed by `simple-udp`.
 
 ```
-NAME                                     READY     STATUS    RESTARTS   AGE
-simple-udp-vwxpt                         2/2       Running   0          5m
+NAME                READY     STATUS    RESTARTS   AGE
+simple-udp-vwxpt    2/2       Running   0          5m
 ```
 
 As you can see above it says `READY: 2/2` this means there are two containers running in this Pod, this is because Agones injected the SDK sidecar for readiness and health checking of your Game Server.
@@ -134,14 +134,14 @@ You might also be interested to see the `Events` section, which outlines when va
 Let's retrieve the IP address and the allocated port of your Game Server :
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ```
 
 This should ouput your Game Server IP address and ports, eg:
 
 ```
-NAME         STATUS    IP               PORT
-simple-udp   Ready     192.168.99.100   [map[name:default port:7614]]
+NAME         STATE     ADDRESS          PORT   NODE       AGE
+simple-udp   Ready     192.168.99.100   7614   minikube   5m
 ```
 
 ### 3. Connect to the GameServer

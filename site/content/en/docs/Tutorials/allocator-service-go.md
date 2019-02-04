@@ -265,14 +265,14 @@ status:
 ### 9. Check Game Servers
 Let's make sure that we have one or more Game Servers in a ready state by running this command:
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ```
 
 For a fleet of 2 replicas, you should see 2 Game Servers with a Status of Ready:
 ```
-NAME                     STATUS    IP               PORT
-simple-udp-s2snf-765bc   Ready     35.231.204.26    [map[name:default port:7260]]
-simple-udp-s2snf-vf6l8   Ready     35.196.162.169   [map[name:default port:7591]]
+NAME                     STATE     ADDRESS           PORT    NODE       AGE                                
+simple-udp-s2snf-765bc   Ready     35.231.204.26     7260    minikube   5m
+simple-udp-s2snf-vf6l8   Ready     35.196.162.169    7591    minikube   5m
 ```
 
 If there is no fleet, please review [Create a Game Server Fleet]({{< relref "../Getting Started/create-fleet.md" >}}).
@@ -298,9 +298,9 @@ curl: (35) error:14094410:SSL routines:ssl3_read_bytes:sslv3 alert handshake fai
 
 Check the Game Servers again, and notice the Allocated Status.  You should see something like this:
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-s2snf-765bc   Allocated   35.231.204.26    [map[name:default port:7260]]
-simple-udp-s2snf-vf6l8   Ready       35.196.162.169   [map[name:default port:7591]]
+NAME                     STATUS      ADDRESS          PORT    NODE      AGE
+simple-udp-s2snf-765bc   Allocated   35.231.204.26    7260    minikube   5m
+simple-udp-s2snf-vf6l8   Ready       35.196.162.169   7591    minikube   5m
 ```
 
 Congratulations, your call to the API has allocated a Game Server from your simple-udp Fleet!
