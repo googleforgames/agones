@@ -49,8 +49,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
 	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt))
@@ -64,56 +63,49 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// the fleet autoscaler should scale the fleet up now up to BufferSize
 	bufferSize := int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err, "fleet did not sync with autoscaler")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// patch the autoscaler to increase MinReplicas and watch the fleet scale up
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), bufferSize+2, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
-	bufferSize = int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err, "fleet did not sync with autoscaler")
+	// min replicas is now higher than buffer size, will scale to that level
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fas.Spec.Policy.Buffer.MinReplicas))
 
-	// patch the autoscaler to remove MinReplicas and watch the fleet scale down
+	// patch the autoscaler to remove MinReplicas and watch the fleet scale down to bufferSize
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), 0, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	bufferSize = int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err, "fleet did not sync with autoscaler")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// do an allocation and watch the fleet scale up
 	fa := getAllocation(flt)
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err)
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err, "fleet did not sync with autoscaler")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// patch autoscaler to switch to relative buffer size and check if the fleet adjusts
 	_, err = patchFleetAutoscaler(fas, intstr.FromString("10%"), 1, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	//10% with only one allocated GS means only one ready server
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(1))
-	assert.Nil(t, err, "fleet did not sync with autoscaler")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
 	// delete the allocated GameServer and watch the fleet scale down
 	gp := int64(1)
 	err = alpha1.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
 	})
-	assert.Nil(t, err)
 }
 
 // TestAutoscalerStressCreate creates many fleetautoscalers with random values
@@ -129,8 +121,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	r := rand.New(rand.NewSource(1783))
 
@@ -170,8 +161,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 					expectedReplicas = fas.Spec.Policy.Buffer.MaxReplicas
 				}
 				// the fleet autoscaler should scale the fleet now to expectedReplicas
-				err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(expectedReplicas))
-				assert.Nil(t, err, fmt.Sprintf("fleet did not sync with autoscaler, expected %d ready replicas", expectedReplicas))
+				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
 			} else {
 				assert.False(t, valid,
 					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
@@ -206,7 +196,9 @@ func patchFleetAutoscaler(fas *v1alpha1.FleetAutoscaler, bufferSize intstr.IntOr
 		WithField("patch", patch).
 		Info("Patching fleetautoscaler")
 
-	return framework.AgonesClient.StableV1alpha1().FleetAutoscalers(defaultNs).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	fas, err := framework.AgonesClient.StableV1alpha1().FleetAutoscalers(defaultNs).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	logrus.WithField("fleetautoscaler", fas).Info("Patched fleet autoscaler")
+	return fas, err
 }
 
 // defaultFleetAutoscaler returns a default fleet autoscaler configuration for a given fleet
@@ -269,8 +261,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
@@ -295,15 +286,13 @@ func TestAutoscalerWebhook(t *testing.T) {
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err)
 
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
-	assert.Nil(t, err)
 }
 
 var webhookKey = `
@@ -446,8 +435,7 @@ func TestTlsWebhook(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	err = framework.WaitForFleetCondition(flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	assert.Nil(t, err, "fleet not ready")
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := alpha1.FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
@@ -474,15 +462,13 @@ func TestTlsWebhook(t *testing.T) {
 	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa.DeepCopy())
 	assert.Nil(t, err)
 	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
-	assert.Nil(t, err)
 
-	err = framework.WaitForFleetCondition(flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
-	assert.Nil(t, err)
 }
 
 func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {

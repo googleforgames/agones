@@ -729,7 +729,7 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{}, m.KubeClient, m.KubeInformationFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{}, m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }
