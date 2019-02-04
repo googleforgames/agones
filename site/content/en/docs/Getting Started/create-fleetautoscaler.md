@@ -150,16 +150,16 @@ Last Scale Time has been updated, and a scaling event has been logged.
 Double-check the actual number of game server instances and status by running
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ``` 
 
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATUS      IP             PORT
-simple-udp-mzhrl-hz8wk   Allocated   10.30.64.99    [map[name:default port:7131]]
-simple-udp-mzhrl-k6jg5   Ready       10.30.64.100   [map[name:default port:7243]]
-simple-udp-mzhrl-n2sk2   Ready       10.30.64.168   [map[name:default port:7658]]
+NAME                     STATE       ADDRESS        PORT     NODE        AGE
+simple-udp-mzhrl-hz8wk   Allocated   10.30.64.99    7131     minikube    5m
+simple-udp-mzhrl-k6jg5   Ready       10.30.64.100   7243     minikube    5m  
+simple-udp-mzhrl-n2sk2   Ready       10.30.64.168   7658     minikube    5m
 ``` 
 
 ### 5. Shut the allocated instance down
@@ -223,15 +223,15 @@ might stay a bit in 'Unhealthy' state (and its pod in 'Terminating' until it get
 Double-check the actual number of game server instances and status by running
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ``` 
 
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATUS    IP             PORT
-simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   [map[name:default port:7243]]
-simple-udp-mzhrl-t7944   Ready     10.30.64.168   [map[port:7561 name:default]]
+NAME                     STATE     ADDRESS        PORT    NODE       AGE
+simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube   5m
+simple-udp-mzhrl-t7944   Ready     10.30.64.168   7561    minikube   5m
 ``` 
 
 ### 7. Change autoscaling parameters
@@ -240,18 +240,18 @@ We can also change the configuration of the `FleetAutoscaler` of the running `Fl
 applied live, without interruptions of service.
 
 Run `kubectl edit fleetautoscaler simple-udp-autoscaler` and set the `bufferSize` field to `5`. 
-
-Let's look at the list of game servers again. Run `watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports`
+]
+Let's look at the list of game servers again. Run `watch kubectl get gs`
 until you can see that are 5 ready server instances:
 
 ```
-NAME                     STATUS    IP             PORT
-simple-udp-mzhrl-7jpkp   Ready     10.30.64.100   [map[name:default port:7019]]
-simple-udp-mzhrl-czt8v   Ready     10.30.64.168   [map[name:default port:7556]]
-simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   [map[name:default port:7243]]
-simple-udp-mzhrl-nb8h2   Ready     10.30.64.168   [map[name:default port:7357]]
-simple-udp-mzhrl-qspb6   Ready     10.30.64.99    [map[name:default port:7859]]
-simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    [map[name:default port:7745]]
+NAME                     STATE     ADDRESS        PORT    NODE         AGE
+simple-udp-mzhrl-7jpkp   Ready     10.30.64.100   7019    minikube     5m
+simple-udp-mzhrl-czt8v   Ready     10.30.64.168   7556    minikube     5m
+simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube     5m
+simple-udp-mzhrl-nb8h2   Ready     10.30.64.168   7357    minikube     5m
+simple-udp-mzhrl-qspb6   Ready     10.30.64.99    7859    minikube     5m
+simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    7745    minikube     5m
 ```
 
 ## Next Steps
