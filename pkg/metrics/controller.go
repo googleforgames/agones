@@ -17,9 +17,11 @@ package metrics
 import (
 	"context"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/client-go/listers/core/v1"
 
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -371,6 +373,8 @@ func (c *Controller) collectNodeCounts() {
 		c.logger.WithError(err).Warn("failed listing gameservers")
 		return
 	}
+
+	nodes = removeSystemNodes(nodes)
 	recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "true")},
 		nodesCountStats.M(int64(len(nodes)-len(gsPerNodes))))
 	recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyEmpty, "false")},
@@ -380,4 +384,27 @@ func (c *Controller) collectNodeCounts() {
 		stats.Record(context.Background(), gsPerNodesCountStats.M(int64(gsPerNodes[node.Name])))
 	}
 
+}
+
+func removeSystemNodes(nodes []*corev1.Node) []*corev1.Node {
+	var result []*corev1.Node
+
+	for _, n := range nodes {
+		if !isSystemNode(n) {
+			result = append(result, n)
+		}
+	}
+
+	return result
+}
+
+// isSystemNode determines if a node is a system node, by checking if it has any taints starting with "stable.agones.dev/"
+func isSystemNode(n *corev1.Node) bool {
+	for _, t := range n.Spec.Taints {
+		if strings.HasPrefix(t.Key, "stable.agones.dev/") {
+			return true
+		}
+	}
+
+	return false
 }

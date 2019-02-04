@@ -401,42 +401,42 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(1, sum(rate(agones_gameservers_node_count_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(1, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "max",
               "refId": "F"
             },
             {
-              "expr": "histogram_quantile(0.99, sum(rate(agones_gameservers_node_count_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.99, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "99th",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.90, sum(rate(agones_gameservers_node_count_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.90, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "90th",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.50, sum(rate(agones_gameservers_node_count_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.50, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "50th",
               "refId": "C"
             },
             {
-              "expr": "histogram_quantile(0, sum(rate(agones_gameservers_node_count_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "min",
               "refId": "E"
             },
             {
-              "expr": "  agones_gameservers_node_count_sum /\n agones_gameservers_node_count_count",
+              "expr": "avg(delta(agones_gameservers_node_count_sum[1m]) / delta(agones_gameservers_node_count_count[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "avg",

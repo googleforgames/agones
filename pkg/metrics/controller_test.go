@@ -243,6 +243,7 @@ func TestControllerGameServersNodeState(t *testing.T) {
 	c.collect()
 	report()
 
-	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(nodeCountExpected), "agones_nodes_count", "agones_gameservers_node_count"))
-
+	if err := testutil.GatherAndCompare(registry, strings.NewReader(nodeCountExpected), "agones_nodes_count", "agones_gameservers_node_count"); err != nil {
+		t.Fatal(err)
+	}
 }
