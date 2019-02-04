@@ -48,7 +48,7 @@ rules:
   resources: ["customresourcedefinitions"]
   verbs: ["get"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["gameservers", "gameserversets"]
+  resources: ["gameservers", "gameserversets", "gameservers/status"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
@@ -676,6 +676,8 @@ spec:
                   type: integer
                   minimum: 1
                   maximum: 2147483648
+  subresources:
+    status: {}
 
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml

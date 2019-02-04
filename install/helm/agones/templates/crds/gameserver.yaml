@@ -53,5 +53,7 @@ spec:
   validation:
     openAPIV3Schema:
       {{- include "gameserver.validation" . | indent 6 }}
+  subresources:
+    status: {}
 
 {{- end }}
