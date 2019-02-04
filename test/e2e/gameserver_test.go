@@ -28,6 +28,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
+const (
+	fakeIPAddress = "192.1.1.2"
+)
+
 func TestCreateConnect(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
@@ -145,6 +149,41 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
 	assert.Nil(t, err)
+}
+func TestDevelopmentGameServerLifecycle(t *testing.T) {
+	t.Parallel()
+	gs := &v1alpha1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "udp-server",
+			Namespace:    defaultNs,
+			Annotations:  map[string]string{v1alpha1.DevAddressAnnotation: fakeIPAddress},
+		},
+		Spec: v1alpha1.GameServerSpec{
+			Container: "udp-server",
+			Ports: []v1alpha1.GameServerPort{{
+				ContainerPort: 7654,
+				HostPort:      7654,
+				Name:          "gameport",
+				PortPolicy:    v1alpha1.Static,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:  "placebo",
+						Image: "this is ignored",
+					}},
+				},
+			},
+		},
+	}
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 }
 
 func defaultGameServer() *v1alpha1.GameServer {
