@@ -20,6 +20,7 @@ package fake
 
 import (
 	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1beta1 "k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -137,4 +138,26 @@ func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subreso
 		return nil, err
 	}
 	return obj.(*v1alpha1.Fleet), err
+}
+
+// GetScale takes name of the fleet, and returns the corresponding scale object, and an error if there is any.
+func (c *FakeFleets) GetScale(fleetName string, options v1.GetOptions) (result *v1beta1.Scale, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewGetSubresourceAction(fleetsResource, c.ns, "scale", fleetName), &v1beta1.Scale{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1beta1.Scale), err
+}
+
+// UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *FakeFleets) UpdateScale(fleetName string, scale *v1beta1.Scale) (result *v1beta1.Scale, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(fleetsResource, "scale", c.ns, scale), &v1beta1.Scale{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1beta1.Scale), err
 }

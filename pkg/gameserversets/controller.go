@@ -16,6 +16,7 @@ package gameserversets
 
 import (
 	"encoding/json"
+	"sort"
 	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
@@ -50,6 +51,17 @@ var (
 	ErrNoGameServerSetOwner = errors.New("No GameServerSet owner for this GameServer")
 )
 
+const (
+	maxCreationParalellism         = 16
+	maxGameServerCreationsPerBatch = 64
+
+	maxDeletionParallelism         = 64
+	maxGameServerDeletionsPerBatch = 64
+
+	// maxPodPendingCount is the maximum number of pending pods per game server set
+	maxPodPendingCount = 5000
+)
+
 // Controller is a the GameServerSet controller
 type Controller struct {
 	logger              *logrus.Entry
@@ -64,6 +76,7 @@ type Controller struct {
 	allocationMutex     *sync.Mutex
 	stop                <-chan struct{}
 	recorder            record.EventRecorder
+	stateCache          *gameServerStateCache
 }
 
 // NewController returns a new gameserverset crd controller
@@ -90,6 +103,7 @@ func NewController(
 		gameServerSetLister: gameServerSets.Lister(),
 		gameServerSetSynced: gsSetInformer.HasSynced,
 		allocationMutex:     allocationMutex,
+		stateCache:          &gameServerStateCache{},
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -111,6 +125,9 @@ func NewController(
 			if oldGss.Spec.Replicas != newGss.Spec.Replicas {
 				c.workerqueue.Enqueue(newGss)
 			}
+		},
+		DeleteFunc: func(gsSet interface{}) {
+			c.stateCache.deleteGameServerSet(gsSet.(*v1alpha1.GameServerSet))
 		},
 	})
 
@@ -209,13 +226,14 @@ func (c *Controller) gameServerEventHandler(obj interface{}) {
 		}
 		return
 	}
-	c.workerqueue.Enqueue(gsSet)
+	c.workerqueue.EnqueueImmediately(gsSet)
 }
 
 // syncGameServer synchronises the GameServers for the Set,
 // making sure there are aways as many GameServers as requested
 func (c *Controller) syncGameServerSet(key string) error {
-	c.logger.WithField("key", key).Info("Synchronising")
+	c.logger.WithField("key", key).Info("syncGameServerSet")
+	defer c.logger.WithField("key", key).Info("syncGameServerSet finished")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
@@ -238,135 +256,268 @@ func (c *Controller) syncGameServerSet(key string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.syncUnhealthyGameServers(gsSet, list); err != nil {
-		return err
-	}
 
-	diff := gsSet.Spec.Replicas - int32(len(list))
+	list = c.stateCache.forGameServerSet(gsSet).reconcileWithUpdatedServerList(list)
 
-	if err := c.syncMoreGameServers(gsSet, diff); err != nil {
-		return err
-	}
-	if err := c.syncLessGameServers(gsSet, diff); err != nil {
-		return err
-	}
-	if err := c.syncGameServerSetState(gsSet, list); err != nil {
-		return err
-	}
+	numServersToAdd, toDelete, isPartial := computeReconciliationAction(list, int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
+	status := computeStatus(list)
+	fields := logrus.Fields{}
 
-	return nil
-}
-
-// syncUnhealthyGameServers deletes any unhealthy game servers (that are not already being deleted)
-func (c *Controller) syncUnhealthyGameServers(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
 	for _, gs := range list {
-		if gs.Status.State == v1alpha1.GameServerStateUnhealthy && gs.ObjectMeta.DeletionTimestamp.IsZero() {
-			c.allocationMutex.Lock()
-			err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, nil)
-			c.allocationMutex.Unlock()
-			if err != nil {
-				return errors.Wrapf(err, "error deleting gameserver %s", gs.ObjectMeta.Name)
-			}
-			c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "UnhealthyDelete", "Deleted gameserver: %s", gs.ObjectMeta.Name)
+		key := "gsCount" + string(gs.Status.State)
+		if gs.ObjectMeta.DeletionTimestamp != nil {
+			key = key + "Deleted"
+		}
+		v, ok := fields[key]
+		if !ok {
+			v = 0
+		}
+
+		fields[key] = v.(int) + 1
+	}
+	c.logger.
+		WithField("targetReplicaCount", gsSet.Spec.Replicas).
+		WithField("numServersToAdd", numServersToAdd).
+		WithField("numServersToDelete", len(toDelete)).
+		WithField("isPartial", isPartial).
+		WithField("status", status).
+		WithFields(fields).
+		Info("Reconciling GameServerSet")
+	if isPartial {
+		// we've determined that there's work to do, but we've decided not to do all the work in one shot
+		// make sure we get a follow-up, by re-scheduling this GSS in the worker queue immediately before this
+		// function returns
+		defer c.workerqueue.EnqueueImmediately(gsSet)
+	}
+
+	if numServersToAdd > 0 {
+		if err := c.addMoreGameServers(gsSet, numServersToAdd); err != nil {
+			c.logger.WithError(err).Warning("error adding game servers")
 		}
 	}
 
-	return nil
+	if len(toDelete) > 0 {
+		if err := c.deleteGameServers(gsSet, toDelete); err != nil {
+			c.logger.WithError(err).Warning("error deleting game servers")
+		}
+	}
+
+	return c.syncGameServerSetStatus(gsSet, list)
 }
 
-// syncMoreGameServers adds diff more GameServers to the set
-func (c *Controller) syncMoreGameServers(gsSet *v1alpha1.GameServerSet, diff int32) error {
-	if diff <= 0 {
-		return nil
+// computeReconciliationAction computes the action to take to reconcile a game server set set given
+// the list of game servers that were found and target replica count.
+func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount int, maxCreations int, maxDeletions int, maxPending int) (int, []*v1alpha1.GameServer, bool) {
+	var upCount int // up == Ready or will become ready
+
+	// track the number of pods that are being created at any given moment by the GameServerSet
+	// so we can limit it at a throughput that Kubernetes can handle
+	var podPendingCount int // podPending == "up" but don't have a Pod running yet
+	var toDelete []*v1alpha1.GameServer
+
+	scheduleDeletion := func(gs *v1alpha1.GameServer) {
+		if gs.ObjectMeta.DeletionTimestamp.IsZero() {
+			toDelete = append(toDelete, gs)
+		}
 	}
-	c.logger.WithField("diff", diff).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Adding more gameservers")
-	for i := int32(0); i < diff; i++ {
-		gs := gsSet.GameServer()
+
+	handleGameServerUp := func(gs *v1alpha1.GameServer) {
+		if upCount >= targetReplicaCount {
+			scheduleDeletion(gs)
+		} else {
+			upCount++
+		}
+	}
+
+	// pass 1 - count allocated servers only, since those can't be touched
+	for _, gs := range list {
+		if isAllocated(gs) {
+			upCount++
+			continue
+		}
+	}
+
+	// pass 2 - handle all other statuses
+	for _, gs := range list {
+		if isAllocated(gs) {
+			// already handled above
+			continue
+		}
+
+		// GS being deleted counts towards target replica count.
+		if !gs.ObjectMeta.DeletionTimestamp.IsZero() {
+			continue
+		}
+
+		switch gs.Status.State {
+		case v1alpha1.GameServerStatePortAllocation:
+			podPendingCount++
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateCreating:
+			podPendingCount++
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateStarting:
+			podPendingCount++
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateScheduled:
+			podPendingCount++
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateRequestReady:
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateReady:
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateShutdown:
+			// will be deleted soon
+			handleGameServerUp(gs)
+
+		// GameServerStateAllocated - already handled above
+
+		case v1alpha1.GameServerStateError, v1alpha1.GameServerStateUnhealthy:
+			scheduleDeletion(gs)
+		default:
+			// unrecognized state, assume it's up.
+			handleGameServerUp(gs)
+		}
+	}
+
+	var partialReconciliation bool
+	var numServersToAdd int
+
+	if upCount < targetReplicaCount {
+		numServersToAdd = targetReplicaCount - upCount
+		originalNumServersToAdd := numServersToAdd
+
+		if numServersToAdd > maxCreations {
+			numServersToAdd = maxCreations
+		}
+
+		if numServersToAdd+podPendingCount > maxPending {
+			numServersToAdd = maxPending - podPendingCount
+			if numServersToAdd < 0 {
+				numServersToAdd = 0
+			}
+		}
+
+		if originalNumServersToAdd != numServersToAdd {
+			partialReconciliation = true
+		}
+	}
+
+	if len(toDelete) > maxDeletions {
+		// we have to pick which GS to delete, let's delete the newest ones first.
+		sort.Slice(toDelete, func(i, j int) bool {
+			return toDelete[i].ObjectMeta.CreationTimestamp.After(toDelete[j].ObjectMeta.CreationTimestamp.Time)
+		})
+
+		toDelete = toDelete[0:maxDeletions]
+		partialReconciliation = true
+	}
+
+	return numServersToAdd, toDelete, partialReconciliation
+}
+
+func isAllocated(gs *v1alpha1.GameServer) bool {
+	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == v1alpha1.GameServerStateAllocated
+}
+
+// addMoreGameServers adds diff more GameServers to the set
+func (c *Controller) addMoreGameServers(gsSet *v1alpha1.GameServerSet, count int) error {
+	c.logger.WithField("count", count).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Adding more gameservers")
+
+	return parallelize(newGameServersChannel(count, gsSet), maxCreationParalellism, func(gs *v1alpha1.GameServer) error {
 		gs, err := c.gameServerGetter.GameServers(gs.Namespace).Create(gs)
 		if err != nil {
 			return errors.Wrapf(err, "error creating gameserver for gameserverset %s", gsSet.ObjectMeta.Name)
 		}
+
+		c.stateCache.forGameServerSet(gsSet).created(gs)
 		c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "SuccessfulCreate", "Created gameserver: %s", gs.ObjectMeta.Name)
-	}
-
-	return nil
-}
-
-// syncLessGameServers removes Ready GameServers from the set of GameServers
-func (c *Controller) syncLessGameServers(gsSet *v1alpha1.GameServerSet, diff int32) error {
-	if diff >= 0 {
 		return nil
-	}
-	// easier to manage positive numbers
-	diff = -diff
-	c.logger.WithField("diff", diff).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Deleting gameservers")
-	count := int32(0)
-
-	// don't allow allocation state for GameServers to change
-	c.allocationMutex.Lock()
-	defer c.allocationMutex.Unlock()
-
-	// make sure we are up to date with GameServer state
-	if !cache.WaitForCacheSync(c.stop, c.gameServerSynced) {
-		// if we can't sync the cache, then exit, and try and scale down
-		// again, and then we aren't blocking allocation at this time.
-		return errors.New("could not sync gameservers cache")
-	}
-
-	list, err := ListGameServersByGameServerSetOwner(c.gameServerLister, gsSet)
-	if err != nil {
-		return err
-	}
-
-	// count anything that is already being deleted
-	for _, gs := range list {
-		if !gs.ObjectMeta.DeletionTimestamp.IsZero() {
-			diff--
-		}
-	}
-
-	if gsSet.Spec.Scheduling == v1alpha1.Packed {
-		list = filterGameServersOnLeastFullNodes(list, diff)
-	}
-
-	for _, gs := range list {
-		if diff <= count {
-			return nil
-		}
-
-		if gs.Status.State != v1alpha1.GameServerStateAllocated {
-			err := c.gameServerGetter.GameServers(gs.Namespace).Delete(gs.ObjectMeta.Name, nil)
-			if err != nil {
-				return errors.Wrapf(err, "error deleting gameserver for gameserverset %s", gsSet.ObjectMeta.Name)
-			}
-			c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "SuccessfulDelete", "Deleted GameServer: %s", gs.ObjectMeta.Name)
-			count++
-		}
-	}
-
-	return nil
+	})
 }
 
-// syncGameServerSetState synchronises the GameServerSet State with active GameServer counts
-func (c *Controller) syncGameServerSetState(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
-	rc := int32(0)
-	ac := int32(0)
-	for _, gs := range list {
-		if gs.ObjectMeta.DeletionTimestamp.IsZero() {
-			switch gs.Status.State {
-			case v1alpha1.GameServerStateReady:
-				rc++
-			case v1alpha1.GameServerStateAllocated:
-				ac++
-			}
+func (c *Controller) deleteGameServers(gsSet *v1alpha1.GameServerSet, toDelete []*v1alpha1.GameServer) error {
+	c.logger.WithField("diff", len(toDelete)).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Deleting gameservers")
+
+	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *v1alpha1.GameServer) error {
+		c.allocationMutex.Lock()
+		err := c.gameServerGetter.GameServers(gs.Namespace).Delete(gs.ObjectMeta.Name, nil)
+		c.allocationMutex.Unlock()
+		if err != nil {
+			return errors.Wrapf(err, "error deleting gameserver %s", gsSet.ObjectMeta.Name)
 		}
+
+		c.stateCache.forGameServerSet(gsSet).deleted(gs)
+		c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "SuccessfulDelete", "Deleted gameserver: %s", gs.ObjectMeta.Name)
+		return nil
+	})
+}
+
+func newGameServersChannel(n int, gsSet *v1alpha1.GameServerSet) chan *v1alpha1.GameServer {
+	gameServers := make(chan *v1alpha1.GameServer)
+	go func() {
+		defer close(gameServers)
+
+		for i := 0; i < n; i++ {
+			gameServers <- gsSet.GameServer()
+		}
+	}()
+
+	return gameServers
+}
+
+func gameServerListToChannel(list []*v1alpha1.GameServer) chan *v1alpha1.GameServer {
+	gameServers := make(chan *v1alpha1.GameServer)
+	go func() {
+		defer close(gameServers)
+
+		for _, gs := range list {
+			gameServers <- gs
+		}
+	}()
+
+	return gameServers
+}
+
+// parallelize processes a channel of game server objects, invoking the provided callback for items in the channel with the specified degree of parallelism up to a limit.
+// Returns nil if all callbacks returned nil or one of the error responses, not necessarily the first one.
+func parallelize(gameServers chan *v1alpha1.GameServer, parallelism int, work func(gs *v1alpha1.GameServer) error) error {
+	errch := make(chan error, parallelism)
+
+	var wg sync.WaitGroup
+
+	for i := 0; i < parallelism; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			for it := range gameServers {
+				err := work(it)
+				if err != nil {
+					errch <- err
+					break
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	close(errch)
+
+	for range gameServers {
+		// drain any remaining game servers in the channel, in case we did not consume them all
 	}
 
-	status := v1alpha1.GameServerSetStatus{
-		Replicas:          int32(len(list)),
-		ReadyReplicas:     rc,
-		AllocatedReplicas: ac,
-	}
+	// return first error from the channel, or nil if all successful.
+	return <-errch
+}
+
+// syncGameServerSetStatus synchronises the GameServerSet State with active GameServer counts
+func (c *Controller) syncGameServerSetStatus(gsSet *v1alpha1.GameServerSet, list []*v1alpha1.GameServer) error {
+	return c.updateStatusIfChanged(gsSet, computeStatus(list))
+}
+
+// updateStatusIfChanged updates GameServerSet status if it's different than provided.
+func (c *Controller) updateStatusIfChanged(gsSet *v1alpha1.GameServerSet, status v1alpha1.GameServerSetStatus) error {
 	if gsSet.Status != status {
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Status = status
@@ -376,4 +527,21 @@ func (c *Controller) syncGameServerSetState(gsSet *v1alpha1.GameServerSet, list 
 		}
 	}
 	return nil
+}
+
+// computeStatus computes the status of the game server set.
+func computeStatus(list []*v1alpha1.GameServer) v1alpha1.GameServerSetStatus {
+	var status v1alpha1.GameServerSetStatus
+
+	status.Replicas = int32(len(list))
+	for _, gs := range list {
+		switch gs.Status.State {
+		case v1alpha1.GameServerStateReady:
+			status.ReadyReplicas++
+		case v1alpha1.GameServerStateAllocated:
+			status.AllocatedReplicas++
+		}
+	}
+
+	return status
 }
