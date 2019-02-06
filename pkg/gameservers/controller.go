@@ -364,6 +364,126 @@ func (c *Controller) syncGameServer(key string) error {
 	return nil
 }
 
+// syncGameServer synchronises the Pods for the GameServers.
+// and reacts to status changes that can occur through the client SDK
+func (c *Controller) syncGameServerForDeletion(key string) error {
+	c.logger.WithField("key", key).Info("Synchronising")
+
+	// Convert the namespace/name string into a distinct namespace and name
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		// don't return an error, as we don't want this retried
+		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		return nil
+	}
+
+	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			c.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
+			return nil
+		}
+		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
+	}
+
+	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerPortAllocationState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerStartingState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerRequestReadyState(gs); err != nil {
+		return err
+	}
+	if err = c.syncGameServerShutdownState(gs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// syncGameServer synchronises the Pods for the GameServers.
+// and reacts to status changes that can occur through the client SDK
+func (c *Controller) syncGameServerForCreation(key string) error {
+	c.logger.WithField("key", key).Info("Synchronising")
+
+	// Convert the namespace/name string into a distinct namespace and name
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		// don't return an error, as we don't want this retried
+		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		return nil
+	}
+
+	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			c.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
+			return nil
+		}
+		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
+	}
+
+	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerPortAllocationState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerCreatingState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerStartingState(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerRequestReadyState(gs); err != nil {
+		return err
+	}
+	if err = c.syncGameServerShutdownState(gs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// syncGameServer synchronises the Pods for the GameServers.
+// and reacts to status changes that can occur through the client SDK
+func (c *Controller) syncGameServerForOther(key string) error {
+	c.logger.WithField("key", key).Info("Synchronising")
+
+	// Convert the namespace/name string into a distinct namespace and name
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		// don't return an error, as we don't want this retried
+		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		return nil
+	}
+
+	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			c.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
+			return nil
+		}
+		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
+	}
+
+	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
+		return err
+	}
+	if gs, err = c.syncGameServerRequestReadyState(gs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // syncGameServerDeletionTimestamp if the deletion timestamp is non-zero
 // then do one of two things:
 // - if the GameServer has Pods running, delete them
@@ -673,9 +793,9 @@ func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error 
 	// be explicit about where to delete. We only need to wait for the Pod to be removed, which we handle with our
 	// own finalizer.
 	p := metav1.DeletePropagationBackground
-	c.allocationMutex.Lock()
+	//c.allocationMutex.Lock()
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
-	c.allocationMutex.Unlock()
+	//c.allocationMutex.Unlock()
 	if err != nil {
 		return errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
 	}
