@@ -48,9 +48,9 @@ agones:
                 operator: Exists
     generateTLS: true
     safeToEvict: false
-    numWorkers: 64
-    apiServerQPS: 100
-    apiServerQPSBurst: 200
+    numWorkers: 100
+    apiServerQPS: 400
+    apiServerQPSBurst: 500
     http:
       port: 8080
     healthCheck:
