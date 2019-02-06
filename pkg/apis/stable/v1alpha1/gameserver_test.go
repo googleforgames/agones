@@ -261,7 +261,7 @@ func TestGameServerPod(t *testing.T) {
 
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Pod should not return an error")
-	assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
@@ -277,7 +277,7 @@ func TestGameServerPod(t *testing.T) {
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
 	pod, err = fixture.Pod(sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
-	assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
 	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
@@ -290,7 +290,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 		Spec: GameServerSpec{Container: "goat"}}
 
 	f := func(t *testing.T, gs *GameServer, pod *corev1.Pod) {
-		assert.Equal(t, gs.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
 		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
 		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])

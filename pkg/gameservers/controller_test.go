@@ -81,7 +81,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 			pod := ca.GetObject().(*corev1.Pod)
 			pod.Spec.NodeName = node.ObjectMeta.Name
 			podCreated = true
-			assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 			watchPods.Add(pod)
 			// wait for the change to propagate
 			assert.True(t, cache.WaitForCacheSync(context.Background().Done(), mocks.KubeInformerFactory.Core().V1().Pods().Informer().HasSynced))
@@ -694,7 +694,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			ca := action.(k8stesting.CreateAction)
 			pod := ca.GetObject().(*corev1.Pod)
 
-			assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 			assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[v1alpha1.GameServerPodLabel])

@@ -481,6 +481,10 @@ func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.Gam
 
 	c.logger.WithField("pod", pod).Info("creating Pod for GameServer")
 	pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
+	if k8serrors.IsAlreadyExists(err) {
+		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Pod already exists, reused")
+		return gs, nil
+	}
 	if err != nil {
 		if k8serrors.IsInvalid(err) {
 			c.logger.WithField("pod", pod).WithField("gameserver", gs).Errorf("Pod created is invalid")
