@@ -12,7 +12,7 @@ description: >
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
 which can be accessed and manipulated through the Kubernetes API.
 
-Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/client-libraries/), however,
+Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/using-api/client-libraries/), however,
 at time of writing, only
 the [Go](https://github.com/kubernetes/client-go) and
 [Python](https://github.com/kubernetes-client/python/) clients are documented to support accessing CRDs.

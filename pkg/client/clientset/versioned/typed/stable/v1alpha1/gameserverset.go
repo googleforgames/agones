@@ -21,6 +21,7 @@ package v1alpha1
 import (
 	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
+	v1beta1 "k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -44,6 +45,9 @@ type GameServerSetInterface interface {
 	List(opts v1.ListOptions) (*v1alpha1.GameServerSetList, error)
 	Watch(opts v1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameServerSet, err error)
+	GetScale(gameServerSetName string, options v1.GetOptions) (*v1beta1.Scale, error)
+	UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (*v1beta1.Scale, error)
+
 	GameServerSetExpansion
 }
 
@@ -168,6 +172,34 @@ func (c *gameServerSets) Patch(name string, pt types.PatchType, data []byte, sub
 		SubResource(subresources...).
 		Name(name).
 		Body(data).
+		Do().
+		Into(result)
+	return
+}
+
+// GetScale takes name of the gameServerSet, and returns the corresponding v1beta1.Scale object, and an error if there is any.
+func (c *gameServerSets) GetScale(gameServerSetName string, options v1.GetOptions) (result *v1beta1.Scale, err error) {
+	result = &v1beta1.Scale{}
+	err = c.client.Get().
+		Namespace(c.ns).
+		Resource("gameserversets").
+		Name(gameServerSetName).
+		SubResource("scale").
+		VersionedParams(&options, scheme.ParameterCodec).
+		Do().
+		Into(result)
+	return
+}
+
+// UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
+func (c *gameServerSets) UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (result *v1beta1.Scale, err error) {
+	result = &v1beta1.Scale{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("gameserversets").
+		Name(gameServerSetName).
+		SubResource("scale").
+		Body(scale).
 		Do().
 		Into(result)
 	return

@@ -18,6 +18,8 @@ import (
 	"context"
 	"testing"
 
+	v1 "k8s.io/api/core/v1"
+
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
@@ -33,19 +35,21 @@ import (
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() *fakeController {
 	m := agtesting.NewMocks()
-	c := NewController(m.KubeClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	gsWatch := watch.NewFake()
 	faWatch := watch.NewFake()
 	fasWatch := watch.NewFake()
 	fleetWatch := watch.NewFake()
+	nodeWatch := watch.NewFake()
 
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleetallocations", k8stesting.DefaultWatchReactor(faWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fasWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleets", k8stesting.DefaultWatchReactor(fleetWatch, nil))
+	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
 	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.faSynced,
-		c.fleetSynced, c.fasSynced)
+		c.fleetSynced, c.fasSynced, c.nodeSynced)
 
 	return &fakeController{
 		Controller: c,
@@ -54,6 +58,7 @@ func newFakeController() *fakeController {
 		faWatch:    faWatch,
 		fasWatch:   fasWatch,
 		fleetWatch: fleetWatch,
+		nodeWatch:  nodeWatch,
 		cancel:     cancel,
 		stop:       stop,
 	}
@@ -93,11 +98,27 @@ type fakeController struct {
 	faWatch    *watch.FakeWatcher
 	fasWatch   *watch.FakeWatcher
 	fleetWatch *watch.FakeWatcher
+	nodeWatch  *watch.FakeWatcher
 	stop       <-chan struct{}
 	cancel     context.CancelFunc
 }
 
-func gameServer(fleetName string, state v1alpha1.GameServerState) *v1alpha1.GameServer {
+func nodeWithName(name string) *v1.Node {
+	return &v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+			UID:  uuid.NewUUID(),
+		},
+	}
+}
+
+func gameServerWithNode(nodeName string) *v1alpha1.GameServer {
+	gs := gameServerWithFleetAndState("fleet", v1alpha1.GameServerStateReady)
+	gs.Status.NodeName = nodeName
+	return gs
+}
+
+func gameServerWithFleetAndState(fleetName string, state v1alpha1.GameServerState) *v1alpha1.GameServer {
 	lbs := map[string]string{}
 	if fleetName != "" {
 		lbs[v1alpha1.FleetNameLabel] = fleetName
@@ -118,7 +139,7 @@ func gameServer(fleetName string, state v1alpha1.GameServerState) *v1alpha1.Game
 
 func generateGsEvents(count int, state v1alpha1.GameServerState, fleetName string, fakew *watch.FakeWatcher) {
 	for i := 0; i < count; i++ {
-		gs := gameServer(fleetName, v1alpha1.GameServerState(""))
+		gs := gameServerWithFleetAndState(fleetName, v1alpha1.GameServerState(""))
 		fakew.Add(gs)
 		gsUpdated := gs.DeepCopy()
 		gsUpdated.Status.State = state
@@ -139,7 +160,7 @@ func fleetAllocation(fleetName string) *v1alpha1.FleetAllocation {
 			FleetName: fleetName,
 		},
 		Status: v1alpha1.FleetAllocationStatus{
-			GameServer: gameServer(fleetName, v1alpha1.GameServerStateAllocated),
+			GameServer: gameServerWithFleetAndState(fleetName, v1alpha1.GameServerStateAllocated),
 		},
 	}
 }
@@ -265,4 +286,42 @@ agones_fleet_autoscalers_desired_replicas_count{fleet_name="deleted-fleet",name=
 agones_fleet_autoscalers_limited{fleet_name="first-fleet",name="name-switch"} 0
 agones_fleet_autoscalers_limited{fleet_name="second-fleet",name="name-switch"} 1
 agones_fleet_autoscalers_limited{fleet_name="deleted-fleet",name="deleted"} 0
+`
+
+var nodeCountExpected = `# HELP agones_gameservers_node_count The count of gameservers per node in the cluster
+# TYPE agones_gameservers_node_count histogram
+agones_gameservers_node_count_bucket{le="1e-05"} 1
+agones_gameservers_node_count_bucket{le="1.00001"} 2
+agones_gameservers_node_count_bucket{le="2.00001"} 3
+agones_gameservers_node_count_bucket{le="3.00001"} 3
+agones_gameservers_node_count_bucket{le="4.00001"} 3
+agones_gameservers_node_count_bucket{le="5.00001"} 3
+agones_gameservers_node_count_bucket{le="6.00001"} 3
+agones_gameservers_node_count_bucket{le="7.00001"} 3
+agones_gameservers_node_count_bucket{le="8.00001"} 3
+agones_gameservers_node_count_bucket{le="9.00001"} 3
+agones_gameservers_node_count_bucket{le="10.00001"} 3
+agones_gameservers_node_count_bucket{le="11.00001"} 3
+agones_gameservers_node_count_bucket{le="12.00001"} 3
+agones_gameservers_node_count_bucket{le="13.00001"} 3
+agones_gameservers_node_count_bucket{le="14.00001"} 3
+agones_gameservers_node_count_bucket{le="15.00001"} 3
+agones_gameservers_node_count_bucket{le="16.00001"} 3
+agones_gameservers_node_count_bucket{le="32.00001"} 3
+agones_gameservers_node_count_bucket{le="40.00001"} 3
+agones_gameservers_node_count_bucket{le="50.00001"} 3
+agones_gameservers_node_count_bucket{le="60.00001"} 3
+agones_gameservers_node_count_bucket{le="70.00001"} 3
+agones_gameservers_node_count_bucket{le="80.00001"} 3
+agones_gameservers_node_count_bucket{le="90.00001"} 3
+agones_gameservers_node_count_bucket{le="100.00001"} 3
+agones_gameservers_node_count_bucket{le="110.00001"} 3
+agones_gameservers_node_count_bucket{le="120.00001"} 3
+agones_gameservers_node_count_bucket{le="+Inf"} 3
+agones_gameservers_node_count_sum 3
+agones_gameservers_node_count_count 3
+# HELP agones_nodes_count The count of nodes in the cluster
+# TYPE agones_nodes_count gauge
+agones_nodes_count{empty="false"} 2
+agones_nodes_count{empty="true"} 1
 `

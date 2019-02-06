@@ -68,7 +68,7 @@ func RegisterStackdriverExporter(projectID string) (sd *stackdriver.Exporter, er
 // we are going to use
 func SetReportingPeriod(prometheus, stackdriver bool) {
 	// if we're using only prometheus we can report faster as we're only exposing metrics in memory
-	reportingPeriod := 1 * time.Second
+	reportingPeriod := 15 * time.Second
 	if stackdriver {
 		// There is a limitation on Stackdriver that reporting should
 		// be equal or more than 1 minute

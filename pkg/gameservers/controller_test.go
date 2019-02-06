@@ -176,11 +176,15 @@ func TestControllerWatchGameServers(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	c.workerqueue.SyncHandler = func(name string) error {
+	h := func(name string) error {
 		assert.Equal(t, "default/test", name)
 		received <- name
 		return nil
 	}
+
+	c.workerqueue.SyncHandler = h
+	c.creationWorkerQueue.SyncHandler = h
+	c.deletionWorkerQueue.SyncHandler = h
 
 	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()

@@ -327,6 +327,16 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+  subresources:
+    # scale enables the scale subresource.
+    scale:
+      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+      specReplicasPath: .spec.replicas
+      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+      statusReplicasPath: .status.replicas
+      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+      labelSelectorPath: .status.labelSelector
+
 ---
 # Source: agones/templates/crds/fleetallocation.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -925,6 +935,16 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+  subresources:
+    # scale enables the scale subresource.
+    scale:
+      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+      specReplicasPath: .spec.replicas
+      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+      statusReplicasPath: .status.replicas
+      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+      labelSelectorPath: .status.labelSelector
+
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -1054,11 +1074,11 @@ spec:
         - name: SIDECAR_CPU_LIMIT
           value: "0"
         - name: NUM_WORKERS
-          value: "64"
-        - name: API_SERVER_QPS
           value: "100"
+        - name: API_SERVER_QPS
+          value: "400"
         - name: API_SERVER_QPS_BURST
-          value: "200"
+          value: "500"
         livenessProbe:
           httpGet:
             path: /live

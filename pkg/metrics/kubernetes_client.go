@@ -86,7 +86,7 @@ func init() {
 		Name:        "k8s_client_cache_list_items",
 		Measure:     cacheListItemCountStats,
 		Description: "Count of items in a list from the Kubernetes API.",
-		Aggregation: view.Distribution(),
+		Aggregation: view.Distribution(0),
 	}))
 
 	runtime.Must(view.Register(&view.View{
@@ -107,14 +107,14 @@ func init() {
 		Name:        "k8s_client_cache_watch_duration_seconds",
 		Measure:     cacheWatchesLatencyStats,
 		Description: "Duration of watches on the Kubernetes API.",
-		Aggregation: view.Distribution(),
+		Aggregation: view.Distribution(0),
 	}))
 
 	runtime.Must(view.Register(&view.View{
 		Name:        "k8s_client_cache_watch_events",
 		Measure:     cacheItemsInWatchesCountStats,
 		Description: "Number of items in watches on the Kubernetes API.",
-		Aggregation: view.Distribution(),
+		Aggregation: view.Distribution(0),
 	}))
 
 	runtime.Must(view.Register(&view.View{
@@ -144,7 +144,7 @@ func init() {
 		Name:        "k8s_client_workqueue_latency_seconds",
 		Measure:     workQueueLatencyStats,
 		Description: "How long an item stays in the work queue.",
-		Aggregation: view.Distribution(),
+		Aggregation: view.Distribution(0),
 		TagKeys:     []tag.Key{keyQueueName},
 	}))
 
@@ -152,7 +152,7 @@ func init() {
 		Name:        "k8s_client_workqueue_work_duration_seconds",
 		Measure:     workQueueWorkDurationStats,
 		Description: "How long processing an item from the work queue takes.",
-		Aggregation: view.Distribution(),
+		Aggregation: view.Distribution(0),
 		TagKeys:     []tag.Key{keyQueueName},
 	}))
 

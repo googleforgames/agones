@@ -31,6 +31,7 @@ var (
 	keyStatusCode = mustTagKey("status_code")
 	keyVerb       = mustTagKey("verb")
 	keyEndpoint   = mustTagKey("endpoint")
+	keyEmpty      = mustTagKey("empty")
 )
 
 func recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Measurement) {

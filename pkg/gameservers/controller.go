@@ -18,6 +18,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+	"time"
+
+	"k8s.io/client-go/util/workqueue"
 
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -73,6 +76,8 @@ type Controller struct {
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	workerqueue            *workerqueue.WorkerQueue
+	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
+	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
 	allocationMutex        *sync.Mutex
 	stop                   <-chan struct {
 	}
@@ -124,21 +129,25 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-controller"})
 
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServer, c.logger, stable.GroupName+".GameServerController")
+	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncGameServer, c.logger, stable.GroupName+".GameServerController", fastRateLimiter())
+	c.creationWorkerQueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncGameServer, c.logger, stable.GroupName+".GameServerControllerCreation", fastRateLimiter())
+	c.deletionWorkerQueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncGameServer, c.logger, stable.GroupName+".GameServerControllerDeletion", fastRateLimiter())
 	health.AddLivenessCheck("gameserver-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
+	health.AddLivenessCheck("gameserver-creation-workerqueue", healthcheck.Check(c.creationWorkerQueue.Healthy))
+	health.AddLivenessCheck("gameserver-deletion-workerqueue", healthcheck.Check(c.deletionWorkerQueue.Healthy))
 
 	wh.AddHandler("/mutate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationMutationHandler)
 	wh.AddHandler("/validate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationValidationHandler)
 	wh.AddHandler("/validate", v1alpha1.Kind("GameServer"), admv1beta1.Update, c.mutationValidationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: c.workerqueue.Enqueue,
+		AddFunc: c.enqueueGameServerBasedOnState,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// no point in processing unless there is a State change
 			oldGs := oldObj.(*v1alpha1.GameServer)
 			newGs := newObj.(*v1alpha1.GameServer)
 			if oldGs.Status.State != newGs.Status.State || oldGs.ObjectMeta.DeletionTimestamp != newGs.ObjectMeta.DeletionTimestamp {
-				c.workerqueue.Enqueue(newGs)
+				c.enqueueGameServerBasedOnState(newGs)
 			}
 		},
 	})
@@ -167,6 +176,31 @@ func NewController(
 	})
 
 	return c
+}
+
+func (c *Controller) enqueueGameServerBasedOnState(item interface{}) {
+	gs := item.(*v1alpha1.GameServer)
+
+	switch gs.Status.State {
+	case v1alpha1.GameServerStatePortAllocation,
+		v1alpha1.GameServerStateCreating:
+		c.creationWorkerQueue.Enqueue(gs)
+
+	case v1alpha1.GameServerStateShutdown:
+		c.deletionWorkerQueue.Enqueue(gs)
+
+	default:
+		c.workerqueue.Enqueue(gs)
+	}
+}
+
+// fastRateLimiter returns a fast rate limiter, without exponential back-off.
+func fastRateLimiter() workqueue.RateLimiter {
+	const numFastRetries = 5
+	const fastDelay = 20 * time.Millisecond  // first few retries up to 'numFastRetries' are fast
+	const slowDelay = 500 * time.Millisecond // subsequent retries are slow
+
+	return workqueue.NewItemFastSlowRateLimiter(fastDelay, slowDelay, numFastRetries)
 }
 
 // creationMutationHandler is the handler for the mutating webhook that sets the
@@ -290,7 +324,21 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	// Run the Health Controller
 	go c.healthController.Run(stop)
 
-	c.workerqueue.Run(workers, stop)
+	// start work queues
+	var wg sync.WaitGroup
+
+	startWorkQueue := func(wq *workerqueue.WorkerQueue) {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			wq.Run(workers, stop)
+		}()
+	}
+
+	startWorkQueue(c.workerqueue)
+	startWorkQueue(c.creationWorkerQueue)
+	startWorkQueue(c.deletionWorkerQueue)
+	wg.Wait()
 	return nil
 }
 

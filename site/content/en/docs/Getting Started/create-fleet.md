@@ -131,11 +131,17 @@ how many `GameServers` are currently in a Ready state. After a short period, the
 
 Let's scale up the `Fleet` from 2 `replicates` to 5.
 
+{{% feature expiryVersion="0.8.0" %}}
 Run `kubectl edit fleet simple-udp`, which will open an editor for you to edit the Fleet configuration.
 
 Scroll down to the `spec > replicas` section, and change the values of `replicas: 2` to `replicas: 5`.
 
 Save the file and exit - this will apply the changes.
+{{% /feature %}}
+
+{{% feature publishVersion="0.8.0" %}}
+Run `kubectl scale fleet simple-udp --replicas=5` to change Replicas count from 2 to 5.
+{{% /feature %}}
 
 If we now run `kubectl get gameservers` we should see 5 `GameServers` prefixed by `simple-udp`.
 
@@ -362,7 +368,14 @@ and will automatically leave them running on scale down -- as we assume that pla
 and we shouldn't disconnect them!
 
 Let's scale down our Fleet to 0 (yep! you can do that!), and watch what happens.
+
+{{% feature expiryVersion="0.8.0" %}}
 Run `kubectl edit fleet simple-udp` and replace `replicas: 5` with `replicas 0`, save the file and exit your editor.
+{{% /feature %}}
+
+{{% feature publishVersion="0.8.0" %}}
+Run `kubectl scale fleet simple-udp --replicas=0` to change Replicas count from 5 to 0.
+{{% /feature %}}
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
@@ -414,7 +427,13 @@ of `GameServers` in the pool in either a `Ready` or `Allocated` state.
 We can also change the configuration of the `GameServer` of the running `Fleet`, and have the changes
 roll out, without interrupting the currently `Allocated` `GameServers`.
 
+{{% feature expiryVersion="0.8.0" %}}
 Let's take this for a spin! Run `kubectl edit fleet simple-udp` and set the `replicas` field to back to `5`.
+{{% /feature %}}
+
+{{% feature publishVersion="0.8.0" %}}
+Let's take this for a spin! Run `kubectl scale fleet simple-udp --replicas=5` to return Replicas count back to 5.
+{{% /feature %}}
 
 Let's also allocate ourselves a `GameServer`
 
@@ -460,5 +479,7 @@ how the extra functionality can enable smoke testing, server information communi
 
   - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
 See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).
+  - Have a look at the [GameServer Creation, Allocation and Shutdown Lifecycle]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) diagram,
+    to give you a good overview of how all the pieces fit together - from creating to integrating with a matchmaker.
   - Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
   - If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}) tutorial.

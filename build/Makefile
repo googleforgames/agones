@@ -59,7 +59,7 @@ GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.5
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
 agones_path := $(realpath $(build_path)/..)
-docs_path := $(agones_path)/docs
+site_path := $(agones_path)/site
 
 kubeconfig_path := $(dir $(KUBECONFIG))
 kubeconfig_file := $(notdir $(KUBECONFIG))
@@ -336,11 +336,17 @@ gen-crd-client: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
 
-doc-images: $(docs_path)/gameserver-states.png
+site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 
-%.png: %.dot
+# generate pngs from dot files
+%.dot.png: %.dot
 	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 	  'dot -Tpng /dev/stdin' < $< > $@.tmp && mv $@.tmp $@
+
+# general pngs from puml files
+%.puml.png: %.puml
+	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		'plantuml -pipe' < $< > $@
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
@@ -488,7 +494,7 @@ install-custom-pull-secret:
 gcloud-init: ensure-build-config
 	docker run --rm -it $(common_mounts) $(build_tag) gcloud init
 
-# Creates and authenticates a small, 3 node GKE cluster to work against
+# Creates and authenticates a small, 6 node GKE cluster to work against (2 nodes are used for agones-metrics and agones-system)
 gcloud-test-cluster: GCP_CLUSTER_LEGACYABAC ?= false
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
@@ -606,9 +612,11 @@ minikube-test-e2e: minikube-agones-profile test-e2e
 
 # prometheus on minkube 
 # we have to disable PVC as it's not supported on minkube.
-minkube-setup-prometheus:
+minikube-setup-prometheus:
 	$(MAKE) setup-prometheus \
-		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" \
+		PVC=false HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
+
 
 # grafana on minkube with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on minkube.
