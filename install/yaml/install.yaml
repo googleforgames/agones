@@ -1074,11 +1074,11 @@ spec:
         - name: SIDECAR_CPU_LIMIT
           value: "0"
         - name: NUM_WORKERS
-          value: "64"
-        - name: API_SERVER_QPS
           value: "100"
+        - name: API_SERVER_QPS
+          value: "400"
         - name: API_SERVER_QPS_BURST
-          value: "200"
+          value: "500"
         livenessProbe:
           httpGet:
             path: /live
