@@ -606,9 +606,11 @@ minikube-test-e2e: minikube-agones-profile test-e2e
 
 # prometheus on minkube 
 # we have to disable PVC as it's not supported on minkube.
-minkube-setup-prometheus:
+minikube-setup-prometheus:
 	$(MAKE) setup-prometheus \
-		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" \
+		PVC=false HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
+
 
 # grafana on minkube with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on minkube.
