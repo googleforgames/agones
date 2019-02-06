@@ -494,7 +494,7 @@ install-custom-pull-secret:
 gcloud-init: ensure-build-config
 	docker run --rm -it $(common_mounts) $(build_tag) gcloud init
 
-# Creates and authenticates a small, 3 node GKE cluster to work against
+# Creates and authenticates a small, 6 node GKE cluster to work against (2 nodes are used for agones-metrics and agones-system)
 gcloud-test-cluster: GCP_CLUSTER_LEGACYABAC ?= false
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
@@ -612,9 +612,11 @@ minikube-test-e2e: minikube-agones-profile test-e2e
 
 # prometheus on minkube 
 # we have to disable PVC as it's not supported on minkube.
-minkube-setup-prometheus:
+minikube-setup-prometheus:
 	$(MAKE) setup-prometheus \
-		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" \
+		PVC=false HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
+
 
 # grafana on minkube with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on minkube.
