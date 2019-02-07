@@ -333,9 +333,9 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 
 // podObjectMeta configures the pod ObjectMeta details
 func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
-	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
-	// can be no collisions
-	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
+	pod.ObjectMeta.GenerateName = ""
+	// Pods inherit the name of their gameserver. It's safe since there's
+	// a guarantee that pod won't outlive its parent.
 	pod.ObjectMeta.Name = gs.ObjectMeta.Name
 	// Pods for GameServers need to stay in the same namespace
 	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
