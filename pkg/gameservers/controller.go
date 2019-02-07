@@ -677,13 +677,7 @@ func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error 
 	// be explicit about where to delete. We only need to wait for the Pod to be removed, which we handle with our
 	// own finalizer.
 	p := metav1.DeletePropagationBackground
-<<<<<<< HEAD
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
-=======
-	//c.allocationMutex.Lock()
-	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
-	//c.allocationMutex.Unlock()
->>>>>>> 7fc63ab826dae368333c64d4301eeebe84cb8e77
 	if err != nil {
 		return errors.Wrapf(err, "error deleting Game Server %s", gs.ObjectMeta.Name)
 	}
