@@ -285,7 +285,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		// make some as unhealthy
 		list[0].Status.State = v1alpha1.GameServerStateUnhealthy
 
-		deleted := false
+		updated := false
 		count := 0
 
 		c, m := newFakeController()
@@ -296,10 +296,13 @@ func TestSyncGameServerSet(t *testing.T) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
 
-		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			da := action.(k8stesting.DeleteAction)
-			deleted = true
-			assert.Equal(t, "test-0", da.GetName())
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, gs.Status.State, v1alpha1.GameServerStateShutdown)
+
+			updated = true
+			assert.Equal(t, "test-0", gs.GetName())
 			return true, nil, nil
 		})
 		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -317,7 +320,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 6, count)
-		assert.True(t, deleted, "A game servers should have been deleted")
+		assert.True(t, updated, "A game servers should have been updated")
 	})
 
 	t.Run("removing gamservers", func(t *testing.T) {
@@ -332,7 +335,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
-		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			count++
 			return true, nil, nil
 		})
@@ -363,12 +366,16 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	gs3.ObjectMeta.DeletionTimestamp = &now
 	gs3.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}
 
-	var deletedCount int
+	var updatedCount int
 
 	c, m := newFakeController()
-	m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		deletedCount++
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*v1alpha1.GameServer)
 
+		assert.Equal(t, gs.Status.State, v1alpha1.GameServerStateShutdown)
+
+		updatedCount++
 		return true, nil, nil
 	})
 
@@ -378,7 +385,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	err := c.deleteGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
 	assert.Nil(t, err)
 
-	assert.Equal(t, 3, deletedCount, "Deletion should have occured")
+	assert.Equal(t, 3, updatedCount, "Updates should have occured")
 }
 
 func TestSyncMoreGameServers(t *testing.T) {
