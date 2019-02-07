@@ -48,6 +48,10 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 
+# Specify stress test level 1..100
+# STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-udp Game Servers.
+STRESS_TEST_LEVEL=20
+
 # kind cluster name to use
 KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=kind-$(KIND_PROFILE)-control-plane
@@ -216,6 +220,16 @@ test-e2e: $(ensure-build-image)
 	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET)
+
+# Runs end-to-end stress tests on the current configured cluster
+# For minikube user the minikube-stress-test-e2e targets
+stress-test-e2e: $(ensure-build-image)
+	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
+		-timeout 1h \
+		-run '.*StressTest.*' \
+		--gameserver-image=$(GS_TEST_IMAGE) \
+		--pullsecret=$(IMAGE_PULL_SECRET) \
+		--stress $(STRESS_TEST_LEVEL)
 
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
@@ -609,6 +623,10 @@ minikube-transfer-image:
 # Runs e2e tests against our minikube
 minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
 minikube-test-e2e: minikube-agones-profile test-e2e
+
+# Runs stress tests against our minikube
+minikube-stress-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
+minikube-stress-test-e2e: minikube-agones-profile stress-test-e2e
 
 # prometheus on minkube 
 # we have to disable PVC as it's not supported on minkube.
