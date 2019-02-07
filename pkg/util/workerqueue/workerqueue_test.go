@@ -114,13 +114,19 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	server := httptest.NewServer(health)
 	defer server.Close()
 
+	const workersCount = 1
 	stop := make(chan struct{})
-	go wq.Run(1, stop)
+	go wq.Run(workersCount, stop)
 
-	url := server.URL + "/live"
+	// Wait for worker to actually start
+	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+		rc := wq.RunCount()
+		logrus.WithField("runcount", rc).Info("Checking run count before liveness check")
+		return rc == workersCount, nil
+	})
+	assert.Nil(t, err)
 
 	f := func(t *testing.T, url string, status int) {
-
 		// sometimes the http server takes a bit to start up
 		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 			resp, err := http.Get(url)
@@ -142,11 +148,12 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
+	url := server.URL + "/live"
 	f(t, url, http.StatusOK)
 
 	close(stop)
 	// closing can take a short while
-	err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count")
 		return rc == 0, nil
