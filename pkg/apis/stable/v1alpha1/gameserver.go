@@ -341,7 +341,10 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
 	// can be no collisions
 	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
+<<<<<<< HEAD
 >>>>>>> Improving delete performance
+=======
+>>>>>>> 7fc63ab826dae368333c64d4301eeebe84cb8e77
 	pod.ObjectMeta.Name = gs.ObjectMeta.Name
 	// Pods for GameServers need to stay in the same namespace
 	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
