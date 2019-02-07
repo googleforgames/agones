@@ -79,7 +79,7 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.5
+            image: gcr.io/agones-images/udp-server:0.6
 ```
 
 This is the *default* Fleet scheduling strategy. It is designed for dynamic Kubernetes environments, wherein you wish 
@@ -134,7 +134,7 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.5
+            image: gcr.io/agones-images/udp-server:0.6
 ```
 
 This Fleet scheduling strategy is designed for static Kubernetes environments, such as when you are running Kubernetes
