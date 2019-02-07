@@ -440,11 +440,12 @@ func (c *Controller) deleteGameServers(gsSet *v1alpha1.GameServerSet, toDelete [
 	c.logger.WithField("diff", len(toDelete)).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Deleting gameservers")
 
 	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *v1alpha1.GameServer) error {
-		c.allocationMutex.Lock()
-		err := c.gameServerGetter.GameServers(gs.Namespace).Delete(gs.ObjectMeta.Name, nil)
-		c.allocationMutex.Unlock()
+		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.State = v1alpha1.GameServerStateShutdown
+		_, err := c.gameServerGetter.GameServers(gs.Namespace).Update(gsCopy)
 		if err != nil {
-			return errors.Wrapf(err, "error deleting gameserver %s", gsSet.ObjectMeta.Name)
+			return errors.Wrapf(err, "error updating gameserver %s from status %s to Shutdown status.", gs.ObjectMeta.Name, gs.Status.State)
 		}
 
 		c.stateCache.forGameServerSet(gsSet).deleted(gs)
