@@ -172,30 +172,34 @@ func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
 	}
 }
 
-// WaitForFleetGameServersCondition wait for all GameServers for a given
-// fleet to match the spec.replicas and match a a condition
-func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond func(server v1alpha1.GameServer) bool) error {
+// WaitForFleetGameServersCondition waits for all GameServers for a given fleet to match
+// a condition specified by a callback.
+func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet,
+	cond func(server v1alpha1.GameServer) bool) error {
+	return f.WaitForFleetGameServerListCondition(flt,
+		func(servers []v1alpha1.GameServer) bool {
+			for _, gs := range servers {
+				if !cond(gs) {
+					return false
+				}
+			}
+			return true
+		})
+}
+
+// WaitForFleetGameServerListCondition waits for the list of GameServers to match a condition
+// specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
+func (f *Framework) WaitForFleetGameServerListCondition(flt *v1alpha1.Fleet,
+	cond func(servers []v1alpha1.GameServer) bool) error {
 	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err
 		}
-
 		if int32(len(gsList)) != flt.Spec.Replicas {
 			return false, nil
 		}
-
-		if err != nil {
-			return false, err
-		}
-
-		for _, gs := range gsList {
-			if !cond(gs) {
-				return false, nil
-			}
-		}
-
-		return true, nil
+		return cond(gsList), nil
 	})
 }
 
