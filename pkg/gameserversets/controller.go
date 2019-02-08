@@ -555,7 +555,7 @@ func (c *Controller) updateStatusIfChanged(gsSet *v1alpha1.GameServerSet, status
 	if gsSet.Status != status {
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Status = status
-		_, err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).Update(gsSetCopy)
+		_, err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).UpdateStatus(gsSetCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating status on GameServerSet %s", gsSet.ObjectMeta.Name)
 		}

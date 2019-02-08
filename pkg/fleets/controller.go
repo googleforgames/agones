@@ -291,9 +291,22 @@ func (c *Controller) syncFleet(key string) error {
 func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, replicas int32) error {
 	if active.ObjectMeta.UID == "" {
 		active.Spec.Replicas = replicas
-		gsSet, err := c.gameServerSetGetter.GameServerSets(active.ObjectMeta.Namespace).Create(active)
+		gsSets := c.gameServerSetGetter.GameServerSets(active.ObjectMeta.Namespace)
+		gsSet, err := gsSets.Create(active)
 		if err != nil {
 			return errors.Wrapf(err, "error creating gameserverset for fleet %s", fleet.ObjectMeta.Name)
+		}
+
+		// extra step which is needed to set
+		// default values for GameServerSet Status Subresource
+		gsSetCopy := gsSet.DeepCopy()
+		gsSetCopy.Status.ReadyReplicas = 0
+		gsSetCopy.Status.Replicas = 0
+		gsSetCopy.Status.AllocatedReplicas = 0
+		_, err = gsSets.UpdateStatus(gsSetCopy)
+		if err != nil {
+			return errors.Wrapf(err, "error updating status of gameserverset for fleet %s",
+				fleet.ObjectMeta.Name)
 		}
 
 		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "CreatingGameServerSet",
@@ -492,7 +505,7 @@ func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
 	}
 
-	_, err = c.fleetGetter.Fleets(fCopy.Namespace).Update(fCopy)
+	_, err = c.fleetGetter.Fleets(fCopy.Namespace).UpdateStatus(fCopy)
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
 
