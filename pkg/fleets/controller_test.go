@@ -143,6 +143,44 @@ func TestControllerSyncFleet(t *testing.T) {
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
 	})
 
+	t.Run("gameserverset with different scheduling", func(t *testing.T) {
+		f := defaultFixture()
+		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
+		c, m := newFakeController()
+		gsSet := f.GameServerSet()
+		gsSet.ObjectMeta.Name = "gsSet1"
+		gsSet.ObjectMeta.UID = "1234"
+		gsSet.Spec.Replicas = f.Spec.Replicas
+		gsSet.Spec.Scheduling = v1alpha1.Distributed
+		updated := false
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+
+			ua := action.(k8stesting.UpdateAction)
+			gsSet := ua.GetObject().(*v1alpha1.GameServerSet)
+			assert.Equal(t, f.Spec.Replicas, gsSet.Spec.Replicas)
+			assert.Equal(t, f.Spec.Scheduling, gsSet.Spec.Scheduling)
+			return true, gsSet, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.Nil(t, err)
+		assert.True(t, updated, "gameserverset should have been updated")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
+	})
+
 	t.Run("gameserverset with different image details", func(t *testing.T) {
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
@@ -153,6 +191,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.ObjectMeta.UID = "4321"
 		gsSet.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{HostPort: 7777}}
 		gsSet.Spec.Replicas = f.Spec.Replicas
+		gsSet.Spec.Scheduling = f.Spec.Scheduling
 		gsSet.Status.Replicas = 5
 		updated := false
 		created := false
@@ -747,8 +786,9 @@ func defaultFixture() *v1alpha1.Fleet {
 			UID:       "1234",
 		},
 		Spec: v1alpha1.FleetSpec{
-			Replicas: 5,
-			Template: v1alpha1.GameServerTemplateSpec{},
+			Replicas:   5,
+			Scheduling: v1alpha1.Packed,
+			Template:   v1alpha1.GameServerTemplateSpec{},
 		},
 	}
 	f.ApplyDefaults()

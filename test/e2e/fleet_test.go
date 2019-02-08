@@ -758,6 +758,81 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 	wg.Wait()
 }
 
+// Creates a fleet and one GameServer with Packed scheduling.
+// Scale to two GameServers with Distributed scheduling.
+// The old GameServer has Scheduling set to 5 and the new one has it set to Distributed.
+func TestUpdateFleetScheduling(t *testing.T) {
+	t.Parallel()
+	t.Run("Updating Spec.Scheduling on fleet should be updated in GameServer",
+		func(t *testing.T) {
+			alpha1 := framework.AgonesClient.StableV1alpha1()
+
+			flt := defaultFleet()
+			flt.Spec.Replicas = 1
+			flt.Spec.Scheduling = v1alpha1.Packed
+			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+
+			if assert.Nil(t, err) {
+				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			assert.Equal(t, int32(1), flt.Spec.Replicas)
+			assert.Equal(t, v1alpha1.Packed, flt.Spec.Scheduling)
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			const targetScale = 2
+			flt = schedulingFleetPatch(t, flt, v1alpha1.Distributed, targetScale)
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+			assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
+			assert.Equal(t, v1alpha1.Distributed, flt.Spec.Scheduling)
+
+			err = framework.WaitForFleetGameServerListCondition(flt,
+				func(gsList []v1alpha1.GameServer) bool {
+					return countFleetScheduling(gsList, v1alpha1.Distributed) == 1 &&
+						countFleetScheduling(gsList, v1alpha1.Packed) == 1
+				})
+			assert.Nil(t, err)
+		})
+}
+
+// Counts the number of gameservers with the specified scheduling strategy in a fleet
+func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling v1alpha1.SchedulingStrategy) int {
+	count := 0
+	for _, gs := range gsList {
+		if gs.Spec.Scheduling == scheduling {
+			count++
+		}
+	}
+	return count
+}
+
+// Patches fleet with scheduling and scale values
+func schedulingFleetPatch(t *testing.T,
+	f *v1alpha1.Fleet,
+	scheduling v1alpha1.SchedulingStrategy,
+	scale int32) *v1alpha1.Fleet {
+
+	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/scheduling", "value": "%s" },
+	                       { "op": "replace", "path": "/spec/replicas", "value": %d }]`,
+		scheduling, scale)
+
+	logrus.WithField("fleet", f.ObjectMeta.Name).
+		WithField("scheduling", scheduling).
+		WithField("scale", scale).
+		WithField("patch", patch).
+		Info("updating scheduling")
+
+	fltRes, err := framework.AgonesClient.
+		StableV1alpha1().
+		Fleets(defaultNs).
+		Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+
+	assert.Nil(t, err)
+	return fltRes
+}
+
 func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {
 	t0 := time.Now()
 	scaleFleetSubresource(t, flt, fleetSize)

@@ -301,9 +301,10 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *st
 		return nil
 	}
 
-	if replicas != active.Spec.Replicas {
+	if replicas != active.Spec.Replicas || active.Spec.Scheduling != fleet.Spec.Scheduling {
 		gsSetCopy := active.DeepCopy()
 		gsSetCopy.Spec.Replicas = replicas
+		gsSetCopy.Spec.Scheduling = fleet.Spec.Scheduling
 		gsSetCopy, err := c.gameServerSetGetter.GameServerSets(fleet.ObjectMeta.Namespace).Update(gsSetCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating replicas for gameserverset for fleet %s", fleet.ObjectMeta.Name)
