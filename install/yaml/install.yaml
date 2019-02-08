@@ -51,11 +51,17 @@ rules:
   resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
+  resources: ["gameserversets/status"]
+  verbs: ["update"]
+- apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers"]
   verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["stable.agones.dev"]
+  resources: ["fleets/status"]
+  verbs: ["update"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameserverallocations"]
   verbs: ["list", "watch",  "delete"]
@@ -328,6 +334,8 @@ spec:
                           minimum: 1
                           maximum: 2147483648
   subresources:
+    # status enables the status subresource.
+    status: {}
     # scale enables the scale subresource.
     scale:
       # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
@@ -936,6 +944,8 @@ spec:
                           minimum: 1
                           maximum: 2147483648
   subresources:
+    # status enables the status subresource.
+    status: {}
     # scale enables the scale subresource.
     scale:
       # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
