@@ -16,6 +16,8 @@ package e2e
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 	"time"
 
@@ -85,6 +87,75 @@ func TestSDKSetLabel(t *testing.T) {
 }
 
 // nolint:dupl
+func TestSDKSetLabelRace(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	const rounds = 50
+
+	lastValue := fmt.Sprintf("val-%03v", rounds)
+
+	// goroutine that will set 2 labels N times on a game server.
+	go func() {
+		for i := 1; i <= rounds; i++ {
+			log.Printf("round %v", i)
+			val := fmt.Sprintf("val-%03v", i)
+			setSimpleUDPLabel(t, readyGs, "foo", val)
+			time.Sleep(1 * time.Millisecond)
+			setSimpleUDPLabel(t, readyGs, "bar", val)
+			time.Sleep(1 * time.Millisecond)
+		}
+	}()
+
+	var lastFoo string
+	var lastBar string
+
+	// now wait until both foo and bar reach "val-100"
+	err = wait.PollImmediate(10*time.Millisecond, 60*time.Second, func() (bool, error) {
+		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+
+		foo := gs.Labels["stable.agones.dev/sdk-foo"]
+		bar := gs.Labels["stable.agones.dev/sdk-bar"]
+
+		log.Printf("got foo %v (previous %v) bar %v (previous %v)", foo, lastFoo, bar, lastBar)
+		if lastFoo != "" && foo < lastFoo {
+			t.Fatalf("foo went back in time %v, was %v", foo, lastFoo)
+		}
+		lastFoo = foo
+
+		if lastBar != "" && bar < lastBar {
+			t.Fatalf("bar went back in time %v, was %v", bar, lastBar)
+		}
+		lastBar = bar
+
+		return foo == lastValue && bar == lastValue, nil
+	})
+
+	time.Sleep(3 * time.Second)
+
+	assert.NoError(t, err)
+}
+
+func setSimpleUDPLabel(t *testing.T, gs *v1alpha1.GameServer, key, value string) {
+	reply, err := e2eframework.PingGameServer("LABEL "+key+" "+value, fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port))
+	if err != nil {
+		t.Fatalf("Could ping GameServer: %v", err)
+	}
+	// if !strings.HasPrefix(reply, "ACK") {
+	if !strings.HasPrefix(reply, "ACK: LABEL") {
+		// t.Fatalf("invalid response")
+		log.Printf("invalid response for key %v value %s, reply %s", key, value, reply)
+	}
+}
+
+// nolint:dupl
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
@@ -119,6 +190,75 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[annotation])
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[stable.VersionAnnotation])
+}
+
+// nolint:dupl
+func TestSDKSetAnnotationRace(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	const rounds = 50
+
+	lastValue := fmt.Sprintf("val-%03v", rounds)
+
+	// goroutine that will set 2 labels N times on a game server.
+	go func() {
+		for i := 1; i <= rounds; i++ {
+			log.Printf("round %v", i)
+			val := fmt.Sprintf("val-%03v", i)
+			setSimpleUDPAnnotation(t, readyGs, "foo", val)
+			time.Sleep(1 * time.Millisecond)
+			setSimpleUDPAnnotation(t, readyGs, "bar", val)
+			time.Sleep(1 * time.Millisecond)
+		}
+	}()
+
+	var lastFoo string
+	var lastBar string
+
+	// now wait until both foo and bar reach "val-100"
+	err = wait.PollImmediate(10*time.Millisecond, 60*time.Second, func() (bool, error) {
+		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+
+		foo := gs.ObjectMeta.Annotations["stable.agones.dev/sdk-foo"]
+		bar := gs.ObjectMeta.Annotations["stable.agones.dev/sdk-bar"]
+
+		log.Printf("got foo %v (previous %v) bar %v (previous %v)", foo, lastFoo, bar, lastBar)
+		if lastFoo != "" && foo < lastFoo {
+			t.Fatalf("foo went back in time %v, was %v", foo, lastFoo)
+		}
+		lastFoo = foo
+
+		if lastBar != "" && bar < lastBar {
+			t.Fatalf("bar went back in time %v, was %v", bar, lastBar)
+		}
+		lastBar = bar
+
+		return foo == lastValue && bar == lastValue, nil
+	})
+
+	time.Sleep(3 * time.Second)
+
+	assert.NoError(t, err)
+}
+
+func setSimpleUDPAnnotation(t *testing.T, gs *v1alpha1.GameServer, key, value string) {
+	reply, err := e2eframework.PingGameServer("ANNOTATION "+key+" "+value, fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port))
+	if err != nil {
+		t.Fatalf("Could ping GameServer: %v", err)
+	}
+	// if !strings.HasPrefix(reply, "ACK") {
+	if !strings.HasPrefix(reply, "ACK: ANNOTATION") {
+		// t.Fatalf("invalid response")
+		log.Printf("invalid response for key %v value %s, reply %s", key, value, reply)
+	}
 }
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {

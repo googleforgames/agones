@@ -261,7 +261,8 @@ func PingGameServer(msg, address string) (reply string, err error) {
 	}
 	b := make([]byte, 1024)
 
-	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	// err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	err = conn.SetReadDeadline(time.Now().Add(2 * time.Second))
 	if err != nil {
 		return "", err
 	}
