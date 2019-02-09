@@ -77,20 +77,26 @@ func TestSidecarRun(t *testing.T) {
 		},
 		"label": {
 			f: func(sc *SDKServer, ctx context.Context) {
-				_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "bar"})
+				_, err := sc.SetLabel(ctx, &sdk.KeyValue{Key: "foo", Value: "value-foo"})
+				_, err = sc.SetLabel(ctx, &sdk.KeyValue{Key: "bar", Value: "value-bar"})
 				assert.Nil(t, err)
 			},
 			expected: expected{
-				labels: map[string]string{metadataPrefix + "foo": "bar"},
+				labels: map[string]string{
+					metadataPrefix + "foo": "value-foo",
+					metadataPrefix + "bar": "value-bar"},
 			},
 		},
 		"annotation": {
 			f: func(sc *SDKServer, ctx context.Context) {
-				_, err := sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test", Value: "annotation"})
+				_, err := sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test-1", Value: "annotation-1"})
+				_, err = sc.SetAnnotation(ctx, &sdk.KeyValue{Key: "test-2", Value: "annotation-2"})
 				assert.Nil(t, err)
 			},
 			expected: expected{
-				annotations: map[string]string{metadataPrefix + "test": "annotation"},
+				annotations: map[string]string{
+					metadataPrefix + "test-1": "annotation-1",
+					metadataPrefix + "test-2": "annotation-2"},
 			},
 		},
 	}
@@ -176,24 +182,40 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 		annotations map[string]string
 	}
 
+	type scData struct {
+		gsState       v1alpha1.GameServerState
+		gsLabels      map[string]string
+		gsAnnotations map[string]string
+	}
+
 	fixtures := map[string]struct {
 		expected expected
 		key      string
+		scData   scData
 	}{
 		"ready": {
-			key: string(updateState) + "/" + string(v1alpha1.GameServerStateReady),
+			key: string(updateState),
+			scData: scData{
+				gsState: v1alpha1.GameServerStateReady,
+			},
 			expected: expected{
 				state: v1alpha1.GameServerStateReady,
 			},
 		},
 		"label": {
-			key: string(updateLabel) + "/foo/bar",
+			key: string(updateLabel),
+			scData: scData{
+				gsLabels: map[string]string{"foo": "bar"},
+			},
 			expected: expected{
 				labels: map[string]string{metadataPrefix + "foo": "bar"},
 			},
 		},
 		"annotation": {
-			key: string(updateAnnotation) + "/test/annotation",
+			key: string(updateAnnotation),
+			scData: scData{
+				gsAnnotations: map[string]string{"test": "annotation"},
+			},
 			expected: expected{
 				annotations: map[string]string{metadataPrefix + "test": "annotation"},
 			},
@@ -205,6 +227,11 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			m := agtesting.NewMocks()
 			sc, err := defaultSidecar(m)
 			assert.Nil(t, err)
+
+			sc.gsState = v.scData.gsState
+			sc.gsLabels = v.scData.gsLabels
+			sc.gsAnnotations = v.scData.gsAnnotations
+
 			updated := false
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -253,6 +280,7 @@ func TestSidecarUpdateState(t *testing.T) {
 		m := agtesting.NewMocks()
 		sc, err := defaultSidecar(m)
 		assert.Nil(t, err)
+		sc.gsState = v1alpha1.GameServerStateReady
 
 		updated := false
 
@@ -275,7 +303,7 @@ func TestSidecarUpdateState(t *testing.T) {
 		sc.informerFactory.Start(stop)
 		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 
-		err = sc.updateState(v1alpha1.GameServerStateReady)
+		err = sc.updateState()
 		assert.Nil(t, err)
 		assert.False(t, updated)
 	})
