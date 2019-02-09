@@ -73,7 +73,6 @@ type Controller struct {
 	gameServerSetLister listerv1alpha1.GameServerSetLister
 	gameServerSetSynced cache.InformerSynced
 	workerqueue         *workerqueue.WorkerQueue
-	allocationMutex     *sync.Mutex
 	stop                <-chan struct{}
 	recorder            record.EventRecorder
 	stateCache          *gameServerStateCache
@@ -83,7 +82,6 @@ type Controller struct {
 func NewController(
 	wh *webhooks.WebHook,
 	health healthcheck.Handler,
-	allocationMutex *sync.Mutex,
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
@@ -102,7 +100,6 @@ func NewController(
 		gameServerSetGetter: agonesClient.StableV1alpha1(),
 		gameServerSetLister: gameServerSets.Lister(),
 		gameServerSetSynced: gsSetInformer.HasSynced,
-		allocationMutex:     allocationMutex,
 		stateCache:          &gameServerStateCache{},
 	}
 
