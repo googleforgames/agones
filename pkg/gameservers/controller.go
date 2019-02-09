@@ -20,8 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/client-go/util/workqueue"
-
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -52,6 +50,7 @@ import (
 	corelisterv1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/workqueue"
 )
 
 var (
@@ -78,7 +77,6 @@ type Controller struct {
 	workerqueue            *workerqueue.WorkerQueue
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
-	allocationMutex        *sync.Mutex
 	stop                   <-chan struct {
 	}
 	recorder record.EventRecorder
@@ -88,7 +86,6 @@ type Controller struct {
 func NewController(
 	wh *webhooks.WebHook,
 	health healthcheck.Handler,
-	allocationMutex *sync.Mutex,
 	minPort, maxPort int32,
 	sidecarImage string,
 	alwaysPullSidecarImage bool,
@@ -109,7 +106,6 @@ func NewController(
 		sidecarCPULimit:        sidecarCPULimit,
 		sidecarCPURequest:      sidecarCPURequest,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
-		allocationMutex:        allocationMutex,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
 		podLister:              pods.Lister(),
