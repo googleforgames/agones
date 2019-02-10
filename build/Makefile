@@ -360,13 +360,8 @@ shell: $(ensure-build-image)
 
 # run a container with godoc
 godoc:
-	if [ ! -f $(build_path)/.index ]; then \
-		touch $(build_path)/.index && \
-		docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-				$(build_tag) godoc -http=":8888" -index=true -write_index=true -index_files=/root/.index;\
-	fi
 	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
-		$(build_tag) godoc -http=":8888" -index=true -index_files=/root/.index
+		$(build_tag) godoc -http=":8888" -index=true
 
 # Creates the build docker image
 build-build-image:
