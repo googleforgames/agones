@@ -50,7 +50,7 @@ GO_BUILD_TAGS ?= none
 
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-udp Game Servers.
-STRESS_TEST_LEVEL=20
+STRESS_TEST_LEVEL ?= 20
 
 # kind cluster name to use
 KIND_PROFILE ?= agones

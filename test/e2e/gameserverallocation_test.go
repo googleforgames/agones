@@ -15,11 +15,13 @@
 package e2e
 
 import (
+	"sync"
 	"testing"
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -237,16 +239,73 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 	if assert.Nil(t, err) {
 		assert.Equal(t, v1alpha1.GameServerAllocationUnAllocated, gsa.Status.State)
 	}
+}
 
-	// this should now delete after a while
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-		_, err := allocations.Get(gsa.ObjectMeta.Name, metav1.GetOptions{})
+func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
+	t.Parallel()
 
-		if errors.IsNotFound(err) {
-			return true, nil
-		}
+	fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+	label := map[string]string{"role": t.Name()}
 
-		return false, err
+	preferred := defaultFleet()
+	preferred.ObjectMeta.GenerateName = "preferred-"
+	preferred.Spec.Replicas = 150
+	preferred.Spec.Template.ObjectMeta.Labels = label
+	preferred, err := fleets.Create(preferred)
+	if assert.Nil(t, err) {
+		defer fleets.Delete(preferred.ObjectMeta.Name, nil) // nolint:errcheck
+	} else {
+		assert.FailNow(t, "could not create first fleet")
+	}
+
+	framework.WaitForFleetCondition(t, preferred, e2e.FleetReadyCount(preferred.Spec.Replicas))
+
+	// scale down before starting allocation
+	preferred = scaleFleetPatch(t, preferred, preferred.Spec.Replicas-20)
+
+	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+		Spec: v1alpha1.GameServerAllocationSpec{
+			Required: metav1.LabelSelector{MatchLabels: label},
+			Preferred: []metav1.LabelSelector{
+				{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: "preferred"}},
+			},
+		}}
+
+	allocatedGS := sync.Map{}
+
+	logrus.Infof("Starting Allocation.")
+	var wg sync.WaitGroup
+
+	// Allocate GS by 10 clients in parallel while the fleet is scaling down
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 10; j++ {
+				gsa1, err := framework.AgonesClient.StableV1alpha1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
+				if err == nil {
+					allocatedGS.LoadOrStore(gsa1.Status.GameServerName, true)
+				} else {
+					t.Errorf("could not completed gsa1 allocation : %v", err)
+				}
+			}
+		}()
+	}
+
+	time.Sleep(3 * time.Second)
+	// scale down further while allocating
+	scaleFleetPatch(t, preferred, preferred.Spec.Replicas-10)
+
+	wg.Wait()
+	logrus.Infof("Finished Allocation.")
+
+	// count the number of unique game servers allocated
+	// there should not be any duplicate
+	uniqueAllocatedGSs := 0
+	allocatedGS.Range(func(k, v interface{}) bool {
+		uniqueAllocatedGSs++
+		return true
 	})
-	assert.Nil(t, err)
+	assert.Equal(t, 100, uniqueAllocatedGSs)
 }

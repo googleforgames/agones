@@ -55,7 +55,7 @@ func TestCreateConnect(t *testing.T) {
 		t.Fatalf("Could ping GameServer: %v", err)
 	}
 
-	assert.Equal(t, reply, "ACK: Hello World !\n")
+	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
 // nolint:dupl

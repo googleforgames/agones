@@ -70,6 +70,9 @@ const (
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
 	defaultResync                = 30 * time.Second
+	// topNGSForAllocation is used by the GameServerAllocation controller
+	// to reduce the contention while allocating gameservers.
+	topNGSForAllocation = 100
 )
 
 var (
@@ -187,8 +190,8 @@ func main() {
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(wh, health, allocationMutex, kubeClient,
-		kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
+	gasController := gameserverallocations.NewController(wh, health, kubeClient,
+		kubeInformerFactory, extClient, agonesClient, agonesInformerFactory, topNGSForAllocation)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 

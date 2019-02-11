@@ -57,20 +57,27 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		return true, &v1alpha1.GameServerList{Items: gsList}, nil
 	})
-	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := applyGameServerPatch(t, m, action)
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*v1alpha1.GameServer)
 		gsWatch.Modify(gs)
+
 		return true, gs, nil
 	})
 
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
+	// This call initializes the cache
+	err := c.syncReadyGSServerCache()
+	assert.Nil(t, err)
+
 	test := func(gsa v1alpha1.GameServerAllocation, expectedState v1alpha1.GameServerAllocationState) {
 		review, err := newAdmissionReview(gsa)
 		assert.Nil(t, err)
 
 		result, err := c.creationMutationHandler(review)
+
 		assert.Nil(t, err)
 		assert.True(t, result.Response.Allowed, fmt.Sprintf("%#v", result.Response))
 		assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
@@ -98,6 +105,8 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	test(*gsa.DeepCopy(), v1alpha1.GameServerAllocationAllocated)
 	test(*gsa.DeepCopy(), v1alpha1.GameServerAllocationAllocated)
 	test(*gsa.DeepCopy(), v1alpha1.GameServerAllocationUnAllocated)
+
+	gsa.DeepCopy()
 }
 
 func TestControllerMutationValidationHandler(t *testing.T) {
@@ -158,8 +167,9 @@ func TestControllerAllocate(t *testing.T) {
 	updated := false
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := applyGameServerPatch(t, m, action)
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*v1alpha1.GameServer)
 
 		updated = true
 		assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
@@ -171,7 +181,11 @@ func TestControllerAllocate(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m, m.AgonesInformerFactory.Stable().V1alpha1().GameServers().Informer().HasSynced)
 	defer cancel()
 
-	err := c.counter.Run(stop)
+	// This call initializes the cache
+	err := c.syncReadyGSServerCache()
+	assert.Nil(t, err)
+
+	err = c.counter.Run(stop)
 	assert.Nil(t, err)
 
 	gsa := v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1"},
@@ -233,16 +247,22 @@ func TestControllerAllocatePriority(t *testing.T) {
 
 		gsWatch := watch.NewFake()
 		m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-		m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			gs := applyGameServerPatch(t, m, action)
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
 			gsWatch.Modify(gs)
+
 			return true, gs, nil
 		})
 
 		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		err := c.counter.Run(stop)
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(stop)
 		assert.Nil(t, err)
 
 		gas := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1"},
@@ -306,7 +326,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 	})
 }
 
-func TestControllerAllocateMutex(t *testing.T) {
+func TestControllerWithoutAllocateMutex(t *testing.T) {
 	t.Parallel()
 
 	f, _, gsList := defaultFixtures(100)
@@ -326,7 +346,11 @@ func TestControllerAllocateMutex(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m, hasSync)
 	defer cancel()
 
-	err := c.counter.Run(stop)
+	// This call initializes the cache
+	err := c.syncReadyGSServerCache()
+	assert.Nil(t, err)
+
+	err = c.counter.Run(stop)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -334,7 +358,9 @@ func TestControllerAllocateMutex(t *testing.T) {
 	allocate := func() {
 		defer wg.Done()
 		for i := 1; i <= 10; i++ {
-			_, err := c.allocate(gas.DeepCopy())
+			review, err := newAdmissionReview(*gas.DeepCopy())
+			assert.Nil(t, err)
+			_, err = c.creationMutationHandler(review)
 			assert.Nil(t, err)
 		}
 	}
@@ -346,6 +372,8 @@ func TestControllerAllocateMutex(t *testing.T) {
 
 	logrus.Info("waiting...")
 	wg.Wait()
+
+	assert.Equal(t, 0, len(c.readyGameServers.cache))
 }
 
 func TestControllerFindPackedReadyGameServer(t *testing.T) {
@@ -384,7 +412,11 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m, hasSync)
 		defer cancel()
 
-		err := c.counter.Run(stop)
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(gsa, packedComparator)
@@ -442,7 +474,11 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m, hasSync)
 		defer cancel()
 
-		err := c.counter.Run(stop)
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(prefGsa, packedComparator)
@@ -503,7 +539,11 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m, hasSync)
 		defer cancel()
 
-		err := c.counter.Run(stop)
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(gsa, packedComparator)
@@ -556,7 +596,11 @@ func TestControllerFindDistributedReadyGameServer(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m, hasSync)
 	defer cancel()
 
-	err := c.counter.Run(stop)
+	// This call initializes the cache
+	err := c.syncReadyGSServerCache()
+	assert.Nil(t, err)
+
+	err = c.counter.Run(stop)
 	assert.Nil(t, err)
 
 	gs, err := c.findReadyGameServerForAllocation(gsa, distributedComparator)
@@ -700,6 +744,40 @@ func TestControllerSyncDelete(t *testing.T) {
 	assert.True(t, deleted)
 }
 
+func TestGetRandomlySelectedGS(t *testing.T) {
+	c, _ := newFakeController()
+	c.topNGameServerCount = 5
+	gsa := &v1alpha1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: defaultNs,
+			Name:      "allocation",
+		},
+		Status: v1alpha1.GameServerAllocationStatus{
+			State: v1alpha1.GameServerAllocationUnAllocated,
+		},
+	}
+
+	_, _, gsList := defaultFixtures(10)
+
+	selectedGS := c.getRandomlySelectedGS(gsa, gsList)
+	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
+	for i := 1; i <= 5; i++ {
+		expectedName := "gs" + strconv.Itoa(i)
+		assert.NotEqual(t, expectedName, selectedGS.ObjectMeta.Name)
+	}
+
+	_, _, gsList = defaultFixtures(5)
+
+	selectedGS = c.getRandomlySelectedGS(gsa, gsList)
+	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
+
+	_, _, gsList = defaultFixtures(1)
+
+	selectedGS = c.getRandomlySelectedGS(gsa, gsList)
+	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
+	assert.Equal(t, "gs1", selectedGS.ObjectMeta.Name)
+}
+
 func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1alpha1.GameServer) {
 	f := &v1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -729,11 +807,12 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{}, m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, 1)
 	c.recorder = m.FakeRecorder
 	return c, m
 }
 
+// newAdmissionReview
 func newAdmissionReview(gsa v1alpha1.GameServerAllocation) (admv1beta1.AdmissionReview, error) {
 	raw, err := json.Marshal(gsa)
 	if err != nil {
@@ -751,21 +830,4 @@ func newAdmissionReview(gsa v1alpha1.GameServerAllocation) (admv1beta1.Admission
 		Response: &admv1beta1.AdmissionResponse{Allowed: true},
 	}
 	return review, err
-}
-
-func applyGameServerPatch(t *testing.T, m agtesting.Mocks, action k8stesting.Action) *v1alpha1.GameServer {
-	pa := action.(k8stesting.PatchAction)
-	gs, err := m.AgonesInformerFactory.Stable().V1alpha1().GameServers().Lister().GameServers(pa.GetNamespace()).Get(pa.GetName())
-	assert.Nil(t, err)
-	js, err := json.Marshal(gs)
-	assert.Nil(t, err)
-	patch, err := applypatch.DecodePatch(pa.GetPatch())
-	assert.Nil(t, err)
-	newJS, err := patch.Apply(js)
-	assert.Nil(t, err)
-	// reset it
-	gs = &v1alpha1.GameServer{}
-	err = json.Unmarshal(newJS, gs)
-	assert.Nil(t, err)
-	return gs
 }

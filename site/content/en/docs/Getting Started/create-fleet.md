@@ -213,6 +213,8 @@ status:
 
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
+{{% feature publishVersion="0.9.0" %}}If there are too many concurrent requests overwhelmed the system, `state` will be set to 
+`Contention`even though there are available `GameServer`.{{% /feature %}}
 
 However, we see that the `status.state` value was set to `Allocated`. 
 This means you have been successfully allocated a `GameServer` out of the fleet, and you can now connect your players to it!
