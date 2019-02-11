@@ -150,11 +150,11 @@ func main() {
 
 	allocationMutex := &sync.Mutex{}
 
-	gsController := gameservers.NewController(wh, health, allocationMutex,
+	gsController := gameservers.NewController(wh, health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
-	gsSetController := gameserversets.NewController(wh, health, allocationMutex,
+	gsSetController := gameserversets.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,

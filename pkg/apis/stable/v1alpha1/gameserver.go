@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 
 	"github.com/mattbaird/jsonpatch"
 
@@ -76,6 +77,9 @@ const (
 	GameServerContainerAnnotation = stable.GroupName + "/container"
 	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
 	SidecarServiceAccountName = "agones-sdk"
+	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
+	// A locally hosted GameServer is not managed by Agones it is just simply registered.
+	DevAddressAnnotation = "stable.agones.dev/dev-address"
 )
 
 var (
@@ -247,38 +251,74 @@ func (gs *GameServer) applySchedulingDefaults() {
 // the returned array
 func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 	var causes []metav1.StatusCause
+	// make sure the host port is specified if this is a development server
+	devAddress, hasDevAddress := gs.GetDevAddress()
 
-	// make sure a name is specified when there is multiple containers in the pod.
-	if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "container",
-			Message: "Container is required when using multiple containers in the pod template",
-		})
-	}
-
-	// no host port when using dynamic PortPolicy
-	for _, p := range gs.Spec.Ports {
-		if p.HostPort > 0 && p.PortPolicy == Dynamic {
+	if hasDevAddress {
+		// verify that the value is a valid IP address.
+		if net.ParseIP(devAddress) == nil {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   fmt.Sprintf("%s.hostPort", p.Name),
-				Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+				Field:   fmt.Sprintf("annotations.%s", DevAddressAnnotation),
+				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address.", DevAddressAnnotation, devAddress),
+			})
+		}
+
+		for _, p := range gs.Spec.Ports {
+			if p.HostPort == 0 {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueRequired,
+					Field:   fmt.Sprintf("%s.hostPort", p.Name),
+					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with %s", DevAddressAnnotation),
+				})
+			}
+			if p.PortPolicy != Static {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueRequired,
+					Field:   fmt.Sprintf("%s.portPolicy", p.Name),
+					Message: fmt.Sprintf("PortPolicy must be Static"),
+				})
+			}
+		}
+	} else {
+		// make sure a name is specified when there is multiple containers in the pod.
+		if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: "Container is required when using multiple containers in the pod template",
+			})
+		}
+
+		// no host port when using dynamic PortPolicy
+		for _, p := range gs.Spec.Ports {
+			if p.HostPort > 0 && p.PortPolicy == Dynamic {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueInvalid,
+					Field:   fmt.Sprintf("%s.hostPort", p.Name),
+					Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+				})
+			}
+		}
+
+		// make sure the container value points to a valid container
+		_, _, err := gs.FindGameServerContainer()
+		if err != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: err.Error(),
 			})
 		}
 	}
 
-	// make sure the container value points to a valid container
-	_, _, err := gs.FindGameServerContainer()
-	if err != nil {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "container",
-			Message: err.Error(),
-		})
-	}
-
 	return len(causes) == 0, causes
+}
+
+// GetDevAddress returns the address for game server.
+func (gs *GameServer) GetDevAddress() (string, bool) {
+	devAddress, hasDevAddress := gs.ObjectMeta.Annotations[DevAddressAnnotation]
+	return devAddress, hasDevAddress
 }
 
 // FindGameServerContainer returns the container that is specified in
