@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	logrus.SetFormatter(&logrus.TextFormatter{
 		EnvironmentOverrideColors: true,
 		FullTimestamp:             true,
-		TimestampFormat:           "2006-01-02 15:04:06.000",
+		TimestampFormat:           "2006-01-02 15:04:05.000",
 	})
 
 	var (
