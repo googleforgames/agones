@@ -41,7 +41,7 @@ rules:
   resources: ["events"]
   verbs: ["create"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["gameservers"]
+  resources: ["gameservers", "gameservers/status"]
   verbs: ["list", "update", "watch"]
 ---
   {{- range .Values.gameservers.namespaces }}

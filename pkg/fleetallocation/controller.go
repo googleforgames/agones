@@ -292,7 +292,7 @@ func (c *Controller) allocate(f *v1alpha1.Fleet, fam *v1alpha1.MetaPatch) (*v1al
 		c.patchMetadata(gsCopy, fam)
 	}
 
-	gs, err := c.gameServerGetter.GameServers(f.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err := c.gameServerGetter.GameServers(f.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s", gsCopy.ObjectMeta.Name)
 	}

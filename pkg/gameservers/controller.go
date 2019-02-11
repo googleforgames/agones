@@ -139,6 +139,8 @@ func NewController(
 	wh.AddHandler("/mutate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationMutationHandler)
 	wh.AddHandler("/validate", v1alpha1.Kind("GameServer"), admv1beta1.Create, c.creationValidationHandler)
 
+	wh.AddHandler("/mutate", v1alpha1.Kind("GameServer/Status"), admv1beta1.Create, c.creationMutationHandler)
+
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.enqueueGameServerBasedOnState,
 		UpdateFunc: func(oldObj, newObj interface{}) {
@@ -218,6 +220,8 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	// This is the main logic of this function
 	// the rest is really just json plumbing
 	gs.ApplyDefaults()
+
+	c.logger.WithField("gs234", gs.ObjectMeta.Name).WithField("Whole review", fmt.Sprintf("%+v", review)).Infof("patch created!")
 
 	newGS, err := json.Marshal(gs)
 	if err != nil {
@@ -357,8 +361,9 @@ func (c *Controller) syncGameServer(key string) error {
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
 	applyStateDefaults(gs)
 	gss := c.gameServerGetter.GameServers(namespace)
-	//gss.Update(gs)
-	gss.UpdateStatus(gs)
+	gss.Update(gs)
+	//gss.UpdateStatus(gs)
+	//gs, err = c.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			c.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
@@ -445,7 +450,22 @@ func (c *Controller) syncGameServerPortAllocationState(gs *v1alpha1.GameServer) 
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
 	c.loggerForGameServer(gsCopy).Info("Syncing Port Allocation GameServerState")
+	//gs2, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).GetStatus(gsCopy)
+	//gsCopy.ObjectMeta.ResourceVersion = gs2.ObjectMeta.ResourceVersion
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		// if the GameServer doesn't get updated with the port data, then put the port
+		// back in the pool, as it will get retried on the next pass
+		return gs, errors.Wrapf(err, "error updating status of GameServer %s to default values", gs.Name)
+	}
+	gsCopy2, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Get(gs.Name, metav1.GetOptions{})
+	if err != nil {
+		// if the GameServer doesn't get updated with the port data, then put the port
+		// back in the pool, as it will get retried on the next pass
+		return gs, errors.Wrapf(err, "error Getting GameServer %s", gs.Name)
+	}
+	gsCopy2.Spec = gsCopy.Spec
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy2)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
 		// back in the pool, as it will get retried on the next pass
@@ -517,7 +537,8 @@ func (c *Controller) syncDevelopmentGameServer(gs *v1alpha1.GameServer) (*v1alph
 	gsCopy.Status.Ports = ports
 	gsCopy.Status.Address = devIPAddress
 	gsCopy.Status.NodeName = devIPAddress
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	// TODO was Update()
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to %v status", gs.Name, gs.Status)
 	}
@@ -665,16 +686,17 @@ func (c *Controller) syncGameServerStartingState(gs *v1alpha1.GameServer) (*v1al
 	}
 
 	gsCopy.Status.State = v1alpha1.GameServerStateScheduled
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
+	}
+
 	/*
-		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+		gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 		if err != nil {
-			return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
+			return gs, errors.Wrapf(err, "error updating GameServer %s to Port state", gs.Name)
 		}
 	*/
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
-	if err != nil {
-		return gs, errors.Wrapf(err, "error updating GameServer %s to Port state", gs.Name)
-	}
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
 
 	return gs, nil
@@ -735,16 +757,17 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 	}
 
 	gsCopy.Status.State = v1alpha1.GameServerStateReady
+
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
+	}
 	/*
-		gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+		gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 		if err != nil {
 			return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 		}
 	*/
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
-	if err != nil {
-		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
-	}
 
 	if addressPopulated {
 		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
@@ -776,8 +799,8 @@ func (c *Controller) moveToErrorState(gs *v1alpha1.GameServer, msg string) (*v1a
 	copy := gs.DeepCopy()
 	copy.Status.State = v1alpha1.GameServerStateError
 
-	//gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(copy)
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(copy)
+	//gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
 	}
