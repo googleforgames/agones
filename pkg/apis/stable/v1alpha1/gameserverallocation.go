@@ -26,6 +26,9 @@ const (
 	GameServerAllocationAllocated GameServerAllocationState = "Allocated"
 	// GameServerAllocationUnAllocated when the allocation is unsuccessful
 	GameServerAllocationUnAllocated GameServerAllocationState = "UnAllocated"
+	// GameServerAllocationContention when the allocation is unsuccessful
+	// because of contention
+	GameServerAllocationContention GameServerAllocationState = "Contention"
 )
 
 // GameServerAllocationState is the Allocation state
