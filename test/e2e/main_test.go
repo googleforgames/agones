@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 )
 
 const defaultNs = "default"
@@ -40,6 +41,12 @@ func TestMain(m *testing.M) {
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
 
 	flag.Parse()
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		EnvironmentOverrideColors: true,
+		FullTimestamp:             true,
+		TimestampFormat:           "2006-01-02 15:04:06.000",
+	})
 
 	var (
 		err      error
