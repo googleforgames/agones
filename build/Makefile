@@ -138,6 +138,8 @@ endif
 GO_TEST=$(DOCKER_RUN) go test $(RACE_DETECTOR_ARGS)
 GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
 
+PERF_OUTPUT_DIR=$(mount_path)/build/.perf
+
 go_build_base_path=$(mount_path)
 
 ifdef LOCAL_GO
@@ -148,6 +150,7 @@ ifdef LOCAL_GO
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 go build
 	GO_TEST=go test -v $(RACE_DETECTOR_ARGS)
 	GO_E2E_TEST_ARGS=
+  PERF_OUTPUT_DIR=$(build_path)/.perf
 	go_build_base_path=$(agones_path)
 endif
 
@@ -229,7 +232,8 @@ stress-test-e2e: $(ensure-build-image)
 		-run '.*StressTest.*' \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
-		--stress $(STRESS_TEST_LEVEL)
+		--stress $(STRESS_TEST_LEVEL) \
+		--perf-output $(PERF_OUTPUT_DIR)
 
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
