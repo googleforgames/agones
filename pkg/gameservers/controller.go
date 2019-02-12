@@ -338,13 +338,27 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 
 // syncGameServer synchronises the Pods for the GameServers.
 // and reacts to status changes that can occur through the client SDK
-func applyStateDefaults(gs *v1alpha1.GameServer) {
+func (c *Controller) applyStateDefaults(gs *v1alpha1.GameServer, namespace, name string) *v1alpha1.GameServer {
+
 	if gs.Status.State == "" {
+		var err error
 		gs.Status.State = v1alpha1.GameServerStateCreating
 		if gs.HasPortPolicy(v1alpha1.Dynamic) {
 			gs.Status.State = v1alpha1.GameServerStatePortAllocation
 		}
+		gss := c.gameServerGetter.GameServers(namespace)
+		gss.UpdateStatus(gs)
+		gs, err = c.gameServerLister.GameServers(namespace).Get(name)
+		if err != nil {
+			var err error
+			if k8serrors.IsNotFound(err) {
+				c.logger.WithField("key", name).Info("GameServer is no longer available for syncing")
+			}
+		}
+
 	}
+	return gs
+
 }
 
 func (c *Controller) syncGameServer(key string) error {
@@ -359,11 +373,8 @@ func (c *Controller) syncGameServer(key string) error {
 	}
 
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
-	applyStateDefaults(gs)
-	gss := c.gameServerGetter.GameServers(namespace)
-	gss.Update(gs)
+	gs = c.applyStateDefaults(gs, namespace, name)
 	//gss.UpdateStatus(gs)
-	//gs, err = c.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			c.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
@@ -504,7 +515,11 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = v1alpha1.GameServerStateStarting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
-	//gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+
+	// Also update version annotation of Gameserver which resides in ObjectMeta
+	//gs2, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Get(gsCopy.Name, metav1.GetOptions{})
+	//gs2.ObjectMeta.Annotations = gsCopy.ObjectMeta.Annotations
+	//gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs2)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
 	}
@@ -549,6 +564,7 @@ func (c *Controller) syncDevelopmentGameServer(gs *v1alpha1.GameServer) (*v1alph
 func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
 	sidecar := c.sidecar(gs)
 	var pod *corev1.Pod
+	//TODO add function with annotation to GS only
 	pod, err := gs.Pod(sidecar)
 
 	// this shouldn't happen, but if it does.
