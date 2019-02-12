@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 )
 
 const (
@@ -640,6 +641,103 @@ func TestCreateFleetAndUpdateScaleSubresource(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(initialReplicas))
 }
 
+// TestScaleUpAndDownInParallelStressTest creates N fleets, half of which start with replicas=0
+// and the other half with 0 and scales them up/down 3 times in parallel expecting it to reach
+// the desired number of ready replicas each time.
+// This test is also used as a stress test with 'make stress-test-e2e', in which case it creates
+// many more fleets of bigger sizes and runs many more repetitions.
+func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
+	t.Parallel()
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+	fleetCount := 2
+	fleetSize := int32(10)
+	repeatCount := 3
+	deadline := time.Now().Add(1 * time.Minute)
+
+	logrus.WithField("fleetCount", fleetCount).
+		WithField("fleetSize", fleetSize).
+		WithField("repeatCount", repeatCount).
+		WithField("deadline", deadline).
+		Info("starting scale up/down test")
+
+	if framework.StressTestLevel > 0 {
+		fleetSize = 10 * int32(framework.StressTestLevel)
+		repeatCount = 10
+		fleetCount = 10
+		deadline = time.Now().Add(45 * time.Minute)
+	}
+
+	var fleets []*v1alpha1.Fleet
+
+	var scaleUpResults e2e.PerfResults
+	var scaleDownResults e2e.PerfResults
+
+	for fleetNumber := 0; fleetNumber < fleetCount; fleetNumber++ {
+		flt := defaultFleet()
+		flt.ObjectMeta.GenerateName = fmt.Sprintf("scale-fleet-%v-", fleetNumber)
+		if fleetNumber%2 == 0 {
+			// even-numbered fleets starts at fleetSize and are scaled down to zero and back.
+			flt.Spec.Replicas = fleetSize
+		} else {
+			// odd-numbered fleets starts at zero and are scaled up to fleetSize and back.
+			flt.Spec.Replicas = 0
+		}
+
+		flt, err := alpha1.Fleets(defaultNs).Create(flt)
+		if assert.Nil(t, err) {
+			defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+		}
+		fleets = append(fleets, flt)
+	}
+
+	// wait for initial fleet conditions.
+	for fleetNumber, flt := range fleets {
+		if fleetNumber%2 == 0 {
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
+		} else {
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
+		}
+	}
+
+	var wg sync.WaitGroup
+
+	for fleetNumber, flt := range fleets {
+		wg.Add(1)
+		go func(fleetNumber int, flt *v1alpha1.Fleet) {
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					t.Errorf("recovered panic: %v", err)
+				}
+			}()
+
+			if fleetNumber%2 == 0 {
+				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+			}
+			for i := 0; i < repeatCount; i++ {
+				if time.Now().After(deadline) {
+					break
+				}
+				scaleUpResults.AddSample(scaleAndWait(t, flt, fleetSize))
+				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+			}
+		}(fleetNumber, flt)
+	}
+
+	wg.Wait()
+
+	scaleUpResults.Report(fmt.Sprintf("scale up 0 to %v with %v fleets", fleetSize, fleetCount))
+	scaleDownResults.Report(fmt.Sprintf("scale down %v to 0 with %v fleets", fleetSize, fleetCount))
+}
+
+func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {
+	t0 := time.Now()
+	scaleFleetSubresource(t, flt, fleetSize)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
+	return time.Since(t0)
+}
+
 // scaleFleetPatch creates a patch to apply to a Fleet.
 // Easier for testing, as it removes object generational issues.
 func scaleFleetPatch(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
@@ -654,19 +752,26 @@ func scaleFleetPatch(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fle
 // scaleFleetSubresource uses scale subresource to change Replicas size of the Fleet.
 // Returns the same f as in parameter, just to keep signature in sync with scaleFleetPatch
 func scaleFleetSubresource(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
-	alpha1 := framework.AgonesClient.StableV1alpha1()
-	// GetScale returns current Scale object with resourceVersion which is opaque object
-	// and it will be used to create new Scale object
-	opts := metav1.GetOptions{}
-	sc, err := alpha1.Fleets(defaultNs).GetScale(f.ObjectMeta.Name, opts)
-	assert.Nil(t, err, "could not get the current scale subresource")
-
-	sc2 := newScale(f.Name, scale, sc.ObjectMeta.ResourceVersion)
-	_, err = alpha1.Fleets(defaultNs).UpdateScale(f.ObjectMeta.Name, sc2)
-	assert.Nil(t, err, "could not update the scale subresource")
-
 	logrus.WithField("fleet", f.ObjectMeta.Name).WithField("scale", scale).Info("Scaling fleet")
 
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		alpha1 := framework.AgonesClient.StableV1alpha1()
+		// GetScale returns current Scale object with resourceVersion which is opaque object
+		// and it will be used to create new Scale object
+		opts := metav1.GetOptions{}
+		sc, err := alpha1.Fleets(defaultNs).GetScale(f.ObjectMeta.Name, opts)
+		if err != nil {
+			return err
+		}
+
+		sc2 := newScale(f.Name, scale, sc.ObjectMeta.ResourceVersion)
+		_, err = alpha1.Fleets(defaultNs).UpdateScale(f.ObjectMeta.Name, sc2)
+		return err
+	})
+
+	if err != nil {
+		t.Fatal("could not update the scale subresource")
+	}
 	return f
 }
 

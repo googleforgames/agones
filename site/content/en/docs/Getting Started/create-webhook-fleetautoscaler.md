@@ -204,11 +204,11 @@ Double-check the actual number of game server instances and status by running:
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATUS      IP              PORT
-simple-udp-dmkp4-8pkk2   Ready       35.247.13.175   [map[name:default port:7386]]
-simple-udp-dmkp4-b7x87   Allocated   35.247.13.175   [map[name:default port:7219]]
-simple-udp-dmkp4-r4qtt   Allocated   35.247.13.175   [map[name:default port:7220]]
-simple-udp-dmkp4-rsr6n   Ready       35.247.13.175   [map[name:default port:7297]]
+NAME                     STATE       ADDRESS         PORT     NODE        AGE
+simple-udp-dmkp4-8pkk2   Ready       35.247.13.175   7386     minikube     5m
+simple-udp-dmkp4-b7x87   Allocated   35.247.13.175   7219     minikube     5m
+simple-udp-dmkp4-r4qtt   Allocated   35.247.13.175   7220     minikube     5m
+simple-udp-dmkp4-rsr6n   Ready       35.247.13.175   7297     minikube     5m
 ```
 
 #### 7. Check down scaling using Webhook Autoscaler policy
@@ -242,9 +242,9 @@ kubectl get gs -n default
 ```
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-884fg-6q5sk   Ready       35.247.117.202   7373
-simple-udp-884fg-b7l58   Allocated   35.247.117.202   7766
+NAME                     STATUS      ADDRESS          PORT     NODE       AGE
+simple-udp-884fg-6q5sk   Ready       35.247.117.202   7373     minikube   5m
+simple-udp-884fg-b7l58   Allocated   35.247.117.202   7766     minikube   5m
 ```
 
 #### 8. Cleanup
@@ -404,11 +404,9 @@ Double-check the actual number of game server instances and status by running:
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATE       ADDRESS         PORT      NODE                                      AGE
-simple-udp-njmr7-2t4nx   Ready       35.203.159.68   7330      gke-test-cluster2-default-55044752-zt63   1m
-simple-udp-njmr7-65rp6   Allocated   35.203.159.68   7294      gke-test-cluster2-default-55044752-zt63   4m
-simple-udp-njmr7-klgtt   Ready       35.203.159.68   7323      gke-test-cluster2-default-55044752-zt63   1m
-simple-udp-njmr7-lglsr   Allocated   35.203.159.68   7009      gke-test-cluster2-default-55044752-zt63   4m
+NAME                     STATE       ADDRESS         PORT      NODE      AGE
+simple-udp-njmr7-2t4nx   Ready       35.203.159.68   7330      minikube   1m
+simple-udp-njmr7-65rp6   Allocated   35.203.159.68   7294      minikube   4m
 ```
 
 #### 8. Cleanup

@@ -53,17 +53,17 @@ kubectl get fleet
 It should look something like this:
 
 ```
-NAME         AGE
-simple-udp   5m
+NAME         SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY     AGE
+simple-udp   Packed       2         3         0           2         9m
 ```
 
 You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
 the GameServer will be prefixed by `simple-udp`.
 
 ```
-NAME                     AGE
-simple-udp-xvp4n-jvhbm   36s
-simple-udp-xvp4n-x6z5m   36s
+NAME                     STATE     ADDRESS            PORT   NODE      AGE
+simple-udp-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
+simple-udp-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#fleet-specification" >}})
@@ -111,7 +111,7 @@ Spec:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.6
+            Image:  gcr.io/agones-images/udp-server:0.7
             Name:   simple-udp
             Resources:
 Status:
@@ -146,12 +146,12 @@ Run `kubectl scale fleet simple-udp --replicas=5` to change Replicas count from 
 If we now run `kubectl get gameservers` we should see 5 `GameServers` prefixed by `simple-udp`.
 
 ```
-NAME                     AGE
-simple-udp-xvp4n-jvhbm   11m
-simple-udp-xvp4n-x6z5m   11m
-simple-udp-xvp4n-z8znu   36s
-simple-udp-xvp4n-a6z0e   36s
-simple-udp-xvp4n-i6bnm   36s
+NAME                     STATE    ADDRESS           PORT    NODE       AGE
+simple-udp-sdhzn-kcmh6   Ready    192.168.122.205   7191    minikube   52m
+simple-udp-sdhzn-pdpk5   Ready    192.168.122.205   7752    minikube   53m
+simple-udp-sdhzn-r4d6x   Ready    192.168.122.205   7623    minikube   52m
+simple-udp-sdhzn-wng5k   Ready    192.168.122.205   7709    minikube   53m
+simple-udp-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   52m
 ```
 
 ### 4. Allocate a Game Server from the Fleet
@@ -238,12 +238,12 @@ kubectl get gs
 This will get you a list of all the current `GameSevers` and their `Status.State`.
 
 ```
-NAME                     STATE       ADDRESS           PORT      NODE       AGE
-simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191      minikube   52m
-simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752      minikube   53m
-simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623      minikube   52m
-simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709      minikube   53m
-simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478      minikube   52m
+NAME                     STATE       ADDRESS           PORT   NODE      AGE
+simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191   minikube  52m
+simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752   minikube  53m
+simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623   minikube  52m
+simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
+simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
 {{% /feature %}}
 
@@ -326,7 +326,7 @@ status:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.6
+          - image: gcr.io/agones-images/udp-server:0.7
             name: simple-udp
             resources: {}
     status:
@@ -345,18 +345,18 @@ allocated a `GameServer` out of the fleet, and you can now connect your players 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ```
 
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   [map[name:default port:7136]]
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
-simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   [map[name:default port:7453]]
-simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   [map[name:default port:7228]]
-simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   [map[name:default port:7226]]
+NAME                     STATE       ADDRESS          PORT   NODE        AGE
+simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   7136   minikube    52m
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube    53m
+simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   7453   minikube    52m
+simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   7228   minikube    53m
+simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   7226   minikube    52m
 ```
 
 ### 5. Scale down the Fleet
@@ -379,14 +379,14 @@ Run `kubectl scale fleet simple-udp --replicas=0` to change Replicas count from 
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
-watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+watch kubectl get gs
 ```
 
 Eventually, one by one they will be removed from the list, and you should simply see:
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
+NAME                     STATUS      ADDRESS          PORT    NODE       AGE
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148    minikube   55m
 ```
 
 That lone `Allocated` `GameServer` is left all alone, but still running!
@@ -443,15 +443,15 @@ kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{
 
 We should now have four `Ready` `GameServers` and one `Allocated`.
 
-We can check this by running `kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports`.
+We can check this by running `kubectl get gs`.
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   [map[name:default port:7136]]
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
-simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   [map[name:default port:7453]]
-simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   [map[name:default port:7228]]
-simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   [map[name:default port:7226]]
+NAME                     STATE       ADDRESS          PORT   NODE       AGE 
+simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m       
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m   
+simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m   
+simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m   
+simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m   
 ```
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
@@ -463,7 +463,7 @@ with a Container Port of `6000`.
 
 > NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
 
-Run `watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,CONTAINERPORT:.spec.ports[0].containerPort`
+Run `watch kubectl get gs`
 until you can see that there are
 one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
 is the new configuration.

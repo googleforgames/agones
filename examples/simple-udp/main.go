@@ -190,9 +190,9 @@ func watchGameServerEvents(s *sdk.SDK) {
 }
 
 // setAnnotation sets a given annotation
-func setAnnotation(s *sdk.SDK, key string, value string) {
+func setAnnotation(s *sdk.SDK, key, value string) {
 	log.Printf("Setting annotation %v=%v", key, value)
-	err := s.SetAnnotation("timestamp", time.Now().UTC().String())
+	err := s.SetAnnotation(key, value)
 	if err != nil {
 		log.Fatalf("could not set annotation: %v", err)
 	}

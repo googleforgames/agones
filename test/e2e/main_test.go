@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 )
 
 const defaultNs = "default"
@@ -33,19 +34,26 @@ func TestMain(m *testing.M) {
 	usr, _ := user.Current()
 	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
 		"kube config path, e.g. $HOME/.kube/config")
-	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.6",
-		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.6")
+	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.7",
+		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.7")
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
+	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
 
 	flag.Parse()
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		EnvironmentOverrideColors: true,
+		FullTimestamp:             true,
+		TimestampFormat:           "2006-01-02 15:04:05.000",
+	})
 
 	var (
 		err      error
 		exitCode int
 	)
 
-	if framework, err = e2eframework.New(*kubeconfig, *gsimage, *pullSecret); err != nil {
+	if framework, err = e2eframework.New(*kubeconfig, *gsimage, *pullSecret, *stressTestLevel); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}

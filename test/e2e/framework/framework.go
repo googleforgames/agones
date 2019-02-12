@@ -48,10 +48,11 @@ type Framework struct {
 	AgonesClient    versioned.Interface
 	GameServerImage string
 	PullSecret      string
+	StressTestLevel int
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig, gsimage string, pullSecret string) (*Framework, error) {
+func New(kubeconfig, gsimage string, pullSecret string, stressTestLevel int) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -72,6 +73,7 @@ func New(kubeconfig, gsimage string, pullSecret string) (*Framework, error) {
 		AgonesClient:    agonesClient,
 		GameServerImage: gsimage,
 		PullSecret:      pullSecret,
+		StressTestLevel: stressTestLevel,
 	}, nil
 }
 
@@ -137,7 +139,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, con
 	})
 	if err != nil {
 		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
-		t.Fatal("error waiting for fleet condition")
+		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
 	}
 }
 
