@@ -4,9 +4,9 @@ This is the {version} release of Agones.
 
 Check the [README](https://github.com/GoogleCloudPlatform/agones/tree/{release-branch}) for details on features, installation and usage.
 
-Features in this release:
+**Implemented enhancements:**
 
-{ insert enhancements from the changelog }
+{ insert enhancements from the changelog and/or security and breaking changes }
 
 See [CHANGELOG](https://github.com/GoogleCloudPlatform/agones/blob/{release-branch}/CHANGELOG.md) for more details on changes.
 
