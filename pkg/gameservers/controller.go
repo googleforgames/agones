@@ -339,7 +339,6 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 // syncGameServer synchronises the Pods for the GameServers.
 // and reacts to status changes that can occur through the client SDK
 func (c *Controller) applyStateDefaults(gs *v1alpha1.GameServer, namespace, name string) *v1alpha1.GameServer {
-
 	if gs.Status.State == "" {
 		var err error
 		gs.Status.State = v1alpha1.GameServerStateCreating
@@ -347,15 +346,14 @@ func (c *Controller) applyStateDefaults(gs *v1alpha1.GameServer, namespace, name
 			gs.Status.State = v1alpha1.GameServerStatePortAllocation
 		}
 		gss := c.gameServerGetter.GameServers(namespace)
-		gss.UpdateStatus(gs)
-		gs, err = c.gameServerLister.GameServers(namespace).Get(name)
+		gs, err = gss.UpdateStatus(gs)
 		if err != nil {
-			var err error
 			if k8serrors.IsNotFound(err) {
 				c.logger.WithField("key", name).Info("GameServer is no longer available for syncing")
 			}
 		}
 
+		c.logger.WithField("key", name).Error("Here we are")
 	}
 	return gs
 
@@ -373,8 +371,6 @@ func (c *Controller) syncGameServer(key string) error {
 	}
 
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
-	gs = c.applyStateDefaults(gs, namespace, name)
-	//gss.UpdateStatus(gs)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			c.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
@@ -382,6 +378,8 @@ func (c *Controller) syncGameServer(key string) error {
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
 	}
+	gs = c.applyStateDefaults(gs, namespace, name)
+	//gss.UpdateStatus(gs)
 
 	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
 		return err
@@ -469,14 +467,9 @@ func (c *Controller) syncGameServerPortAllocationState(gs *v1alpha1.GameServer) 
 		// back in the pool, as it will get retried on the next pass
 		return gs, errors.Wrapf(err, "error updating status of GameServer %s to default values", gs.Name)
 	}
-	gsCopy2, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Get(gs.Name, metav1.GetOptions{})
-	if err != nil {
-		// if the GameServer doesn't get updated with the port data, then put the port
-		// back in the pool, as it will get retried on the next pass
-		return gs, errors.Wrapf(err, "error Getting GameServer %s", gs.Name)
-	}
-	gsCopy2.Spec = gsCopy.Spec
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy2)
+	//Using ResourceVersion from updated gs
+	gs.Spec = gsCopy.Spec
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
 		// back in the pool, as it will get retried on the next pass
@@ -511,7 +504,6 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 			return gs, err
 		}
 	}
-
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = v1alpha1.GameServerStateStarting
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
