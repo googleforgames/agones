@@ -189,7 +189,6 @@ func (gs *GameServer) ApplyDefaults() {
 
 	gs.applyContainerDefaults()
 	gs.applyPortDefaults()
-	gs.applyStateDefaults()
 	gs.applyHealthDefaults()
 	gs.applySchedulingDefaults()
 }
@@ -212,16 +211,6 @@ func (gs *GameServer) applyHealthDefaults() {
 		}
 		if gs.Spec.Health.InitialDelaySeconds <= 0 {
 			gs.Spec.Health.InitialDelaySeconds = 5
-		}
-	}
-}
-
-// applyStateDefaults applies state defaults
-func (gs *GameServer) applyStateDefaults() {
-	if gs.Status.State == "" {
-		gs.Status.State = GameServerStateCreating
-		if gs.HasPortPolicy(Dynamic) {
-			gs.Status.State = GameServerStatePortAllocation
 		}
 	}
 }

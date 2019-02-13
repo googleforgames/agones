@@ -204,7 +204,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
 			assert.Equal(t, test.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
-			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
 		})

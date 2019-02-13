@@ -393,16 +393,21 @@ func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alph
 	gsCopy := allocation.DeepCopy()
 	gsCopy.Status.State = stablev1alpha1.GameServerStateAllocated
 
-	c.patchMetadata(gsCopy, gsa.Spec.MetaPatch)
+	gs, err := c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		// since we could not allocate, we should put it back
+		c.readyGameServers.Store(key, gs)
+		return gs, errors.Wrapf(err, "error updating GameServer Status %s", gsCopy.ObjectMeta.Name)
+	}
 
-	gs, err := c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gsCopy)
+	c.patchMetadata(gs, gsa.Spec.MetaPatch)
+	_, err = c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gs)
 
 	if err != nil {
 		// since we could not allocate, we should put it back
 		c.readyGameServers.Store(key, gs)
 		return gs, errors.Wrapf(err, "error updating GameServer %s", gsCopy.ObjectMeta.Name)
 	}
-
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Allocated")
 
 	return gs, nil

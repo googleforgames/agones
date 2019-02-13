@@ -57,7 +57,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 
 	t.Run("Creating a new GameServer", func(t *testing.T) {
 		c, mocks := newFakeController()
-		updateCount := 0
+		updateStateCount := 0
 		podCreated := false
 		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: v1alpha1.GameServerSpec{
@@ -95,24 +95,28 @@ func TestControllerSyncGameServer(t *testing.T) {
 			gameServers := &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*fixture}}
 			return true, gameServers, nil
 		})
+		//Check only GS Status Subresource updates
 		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
-			updateCount++
 			expectedState := v1alpha1.GameServerState("notastate")
-			switch updateCount {
-			case 1:
-				expectedState = v1alpha1.GameServerStateCreating
-			case 2:
-				expectedState = v1alpha1.GameServerStateStarting
-			case 3:
-				expectedState = v1alpha1.GameServerStateScheduled
-			}
-
-			assert.Equal(t, expectedState, gs.Status.State)
-			if expectedState == v1alpha1.GameServerStateScheduled {
-				assert.Equal(t, ipFixture, gs.Status.Address)
-				assert.NotEmpty(t, gs.Status.Ports[0].Port)
+			// Check only Status Subresource updates
+			if ua.GetSubresource() == "status" {
+				// Check that on last update we have set the Address
+				if updateStateCount == 2 {
+					assert.Equal(t, ipFixture, gs.Status.Address)
+					assert.NotEmpty(t, gs.Status.Ports[0].Port)
+				}
+			} else {
+				assert.Equal(t, ua.GetSubresource(), "")
+				updateStateCount++
+				switch updateStateCount {
+				case 1:
+					expectedState = v1alpha1.GameServerStateCreating
+				case 2:
+					expectedState = v1alpha1.GameServerStateStarting
+				}
+				assert.Equal(t, expectedState, gs.Status.State)
 			}
 
 			return true, gs, nil
@@ -126,7 +130,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 
 		err = c.syncGameServer("default/test")
 		assert.Nil(t, err)
-		assert.Equal(t, 3, updateCount, "update reactor should fire thrice")
+		assert.Equal(t, 2, updateStateCount, "update reactor should fire thrice")
 		assert.True(t, podCreated, "pod should be created")
 	})
 
@@ -159,6 +163,7 @@ func runReconcileDeleteGameServer(t *testing.T, fixture *v1alpha1.GameServer) {
 	assert.Nil(t, err, fmt.Sprintf("Shouldn't be an error from syncGameServer: %+v", err))
 	assert.False(t, podAction, "Nothing should happen to a Pod")
 }
+
 func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 	t.Parallel()
 
@@ -195,6 +200,9 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*v1alpha1.GameServer)
 			updateCount++
+			if ua.GetSubresource() == "status" {
+				return true, gs, nil
+			}
 			expectedState := v1alpha1.GameServerStateReady
 
 			assert.Equal(t, expectedState, gs.Status.State)
@@ -214,7 +222,7 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 
 		err = c.syncGameServer("default/test")
 		assert.Nil(t, err)
-		assert.Equal(t, 1, updateCount, "update reactor should fire once")
+		assert.Equal(t, 2, updateCount, "update reactor should fire twice: on Subresource and on Main Resource")
 	})
 
 	t.Run("When a GameServer has been deleted, the sync operation should be a noop", func(t *testing.T) {

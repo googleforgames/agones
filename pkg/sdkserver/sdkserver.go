@@ -258,13 +258,15 @@ func (s *SDKServer) updateState() error {
 		return nil
 	}
 
-	//UpdateStatus
 	s.gsUpdateMutex.RLock()
 	gs.Status.State = s.gsState
 	s.gsUpdateMutex.RUnlock()
+	// Using Status Endpoint for SDK Server
 	// Status changes are ignored on the main resource endpoint.
-	//_, err = gameServers.Update(gs)
 	_, err = gameServers.UpdateStatus(gs)
+	if err != nil {
+		return err
+	}
 
 	// state specific work here
 	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
@@ -371,7 +373,7 @@ func (s *SDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = stablev1alpha1.GameServerStateAllocated
-		_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+		_, err = s.gameServerGetter.GameServers(s.namespace).UpdateStatus(gsCopy)
 
 		// if a contention, and we are under the timeout period.
 		if k8serrors.IsConflict(err) {
