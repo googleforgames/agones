@@ -2,13 +2,17 @@
 
 This is the {version} release of Agones.
 
-Check the [README](https://github.com/GoogleCloudPlatform/agones/tree/{release-branch}) for details on features, installation and usage.
+Check the [README](https://github.com/GoogleCloudPlatform/agones/tree/release-{version}) for details on features, installation and usage.
 
 **Implemented enhancements:**
 
 { insert enhancements from the changelog and/or security and breaking changes }
 
-See [CHANGELOG](https://github.com/GoogleCloudPlatform/agones/blob/{release-branch}/CHANGELOG.md) for more details on changes.
+{ if release candidate }
+Documentation: https://development.agones.dev/site/
+{ end }
+
+See [CHANGELOG](https://github.com/GoogleCloudPlatform/agones/blob/release-{version}/CHANGELOG.md) for more details on changes.
 
 This software is currently alpha, and subject to change. Not to be used in production systems.
 
@@ -16,6 +20,7 @@ Images available with this release:
 
 - [gcr.io/agones-images/agones-controller:{version}](https://gcr.io/agones-images/agones-controller:{version})
 - [gcr.io/agones-images/agones-sdk:{version}](https://gcr.io/agones-images/agones-sdk:{version})
+- [gcr.io/agones-images/agones-ping:{version}](https://gcr.io/agones-images/agones-ping:{version})
 - [gcr.io/agones-images/cpp-simple-server:{example-version}](https://gcr.io/agones-images/cpp-simple-server:{example-version})
 - [gcr.io/agones-images/udp-server:{example-version}](https://gcr.io/agones-images/udp-server:{example-version})
 - [gcr.io/agones-images/xonotic-example:{example-version}](https://gcr.io/agones-images/xonotic-example:{example-version})
