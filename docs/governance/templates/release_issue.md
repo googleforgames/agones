@@ -20,8 +20,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
   - [ ] Make a `tag` with the release version.
 - [ ] Site updated
   - [ ] If full release, review and remove all instances of the `feature` shortcode
-  - [ ] If full release, update to the new release branch {version}+0.1.
-  - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}+0.1
+  - [ ] If full release, update to the new release branch {version}+1.
+  - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}+1
   - [ ] If full release, update documentation with updated example images tags
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
 - [ ] Create PR with these changes, and merge them with approval
@@ -34,8 +34,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Submit the Release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
-- [ ] Ensure the [helm `tag` value][values] is set to the next version (should be the {version}+0.1 if a full release, {version}+0.1-rc if release candidate)
-- [ ] Ensure the [helm `Chart` version values][chart] is set to the next version (should be the {version}+0.1 if a full release, {version} if release candidate)
+- [ ] If full release move [helm `tag` value][values] is set to {version}+1
+- [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1
 - [ ] Run `make gen-install`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
