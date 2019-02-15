@@ -112,6 +112,7 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
 
+	wh.AddHandler("/validate", v1alpha1.Kind("GameServerSet"), admv1beta1.Create, c.creationValidationHandler)
 	wh.AddHandler("/validate", v1alpha1.Kind("GameServerSet"), admv1beta1.Update, c.updateValidationHandler)
 
 	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -180,7 +181,7 @@ func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error unmarshalling old GameServerSet json: %s", oldObj.Raw)
 	}
 
-	ok, causes := oldGss.ValidateUpdate(newGss)
+	causes, ok := oldGss.ValidateUpdate(newGss)
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
@@ -191,7 +192,42 @@ func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) 
 		}
 		review.Response.Result = &metav1.Status{
 			Status:  metav1.StatusFailure,
-			Message: "GameServer update is invalid",
+			Message: "GameServerSet update is invalid",
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &details,
+		}
+
+		c.logger.WithField("review", review).Info("Invalid GameServerSet update")
+		return review, nil
+	}
+
+	return review, nil
+}
+
+// creationValidationHandler that validates a GameServerSet when is created
+// Should only be called on gameserverset create operations.
+func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("creationValidationHandler")
+
+	newGss := &v1alpha1.GameServerSet{}
+
+	newObj := review.Request.Object
+	if err := json.Unmarshal(newObj.Raw, newGss); err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling new GameServerSet json: %s", newObj.Raw)
+	}
+
+	causes, ok := newGss.Validate()
+	if !ok {
+		review.Response.Allowed = false
+		details := metav1.StatusDetails{
+			Name:   review.Request.Name,
+			Group:  review.Request.Kind.Group,
+			Kind:   review.Request.Kind.Kind,
+			Causes: causes,
+		}
+		review.Response.Result = &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: "GameServerSet update is invalid",
 			Reason:  metav1.StatusReasonInvalid,
 			Details: &details,
 		}

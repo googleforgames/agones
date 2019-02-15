@@ -55,6 +55,8 @@ attach specific [annotations](https://kubernetes.io/docs/concepts/overview/worki
 and [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to your resource. 
 This is a very common pattern in the Kubernetes ecosystem.
 
+The length of the `name` field of the fleet should be at most 63 characters.
+
 The `spec` field is the actual `Fleet` specification and it is composed as follow:
 
 - `replicas` is the number of `GameServers` to keep Ready or Allocated in this Fleet

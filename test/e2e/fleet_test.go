@@ -30,6 +30,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 )
@@ -487,6 +488,32 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
+}
+
+// TestFleetNameValidation is built to test Fleet Name length validation,
+// Fleet Name should have at most 63 chars
+func TestFleetNameValidation(t *testing.T) {
+	t.Parallel()
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	flt := defaultFleet()
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'f'
+	}
+	flt.Name = string(bytes)
+	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr := err.(*k8serrors.StatusError)
+	assert.Equal(t, statusErr.Status().Details.Causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+	goodFlt := defaultFleet()
+	goodFlt.Name = string(bytes[0 : nameLen-1])
+	goodFlt, err = alpha1.Fleets(defaultNs).Create(goodFlt)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
 }
 
 func assertSuccessOrUpdateConflict(t *testing.T, err error) {
