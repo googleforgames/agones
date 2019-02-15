@@ -157,25 +157,26 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver            | ``                 |
 | `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
-| `agones.controller.nodeSelector`                    | Controller [node labels](nodeSelector) for pod assignment                                       | `{}`                   |
+| `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
-| `agones.controller.affinity`                        | Controller [affinity](affinity) settings for pod assignment                                     | `{}`                   |
+| `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
 | `agones.ping.resources`                             | Ping pods resource requests/limit                                                               | `{}`                   |
-| `agones.ping.nodeSelector`                          | Ping [node labels](nodeSelector) for pod assignment                                             | `{}`                   |
+| `agones.ping.nodeSelector`                          | Ping [node labels][nodeSelector] for pod assignment                                             | `{}`                   |
 | `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
-| `agones.ping.affinity`                              | Ping [affinity](affinity) settings for pod assignment                                           | `{}`                   |
+| `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
 | `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
 | `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
 | `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+[nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+[affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+
 {{% /feature %}}
 
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
-[nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
-[affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

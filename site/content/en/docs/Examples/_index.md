@@ -15,4 +15,4 @@ weight: 120
 
 - {{< ghlink href="examples/simple-udp" >}}Simple UDP{{< /ghlink >}} (Go) - simple server and client that send UDP packets back and forth.
 - {{< ghlink href="examples/cpp-simple" >}}CPP Simple{{< /ghlink >}} (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
-- {{< ghlink href="examples/xonotic" >}}Xonotic{{< /ghlink >}} - Wraps the SDK around the open source FPS game {{< ghlink href="http://www.xonotic.org" >}}Xonotic{{< /ghlink >}} and hosts it on Agones.
+- {{< ghlink href="examples/xonotic" >}}Xonotic{{< /ghlink >}} - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.

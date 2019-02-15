@@ -193,7 +193,7 @@ Finally to access dashboards run
 kubectl port-forward deployments/grafana 3000 -n metrics
 ```
 
-Open a web browser to [http://127.0.0.1:3000](http://127.0.0.1:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
+Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
 
 > Makefile targets `make grafana-portforward`,`make kind-grafana-portforward` and `make minikube-grafana-portforward`.
 

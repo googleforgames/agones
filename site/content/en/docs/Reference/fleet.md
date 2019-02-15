@@ -186,7 +186,7 @@ $ kubectl scale fleet simple-udp --replicas=10
 fleet.stable.agones.dev/simple-udp scaled
 ```
 
-You can also use [Kubernetes API](../Guides/access-api.md) to get or update the Replicas count:
+You can also use [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}) to get or update the Replicas count:
 ```
 curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fleets/simple-udp/scale
 ...
