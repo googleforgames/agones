@@ -8,7 +8,7 @@ description: >
   when being started and match made.
 ---
 
-![Lifecyle Sequence Diagram](../../../../diagrams/gameserver-lifecycle.puml.png)
+![Lifecyle Sequence Diagram](../../../diagrams/gameserver-lifecycle.puml.png)
 
 ## Next Steps:
 

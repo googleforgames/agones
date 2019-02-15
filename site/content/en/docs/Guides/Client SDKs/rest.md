@@ -71,7 +71,7 @@ $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:5935
 
 Apply a Label with the prefix "stable.agones.dev/sdk-" to the backing `GameServer` metadata. 
 
-See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}}) documentation for restrictions.
+See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) documentation for restrictions.
 
 #### Example
 
