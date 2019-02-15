@@ -65,7 +65,7 @@ grpc::Status status = sdk->Shutdown();
 if (!status.ok()) { ... }
 ```
 
-To [set a Label]({{< relref "_index.md#setlabelkey-value" >}}) on the backing `GameServer` call
+To [set a Label]({{< relref "_index.md#setlabel-key-value" >}}) on the backing `GameServer` call
 `sdk->SetLabel(key, value)`.
 
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
@@ -78,7 +78,7 @@ grpc::Status status = sdk->SetLabel("test-label", "test-value");
 if (!status.ok()) { ... }
 ```
 
-To [set an Annotation]({{< relref "_index.md#setannotationkey-value" >}}) on the backing `GameServer` call
+To [set an Annotation]({{< relref "_index.md#setannotation-key-value" >}}) on the backing `GameServer` call
 `sdk->SetAnnotation(key, value)`.
 
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
@@ -104,7 +104,7 @@ grpc::Status status = sdk->GameServer(&gameserver);
 if (!status.ok()) {...}
 ```
 
-To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, 
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, 
 call `sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){...})`.
 
 This will call the passed in `std::function`

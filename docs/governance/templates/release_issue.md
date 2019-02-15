@@ -19,6 +19,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Create a *draft* release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
 - [ ] Site updated
+  - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
   - [ ] If full release, review and remove all instances of the `feature` shortcode
   - [ ] If full release, update to the new release branch {version}+1.
   - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}+1

@@ -66,7 +66,7 @@ simple-udp-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
 simple-udp-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
 ```
 
-For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#fleet-specification" >}})
+For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
 ### 2. Fetch the Fleet status
 

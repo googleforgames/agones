@@ -135,7 +135,7 @@ ifdef NO_RACE_DETECTOR
   RACE_DETECTOR_ARGS=
 endif
 
-GO_TEST=$(DOCKER_RUN) go test -v $(RACE_DETECTOR_ARGS)
+GO_TEST=$(DOCKER_RUN) go test $(RACE_DETECTOR_ARGS)
 GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
 
 go_build_base_path=$(mount_path)
