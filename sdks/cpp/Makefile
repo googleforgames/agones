@@ -72,7 +72,7 @@ archive:
 	cp /usr/local/lib/libagonessdk.so $(build_path)/bin/
 	cp /usr/local/lib/libgpr.so.6 $(build_path)/bin/
 	cp /usr/local/lib/libgrpc_unsecure.so.6 $(build_path)/bin/
-	cd $(build_path)/bin && tar cvf agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz *
+	cd $(build_path)/bin && tar cvf agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz --exclude='*.zip' --exclude='*.tar.gz' *
 	cd /usr/local && tar cvf $(build_path)/bin/agonessdk-$(VERSION)-dev-linux-arch_64.tar.gz lib include
 	cd $(build_path) && zip ./bin/agonessdk-$(VERSION)-src.zip Makefile *.md *.cc *.h
 
