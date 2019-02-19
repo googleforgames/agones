@@ -52,7 +52,9 @@ spec:
       tolerations:
 {{ toYaml .Values.agones.ping.tolerations | indent 8 }}
       {{- end }}
+      {{- if .Values.agones.createPriorityClass }}
       priorityClassName: {{ .Values.agones.priorityClassName }}
+      {{- end }}
       containers:
         - name: agones-ping
           image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ .Values.agones.image.tag }}"
