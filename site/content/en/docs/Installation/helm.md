@@ -157,6 +157,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver            | ``                 |
 | `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
+| `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
+| `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
 | `agones.controller.nodeSelector`                    | Controller [node labels](nodeSelector) for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity](affinity) settings for pod assignment                                     | `{}`                   |
