@@ -165,6 +165,9 @@ do this through `kubectl` as well, and ask it to return the response in yaml so 
 {{% feature publishVersion="0.8.0" %}}
 #### GameServerAllocation
 
+> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
+  However, we welcome you to test it out in its current format and provide feedback.
+
 We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
 which demarcates that it has players on it, and should not be removed until `SDK.Shutdown()` is called, or it is manually deleted.
@@ -249,10 +252,6 @@ simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 
 {{% feature publishVersion="0.8.0" %}}
 #### FleetAllocation
-
-> Fleet Allocation is **deprecated** in version 0.8.0, and will be removed in the 0.10.0 release.
-  Migrate to using GameServer Allocation instead.
-{{% /feature %}}
 
 We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
 and also move it to the `Allocated` state.
