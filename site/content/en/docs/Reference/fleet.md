@@ -76,6 +76,9 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 {{% feature publishVersion="0.8.0" %}}
 ## GameServer Allocation Specification
 
+> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
+  However, we welcome you to test it out in its current format and provide feedback.
+
 A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers. 
 This could be a single Fleet, multiple Fleets, or a self managed group of GameServers.
 
@@ -140,11 +143,6 @@ The `spec` field is the actual `GameServerAllocation` specification and it is co
 {{% /feature %}}
 
 # Fleet Allocation Specification
-
-{{% feature publishVersion="0.8.0" %}}
-> Fleet Allocation is **deprecated** in version 0.8.0, and will be removed in the 0.10.0 release.
-  Migrate to using GameServer Allocation instead.
-{{% /feature %}}
 
 A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet`
 
