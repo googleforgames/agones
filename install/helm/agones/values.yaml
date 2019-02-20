@@ -29,6 +29,7 @@ agones:
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
+  createPriorityClass: true
   priorityClassName: agones-system
   controller:
     resources: {}
