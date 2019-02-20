@@ -260,7 +260,6 @@ Removing the fleet:
 kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
 ```
 
-{{% feature publishVersion="0.8.0" %}}
 ## Chapter 2 Configuring HTTPS fleetautoscaler webhook with CA Bundle
 
 ### Objectives
@@ -425,8 +424,6 @@ Removing the fleet:
 ```
 kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
 ```
-
-{{% /feature %}}
 
 ### Comments 
 

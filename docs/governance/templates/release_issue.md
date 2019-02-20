@@ -11,6 +11,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Review closed PRs have been applied to the current milestone.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
+- [ ] `git checkout master && git pull --rebase upstream master`
+- [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be the {version} if a full release, {version}-rc if release candidate)
@@ -24,6 +26,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
   - [ ] If full release, update to the new release branch {version}+1.
   - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}+1
   - [ ] If full release, update documentation with updated example images tags
+  - [ ] If full release, add link to previous version's documentation to nav dropdown
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
