@@ -1,6 +1,32 @@
 # Changelog
 
-## [v0.8.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.0-rc) (2019-02-13)
+## [v0.8.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.0) (2019-02-20)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.0-rc...v0.8.0)
+
+**Implemented enhancements:**
+
+- Register GameServers with local IP addresses [\#469](https://github.com/GoogleCloudPlatform/agones/issues/469)
+
+**Fixed bugs:**
+
+- agonessdk-0.8.0-\*-runtime-linux-arch\_64.tar.gz is growing unboundedly [\#589](https://github.com/GoogleCloudPlatform/agones/issues/589)
+- Create a boolean to gate the creation of priority classes for controllers. [\#602](https://github.com/GoogleCloudPlatform/agones/pull/602) ([bbf](https://github.com/bbf))
+- Exclude tar.gz and zip files from Runtime archive [\#596](https://github.com/GoogleCloudPlatform/agones/pull/596) ([aLekSer](https://github.com/aLekSer))
+- Switch to htmltest link checker -- and fix issues [\#594](https://github.com/GoogleCloudPlatform/agones/pull/594) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.8.0-rc [\#590](https://github.com/GoogleCloudPlatform/agones/issues/590)
+- Help us pick a new project logo!  [\#577](https://github.com/GoogleCloudPlatform/agones/issues/577)
+
+**Merged pull requests:**
+
+- Remove deprecation from FleetAllocation [\#603](https://github.com/GoogleCloudPlatform/agones/pull/603) ([markmandel](https://github.com/markmandel))
+- Remove -v from Go testing - becomes too noisy [\#595](https://github.com/GoogleCloudPlatform/agones/pull/595) ([markmandel](https://github.com/markmandel))
+- Minor tweaks to release process. [\#592](https://github.com/GoogleCloudPlatform/agones/pull/592) ([markmandel](https://github.com/markmandel))
+
+## [v0.8.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.0-rc) (2019-02-14)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.7.0...v0.8.0-rc)
 
@@ -61,6 +87,7 @@
 
 **Merged pull requests:**
 
+- Release 0.8.0-rc [\#591](https://github.com/GoogleCloudPlatform/agones/pull/591) ([markmandel](https://github.com/markmandel))
 - typo [\#587](https://github.com/GoogleCloudPlatform/agones/pull/587) ([jkowalski](https://github.com/jkowalski))
 - test: make e2e test logs more readable [\#585](https://github.com/GoogleCloudPlatform/agones/pull/585) ([jkowalski](https://github.com/jkowalski))
 - Update godoc command to enable search [\#580](https://github.com/GoogleCloudPlatform/agones/pull/580) ([markmandel](https://github.com/markmandel))

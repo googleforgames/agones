@@ -25,6 +25,25 @@
   version = "v0.8.0"
 
 [[projects]]
+  digest = "1:dce7126264112cb2357a02f845cbb4cb4428dbe499ff290bf391f826175fe983"
+  name = "fortio.org/fortio"
+  packages = [
+    ".",
+    "bincommon",
+    "fgrpc",
+    "fhttp",
+    "fnet",
+    "log",
+    "periodic",
+    "stats",
+    "ui",
+    "version",
+  ]
+  pruneopts = ""
+  revision = "fd8f4a7177e9ea509f27105ae4e55e6c68ece6f7"
+  version = "v1.3.1"
+
+[[projects]]
   digest = "1:4d581a0828b5c0f9e252edb5cd85f2c5c20809783dddedae5be94cc8ee26639b"
   name = "github.com/aws/aws-sdk-go"
   packages = [
@@ -681,6 +700,8 @@
     "encoding",
     "encoding/proto",
     "grpclog",
+    "health",
+    "health/grpc_health_v1",
     "internal",
     "internal/backoff",
     "internal/channelz",
@@ -691,6 +712,8 @@
     "metadata",
     "naming",
     "peer",
+    "reflection",
+    "reflection/grpc_reflection_v1alpha",
     "resolver",
     "resolver/dns",
     "resolver/passthrough",
@@ -1007,6 +1030,7 @@
   analyzer-version = 1
   input-imports = [
     "contrib.go.opencensus.io/exporter/stackdriver",
+    "fortio.org/fortio",
     "github.com/evanphx/json-patch",
     "github.com/fsnotify/fsnotify",
     "github.com/golang/protobuf/proto",
@@ -1034,10 +1058,12 @@
     "google.golang.org/grpc/grpclog",
     "google.golang.org/grpc/metadata",
     "google.golang.org/grpc/status",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/admission/v1beta1",
     "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/extensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake",
@@ -1075,6 +1101,7 @@
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/metrics",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/flowcontrol",
     "k8s.io/client-go/util/workqueue",
