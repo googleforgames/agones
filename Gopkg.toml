@@ -99,3 +99,7 @@
 [[constraint]]
   name = "contrib.go.opencensus.io/exporter/stackdriver"
   version = "v0.8.0"
+
+[[constraint]]
+  name = "fortio.org/fortio"
+  version = "1.3.1"

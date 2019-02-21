@@ -697,8 +697,11 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 
 	var fleets []*v1alpha1.Fleet
 
-	var scaleUpResults e2e.PerfResults
-	var scaleDownResults e2e.PerfResults
+	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize))
+	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize))
+
+	defer scaleUpStats.Report()
+	defer scaleDownStats.Report()
 
 	for fleetNumber := 0; fleetNumber < fleetCount; fleetNumber++ {
 		flt := defaultFleet()
@@ -740,22 +743,19 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 			}()
 
 			if fleetNumber%2 == 0 {
-				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
 			}
 			for i := 0; i < repeatCount; i++ {
 				if time.Now().After(deadline) {
 					break
 				}
-				scaleUpResults.AddSample(scaleAndWait(t, flt, fleetSize))
-				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+				scaleUpStats.ReportDuration(scaleAndWait(t, flt, fleetSize), nil)
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
 			}
 		}(fleetNumber, flt)
 	}
 
 	wg.Wait()
-
-	scaleUpResults.Report(fmt.Sprintf("scale up 0 to %v with %v fleets", fleetSize, fleetCount))
-	scaleDownResults.Report(fmt.Sprintf("scale down %v to 0 with %v fleets", fleetSize, fleetCount))
 }
 
 func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {

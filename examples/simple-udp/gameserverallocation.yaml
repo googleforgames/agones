@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Usually you would define a Fleet rather than a GameServerSet
-# directly. This is here mostly for testing purposes
+# (GameServerAllocation is currently experimental, and likely to change in upcoming releases)
 
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: GameServerAllocation

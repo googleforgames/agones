@@ -75,8 +75,10 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 - `template` a full `GameServer` configuration template.
    See the [GameServer]({{< relref "gameserver.md" >}}) reference for all available fields.
 
-{{% feature publishVersion="0.8.0" %}}
 ## GameServer Allocation Specification
+
+> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
+  However, we welcome you to test it out in its current format and provide feedback.
 
 A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers. 
 This could be a single Fleet, multiple Fleets, or a self managed group of GameServers.
@@ -139,14 +141,8 @@ The `spec` field is the actual `GameServerAllocation` specification and it is co
  
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
-{{% /feature %}}
 
 # Fleet Allocation Specification
-
-{{% feature publishVersion="0.8.0" %}}
-> Fleet Allocation is **deprecated** in version 0.8.0, and will be removed in the 0.10.0 release.
-  Migrate to using GameServer Allocation instead.
-{{% /feature %}}
 
 A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet`
 
@@ -177,7 +173,6 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
 
-{{% feature publishVersion="0.8.0" %}}
 # Fleet Scale Subresource Specification
 
 Scale subresource is defined for a Fleet. Please refer to [Kubernetes docs](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#subresources).
@@ -212,5 +207,3 @@ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fl
 ```
 
 Also exposing a Scale subresource would allow you to configure HorizontalPodAutoscaler and PodDisruptionBudget for a fleet in the future. Howeber these features have not been tested, and are not currently supported - but if you are looking for these features, please be sure to let us know in the [ticket](https://github.com/GoogleCloudPlatform/agones/issues/553). 
-
-{{% /feature %}}

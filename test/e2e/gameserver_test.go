@@ -19,6 +19,8 @@ import (
 	"testing"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/resource"
+
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
@@ -201,7 +203,18 @@ func defaultGameServer() *v1alpha1.GameServer {
 					Containers: []corev1.Container{{
 						Name:            "udp-server",
 						Image:           framework.GameServerImage,
-						ImagePullPolicy: corev1.PullIfNotPresent}},
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					}},
 				},
 			},
 		},

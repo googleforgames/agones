@@ -39,6 +39,7 @@ func TestMain(m *testing.M) {
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
+	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directrory")
 
 	flag.Parse()
 
@@ -53,10 +54,15 @@ func TestMain(m *testing.M) {
 		exitCode int
 	)
 
-	if framework, err = e2eframework.New(*kubeconfig, *gsimage, *pullSecret, *stressTestLevel); err != nil {
+	if framework, err = e2eframework.New(*kubeconfig); err != nil {
 		log.Printf("failed to setup framework: %v\n", err)
 		os.Exit(1)
 	}
+
+	framework.GameServerImage = *gsimage
+	framework.PullSecret = *pullSecret
+	framework.StressTestLevel = *stressTestLevel
+	framework.PerfOutputDir = *perfOutputDir
 
 	// run cleanup before tests, to ensure no resources from previous runs exist.
 	err = framework.CleanUp(defaultNs)

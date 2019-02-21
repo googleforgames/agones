@@ -49,10 +49,11 @@ type Framework struct {
 	GameServerImage string
 	PullSecret      string
 	StressTestLevel int
+	PerfOutputDir   string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig, gsimage string, pullSecret string, stressTestLevel int) (*Framework, error) {
+func New(kubeconfig string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -69,11 +70,8 @@ func New(kubeconfig, gsimage string, pullSecret string, stressTestLevel int) (*F
 	}
 
 	return &Framework{
-		KubeClient:      kubeClient,
-		AgonesClient:    agonesClient,
-		GameServerImage: gsimage,
-		PullSecret:      pullSecret,
-		StressTestLevel: stressTestLevel,
+		KubeClient:   kubeClient,
+		AgonesClient: agonesClient,
 	}, nil
 }
 
@@ -199,6 +197,15 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond f
 
 		return true, nil
 	})
+}
+
+// NewStatsCollector returns new instance of statistics collector,
+// which can be used to emit performance statistics for load tests and stress tests.
+func (f *Framework) NewStatsCollector(name string) *StatsCollector {
+	if f.StressTestLevel > 0 {
+		name = fmt.Sprintf("stress_%v_%v", f.StressTestLevel, name)
+	}
+	return &StatsCollector{name: name, outputDir: f.PerfOutputDir}
 }
 
 // CleanUp Delete all Agones resources in a given namespace.

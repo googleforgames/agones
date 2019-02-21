@@ -15,7 +15,7 @@ We plan to support multiple exporters in the future via environement variables a
 
 ### Prometheus
 
-If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values {{% feature expiryVersion="0.8.0" %}}`agones.metrics.enabled`{{% /feature %}}{{% feature publishVersion="0.8.0" %}}`agones.metrics.prometheusEnabled`{{% /feature %}} and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/master/documentation/examples/kubernetes-rabbitmq))
+If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/master/documentation/examples/kubernetes-rabbitmq))
 
 ### Prometheus Operator
 
@@ -40,17 +40,9 @@ Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://
 
 ### Stackdriver
 
-{{% feature expiryVersion="0.8.0" %}}
-We don't yet support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/)
-but you can still use the Prometheus Stackdriver integration by following these [instructions](https://cloud.google.com/monitoring/kubernetes-engine/prometheus).
-Annotations required by this integration can be activated by setting the `agones.metrics.prometheusServiceDiscovery` 
-to true (default) via the [helm chart value]({{< relref "../Installation/helm.md" >}}).
-{{% /feature %}}
-{{% feature publishVersion="0.8.0" %}}
 We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/). 
 In order to use it you should enable [Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
 Follow the [Stackdriver Installation steps](#stackdriver-installation) to see your metrics on Stackdriver Monitoring website.
-{{% /feature %}}
 
 ## Metrics available
 
@@ -80,22 +72,17 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 
 - {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="master" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations , game servers statuses, fleets replicas) with optional fleet name filtering.
 
-{{% feature publishVersion="0.8.0" %}}
 - {{< ghlink href="/build/grafana/dashboard-allocations.yaml" branch="master" >}}Agones GameServer Allocations{{< /ghlink >}} displays Agones gameservers allocations rates and counts per fleet.
-{{% /feature %}}
 
 - {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="master" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
 
 - {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="master" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
-
-{{% feature publishVersion="0.8.0" %}}
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="master" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="master" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="master" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
-{{% /feature %}}
 
 Dashboard screenshots :
 
@@ -197,7 +184,6 @@ Open a web browser to [http://localhost:3000](http://localhost:3000), you should
 
 > Makefile targets `make grafana-portforward`,`make kind-grafana-portforward` and `make minikube-grafana-portforward`.
 
-{{% feature publishVersion="0.8.0" %}}
 ### Stackdriver installation
 
 In order to use [Stackdriver monitoring](https://app.google.stackdriver.com) you should [enable Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) on Google Cloud Console. You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). Stackdriver exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details could be found here [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
@@ -228,4 +214,3 @@ Permissions problem example from controller logs:
 ```
 Failed to export to Stackdriver: rpc error: code = PermissionDenied desc = Permission monitoring.metricDescriptors.create denied (or the resource may not exist).
 ```
-{{% /feature %}}
