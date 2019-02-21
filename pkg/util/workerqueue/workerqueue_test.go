@@ -40,7 +40,7 @@ func TestWorkerQueueRun(t *testing.T) {
 		return nil
 	}
 
-	wq := NewWorkerQueue(syncHandler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(syncHandler, logrus.WithField("source", "test"), "testKey", "test")
 	stop := make(chan struct{})
 	defer close(stop)
 
@@ -70,7 +70,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 		<-done
 		return nil
 	}
-	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
 	wq.Enqueue(cache.ExplicitKey("default/test"))
 
 	stop := make(chan struct{})
@@ -108,7 +108,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	handler := func(string) error {
 		return nil
 	}
-	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
 	health.AddLivenessCheck("test", wq.Healthy)
 
 	server := httptest.NewServer(health)
