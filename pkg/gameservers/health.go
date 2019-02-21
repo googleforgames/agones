@@ -23,6 +23,7 @@ import (
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
@@ -44,7 +45,7 @@ import (
 // an Unhealthy state if certain pods crash, or can't be assigned a port, and other
 // similar type conditions.
 type HealthController struct {
-	logger           *logrus.Entry
+	baseLogger       *logrus.Entry
 	podSynced        cache.InformerSynced
 	podLister        corelisterv1.PodLister
 	gameServerGetter getterv1alpha1.GameServersGetter
@@ -65,11 +66,11 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 		gameServerLister: agonesInformerFactory.Stable().V1alpha1().GameServers().Lister(),
 	}
 
-	hc.logger = runtime.NewLoggerWithType(hc)
-	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.logger, stable.GroupName+".HealthController")
+	hc.baseLogger = runtime.NewLoggerWithType(hc)
+	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.baseLogger, logfields.GameServerKey, stable.GroupName+".HealthController")
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(hc.logger.Infof)
+	eventBroadcaster.StartLogging(hc.baseLogger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
 
@@ -124,22 +125,30 @@ func (hc *HealthController) Run(stop <-chan struct{}) {
 	hc.workerqueue.Run(1, stop)
 }
 
+func (hc *HealthController) loggerForGameServerKey(key string) *logrus.Entry {
+	return logfields.AugmentLogEntry(hc.baseLogger, logfields.GameServerKey, key)
+}
+
+func (hc *HealthController) loggerForGameServer(gs *v1alpha1.GameServer) *logrus.Entry {
+	return hc.loggerForGameServerKey(gs.Namespace+"/"+gs.Name).WithField("gs", gs)
+}
+
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
 func (hc *HealthController) syncGameServer(key string) error {
-	hc.logger.WithField("key", key).Info("Synchronising")
+	hc.loggerForGameServerKey(key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(hc.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(hc.loggerForGameServerKey(key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	gs, err := hc.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			hc.logger.WithField("key", key).Info("GameServer is no longer available for syncing")
+			hc.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
@@ -151,18 +160,18 @@ func (hc *HealthController) syncGameServer(key string) error {
 	switch gs.Status.State {
 
 	case v1alpha1.GameServerStateStarting:
-		hc.logger.WithField("key", key).Info("GameServer cannot start on this port")
+		hc.loggerForGameServer(gs).Info("GameServer cannot start on this port")
 		unhealthy = true
 		reason = "No nodes have free ports for the allocated ports"
 
 	case v1alpha1.GameServerStateReady:
-		hc.logger.WithField("key", key).Info("GameServer container has terminated")
+		hc.loggerForGameServer(gs).Info("GameServer container has terminated")
 		unhealthy = true
 		reason = "GameServer container terminated"
 	}
 
 	if unhealthy {
-		hc.logger.WithField("gs", gs).Infof("Marking GameServer as GameServerStateUnhealthy")
+		hc.loggerForGameServer(gs).Infof("Marking GameServer as GameServerStateUnhealthy")
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
 
