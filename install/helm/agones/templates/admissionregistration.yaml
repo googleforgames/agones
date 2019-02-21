@@ -39,7 +39,9 @@ webhooks:
       - apiGroups:
           - stable.agones.dev
         resources:
+          - "fleets"
           - "gameservers"
+          - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"
         apiVersions:
@@ -49,6 +51,7 @@ webhooks:
       - apiGroups:
           - stable.agones.dev
         resources:
+          - "fleets"
           - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"

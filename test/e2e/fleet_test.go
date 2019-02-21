@@ -30,6 +30,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 )
@@ -489,6 +490,32 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 	})
 }
 
+// TestFleetNameValidation is built to test Fleet Name length validation,
+// Fleet Name should have at most 63 chars
+func TestFleetNameValidation(t *testing.T) {
+	t.Parallel()
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	flt := defaultFleet()
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'f'
+	}
+	flt.Name = string(bytes)
+	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr := err.(*k8serrors.StatusError)
+	assert.Equal(t, statusErr.Status().Details.Causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+	goodFlt := defaultFleet()
+	goodFlt.Name = string(bytes[0 : nameLen-1])
+	goodFlt, err = alpha1.Fleets(defaultNs).Create(goodFlt)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+}
+
 func assertSuccessOrUpdateConflict(t *testing.T, err error) {
 	if !k8serrors.IsConflict(err) {
 		// update conflicts are sometimes ok, we simply lost the race.
@@ -670,8 +697,11 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 
 	var fleets []*v1alpha1.Fleet
 
-	var scaleUpResults e2e.PerfResults
-	var scaleDownResults e2e.PerfResults
+	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize))
+	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize))
+
+	defer scaleUpStats.Report()
+	defer scaleDownStats.Report()
 
 	for fleetNumber := 0; fleetNumber < fleetCount; fleetNumber++ {
 		flt := defaultFleet()
@@ -713,22 +743,19 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 			}()
 
 			if fleetNumber%2 == 0 {
-				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
 			}
 			for i := 0; i < repeatCount; i++ {
 				if time.Now().After(deadline) {
 					break
 				}
-				scaleUpResults.AddSample(scaleAndWait(t, flt, fleetSize))
-				scaleDownResults.AddSample(scaleAndWait(t, flt, 0))
+				scaleUpStats.ReportDuration(scaleAndWait(t, flt, fleetSize), nil)
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
 			}
 		}(fleetNumber, flt)
 	}
 
 	wg.Wait()
-
-	scaleUpResults.Report(fmt.Sprintf("scale up 0 to %v with %v fleets", fleetSize, fleetCount))
-	scaleDownResults.Report(fmt.Sprintf("scale down %v to 0 with %v fleets", fleetSize, fleetCount))
 }
 
 func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {
