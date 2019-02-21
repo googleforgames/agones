@@ -32,9 +32,7 @@ func (e *gameServerSetCacheEntry) deleted(gs *v1alpha1.GameServer) {
 	}
 
 	// Was pending creation, but deleted already.
-	if _, ok := e.pendingCreation[gs.Name]; ok {
-		delete(e.pendingCreation, gs.Name)
-	}
+	delete(e.pendingCreation, gs.Name)
 
 	gsClone := gs.DeepCopy()
 	t := metav1.Now()
