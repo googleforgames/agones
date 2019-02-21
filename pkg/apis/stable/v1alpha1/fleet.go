@@ -15,11 +15,14 @@
 package v1alpha1
 
 import (
+	"fmt"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -132,6 +135,24 @@ func (f *Fleet) ApplyDefaults() {
 		f.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
 	f.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
+}
+
+// Validate validates the Fleet configuration.
+// If a Fleet is invalid there will be > 0 values in
+// the returned array
+func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+
+	// make sure the Name of a Fleet does not oversize the Label size in GSS and GS
+	if len(f.Name) > validation.LabelValueMaxLength {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   fmt.Sprintf("Name"),
+			Message: fmt.Sprintf("Length of Fleet '%s' name should be no more than 63.", f.ObjectMeta.Name),
+		})
+	}
+
+	return causes, len(causes) == 0
 }
 
 // UpperBoundReplicas returns whichever is smaller,

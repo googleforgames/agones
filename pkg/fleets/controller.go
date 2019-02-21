@@ -19,6 +19,7 @@ import (
 	"reflect"
 
 	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
@@ -96,6 +97,8 @@ func NewController(
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleet-controller"})
 
 	wh.AddHandler("/mutate", stablev1alpha1.Kind("Fleet"), admv1beta1.Create, c.creationMutationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("Fleet"), admv1beta1.Create, c.creationValidationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("Fleet"), admv1beta1.Update, c.creationValidationHandler)
 
 	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -156,6 +159,41 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
 	review.Response.Patch = jsn
+
+	return review, nil
+}
+
+// creationValidationHandler that validates a Fleet when it is created
+// Should only be called on Fleet create and Update operations.
+func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.logger.WithField("review", review).Info("creationValidationHandler")
+
+	obj := review.Request.Object
+	fleet := &stablev1alpha1.Fleet{}
+	err := json.Unmarshal(obj.Raw, fleet)
+	if err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling original Fleet json: %s", obj.Raw)
+	}
+
+	causes, ok := fleet.Validate()
+	if !ok {
+		review.Response.Allowed = false
+		details := metav1.StatusDetails{
+			Name:   review.Request.Name,
+			Group:  review.Request.Kind.Group,
+			Kind:   review.Request.Kind.Kind,
+			Causes: causes,
+		}
+		review.Response.Result = &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: "Fleet configuration is invalid",
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &details,
+		}
+
+		c.logger.WithField("review", review).Info("Invalid Fleet")
+		return review, nil
+	}
 
 	return review, nil
 }
@@ -435,6 +473,9 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 // updateFleetStatus gets the GameServerSets for this Fleet and then
 // calculates the counts for the status, and updates the Fleet
 func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
+
+	c.logger.WithField("key", fleet.Name).Info("Update Fleet Status")
+
 	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {
 		return err
