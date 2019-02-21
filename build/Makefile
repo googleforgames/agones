@@ -253,6 +253,9 @@ stress-test-e2e: $(ensure-build-image)
 		--stress $(STRESS_TEST_LEVEL) \
 		--perf-output $(PERF_OUTPUT_DIR)
 
+test-cloud-builder:
+	cloud-build-local -dryrun=false --write-workspace=~/cloud-builder-workspace --config=../cloudbuild.yaml ../ 
+
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
 test-install-yaml:
