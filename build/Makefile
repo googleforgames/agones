@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 0.8.0
+base_version = 0.9.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -195,6 +195,7 @@ push-chart: $(ensure-build-image) build-chart
 		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
 		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
 		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
+		cp ./install/helm/bin/index.yaml ./install/helm/bin/index-$(VERSION).yaml && \
 		gsutil copy ./install/helm/bin/*.* gs://$(GCP_BUCKET_CHARTS)/"
 
 # push a specific release useful to push previous missing release
@@ -464,16 +465,26 @@ do-release:
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
 	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
-	$(MAKE) build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
+	$(MAKE) build-sdks build-agones-sdk-binary VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
 	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
-	$(MAKE) push-chart
-	$(MAKE) gcloud-auth-docker push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
+
+	# retag the current master commit images with the release tag.
+	$(MAKE) do-relase-tag-images RELEASE_VERSION=$(RELEASE_VERSION)
+
+	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
+
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
+
+do-relase-tag-images: RELEASE_VERSION ?= $(base_version)
+do-relase-tag-images:
+	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-controller:$(VERSION) $(release_registry)/agones-controller:$(RELEASE_VERSION) --quiet
+	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-sdk:$(VERSION) $(release_registry)/agones-sdk:$(RELEASE_VERSION) --quiet
+	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-ping:$(VERSION) $(release_registry)/agones-ping:$(RELEASE_VERSION) --quiet
 
 setup-test-cluster: DOCKER_RUN_ARGS+=--network=host
 setup-test-cluster: $(ensure-build-image)
