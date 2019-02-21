@@ -1,4 +1,4 @@
-FROM gcr.io/cloud-builders/gcloud
+FROM gcr.io/cloud-builders/docker
 
 RUN apt-get update && \
     apt-get install -y wget psmisc make gcc python jq zip && \
@@ -12,6 +12,9 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
+
+# install kind
+RUN go get -u sigs.k8s.io/kind
 
 # install kubectl without gcloud as we want the last version
 ENV KUBECTL_VER 1.11.5
@@ -43,6 +46,7 @@ RUN mkdir -p /tmp/build && \
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
+
 # scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh

@@ -231,6 +231,9 @@ stress-test-e2e: $(ensure-build-image)
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--stress $(STRESS_TEST_LEVEL)
 
+test-cloud-builder:
+	cloud-build-local -dryrun=false --write-workspace=~/cloud-builder-workspace --config=../cloudbuild.yaml ../ 
+
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
 test-install-yaml:
@@ -665,8 +668,13 @@ kind-test-cluster: $(ensure-build-image)
 	@if [ -z $$(kind get clusters | grep $(KIND_PROFILE)) ]; then\
 		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
 		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.11.3 --wait 5m;\
+		until KUBECONFIG="$$(kind get kubeconfig-path --name="$(KIND_PROFILE)")" kubectl cluster-info; \
+		do \
+			echo "Waiting for cluster to start..."; \
+			sleep 1; \
+		done; \
+		$(MAKE) setup-test-cluster KUBECONFIG="$$(kind get kubeconfig-path --name="$(KIND_PROFILE)")" DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)";\
 	fi
-	$(MAKE) setup-test-cluster KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 
 # deletes the kind agones cluster
 # useful if you're want to start from scratch
