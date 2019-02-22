@@ -354,6 +354,19 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gs.Spec.Container)
 }
 
+// ApplyToPodGameServerContainer applies func(v1.Container) to the pod's gameserver container
+func (gs *GameServer) ApplyToPodGameServerContainer(pod *corev1.Pod, f func(corev1.Container) corev1.Container) *corev1.Pod {
+	for i, c := range pod.Spec.Containers {
+		if c.Name == gs.Spec.Container {
+			c = f(c)
+			pod.Spec.Containers[i] = c
+			break
+		}
+	}
+
+	return pod
+}
+
 // Pod creates a new Pod from the PodTemplateSpec
 // attached to the GameServer resource
 func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
@@ -364,8 +377,12 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 
 	gs.podObjectMeta(pod)
 
+	// if the service account is not set, then you are in the "opinionated"
+	// mode. If the user sets the service account, we assume they know what they are
+	// doing, and don't disable the gameserver container.
 	if pod.Spec.ServiceAccountName == "" {
 		pod.Spec.ServiceAccountName = SidecarServiceAccountName
+		gs.disableServiceAccount(pod)
 	}
 
 	i, gsContainer, err := gs.FindGameServerContainer()
@@ -455,6 +472,20 @@ func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 
 		pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, wpat)
 	}
+}
+
+// disableServiceAccount disables the service account for the gameserver container
+func (gs *GameServer) disableServiceAccount(pod *corev1.Pod) {
+	// gameservers don't get access to the k8s api.
+	emptyVol := corev1.Volume{Name: "empty", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}}
+	pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVol)
+	mount := corev1.VolumeMount{MountPath: "/var/run/secrets/kubernetes.io/serviceaccount", Name: emptyVol.Name, ReadOnly: true}
+
+	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+		c.VolumeMounts = append(c.VolumeMounts, mount)
+
+		return c
+	})
 }
 
 // HasPortPolicy checks if there is a port with a given
