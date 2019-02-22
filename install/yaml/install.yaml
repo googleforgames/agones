@@ -1089,6 +1089,10 @@ spec:
           value: "400"
         - name: API_SERVER_QPS_BURST
           value: "500"
+        - name: LOG_DIR
+          value: "/home/agones/logs"
+        - name: LOG_SIZE_LIMIT_MB
+          value: "10000"
         livenessProbe:
           httpGet:
             path: /live
@@ -1101,10 +1105,15 @@ spec:
         - name: certs
           mountPath: /home/agones/certs
           readOnly: true
+        - name: logs
+          mountPath: /home/agones/logs
+          readOnly: false
       volumes:
       - name: certs
         secret:
           secretName: agones-manual-cert
+      - name: logs
+        emptyDir: {}
 
 ---
 # Source: agones/templates/ping.yaml
