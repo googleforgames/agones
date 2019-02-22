@@ -321,6 +321,16 @@ func (gs *GameServer) GetDevAddress() (string, bool) {
 	return devAddress, hasDevAddress
 }
 
+// IsAllocated returns true if the server is currently allocated.
+func (gs *GameServer) IsAllocated() bool {
+	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == GameServerStateAllocated
+}
+
+// IsBeingDeleted returns true if the server is in the process of being deleted.
+func (gs *GameServer) IsBeingDeleted() bool {
+	return !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == GameServerStateShutdown
+}
+
 // FindGameServerContainer returns the container that is specified in
 // spec.gameServer.container. Returns the index and the value.
 // Returns an error if not found
