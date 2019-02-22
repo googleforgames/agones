@@ -98,6 +98,12 @@ spec:
           value: {{ .Values.agones.controller.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
           value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
+{{- if .Values.agones.controller.persistentLogs }}
+        - name: LOG_DIR
+          value: "/home/agones/logs"
+        - name: LOG_SIZE_LIMIT_MB
+          value: {{ .Values.agones.controller.persistentLogsSizeLimitMB | quote }}
+{{- end }}
         livenessProbe:
           httpGet:
             path: /live
@@ -114,10 +120,19 @@ spec:
         - name: certs
           mountPath: /home/agones/certs
           readOnly: true
+{{- if .Values.agones.controller.persistentLogs }}
+        - name: logs
+          mountPath: /home/agones/logs
+          readOnly: false
+{{- end }}
       volumes:
       - name: certs
         secret:
           secretName: {{ template "agones.fullname" . }}-cert
+{{- if .Values.agones.controller.persistentLogs }}
+      - name: logs
+        emptyDir: {}
+{{- end }}
 {{- if .Values.agones.image.controller.pullSecret }}
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}

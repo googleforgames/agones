@@ -49,6 +49,8 @@ agones:
                 operator: Exists
     generateTLS: true
     safeToEvict: false
+    persistentLogs: true
+    persistentLogsSizeLimitMB: 10000
     numWorkers: 100
     apiServerQPS: 400
     apiServerQPSBurst: 500
