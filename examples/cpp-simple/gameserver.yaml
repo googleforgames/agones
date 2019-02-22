@@ -21,7 +21,7 @@ metadata:
 spec:
   ports:
     - name: default
-      portPolicy: "dynamic"
+      portPolicy: Dynamic
       containerPort: 7654
   template:
     spec:

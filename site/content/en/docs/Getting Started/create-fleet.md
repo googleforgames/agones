@@ -105,7 +105,7 @@ Spec:
       Ports:
         Container Port:  7654
         Name:            default
-        Port Policy:     dynamic
+        Port Policy:     Dynamic
       Template:
         Metadata:
           Creation Timestamp:  <nil>
@@ -305,7 +305,7 @@ status:
       - containerPort: 7654
         hostPort: 7604
         name: default
-        portPolicy: dynamic
+        portPolicy: Dynamic
         protocol: UDP
       template:
         metadata:
