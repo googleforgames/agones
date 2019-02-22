@@ -364,7 +364,7 @@ func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount
 
 	// pass 1 - count allocated servers only, since those can't be touched
 	for _, gs := range list {
-		if isAllocated(gs) {
+		if gs.IsAllocated() {
 			upCount++
 			continue
 		}
@@ -372,13 +372,13 @@ func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount
 
 	// pass 2 - handle all other statuses
 	for _, gs := range list {
-		if isAllocated(gs) {
+		if gs.IsAllocated() {
 			// already handled above
 			continue
 		}
 
-		// GS being deleted counts towards target replica count.
-		if !gs.ObjectMeta.DeletionTimestamp.IsZero() {
+		// GS being deleted don't count.
+		if gs.IsBeingDeleted() {
 			continue
 		}
 
@@ -399,12 +399,9 @@ func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount
 			handleGameServerUp(gs)
 		case v1alpha1.GameServerStateReady:
 			handleGameServerUp(gs)
-		case v1alpha1.GameServerStateShutdown:
-			// will be deleted soon
-			handleGameServerUp(gs)
 
+		// GameServerStateShutdown - already handled above
 		// GameServerStateAllocated - already handled above
-
 		case v1alpha1.GameServerStateError, v1alpha1.GameServerStateUnhealthy:
 			scheduleDeletion(gs)
 		default:
@@ -449,10 +446,6 @@ func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount
 	return numServersToAdd, toDelete, partialReconciliation
 }
 
-func isAllocated(gs *v1alpha1.GameServer) bool {
-	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == v1alpha1.GameServerStateAllocated
-}
-
 // addMoreGameServers adds diff more GameServers to the set
 func (c *Controller) addMoreGameServers(gsSet *v1alpha1.GameServerSet, count int) error {
 	c.logger.WithField("count", count).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("Adding more gameservers")
@@ -482,7 +475,7 @@ func (c *Controller) deleteGameServers(gsSet *v1alpha1.GameServerSet, toDelete [
 		}
 
 		c.stateCache.forGameServerSet(gsSet).deleted(gs)
-		c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "SuccessfulDelete", "Deleted gameserver: %s", gs.ObjectMeta.Name)
+		c.recorder.Eventf(gsSet, corev1.EventTypeNormal, "SuccessfulDelete", "Deleted gameserver in state %s: %v", gs.Status.State, gs.ObjectMeta.Name)
 		return nil
 	})
 }
@@ -566,9 +559,13 @@ func (c *Controller) updateStatusIfChanged(gsSet *v1alpha1.GameServerSet, status
 // computeStatus computes the status of the game server set.
 func computeStatus(list []*v1alpha1.GameServer) v1alpha1.GameServerSetStatus {
 	var status v1alpha1.GameServerSetStatus
-
-	status.Replicas = int32(len(list))
 	for _, gs := range list {
+		if gs.IsBeingDeleted() {
+			// don't count GS that are being deleted
+			continue
+		}
+
+		status.Replicas++
 		switch gs.Status.State {
 		case v1alpha1.GameServerStateReady:
 			status.ReadyReplicas++
