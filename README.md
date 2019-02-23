@@ -1,4 +1,5 @@
-# Agones
+<img src="./docs/agones.png" alt="Agones logo" width="250px" height="250px" />
+
 [![GoDoc](https://godoc.org/agones.dev/agones?status.svg)](https://godoc.org/agones.dev/agones)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GoogleCloudPlatform/agones)](https://goreportcard.com/report/github.com/GoogleCloudPlatform/agones)
 [![GitHub release](https://img.shields.io/github/release/GoogleCloudPlatform/agones.svg)](https://github.com/GoogleCloudPlatform/agones/releases)
