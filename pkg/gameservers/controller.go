@@ -252,7 +252,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
-	ok, causes := gs.Validate()
+	causes, ok := gs.Validate()
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{

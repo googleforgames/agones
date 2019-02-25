@@ -97,4 +97,10 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
+
+	newGSS.Name = ""
+	newGSS.GenerateName = string(bytes)
+	causes, ok = newGSS.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }

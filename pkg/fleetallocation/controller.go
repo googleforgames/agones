@@ -237,7 +237,7 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 		return review, errors.Wrapf(err, "error unmarshalling old FleetAllocation json: %s", review.Request.Object.Raw)
 	}
 
-	if ok, causes := oldFA.ValidateUpdate(newFA); !ok {
+	if causes, ok := oldFA.ValidateUpdate(newFA); !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
 			Name:   review.Request.Name,

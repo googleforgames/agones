@@ -29,13 +29,13 @@ func TestFleetAllocationValidateupdate(t *testing.T) {
 		},
 	}
 
-	valid, causes := fa.ValidateUpdate(fa.DeepCopy())
+	causes, valid := fa.ValidateUpdate(fa.DeepCopy())
 	assert.True(t, valid)
 	assert.Len(t, causes, 0)
 
 	faCopy := fa.DeepCopy()
 	faCopy.Spec.FleetName = "notthesame"
-	valid, causes = fa.ValidateUpdate(faCopy)
+	causes, valid = fa.ValidateUpdate(faCopy)
 
 	assert.False(t, valid)
 	assert.Len(t, causes, 1)

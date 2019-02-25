@@ -112,6 +112,12 @@ func TestFleetName(t *testing.T) {
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
+
+	f.Name = ""
+	f.GenerateName = string(bytes)
+	causes, ok = f.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }
 
 func TestSumStatusReplicas(t *testing.T) {

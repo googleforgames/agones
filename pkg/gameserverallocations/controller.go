@@ -220,7 +220,7 @@ func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview
 		return review, errors.Wrapf(err, "error unmarshalling old GameServerAllocation json: %s", review.Request.Object.Raw)
 	}
 
-	if ok, causes := oldGSA.ValidateUpdate(newGSA); !ok {
+	if causes, ok := oldGSA.ValidateUpdate(newGSA); !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{
 			Name:   review.Request.Name,

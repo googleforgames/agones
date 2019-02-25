@@ -97,7 +97,7 @@ func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   "Name",
-			Message: fmt.Sprintf("Length of GameServerSet '%s' name should be no more than 63.", gsSet.ObjectMeta.Name),
+			Message: fmt.Sprintf("Length of GameServerSet '%s' name should be no more than 63 characters.", gsSet.ObjectMeta.Name),
 		})
 	}
 
