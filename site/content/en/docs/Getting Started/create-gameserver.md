@@ -100,7 +100,7 @@ Spec:
     Container Port:  7654
     Host Port:       7614
     Name:            default
-    Port Policy:     dynamic
+    Port Policy:     Dynamic
     Protocol:        UDP
   Template:
     Metadata:

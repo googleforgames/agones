@@ -59,10 +59,10 @@ const (
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
-	Static PortPolicy = "static"
+	Static PortPolicy = "Static"
 	// Dynamic PortPolicy means that the system will choose an open
 	// port for the GameServer in question
-	Dynamic PortPolicy = "dynamic"
+	Dynamic PortPolicy = "Dynamic"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"

@@ -36,13 +36,13 @@ spec:
     # name is a descriptive name for the port
   - name: default
     # portPolicy has two options:
-    # - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-    # - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+    # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+    # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
     # port is available. When static is the policy specified, `hostPort` is required to be populated
-    portPolicy: "static"
+    portPolicy: Dynamic
     # the port that is being opened on the game server process
     containerPort: 7654
-    # the port exposed on the host, only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
+    # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
     # protocol being used. Defaults to UDP. TCP is the only other option
     protocol: UDP

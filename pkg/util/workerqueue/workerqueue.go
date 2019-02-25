@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -42,8 +43,9 @@ type Handler func(string) error
 // with controllers and related and processing Kubernetes watched
 // events and synchronising resources
 type WorkerQueue struct {
-	logger *logrus.Entry
-	queue  workqueue.RateLimitingInterface
+	logger  *logrus.Entry
+	keyName string
+	queue   workqueue.RateLimitingInterface
 	// SyncHandler is exported to make testing easier (hack)
 	SyncHandler Handler
 
@@ -53,15 +55,16 @@ type WorkerQueue struct {
 }
 
 // NewWorkerQueue returns a new worker queue for a given name
-func NewWorkerQueue(handler Handler, logger *logrus.Entry, name string) *WorkerQueue {
-	return NewWorkerQueueWithRateLimiter(handler, logger, name, workqueue.DefaultControllerRateLimiter())
+func NewWorkerQueue(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string) *WorkerQueue {
+	return NewWorkerQueueWithRateLimiter(handler, logger, keyName, queueName, workqueue.DefaultControllerRateLimiter())
 }
 
 // NewWorkerQueueWithRateLimiter returns a new worker queue for a given name and a custom rate limiter.
-func NewWorkerQueueWithRateLimiter(handler Handler, logger *logrus.Entry, name string, rateLimiter workqueue.RateLimiter) *WorkerQueue {
+func NewWorkerQueueWithRateLimiter(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string, rateLimiter workqueue.RateLimiter) *WorkerQueue {
 	return &WorkerQueue{
-		logger:      logger.WithField("queue", name),
-		queue:       workqueue.NewNamedRateLimitingQueue(rateLimiter, name),
+		keyName:     string(keyName),
+		logger:      logger.WithField("queue", queueName),
+		queue:       workqueue.NewNamedRateLimitingQueue(rateLimiter, queueName),
 		SyncHandler: handler,
 	}
 }
@@ -77,7 +80,7 @@ func (wq *WorkerQueue) Enqueue(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField("key", key).Info("Enqueuing key")
+	wq.logger.WithField(wq.keyName, key).Info("Enqueuing")
 	wq.queue.AddRateLimited(key)
 }
 
@@ -92,7 +95,7 @@ func (wq *WorkerQueue) EnqueueImmediately(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField("key", key).Info("Enqueuing key immediately")
+	wq.logger.WithField(wq.keyName, key).Info("Enqueuing immediately")
 	wq.queue.Add(key)
 }
 
@@ -113,12 +116,12 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 	}
 	defer wq.queue.Done(obj)
 
-	wq.logger.WithField("obj", obj).Info("Processing obj")
+	wq.logger.WithField(wq.keyName, obj).Info("Processing")
 
 	var key string
 	var ok bool
 	if key, ok = obj.(string); !ok {
-		runtime.HandleError(wq.logger.WithField("obj", obj), errors.Errorf("expected string in queue, but got %T", obj))
+		runtime.HandleError(wq.logger.WithField(wq.keyName, obj), errors.Errorf("expected string in queue, but got %T", obj))
 		// this is a bad entry, we don't want to reprocess
 		wq.queue.Forget(obj)
 		return true
@@ -126,7 +129,7 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 
 	if err := wq.SyncHandler(key); err != nil {
 		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(wq.logger.WithField("obj", obj), err)
+		runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
 		wq.queue.AddRateLimited(obj)
 		return true
 	}
