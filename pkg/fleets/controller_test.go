@@ -217,6 +217,12 @@ func TestControllerSyncFleet(t *testing.T) {
 		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			updated = true
 			ua := action.(k8stesting.UpdateAction)
+			// separate update of status subresource
+			if ua.GetSubresource() != "" {
+				assert.Equal(t, ua.GetSubresource(), "status")
+				return true, nil, nil
+			}
+			// update main resource
 			gsSet := ua.GetObject().(*v1alpha1.GameServerSet)
 			assert.Equal(t, int32(3), gsSet.Spec.Replicas)
 			assert.Equal(t, "gsSet1", gsSet.ObjectMeta.Name)
