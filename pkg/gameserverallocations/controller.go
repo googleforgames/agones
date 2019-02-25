@@ -25,6 +25,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/crd"
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -55,7 +56,7 @@ var (
 
 // Controller is a the GameServerAllocation controller
 type Controller struct {
-	logger                     *logrus.Entry
+	baseLogger                 *logrus.Entry
 	counter                    *AllocationCounter
 	crdGetter                  v1beta1.CustomResourceDefinitionInterface
 	gameServerSynced           cache.InformerSynced
@@ -95,12 +96,12 @@ func NewController(wh *webhooks.WebHook,
 		gameServerAllocationGetter: agonesClient.StableV1alpha1(),
 		allocationMutex:            allocationMutex,
 	}
-	c.logger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncDelete, c.logger, stable.GroupName+".GameServerAllocationController")
+	c.baseLogger = runtime.NewLoggerWithType(c)
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncDelete, c.baseLogger, logfields.GameServerAllocationKey, stable.GroupName+".GameServerAllocationController")
 	health.AddLivenessCheck("gameserverallocation-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(c.logger.Infof)
+	eventBroadcaster.StartLogging(c.baseLogger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
 
@@ -124,7 +125,7 @@ func NewController(wh *webhooks.WebHook,
 // Runs threadiness number workers to process the rate limited queue
 // Probably only needs 1 worker, as its just deleting unallocated GameServerAllocations
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameserverallocations."+stable.GroupName, c.logger)
+	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameserverallocations."+stable.GroupName, c.baseLogger)
 	if err != nil {
 		return err
 	}
@@ -136,7 +137,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 
 	c.stop = stop
 
-	c.logger.Info("Wait for cache sync")
+	c.baseLogger.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerAllocationSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -145,16 +146,24 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	return nil
 }
 
+func (c *Controller) loggerForGameServerAllocationKey(key string) *logrus.Entry {
+	return logfields.AugmentLogEntry(c.baseLogger, logfields.GameServerAllocationKey, key)
+}
+
+func (c *Controller) loggerForGameServerAllocation(gsa *v1alpha1.GameServerAllocation) *logrus.Entry {
+	return c.loggerForGameServerAllocationKey(gsa.Namespace+"/"+gsa.Name).WithField("gsa", gsa)
+}
+
 // creationMutationHandler will intercept when a GameServerAllocation is created, and allocate it a GameServer
 // assuming that one is available. If not, it will reject the AdmissionReview.
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("creationMutationHandler")
+	c.baseLogger.WithField("review", review).Info("creationMutationHandler")
 	obj := review.Request.Object
 	gsa := &v1alpha1.GameServerAllocation{}
 
 	err := json.Unmarshal(obj.Raw, gsa)
 	if err != nil {
-		c.logger.WithError(err).Error("error unmarchaslling json")
+		c.baseLogger.WithError(err).Error("error unmarshalling json")
 		return review, errors.Wrapf(err, "error unmarshalling original GameServerAllocation json: %s", obj.Raw)
 	}
 
@@ -179,23 +188,23 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 
 	newFA, err := json.Marshal(gsa)
 	if err != nil {
-		c.logger.WithError(err).Error("error marshalling")
+		c.baseLogger.WithError(err).Error("error marshalling")
 		return review, errors.Wrapf(err, "error marshalling GameServerAllocation %s to json", gsa.ObjectMeta.Name)
 	}
 
 	patch, err := jsonpatch.CreatePatch(obj.Raw, newFA)
 	if err != nil {
-		c.logger.WithError(err).Error("error creating the patch")
+		c.baseLogger.WithError(err).Error("error creating the patch")
 		return review, errors.Wrapf(err, "error creating patch for GameServerAllocation %s", gsa.ObjectMeta.Name)
 	}
 
 	json, err := json.Marshal(patch)
 	if err != nil {
-		c.logger.WithError(err).Error("error creating the json for the patch")
+		c.baseLogger.WithError(err).Error("error creating the json for the patch")
 		return review, errors.Wrapf(err, "error creating json for patch for GameServerAllocation %s", gs.ObjectMeta.Name)
 	}
 
-	c.logger.WithField("gsa", gsa.ObjectMeta.Name).WithField("patch", string(json)).Infof("patch created!")
+	c.loggerForGameServerAllocation(gsa).WithField("patch", string(json)).Infof("patch created!")
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
@@ -207,7 +216,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 // GameServerAllocation fleetName value
 // nolint: dupl
 func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("mutationValidationHandler")
+	c.baseLogger.WithField("review", review).Info("mutationValidationHandler")
 
 	newGSA := &v1alpha1.GameServerAllocation{}
 	oldGSA := &v1alpha1.GameServerAllocation{}
@@ -310,11 +319,11 @@ func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam v1alpha1.MetaPat
 
 // syncDelete takes unallocated GameServerAllocations, and deletes them!
 func (c *Controller) syncDelete(key string) error {
-	c.logger.WithField("key", key).Info("Deleting gameserverallocation")
+	c.loggerForGameServerAllocationKey(key).Info("Deleting gameserverallocation")
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(c.loggerForGameServerAllocationKey(key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
