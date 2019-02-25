@@ -261,7 +261,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 
 	c.loggerForGameServer(gs).WithField("review", review).Info("creationValidationHandler")
 
-	ok, causes := gs.Validate()
+	causes, ok := gs.Validate()
 	if !ok {
 		review.Response.Allowed = false
 		details := metav1.StatusDetails{

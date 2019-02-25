@@ -148,7 +148,7 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   fmt.Sprintf("Name"),
-			Message: fmt.Sprintf("Length of Fleet '%s' name should be no more than 63.", f.ObjectMeta.Name),
+			Message: fmt.Sprintf("Length of Fleet '%s' name should be no more than 63 characters.", f.ObjectMeta.Name),
 		})
 	}
 

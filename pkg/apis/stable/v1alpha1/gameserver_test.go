@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -216,7 +217,7 @@ func TestGameServerValidate(t *testing.T) {
 				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 	}
 	gs.ApplyDefaults()
-	ok, causes := gs.Validate()
+	causes, ok := gs.Validate()
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
@@ -234,7 +235,7 @@ func TestGameServerValidate(t *testing.T) {
 					{Name: "anothertest", Image: "testing/image"},
 				}}}},
 	}
-	ok, causes = gs.Validate()
+	causes, ok = gs.Validate()
 	var fields []string
 	for _, f := range causes {
 		fields = append(fields, f.Field)
@@ -255,7 +256,7 @@ func TestGameServerValidate(t *testing.T) {
 			Ports: []GameServerPort{{Name: "main", ContainerPort: 7777, PortPolicy: Static}},
 		},
 	}
-	ok, causes = gs.Validate()
+	causes, ok = gs.Validate()
 	for _, f := range causes {
 		fields = append(fields, f.Field)
 	}
@@ -264,6 +265,36 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Contains(t, fields, fmt.Sprintf("annotations.%s", DevAddressAnnotation))
 	assert.Contains(t, fields, "main.hostPort")
 	assert.Equal(t, causes[1].Type, metav1.CauseTypeFieldValueRequired)
+
+	gs = GameServer{
+		Spec: GameServerSpec{
+			Container: "my_image",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "my_image", Image: "foo/my_image"},
+					},
+				},
+			},
+		},
+	}
+
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'g'
+	}
+	gs.Name = string(bytes)
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Name", causes[0].Field)
+
+	gs.Name = ""
+	gs.GenerateName = string(bytes)
+	causes, ok = gs.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }
 
 func TestGameServerPod(t *testing.T) {

@@ -59,7 +59,7 @@ type FleetAllocationStatus struct {
 }
 
 // ValidateUpdate validates when an update occurs
-func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) (bool, []metav1.StatusCause) {
+func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
 	if fa.Spec.FleetName != new.Spec.FleetName {
@@ -70,5 +70,5 @@ func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) (bool, []metav1.
 		})
 	}
 
-	return len(causes) == 0, causes
+	return causes, len(causes) == 0
 }

@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -249,11 +250,20 @@ func (gs *GameServer) applySchedulingDefaults() {
 // Validate validates the GameServer configuration.
 // If a GameServer is invalid there will be > 0 values in
 // the returned array
-func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
+func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
+
+	// Long GS name would produce an invalid Label for Pod
+	if len(gs.Name) > validation.LabelValueMaxLength {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   fmt.Sprintf("Name"),
+			Message: fmt.Sprintf("Length of Gameserver '%s' name should be no more than 63 characters.", gs.ObjectMeta.Name),
+		})
+	}
+
 	// make sure the host port is specified if this is a development server
 	devAddress, hasDevAddress := gs.GetDevAddress()
-
 	if hasDevAddress {
 		// verify that the value is a valid IP address.
 		if net.ParseIP(devAddress) == nil {
@@ -312,7 +322,7 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 		}
 	}
 
-	return len(causes) == 0, causes
+	return causes, len(causes) == 0
 }
 
 // GetDevAddress returns the address for game server.
