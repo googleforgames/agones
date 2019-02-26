@@ -28,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listersv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/pkg/errors"
@@ -117,7 +118,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	}
 
 	s.informerFactory = factory
-	s.logger = runtime.NewLoggerWithType(s)
+	s.logger = runtime.NewLoggerWithType(s).WithField("gsKey", namespace+"/"+gameServerName)
 
 	gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
@@ -153,9 +154,10 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	s.workerqueue = workerqueue.NewWorkerQueue(
 		s.syncGameServer,
 		s.logger,
+		logfields.GameServerKey,
 		strings.Join([]string{stable.GroupName, s.namespace, s.gameServerName}, "."))
 
-	s.logger.WithField("gameServerName", s.gameServerName).WithField("namespace", s.namespace).Info("created GameServer sidecar")
+	s.logger.Info("created GameServer sidecar")
 
 	return s, nil
 }

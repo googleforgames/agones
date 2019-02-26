@@ -191,7 +191,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
                 "uid": "692beea6-1e62-11e8-beb2-080027637781"
             },
             "spec": {
-                "PortPolicy": "static",
+                "PortPolicy": "Static",
                 "container": "simple-udp",
                 "containerPort": 7654,
                 "health": {
@@ -305,7 +305,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
                         "containerPort": 7654,
                         "hostPort": 7968,
                         "name": "default",
-                        "portPolicy": "dynamic",
+                        "portPolicy": "Dynamic",
                         "protocol": "UDP"
                     }
                 ],

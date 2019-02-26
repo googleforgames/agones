@@ -57,7 +57,7 @@ spec:
     spec:
       ports:
       - name: default
-        portPolicy: "dynamic"
+        portPolicy: Dynamic
         containerPort: 26000
       health:
         initialDelaySeconds: 30

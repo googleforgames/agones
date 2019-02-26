@@ -23,7 +23,7 @@ metadata:
 spec:
   ports:
   - name: default
-    portPolicy: "static"
+    portPolicy: Static
     hostPort: 17654
     containerPort: 17654
   # The following is ignored but required due to validation.

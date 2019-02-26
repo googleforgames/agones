@@ -73,6 +73,8 @@ spec:
             template:
               {{- include "gameserver.validation" . | indent 14 }}
   subresources:
+    # status enables the status subresource.
+    status: {}
     # scale enables the scale subresource.
     scale:
       # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.

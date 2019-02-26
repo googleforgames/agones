@@ -59,10 +59,10 @@ const (
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
-	Static PortPolicy = "static"
+	Static PortPolicy = "Static"
 	// Dynamic PortPolicy means that the system will choose an open
 	// port for the GameServer in question
-	Dynamic PortPolicy = "dynamic"
+	Dynamic PortPolicy = "Dynamic"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -319,6 +319,16 @@ func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
 func (gs *GameServer) GetDevAddress() (string, bool) {
 	devAddress, hasDevAddress := gs.ObjectMeta.Annotations[DevAddressAnnotation]
 	return devAddress, hasDevAddress
+}
+
+// IsAllocated returns true if the server is currently allocated.
+func (gs *GameServer) IsAllocated() bool {
+	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == GameServerStateAllocated
+}
+
+// IsBeingDeleted returns true if the server is in the process of being deleted.
+func (gs *GameServer) IsBeingDeleted() bool {
+	return !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == GameServerStateShutdown
 }
 
 // FindGameServerContainer returns the container that is specified in

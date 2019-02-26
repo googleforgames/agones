@@ -1022,6 +1022,9 @@ func TestControllerAddress(t *testing.T) {
 		},
 	}
 
+	dummyGS := &v1alpha1.GameServer{}
+	dummyGS.Name = "some-gs"
+
 	for name, fixture := range fixture {
 		t.Run(name, func(t *testing.T) {
 			c, mocks := newFakeController()
@@ -1041,7 +1044,7 @@ func TestControllerAddress(t *testing.T) {
 			_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, podSynced, nodeSynced)
 			defer cancel()
 
-			addr, err := c.address(&pod)
+			addr, err := c.address(dummyGS, &pod)
 			assert.Nil(t, err)
 			assert.Equal(t, fixture.expectedAddress, addr)
 		})
