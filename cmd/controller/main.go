@@ -16,6 +16,7 @@
 package main
 
 import (
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -39,8 +40,10 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/informers"
@@ -63,6 +66,8 @@ const (
 	numWorkersFlag               = "num-workers"
 	apiServerSustainedQPSFlag    = "api-server-qps"
 	apiServerBurstQPSFlag        = "api-server-qps-burst"
+	logDirFlag                   = "log-dir"
+	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
 	defaultResync                = 30 * time.Second
 )
@@ -71,9 +76,32 @@ var (
 	logger = runtime.NewLoggerWithSource("main")
 )
 
+func setupLogging(logDir string, logSizeLimitMB int) {
+	logFileName := filepath.Join(logDir, "agones-controller-"+time.Now().Format("20060102_150405")+".log")
+
+	const maxLogSizeMB = 100
+	maxBackups := (logSizeLimitMB - maxLogSizeMB) / maxLogSizeMB
+	logger.WithField("filename", logFileName).WithField("numbackups", maxBackups).Info("logging to file")
+	logrus.SetOutput(
+		io.MultiWriter(
+			logrus.StandardLogger().Out,
+			&lumberjack.Logger{
+				Filename:   logFileName,
+				MaxSize:    maxLogSizeMB,
+				MaxBackups: maxBackups,
+			},
+		),
+	)
+}
+
 // main starts the operator for the gameserver CRD
 func main() {
 	ctlConf := parseEnvFlags()
+
+	if ctlConf.LogDir != "" {
+		setupLogging(ctlConf.LogDir, ctlConf.LogSizeLimitMB)
+	}
+
 	logger.WithField("version", pkg.Version).
 		WithField("ctlConf", ctlConf).Info("starting gameServer operator...")
 
@@ -203,6 +231,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(numWorkersFlag, 64)
 	viper.SetDefault(apiServerSustainedQPSFlag, 100)
 	viper.SetDefault(apiServerBurstQPSFlag, 200)
+	viper.SetDefault(logDirFlag, "")
+	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -219,6 +249,8 @@ func parseEnvFlags() config {
 	pflag.Int32(numWorkersFlag, 64, "Number of controller workers per resource type")
 	pflag.Int32(apiServerSustainedQPSFlag, 100, "Maximum sustained queries per second to send to the API server")
 	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
+	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
+	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -238,6 +270,8 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(numWorkersFlag))
 	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
 	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
+	runtime.Must(viper.BindEnv(logDirFlag))
+	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 
 	request, err := resource.ParseQuantity(viper.GetString(sidecarCPURequestFlag))
 	if err != nil {
@@ -265,6 +299,8 @@ func parseEnvFlags() config {
 		NumWorkers:            int(viper.GetInt32(numWorkersFlag)),
 		APIServerSustainedQPS: int(viper.GetInt32(apiServerSustainedQPSFlag)),
 		APIServerBurstQPS:     int(viper.GetInt32(apiServerBurstQPSFlag)),
+		LogDir:                viper.GetString(logDirFlag),
+		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
 	}
 }
 
@@ -285,6 +321,8 @@ type config struct {
 	NumWorkers            int
 	APIServerSustainedQPS int
 	APIServerBurstQPS     int
+	LogDir                string
+	LogSizeLimitMB        int
 }
 
 // validate ensures the ctlConfig data is valid.

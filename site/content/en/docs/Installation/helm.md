@@ -164,6 +164,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
+| `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
 
 {{% /feature %}}
 
