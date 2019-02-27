@@ -130,7 +130,11 @@ func (hc *HealthController) loggerForGameServerKey(key string) *logrus.Entry {
 }
 
 func (hc *HealthController) loggerForGameServer(gs *v1alpha1.GameServer) *logrus.Entry {
-	return hc.loggerForGameServerKey(gs.Namespace+"/"+gs.Name).WithField("gs", gs)
+	gsName := "NilGameServer"
+	if gs != nil {
+		gsName = gs.Namespace + "/" + gs.Name
+	}
+	return hc.loggerForGameServerKey(gsName).WithField("gs", gs)
 }
 
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready

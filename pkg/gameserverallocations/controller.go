@@ -253,7 +253,11 @@ func (c *Controller) loggerForGameServerAllocationKey(key string) *logrus.Entry 
 }
 
 func (c *Controller) loggerForGameServerAllocation(gsa *v1alpha1.GameServerAllocation) *logrus.Entry {
-	return c.loggerForGameServerAllocationKey(gsa.Namespace+"/"+gsa.Name).WithField("gsa", gsa)
+	gsaName := "NilGameServerAllocation"
+	if gsa != nil {
+		gsaName = gsa.Namespace + "/" + gsa.Name
+	}
+	return c.loggerForGameServerAllocationKey(gsaName).WithField("gsa", gsa)
 }
 
 // creationMutationHandler will intercept when a GameServerAllocation is created, and allocate it a GameServer
