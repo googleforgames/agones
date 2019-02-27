@@ -245,7 +245,11 @@ func (c *Controller) loggerForGameServerKey(key string) *logrus.Entry {
 }
 
 func (c *Controller) loggerForGameServer(gs *v1alpha1.GameServer) *logrus.Entry {
-	return c.loggerForGameServerKey(gs.Namespace+"/"+gs.Name).WithField("gs", gs)
+	gsName := "NilGameServer"
+	if gs != nil {
+		gsName = gs.Namespace + "/" + gs.Name
+	}
+	return c.loggerForGameServerKey(gsName).WithField("gs", gs)
 }
 
 // creationValidationHandler that validates a GameServer when it is created
