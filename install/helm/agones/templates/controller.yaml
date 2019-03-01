@@ -69,7 +69,7 @@ spec:
       serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
       containers:
       - name: agones-controller
-        image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ .Values.agones.image.tag }}"
+        image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ default .Values.agones.image.tag .Values.agones.image.controller.tag }}"
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -79,7 +79,7 @@ spec:
         - name: MAX_PORT
           value: {{ .Values.gameservers.maxPort | quote }}
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ .Values.agones.image.tag }}"
+          value: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.sdk.name}}:{{ default .Values.agones.image.tag .Values.agones.image.sdk.tag }}"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         - name: SIDECAR_CPU_REQUEST
