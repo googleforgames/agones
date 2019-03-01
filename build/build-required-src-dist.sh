@@ -1,4 +1,5 @@
-# Copyright 2018 Google Inc. All Rights Reserved.
+#!/usr/bin/env bash
+# Copyright 2017 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.8
+set -o errexit
+set -o nounset
+set -o pipefail
 
-RUN apk --update add ca-certificates && \
-    adduser -D agones
+SRC_ROOT=$(dirname "${BASH_SOURCE}")/..
 
-COPY --chown=agones:root ./bin/ping /home/agones/ping
-COPY --chown=agones:root ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+TMP_DEPS_SRC=/tmp/dependencies-src.tgz
 
-USER agones
-ENTRYPOINT ["/home/agones/ping"]
+# Pack the source code of dependencies that are MPL
+tar -zcf ${TMP_DEPS_SRC} -C ${SRC_ROOT}/vendor/ \
+  github.com/hashicorp/golang-lru \
+  github.com/hashicorp/hcl
+
+for ddir in ${SRC_ROOT}/cmd/controller/bin/ ${SRC_ROOT}/cmd/ping/bin/ ${SRC_ROOT}/cmd/sdk-server/bin/ ; do
+  mkdir -p ${ddir}
+  cp ${TMP_DEPS_SRC} ${ddir}
+done
+

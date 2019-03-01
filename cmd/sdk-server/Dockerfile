@@ -18,7 +18,7 @@ RUN apk --update add ca-certificates && \
     adduser -D agones
 
 COPY --chown=agones:root ./bin/sdk-server.linux.amd64 /home/agones/sdk-server
-COPY --chown=agones:root ./bin/LICENSES /home/agones/LICENSES
+COPY --chown=agones:root ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER agones
 ENTRYPOINT ["/home/agones/sdk-server"]
