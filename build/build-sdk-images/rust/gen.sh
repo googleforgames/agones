@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,19 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
-
-header() {
-    cat ./build/boilerplate.go.txt $1 >> ./tmp.js && mv ./tmp.js $1
-}
+set -ex
 
 googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
 
 cd /go/src/agones.dev/agones
 
-protoc -I ${googleapis} -I . --grpc_out=./sdks/nodejs/lib --plugin=protoc-gen-grpc=`which grpc_node_plugin` sdk.proto
-protoc -I ${googleapis} -I . --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto 
+protoc \
+    -I ${googleapis} -I . sdk.proto \
+    --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \
+    --plugin=protoc-gen-grpc=`which grpc_rust_plugin` \
 
-header ./sdks/nodejs/lib/sdk_pb.js
-header ./sdks/nodejs/lib/google/api/annotations_pb.js
-header ./sdks/nodejs/lib/google/api/http_pb.js
+cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk.rs >> ./sdk.rs
+cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk_grpc.rs >> ./sdk_grpc.rs
+mv ./sdk.rs ./sdks/rust/src/grpc/
+mv ./sdk_grpc.rs ./sdks/rust/src/grpc/

@@ -24,9 +24,8 @@ install_path := /opt/local
 
 build:
 	-mkdir $(build_path)
-	apt-get install
-	cd $(build_path) && /opt/cmake/bin/cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
-	cd $(build_path) && /opt/cmake/bin/cmake --build . --target install
+	cd $(build_path) && cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
+	cd $(build_path) && cmake --build . --target install
 	
 install:
 	cp -r $(build_path)/.install $(install_path)
