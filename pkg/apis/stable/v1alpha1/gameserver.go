@@ -75,8 +75,6 @@ const (
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = stable.GroupName + "/container"
-	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
-	SidecarServiceAccountName = "agones-sdk"
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
 	DevAddressAnnotation = "stable.agones.dev/dev-address"
@@ -343,10 +341,6 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
-
-	if pod.Spec.ServiceAccountName == "" {
-		pod.Spec.ServiceAccountName = SidecarServiceAccountName
-	}
 
 	i, gsContainer, err := gs.FindGameServerContainer()
 	// this shouldn't happen, but if it does.
