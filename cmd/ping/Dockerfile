@@ -18,6 +18,7 @@ RUN apk --update add ca-certificates && \
     adduser -D agones
 
 COPY --chown=agones:root ./bin/ping /home/agones/ping
+COPY --chown=agones:root ./bin/LICENSES /home/agones/LICENSES
 
 USER agones
 ENTRYPOINT ["/home/agones/ping"]

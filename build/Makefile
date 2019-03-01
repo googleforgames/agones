@@ -277,8 +277,12 @@ lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
+# Extract licenses from source tree
+build-licenses:
+	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/extract-licenses.sh
+
 # Build the image for the gameserver controller
-build-controller-image: $(ensure-build-image) build-controller-binary
+build-controller-image: $(ensure-build-image) build-controller-binary build-licenses
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
@@ -286,7 +290,7 @@ push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin 
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
@@ -306,7 +310,7 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
-build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
+build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the ping service
@@ -320,7 +324,7 @@ push-ping-image: $(ensure-build-image)
 	docker push $(ping_tag)
 
 # Build the image for the ping service
-build-ping-image: $(ensure-build-image) build-ping-binary
+build-ping-image: $(ensure-build-image) build-ping-binary build-licenses
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build the cpp sdk linux archive
@@ -623,7 +627,7 @@ minikube-test-e2e: minikube-agones-profile test-e2e
 minikube-stress-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
 minikube-stress-test-e2e: minikube-agones-profile stress-test-e2e
 
-# prometheus on minkube 
+# prometheus on minkube
 # we have to disable PVC as it's not supported on minkube.
 minikube-setup-prometheus:
 	$(MAKE) setup-prometheus \
@@ -651,7 +655,7 @@ minikube-prometheus-portforward:
 	$(MAKE) prometheus-portforward \
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
 
-#   _  ___           _ 
+#   _  ___           _
 #  | |/ (_)_ __   __| |
 #  | ' /| | '_ \ / _` |
 #  | . \| | | | | (_| |
@@ -659,9 +663,9 @@ minikube-prometheus-portforward:
 
 # creates a kind cluster for use with agones
 # Kind stand for Kubernetes IN Docker
-# You can change the cluster name using KIND_PROFILE env var                                   
+# You can change the cluster name using KIND_PROFILE env var
 kind-test-cluster: DOCKER_RUN_ARGS+=--network=host
-kind-test-cluster: $(ensure-build-image) 
+kind-test-cluster: $(ensure-build-image)
 	@if [ -z $$(kind get clusters | grep $(KIND_PROFILE)) ]; then\
 		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
 		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.11.3 --wait 5m;\
@@ -680,7 +684,7 @@ kind-shell: $(ensure-build-image)
 
 # installs the current dev version of agones
 # you should build-images and kind-push first.
-kind-install: 
+kind-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
 		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort \
 		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")"
@@ -698,12 +702,12 @@ kind-push:
 	rm -f $$BUNDLE_FILE
 
 # Runs e2e tests against our kind cluster
-kind-test-e2e: 
+kind-test-e2e:
 	$(MAKE) KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
 		DOCKER_RUN_ARGS=--network=host \
 		test-e2e
 
-# prometheus on kind 
+# prometheus on kind
 # we have to disable PVC as it's not supported on kind.
 kind-setup-prometheus:
 	$(MAKE) setup-prometheus \
