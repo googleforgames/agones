@@ -84,6 +84,8 @@ spec:
           value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         - name: SIDECAR_CPU_REQUEST
           value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
+        - name: SDK_SERVICE_ACCOUNT
+          value: {{ .Values.agones.serviceaccount.sdk | quote }}
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER

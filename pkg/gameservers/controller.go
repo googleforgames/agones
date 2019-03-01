@@ -64,6 +64,7 @@ type Controller struct {
 	alwaysPullSidecarImage bool
 	sidecarCPURequest      resource.Quantity
 	sidecarCPULimit        resource.Quantity
+	sdkServiceAccount      string
 	crdGetter              v1beta1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
 	podLister              corelisterv1.PodLister
@@ -91,6 +92,7 @@ func NewController(
 	alwaysPullSidecarImage bool,
 	sidecarCPURequest resource.Quantity,
 	sidecarCPULimit resource.Quantity,
+	sdkServiceAccount string,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
@@ -106,6 +108,7 @@ func NewController(
 		sidecarCPULimit:        sidecarCPULimit,
 		sidecarCPURequest:      sidecarCPURequest,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
+		sdkServiceAccount:      sdkServiceAccount,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
 		podLister:              pods.Lister(),
@@ -510,6 +513,11 @@ func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.Gam
 		c.logger.WithField("gameserver", gs).WithError(err).Error("error creating pod from Game Server")
 		gs, err = c.moveToErrorState(gs, err.Error())
 		return gs, err
+	}
+
+	// apply the sdk service account
+	if pod.Spec.ServiceAccountName == "" {
+		pod.Spec.ServiceAccountName = c.sdkServiceAccount
 	}
 
 	c.addGameServerHealthCheck(gs, pod)

@@ -1065,6 +1065,8 @@ spec:
           value: "false"
         - name: SIDECAR_CPU_REQUEST
           value: "30m"
+        - name: SDK_SERVICE_ACCOUNT
+          value: "agones-sdk"
         - name: PROMETHEUS_EXPORTER
           value: "true"
         - name: STACKDRIVER_EXPORTER
