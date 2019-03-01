@@ -776,6 +776,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 			assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, "sdk-service-account", pod.Spec.ServiceAccountName)
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[v1alpha1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
@@ -1189,7 +1190,8 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(),
 		10, 20, "sidecar:dev", false,
-		resource.MustParse("0.05"), resource.MustParse("0.1"), m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+		resource.MustParse("0.05"), resource.MustParse("0.1"), "sdk-service-account",
+		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }
