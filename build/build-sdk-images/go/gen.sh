@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2019 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,19 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -x
+set -ex
 
 export GO111MODULE=on
 
 mkdir -p /go/src/
 cp -r /go/src/agones.dev/agones/vendor/* /go/src/
 
+cd /go/src/agones.dev/agones
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
 googleapis=/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
 
-cd /go/src/agones.dev/agones
+
 protoc -I ${googleapis} -I . sdk.proto --go_out=plugins=grpc:pkg/sdk
 protoc -I ${googleapis} -I . sdk.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
 protoc -I ${googleapis} -I . sdk.proto --swagger_out=logtostderr=true:.
