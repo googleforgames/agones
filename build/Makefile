@@ -293,8 +293,12 @@ lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
+# Extract licenses from source tree
+build-licenses:
+	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/extract-licenses.sh
+
 # Build the image for the gameserver controller
-build-controller-image: $(ensure-build-image) build-controller-binary
+build-controller-image: $(ensure-build-image) build-controller-binary build-licenses
 	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
@@ -322,7 +326,7 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # Build the image for the gameserver sidecar
-build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary
+build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the ping service
@@ -336,7 +340,7 @@ push-ping-image: $(ensure-build-image)
 	docker push $(ping_tag)
 
 # Build the image for the ping service
-build-ping-image: $(ensure-build-image) build-ping-binary
+build-ping-image: $(ensure-build-image) build-ping-binary build-licenses
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build the cpp sdk linux archive
