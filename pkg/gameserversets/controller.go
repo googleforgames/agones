@@ -268,7 +268,11 @@ func (c *Controller) loggerForGameServerSetKey(key string) *logrus.Entry {
 }
 
 func (c *Controller) loggerForGameServerSet(gsSet *v1alpha1.GameServerSet) *logrus.Entry {
-	return c.loggerForGameServerSetKey(gsSet.Namespace+"/"+gsSet.Name).WithField("gss", gsSet)
+	gsSetName := "NilGameServerSet"
+	if gsSet != nil {
+		gsSetName = gsSet.Namespace + "/" + gsSet.Name
+	}
+	return c.loggerForGameServerSetKey(gsSetName).WithField("gss", gsSet)
 }
 
 // syncGameServer synchronises the GameServers for the Set,
