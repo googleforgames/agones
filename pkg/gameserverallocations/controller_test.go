@@ -39,6 +39,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+const (
+	defaultNs = "default"
+	n1        = "node1"
+	n2        = "node2"
+)
+
 var (
 	gvk = metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("GameServerAllocation"))
 )
