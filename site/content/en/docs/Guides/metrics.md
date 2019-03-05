@@ -84,6 +84,8 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 
 - {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="master" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
 
+- {{< ghlink href="/build/grafana/dashboard-apiserver-requests.yaml" branch="master" >}}Agones Controller API Server requests{{< /ghlink >}} displays your current API server request rate, errors rate and request latencies with optional CustomResourceDefinition filtering by Types: fleets, gameserversets, gameservers, gamserverallocations.
+
 Dashboard screenshots :
 
 ![grafana dashboard autoscalers](../../../images/grafana-dashboard-autoscalers.png)
