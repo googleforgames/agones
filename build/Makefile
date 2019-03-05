@@ -203,12 +203,16 @@ push-release-chart: $(ensure-build-image)
 build-sdks: build-sdk-cpp
 
 # Run all tests
-test: $(ensure-build-image) test-go test-install-yaml site-test
+test: $(ensure-build-image) test-go test-nodejs test-install-yaml site-test
 
 # Run go tests
 test-go:
 	$(GO_TEST) $(agones_package)/pkg/... \
 	    $(agones_package)/sdks/... $(agones_package)/cmd/...
+
+# Run Node.js SDK tests
+test-nodejs:
+	docker run --rm $(common_mounts) -w $(mount_path)/sdks/nodejs $(build_tag) npm install-test
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
@@ -330,6 +334,7 @@ gen-gameservers-sdk-grpc: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-go.sh
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-cpp.sh
 	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-rust.sh
+	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-nodejs.sh
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: $(ensure-build-image)
