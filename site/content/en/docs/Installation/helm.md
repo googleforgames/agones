@@ -28,8 +28,6 @@ $ helm install --name my-release --namespace agones-system agones/agones
 _We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
 you can use the helm `--namespace` parameter to specify a different namespace._
 
-{{% feature publishVersion="0.8.0" %}}
-
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `stable.agones.dev/agones-system=true` and tolerates node taint `stable.agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
 run on regular nodes, but that's not recommended for production use.
 
@@ -41,8 +39,6 @@ gcloud container node-pools create agones-system --cluster=... --zone=... \
   --node-labels stable.agones.dev/agones-system=true \
   --num-nodes=1
 ```
-
-{{% /feature %}}
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
@@ -105,10 +101,16 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.rbacEnabled`                                | Creates RBAC resources. Must be set for any cluster configured with RBAC                        | `true`                 |
+| `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
+| `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
+| `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
+| `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
 | `agones.crds.install`                               | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart. | `true` |
 | `agones.crds.cleanupOnDelete`                       | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion | `true`          |
-| `agones.metrics.enabled`                            | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
+| `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
+| `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
+| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -129,6 +131,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
+| `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
+| `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
+| `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
+| `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
+| `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
+| `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
 | `agones.ping.install`                               | Whether to install the [ping service][ping]                                                     | `true`                 |
 | `agones.ping.replicas`                              | The number of replicas to run in the deployment                                                 | `2`                    |
 | `agones.ping.http.expose`                           | Expose the http ping service via a Service                                                      | `true`                 |
@@ -143,39 +151,30 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.healthCheck.periodSeconds`             | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.ping.healthCheck.failureThreshold`          | Number of times before giving up (in seconds)                                                   | `3`                    |
 | `agones.ping.healthCheck.timeoutSeconds`            | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
+| `agones.ping.resources`                             | Ping pods resource requests/limit                                                               | `{}`                   |
+| `agones.ping.nodeSelector`                          | Ping [node labels][nodeSelector] for pod assignment                                             | `{}`                   |
+| `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
+| `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="0.8.0" %}}
+{{% feature publishVersion="0.9.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
-| `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics              | `false`                 |
-| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver            | ``                 |
-| `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
-| `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
-| `agones.controller.nodeSelector`                    | Controller [node labels](nodeSelector) for pod assignment                                       | `{}`                   |
-| `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
-| `agones.controller.affinity`                        | Controller [affinity](affinity) settings for pod assignment                                     | `{}`                   |
-| `agones.ping.resources`                             | Ping pods resource requests/limit                                                               | `{}`                   |
-| `agones.ping.nodeSelector`                          | Ping [node labels](nodeSelector) for pod assignment                                             | `{}`                   |
-| `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
-| `agones.ping.affinity`                              | Ping [affinity](affinity) settings for pod assignment                                           | `{}`                   |
-| `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
-| `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
-| `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
+| `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
+| `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
 
-[toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 {{% /feature %}}
 
+[toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+[nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+[affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
-[nodeSelector]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
-[affinity]: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

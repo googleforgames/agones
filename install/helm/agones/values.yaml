@@ -29,6 +29,7 @@ agones:
   serviceaccount:
     controller: agones-controller
     sdk: agones-sdk
+  createPriorityClass: true
   priorityClassName: agones-system
   controller:
     resources: {}
@@ -48,9 +49,11 @@ agones:
                 operator: Exists
     generateTLS: true
     safeToEvict: false
-    numWorkers: 64
-    apiServerQPS: 100
-    apiServerQPSBurst: 200
+    persistentLogs: true
+    persistentLogsSizeLimitMB: 10000
+    numWorkers: 100
+    apiServerQPS: 400
+    apiServerQPSBurst: 500
     http:
       port: 8080
     healthCheck:
@@ -93,7 +96,7 @@ agones:
       timeoutSeconds: 1
   image:
     registry: gcr.io/agones-images
-    tag: 0.8.0-rc
+    tag: 0.9.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

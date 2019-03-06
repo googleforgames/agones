@@ -57,7 +57,7 @@ spec:
     spec:
       ports:
       - name: default
-        portPolicy: "dynamic"
+        portPolicy: Dynamic
         containerPort: 26000
       health:
         initialDelaySeconds: 30
@@ -67,4 +67,4 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.5
+            image: gcr.io/agones-images/udp-server:0.7

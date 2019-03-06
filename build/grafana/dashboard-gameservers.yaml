@@ -26,7 +26,6 @@ data:
       "annotations": {
         "list": [
           {
-            "$$hashKey": "object:2841",
             "builtIn": 1,
             "datasource": "-- Grafana --",
             "enable": true,
@@ -41,111 +40,72 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "iteration": 1547331274009,
+      "iteration": 1549049758587,
       "links": [],
       "panels": [
         {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 10,
+          "aliasColors": {
+            "Allocated": "#1f78c1",
+            "Creating": "#cca300",
+            "PortAllocation": "#e0f9d7",
+            "Ready": "#508642",
+            "Scheduled": "#f2c96d",
+            "Unhealthy": "#890f02"
+          },
+          "breakPoint": "50%",
+          "cacheTimeout": null,
+          "combine": {
+            "label": "Others",
+            "threshold": 0
+          },
+          "fontSize": "100%",
+          "format": "short",
           "gridPos": {
-            "h": 7,
-            "w": 12,
+            "h": 6,
+            "w": 7,
             "x": 0,
             "y": 0
           },
-          "id": 7,
+          "id": 4,
+          "interval": null,
           "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": false,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": true,
-            "min": true,
-            "rightSide": true,
+            "percentage": false,
             "show": true,
-            "total": false,
+            "sideWidth": null,
+            "sortDesc": true,
             "values": true
           },
-          "lines": true,
-          "linewidth": 1,
+          "legendType": "Right side",
           "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
+          "maxDataPoints": 3,
+          "nullPointMode": "connected",
+          "pieType": "pie",
+          "strokeWidth": 1,
           "targets": [
             {
-              "$$hashKey": "object:11157",
               "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\"}) by (type)",
               "format": "time_series",
+              "instant": true,
               "intervalFactor": 1,
               "legendFormat": "{{type}}",
               "refId": "A"
             }
           ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
           "title": "GameServers count per type",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "$$hashKey": "object:11185",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "$$hashKey": "object:11186",
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
+          "transparent": false,
+          "type": "grafana-piechart-panel",
+          "valueName": "current"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
-            "h": 7,
-            "w": 12,
-            "x": 12,
+            "h": 6,
+            "w": 17,
+            "x": 7,
             "y": 0
           },
           "id": 2,
@@ -176,7 +136,6 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "$$hashKey": "object:11320",
               "expr": "sum(rate(agones_gameservers_total{fleet_name=~\"$fleet\"}[$interval])) by (type)",
               "format": "time_series",
               "intervalFactor": 1,
@@ -186,6 +145,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "GameServers rate per type",
           "tooltip": {
@@ -203,7 +163,6 @@ data:
           },
           "yaxes": [
             {
-              "$$hashKey": "object:11389",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -212,7 +171,94 @@ data:
               "show": true
             },
             {
-              "$$hashKey": "object:11390",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 10,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 6
+          },
+          "id": 7,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\"}) by (type)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{type}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GameServers count per type",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -228,59 +274,6 @@ data:
         },
         {
           "aliasColors": {
-            "Allocated": "#1f78c1",
-            "Creating": "#cca300",
-            "PortAllocation": "#e0f9d7",
-            "Ready": "#508642",
-            "Scheduled": "#f2c96d",
-            "Unhealthy": "#890f02"
-          },
-          "breakPoint": "50%",
-          "cacheTimeout": null,
-          "combine": {
-            "label": "Others",
-            "threshold": 0
-          },
-          "datasource": null,
-          "fontSize": "100%",
-          "format": "short",
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 7
-          },
-          "id": 4,
-          "interval": null,
-          "legend": {
-            "percentage": false,
-            "show": true,
-            "sortDesc": true,
-            "values": true
-          },
-          "legendType": "On graph",
-          "links": [],
-          "maxDataPoints": 3,
-          "nullPointMode": "connected",
-          "pieType": "pie",
-          "strokeWidth": 1,
-          "targets": [
-            {
-              "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\"}) by (type)",
-              "format": "time_series",
-              "instant": true,
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "title": "GameServers count per type",
-          "transparent": false,
-          "type": "grafana-piechart-panel",
-          "valueName": "current"
-        },
-        {
-          "aliasColors": {
             "allocated": "#511749",
             "desired": "#ef843c",
             "ready": "#3f6833",
@@ -289,13 +282,12 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
-            "h": 8,
+            "h": 7,
             "w": 12,
             "x": 12,
-            "y": 7
+            "y": 6
           },
           "id": 9,
           "legend": {
@@ -323,7 +315,6 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "$$hashKey": "object:11806",
               "expr": "sum(agones_fleets_replicas_count{name=~\"$fleet\"}) by (type)",
               "format": "time_series",
               "intervalFactor": 1,
@@ -333,6 +324,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "Fleet Replicas Count",
           "tooltip": {
@@ -350,7 +342,6 @@ data:
           },
           "yaxes": [
             {
-              "$$hashKey": "object:11834",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -359,7 +350,6 @@ data:
               "show": true
             },
             {
-              "$$hashKey": "object:11835",
               "format": "short",
               "label": null,
               "logBase": 1,
@@ -378,110 +368,18 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
-            "h": 8,
-            "w": 12,
+            "h": 7,
+            "w": 11,
             "x": 0,
-            "y": 15
+            "y": 13
           },
-          "id": 6,
+          "id": 12,
           "legend": {
             "alignAsTable": true,
             "avg": false,
             "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "$$hashKey": "object:11266",
-              "expr": "agones_fleet_allocations_count{fleet_name=~\"$fleet\"}",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{fleet_name}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "GameServer allocations count by fleet",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": null,
-          "fill": 1,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 15
-          },
-          "id": 10,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
             "max": false,
             "min": false,
             "rightSide": true,
@@ -503,18 +401,146 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "$$hashKey": "object:11266",
-              "expr": "rate(agones_fleet_allocations_count{fleet_name=~\"$fleet\"}[$interval])",
+              "expr": "histogram_quantile(1, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "{{fleet_name}}",
+              "legendFormat": "max",
+              "refId": "F"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "99th",
               "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.90, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "90th",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "50th",
+              "refId": "C"
+            },
+            {
+              "expr": "histogram_quantile(0, sum(rate(agones_gameservers_node_count_bucket[1m])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "min",
+              "refId": "E"
+            },
+            {
+              "expr": "avg(delta(agones_gameservers_node_count_sum[1m]) / delta(agones_gameservers_node_count_count[1m]))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "avg",
+              "refId": "D"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
-          "title": "GameServer allocations rate by fleet",
+          "title": "GameServers per node",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 1,
+          "gridPos": {
+            "h": 7,
+            "w": 13,
+            "x": 11,
+            "y": 13
+          },
+          "id": 14,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "agones_nodes_count{empty=\"true\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "unused",
+              "refId": "A"
+            },
+            {
+              "expr": "agones_nodes_count{empty=\"false\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "used",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Node avaibility (stacked)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -571,6 +597,7 @@ data:
               ]
             },
             "datasource": "Prometheus",
+            "definition": "label_values(agones_gameservers_count, fleet_name)\t",
             "hide": 0,
             "includeAll": true,
             "label": null,
@@ -580,6 +607,7 @@ data:
             "query": "label_values(agones_gameservers_count, fleet_name)\t",
             "refresh": 2,
             "regex": "",
+            "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
             "tags": [],
@@ -657,6 +685,7 @@ data:
             ],
             "query": "1m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
             "refresh": 2,
+            "skipUrlSync": false,
             "type": "interval"
           }
         ]

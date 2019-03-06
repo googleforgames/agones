@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+#export DEB_BUILD_OPTIONS=--no-parallel
+
+# debian build farms don't have internet access so some of our grpc tests against
+# fortio.istio.io can't work, so disabling tests by default
+
+ifndef FORTIO_SKIP_TESTS
+export FORTIO_SKIP_TESTS=Y
+endif
+
+%:
+	dh $@
+

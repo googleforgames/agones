@@ -17,7 +17,6 @@ package gameserversets
 import (
 	"encoding/json"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -34,6 +33,162 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
+
+func gsWithState(st v1alpha1.GameServerState) *v1alpha1.GameServer {
+	return &v1alpha1.GameServer{Status: v1alpha1.GameServerStatus{State: st}}
+}
+
+func gsPendingDeletionWithState(st v1alpha1.GameServerState) *v1alpha1.GameServer {
+	return &v1alpha1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			DeletionTimestamp: &deletionTime,
+		},
+		Status: v1alpha1.GameServerStatus{State: st},
+	}
+}
+
+const (
+	maxTestCreationsPerBatch = 3
+	maxTestDeletionsPerBatch = 3
+	maxTestPendingPerBatch   = 3
+)
+
+func TestComputeReconciliationAction(t *testing.T) {
+	cases := []struct {
+		desc                   string
+		list                   []*v1alpha1.GameServer
+		targetReplicaCount     int
+		wantNumServersToAdd    int
+		wantNumServersToDelete int
+		wantIsPartial          bool
+	}{
+		{
+			desc: "Empty",
+		},
+		{
+			desc: "AddServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			targetReplicaCount:  3,
+			wantNumServersToAdd: 2,
+		},
+		{
+			// 1 ready servers, target is 30 but we can only create 3 at a time.
+			desc: "AddServersPartial",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			targetReplicaCount:  30,
+			wantNumServersToAdd: 3,
+			wantIsPartial:       true, // max 3 creations per action
+		},
+		{
+			// 0 ready servers, target is 30 but we can only have 3 in-flight.
+			desc: "AddServersExceedsInFlightLimit",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateCreating),
+				gsWithState(v1alpha1.GameServerStatePortAllocation),
+			},
+			targetReplicaCount:  30,
+			wantNumServersToAdd: 1,
+			wantIsPartial:       true,
+		}, {
+			desc: "DeleteServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			targetReplicaCount:     1,
+			wantNumServersToDelete: 2,
+		},
+		{
+			// 6 ready servers, target is 1 but we can only delete 3 at a time.
+			desc: "DeleteServerPartial",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			targetReplicaCount:     1,
+			wantNumServersToDelete: 3,
+			wantIsPartial:          true, // max 3 deletions per action
+		},
+		{
+			desc: "DeleteIgnoresAllocatedServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateAllocated),
+				gsWithState(v1alpha1.GameServerStateAllocated),
+			},
+			targetReplicaCount:     0,
+			wantNumServersToDelete: 1,
+		},
+		{
+			desc: "CreateWhileDeletionsPending",
+			list: []*v1alpha1.GameServer{
+				// 2 being deleted, one ready, target is 4, we add 3 more.
+				gsPendingDeletionWithState(v1alpha1.GameServerStateUnhealthy),
+				gsPendingDeletionWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			targetReplicaCount:  4,
+			wantNumServersToAdd: 3,
+		},
+		{
+			desc: "PendingDeletionsCountTowardsTargetReplicaCount",
+			list: []*v1alpha1.GameServer{
+				// 6 being deleted now, we want 10 but that would exceed in-flight limit by a lot.
+				gsWithState(v1alpha1.GameServerStateCreating),
+				gsWithState(v1alpha1.GameServerStatePortAllocation),
+				gsWithState(v1alpha1.GameServerStateCreating),
+				gsWithState(v1alpha1.GameServerStatePortAllocation),
+				gsWithState(v1alpha1.GameServerStateCreating),
+				gsWithState(v1alpha1.GameServerStatePortAllocation),
+			},
+			targetReplicaCount:  10,
+			wantNumServersToAdd: 0,
+			wantIsPartial:       true,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			toAdd, toDelete, isPartial := computeReconciliationAction(tc.list, tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
+
+			assert.Equal(t, tc.wantNumServersToAdd, toAdd, "# of GameServers to add")
+			assert.Len(t, toDelete, tc.wantNumServersToDelete, "# of GameServers to delete")
+			assert.Equal(t, tc.wantIsPartial, isPartial, "is partial reconciliation")
+		})
+	}
+}
+
+func TestComputeStatus(t *testing.T) {
+	cases := []struct {
+		list       []*v1alpha1.GameServer
+		wantStatus v1alpha1.GameServerSetStatus
+	}{
+		{[]*v1alpha1.GameServer{}, v1alpha1.GameServerSetStatus{}},
+		{[]*v1alpha1.GameServer{
+			gsWithState(v1alpha1.GameServerStateCreating),
+			gsWithState(v1alpha1.GameServerStateReady),
+		}, v1alpha1.GameServerSetStatus{ReadyReplicas: 1, Replicas: 2}},
+		{[]*v1alpha1.GameServer{
+			gsWithState(v1alpha1.GameServerStateAllocated),
+			gsWithState(v1alpha1.GameServerStateAllocated),
+			gsWithState(v1alpha1.GameServerStateCreating),
+			gsWithState(v1alpha1.GameServerStateReady),
+		}, v1alpha1.GameServerSetStatus{ReadyReplicas: 1, AllocatedReplicas: 2, Replicas: 4}},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(t, tc.wantStatus, computeStatus(tc.list))
+	}
+}
 
 func TestControllerWatchGameServers(t *testing.T) {
 	gsSet := defaultFixture()
@@ -129,7 +284,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		// make some as unhealthy
 		list[0].Status.State = v1alpha1.GameServerStateUnhealthy
 
-		deleted := false
+		updated := false
 		count := 0
 
 		c, m := newFakeController()
@@ -140,10 +295,13 @@ func TestSyncGameServerSet(t *testing.T) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
 
-		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			da := action.(k8stesting.DeleteAction)
-			deleted = true
-			assert.Equal(t, "test-0", da.GetName())
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, gs.Status.State, v1alpha1.GameServerStateShutdown)
+
+			updated = true
+			assert.Equal(t, "test-0", gs.GetName())
 			return true, nil, nil
 		})
 		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -160,8 +318,8 @@ func TestSyncGameServerSet(t *testing.T) {
 
 		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
 
-		assert.Equal(t, 5, count)
-		assert.True(t, deleted, "A game servers should have been deleted")
+		assert.Equal(t, 6, count)
+		assert.True(t, updated, "A game servers should have been updated")
 	})
 
 	t.Run("removing gamservers", func(t *testing.T) {
@@ -176,7 +334,7 @@ func TestSyncGameServerSet(t *testing.T) {
 		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &v1alpha1.GameServerList{Items: list}, nil
 		})
-		m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			count++
 			return true, nil, nil
 		})
@@ -207,24 +365,26 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	gs3.ObjectMeta.DeletionTimestamp = &now
 	gs3.Status = v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}
 
-	deleted := false
+	var updatedCount int
 
 	c, m := newFakeController()
-	m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		deleted = true
-		da := action.(k8stesting.DeleteAction)
-		assert.Equal(t, gs1.ObjectMeta.Name, da.GetName())
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*v1alpha1.GameServer)
 
+		assert.Equal(t, gs.Status.State, v1alpha1.GameServerStateShutdown)
+
+		updatedCount++
 		return true, nil, nil
 	})
 
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	err := c.syncUnhealthyGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
+	err := c.deleteGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
 	assert.Nil(t, err)
 
-	assert.True(t, deleted, "Deletion should have occured")
+	assert.Equal(t, 3, updatedCount, "Updates should have occured")
 }
 
 func TestSyncMoreGameServers(t *testing.T) {
@@ -247,85 +407,14 @@ func TestSyncMoreGameServers(t *testing.T) {
 	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	err := c.syncMoreGameServers(gsSet, int32(expected))
+	err := c.addMoreGameServers(gsSet, expected)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, count)
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SuccessfulCreate")
 }
 
-func TestSyncLessGameServers(t *testing.T) {
-	gsSet := defaultFixture()
-
-	c, m := newFakeController()
-	count := 0
-	expected := 5
-
-	list := createGameServers(gsSet, 11)
-
-	// mark some as Allocated
-	list[0].Status.State = v1alpha1.GameServerStateAllocated
-	list[3].Status.State = v1alpha1.GameServerStateAllocated
-
-	// make the last one already being deleted
-	now := metav1.Now()
-	list[10].ObjectMeta.DeletionTimestamp = &now
-
-	// gate
-	assert.Equal(t, v1alpha1.GameServerStateAllocated, list[0].Status.State)
-	assert.Equal(t, v1alpha1.GameServerStateAllocated, list[3].Status.State)
-	assert.False(t, list[10].ObjectMeta.DeletionTimestamp.IsZero())
-
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: list}, nil
-	})
-	m.AgonesClient.AddReactor("delete", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		da := action.(k8stesting.DeleteAction)
-
-		found := false
-		for _, gs := range list {
-			if gs.ObjectMeta.Name == da.GetName() {
-				found = true
-				assert.NotEqual(t, gs.Status.State, v1alpha1.GameServerStateAllocated)
-			}
-		}
-		assert.True(t, found)
-		count++
-
-		return true, nil, nil
-	})
-
-	_, cancel := agtesting.StartInformers(m)
-	defer cancel()
-
-	list2, err := ListGameServersByGameServerSetOwner(c.gameServerLister, gsSet)
-	assert.Nil(t, err)
-	assert.Len(t, list2, 11)
-
-	err = c.syncLessGameServers(gsSet, int32(-expected))
-	assert.Nil(t, err)
-
-	// subtract one, because one is already deleted
-	assert.Equal(t, expected-1, count)
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SuccessfulDelete")
-}
-
-func TestControllerSyncGameServerSetState(t *testing.T) {
+func TestControllerSyncGameServerSetStatus(t *testing.T) {
 	t.Parallel()
-
-	t.Run("empty list", func(t *testing.T) {
-		gsSet := defaultFixture()
-		c, m := newFakeController()
-
-		updated := false
-		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			updated = true
-			return true, nil, nil
-		})
-
-		err := c.syncGameServerSetState(gsSet, nil)
-		assert.Nil(t, err)
-		assert.False(t, updated)
-	})
 
 	t.Run("all ready list", func(t *testing.T) {
 		gsSet := defaultFixture()
@@ -345,7 +434,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 		})
 
 		list := []*v1alpha1.GameServer{{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}}}
-		err := c.syncGameServerSetState(gsSet, list)
+		err := c.syncGameServerSetStatus(gsSet, list)
 		assert.Nil(t, err)
 		assert.True(t, updated)
 	})
@@ -377,7 +466,7 @@ func TestControllerSyncGameServerSetState(t *testing.T) {
 			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateAllocated}},
 			{Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateAllocated}},
 		}
-		err := c.syncGameServerSetState(gsSet, list)
+		err := c.syncGameServerSetStatus(gsSet, list)
 		assert.Nil(t, err)
 		assert.True(t, updated)
 	})
@@ -483,7 +572,7 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook("", "")
-	c := NewController(wh, healthcheck.NewHandler(), &sync.Mutex{}, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

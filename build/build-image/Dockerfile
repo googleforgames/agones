@@ -19,7 +19,8 @@
 FROM gcr.io/agones-images/grpc-cxx:1.16.1
 
 RUN apt-get update && \
-    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq graphviz linkchecker gettext-base && \
+    apt-get install -y wget psmisc rsync make python bash-completion zip nano jq graphviz \
+            gettext-base plantuml && \
     apt-get clean
 
 #   _
@@ -103,7 +104,7 @@ RUN go get -u github.com/golang/dep/cmd/dep && \
     go get -u golang.org/x/tools/cmd/goimports
 
 # install golang-ci linter
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.12.2
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.15.0
 
 # install the release branch of the code generator tools
 RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
@@ -124,6 +125,13 @@ RUN mkdir /tmp/hugo && \
 
 RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
     apt-get install -y nodejs
+
+# html checker
+RUN mkdir /tmp/htmltest && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.10.1/htmltest_0.10.1_linux_amd64.tar.gz && \
+    tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
+    mv /tmp/htmltest/htmltest /usr/local/bin && \
+    rm -r /tmp/htmltest
 
 # make sure we keep the path to go
 RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc

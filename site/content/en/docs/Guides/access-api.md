@@ -12,7 +12,7 @@ description: >
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
 which can be accessed and manipulated through the Kubernetes API.
 
-Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/client-libraries/), however,
+Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/using-api/client-libraries/), however,
 at time of writing, only
 the [Go](https://github.com/kubernetes/client-go) and
 [Python](https://github.com/kubernetes-client/python/) clients are documented to support accessing CRDs.
@@ -88,7 +88,7 @@ func main() {
 		Spec: v1alpha1.GameServerSpec{
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "udp-server", Image: "gcr.io/agones-images/udp-server:0.5"}},
+					Containers: []corev1.Container{{Name: "udp-server", Image: "gcr.io/agones-images/udp-server:0.7"}},
 				},
 			},
 		},
@@ -176,7 +176,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
             "kind": "GameServer",
             "metadata": {
                 "annotations": {
-                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"stable.agones.dev/v1alpha1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"gcr.io/agones-images/udp-server:0.5\",\"name\":\"simple-udp\"}]}}}}\n"
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"stable.agones.dev/v1alpha1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"gcr.io/agones-images/udp-server:0.7\",\"name\":\"simple-udp\"}]}}}}\n"
                 },
                 "clusterName": "",
                 "creationTimestamp": "2018-03-02T21:41:05Z",
@@ -191,7 +191,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
                 "uid": "692beea6-1e62-11e8-beb2-080027637781"
             },
             "spec": {
-                "PortPolicy": "static",
+                "PortPolicy": "Static",
                 "container": "simple-udp",
                 "containerPort": 7654,
                 "health": {
@@ -208,7 +208,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
                     "spec": {
                         "containers": [
                             {
-                                "image": "gcr.io/agones-images/udp-server:0.5",
+                                "image": "gcr.io/agones-images/udp-server:0.7",
                                 "name": "simple-udp",
                                 "resources": {}
                             }
@@ -305,7 +305,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
                         "containerPort": 7654,
                         "hostPort": 7968,
                         "name": "default",
-                        "portPolicy": "dynamic",
+                        "portPolicy": "Dynamic",
                         "protocol": "UDP"
                     }
                 ],
@@ -316,7 +316,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
                     "spec": {
                         "containers": [
                             {
-                                "image": "gcr.io/agones-images/udp-server:0.5",
+                                "image": "gcr.io/agones-images/udp-server:0.7",
                                 "name": "simple-udp",
                                 "resources": {}
                             }

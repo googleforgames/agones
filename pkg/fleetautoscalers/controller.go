@@ -20,12 +20,14 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/crd"
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -48,7 +50,7 @@ import (
 
 // Controller is a the FleetAutoscaler controller
 type Controller struct {
-	logger                *logrus.Entry
+	baseLogger            *logrus.Entry
 	crdGetter             v1beta1.CustomResourceDefinitionInterface
 	fleetGetter           getterv1alpha1.FleetsGetter
 	fleetLister           listerv1alpha1.FleetLister
@@ -79,12 +81,12 @@ func NewController(
 		fleetAutoscalerLister: agonesInformer.FleetAutoscalers().Lister(),
 		fleetAutoscalerSynced: fasInformer.HasSynced,
 	}
-	c.logger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleetAutoscaler, c.logger, stable.GroupName+".FleetAutoscalerController")
+	c.baseLogger = runtime.NewLoggerWithType(c)
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, stable.GroupName+".FleetAutoscalerController")
 	health.AddLivenessCheck("fleetautoscaler-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(c.logger.Infof)
+	eventBroadcaster.StartLogging(c.baseLogger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
@@ -105,12 +107,12 @@ func NewController(
 // Run the FleetAutoscaler controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetautoscalers."+stable.GroupName, c.logger)
+	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetautoscalers."+stable.GroupName, c.baseLogger)
 	if err != nil {
 		return err
 	}
 
-	c.logger.Info("Wait for cache sync")
+	c.baseLogger.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.fleetAutoscalerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -119,14 +121,26 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	return nil
 }
 
+func (c *Controller) loggerForFleetAutoscalerKey(key string) *logrus.Entry {
+	return logfields.AugmentLogEntry(c.baseLogger, logfields.FleetAutoscalerKey, key)
+}
+
+func (c *Controller) loggerForFleetAutoscaler(fas *v1alpha1.FleetAutoscaler) *logrus.Entry {
+	fasName := "NilFleetAutoScaler"
+	if fas != nil {
+		fasName = fas.Namespace + "/" + fas.Name
+	}
+	return c.loggerForFleetAutoscalerKey(fasName).WithField("fas", fas)
+}
+
 // validationHandler will intercept when a FleetAutoscaler is created, and
 // validate its settings.
 func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("validationHandler")
 	obj := review.Request.Object
 	fas := &stablev1alpha1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
 	if err != nil {
+		c.baseLogger.WithField("review", review).WithError(err).Info("validationHandler")
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
 	}
 
@@ -154,20 +168,20 @@ func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1
 // syncFleetAutoscaler scales the attached fleet and
 // synchronizes the FleetAutoscaler CRD
 func (c *Controller) syncFleetAutoscaler(key string) error {
-	c.logger.WithField("key", key).Info("Synchronising")
+	c.loggerForFleetAutoscalerKey(key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(c.loggerForFleetAutoscalerKey(key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	fas, err := c.fleetAutoscalerLister.FleetAutoscalers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.logger.WithField("key", key).Info(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
+			c.loggerForFleetAutoscalerKey(key).Info(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving FleetAutoscaler %s from namespace %s", name, namespace)
@@ -177,10 +191,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 	fleet, err := c.fleetLister.Fleets(namespace).Get(fas.Spec.FleetName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			logrus.WithError(err).WithField("fleetAutoscaler", fas.Name).
-				WithField("fleet", fas.Spec.FleetName).
-				WithField("namespace", namespace).
-				Warn("Could not find fleet for autoscaler. Skipping.")
+			c.loggerForFleetAutoscaler(fas).Warn("Could not find fleet for autoscaler. Skipping.")
 
 			c.recorder.Eventf(fas, corev1.EventTypeWarning, "FailedGetFleet",
 				"could not fetch fleet: %s", fas.Spec.FleetName)

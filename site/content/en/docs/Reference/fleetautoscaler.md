@@ -39,6 +39,7 @@ spec:
       name: "fleet-autoscaler-webhook"
       namespace: "default"
       path: "/scale"
+      caBundle: "<base64 encoded string>"
 ```
 
 Since Agones defines a new 
@@ -68,9 +69,7 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
                       If not specified, the "default" would be used
       - `path` is an optional URL path which will be sent in any request to this service. (i. e. /scale)
     - `url` gives the location of the webhook, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. The `host` should not refer to a service running in the cluster; use the `service` field instead.  (optional, instead of service)
-{{% feature publishVersion="0.8.0" %}}
-<li>`caBundle` is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.</li>
-{{% /feature %}}
+    - `caBundle` is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.
 
 Note: only one `buffer` or `webhook` could be defined for FleetAutoscaler which is based on the `type` field.
 

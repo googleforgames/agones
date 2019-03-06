@@ -26,10 +26,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1betaext "k8s.io/api/extensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 )
 
 const (
@@ -117,106 +120,138 @@ func TestCreateFullFleetAndCantFleetAllocate(t *testing.T) {
 
 func TestScaleFleetUpAndDownWithFleetAllocation(t *testing.T) {
 	t.Parallel()
-	alpha1 := framework.AgonesClient.StableV1alpha1()
 
-	flt := defaultFleet()
-	flt.Spec.Replicas = 1
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
-	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	fixtures := []bool{true, false}
+
+	for _, usePatch := range fixtures {
+		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
+			alpha1 := framework.AgonesClient.StableV1alpha1()
+
+			flt := defaultFleet()
+			flt.Spec.Replicas = 1
+			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			if assert.Nil(t, err) {
+				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			assert.Equal(t, int32(1), flt.Spec.Replicas)
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			// scale up
+			const targetScale = 3
+			if usePatch {
+				flt = scaleFleetPatch(t, flt, targetScale)
+				assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
+			} else {
+				flt = scaleFleetSubresource(t, flt, targetScale)
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+			// get an allocation
+			fa := &v1alpha1.FleetAllocation{
+				ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
+				Spec: v1alpha1.FleetAllocationSpec{
+					FleetName: flt.ObjectMeta.Name,
+				},
+			}
+
+			fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
+			assert.Nil(t, err)
+			assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == 1
+			})
+
+			// scale down, with allocation
+			const scaleDownTarget = 1
+			if usePatch {
+				flt = scaleFleetPatch(t, flt, scaleDownTarget)
+			} else {
+				flt = scaleFleetSubresource(t, flt, scaleDownTarget)
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
+			// delete the allocated GameServer
+			gp := int64(1)
+			err = alpha1.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+			assert.Nil(t, err)
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
+
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == 0
+			})
+		})
 	}
-
-	assert.Equal(t, int32(1), flt.Spec.Replicas)
-
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	// scale up
-	flt, err = scaleFleet(flt, 3)
-	assert.Nil(t, err)
-	assert.Equal(t, int32(3), flt.Spec.Replicas)
-
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	// get an allocation
-	fa := &v1alpha1.FleetAllocation{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
-		Spec: v1alpha1.FleetAllocationSpec{
-			FleetName: flt.ObjectMeta.Name,
-		},
-	}
-
-	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
-	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
-		return fleet.Status.AllocatedReplicas == 1
-	})
-
-	// scale down, with allocation
-	flt, err = scaleFleet(flt, 1)
-	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
-
-	// delete the allocated GameServer
-	gp := int64(1)
-	err = alpha1.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
-	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
-
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
-		return fleet.Status.AllocatedReplicas == 0
-	})
 }
 
 func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 	t.Parallel()
-	alpha1 := framework.AgonesClient.StableV1alpha1()
 
-	flt := defaultFleet()
-	flt.Spec.Replicas = 1
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
-	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	fixtures := []bool{false, true}
+
+	for _, usePatch := range fixtures {
+		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
+			alpha1 := framework.AgonesClient.StableV1alpha1()
+
+			flt := defaultFleet()
+			flt.Spec.Replicas = 1
+			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			if assert.Nil(t, err) {
+				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			assert.Equal(t, int32(1), flt.Spec.Replicas)
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			// scale up
+			const targetScale = 3
+			if usePatch {
+				flt = scaleFleetPatch(t, flt, targetScale)
+				assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
+			} else {
+				flt = scaleFleetSubresource(t, flt, targetScale)
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+			// get an allocation
+			gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+				Spec: v1alpha1.GameServerAllocationSpec{
+					Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+				}}
+
+			gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
+			assert.Nil(t, err)
+			assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == 1
+			})
+
+			// scale down, with allocation
+			const scaleDownTarget = 1
+			if usePatch {
+				flt = scaleFleetPatch(t, flt, scaleDownTarget)
+			} else {
+				flt = scaleFleetSubresource(t, flt, scaleDownTarget)
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
+
+			// delete the allocated GameServer
+			gp := int64(1)
+			err = alpha1.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+			assert.Nil(t, err)
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
+
+			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+				return fleet.Status.AllocatedReplicas == 0
+			})
+		})
 	}
-
-	assert.Equal(t, int32(1), flt.Spec.Replicas)
-
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	// scale up
-	flt, err = scaleFleet(flt, 3)
-	assert.Nil(t, err)
-	assert.Equal(t, int32(3), flt.Spec.Replicas)
-
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	// get an allocation
-	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
-		Spec: v1alpha1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
-		}}
-
-	gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
-	assert.Nil(t, err)
-	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
-		return fleet.Status.AllocatedReplicas == 1
-	})
-
-	// scale down, with allocation
-	flt, err = scaleFleet(flt, 1)
-	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
-
-	// delete the allocated GameServer
-	gp := int64(1)
-	err = alpha1.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
-	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
-
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
-		return fleet.Status.AllocatedReplicas == 0
-	})
 }
 
 func TestFleetUpdates(t *testing.T) {
@@ -404,9 +439,9 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 
 		testAllocationRaceCondition(t, defaultFleet, time.Second,
 			func(t *testing.T, flt *v1alpha1.Fleet) {
-				fltResult, err := scaleFleet(flt, 0)
-				assert.Nil(t, err)
-				assert.Equal(t, int32(0), fltResult.Spec.Replicas)
+				const targetScale = int32(0)
+				flt = scaleFleetPatch(t, flt, targetScale)
+				assert.Equal(t, targetScale, flt.Spec.Replicas)
 			})
 	})
 
@@ -453,6 +488,34 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
+}
+
+// TestFleetNameValidation is built to test Fleet Name length validation,
+// Fleet Name should have at most 63 chars
+func TestFleetNameValidation(t *testing.T) {
+	t.Parallel()
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	flt := defaultFleet()
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'f'
+	}
+	flt.Name = string(bytes)
+	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
+	assert.Equal(t, statusErr.Status().Details.Causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+	goodFlt := defaultFleet()
+	goodFlt.Name = string(bytes[0 : nameLen-1])
+	goodFlt, err = alpha1.Fleets(defaultNs).Create(goodFlt)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
 }
 
 func assertSuccessOrUpdateConflict(t *testing.T, err error) {
@@ -532,9 +595,9 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 
 		testAllocationRaceCondition(t, defaultFleet, time.Second,
 			func(t *testing.T, flt *v1alpha1.Fleet) {
-				fltResult, err := scaleFleet(flt, 0)
-				assert.Nil(t, err)
-				assert.Equal(t, int32(0), fltResult.Spec.Replicas)
+				const targetScale = int32(0)
+				flt = scaleFleetPatch(t, flt, targetScale)
+				assert.Equal(t, targetScale, flt.Spec.Replicas)
 			})
 	})
 
@@ -583,13 +646,237 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 	})
 }
 
-// scaleFleet creates a patch to apply to a Fleet.
-// easier for testing, as it removes object generational issues.
-func scaleFleet(f *v1alpha1.Fleet, scale int32) (*v1alpha1.Fleet, error) {
+// TestCreateFleetAndUpdateScaleSubresource is built to
+// test scale subresource usage and its ability to change Fleet Replica size.
+// Both scaling up and down.
+func TestCreateFleetAndUpdateScaleSubresource(t *testing.T) {
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	flt := defaultFleet()
+	const initialReplicas int32 = 1
+	flt.Spec.Replicas = initialReplicas
+	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+	assert.Equal(t, initialReplicas, flt.Spec.Replicas)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	newReplicas := initialReplicas * 2
+	scaleFleetSubresource(t, flt, newReplicas)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(newReplicas))
+
+	scaleFleetSubresource(t, flt, initialReplicas)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(initialReplicas))
+}
+
+// TestScaleUpAndDownInParallelStressTest creates N fleets, half of which start with replicas=0
+// and the other half with 0 and scales them up/down 3 times in parallel expecting it to reach
+// the desired number of ready replicas each time.
+// This test is also used as a stress test with 'make stress-test-e2e', in which case it creates
+// many more fleets of bigger sizes and runs many more repetitions.
+func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
+	t.Parallel()
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+	fleetCount := 2
+	fleetSize := int32(10)
+	repeatCount := 3
+	deadline := time.Now().Add(1 * time.Minute)
+
+	logrus.WithField("fleetCount", fleetCount).
+		WithField("fleetSize", fleetSize).
+		WithField("repeatCount", repeatCount).
+		WithField("deadline", deadline).
+		Info("starting scale up/down test")
+
+	if framework.StressTestLevel > 0 {
+		fleetSize = 10 * int32(framework.StressTestLevel)
+		repeatCount = 10
+		fleetCount = 10
+		deadline = time.Now().Add(45 * time.Minute)
+	}
+
+	var fleets []*v1alpha1.Fleet
+
+	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize))
+	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize))
+
+	defer scaleUpStats.Report()
+	defer scaleDownStats.Report()
+
+	for fleetNumber := 0; fleetNumber < fleetCount; fleetNumber++ {
+		flt := defaultFleet()
+		flt.ObjectMeta.GenerateName = fmt.Sprintf("scale-fleet-%v-", fleetNumber)
+		if fleetNumber%2 == 0 {
+			// even-numbered fleets starts at fleetSize and are scaled down to zero and back.
+			flt.Spec.Replicas = fleetSize
+		} else {
+			// odd-numbered fleets starts at zero and are scaled up to fleetSize and back.
+			flt.Spec.Replicas = 0
+		}
+
+		flt, err := alpha1.Fleets(defaultNs).Create(flt)
+		if assert.Nil(t, err) {
+			defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+		}
+		fleets = append(fleets, flt)
+	}
+
+	// wait for initial fleet conditions.
+	for fleetNumber, flt := range fleets {
+		if fleetNumber%2 == 0 {
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
+		} else {
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
+		}
+	}
+
+	var wg sync.WaitGroup
+
+	for fleetNumber, flt := range fleets {
+		wg.Add(1)
+		go func(fleetNumber int, flt *v1alpha1.Fleet) {
+			defer wg.Done()
+			defer func() {
+				if err := recover(); err != nil {
+					t.Errorf("recovered panic: %v", err)
+				}
+			}()
+
+			if fleetNumber%2 == 0 {
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
+			}
+			for i := 0; i < repeatCount; i++ {
+				if time.Now().After(deadline) {
+					break
+				}
+				scaleUpStats.ReportDuration(scaleAndWait(t, flt, fleetSize), nil)
+				scaleDownStats.ReportDuration(scaleAndWait(t, flt, 0), nil)
+			}
+		}(fleetNumber, flt)
+	}
+
+	wg.Wait()
+}
+
+// Creates a fleet and one GameServer with Packed scheduling.
+// Scale to two GameServers with Distributed scheduling.
+// The old GameServer has Scheduling set to 5 and the new one has it set to Distributed.
+func TestUpdateFleetScheduling(t *testing.T) {
+	t.Parallel()
+	t.Run("Updating Spec.Scheduling on fleet should be updated in GameServer",
+		func(t *testing.T) {
+			alpha1 := framework.AgonesClient.StableV1alpha1()
+
+			flt := defaultFleet()
+			flt.Spec.Replicas = 1
+			flt.Spec.Scheduling = v1alpha1.Packed
+			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+
+			if assert.Nil(t, err) {
+				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			assert.Equal(t, int32(1), flt.Spec.Replicas)
+			assert.Equal(t, v1alpha1.Packed, flt.Spec.Scheduling)
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			const targetScale = 2
+			flt = schedulingFleetPatch(t, flt, v1alpha1.Distributed, targetScale)
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+			assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
+			assert.Equal(t, v1alpha1.Distributed, flt.Spec.Scheduling)
+
+			err = framework.WaitForFleetGameServerListCondition(flt,
+				func(gsList []v1alpha1.GameServer) bool {
+					return countFleetScheduling(gsList, v1alpha1.Distributed) == 1 &&
+						countFleetScheduling(gsList, v1alpha1.Packed) == 1
+				})
+			assert.Nil(t, err)
+		})
+}
+
+// Counts the number of gameservers with the specified scheduling strategy in a fleet
+func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling v1alpha1.SchedulingStrategy) int {
+	count := 0
+	for _, gs := range gsList {
+		if gs.Spec.Scheduling == scheduling {
+			count++
+		}
+	}
+	return count
+}
+
+// Patches fleet with scheduling and scale values
+func schedulingFleetPatch(t *testing.T,
+	f *v1alpha1.Fleet,
+	scheduling v1alpha1.SchedulingStrategy,
+	scale int32) *v1alpha1.Fleet {
+
+	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/scheduling", "value": "%s" },
+	                       { "op": "replace", "path": "/spec/replicas", "value": %d }]`,
+		scheduling, scale)
+
+	logrus.WithField("fleet", f.ObjectMeta.Name).
+		WithField("scheduling", scheduling).
+		WithField("scale", scale).
+		WithField("patch", patch).
+		Info("updating scheduling")
+
+	fltRes, err := framework.AgonesClient.
+		StableV1alpha1().
+		Fleets(defaultNs).
+		Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+
+	assert.Nil(t, err)
+	return fltRes
+}
+
+func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {
+	t0 := time.Now()
+	scaleFleetSubresource(t, flt, fleetSize)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
+	return time.Since(t0)
+}
+
+// scaleFleetPatch creates a patch to apply to a Fleet.
+// Easier for testing, as it removes object generational issues.
+func scaleFleetPatch(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
 	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/replicas", "value": %d }]`, scale)
 	logrus.WithField("fleet", f.ObjectMeta.Name).WithField("scale", scale).WithField("patch", patch).Info("Scaling fleet")
 
-	return framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	fltRes, err := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	assert.Nil(t, err)
+	return fltRes
+}
+
+// scaleFleetSubresource uses scale subresource to change Replicas size of the Fleet.
+// Returns the same f as in parameter, just to keep signature in sync with scaleFleetPatch
+func scaleFleetSubresource(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
+	logrus.WithField("fleet", f.ObjectMeta.Name).WithField("scale", scale).Info("Scaling fleet")
+
+	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+		alpha1 := framework.AgonesClient.StableV1alpha1()
+		// GetScale returns current Scale object with resourceVersion which is opaque object
+		// and it will be used to create new Scale object
+		opts := metav1.GetOptions{}
+		sc, err := alpha1.Fleets(defaultNs).GetScale(f.ObjectMeta.Name, opts)
+		if err != nil {
+			return err
+		}
+
+		sc2 := newScale(f.Name, scale, sc.ObjectMeta.ResourceVersion)
+		_, err = alpha1.Fleets(defaultNs).UpdateScale(f.ObjectMeta.Name, sc2)
+		return err
+	})
+
+	if err != nil {
+		t.Fatal("could not update the scale subresource")
+	}
+	return f
 }
 
 // defaultFleet returns a default fleet configuration
@@ -607,6 +894,16 @@ func fleetWithGameServerSpec(gsSpec v1alpha1.GameServerSpec) *v1alpha1.Fleet {
 			Template: v1alpha1.GameServerTemplateSpec{
 				Spec: gsSpec,
 			},
+		},
+	}
+}
+
+// newScale returns a scale with specified Replicas spec
+func newScale(fleetName string, newReplicas int32, resourceVersion string) *v1betaext.Scale {
+	return &v1betaext.Scale{
+		ObjectMeta: metav1.ObjectMeta{Name: fleetName, Namespace: defaultNs, ResourceVersion: resourceVersion},
+		Spec: v1betaext.ScaleSpec{
+			Replicas: newReplicas,
 		},
 	}
 }

@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func TestGameServerSetGameServer(t *testing.T) {
@@ -69,19 +70,37 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 		},
 	}
 
-	ok, causes := gsSet.ValidateUpdate(gsSet.DeepCopy())
+	causes, ok := gsSet.ValidateUpdate(gsSet.DeepCopy())
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
 	newGSS := gsSet.DeepCopy()
 	newGSS.Spec.Replicas = 5
-	ok, causes = gsSet.ValidateUpdate(newGSS)
+	causes, ok = gsSet.ValidateUpdate(newGSS)
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
 	newGSS.Spec.Template.Spec.Ports[0].ContainerPort = 321
-	ok, causes = gsSet.ValidateUpdate(newGSS)
+	causes, ok = gsSet.ValidateUpdate(newGSS)
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "template", causes[0].Field)
+
+	newGSS = gsSet.DeepCopy()
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'f'
+	}
+	newGSS.Name = string(bytes)
+	causes, ok = newGSS.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Name", causes[0].Field)
+
+	newGSS.Name = ""
+	newGSS.GenerateName = string(bytes)
+	causes, ok = newGSS.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }

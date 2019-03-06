@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -31,7 +31,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -51,11 +51,17 @@ rules:
   resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
+  resources: ["gameserversets/status"]
+  verbs: ["update"]
+- apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers"]
   verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["stable.agones.dev"]
+  resources: ["fleets/status"]
+  verbs: ["update"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["gameserverallocations"]
   verbs: ["list", "watch",  "delete"]
@@ -68,7 +74,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -102,7 +108,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -113,7 +119,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -131,7 +137,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -167,7 +173,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -276,13 +282,13 @@ spec:
                             title: the port policy that will be applied to the game server
                             description: |
                                 portPolicy has two options:
-                                - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                                - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                                - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                                - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                                 port is available. When static is the policy specified, `hostPort` is required to be populated
                             type: string
                             enum:
-                            - dynamic
-                            - static
+                            - Dynamic
+                            - Static
                           protocol:
                             title: Protocol being used. Defaults to UDP. TCP is the only other option
                             type: string
@@ -296,7 +302,7 @@ spec:
                             maximum: 65535
                           hostPort:
                             title: The port exposed on the host
-                            description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
+                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
                             type: integer
                             minimum: 1
                             maximum: 65535
@@ -327,6 +333,18 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+  subresources:
+    # status enables the status subresource.
+    status: {}
+    # scale enables the scale subresource.
+    scale:
+      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+      specReplicasPath: .spec.replicas
+      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+      statusReplicasPath: .status.replicas
+      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+      labelSelectorPath: .status.labelSelector
+
 ---
 # Source: agones/templates/crds/fleetallocation.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -350,7 +368,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -415,7 +433,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -496,7 +514,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -580,13 +598,13 @@ spec:
                     title: the port policy that will be applied to the game server
                     description: |
                         portPolicy has two options:
-                        - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                        - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                        - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                        - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                         port is available. When static is the policy specified, `hostPort` is required to be populated
                     type: string
                     enum:
-                    - dynamic
-                    - static
+                    - Dynamic
+                    - Static
                   protocol:
                     title: Protocol being used. Defaults to UDP. TCP is the only other option
                     type: string
@@ -600,7 +618,7 @@ spec:
                     maximum: 65535
                   hostPort:
                     title: The port exposed on the host
-                    description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
+                    description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
                     type: integer
                     minimum: 1
                     maximum: 65535
@@ -654,7 +672,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -771,7 +789,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -874,13 +892,13 @@ spec:
                             title: the port policy that will be applied to the game server
                             description: |
                                 portPolicy has two options:
-                                - "dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-                                - "static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                                - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                                - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                                 port is available. When static is the policy specified, `hostPort` is required to be populated
                             type: string
                             enum:
-                            - dynamic
-                            - static
+                            - Dynamic
+                            - Static
                           protocol:
                             title: Protocol being used. Defaults to UDP. TCP is the only other option
                             type: string
@@ -894,7 +912,7 @@ spec:
                             maximum: 65535
                           hostPort:
                             title: The port exposed on the host
-                            description: Only required when `portPolicy` is "static". Overwritten when portPolicy is "dynamic".
+                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
                             type: integer
                             minimum: 1
                             maximum: 65535
@@ -925,6 +943,18 @@ spec:
                           type: integer
                           minimum: 1
                           maximum: 2147483648
+  subresources:
+    # status enables the status subresource.
+    status: {}
+    # scale enables the scale subresource.
+    scale:
+      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+      specReplicasPath: .spec.replicas
+      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+      statusReplicasPath: .status.replicas
+      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+      labelSelectorPath: .status.labelSelector
+
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google Inc. All Rights Reserved.
@@ -949,7 +979,7 @@ metadata:
   labels:
     stable.agones.dev/role: controller
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -985,7 +1015,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1030,7 +1060,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:0.8.0-rc"
+        image: "gcr.io/agones-images/agones-controller:0.9.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -1040,7 +1070,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:0.8.0-rc"
+          value: "gcr.io/agones-images/agones-sdk:0.9.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -1054,11 +1084,15 @@ spec:
         - name: SIDECAR_CPU_LIMIT
           value: "0"
         - name: NUM_WORKERS
-          value: "64"
-        - name: API_SERVER_QPS
           value: "100"
+        - name: API_SERVER_QPS
+          value: "400"
         - name: API_SERVER_QPS_BURST
-          value: "200"
+          value: "500"
+        - name: LOG_DIR
+          value: "/home/agones/logs"
+        - name: LOG_SIZE_LIMIT_MB
+          value: "10000"
         livenessProbe:
           httpGet:
             path: /live
@@ -1071,10 +1105,15 @@ spec:
         - name: certs
           mountPath: /home/agones/certs
           readOnly: true
+        - name: logs
+          mountPath: /home/agones/logs
+          readOnly: false
       volumes:
       - name: certs
         secret:
           secretName: agones-manual-cert
+      - name: logs
+        emptyDir: {}
 
 ---
 # Source: agones/templates/ping.yaml
@@ -1099,7 +1138,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1136,7 +1175,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:0.8.0-rc"
+          image: "gcr.io/agones-images/agones-ping:0.9.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1160,7 +1199,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1181,7 +1220,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1195,6 +1234,7 @@ spec:
   type: LoadBalancer
 ---
 # Source: agones/templates/priority-class.yaml
+
 apiVersion: scheduling.k8s.io/v1beta1
 kind: PriorityClass
 metadata:
@@ -1202,7 +1242,6 @@ metadata:
 value: 1000000
 globalDefault: false
 description: "This priority class should be used for Agones service pods only."
-
 ---
 # Source: agones/templates/hooks/pre_delete_hook.yaml
 
@@ -1248,7 +1287,9 @@ webhooks:
       - apiGroups:
           - stable.agones.dev
         resources:
+          - "fleets"
           - "gameservers"
+          - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"
         apiVersions:
@@ -1258,6 +1299,7 @@ webhooks:
       - apiGroups:
           - stable.agones.dev
         resources:
+          - "fleets"
           - "gameserversets"
           - "fleetallocations"
           - "fleetautoscalers"
@@ -1274,7 +1316,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.8.0-rc
+    chart: agones-0.9.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1306,7 +1348,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.8.0-rc"
+    chart: "agones-0.9.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

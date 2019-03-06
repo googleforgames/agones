@@ -33,13 +33,12 @@ metadata:
 spec:
   ports:
   - name: default
-    portPolicy: "dynamic"
     containerPort: 7654
   template:
     spec:
       containers:
       - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.5
+        image: gcr.io/agones-images/udp-server:0.7
         resources:
           limit:
             cpu: "250m" #this is our limit here

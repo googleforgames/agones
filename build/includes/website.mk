@@ -26,7 +26,7 @@
 
 # generate the latest website
 site-server: ARGS ?=-F
-site-server: ENV ?= RELEASE_VERSION="$(base_version)"
+site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=master
 site-server: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) -p 1313:1313 $(build_tag) bash -c \
 	"$(ENV) hugo server --watch --baseURL=http://localhost:1313/ --bind=0.0.0.0 $(ARGS)"
@@ -52,17 +52,13 @@ site-deploy: site-gen-app-yaml site-static
 		gcloud app deploy .app.yaml --no-promote --version=$(shell git rev-parse --short=7 HEAD)
 
 site-static-preview:
-	$(MAKE) site-static ARGS="-F" ENV=RELEASE_VERSION=$(base_version)
+	$(MAKE) site-static ARGS="-F" ENV="RELEASE_VERSION=$(base_version) RELEASE_BRANCH=master"
 
 site-deploy-preview: site-static-preview
 	$(MAKE) site-deploy SERVICE=preview
 
 site-test:
-	docker run --rm --name=agones-website $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-    	hugo server --watch --baseURL="http://localhost:1313/site/" &
-	until docker exec agones-website curl -o /dev/null --silent http://localhost:1313/site/; \
-			do \
-				echo "Waiting for server to start..."; \
-				sleep 1; \
-			done
-	( trap 'docker stop agones-website' EXIT; docker exec agones-website linkchecker --anchors http://localhost:1313/site/ )
+	# generate actual html and run test against - provides a more accurate tests
+	$(MAKE) site-static-preview
+	docker run --rm -t -e "TERM=xterm-256color" $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		"mkdir -p /tmp/website && cp -r $(mount_path)/site/public /tmp/website/site && htmltest -c $(mount_path)/site/htmltest.yaml /tmp/website"

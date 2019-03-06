@@ -15,12 +15,18 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"testing"
 
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
+)
+
+const (
+	ipFixture = "127.1.1.1"
 )
 
 func TestGameServerFindGameServerContainer(t *testing.T) {
@@ -211,7 +217,7 @@ func TestGameServerValidate(t *testing.T) {
 				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 	}
 	gs.ApplyDefaults()
-	ok, causes := gs.Validate()
+	causes, ok := gs.Validate()
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
@@ -229,7 +235,7 @@ func TestGameServerValidate(t *testing.T) {
 					{Name: "anothertest", Image: "testing/image"},
 				}}}},
 	}
-	ok, causes = gs.Validate()
+	causes, ok = gs.Validate()
 	var fields []string
 	for _, f := range causes {
 		fields = append(fields, f.Field)
@@ -239,6 +245,56 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Contains(t, fields, "container")
 	assert.Contains(t, fields, "main.hostPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "dev-game",
+			Namespace:   "default",
+			Annotations: map[string]string{DevAddressAnnotation: "invalid-ip"},
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main", ContainerPort: 7777, PortPolicy: Static}},
+		},
+	}
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+	assert.Contains(t, fields, fmt.Sprintf("annotations.%s", DevAddressAnnotation))
+	assert.Contains(t, fields, "main.hostPort")
+	assert.Equal(t, causes[1].Type, metav1.CauseTypeFieldValueRequired)
+
+	gs = GameServer{
+		Spec: GameServerSpec{
+			Container: "my_image",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: "my_image", Image: "foo/my_image"},
+					},
+				},
+			},
+		},
+	}
+
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'g'
+	}
+	gs.Name = string(bytes)
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Name", causes[0].Field)
+
+	gs.Name = ""
+	gs.GenerateName = string(bytes)
+	causes, ok = gs.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }
 
 func TestGameServerPod(t *testing.T) {
@@ -261,7 +317,7 @@ func TestGameServerPod(t *testing.T) {
 
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Pod should not return an error")
-	assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
@@ -277,7 +333,7 @@ func TestGameServerPod(t *testing.T) {
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
 	pod, err = fixture.Pod(sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
-	assert.Equal(t, fixture.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
 	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
@@ -290,7 +346,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 		Spec: GameServerSpec{Container: "goat"}}
 
 	f := func(t *testing.T, gs *GameServer, pod *corev1.Pod) {
-		assert.Equal(t, gs.ObjectMeta.Name+"-", pod.ObjectMeta.GenerateName)
+		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
 		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
 		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
@@ -368,4 +424,30 @@ func TestGameServerPatch(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Contains(t, string(patch), `{"op":"replace","path":"/spec/container","value":"bear"}`)
+}
+func TestGetDevAddress(t *testing.T) {
+	devGs := &GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "dev-game",
+			Namespace:   "default",
+			Annotations: map[string]string{DevAddressAnnotation: ipFixture},
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{HostPort: 7777, PortPolicy: Static}},
+			Template: corev1.PodTemplateSpec{Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+			},
+			},
+		},
+	}
+
+	devAddress, isDev := devGs.GetDevAddress()
+	assert.True(t, isDev, "dev-game should had a dev-address")
+	assert.Equal(t, ipFixture, devAddress, "dev-address IP address should be 127.1.1.1")
+
+	regularGs := devGs.DeepCopy()
+	regularGs.ObjectMeta.Annotations = map[string]string{}
+	devAddress, isDev = regularGs.GetDevAddress()
+	assert.False(t, isDev, "dev-game should NOT have a dev-address")
+	assert.Equal(t, "", devAddress, "dev-address IP address should be 127.1.1.1")
 }

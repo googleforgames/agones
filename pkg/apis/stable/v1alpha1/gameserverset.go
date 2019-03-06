@@ -15,10 +15,12 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 
 	"agones.dev/agones/pkg/apis/stable"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -28,6 +30,8 @@ const (
 )
 
 // +genclient
+// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/extensions/v1beta1.Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/extensions/v1beta1.Scale,result=k8s.io/api/extensions/v1beta1.Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GameServerSet is the data structure a set of GameServers
@@ -73,7 +77,7 @@ type GameServerSetStatus struct {
 
 // ValidateUpdate validates when updates occur. The argument
 // is the new GameServerSet, being passed into the old GameServerSet
-func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) (bool, []metav1.StatusCause) {
+func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 	if !reflect.DeepEqual(gsSet.Spec.Template, new.Spec.Template) {
 		causes = append(causes, metav1.StatusCause{
@@ -83,7 +87,21 @@ func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) (bool, []metav1.S
 		})
 	}
 
-	return len(causes) == 0, causes
+	return causes, len(causes) == 0
+}
+
+// Validate validates when Create occur. Check the name szie
+func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+	if len(gsSet.Name) > validation.LabelValueMaxLength {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "Name",
+			Message: fmt.Sprintf("Length of GameServerSet '%s' name should be no more than 63 characters.", gsSet.ObjectMeta.Name),
+		})
+	}
+
+	return causes, len(causes) == 0
 }
 
 // GameServer returns a single GameServer derived

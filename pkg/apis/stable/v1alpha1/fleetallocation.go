@@ -20,7 +20,6 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // FleetAllocation is the data structure for allocating against a Fleet
-// Deprecated: Please use GameServerAllocation instead.
 type FleetAllocation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -60,7 +59,7 @@ type FleetAllocationStatus struct {
 }
 
 // ValidateUpdate validates when an update occurs
-func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) (bool, []metav1.StatusCause) {
+func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
 	if fa.Spec.FleetName != new.Spec.FleetName {
@@ -71,5 +70,5 @@ func (fa *FleetAllocation) ValidateUpdate(new *FleetAllocation) (bool, []metav1.
 		})
 	}
 
-	return len(causes) == 0, causes
+	return causes, len(causes) == 0
 }

@@ -19,12 +19,14 @@ import (
 	"reflect"
 
 	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/crd"
+	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -49,7 +51,7 @@ import (
 
 // Controller is a the GameServerSet controller
 type Controller struct {
-	logger              *logrus.Entry
+	baseLogger          *logrus.Entry
 	crdGetter           v1beta1.CustomResourceDefinitionInterface
 	gameServerSetGetter getterv1alpha1.GameServerSetsGetter
 	gameServerSetLister listerv1alpha1.GameServerSetLister
@@ -86,16 +88,18 @@ func NewController(
 		fleetSynced:         fInformer.HasSynced,
 	}
 
-	c.logger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleet, c.logger, stable.GroupName+".FleetController")
+	c.baseLogger = runtime.NewLoggerWithType(c)
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleet, c.baseLogger, logfields.FleetKey, stable.GroupName+".FleetController")
 	health.AddLivenessCheck("fleet-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(c.logger.Infof)
+	eventBroadcaster.StartLogging(c.baseLogger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleet-controller"})
 
 	wh.AddHandler("/mutate", stablev1alpha1.Kind("Fleet"), admv1beta1.Create, c.creationMutationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("Fleet"), admv1beta1.Create, c.creationValidationHandler)
+	wh.AddHandler("/validate", v1alpha1.Kind("Fleet"), admv1beta1.Update, c.creationValidationHandler)
 
 	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -123,7 +127,7 @@ func NewController(
 // Should only be called on fleet create operations.
 // nolint:dupl
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.logger.WithField("review", review).Info("creationMutationHandler")
+	c.baseLogger.WithField("review", review).Info("creationMutationHandler")
 
 	obj := review.Request.Object
 	fleet := &stablev1alpha1.Fleet{}
@@ -151,7 +155,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating json for patch for Fleet %s", fleet.ObjectMeta.Name)
 	}
 
-	c.logger.WithField("fleet", fleet.ObjectMeta.Name).WithField("patch", string(jsn)).Infof("patch created!")
+	c.loggerForFleet(fleet).WithField("patch", string(jsn)).Infof("patch created!")
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
@@ -160,21 +164,68 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	return review, nil
 }
 
+// creationValidationHandler that validates a Fleet when it is created
+// Should only be called on Fleet create and Update operations.
+func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+	c.baseLogger.WithField("review", review).Info("creationValidationHandler")
+
+	obj := review.Request.Object
+	fleet := &stablev1alpha1.Fleet{}
+	err := json.Unmarshal(obj.Raw, fleet)
+	if err != nil {
+		return review, errors.Wrapf(err, "error unmarshalling original Fleet json: %s", obj.Raw)
+	}
+
+	causes, ok := fleet.Validate()
+	if !ok {
+		review.Response.Allowed = false
+		details := metav1.StatusDetails{
+			Name:   review.Request.Name,
+			Group:  review.Request.Kind.Group,
+			Kind:   review.Request.Kind.Kind,
+			Causes: causes,
+		}
+		review.Response.Result = &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: "Fleet configuration is invalid",
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &details,
+		}
+
+		c.loggerForFleet(fleet).WithField("review", review).Info("Invalid Fleet")
+		return review, nil
+	}
+
+	return review, nil
+}
+
 // Run the Fleet controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleets.stable.agones.dev", c.logger)
+	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleets.stable.agones.dev", c.baseLogger)
 	if err != nil {
 		return err
 	}
 
-	c.logger.Info("Wait for cache sync")
+	c.baseLogger.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSetSynced, c.fleetSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
 	c.workerqueue.Run(workers, stop)
 	return nil
+}
+
+func (c *Controller) loggerForFleetKey(key string) *logrus.Entry {
+	return logfields.AugmentLogEntry(c.baseLogger, logfields.FleetKey, key)
+}
+
+func (c *Controller) loggerForFleet(f *v1alpha1.Fleet) *logrus.Entry {
+	fleetName := "NilFleet"
+	if f != nil {
+		fleetName = f.Namespace + "/" + f.Name
+	}
+	return c.loggerForFleetKey(fleetName).WithField("fleet", f)
 }
 
 // gameServerSetEventHandler enqueues the owning Fleet for this GameServerSet,
@@ -189,9 +240,9 @@ func (c *Controller) gameServerSetEventHandler(obj interface{}) {
 	fleet, err := c.fleetLister.Fleets(gsSet.ObjectMeta.Namespace).Get(ref.Name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.logger.WithField("ref", ref).Info("Owner Fleet no longer available for syncing")
+			c.baseLogger.WithField("ref", ref).Info("Owner Fleet no longer available for syncing")
 		} else {
-			runtime.HandleError(c.logger.WithField("fleet", fleet.ObjectMeta.Name).WithField("ref", ref),
+			runtime.HandleError(c.loggerForFleet(fleet).WithField("ref", ref),
 				errors.Wrap(err, "error retrieving GameServerSet owner"))
 		}
 		return
@@ -202,20 +253,20 @@ func (c *Controller) gameServerSetEventHandler(obj interface{}) {
 // syncFleet synchronised the fleet CRDs and configures/updates
 // backing GameServerSets
 func (c *Controller) syncFleet(key string) error {
-	c.logger.WithField("key", key).Info("Synchronising")
+	c.loggerForFleetKey(key).Info("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.logger.WithField("key", key), errors.Wrapf(err, "invalid resource key"))
+		runtime.HandleError(c.loggerForFleetKey(key), errors.Wrapf(err, "invalid resource key"))
 		return nil
 	}
 
 	fleet, err := c.fleetLister.Fleets(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.logger.WithField("key", key).Info("Fleet is no longer available for syncing")
+			c.loggerForFleetKey(key).Info("Fleet is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving fleet %s from namespace %s", name, namespace)
@@ -229,7 +280,7 @@ func (c *Controller) syncFleet(key string) error {
 	active, rest := c.filterGameServerSetByActive(fleet, list)
 	// if there isn't an active gameServerSet, create one (but don't persist yet)
 	if active == nil {
-		c.logger.WithField("fleet", fleet.ObjectMeta.Name).Info("could not find active GameServerSet, creating")
+		c.loggerForFleet(fleet).Info("could not find active GameServerSet, creating")
 		active = fleet.GameServerSet()
 	}
 
@@ -253,9 +304,22 @@ func (c *Controller) syncFleet(key string) error {
 func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, replicas int32) error {
 	if active.ObjectMeta.UID == "" {
 		active.Spec.Replicas = replicas
-		gsSet, err := c.gameServerSetGetter.GameServerSets(active.ObjectMeta.Namespace).Create(active)
+		gsSets := c.gameServerSetGetter.GameServerSets(active.ObjectMeta.Namespace)
+		gsSet, err := gsSets.Create(active)
 		if err != nil {
 			return errors.Wrapf(err, "error creating gameserverset for fleet %s", fleet.ObjectMeta.Name)
+		}
+
+		// extra step which is needed to set
+		// default values for GameServerSet Status Subresource
+		gsSetCopy := gsSet.DeepCopy()
+		gsSetCopy.Status.ReadyReplicas = 0
+		gsSetCopy.Status.Replicas = 0
+		gsSetCopy.Status.AllocatedReplicas = 0
+		_, err = gsSets.UpdateStatus(gsSetCopy)
+		if err != nil {
+			return errors.Wrapf(err, "error updating status of gameserverset for fleet %s",
+				fleet.ObjectMeta.Name)
 		}
 
 		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "CreatingGameServerSet",
@@ -263,9 +327,10 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *st
 		return nil
 	}
 
-	if replicas != active.Spec.Replicas {
+	if replicas != active.Spec.Replicas || active.Spec.Scheduling != fleet.Spec.Scheduling {
 		gsSetCopy := active.DeepCopy()
 		gsSetCopy.Spec.Replicas = replicas
+		gsSetCopy.Spec.Scheduling = fleet.Spec.Scheduling
 		gsSetCopy, err := c.gameServerSetGetter.GameServerSets(fleet.ObjectMeta.Namespace).Update(gsSetCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating replicas for gameserverset for fleet %s", fleet.ObjectMeta.Name)
@@ -319,7 +384,7 @@ func (c *Controller) deleteEmptyGameServerSets(fleet *stablev1alpha1.Fleet, list
 func (c *Controller) recreateDeployment(fleet *stablev1alpha1.Fleet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
 	for _, gsSet := range rest {
 		if gsSet.Spec.Replicas != 0 {
-			c.logger.WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
+			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
 			gsSetCopy := gsSet.DeepCopy()
 			gsSetCopy.Spec.Replicas = 0
 			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
@@ -382,7 +447,7 @@ func (c *Controller) rollingUpdateActive(fleet *stablev1alpha1.Fleet, active *st
 		replicas = fleet.LowerBoundReplicas(replicas - sumAllocated)
 	}
 
-	c.logger.WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
+	c.loggerForFleet(fleet).WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
 		Info("applying rolling update to active gameserverset")
 
 	return replicas, nil
@@ -415,7 +480,7 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 
-		c.logger.WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
+		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
 			Info("applying rolling update to inactive gameserverset")
 
 		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
@@ -434,6 +499,8 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 // updateFleetStatus gets the GameServerSets for this Fleet and then
 // calculates the counts for the status, and updates the Fleet
 func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
+	c.loggerForFleet(fleet).Info("Update Fleet Status")
+
 	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {
 		return err
@@ -450,7 +517,7 @@ func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
 	}
 
-	_, err = c.fleetGetter.Fleets(fCopy.Namespace).Update(fCopy)
+	_, err = c.fleetGetter.Fleets(fCopy.Namespace).UpdateStatus(fCopy)
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
 

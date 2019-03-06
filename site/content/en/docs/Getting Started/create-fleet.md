@@ -53,20 +53,20 @@ kubectl get fleet
 It should look something like this:
 
 ```
-NAME         AGE
-simple-udp   5m
+NAME         SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY     AGE
+simple-udp   Packed       2         3         0           2         9m
 ```
 
 You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
 the GameServer will be prefixed by `simple-udp`.
 
 ```
-NAME                     AGE
-simple-udp-xvp4n-jvhbm   36s
-simple-udp-xvp4n-x6z5m   36s
+NAME                     STATE     ADDRESS            PORT   NODE      AGE
+simple-udp-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
+simple-udp-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
 ```
 
-For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#fleet-specification" >}})
+For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
 
 ### 2. Fetch the Fleet status
 
@@ -105,13 +105,13 @@ Spec:
       Ports:
         Container Port:  7654
         Name:            default
-        Port Policy:     dynamic
+        Port Policy:     Dynamic
       Template:
         Metadata:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.5
+            Image:  gcr.io/agones-images/udp-server:0.7
             Name:   simple-udp
             Resources:
 Status:
@@ -131,21 +131,17 @@ how many `GameServers` are currently in a Ready state. After a short period, the
 
 Let's scale up the `Fleet` from 2 `replicates` to 5.
 
-Run `kubectl edit fleet simple-udp`, which will open an editor for you to edit the Fleet configuration.
-
-Scroll down to the `spec > replicas` section, and change the values of `replicas: 2` to `replicas: 5`.
-
-Save the file and exit - this will apply the changes.
+Run `kubectl scale fleet simple-udp --replicas=5` to change Replicas count from 2 to 5.
 
 If we now run `kubectl get gameservers` we should see 5 `GameServers` prefixed by `simple-udp`.
 
 ```
-NAME                     AGE
-simple-udp-xvp4n-jvhbm   11m
-simple-udp-xvp4n-x6z5m   11m
-simple-udp-xvp4n-z8znu   36s
-simple-udp-xvp4n-a6z0e   36s
-simple-udp-xvp4n-i6bnm   36s
+NAME                     STATE    ADDRESS           PORT    NODE       AGE
+simple-udp-sdhzn-kcmh6   Ready    192.168.122.205   7191    minikube   52m
+simple-udp-sdhzn-pdpk5   Ready    192.168.122.205   7752    minikube   53m
+simple-udp-sdhzn-r4d6x   Ready    192.168.122.205   7623    minikube   52m
+simple-udp-sdhzn-wng5k   Ready    192.168.122.205   7709    minikube   53m
+simple-udp-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   52m
 ```
 
 ### 4. Allocate a Game Server from the Fleet
@@ -156,8 +152,10 @@ players access it (and therefore, it should not be deleted until they are finish
 > In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 
-{{% feature publishVersion="0.8.0" %}}
 #### GameServerAllocation
+
+> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
+  However, we welcome you to test it out in its current format and provide feedback.
 
 We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
@@ -215,6 +213,8 @@ status:
 
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
+{{% feature publishVersion="0.9.0" %}}If there are too many concurrent requests overwhelmed the system, `state` will be set to 
+`Contention`even though there are available `GameServer`.{{% /feature %}}
 
 However, we see that the `status.state` value was set to `Allocated`. 
 This means you have been successfully allocated a `GameServer` out of the fleet, and you can now connect your players to it!
@@ -232,21 +232,15 @@ kubectl get gs
 This will get you a list of all the current `GameSevers` and their `Status.State`.
 
 ```
-NAME                     STATE       ADDRESS           PORT      NODE       AGE
-simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191      minikube   52m
-simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752      minikube   53m
-simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623      minikube   52m
-simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709      minikube   53m
-simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478      minikube   52m
+NAME                     STATE       ADDRESS           PORT   NODE      AGE
+simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191   minikube  52m
+simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752   minikube  53m
+simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623   minikube  52m
+simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
+simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
-{{% /feature %}}
 
-{{% feature publishVersion="0.8.0" %}}
 #### FleetAllocation
-
-> Fleet Allocation is **deprecated** in version 0.8.0, and will be removed in the 0.10.0 release.
-  Migrate to using GameServer Allocation instead.
-{{% /feature %}}
 
 We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
 and also move it to the `Allocated` state.
@@ -313,14 +307,14 @@ status:
       - containerPort: 7654
         hostPort: 7604
         name: default
-        portPolicy: dynamic
+        portPolicy: Dynamic
         protocol: UDP
       template:
         metadata:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.5
+          - image: gcr.io/agones-images/udp-server:0.7
             name: simple-udp
             resources: {}
     status:
@@ -339,18 +333,18 @@ allocated a `GameServer` out of the fleet, and you can now connect your players 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ```
 
 This will get you a list of all the current `GameSevers` and their `Status > State`.
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   [map[name:default port:7136]]
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
-simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   [map[name:default port:7453]]
-simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   [map[name:default port:7228]]
-simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   [map[name:default port:7226]]
+NAME                     STATE       ADDRESS          PORT   NODE        AGE
+simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   7136   minikube    52m
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube    53m
+simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   7453   minikube    52m
+simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   7228   minikube    53m
+simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   7226   minikube    52m
 ```
 
 ### 5. Scale down the Fleet
@@ -362,18 +356,19 @@ and will automatically leave them running on scale down -- as we assume that pla
 and we shouldn't disconnect them!
 
 Let's scale down our Fleet to 0 (yep! you can do that!), and watch what happens.
-Run `kubectl edit fleet simple-udp` and replace `replicas: 5` with `replicas 0`, save the file and exit your editor.
+
+Run `kubectl scale fleet simple-udp --replicas=0` to change Replicas count from 5 to 0.
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
-watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+watch kubectl get gs
 ```
 
 Eventually, one by one they will be removed from the list, and you should simply see:
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
+NAME                     STATUS      ADDRESS          PORT    NODE       AGE
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148    minikube   55m
 ```
 
 That lone `Allocated` `GameServer` is left all alone, but still running!
@@ -414,7 +409,7 @@ of `GameServers` in the pool in either a `Ready` or `Allocated` state.
 We can also change the configuration of the `GameServer` of the running `Fleet`, and have the changes
 roll out, without interrupting the currently `Allocated` `GameServers`.
 
-Let's take this for a spin! Run `kubectl edit fleet simple-udp` and set the `replicas` field to back to `5`.
+Let's take this for a spin! Run `kubectl scale fleet simple-udp --replicas=5` to return Replicas count back to 5.
 
 Let's also allocate ourselves a `GameServer`
 
@@ -424,15 +419,15 @@ kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{
 
 We should now have four `Ready` `GameServers` and one `Allocated`.
 
-We can check this by running `kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports`.
+We can check this by running `kubectl get gs`.
 
 ```
-NAME                     STATUS      IP               PORT
-simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   [map[name:default port:7136]]
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   [map[name:default port:7148]]
-simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   [map[name:default port:7453]]
-simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   [map[name:default port:7228]]
-simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   [map[name:default port:7226]]
+NAME                     STATE       ADDRESS          PORT   NODE       AGE 
+simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m       
+simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m   
+simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m   
+simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m   
+simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m   
 ```
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
@@ -444,7 +439,7 @@ with a Container Port of `6000`.
 
 > NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
 
-Run `watch kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,CONTAINERPORT:.spec.ports[0].containerPort`
+Run `watch kubectl get gs`
 until you can see that there are
 one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
 is the new configuration.
@@ -453,12 +448,11 @@ You have now deployed a new version of your game!
 
 ## Next Steps
 
-{{% feature publishVersion="0.8.0" %}}
 - Have a look at the [GameServerAllocation specification]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}), and see
-how the extra functionality can enable smoke testing, server information communication, and more.
-{{% /feature %}}
-
-  - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
-See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).
-  - Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
-  - If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}) tutorial.
+    how the extra functionality can enable smoke testing, server information communication, and more.
+- You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
+  See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).
+- Have a look at the [GameServer Creation, Allocation and Shutdown Lifecycle]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) diagram,
+    to give you a good overview of how all the pieces fit together - from creating to integrating with a matchmaker.
+- Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
+- If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}) tutorial.

@@ -17,6 +17,7 @@ package v1alpha1
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 
 	"github.com/mattbaird/jsonpatch"
 
@@ -26,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -58,10 +60,10 @@ const (
 
 	// Static PortPolicy means that the user defines the hostPort to be used
 	// in the configuration.
-	Static PortPolicy = "static"
+	Static PortPolicy = "Static"
 	// Dynamic PortPolicy means that the system will choose an open
 	// port for the GameServer in question
-	Dynamic PortPolicy = "dynamic"
+	Dynamic PortPolicy = "Dynamic"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -76,6 +78,9 @@ const (
 	GameServerContainerAnnotation = stable.GroupName + "/container"
 	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
 	SidecarServiceAccountName = "agones-sdk"
+	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
+	// A locally hosted GameServer is not managed by Agones it is just simply registered.
+	DevAddressAnnotation = "stable.agones.dev/dev-address"
 )
 
 var (
@@ -245,40 +250,95 @@ func (gs *GameServer) applySchedulingDefaults() {
 // Validate validates the GameServer configuration.
 // If a GameServer is invalid there will be > 0 values in
 // the returned array
-func (gs *GameServer) Validate() (bool, []metav1.StatusCause) {
+func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
-	// make sure a name is specified when there is multiple containers in the pod.
-	if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+	// Long GS name would produce an invalid Label for Pod
+	if len(gs.Name) > validation.LabelValueMaxLength {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "container",
-			Message: "Container is required when using multiple containers in the pod template",
+			Field:   fmt.Sprintf("Name"),
+			Message: fmt.Sprintf("Length of Gameserver '%s' name should be no more than 63 characters.", gs.ObjectMeta.Name),
 		})
 	}
 
-	// no host port when using dynamic PortPolicy
-	for _, p := range gs.Spec.Ports {
-		if p.HostPort > 0 && p.PortPolicy == Dynamic {
+	// make sure the host port is specified if this is a development server
+	devAddress, hasDevAddress := gs.GetDevAddress()
+	if hasDevAddress {
+		// verify that the value is a valid IP address.
+		if net.ParseIP(devAddress) == nil {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   fmt.Sprintf("%s.hostPort", p.Name),
-				Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+				Field:   fmt.Sprintf("annotations.%s", DevAddressAnnotation),
+				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address.", DevAddressAnnotation, devAddress),
+			})
+		}
+
+		for _, p := range gs.Spec.Ports {
+			if p.HostPort == 0 {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueRequired,
+					Field:   fmt.Sprintf("%s.hostPort", p.Name),
+					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with %s", DevAddressAnnotation),
+				})
+			}
+			if p.PortPolicy != Static {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueRequired,
+					Field:   fmt.Sprintf("%s.portPolicy", p.Name),
+					Message: fmt.Sprintf("PortPolicy must be Static"),
+				})
+			}
+		}
+	} else {
+		// make sure a name is specified when there is multiple containers in the pod.
+		if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: "Container is required when using multiple containers in the pod template",
+			})
+		}
+
+		// no host port when using dynamic PortPolicy
+		for _, p := range gs.Spec.Ports {
+			if p.HostPort > 0 && p.PortPolicy == Dynamic {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueInvalid,
+					Field:   fmt.Sprintf("%s.hostPort", p.Name),
+					Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+				})
+			}
+		}
+
+		// make sure the container value points to a valid container
+		_, _, err := gs.FindGameServerContainer()
+		if err != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: err.Error(),
 			})
 		}
 	}
 
-	// make sure the container value points to a valid container
-	_, _, err := gs.FindGameServerContainer()
-	if err != nil {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "container",
-			Message: err.Error(),
-		})
-	}
+	return causes, len(causes) == 0
+}
 
-	return len(causes) == 0, causes
+// GetDevAddress returns the address for game server.
+func (gs *GameServer) GetDevAddress() (string, bool) {
+	devAddress, hasDevAddress := gs.ObjectMeta.Annotations[DevAddressAnnotation]
+	return devAddress, hasDevAddress
+}
+
+// IsAllocated returns true if the server is currently allocated.
+func (gs *GameServer) IsAllocated() bool {
+	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == GameServerStateAllocated
+}
+
+// IsBeingDeleted returns true if the server is in the process of being deleted.
+func (gs *GameServer) IsBeingDeleted() bool {
+	return !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == GameServerStateShutdown
 }
 
 // FindGameServerContainer returns the container that is specified in
@@ -333,10 +393,10 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 
 // podObjectMeta configures the pod ObjectMeta details
 func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
-	// Switch to GenerateName, so that we always get a Unique name for the Pod, and there
-	// can be no collisions
-	pod.ObjectMeta.GenerateName = gs.ObjectMeta.Name + "-"
-	pod.ObjectMeta.Name = ""
+	pod.ObjectMeta.GenerateName = ""
+	// Pods inherit the name of their gameserver. It's safe since there's
+	// a guarantee that pod won't outlive its parent.
+	pod.ObjectMeta.Name = gs.ObjectMeta.Name
 	// Pods for GameServers need to stay in the same namespace
 	pod.ObjectMeta.Namespace = gs.ObjectMeta.Namespace
 	// Make sure these are blank, just in case

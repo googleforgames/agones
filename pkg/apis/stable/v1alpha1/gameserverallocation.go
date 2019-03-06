@@ -26,6 +26,9 @@ const (
 	GameServerAllocationAllocated GameServerAllocationState = "Allocated"
 	// GameServerAllocationUnAllocated when the allocation is unsuccessful
 	GameServerAllocationUnAllocated GameServerAllocationState = "UnAllocated"
+	// GameServerAllocationContention when the allocation is unsuccessful
+	// because of contention
+	GameServerAllocationContention GameServerAllocationState = "Contention"
 )
 
 // GameServerAllocationState is the Allocation state
@@ -105,7 +108,7 @@ func (gsa *GameServerAllocation) ApplyDefaults() {
 }
 
 // ValidateUpdate validates when an update occurs
-func (gsa *GameServerAllocation) ValidateUpdate(new *GameServerAllocation) (bool, []metav1.StatusCause) {
+func (gsa *GameServerAllocation) ValidateUpdate(new *GameServerAllocation) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
 	if !equality.Semantic.DeepEqual(gsa.Spec, new.Spec) {
@@ -116,5 +119,5 @@ func (gsa *GameServerAllocation) ValidateUpdate(new *GameServerAllocation) (bool
 		})
 	}
 
-	return len(causes) == 0, causes
+	return causes, len(causes) == 0
 }

@@ -37,16 +37,16 @@ func TestGameServerAllocationValidateUpdate(t *testing.T) {
 	new := &GameServerAllocation{Spec: GameServerAllocationSpec{Scheduling: Packed}}
 	old := &GameServerAllocation{Spec: GameServerAllocationSpec{Scheduling: Distributed}}
 
-	ok, result := old.ValidateUpdate(old)
+	causes, ok := old.ValidateUpdate(old)
 	assert.True(t, ok)
-	assert.Empty(t, result)
+	assert.Empty(t, causes)
 
-	ok, result = old.ValidateUpdate(new)
+	causes, ok = old.ValidateUpdate(new)
 	assert.False(t, ok)
-	assert.Len(t, result, 1)
+	assert.Len(t, causes, 1)
 
-	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, result[0].Type)
-	assert.Equal(t, "spec", result[0].Field)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, causes[0].Type)
+	assert.Equal(t, "spec", causes[0].Field)
 }
 
 func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {

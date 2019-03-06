@@ -21,6 +21,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 func TestFleetGameServerSetGameServer(t *testing.T) {
@@ -96,6 +97,27 @@ func TestSumStatusAllocatedReplicas(t *testing.T) {
 	gsSet2.Status.AllocatedReplicas = 3
 
 	assert.Equal(t, int32(5), SumStatusAllocatedReplicas([]*GameServerSet{gsSet1, gsSet2}))
+}
+
+func TestFleetName(t *testing.T) {
+	f := Fleet{}
+
+	nameLen := validation.LabelValueMaxLength + 1
+	bytes := make([]byte, nameLen)
+	for i := 0; i < nameLen; i++ {
+		bytes[i] = 'f'
+	}
+	f.Name = string(bytes)
+	causes, ok := f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Name", causes[0].Field)
+
+	f.Name = ""
+	f.GenerateName = string(bytes)
+	causes, ok = f.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
 }
 
 func TestSumStatusReplicas(t *testing.T) {

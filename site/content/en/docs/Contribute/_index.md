@@ -25,6 +25,7 @@ with the Docsy theme for open source documentation.
 
 - [Hugo Documentation](https://gohugo.io/documentation/)
 - [Docsy Guide](https://github.com/google/docsy)
+- [Link Checker](https://github.com/wjdp/htmltest)
 
 ## Documentation for upcoming features
 

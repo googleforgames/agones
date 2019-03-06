@@ -48,10 +48,12 @@ type Framework struct {
 	AgonesClient    versioned.Interface
 	GameServerImage string
 	PullSecret      string
+	StressTestLevel int
+	PerfOutputDir   string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
-func New(kubeconfig, gsimage string, pullSecret string) (*Framework, error) {
+func New(kubeconfig string) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
@@ -68,10 +70,8 @@ func New(kubeconfig, gsimage string, pullSecret string) (*Framework, error) {
 	}
 
 	return &Framework{
-		KubeClient:      kubeClient,
-		AgonesClient:    agonesClient,
-		GameServerImage: gsimage,
-		PullSecret:      pullSecret,
+		KubeClient:   kubeClient,
+		AgonesClient: agonesClient,
 	}, nil
 }
 
@@ -137,7 +137,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, con
 	})
 	if err != nil {
 		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
-		t.Fatal("error waiting for fleet condition")
+		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
 	}
 }
 
@@ -172,31 +172,44 @@ func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
 	}
 }
 
-// WaitForFleetGameServersCondition wait for all GameServers for a given
-// fleet to match the spec.replicas and match a a condition
-func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet, cond func(server v1alpha1.GameServer) bool) error {
+// WaitForFleetGameServersCondition waits for all GameServers for a given fleet to match
+// a condition specified by a callback.
+func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet,
+	cond func(server v1alpha1.GameServer) bool) error {
+	return f.WaitForFleetGameServerListCondition(flt,
+		func(servers []v1alpha1.GameServer) bool {
+			for _, gs := range servers {
+				if !cond(gs) {
+					return false
+				}
+			}
+			return true
+		})
+}
+
+// WaitForFleetGameServerListCondition waits for the list of GameServers to match a condition
+// specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
+func (f *Framework) WaitForFleetGameServerListCondition(flt *v1alpha1.Fleet,
+	cond func(servers []v1alpha1.GameServer) bool) error {
 	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
 			return false, err
 		}
-
 		if int32(len(gsList)) != flt.Spec.Replicas {
 			return false, nil
 		}
-
-		if err != nil {
-			return false, err
-		}
-
-		for _, gs := range gsList {
-			if !cond(gs) {
-				return false, nil
-			}
-		}
-
-		return true, nil
+		return cond(gsList), nil
 	})
+}
+
+// NewStatsCollector returns new instance of statistics collector,
+// which can be used to emit performance statistics for load tests and stress tests.
+func (f *Framework) NewStatsCollector(name string) *StatsCollector {
+	if f.StressTestLevel > 0 {
+		name = fmt.Sprintf("stress_%v_%v", f.StressTestLevel, name)
+	}
+	return &StatsCollector{name: name, outputDir: f.PerfOutputDir}
 }
 
 // CleanUp Delete all Agones resources in a given namespace.

@@ -40,7 +40,7 @@ func TestWorkerQueueRun(t *testing.T) {
 		return nil
 	}
 
-	wq := NewWorkerQueue(syncHandler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(syncHandler, logrus.WithField("source", "test"), "testKey", "test")
 	stop := make(chan struct{})
 	defer close(stop)
 
@@ -70,7 +70,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 		<-done
 		return nil
 	}
-	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
 	wq.Enqueue(cache.ExplicitKey("default/test"))
 
 	stop := make(chan struct{})
@@ -108,19 +108,25 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	handler := func(string) error {
 		return nil
 	}
-	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "test")
+	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
 	health.AddLivenessCheck("test", wq.Healthy)
 
 	server := httptest.NewServer(health)
 	defer server.Close()
 
+	const workersCount = 1
 	stop := make(chan struct{})
-	go wq.Run(1, stop)
+	go wq.Run(workersCount, stop)
 
-	url := server.URL + "/live"
+	// Wait for worker to actually start
+	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
+		rc := wq.RunCount()
+		logrus.WithField("runcount", rc).Info("Checking run count before liveness check")
+		return rc == workersCount, nil
+	})
+	assert.Nil(t, err)
 
 	f := func(t *testing.T, url string, status int) {
-
 		// sometimes the http server takes a bit to start up
 		err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 			resp, err := http.Get(url)
@@ -142,11 +148,12 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
+	url := server.URL + "/live"
 	f(t, url, http.StatusOK)
 
 	close(stop)
 	// closing can take a short while
-	err := wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 		rc := wq.RunCount()
 		logrus.WithField("runcount", rc).Info("Checking run count")
 		return rc == 0, nil

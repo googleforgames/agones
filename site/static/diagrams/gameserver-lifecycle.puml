@@ -1,0 +1,67 @@
+@startuml
+participant Matchmaker
+participant "Kubernetes API" as K8sAPI
+participant Agones
+participant "Game Server\nProcess" as Binary
+participant SDK
+participant "GameServer\nResource" as GameServer
+box "Game Server Pod"
+  participant Binary
+  participant SDK
+end box
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.Health()
+note right
+  <i>Health()</i> is a continuous
+  ping that occurs under
+  the configured threshold.
+end note
+GameServer <-- SDK: Maintains Healthy status
+Binary -> SDK: SDK.Ready()
+note right
+  Call <i>Ready()</i> when the
+  Game Server can take player
+  connections and is able to
+  be allocated.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+== Matchmaker requesting GameServer ==
+
+Matchmaker -> K8sAPI: Create: <i>FleetAllocation</i>
+note left
+  Allocation atomically provides
+  a GameServer from a pool
+  of existing GameServers
+  (Usually a <i>Fleet</i>)
+end note
+K8sAPI -> Agones: Intercepts <i>FleetAllocation</i>\nrequest
+"Agones" -> GameServer: Finds a Ready <i>GameServer</i>,\nsets it to <i>Allocated</i> State
+K8sAPI <-- Agones: returns <i>Allocated</i>\nGameServer record
+Matchmaker <-- K8sAPI : <i>FleetAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+note left
+If no <i>GameServer</i> can be
+provided, <i>FleetAllocation</i> is
+returned with a Status
+of <i>UnAllocated</i>
+end note
+
+== Players Finish Game ==
+
+Binary -> GameServer: SDK.Shutdown()
+note left
+Once gameplay is complete, call
+<i>Shutdown()</i> to delete the
+<i>GameServer</i> resource and backing Pod.
+end note
+destroy Binary
+destroy SDK
+destroy GameServer
+@enduml

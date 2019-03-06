@@ -1,2 +1,3 @@
-{{- $branch := .Get "branch" | default $.Page.Site.Params.release_branch }}
-<a href="{{$.Page.Site.Params.github_repo}}/blob/{{ $branch }}/{{.Get "href"}}" target="_blank">{{.Inner}}</a>
+{{- $branch := .Get "branch" | default (getenv "RELEASE_BRANCH") | default $.Page.Site.Params.release_branch }}
+{{- $test := eq (.Get "link_test") "true" | default true }}
+<a href="{{$.Page.Site.Params.github_repo}}/blob/{{ $branch }}/{{.Get "href"}}" target="_blank" {{if not $test}}data-proofer-ignore{{end}}>{{.Inner}}</a>

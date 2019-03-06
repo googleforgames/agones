@@ -27,7 +27,7 @@ import (
 
 	coresdk "agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/util/signals"
-	"agones.dev/agones/sdks/go"
+	sdk "agones.dev/agones/sdks/go"
 )
 
 // main starts a UDP server that received 1024 byte sized packets at at time
@@ -80,8 +80,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 	b := make([]byte, 1024)
 	for {
 		sender, txt := readPacket(conn, b)
-		switch txt {
+		parts := strings.Split(strings.TrimSpace(txt), " ")
 
+		switch parts[0] {
 		// shuts down the gameserver
 		case "EXIT":
 			exit(s)
@@ -97,13 +98,31 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 			watchGameServerEvents(s)
 
 		case "LABEL":
-			setLabel(s)
+			switch len(parts) {
+			case 1:
+				// legacy format
+				setLabel(s, "timestamp", strconv.FormatInt(time.Now().Unix(), 10))
+			case 3:
+				setLabel(s, parts[1], parts[2])
+			default:
+				respond(conn, sender, "ERROR: Invalid LABEL command, must use zero or 2 arguments")
+				continue
+			}
 
 		case "ANNOTATION":
-			setAnnotation(s)
+			switch len(parts) {
+			case 1:
+				// legacy format
+				setAnnotation(s, "timestamp", time.Now().UTC().String())
+			case 3:
+				setAnnotation(s, parts[1], parts[2])
+			default:
+				respond(conn, sender, "ERROR: Invalid ANNOTATION command, must use zero or 2 arguments\n")
+				continue
+			}
 		}
 
-		ack(conn, sender, txt)
+		respond(conn, sender, "ACK: "+txt+"\n")
 	}
 }
 
@@ -118,10 +137,9 @@ func readPacket(conn net.PacketConn, b []byte) (net.Addr, string) {
 	return sender, txt
 }
 
-// ack echoes it back, with an ACK
-func ack(conn net.PacketConn, sender net.Addr, txt string) {
-	ack := "ACK: " + txt + "\n"
-	if _, err := conn.WriteTo([]byte(ack), sender); err != nil {
+// respond responds to a given sender.
+func respond(conn net.PacketConn, sender net.Addr, txt string) {
+	if _, err := conn.WriteTo([]byte(txt), sender); err != nil {
 		log.Fatalf("Could not write to udp stream: %v", err)
 	}
 }
@@ -172,19 +190,19 @@ func watchGameServerEvents(s *sdk.SDK) {
 }
 
 // setAnnotation sets a given annotation
-func setAnnotation(s *sdk.SDK) {
-	log.Print("Setting annotation")
-	err := s.SetAnnotation("timestamp", time.Now().UTC().String())
+func setAnnotation(s *sdk.SDK, key, value string) {
+	log.Printf("Setting annotation %v=%v", key, value)
+	err := s.SetAnnotation(key, value)
 	if err != nil {
 		log.Fatalf("could not set annotation: %v", err)
 	}
 }
 
 // setLabel sets a given label
-func setLabel(s *sdk.SDK) {
-	log.Print("Setting label")
+func setLabel(s *sdk.SDK, key, value string) {
+	log.Printf("Setting label %v=%v", key, value)
 	// label values can only be alpha, - and .
-	err := s.SetLabel("timestamp", strconv.FormatInt(time.Now().Unix(), 10))
+	err := s.SetLabel(key, value)
 	if err != nil {
 		log.Fatalf("could not set label: %v", err)
 	}

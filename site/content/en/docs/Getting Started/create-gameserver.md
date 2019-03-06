@@ -31,7 +31,7 @@ For the purpose of this guide we're going to use the {{< ghlink href="examples/s
 Let's create a GameServer using the following command :
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
+kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 ```
 
 You should see a successful ouput similar to this :
@@ -49,15 +49,15 @@ kubectl get gameservers
 It should look something like this:
 
 ```
-NAME         AGE
-simple-udp   5m
+NAME               STATE     ADDRESS       PORT   NODE     AGE
+simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   3m
 ```
 
 You can also see the [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) that got created by running `kubectl get pods`, the Pod will be prefixed by `simple-udp`.
 
 ```
-NAME                                     READY     STATUS    RESTARTS   AGE
-simple-udp-vwxpt                         2/2       Running   0          5m
+NAME                READY     STATUS    RESTARTS   AGE
+simple-udp-7pjrq    2/2       Running   0          5m
 ```
 
 As you can see above it says `READY: 2/2` this means there are two containers running in this Pod, this is because Agones injected the SDK sidecar for readiness and health checking of your Game Server.
@@ -74,22 +74,21 @@ watch kubectl describe gameserver
 ```
 
 ```
-Name:         simple-udp-jq8kd-q8dzg
+Name:         simple-udp-7pjrq
 Namespace:    default
-Labels:       stable.agones.dev/gameserverset=simple-udp-jq8kd
-Annotations:  <none>
+Labels:       <none>
+Annotations:  stable.agones.dev/sdk-version: 0.9.0-764fa53
 API Version:  stable.agones.dev/v1alpha1
 Kind:         GameServer
 Metadata:
-  Cluster Name:
-  Creation Timestamp:  2018-06-30T14:15:43Z
+  Creation Timestamp:  2019-02-27T15:06:20Z
   Finalizers:
     stable.agones.dev
-  Generate Name:  simple-udp-jq8kd-
-  Generation:     1
-  Resource Version:        11978
-  Self Link:               /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-jq8kd-q8dzg
-  UID:                     132bb210-7c70-11e8-b9be-08002703ef08
+  Generate Name:     simple-udp-
+  Generation:        1
+  Resource Version:  30377
+  Self Link:         /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers/simple-udp-7pjrq
+  UID:               3d7ac3e1-3aa1-11e9-a4f5-42010a8a0019
 Spec:
   Container:  simple-udp
   Health:
@@ -98,50 +97,57 @@ Spec:
     Period Seconds:         5
   Ports:
     Container Port:  7654
-    Host Port:       7614
+    Host Port:       7190
     Name:            default
-    Port Policy:     dynamic
+    Port Policy:     Dynamic
     Protocol:        UDP
+  Scheduling:        Packed
   Template:
     Metadata:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.5
+        Image:  gcr.io/agones-images/udp-server:0.7
         Name:   simple-udp
         Resources:
+          Limits:
+            Cpu:     20m
+            Memory:  32Mi
+          Requests:
+            Cpu:     20m
+            Memory:  32Mi
 Status:
-  Address:    192.168.99.100
+  Address:    35.233.183.43
   Node Name:  agones
   Ports:
     Name:  default
-    Port:  7614
+    Port:  7190
   State:   Ready
 Events:
   Type    Reason          Age   From                   Message
   ----    ------          ----  ----                   -------
-  Normal  PortAllocation  23s   gameserver-controller  Port allocated
-  Normal  Creating        23s   gameserver-controller  Pod simple-udp-jq8kd-q8dzg-9kww8 created
-  Normal  Starting        23s   gameserver-controller  Synced
-  Normal  Ready           20s   gameserver-controller  Address and Port populated
+  Normal  PortAllocation  34s   gameserver-controller  Port allocated
+  Normal  Creating        34s   gameserver-controller  Pod simple-udp-7pjrq created
+  Normal  Scheduled       34s   gameserver-controller  Address and port populated
+  Normal  Ready           27s   gameserver-controller  SDK.Ready() executed
 ```
 
 If you look towards the bottom, you can see there is a `Status > State` value. We are waiting for it to move to `Ready`, which means that the game server is ready to accept connections.
 
-You might also be interested to see the `Events` section, which outlines when various lifecycle events of the `GameSever` occur. We can also see when the `GameServer` is ready on the event stream as well - at which time the `Status > Address` and `Status > Port` have also been populated, letting us know what IP and port our client can now connect to!
+You might also be interested to see the `Events` section, which outlines when various lifecycle events of the `GameServer` occur. We can also see when the `GameServer` is ready on the event stream as well - at which time the `Status > Address` and `Status > Ports > Port` have also been populated, letting us know what IP and port our client can now connect to!
 
 
 Let's retrieve the IP address and the allocated port of your Game Server :
 
 ```
-kubectl get gs -o=custom-columns=NAME:.metadata.name,STATUS:.status.state,IP:.status.address,PORT:.status.ports
+kubectl get gs
 ```
 
 This should ouput your Game Server IP address and ports, eg:
 
 ```
-NAME         STATUS    IP               PORT
-simple-udp   Ready     192.168.99.100   [map[name:default port:7614]]
+NAME               STATE   ADDRESS         PORT   NODE     AGE
+simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
 
 ### 3. Connect to the GameServer
@@ -151,6 +157,7 @@ simple-udp   Ready     192.168.99.100   [map[name:default port:7614]]
   SSH'ing into a running VM in your project, such as a Kubernetes node.
   You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
   page to do this.
+  Run `toolbox` on GKE Node to run docker container with tools and then `nc` command would be available.
 
 You can now communicate with the Game Server :
 
@@ -165,7 +172,7 @@ ACK: Hello World !
 EXIT
 ```
 
-You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.  
+You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.
 
 If you run `kubectl describe gameserver` again - either the GameServer will be gone completely, or it will be in `Shutdown` state, on the way to being deleted.
 
