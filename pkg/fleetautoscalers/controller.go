@@ -126,7 +126,11 @@ func (c *Controller) loggerForFleetAutoscalerKey(key string) *logrus.Entry {
 }
 
 func (c *Controller) loggerForFleetAutoscaler(fas *v1alpha1.FleetAutoscaler) *logrus.Entry {
-	return c.loggerForFleetAutoscalerKey(fas.Namespace+"/"+fas.Name).WithField("fas", fas)
+	fasName := "NilFleetAutoScaler"
+	if fas != nil {
+		fasName = fas.Namespace + "/" + fas.Name
+	}
+	return c.loggerForFleetAutoscalerKey(fasName).WithField("fas", fas)
 }
 
 // validationHandler will intercept when a FleetAutoscaler is created, and

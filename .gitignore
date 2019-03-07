@@ -19,6 +19,8 @@
 !.dockerignore
 !.golangci.yml
 !.gcloudignore
+!.eslintrc.*
+!.nycrc
 *.iml
 bin
 *.o

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "agones": "../../sdks/nodejs"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}

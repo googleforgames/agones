@@ -1,0 +1,30 @@
+{
+  "author": "Google Inc.",
+  "bugs": {
+    "url": "https://github.com/GoogleCloudPlatform/agones/issues"
+  },
+  "dependencies": {
+    "google-protobuf": "3.7.0-rc.2",
+    "grpc": "1.18.0"
+  },
+  "description": "SDK for Agones",
+  "devDependencies": {
+    "eslint": "^5.14.1",
+    "jasmine": "^3.3.1",
+    "nyc": "^13.3.0"
+  },
+  "homepage": "https://agones.dev",
+  "license": "Apache-2.0",
+  "main": "src/index.js",
+  "name": "agones",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GoogleCloudPlatform/agones.git"
+  },
+  "scripts": {
+    "cover": "nyc jasmine",
+    "lint": "eslint --fix src",
+    "test": "jasmine"
+  },
+  "version": "0.8.0"
+}

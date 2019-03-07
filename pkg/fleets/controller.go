@@ -221,7 +221,11 @@ func (c *Controller) loggerForFleetKey(key string) *logrus.Entry {
 }
 
 func (c *Controller) loggerForFleet(f *v1alpha1.Fleet) *logrus.Entry {
-	return c.loggerForFleetKey(f.Namespace+"/"+f.Name).WithField("fleet", f)
+	fleetName := "NilFleet"
+	if f != nil {
+		fleetName = f.Namespace + "/" + f.Name
+	}
+	return c.loggerForFleetKey(fleetName).WithField("fleet", f)
 }
 
 // gameServerSetEventHandler enqueues the owning Fleet for this GameServerSet,
