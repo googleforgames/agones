@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	applypatch "github.com/evanphx/json-patch"
@@ -186,7 +187,7 @@ func TestControllerAllocate(t *testing.T) {
 	err := c.syncReadyGSServerCache()
 	assert.Nil(t, err)
 
-	err = c.counter.Run(stop)
+	err = c.counter.Run(0, stop)
 	assert.Nil(t, err)
 
 	gsa := v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1"},
@@ -263,7 +264,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 		err := c.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(stop)
+		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gas := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1"},
@@ -351,7 +352,7 @@ func TestControllerWithoutAllocateMutex(t *testing.T) {
 	err := c.syncReadyGSServerCache()
 	assert.Nil(t, err)
 
-	err = c.counter.Run(stop)
+	err = c.counter.Run(0, stop)
 	assert.Nil(t, err)
 
 	wg := sync.WaitGroup{}
@@ -417,7 +418,7 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		err := c.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(stop)
+		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(gsa, packedComparator)
@@ -479,7 +480,7 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		err := c.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(stop)
+		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(prefGsa, packedComparator)
@@ -544,7 +545,7 @@ func TestControllerFindPackedReadyGameServer(t *testing.T) {
 		err := c.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(stop)
+		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gs, err := c.findReadyGameServerForAllocation(gsa, packedComparator)
@@ -601,7 +602,7 @@ func TestControllerFindDistributedReadyGameServer(t *testing.T) {
 	err := c.syncReadyGSServerCache()
 	assert.Nil(t, err)
 
-	err = c.counter.Run(stop)
+	err = c.counter.Run(0, stop)
 	assert.Nil(t, err)
 
 	gs, err := c.findReadyGameServerForAllocation(gsa, distributedComparator)
@@ -808,7 +809,8 @@ func defaultFixtures(gsLen int) (*v1alpha1.Fleet, *v1alpha1.GameServerSet, []v1a
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook(http.NewServeMux())
-	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory, 1)
+	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), counter, 1, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

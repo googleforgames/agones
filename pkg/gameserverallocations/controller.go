@@ -27,6 +27,7 @@ import (
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -43,7 +44,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -61,8 +61,12 @@ var (
 
 // Controller is a the GameServerAllocation controller
 type Controller struct {
-	baseLogger                 *logrus.Entry
-	counter                    *AllocationCounter
+	baseLogger       *logrus.Entry
+	counter          *gameservers.PerNodeCounter
+	readyGameServers gameServerCacheEntry
+	// Instead of selecting the top one, controller selects a random one
+	// from the topNGameServerCount of Ready gameservers
+	topNGameServerCount        int
 	crdGetter                  v1beta1.CustomResourceDefinitionInterface
 	gameServerSynced           cache.InformerSynced
 	gameServerGetter           getterv1alpha1.GameServersGetter
@@ -73,10 +77,6 @@ type Controller struct {
 	workerqueue                *workerqueue.WorkerQueue
 	gsWorkerqueue              *workerqueue.WorkerQueue
 	recorder                   record.EventRecorder
-	readyGameServers           gameServerCacheEntry
-	// Instead of selecting the top one, controller selects a random one
-	// from the topNGameServerCount of Ready gameservers
-	topNGameServerCount int
 }
 
 // gameserver cache to keep the Ready state gameserver.
@@ -133,7 +133,7 @@ func (e *gameServerCacheEntry) Range(f func(key string, gs *v1alpha1.GameServer)
 // findComparator is a comparator function specifically for the
 // findReadyGameServerForAllocation method for determining
 // scheduling strategy
-type findComparator func(bestCount, currentCount NodeCount) bool
+type findComparator func(bestCount, currentCount gameservers.NodeCount) bool
 
 var allocationRetry = wait.Backoff{
 	Steps:    5,
@@ -145,24 +145,24 @@ var allocationRetry = wait.Backoff{
 // NewController returns a controller for a GameServerAllocation
 func NewController(wh *webhooks.WebHook,
 	health healthcheck.Handler,
+	counter *gameservers.PerNodeCounter,
+	topNGameServerCnt int,
 	kubeClient kubernetes.Interface,
-	kubeInformerFactory informers.SharedInformerFactory,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
-	topNGameServerCnt int,
 ) *Controller {
 
 	agonesInformer := agonesInformerFactory.Stable().V1alpha1()
 	c := &Controller{
-		counter:                    NewAllocationCounter(kubeInformerFactory, agonesInformerFactory),
+		counter:                    counter,
+		topNGameServerCount:        topNGameServerCnt,
 		crdGetter:                  extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		gameServerSynced:           agonesInformer.GameServers().Informer().HasSynced,
 		gameServerGetter:           agonesClient.StableV1alpha1(),
 		gameServerLister:           agonesInformer.GameServers().Lister(),
 		gameServerAllocationSynced: agonesInformer.GameServerAllocations().Informer().HasSynced,
 		gameServerAllocationGetter: agonesClient.StableV1alpha1(),
-		topNGameServerCount:        topNGameServerCnt,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueue(c.syncDelete, c.baseLogger, logfields.GameServerAllocationKey, stable.GroupName+".GameServerAllocationController")
@@ -217,13 +217,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 		return err
 	}
 
-	err = c.counter.Run(stop)
-	if err != nil {
-		return err
-	}
-
 	c.stop = stop
-
 	c.baseLogger.Info("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerAllocationSynced, c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
@@ -444,7 +438,7 @@ func (c *Controller) syncDelete(key string) error {
 // preferred selectors, as well as the passed in comparator
 func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAllocation, comparator findComparator) (*v1alpha1.GameServer, error) {
 	// track the best node count
-	var bestCount *NodeCount
+	var bestCount *gameservers.NodeCount
 	// the current GameServer from the node with the most GameServers (allocated, ready)
 	var bestGS *v1alpha1.GameServer
 

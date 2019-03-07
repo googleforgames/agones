@@ -14,12 +14,14 @@
 
 package gameserverallocations
 
+import "agones.dev/agones/pkg/gameservers"
+
 // packedComparator prioritises Nodes with GameServers that are allocated, and then Nodes with the most
 // Ready GameServers -- this will bin pack allocated game servers together.
-func packedComparator(bestCount, currentCount NodeCount) bool {
-	if currentCount.allocated == bestCount.allocated && currentCount.ready > bestCount.ready {
+func packedComparator(bestCount, currentCount gameservers.NodeCount) bool {
+	if currentCount.Allocated == bestCount.Allocated && currentCount.Ready > bestCount.Ready {
 		return true
-	} else if currentCount.allocated > bestCount.allocated {
+	} else if currentCount.Allocated > bestCount.Allocated {
 		return true
 	}
 
@@ -28,6 +30,6 @@ func packedComparator(bestCount, currentCount NodeCount) bool {
 
 // distributedComparator is the inverse of the packed comparator,
 // looking to distribute allocated gameservers on as many nodes as possible.
-func distributedComparator(bestCount, currentCount NodeCount) bool {
+func distributedComparator(bestCount, currentCount gameservers.NodeCount) bool {
 	return !packedComparator(bestCount, currentCount)
 }
