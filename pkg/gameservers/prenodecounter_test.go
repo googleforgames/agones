@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2019 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameserverallocations
+package gameservers
 
 import (
 	"testing"
-
-	"k8s.io/apimachinery/pkg/runtime"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 	"k8s.io/client-go/tools/cache"
 )
 
-func TestAllocationCounterGameServerEvents(t *testing.T) {
+const (
+	defaultNs = "default"
+	name1     = "node1"
+	name2     = "node2"
+)
+
+func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	t.Parallel()
 
-	ac, m := newFakeAllocationCounter()
+	pnc, m := newFakePerNodeCounter()
 
 	watch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
@@ -41,79 +46,79 @@ func TestAllocationCounterGameServerEvents(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	assert.Empty(t, ac.Counts())
+	assert.Empty(t, pnc.Counts())
 
 	gs := &v1alpha1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
 		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateStarting, NodeName: n1}}
+			State: v1alpha1.GameServerStateStarting, NodeName: name1}}
 
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	assert.Empty(t, ac.Counts())
+	assert.Empty(t, pnc.Counts())
 
 	gs.Status.State = v1alpha1.GameServerStateReady
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts := ac.Counts()
+	counts := pnc.Counts()
 	assert.Len(t, counts, 1)
-	assert.Equal(t, int64(1), counts[n1].ready)
-	assert.Equal(t, int64(0), counts[n1].allocated)
+	assert.Equal(t, int64(1), counts[name1].Ready)
+	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.Status.State = v1alpha1.GameServerStateAllocated
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts = ac.Counts()
+	counts = pnc.Counts()
 	assert.Len(t, counts, 1)
-	assert.Equal(t, int64(0), counts[n1].ready)
-	assert.Equal(t, int64(1), counts[n1].allocated)
+	assert.Equal(t, int64(0), counts[name1].Ready)
+	assert.Equal(t, int64(1), counts[name1].Allocated)
 
 	gs.Status.State = v1alpha1.GameServerStateShutdown
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts = ac.Counts()
+	counts = pnc.Counts()
 	assert.Len(t, counts, 1)
-	assert.Equal(t, int64(0), counts[n1].ready)
-	assert.Equal(t, int64(0), counts[n1].allocated)
+	assert.Equal(t, int64(0), counts[name1].Ready)
+	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.ObjectMeta.Name = "gs2"
 	gs.Status.State = v1alpha1.GameServerStateReady
-	gs.Status.NodeName = n2
+	gs.Status.NodeName = name2
 
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts = ac.Counts()
+	counts = pnc.Counts()
 	assert.Len(t, counts, 2)
-	assert.Equal(t, int64(0), counts[n1].ready)
-	assert.Equal(t, int64(0), counts[n1].allocated)
-	assert.Equal(t, int64(1), counts[n2].ready)
-	assert.Equal(t, int64(0), counts[n2].allocated)
+	assert.Equal(t, int64(0), counts[name1].Ready)
+	assert.Equal(t, int64(0), counts[name1].Allocated)
+	assert.Equal(t, int64(1), counts[name2].Ready)
+	assert.Equal(t, int64(0), counts[name2].Allocated)
 
 	gs.ObjectMeta.Name = "gs3"
 	// not likely, but to test the flow
 	gs.Status.State = v1alpha1.GameServerStateAllocated
-	gs.Status.NodeName = n2
+	gs.Status.NodeName = name2
 
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts = ac.Counts()
+	counts = pnc.Counts()
 	assert.Len(t, counts, 2)
-	assert.Equal(t, int64(0), counts[n1].ready)
-	assert.Equal(t, int64(0), counts[n1].allocated)
-	assert.Equal(t, int64(1), counts[n2].ready)
-	assert.Equal(t, int64(1), counts[n2].allocated)
+	assert.Equal(t, int64(0), counts[name1].Ready)
+	assert.Equal(t, int64(0), counts[name1].Allocated)
+	assert.Equal(t, int64(1), counts[name2].Ready)
+	assert.Equal(t, int64(1), counts[name2].Allocated)
 }
 
-func TestAllocationCountNodeEvents(t *testing.T) {
+func TestPerNodeCounterNodeEvents(t *testing.T) {
 	t.Parallel()
 
-	ac, m := newFakeAllocationCounter()
+	pnc, m := newFakePerNodeCounter()
 
 	gsWatch := watch.NewFake()
 	nodeWatch := watch.NewFake()
@@ -126,32 +131,32 @@ func TestAllocationCountNodeEvents(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	assert.Empty(t, ac.Counts())
+	assert.Empty(t, pnc.Counts())
 
 	gs := &v1alpha1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
 		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady, NodeName: n1}}
-	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs, Name: n1}}
+			State: v1alpha1.GameServerStateReady, NodeName: name1}}
+	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs, Name: name1}}
 
 	gsWatch.Add(gs.DeepCopy())
 	nodeWatch.Add(node.DeepCopy())
 	cache.WaitForCacheSync(stop, gsSynced, nodeSynced)
-	assert.Len(t, ac.Counts(), 1)
+	assert.Len(t, pnc.Counts(), 1)
 
 	nodeWatch.Delete(node.DeepCopy())
 	cache.WaitForCacheSync(stop, nodeSynced)
-	assert.Empty(t, ac.Counts())
+	assert.Empty(t, pnc.Counts())
 }
 
-func TestAllocationCounterRun(t *testing.T) {
+func TestPerNodeCounterRun(t *testing.T) {
 	t.Parallel()
-	ac, m := newFakeAllocationCounter()
+	pnc, m := newFakePerNodeCounter()
 
 	gs1 := &v1alpha1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
 		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady, NodeName: n1}}
+			State: v1alpha1.GameServerStateReady, NodeName: name1}}
 
 	gs2 := gs1.DeepCopy()
 	gs2.ObjectMeta.Name = "gs2"
@@ -160,7 +165,7 @@ func TestAllocationCounterRun(t *testing.T) {
 	gs3 := gs1.DeepCopy()
 	gs3.ObjectMeta.Name = "gs3"
 	gs3.Status.State = v1alpha1.GameServerStateStarting
-	gs3.Status.NodeName = n2
+	gs3.Status.NodeName = name2
 
 	gs4 := gs1.DeepCopy()
 	gs4.ObjectMeta.Name = "gs4"
@@ -173,21 +178,21 @@ func TestAllocationCounterRun(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	err := ac.Run(stop)
+	err := pnc.Run(0, stop)
 	assert.Nil(t, err)
 
-	counts := ac.Counts()
+	counts := pnc.Counts()
 
 	assert.Len(t, counts, 2)
-	assert.Equal(t, int64(1), counts[n1].ready)
-	assert.Equal(t, int64(2), counts[n1].allocated)
-	assert.Equal(t, int64(0), counts[n2].ready)
-	assert.Equal(t, int64(0), counts[n2].allocated)
+	assert.Equal(t, int64(1), counts[name1].Ready)
+	assert.Equal(t, int64(2), counts[name1].Allocated)
+	assert.Equal(t, int64(0), counts[name2].Ready)
+	assert.Equal(t, int64(0), counts[name2].Allocated)
 }
 
 // newFakeController returns a controller, backed by the fake Clientset
-func newFakeAllocationCounter() (*AllocationCounter, agtesting.Mocks) {
+func newFakePerNodeCounter() (*PerNodeCounter, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	c := NewAllocationCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	c := NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	return c, m
 }

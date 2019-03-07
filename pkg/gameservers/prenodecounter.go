@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gameserverallocations
+package gameservers
 
 import (
 	"sync"
@@ -29,11 +29,11 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// AllocationCounter counts how many Allocated and
+// PerNodeCounter counts how many Allocated and
 // Ready GameServers currently exist on each node.
-// This is useful for scheduling allocations on the
-// right Nodes.
-type AllocationCounter struct {
+// This is useful for scheduling allocations, fleet management
+// mostly under a Packed strategy
+type PerNodeCounter struct {
 	logger           *logrus.Entry
 	gameServerSynced cache.InformerSynced
 	gameServerLister listerv1alpha1.GameServerLister
@@ -44,19 +44,21 @@ type AllocationCounter struct {
 // NodeCount is just a convenience data structure for
 // keeping relevant GameServer counts about Nodes
 type NodeCount struct {
-	ready     int64
-	allocated int64
+	// Ready is ready count
+	Ready int64
+	// Allocated is allocated out
+	Allocated int64
 }
 
-// NewAllocationCounter returns a new AllocationCounter
-func NewAllocationCounter(
+// NewPerNodeCounter returns a new PerNodeCounter
+func NewPerNodeCounter(
 	kubeInformerFactory informers.SharedInformerFactory,
-	agonesInformerFactory externalversions.SharedInformerFactory) *AllocationCounter {
+	agonesInformerFactory externalversions.SharedInformerFactory) *PerNodeCounter {
 
 	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServers.Informer()
 
-	ac := &AllocationCounter{
+	ac := &PerNodeCounter{
 		gameServerSynced: gsInformer.HasSynced,
 		gameServerLister: gameServers.Lister(),
 		countMutex:       sync.RWMutex{},
@@ -131,17 +133,18 @@ func NewAllocationCounter(
 }
 
 // Run sets up the current state GameServer counts across nodes
-func (ac *AllocationCounter) Run(stop <-chan struct{}) error {
-	ac.countMutex.Lock()
-	defer ac.countMutex.Unlock()
+// non blocking Run function.
+func (pnc *PerNodeCounter) Run(_ int, stop <-chan struct{}) error {
+	pnc.countMutex.Lock()
+	defer pnc.countMutex.Unlock()
 
-	ac.logger.Info("Running")
+	pnc.logger.Info("Running")
 
-	if !cache.WaitForCacheSync(stop, ac.gameServerSynced) {
+	if !cache.WaitForCacheSync(stop, pnc.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	gsList, err := ac.gameServerLister.List(labels.Everything())
+	gsList, err := pnc.gameServerLister.List(labels.Everything())
 	if err != nil {
 		return errors.Wrap(err, "error attempting to list all GameServers")
 	}
@@ -155,49 +158,49 @@ func (ac *AllocationCounter) Run(stop <-chan struct{}) error {
 
 		switch gs.Status.State {
 		case v1alpha1.GameServerStateReady:
-			counts[gs.Status.NodeName].ready++
+			counts[gs.Status.NodeName].Ready++
 		case v1alpha1.GameServerStateAllocated:
-			counts[gs.Status.NodeName].allocated++
+			counts[gs.Status.NodeName].Allocated++
 		}
 	}
 
-	ac.counts = counts
+	pnc.counts = counts
 	return nil
 }
 
 // Counts returns the NodeCount map in a thread safe way
-func (ac *AllocationCounter) Counts() map[string]NodeCount {
-	ac.countMutex.RLock()
-	defer ac.countMutex.RUnlock()
+func (pnc *PerNodeCounter) Counts() map[string]NodeCount {
+	pnc.countMutex.RLock()
+	defer pnc.countMutex.RUnlock()
 
-	result := make(map[string]NodeCount, len(ac.counts))
+	result := make(map[string]NodeCount, len(pnc.counts))
 
 	// return a copy, so it's thread safe
-	for k, v := range ac.counts {
+	for k, v := range pnc.counts {
 		result[k] = *v
 	}
 
 	return result
 }
 
-func (ac *AllocationCounter) inc(gs *v1alpha1.GameServer, ready, allocated int64) {
-	ac.countMutex.Lock()
-	defer ac.countMutex.Unlock()
+func (pnc *PerNodeCounter) inc(gs *v1alpha1.GameServer, ready, allocated int64) {
+	pnc.countMutex.Lock()
+	defer pnc.countMutex.Unlock()
 
-	_, ok := ac.counts[gs.Status.NodeName]
+	_, ok := pnc.counts[gs.Status.NodeName]
 	if !ok {
-		ac.counts[gs.Status.NodeName] = &NodeCount{}
+		pnc.counts[gs.Status.NodeName] = &NodeCount{}
 	}
 
-	ac.counts[gs.Status.NodeName].allocated += allocated
-	ac.counts[gs.Status.NodeName].ready += ready
+	pnc.counts[gs.Status.NodeName].Allocated += allocated
+	pnc.counts[gs.Status.NodeName].Ready += ready
 
 	// just in case
-	if ac.counts[gs.Status.NodeName].allocated < 0 {
-		ac.counts[gs.Status.NodeName].allocated = 0
+	if pnc.counts[gs.Status.NodeName].Allocated < 0 {
+		pnc.counts[gs.Status.NodeName].Allocated = 0
 	}
 
-	if ac.counts[gs.Status.NodeName].ready < 0 {
-		ac.counts[gs.Status.NodeName].ready = 0
+	if pnc.counts[gs.Status.NodeName].Ready < 0 {
+		pnc.counts[gs.Status.NodeName].Ready = 0
 	}
 }

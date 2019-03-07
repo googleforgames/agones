@@ -184,6 +184,8 @@ func main() {
 
 	allocationMutex := &sync.Mutex{}
 
+	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+
 	gsController := gameservers.NewController(wh, health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
 		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
@@ -193,13 +195,13 @@ func main() {
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(wh, health, kubeClient,
-		kubeInformerFactory, extClient, agonesClient, agonesInformerFactory, topNGSForAllocation)
+	gasController := gameserverallocations.NewController(wh, health, gsCounter, topNGSForAllocation,
+		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
+		httpsServer, gsCounter, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
 
 	stop := signals.NewStopChannel()
 
