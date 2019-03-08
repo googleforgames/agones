@@ -15,7 +15,6 @@
 package e2e
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -48,8 +47,7 @@ func TestCreateConnect(t *testing.T) {
 	assert.NotEmpty(t, readyGs.Status.NodeName)
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 
-	reply, err := e2eframework.PingGameServer("Hello World !", fmt.Sprintf("%s:%d", readyGs.Status.Address,
-		readyGs.Status.Ports[0].Port))
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "Hello World !")
 
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)
@@ -68,8 +66,7 @@ func TestSDKSetLabel(t *testing.T) {
 	}
 
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
-	reply, err := e2eframework.PingGameServer("LABEL", fmt.Sprintf("%s:%d", readyGs.Status.Address,
-		readyGs.Status.Ports[0].Port))
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "LABEL")
 
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)
@@ -105,8 +102,7 @@ func TestHealthCheckDisable(t *testing.T) {
 	}
 	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
-	_, err = e2eframework.PingGameServer("UNHEALTHY", fmt.Sprintf("%s:%d", readyGs.Status.Address,
-		readyGs.Status.Ports[0].Port))
+	_, err = e2eframework.SendGameServerUDP(readyGs, "UNHEALTHY")
 
 	if err != nil {
 		t.Fatalf("Could not ping GameServer: %v", err)
@@ -134,8 +130,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
-	reply, err := e2eframework.PingGameServer("ANNOTATION", fmt.Sprintf("%s:%d", readyGs.Status.Address,
-		readyGs.Status.Ports[0].Port))
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "ANNOTATION")
 
 	if err != nil {
 		t.Fatalf("Could ping GameServer: %v", err)

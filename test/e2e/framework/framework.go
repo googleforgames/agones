@@ -259,8 +259,16 @@ func (f *Framework) CleanUp(ns string) error {
 		DeleteCollection(deleteOptions, listOptions)
 }
 
-// PingGameServer pings a gameserver and returns its reply
-func PingGameServer(msg, address string) (reply string, err error) {
+// SendGameServerUDP sends a message to a gameserver and returns its reply
+// assumes the first port is the port to send the message to
+func SendGameServerUDP(gs *v1alpha1.GameServer, msg string) (string, error) {
+	address := fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port)
+	return SendUDP(address, msg)
+}
+
+// SendUDP sends a message to an address, and returns its reply if
+// it returns one in 30 seconds
+func SendUDP(address, msg string) (string, error) {
 	conn, err := net.Dial("udp", address)
 	if err != nil {
 		return "", err
