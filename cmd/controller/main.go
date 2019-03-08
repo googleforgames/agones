@@ -34,6 +34,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -136,7 +137,9 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	wh := webhooks.NewWebHook(ctlConf.CertFile, ctlConf.KeyFile)
+	// https server and the items that share the Mux for routing
+	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
+	wh := webhooks.NewWebHook(httpsServer.Mux)
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
@@ -196,7 +199,7 @@ func main() {
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		wh, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
+		httpsServer, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
 
 	stop := signals.NewStopChannel()
 
