@@ -26,19 +26,10 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// Server is a http server interface to enable easier testing
-type Server interface {
-	Close() error
-	ListenAndServeTLS(certFile, keyFile string) error
-}
-
 // WebHook manage Kubernetes webhooks
 type WebHook struct {
 	logger   *logrus.Entry
 	mux      *http.ServeMux
-	server   Server
-	certFile string
-	keyFile  string
 	handlers map[string][]operationHandler
 }
 
@@ -54,42 +45,14 @@ type operationHandler struct {
 type Handler func(review v1beta1.AdmissionReview) (v1beta1.AdmissionReview, error)
 
 // NewWebHook returns a Kubernetes webhook manager
-func NewWebHook(certFile, keyFile string) *WebHook {
-	mux := http.NewServeMux()
-	server := http.Server{
-		Addr:    ":8081",
-		Handler: mux,
-	}
-
+func NewWebHook(mux *http.ServeMux) *WebHook {
 	wh := &WebHook{
 		mux:      mux,
-		server:   &server,
-		certFile: certFile,
-		keyFile:  keyFile,
 		handlers: map[string][]operationHandler{},
 	}
+
 	wh.logger = runtime.NewLoggerWithType(wh)
-
 	return wh
-}
-
-// Run runs the webhook server, starting a https listener.
-// Will block on stop channel
-func (wh *WebHook) Run(workers int, stop <-chan struct{}) error {
-	go func() {
-		<-stop
-		wh.server.Close() // nolint: errcheck,gosec
-	}()
-
-	wh.logger.WithField("webook", wh).Infof("https server started")
-
-	err := wh.server.ListenAndServeTLS(wh.certFile, wh.keyFile)
-	if err == http.ErrServerClosed {
-		wh.logger.WithError(err).Info("https server closed")
-		return nil
-	}
-
-	return errors.Wrap(err, "Could not listen on :8081")
 }
 
 // AddHandler adds a handler for a given path, group and kind, and operation
