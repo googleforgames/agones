@@ -16,6 +16,7 @@ package gameserversets
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"testing"
 	"time"
@@ -571,7 +572,7 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook("", "")
+	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
