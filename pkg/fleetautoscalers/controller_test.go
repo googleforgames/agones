@@ -17,6 +17,7 @@ package fleetautoscalers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -503,7 +504,7 @@ func defaultWebhookFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
-	wh := webhooks.NewWebHook("", "")
+	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m

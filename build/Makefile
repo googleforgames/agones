@@ -302,7 +302,7 @@ push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gamesever sidecar
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin 
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
@@ -404,6 +404,7 @@ clean-build-image:
 
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
+	-mkdir -p $(build_path)/.gocache
 	-mkdir -p $(build_path)/.config/gcloud
 	-mkdir -p $(helm_path)
 
