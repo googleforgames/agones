@@ -84,7 +84,7 @@ func TestPingUDP(t *testing.T) {
 	assert.Nil(t, err)
 
 	expected := "hello"
-	reply, err := e2eframework.PingGameServer(expected, fmt.Sprintf("%s:%d", externalIP, p))
+	reply, err := e2eframework.SendUDP(fmt.Sprintf("%s:%d", externalIP, p), expected)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, reply)
 }
