@@ -352,7 +352,7 @@ The second step is to prepare your cluster for the Agones deployments. Run `make
 
 Now you're ready to begin the development/test cycle:
 - `make build` will build Agones
-- `make test` will run local tests
+- `make test` will run local tests, which includes `site-test` target
 - `make push` will push the Agones images to your image repository 
 - `make test-e2e` will run end-to-end tests in your cluster
 - `make install` will install/upgrade Agones into your cluster
@@ -411,6 +411,18 @@ Build the cpp sdk static and dynamic libraries (linux libraries only)
 
 #### `make test`
 Run the linter and tests
+
+#### `make site-server`
+Generate `https://agones.dev` website locally and host on `http://localhost:1313`
+
+#### `make site-test`
+Check the links in website
+
+#### `make gen-api-docs`
+Generate Agones CRD reference documentation [Agones CRD API reference](../site/content/en/docs/Reference/agones_crd_api_reference.html). Set `feature` shortcode with proper version automatically
+
+#### `make test-gen-api-docs`
+Verifies that there is no changes in generated [Agones CRD API reference](../site/content/en/docs/Reference/agones_crd_api_reference.html) compared to the current one (useful for CI)
 
 #### `make push`
 Pushes all built images up to the `$(REGISTRY)`
