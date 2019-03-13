@@ -264,7 +264,7 @@ We can install Agones to the cluster using the
 
 ```bash
 kubectl create namespace agones-system
-kubectl apply -f https://github.com/GoogleCloudPlatform/agones/raw/release-0.7.0/install/yaml/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/install/yaml/install.yaml
 ```
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
