@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.8.1](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.1) (2019-03-14)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.0...v0.8.1)
+
+**Fixed bugs:**
+
+- SDK Service Account was Hardcoded [\#629](https://github.com/GoogleCloudPlatform/agones/pull/629) ([markmandel](https://github.com/markmandel))
+
+**Merged pull requests:**
+
+- Tarballing source into the images for dependencies that are required by their licenses. [\#634](https://github.com/GoogleCloudPlatform/agones/pull/634) ([bbf](https://github.com/bbf))
+- 2 Hotfixes: Allow Helm to reference image digests and inject licenses [\#631](https://github.com/GoogleCloudPlatform/agones/pull/631) ([bbf](https://github.com/bbf))
+- \[Hotfix\] Prep work for hotfix 0.8.1 [\#628](https://github.com/GoogleCloudPlatform/agones/pull/628) ([markmandel](https://github.com/markmandel))
+
 ## [v0.8.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.0) (2019-02-20)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.0-rc...v0.8.0)
@@ -22,6 +36,7 @@
 
 **Merged pull requests:**
 
+- Release 0.8.0 [\#605](https://github.com/GoogleCloudPlatform/agones/pull/605) ([markmandel](https://github.com/markmandel))
 - Remove deprecation from FleetAllocation [\#603](https://github.com/GoogleCloudPlatform/agones/pull/603) ([markmandel](https://github.com/markmandel))
 - Remove -v from Go testing - becomes too noisy [\#595](https://github.com/GoogleCloudPlatform/agones/pull/595) ([markmandel](https://github.com/markmandel))
 - Minor tweaks to release process. [\#592](https://github.com/GoogleCloudPlatform/agones/pull/592) ([markmandel](https://github.com/markmandel))
@@ -80,6 +95,7 @@
 **Closed issues:**
 
 - Grafana: add graph of nodes in cluster [\#547](https://github.com/GoogleCloudPlatform/agones/issues/547)
+- Replace global allocation mutex with fine-grained concurrency controls. [\#535](https://github.com/GoogleCloudPlatform/agones/issues/535)
 - Approver access for @jkowalski [\#526](https://github.com/GoogleCloudPlatform/agones/issues/526)
 - Docker images layers not optimal [\#481](https://github.com/GoogleCloudPlatform/agones/issues/481)
 - Release 0.7.0 [\#477](https://github.com/GoogleCloudPlatform/agones/issues/477)
