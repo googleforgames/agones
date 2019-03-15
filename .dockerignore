@@ -21,6 +21,7 @@ bin
 /docs
 *.md
 *.amd64
+/site/public
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
