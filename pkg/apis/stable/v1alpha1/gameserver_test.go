@@ -416,7 +416,7 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
 
-	gs.disableServiceAccount(pod)
+	gs.DisableServiceAccount(pod)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
 	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)

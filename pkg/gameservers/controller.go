@@ -528,9 +528,12 @@ func (c *Controller) createGameServerPod(gs *v1alpha1.GameServer) (*v1alpha1.Gam
 		return gs, err
 	}
 
-	// apply the sdk service account
+	// if the service account is not set, then you are in the "opinionated"
+	// mode. If the user sets the service account, we assume they know what they are
+	// doing, and don't disable the gameserver container.
 	if pod.Spec.ServiceAccountName == "" {
 		pod.Spec.ServiceAccountName = c.sdkServiceAccount
+		gs.DisableServiceAccount(pod)
 	}
 
 	c.addGameServerHealthCheck(gs, pod)
