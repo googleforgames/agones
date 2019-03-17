@@ -48,8 +48,9 @@ RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rust
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.11.5
+ENV GO_VERSION=1.12
 ENV GOPATH /go
+ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
 
@@ -89,19 +90,15 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 #   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |
 #   |___/                                               |___/
 
-# install go-proto-gen 1.1
-RUN mkdir -p /go/src/github.com/golang && cd /go/src/github.com/golang && \
-    git clone https://github.com/golang/protobuf.git &&  \
-    cd protobuf && git checkout v1.2.0 && \
-    go install github.com/golang/protobuf/protoc-gen-go
+# install protoc-gen-go 1.2.0
+RUN go get github.com/golang/protobuf/protoc-gen-go@v1.2.0
 
 # install rust tooling for SDK generation
 RUN cargo install protobuf-codegen --vers 2.0.2
 RUN cargo install grpcio-compiler --vers 0.3.0
 
 # install go tooling for development, building and testing
-RUN go get -u github.com/golang/dep/cmd/dep && \
-    go get -u golang.org/x/tools/cmd/goimports
+RUN go get -u golang.org/x/tools/cmd/goimports
 
 # install golang-ci linter
 RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.15.0
@@ -141,5 +138,3 @@ RUN echo "export EDITOR=nano" >> /root/.bashrc
 # code generation scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
-
-WORKDIR /go
