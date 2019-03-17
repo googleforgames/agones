@@ -17,6 +17,7 @@
 googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
 
 cd /go/src/agones.dev/agones
+
 protoc \
     -I ${googleapis} -I . sdk.proto \
     --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \

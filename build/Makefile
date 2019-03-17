@@ -76,6 +76,8 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(kubeconfig_path):/root/.kube \
 				-v $(helm_path):/root/.helm \
 				-v $(agones_path):$(mount_path)
+# Its possible for this to change in the future, so it gets its own variable.
+workdir_path = $(mount_path)
 
 build_tag = agones-build:$(build_version)
 build_remote_tag = $(REGISTRY)/$(build_tag)
@@ -83,8 +85,10 @@ controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 
+gomod_on = GO111MODULE=on
+
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
-DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag)
+DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
 
 
 ifdef DOCKER_RUN
@@ -106,9 +110,10 @@ ifndef FULL_BUILD
 	zip_flags = -0
 endif
 
-GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" $(common_mounts) $(build_tag) go build
-GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
-GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" $(common_mounts) $(build_tag) go build
+go_build_cmd = go build -mod=vendor
+GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
 RACE_DETECTOR_ARGS=-race
 
@@ -116,7 +121,8 @@ ifdef NO_RACE_DETECTOR
   RACE_DETECTOR_ARGS=
 endif
 
-GO_TEST=$(DOCKER_RUN) go test $(RACE_DETECTOR_ARGS)
+go_test_cmd = go test -mod=vendor $(RACE_DETECTOR_ARGS)
+GO_TEST=$(DOCKER_RUN) $(go_test_cmd)
 GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
 
 PERF_OUTPUT_DIR=$(mount_path)/build/.perf
@@ -126,16 +132,16 @@ go_build_base_path=$(mount_path)
 ifdef LOCAL_GO
 	# use local Go tooling, which greatly speeds up incremental rebuils, in particular on macOS
 	# Note that agones.dev must be in GOPATH
-	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
-	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 go build
-	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 go build
-	GO_TEST=go test -v $(RACE_DETECTOR_ARGS)
+	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(gomod_on) $(go_build_cmd)
+	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 $(gomod_on) $(go_build_cmd)
+	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 $(gomod_on) $(go_build_cmd)
+	GO_TEST=$(go_test_cmd) -v
 	GO_E2E_TEST_ARGS=
 	PERF_OUTPUT_DIR=$(build_path)/.perf
 	go_build_base_path=$(agones_path)
 endif
 
-ZIP_SDK=docker run --rm $(common_mounts) -w $(mount_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
+ZIP_SDK=docker run --rm $(common_mounts) -w $(workdir_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
 ifdef LOCAL_ZIP
 	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
 endif
@@ -192,13 +198,13 @@ build-images: build-controller-image build-agones-sdk-image build-ping-image
 build-chart: RELEASE_VERSION ?= $(base_version)
 build-chart: CHART_DIR ?= install/helm/agones/
 build-chart: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) bash -c \
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
 			helm init --client-only && helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
 
 # push the current chart to google cloud storage and update the index
 push-chart: $(ensure-build-image) build-chart
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) bash -c \
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
 		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
 		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
@@ -227,7 +233,7 @@ test-go:
 
 # Run Node.js SDK tests
 test-nodejs:
-	docker run --rm $(common_mounts) -w $(mount_path)/sdks/nodejs $(build_tag) npm install-test
+	docker run --rm $(common_mounts) -w $(workdir_path)/sdks/nodejs $(build_tag) npm install-test
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
@@ -290,7 +296,7 @@ build-controller-binary: $(ensure-build-image)
 # use LINT_TIMEOUT to manipulate the linter timeout
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
-	docker run -t -e "TERM=xterm-256color" --rm $(common_mounts) -w $(mount_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
 
 # Build the image for the gameserver controller
@@ -341,7 +347,7 @@ build-ping-image: $(ensure-build-image) build-ping-binary
 
 # Build the cpp sdk linux archive
 build-sdk-cpp: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make build install archive VERSION=$(VERSION)
+	docker run --rm $(common_mounts) -w $(workdir_path)/sdks/cpp $(build_tag) make build install archive VERSION=$(VERSION)
 
 # push the gameservers sidecar image
 push-agones-sdk-image: $(ensure-build-image)
@@ -357,15 +363,15 @@ gen-install: $(ensure-build-image)
 
 # Generate the SDK gRPC server and client code
 gen-gameservers-sdk-grpc: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-go.sh
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-cpp.sh
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-rust.sh
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-grpc-nodejs.sh
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-go.sh
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-cpp.sh
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-rust.sh
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-nodejs.sh
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(mount_path) $(build_tag) /root/gen-crd-client.sh
-	docker run --rm $(common_mounts) -w $(mount_path)/pkg $(build_tag) goimports -w .
+	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-crd-client.sh
+	docker run --rm $(common_mounts) -w $(workdir_path)/pkg $(build_tag) goimports -w .
 
 site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 
@@ -384,7 +390,7 @@ site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)
 shell: $(ensure-build-image)
 	docker run -it --rm \
 		$(common_mounts) \
-		-w $(mount_path) \
+		-w $(workdir_path) \
 		-e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" \
 		$(DOCKER_RUN_ARGS) \
 		$(build_tag) bash -l

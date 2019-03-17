@@ -46,7 +46,7 @@
         "parameters": [
           {
             "name": "body",
-            "description": "(streaming inputs)",
+            "description": " (streaming inputs)",
             "in": "body",
             "required": true,
             "schema": {
