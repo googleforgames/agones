@@ -47,7 +47,7 @@ Once this is done, you can `kubectl delete gs --all` and clean everything up (if
 
 Some troubleshooting steps:
 
-1. Run `kubectl describe clusterrolebinding cluster-admin-binding` and make sure your email is in there. This may be
+1. Run `kubectl describe clusterrolebinding | grep cluster-admin-binding- -A10` and make sure your email is in there. This may be
 _case sensitive_ so you may need to compare it to the case you used.
 1. In the [GKE tutorial]({{< ref "/docs/Installation#enabling-creation-of-rbac-resources" >}}) `gcloud config get-value accounts` 
 will return a lowercase email address, so if you are using a CamelCase email, you may want to type that in manually.

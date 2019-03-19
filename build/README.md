@@ -692,7 +692,7 @@ If you get this error when building Agones in WSL (`make build`, `make test` or 
 
 #### Error: cluster-admin-binding already exists
 
-This surfaces while running `make gcloud-auth-cluster`. The solution is to run `kubectl delete clusterrolebinding cluster-admin-binding` then run `make gcloud-auth-cluster` again. If you run into a permission denied error when attempting the delete operation, you need to run `sudo chown <your username> <path to .kube/config>` to change ownership of the file to yourself.
+This surfaces while running `make gcloud-auth-cluster`. The solution is to run `kubectl describe clusterrolebinding | grep cluster-admin-binding- -A10`, find clusterrolebinding which belongs to your `User` account and then run `kubectl delete clusterrolebindings cluster-admin-binding-<md5Hash>` where `<md5Hash>` is a value specific to your account. Now you can execute `make gcloud-auth-cluster` again. If you run into a permission denied error when attempting the delete operation, you need to run `sudo chown <your username> <path to .kube/config>` to change ownership of the file to yourself.
 
 #### Error: releases do not exist
 
