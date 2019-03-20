@@ -16,6 +16,8 @@
 
 set -x
 
+export GO111MODULE=on
+
 mkdir -p /go/src/
 cp -r /go/src/agones.dev/agones/vendor/* /go/src/
 

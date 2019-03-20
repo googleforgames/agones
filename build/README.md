@@ -89,8 +89,10 @@ Table of Contents
         * [make clean-custom-test-cluster](#make-clean-custom-test-cluster)
   * [Dependencies](#dependencies)
   * [Troubleshooting](#troubleshooting)
-        * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
-        * [I want to use pprof to profile the controller.](#i-want-to-use-pprof-to-profile-the-controller)
+      * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
+      * [Error: cluster-admin-binding already exists](#error-cluster-admin-binding-already-exists)
+      * [Error: releases do not exist](#error-releases-do-not-exist)
+      * [I want to use pprof to profile the controller](#i-want-to-use-pprof-to-profile-the-controller)
 
 ## Building on Different Platforms
 
@@ -237,6 +239,8 @@ run `make install` and Agones will install the image that you just built and pus
 created at the beginning of this section. (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`)
 
 Finally to run end-to-end tests against your development version previously installed in your test cluster run `make test-e2e`, this will validate the whole application flow (from start to finish). If you're curious about how they work head to [tests/e2e](../test/e2e/)
+
+When your are finished, you can run `make clean-gcloud-e2e-test-cluster` to tear down your cluster.
 
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
@@ -646,7 +650,29 @@ Cleans up your custom cluster by reseting Helm.
 
 ## Dependencies
 
-This project uses the [dep](https://github.com/golang/dep) as a dependency manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/Gopkg.toml).
+This project uses the [go modules](https://github.com/golang/go/wiki/Modules) as its manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/go.mod).
+
+#### Vendoring
+
+Agones uses [module vendoring](https://tip.golang.org/cmd/go/#hdr-Modules_and_vendoring) to reliably produce versioned builds with consistent behavior.
+
+Adding a new dependency to Agones:
+
+*  `go mod tidy` This will import your new deps into the go.mod file and trim out any removed dependencies.
+*  `go mod vendor` Pulls module code into the vendor directory.
+
+Sometimes the code added to vendor may not include a subdirectory that houses code being used but not as an import
+(protos passed as args to scripts is a good example). In this case you can go into the module cache and copy what you need to the path in vendor. 
+
+Here is an example for getting third_party from grpc-ecosystem/grpc-gateway v1.5.1 into vendor:
+
+*  AGONES_PATH=/wherever/your/agones/path/is
+*  cp -R $GOPATH/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@v1.5.1/third_party $AGONES_PATH/vendor/github.com/grpc-ecosystem/grpc-gateway/
+
+Note the version in the pathname. Go may eliminate the need to do this in future versions.
+
+We also use vendor to hold code patches while waiting for the project to release the fixes in their own code. An example is in [k8s.io/apimachinery](https://github.com/GoogleCloudPlatform/agones/issues/414) where a fix will be released later this year, but we updated our own vendored version in order to fix the issue sooner.
+
 
 ## Troubleshooting
 
@@ -663,6 +689,14 @@ If you get this error when building Agones in WSL (`make build`, `make test` or 
 
 - Are your project files on a different folder than C? If yes, then you should either move them on drive C or set up Docker for Windows to share your project drive as well
 - Did you set up the volume mount for Docker correctly? By default, drive C is mapped by WSL as /mnt/c, but Docker expects it as /c. You can test by executing `ls /c` in your linux shell. If you get an error, then follow the instructions for [setting up volume mount for Docker](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly#ensure-volume-mounts-work)
+
+#### Error: cluster-admin-binding already exists
+
+This surfaces while running `make gcloud-auth-cluster`. The solution is to run `kubectl delete clusterrolebinding cluster-admin-binding` then run `make gcloud-auth-cluster` again. If you run into a permission denied error when attempting the delete operation, you need to run `sudo chown <your username> <path to .kube/config>` to change ownership of the file to yourself.
+
+#### Error: releases do not exist
+
+Run `make uninstall` then run `make install` again.
 
 #### I want to use pprof to profile the controller.
 
