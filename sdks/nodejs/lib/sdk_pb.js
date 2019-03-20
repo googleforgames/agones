@@ -16,6 +16,8 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
@@ -76,6 +78,7 @@ proto.stable.agones.dev.sdk.Empty.prototype.toObject = function(opt_includeInsta
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.Empty} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.Empty.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -126,43 +129,25 @@ proto.stable.agones.dev.sdk.Empty.deserializeBinaryFromReader = function(msg, re
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.Empty} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.Empty.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.Empty.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.Empty.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.Empty} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.Empty.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.Empty.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-};
-
-
-/**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.Empty} The clone.
- */
-proto.stable.agones.dev.sdk.Empty.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.Empty} */ (jspb.Message.cloneMessage(this));
 };
 
 
@@ -209,11 +194,12 @@ proto.stable.agones.dev.sdk.KeyValue.prototype.toObject = function(opt_includeIn
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.KeyValue} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.KeyValue.toObject = function(includeInstance, msg) {
   var f, obj = {
-    key: msg.getKey(),
-    value: msg.getValue()
+    key: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    value: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -268,42 +254,33 @@ proto.stable.agones.dev.sdk.KeyValue.deserializeBinaryFromReader = function(msg,
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.KeyValue} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.KeyValue.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.KeyValue.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.KeyValue.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.KeyValue} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.KeyValue.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.KeyValue.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getKey();
+  f = message.getKey();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = this.getValue();
+  f = message.getValue();
   if (f.length > 0) {
     writer.writeString(
       2,
@@ -314,26 +291,17 @@ proto.stable.agones.dev.sdk.KeyValue.prototype.serializeBinaryToWriter = functio
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.KeyValue} The clone.
- */
-proto.stable.agones.dev.sdk.KeyValue.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.KeyValue} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * optional string key = 1;
  * @return {string}
  */
 proto.stable.agones.dev.sdk.KeyValue.prototype.getKey = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.KeyValue.prototype.setKey = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -342,13 +310,13 @@ proto.stable.agones.dev.sdk.KeyValue.prototype.setKey = function(value) {
  * @return {string}
  */
 proto.stable.agones.dev.sdk.KeyValue.prototype.getValue = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.KeyValue.prototype.setValue = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -395,6 +363,7 @@ proto.stable.agones.dev.sdk.GameServer.prototype.toObject = function(opt_include
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -462,35 +431,26 @@ proto.stable.agones.dev.sdk.GameServer.deserializeBinaryFromReader = function(ms
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getObjectMeta();
+  f = message.getObjectMeta();
   if (f != null) {
     writer.writeMessage(
       1,
@@ -498,7 +458,7 @@ proto.stable.agones.dev.sdk.GameServer.prototype.serializeBinaryToWriter = funct
       proto.stable.agones.dev.sdk.GameServer.ObjectMeta.serializeBinaryToWriter
     );
   }
-  f = this.getSpec();
+  f = message.getSpec();
   if (f != null) {
     writer.writeMessage(
       2,
@@ -506,7 +466,7 @@ proto.stable.agones.dev.sdk.GameServer.prototype.serializeBinaryToWriter = funct
       proto.stable.agones.dev.sdk.GameServer.Spec.serializeBinaryToWriter
     );
   }
-  f = this.getStatus();
+  f = message.getStatus();
   if (f != null) {
     writer.writeMessage(
       3,
@@ -514,105 +474,6 @@ proto.stable.agones.dev.sdk.GameServer.prototype.serializeBinaryToWriter = funct
       proto.stable.agones.dev.sdk.GameServer.Status.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
- * optional ObjectMeta object_meta = 1;
- * @return {proto.stable.agones.dev.sdk.GameServer.ObjectMeta}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.getObjectMeta = function() {
-  return /** @type{proto.stable.agones.dev.sdk.GameServer.ObjectMeta} */ (
-    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.ObjectMeta, 1));
-};
-
-
-/** @param {proto.stable.agones.dev.sdk.GameServer.ObjectMeta|undefined} value  */
-proto.stable.agones.dev.sdk.GameServer.prototype.setObjectMeta = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.stable.agones.dev.sdk.GameServer.prototype.clearObjectMeta = function() {
-  this.setObjectMeta(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.hasObjectMeta = function() {
-  return jspb.Message.getField(this, 1) != null;
-};
-
-
-/**
- * optional Spec spec = 2;
- * @return {proto.stable.agones.dev.sdk.GameServer.Spec}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.getSpec = function() {
-  return /** @type{proto.stable.agones.dev.sdk.GameServer.Spec} */ (
-    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Spec, 2));
-};
-
-
-/** @param {proto.stable.agones.dev.sdk.GameServer.Spec|undefined} value  */
-proto.stable.agones.dev.sdk.GameServer.prototype.setSpec = function(value) {
-  jspb.Message.setWrapperField(this, 2, value);
-};
-
-
-proto.stable.agones.dev.sdk.GameServer.prototype.clearSpec = function() {
-  this.setSpec(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.hasSpec = function() {
-  return jspb.Message.getField(this, 2) != null;
-};
-
-
-/**
- * optional Status status = 3;
- * @return {proto.stable.agones.dev.sdk.GameServer.Status}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.getStatus = function() {
-  return /** @type{proto.stable.agones.dev.sdk.GameServer.Status} */ (
-    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Status, 3));
-};
-
-
-/** @param {proto.stable.agones.dev.sdk.GameServer.Status|undefined} value  */
-proto.stable.agones.dev.sdk.GameServer.prototype.setStatus = function(value) {
-  jspb.Message.setWrapperField(this, 3, value);
-};
-
-
-proto.stable.agones.dev.sdk.GameServer.prototype.clearStatus = function() {
-  this.setStatus(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.stable.agones.dev.sdk.GameServer.prototype.hasStatus = function() {
-  return jspb.Message.getField(this, 3) != null;
 };
 
 
@@ -659,18 +520,19 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.toObject = function(
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer.ObjectMeta} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.toObject = function(includeInstance, msg) {
   var f, obj = {
-    name: msg.getName(),
-    namespace: msg.getNamespace(),
-    uid: msg.getUid(),
-    resourceVersion: msg.getResourceVersion(),
-    generation: msg.getGeneration(),
-    creationTimestamp: msg.getCreationTimestamp(),
-    deletionTimestamp: msg.getDeletionTimestamp(),
-    annotationsMap: (f = msg.getAnnotationsMap(true)) ? f.toArray() : [],
-    labelsMap: (f = msg.getLabelsMap(true)) ? f.toArray() : []
+    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    namespace: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    uid: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    resourceVersion: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    generation: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    creationTimestamp: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    deletionTimestamp: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    annotationsMap: (f = msg.getAnnotationsMap()) ? f.toObject(includeInstance, undefined) : [],
+    labelsMap: (f = msg.getLabelsMap()) ? f.toObject(includeInstance, undefined) : []
   };
 
   if (includeInstance) {
@@ -738,13 +600,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.deserializeBinaryFromReader = 
     case 8:
       var value = msg.getAnnotationsMap();
       reader.readMessage(value, function(message, reader) {
-        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString);
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "");
          });
       break;
     case 9:
       var value = msg.getLabelsMap();
       reader.readMessage(value, function(message, reader) {
-        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString);
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "");
          });
       break;
     default:
@@ -757,100 +619,82 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.deserializeBinaryFromReader = 
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer.ObjectMeta} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.ObjectMeta.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.ObjectMeta.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer.ObjectMeta} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.ObjectMeta.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getName();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = this.getNamespace();
+  f = message.getNamespace();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = this.getUid();
+  f = message.getUid();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
-  f = this.getResourceVersion();
+  f = message.getResourceVersion();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = this.getGeneration();
+  f = message.getGeneration();
   if (f !== 0) {
     writer.writeInt64(
       5,
       f
     );
   }
-  f = this.getCreationTimestamp();
+  f = message.getCreationTimestamp();
   if (f !== 0) {
     writer.writeInt64(
       6,
       f
     );
   }
-  f = this.getDeletionTimestamp();
+  f = message.getDeletionTimestamp();
   if (f !== 0) {
     writer.writeInt64(
       7,
       f
     );
   }
-  f = this.getAnnotationsMap(true);
+  f = message.getAnnotationsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(8, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
   }
-  f = this.getLabelsMap(true);
+  f = message.getLabelsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(9, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
   }
-};
-
-
-/**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer.ObjectMeta} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer.ObjectMeta} */ (jspb.Message.cloneMessage(this));
 };
 
 
@@ -859,13 +703,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.cloneMessage = funct
  * @return {string}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setName = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -874,13 +718,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setName = function(v
  * @return {string}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getNamespace = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setNamespace = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -889,13 +733,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setNamespace = funct
  * @return {string}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getUid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 3, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setUid = function(value) {
-  jspb.Message.setField(this, 3, value);
+  jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -904,13 +748,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setUid = function(va
  * @return {string}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getResourceVersion = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 4, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setResourceVersion = function(value) {
-  jspb.Message.setField(this, 4, value);
+  jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
@@ -919,13 +763,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setResourceVersion =
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getGeneration = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 5, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setGeneration = function(value) {
-  jspb.Message.setField(this, 5, value);
+  jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
@@ -934,13 +778,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setGeneration = func
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getCreationTimestamp = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 6, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setCreationTimestamp = function(value) {
-  jspb.Message.setField(this, 6, value);
+  jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
@@ -949,13 +793,13 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setCreationTimestamp
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getDeletionTimestamp = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 7, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.setDeletionTimestamp = function(value) {
-  jspb.Message.setField(this, 7, value);
+  jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -972,6 +816,11 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getAnnotationsMap = 
 };
 
 
+proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.clearAnnotationsMap = function() {
+  this.getAnnotationsMap().clear();
+};
+
+
 /**
  * map<string, string> labels = 9;
  * @param {boolean=} opt_noLazyCreate Do not create the map if
@@ -982,6 +831,11 @@ proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.getLabelsMap = funct
   return /** @type {!jspb.Map<string,string>} */ (
       jspb.Message.getMapField(this, 9, opt_noLazyCreate,
       null));
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.ObjectMeta.prototype.clearLabelsMap = function() {
+  this.getLabelsMap().clear();
 };
 
 
@@ -1028,6 +882,7 @@ proto.stable.agones.dev.sdk.GameServer.Spec.prototype.toObject = function(opt_in
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer.Spec} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -1083,35 +938,26 @@ proto.stable.agones.dev.sdk.GameServer.Spec.deserializeBinaryFromReader = functi
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer.Spec} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.Spec.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer.Spec} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.Spec.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getHealth();
+  f = message.getHealth();
   if (f != null) {
     writer.writeMessage(
       1,
@@ -1119,45 +965,6 @@ proto.stable.agones.dev.sdk.GameServer.Spec.prototype.serializeBinaryToWriter = 
       proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer.Spec} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer.Spec} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
- * optional Health health = 1;
- * @return {proto.stable.agones.dev.sdk.GameServer.Spec.Health}
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.getHealth = function() {
-  return /** @type{proto.stable.agones.dev.sdk.GameServer.Spec.Health} */ (
-    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Spec.Health, 1));
-};
-
-
-/** @param {proto.stable.agones.dev.sdk.GameServer.Spec.Health|undefined} value  */
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.setHealth = function(value) {
-  jspb.Message.setWrapperField(this, 1, value);
-};
-
-
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.clearHealth = function() {
-  this.setHealth(undefined);
-};
-
-
-/**
- * Returns whether this field is set.
- * @return{!boolean}
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.prototype.hasHealth = function() {
-  return jspb.Message.getField(this, 1) != null;
 };
 
 
@@ -1204,13 +1011,14 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.toObject = function
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer.Spec.Health} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.toObject = function(includeInstance, msg) {
   var f, obj = {
-    disabled: msg.getDisabled(),
-    periodseconds: msg.getPeriodseconds(),
-    failurethreshold: msg.getFailurethreshold(),
-    initialdelayseconds: msg.getInitialdelayseconds()
+    disabled: jspb.Message.getFieldWithDefault(msg, 1, false),
+    periodseconds: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    failurethreshold: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    initialdelayseconds: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -1273,56 +1081,47 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.deserializeBinaryFromReader =
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer.Spec.Health} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer.Spec.Health} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getDisabled();
+  f = message.getDisabled();
   if (f) {
     writer.writeBool(
       1,
       f
     );
   }
-  f = this.getPeriodseconds();
+  f = message.getPeriodseconds();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = this.getFailurethreshold();
+  f = message.getFailurethreshold();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
-  f = this.getInitialdelayseconds();
+  f = message.getInitialdelayseconds();
   if (f !== 0) {
     writer.writeInt32(
       4,
@@ -1333,28 +1132,19 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.serializeBinaryToWr
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer.Spec.Health} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer.Spec.Health} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * optional bool Disabled = 1;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getDisabled = function() {
-  return /** @type {boolean} */ (jspb.Message.getFieldProto3(this, 1, false));
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 1, false));
 };
 
 
-/** @param {boolean} value  */
+/** @param {boolean} value */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setDisabled = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3BooleanField(this, 1, value);
 };
 
 
@@ -1363,13 +1153,13 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setDisabled = funct
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getPeriodseconds = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 2, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setPeriodseconds = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -1378,13 +1168,13 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setPeriodseconds = 
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getFailurethreshold = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setFailurethreshold = function(value) {
-  jspb.Message.setField(this, 3, value);
+  jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
@@ -1393,13 +1183,43 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setFailurethreshold
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getInitialdelayseconds = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setInitialdelayseconds = function(value) {
-  jspb.Message.setField(this, 4, value);
+  jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional Health health = 1;
+ * @return {?proto.stable.agones.dev.sdk.GameServer.Spec.Health}
+ */
+proto.stable.agones.dev.sdk.GameServer.Spec.prototype.getHealth = function() {
+  return /** @type{?proto.stable.agones.dev.sdk.GameServer.Spec.Health} */ (
+    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Spec.Health, 1));
+};
+
+
+/** @param {?proto.stable.agones.dev.sdk.GameServer.Spec.Health|undefined} value */
+proto.stable.agones.dev.sdk.GameServer.Spec.prototype.setHealth = function(value) {
+  jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.Spec.prototype.clearHealth = function() {
+  this.setHealth(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.stable.agones.dev.sdk.GameServer.Spec.prototype.hasHealth = function() {
+  return jspb.Message.getField(this, 1) != null;
 };
 
 
@@ -1453,11 +1273,12 @@ proto.stable.agones.dev.sdk.GameServer.Status.prototype.toObject = function(opt_
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer.Status} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.Status.toObject = function(includeInstance, msg) {
   var f, obj = {
-    state: msg.getState(),
-    address: msg.getAddress(),
+    state: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    address: jspb.Message.getFieldWithDefault(msg, 2, ""),
     portsList: jspb.Message.toObjectList(msg.getPortsList(),
     proto.stable.agones.dev.sdk.GameServer.Status.Port.toObject, includeInstance)
   };
@@ -1507,8 +1328,7 @@ proto.stable.agones.dev.sdk.GameServer.Status.deserializeBinaryFromReader = func
     case 3:
       var value = new proto.stable.agones.dev.sdk.GameServer.Status.Port;
       reader.readMessage(value,proto.stable.agones.dev.sdk.GameServer.Status.Port.deserializeBinaryFromReader);
-      msg.getPortsList().push(value);
-      msg.setPortsList(msg.getPortsList());
+      msg.addPorts(value);
       break;
     default:
       reader.skipField();
@@ -1520,49 +1340,40 @@ proto.stable.agones.dev.sdk.GameServer.Status.deserializeBinaryFromReader = func
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer.Status} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.Status.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.Status.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.Status.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer.Status} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.Status.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getState();
+  f = message.getState();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = this.getAddress();
+  f = message.getAddress();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = this.getPortsList();
+  f = message.getPortsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       3,
@@ -1570,68 +1381,6 @@ proto.stable.agones.dev.sdk.GameServer.Status.prototype.serializeBinaryToWriter 
       proto.stable.agones.dev.sdk.GameServer.Status.Port.serializeBinaryToWriter
     );
   }
-};
-
-
-/**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer.Status} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer.Status} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
- * optional string state = 1;
- * @return {string}
- */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.getState = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
-};
-
-
-/** @param {string} value  */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.setState = function(value) {
-  jspb.Message.setField(this, 1, value);
-};
-
-
-/**
- * optional string address = 2;
- * @return {string}
- */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.getAddress = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 2, ""));
-};
-
-
-/** @param {string} value  */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.setAddress = function(value) {
-  jspb.Message.setField(this, 2, value);
-};
-
-
-/**
- * repeated Port ports = 3;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.stable.agones.dev.sdk.GameServer.Status.Port>}
- */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.getPortsList = function() {
-  return /** @type{!Array.<!proto.stable.agones.dev.sdk.GameServer.Status.Port>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Status.Port, 3));
-};
-
-
-/** @param {Array.<!proto.stable.agones.dev.sdk.GameServer.Status.Port>} value  */
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.setPortsList = function(value) {
-  jspb.Message.setRepeatedWrapperField(this, 3, value);
-};
-
-
-proto.stable.agones.dev.sdk.GameServer.Status.prototype.clearPortsList = function() {
-  this.setPortsList([]);
 };
 
 
@@ -1678,11 +1427,12 @@ proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.toObject = function
  *     http://goto/soy-param-migration
  * @param {!proto.stable.agones.dev.sdk.GameServer.Status.Port} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.toObject = function(includeInstance, msg) {
   var f, obj = {
-    name: msg.getName(),
-    port: msg.getPort()
+    name: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    port: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -1737,42 +1487,33 @@ proto.stable.agones.dev.sdk.GameServer.Status.Port.deserializeBinaryFromReader =
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.stable.agones.dev.sdk.GameServer.Status.Port} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.stable.agones.dev.sdk.GameServer.Status.Port.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.stable.agones.dev.sdk.GameServer.Status.Port.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.stable.agones.dev.sdk.GameServer.Status.Port} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.serializeBinaryToWriter = function (writer) {
+proto.stable.agones.dev.sdk.GameServer.Status.Port.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getName();
+  f = message.getName();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = this.getPort();
+  f = message.getPort();
   if (f !== 0) {
     writer.writeInt32(
       2,
@@ -1783,26 +1524,17 @@ proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.serializeBinaryToWr
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.stable.agones.dev.sdk.GameServer.Status.Port} The clone.
- */
-proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.cloneMessage = function() {
-  return /** @type {!proto.stable.agones.dev.sdk.GameServer.Status.Port} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * optional string name = 1;
  * @return {string}
  */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.getName = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.setName = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -1811,13 +1543,164 @@ proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.setName = function(
  * @return {number}
  */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.getPort = function() {
-  return /** @type {number} */ (jspb.Message.getFieldProto3(this, 2, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
-/** @param {number} value  */
+/** @param {number} value */
 proto.stable.agones.dev.sdk.GameServer.Status.Port.prototype.setPort = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string state = 1;
+ * @return {string}
+ */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.getState = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/** @param {string} value */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.setState = function(value) {
+  jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string address = 2;
+ * @return {string}
+ */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.getAddress = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/** @param {string} value */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.setAddress = function(value) {
+  jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * repeated Port ports = 3;
+ * @return {!Array<!proto.stable.agones.dev.sdk.GameServer.Status.Port>}
+ */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.getPortsList = function() {
+  return /** @type{!Array<!proto.stable.agones.dev.sdk.GameServer.Status.Port>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Status.Port, 3));
+};
+
+
+/** @param {!Array<!proto.stable.agones.dev.sdk.GameServer.Status.Port>} value */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.setPortsList = function(value) {
+  jspb.Message.setRepeatedWrapperField(this, 3, value);
+};
+
+
+/**
+ * @param {!proto.stable.agones.dev.sdk.GameServer.Status.Port=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.stable.agones.dev.sdk.GameServer.Status.Port}
+ */
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.addPorts = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 3, opt_value, proto.stable.agones.dev.sdk.GameServer.Status.Port, opt_index);
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.Status.prototype.clearPortsList = function() {
+  this.setPortsList([]);
+};
+
+
+/**
+ * optional ObjectMeta object_meta = 1;
+ * @return {?proto.stable.agones.dev.sdk.GameServer.ObjectMeta}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.getObjectMeta = function() {
+  return /** @type{?proto.stable.agones.dev.sdk.GameServer.ObjectMeta} */ (
+    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.ObjectMeta, 1));
+};
+
+
+/** @param {?proto.stable.agones.dev.sdk.GameServer.ObjectMeta|undefined} value */
+proto.stable.agones.dev.sdk.GameServer.prototype.setObjectMeta = function(value) {
+  jspb.Message.setWrapperField(this, 1, value);
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.prototype.clearObjectMeta = function() {
+  this.setObjectMeta(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.hasObjectMeta = function() {
+  return jspb.Message.getField(this, 1) != null;
+};
+
+
+/**
+ * optional Spec spec = 2;
+ * @return {?proto.stable.agones.dev.sdk.GameServer.Spec}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.getSpec = function() {
+  return /** @type{?proto.stable.agones.dev.sdk.GameServer.Spec} */ (
+    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Spec, 2));
+};
+
+
+/** @param {?proto.stable.agones.dev.sdk.GameServer.Spec|undefined} value */
+proto.stable.agones.dev.sdk.GameServer.prototype.setSpec = function(value) {
+  jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.prototype.clearSpec = function() {
+  this.setSpec(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.hasSpec = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional Status status = 3;
+ * @return {?proto.stable.agones.dev.sdk.GameServer.Status}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.getStatus = function() {
+  return /** @type{?proto.stable.agones.dev.sdk.GameServer.Status} */ (
+    jspb.Message.getWrapperField(this, proto.stable.agones.dev.sdk.GameServer.Status, 3));
+};
+
+
+/** @param {?proto.stable.agones.dev.sdk.GameServer.Status|undefined} value */
+proto.stable.agones.dev.sdk.GameServer.prototype.setStatus = function(value) {
+  jspb.Message.setWrapperField(this, 3, value);
+};
+
+
+proto.stable.agones.dev.sdk.GameServer.prototype.clearStatus = function() {
+  this.setStatus(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {!boolean}
+ */
+proto.stable.agones.dev.sdk.GameServer.prototype.hasStatus = function() {
+  return jspb.Message.getField(this, 3) != null;
 };
 
 
