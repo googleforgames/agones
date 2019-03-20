@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -159,13 +160,59 @@ func TestComputeReconciliationAction(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			toAdd, toDelete, isPartial := computeReconciliationAction(tc.list, tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
+			toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Distributed, tc.list, map[string]gameservers.NodeCount{},
+				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
 
 			assert.Equal(t, tc.wantNumServersToAdd, toAdd, "# of GameServers to add")
 			assert.Len(t, toDelete, tc.wantNumServersToDelete, "# of GameServers to delete")
 			assert.Equal(t, tc.wantIsPartial, isPartial, "is partial reconciliation")
 		})
 	}
+
+	t.Run("test packed scale down", func(t *testing.T) {
+		list := []*v1alpha1.GameServer{
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, NodeName: "node3"}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, NodeName: "node1"}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, NodeName: "node3"}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, NodeName: ""}},
+		}
+
+		counts := map[string]gameservers.NodeCount{"node1": {Ready: 1}, "node3": {Ready: 2}}
+		toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Packed, list, counts, 2,
+			1000, 1000, 1000)
+
+		assert.Empty(t, toAdd)
+		assert.False(t, isPartial, "shouldn't be partial")
+
+		assert.Len(t, toDelete, 2)
+		assert.Equal(t, "gs4", toDelete[0].ObjectMeta.Name)
+		assert.Equal(t, "gs2", toDelete[1].ObjectMeta.Name)
+	})
+
+	t.Run("test distributed scale down", func(t *testing.T) {
+		now := metav1.Now()
+
+		list := []*v1alpha1.GameServer{
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs1",
+				CreationTimestamp: metav1.Time{Time: now.Add(10 * time.Second)}}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs2",
+				CreationTimestamp: now}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs3",
+				CreationTimestamp: metav1.Time{Time: now.Add(40 * time.Second)}}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs4",
+				CreationTimestamp: metav1.Time{Time: now.Add(30 * time.Second)}}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
+		}
+
+		toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Distributed, list, map[string]gameservers.NodeCount{},
+			2, 1000, 1000, 1000)
+
+		assert.Empty(t, toAdd)
+		assert.False(t, isPartial, "shouldn't be partial")
+
+		assert.Len(t, toDelete, 2)
+		assert.Equal(t, "gs2", toDelete[0].ObjectMeta.Name)
+		assert.Equal(t, "gs1", toDelete[1].ObjectMeta.Name)
+	})
 }
 
 func TestComputeStatus(t *testing.T) {
@@ -573,7 +620,8 @@ func createGameServers(gsSet *v1alpha1.GameServerSet, size int) []v1alpha1.GameS
 func newFakeController() (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	wh := webhooks.NewWebHook(http.NewServeMux())
-	c := NewController(wh, healthcheck.NewHandler(), m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	c := NewController(wh, healthcheck.NewHandler(), counter, m.KubeClient, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

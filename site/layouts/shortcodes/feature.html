@@ -1,6 +1,36 @@
 {{- $version := getenv "RELEASE_VERSION" | default $.Page.Site.Params.release_version }}
 {{- $publishVersion := (.Get "publishVersion" ) | default "0.0.0" }}
 {{- $expiryVersion := (.Get "expiryVersion") | default "9999.0.0"}}
-{{- if and (ge $version $publishVersion) (lt $version $expiryVersion) }}
+{{- $publDigits := split $publishVersion "." }}
+{{- $curDigits := split $version "." }}
+{{- $expDigits := split $expiryVersion "." }}
+{{- $multiplier := 10000 }}
+{{- $current := 0}}
+{{- $publish := 0}}
+{{- $expire := 0}}
+{{- $index := 0}}
+
+{{/*Generate initial shift for most significant number*/}}
+{{- $shift := 1 }}
+{{- range $curDigits}}
+    {{- $shift = mul $shift $multiplier }}
+{{- end}}
+{{- $shift = div $shift $multiplier }}
+
+{{/* loop three times */}}
+{{- range $curDigits}}
+    {{/* Get integer from dot separated string at index */}}
+    {{- $c := int (index $curDigits $index)}}
+    {{- $p := int (index $publDigits $index)}}
+    {{- $e := int (index $expDigits $index)}}
+    {{/* current += digit * shift */}}
+    {{- $current =  (add $current (mul $c  $shift ))}}
+    {{- $publish =  (add $publish (mul $p $shift ))}}
+    {{- $expire =  (add $expire (mul $e  $shift ))}}
+    {{- $shift = (div $shift $multiplier)}}
+
+    {{- $index = (add $index 1) }}
+{{- end}}
+{{- if and (ge $current $publish) (lt $current $expire) }}
 {{.Inner}}
 {{- end}}

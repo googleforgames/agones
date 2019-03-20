@@ -595,27 +595,27 @@ func (c *Controller) sidecar(gs *v1alpha1.GameServer) corev1.Container {
 
 // addGameServerHealthCheck adds the http health check to the GameServer container
 func (c *Controller) addGameServerHealthCheck(gs *v1alpha1.GameServer, pod *corev1.Pod) {
-	if !gs.Spec.Health.Disabled {
-		for i, c := range pod.Spec.Containers {
-			if c.Name == gs.Spec.Container {
-				if c.LivenessProbe == nil {
-					c.LivenessProbe = &corev1.Probe{
-						Handler: corev1.Handler{
-							HTTPGet: &corev1.HTTPGetAction{
-								Path: "/gshealthz",
-								Port: intstr.FromInt(8080),
-							},
-						},
-						InitialDelaySeconds: gs.Spec.Health.InitialDelaySeconds,
-						PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
-						FailureThreshold:    gs.Spec.Health.FailureThreshold,
-					}
-					pod.Spec.Containers[i] = c
-				}
-				break
+	if gs.Spec.Health.Disabled {
+		return
+	}
+
+	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+		if c.LivenessProbe == nil {
+			c.LivenessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path: "/gshealthz",
+						Port: intstr.FromInt(8080),
+					},
+				},
+				InitialDelaySeconds: gs.Spec.Health.InitialDelaySeconds,
+				PeriodSeconds:       gs.Spec.Health.PeriodSeconds,
+				FailureThreshold:    gs.Spec.Health.FailureThreshold,
 			}
 		}
-	}
+
+		return c
+	})
 }
 
 // syncGameServerStartingState looks for a pod that has been scheduled for this GameServer

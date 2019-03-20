@@ -16,6 +16,8 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
@@ -77,12 +79,13 @@ proto.google.api.Http.prototype.toObject = function(opt_includeInstance) {
  *     http://goto/soy-param-migration
  * @param {!proto.google.api.Http} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.google.api.Http.toObject = function(includeInstance, msg) {
   var f, obj = {
     rulesList: jspb.Message.toObjectList(msg.getRulesList(),
     proto.google.api.HttpRule.toObject, includeInstance),
-    fullyDecodeReservedExpansion: msg.getFullyDecodeReservedExpansion()
+    fullyDecodeReservedExpansion: jspb.Message.getFieldWithDefault(msg, 2, false)
   };
 
   if (includeInstance) {
@@ -122,8 +125,7 @@ proto.google.api.Http.deserializeBinaryFromReader = function(msg, reader) {
     case 1:
       var value = new proto.google.api.HttpRule;
       reader.readMessage(value,proto.google.api.HttpRule.deserializeBinaryFromReader);
-      msg.getRulesList().push(value);
-      msg.setRulesList(msg.getRulesList());
+      msg.addRules(value);
       break;
     case 2:
       var value = /** @type {boolean} */ (reader.readBool());
@@ -139,35 +141,26 @@ proto.google.api.Http.deserializeBinaryFromReader = function(msg, reader) {
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.google.api.Http} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.google.api.Http.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.google.api.Http.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.google.api.Http.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.api.Http} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.google.api.Http.prototype.serializeBinaryToWriter = function (writer) {
+proto.google.api.Http.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getRulesList();
+  f = message.getRulesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       1,
@@ -175,7 +168,7 @@ proto.google.api.Http.prototype.serializeBinaryToWriter = function (writer) {
       proto.google.api.HttpRule.serializeBinaryToWriter
     );
   }
-  f = this.getFullyDecodeReservedExpansion();
+  f = message.getFullyDecodeReservedExpansion();
   if (f) {
     writer.writeBool(
       2,
@@ -186,29 +179,28 @@ proto.google.api.Http.prototype.serializeBinaryToWriter = function (writer) {
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.google.api.Http} The clone.
- */
-proto.google.api.Http.prototype.cloneMessage = function() {
-  return /** @type {!proto.google.api.Http} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * repeated HttpRule rules = 1;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.google.api.HttpRule>}
+ * @return {!Array<!proto.google.api.HttpRule>}
  */
 proto.google.api.Http.prototype.getRulesList = function() {
-  return /** @type{!Array.<!proto.google.api.HttpRule>} */ (
+  return /** @type{!Array<!proto.google.api.HttpRule>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.google.api.HttpRule, 1));
 };
 
 
-/** @param {Array.<!proto.google.api.HttpRule>} value  */
+/** @param {!Array<!proto.google.api.HttpRule>} value */
 proto.google.api.Http.prototype.setRulesList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 1, value);
+};
+
+
+/**
+ * @param {!proto.google.api.HttpRule=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.google.api.HttpRule}
+ */
+proto.google.api.Http.prototype.addRules = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.google.api.HttpRule, opt_index);
 };
 
 
@@ -224,13 +216,13 @@ proto.google.api.Http.prototype.clearRulesList = function() {
  * @return {boolean}
  */
 proto.google.api.Http.prototype.getFullyDecodeReservedExpansion = function() {
-  return /** @type {boolean} */ (jspb.Message.getFieldProto3(this, 2, false));
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 2, false));
 };
 
 
-/** @param {boolean} value  */
+/** @param {boolean} value */
 proto.google.api.Http.prototype.setFullyDecodeReservedExpansion = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3BooleanField(this, 2, value);
 };
 
 
@@ -314,18 +306,19 @@ proto.google.api.HttpRule.prototype.toObject = function(opt_includeInstance) {
  *     http://goto/soy-param-migration
  * @param {!proto.google.api.HttpRule} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.google.api.HttpRule.toObject = function(includeInstance, msg) {
   var f, obj = {
-    selector: msg.getSelector(),
-    get: jspb.Message.getField(msg, 2),
-    put: jspb.Message.getField(msg, 3),
-    post: jspb.Message.getField(msg, 4),
-    pb_delete: jspb.Message.getField(msg, 5),
-    patch: jspb.Message.getField(msg, 6),
+    selector: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    get: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    put: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    post: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    pb_delete: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    patch: jspb.Message.getFieldWithDefault(msg, 6, ""),
     custom: (f = msg.getCustom()) && proto.google.api.CustomHttpPattern.toObject(includeInstance, f),
-    body: msg.getBody(),
-    responseBody: msg.getResponseBody(),
+    body: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    responseBody: jspb.Message.getFieldWithDefault(msg, 12, ""),
     additionalBindingsList: jspb.Message.toObjectList(msg.getAdditionalBindingsList(),
     proto.google.api.HttpRule.toObject, includeInstance)
   };
@@ -404,8 +397,7 @@ proto.google.api.HttpRule.deserializeBinaryFromReader = function(msg, reader) {
     case 11:
       var value = new proto.google.api.HttpRule;
       reader.readMessage(value,proto.google.api.HttpRule.deserializeBinaryFromReader);
-      msg.getAdditionalBindingsList().push(value);
-      msg.setAdditionalBindingsList(msg.getAdditionalBindingsList());
+      msg.addAdditionalBindings(value);
       break;
     default:
       reader.skipField();
@@ -417,77 +409,68 @@ proto.google.api.HttpRule.deserializeBinaryFromReader = function(msg, reader) {
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.google.api.HttpRule} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.google.api.HttpRule.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.google.api.HttpRule.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.google.api.HttpRule.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.api.HttpRule} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.google.api.HttpRule.prototype.serializeBinaryToWriter = function (writer) {
+proto.google.api.HttpRule.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getSelector();
+  f = message.getSelector();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = jspb.Message.getField(this, 2);
+  f = /** @type {string} */ (jspb.Message.getField(message, 2));
   if (f != null) {
     writer.writeString(
       2,
       f
     );
   }
-  f = jspb.Message.getField(this, 3);
+  f = /** @type {string} */ (jspb.Message.getField(message, 3));
   if (f != null) {
     writer.writeString(
       3,
       f
     );
   }
-  f = jspb.Message.getField(this, 4);
+  f = /** @type {string} */ (jspb.Message.getField(message, 4));
   if (f != null) {
     writer.writeString(
       4,
       f
     );
   }
-  f = jspb.Message.getField(this, 5);
+  f = /** @type {string} */ (jspb.Message.getField(message, 5));
   if (f != null) {
     writer.writeString(
       5,
       f
     );
   }
-  f = jspb.Message.getField(this, 6);
+  f = /** @type {string} */ (jspb.Message.getField(message, 6));
   if (f != null) {
     writer.writeString(
       6,
       f
     );
   }
-  f = this.getCustom();
+  f = message.getCustom();
   if (f != null) {
     writer.writeMessage(
       8,
@@ -495,21 +478,21 @@ proto.google.api.HttpRule.prototype.serializeBinaryToWriter = function (writer) 
       proto.google.api.CustomHttpPattern.serializeBinaryToWriter
     );
   }
-  f = this.getBody();
+  f = message.getBody();
   if (f.length > 0) {
     writer.writeString(
       7,
       f
     );
   }
-  f = this.getResponseBody();
+  f = message.getResponseBody();
   if (f.length > 0) {
     writer.writeString(
       12,
       f
     );
   }
-  f = this.getAdditionalBindingsList();
+  f = message.getAdditionalBindingsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       11,
@@ -521,26 +504,17 @@ proto.google.api.HttpRule.prototype.serializeBinaryToWriter = function (writer) 
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.google.api.HttpRule} The clone.
- */
-proto.google.api.HttpRule.prototype.cloneMessage = function() {
-  return /** @type {!proto.google.api.HttpRule} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * optional string selector = 1;
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getSelector = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setSelector = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -549,11 +523,11 @@ proto.google.api.HttpRule.prototype.setSelector = function(value) {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getGet = function() {
-  return /** @type {string} */ (!this.hasGet() ? "" : jspb.Message.getField(this, 2));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
-/** @param {string?|undefined} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setGet = function(value) {
   jspb.Message.setOneofField(this, 2, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -566,7 +540,7 @@ proto.google.api.HttpRule.prototype.clearGet = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasGet = function() {
   return jspb.Message.getField(this, 2) != null;
@@ -578,11 +552,11 @@ proto.google.api.HttpRule.prototype.hasGet = function() {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getPut = function() {
-  return /** @type {string} */ (!this.hasPut() ? "" : jspb.Message.getField(this, 3));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
-/** @param {string?|undefined} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setPut = function(value) {
   jspb.Message.setOneofField(this, 3, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -595,7 +569,7 @@ proto.google.api.HttpRule.prototype.clearPut = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasPut = function() {
   return jspb.Message.getField(this, 3) != null;
@@ -607,11 +581,11 @@ proto.google.api.HttpRule.prototype.hasPut = function() {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getPost = function() {
-  return /** @type {string} */ (!this.hasPost() ? "" : jspb.Message.getField(this, 4));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
-/** @param {string?|undefined} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setPost = function(value) {
   jspb.Message.setOneofField(this, 4, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -624,7 +598,7 @@ proto.google.api.HttpRule.prototype.clearPost = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasPost = function() {
   return jspb.Message.getField(this, 4) != null;
@@ -636,11 +610,11 @@ proto.google.api.HttpRule.prototype.hasPost = function() {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getDelete = function() {
-  return /** @type {string} */ (!this.hasDelete() ? "" : jspb.Message.getField(this, 5));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
-/** @param {string?|undefined} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setDelete = function(value) {
   jspb.Message.setOneofField(this, 5, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -653,7 +627,7 @@ proto.google.api.HttpRule.prototype.clearDelete = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasDelete = function() {
   return jspb.Message.getField(this, 5) != null;
@@ -665,11 +639,11 @@ proto.google.api.HttpRule.prototype.hasDelete = function() {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getPatch = function() {
-  return /** @type {string} */ (!this.hasPatch() ? "" : jspb.Message.getField(this, 6));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
-/** @param {string?|undefined} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setPatch = function(value) {
   jspb.Message.setOneofField(this, 6, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -682,7 +656,7 @@ proto.google.api.HttpRule.prototype.clearPatch = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasPatch = function() {
   return jspb.Message.getField(this, 6) != null;
@@ -691,15 +665,15 @@ proto.google.api.HttpRule.prototype.hasPatch = function() {
 
 /**
  * optional CustomHttpPattern custom = 8;
- * @return {proto.google.api.CustomHttpPattern}
+ * @return {?proto.google.api.CustomHttpPattern}
  */
 proto.google.api.HttpRule.prototype.getCustom = function() {
-  return /** @type{proto.google.api.CustomHttpPattern} */ (
+  return /** @type{?proto.google.api.CustomHttpPattern} */ (
     jspb.Message.getWrapperField(this, proto.google.api.CustomHttpPattern, 8));
 };
 
 
-/** @param {proto.google.api.CustomHttpPattern|undefined} value  */
+/** @param {?proto.google.api.CustomHttpPattern|undefined} value */
 proto.google.api.HttpRule.prototype.setCustom = function(value) {
   jspb.Message.setOneofWrapperField(this, 8, proto.google.api.HttpRule.oneofGroups_[0], value);
 };
@@ -712,7 +686,7 @@ proto.google.api.HttpRule.prototype.clearCustom = function() {
 
 /**
  * Returns whether this field is set.
- * @return{!boolean}
+ * @return {!boolean}
  */
 proto.google.api.HttpRule.prototype.hasCustom = function() {
   return jspb.Message.getField(this, 8) != null;
@@ -724,13 +698,13 @@ proto.google.api.HttpRule.prototype.hasCustom = function() {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getBody = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 7, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setBody = function(value) {
-  jspb.Message.setField(this, 7, value);
+  jspb.Message.setProto3StringField(this, 7, value);
 };
 
 
@@ -739,31 +713,39 @@ proto.google.api.HttpRule.prototype.setBody = function(value) {
  * @return {string}
  */
 proto.google.api.HttpRule.prototype.getResponseBody = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 12, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.google.api.HttpRule.prototype.setResponseBody = function(value) {
-  jspb.Message.setField(this, 12, value);
+  jspb.Message.setProto3StringField(this, 12, value);
 };
 
 
 /**
  * repeated HttpRule additional_bindings = 11;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
- * @return {!Array.<!proto.google.api.HttpRule>}
+ * @return {!Array<!proto.google.api.HttpRule>}
  */
 proto.google.api.HttpRule.prototype.getAdditionalBindingsList = function() {
-  return /** @type{!Array.<!proto.google.api.HttpRule>} */ (
+  return /** @type{!Array<!proto.google.api.HttpRule>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.google.api.HttpRule, 11));
 };
 
 
-/** @param {Array.<!proto.google.api.HttpRule>} value  */
+/** @param {!Array<!proto.google.api.HttpRule>} value */
 proto.google.api.HttpRule.prototype.setAdditionalBindingsList = function(value) {
   jspb.Message.setRepeatedWrapperField(this, 11, value);
+};
+
+
+/**
+ * @param {!proto.google.api.HttpRule=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.google.api.HttpRule}
+ */
+proto.google.api.HttpRule.prototype.addAdditionalBindings = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 11, opt_value, proto.google.api.HttpRule, opt_index);
 };
 
 
@@ -815,11 +797,12 @@ proto.google.api.CustomHttpPattern.prototype.toObject = function(opt_includeInst
  *     http://goto/soy-param-migration
  * @param {!proto.google.api.CustomHttpPattern} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.google.api.CustomHttpPattern.toObject = function(includeInstance, msg) {
   var f, obj = {
-    kind: msg.getKind(),
-    path: msg.getPath()
+    kind: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    path: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -874,42 +857,33 @@ proto.google.api.CustomHttpPattern.deserializeBinaryFromReader = function(msg, r
 
 
 /**
- * Class method variant: serializes the given message to binary data
- * (in protobuf wire format), writing to the given BinaryWriter.
- * @param {!proto.google.api.CustomHttpPattern} message
- * @param {!jspb.BinaryWriter} writer
- */
-proto.google.api.CustomHttpPattern.serializeBinaryToWriter = function(message, writer) {
-  message.serializeBinaryToWriter(writer);
-};
-
-
-/**
  * Serializes the message to binary data (in protobuf wire format).
  * @return {!Uint8Array}
  */
 proto.google.api.CustomHttpPattern.prototype.serializeBinary = function() {
   var writer = new jspb.BinaryWriter();
-  this.serializeBinaryToWriter(writer);
+  proto.google.api.CustomHttpPattern.serializeBinaryToWriter(this, writer);
   return writer.getResultBuffer();
 };
 
 
 /**
- * Serializes the message to binary data (in protobuf wire format),
- * writing to the given BinaryWriter.
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.api.CustomHttpPattern} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
-proto.google.api.CustomHttpPattern.prototype.serializeBinaryToWriter = function (writer) {
+proto.google.api.CustomHttpPattern.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = this.getKind();
+  f = message.getKind();
   if (f.length > 0) {
     writer.writeString(
       1,
       f
     );
   }
-  f = this.getPath();
+  f = message.getPath();
   if (f.length > 0) {
     writer.writeString(
       2,
@@ -920,26 +894,17 @@ proto.google.api.CustomHttpPattern.prototype.serializeBinaryToWriter = function 
 
 
 /**
- * Creates a deep clone of this proto. No data is shared with the original.
- * @return {!proto.google.api.CustomHttpPattern} The clone.
- */
-proto.google.api.CustomHttpPattern.prototype.cloneMessage = function() {
-  return /** @type {!proto.google.api.CustomHttpPattern} */ (jspb.Message.cloneMessage(this));
-};
-
-
-/**
  * optional string kind = 1;
  * @return {string}
  */
 proto.google.api.CustomHttpPattern.prototype.getKind = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.google.api.CustomHttpPattern.prototype.setKind = function(value) {
-  jspb.Message.setField(this, 1, value);
+  jspb.Message.setProto3StringField(this, 1, value);
 };
 
 
@@ -948,13 +913,13 @@ proto.google.api.CustomHttpPattern.prototype.setKind = function(value) {
  * @return {string}
  */
 proto.google.api.CustomHttpPattern.prototype.getPath = function() {
-  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
-/** @param {string} value  */
+/** @param {string} value */
 proto.google.api.CustomHttpPattern.prototype.setPath = function(value) {
-  jspb.Message.setField(this, 2, value);
+  jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
