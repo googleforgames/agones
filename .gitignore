@@ -25,6 +25,8 @@
 bin
 *.o
 tmp
+terraform.tfvars
+terraform.tfstate*
 build/local-includes/*
 !build/local-includes/README.md
 /release

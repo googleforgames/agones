@@ -98,6 +98,9 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 # make nano the editor
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
+# install terraform
+RUN wget -nv https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_386.zip && unzip ./terraform_0.11.13_linux_386.zip && mv terraform /usr/local/bin/
+
 # code generation scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
