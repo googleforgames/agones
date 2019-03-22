@@ -776,6 +776,7 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 			assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+			assert.Equal(t, "sdk-service-account", pod.Spec.ServiceAccountName)
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[v1alpha1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
@@ -791,6 +792,10 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, fixture.Spec.Health.FailureThreshold, gsContainer.LivenessProbe.FailureThreshold)
 
 			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+
+			assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
+			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
+
 			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
@@ -807,6 +812,28 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 		assert.Equal(t, fixture.Status.State, gs.Status.State)
 		assert.True(t, created)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Pod")
+	})
+
+	t.Run("service account", func(t *testing.T) {
+		c, m := newFakeController()
+		fixture := newFixture()
+		fixture.Spec.Template.Spec.ServiceAccountName = "foobar"
+
+		created := false
+
+		m.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			created = true
+			ca := action.(k8stesting.CreateAction)
+			pod := ca.GetObject().(*corev1.Pod)
+			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+			assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
+
+			return true, pod, nil
+		})
+
+		_, err := c.createGameServerPod(fixture)
+		assert.Nil(t, err)
+		assert.True(t, created)
 	})
 
 	t.Run("invalid podspec", func(t *testing.T) {
@@ -1189,7 +1216,8 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(),
 		10, 20, "sidecar:dev", false,
-		resource.MustParse("0.05"), resource.MustParse("0.1"), m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
+		resource.MustParse("0.05"), resource.MustParse("0.1"), "sdk-service-account",
+		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
 }

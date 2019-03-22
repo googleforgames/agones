@@ -322,7 +322,6 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
 	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
-	assert.Equal(t, "agones-sdk", pod.Spec.ServiceAccountName)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, fixture.Spec.Ports[0].HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
@@ -417,7 +416,7 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
 
-	gs.disableServiceAccount(pod)
+	gs.DisableServiceAccount(pod)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
 	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
