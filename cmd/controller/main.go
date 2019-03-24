@@ -59,6 +59,7 @@ const (
 	sidecarImageFlag             = "sidecar-image"
 	sidecarCPURequestFlag        = "sidecar-cpu-request"
 	sidecarCPULimitFlag          = "sidecar-cpu-limit"
+	sdkServerAccountFlag         = "sdk-service-account"
 	pullSidecarFlag              = "always-pull-sidecar"
 	minPortFlag                  = "min-port"
 	maxPortFlag                  = "max-port"
@@ -188,7 +189,7 @@ func main() {
 
 	gsController := gameservers.NewController(wh, health,
 		ctlConf.MinPort, ctlConf.MaxPort, ctlConf.SidecarImage, ctlConf.AlwaysPullSidecar,
-		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit,
+		ctlConf.SidecarCPURequest, ctlConf.SidecarCPULimit, ctlConf.SdkServiceAccount,
 		kubeClient, kubeInformerFactory, extClient, agonesClient, agonesInformerFactory)
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
@@ -231,6 +232,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(sidecarCPURequestFlag, "0")
 	viper.SetDefault(sidecarCPULimitFlag, "0")
 	viper.SetDefault(pullSidecarFlag, false)
+	viper.SetDefault(sdkServerAccountFlag, "agones-sdk")
 	viper.SetDefault(certFileFlag, filepath.Join(base, "certs/server.crt"))
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
@@ -246,6 +248,7 @@ func parseEnvFlags() config {
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
 	pflag.String(sidecarCPURequestFlag, viper.GetString(sidecarCPURequestFlag), "Flag to overwrite the GameServer sidecar container's cpu request. Can also use SIDECAR_CPU_REQUEST env variable")
 	pflag.Bool(pullSidecarFlag, viper.GetBool(pullSidecarFlag), "For development purposes, set the sidecar image to have a ImagePullPolicy of Always. Can also use ALWAYS_PULL_SIDECAR env variable")
+	pflag.String(sdkServerAccountFlag, viper.GetString(sdkServerAccountFlag), "Overwrite what service account default for GameServer Pods. Defaults to Can also use SDK_SERVICE_ACCOUNT")
 	pflag.Int32(minPortFlag, 0, "Required. The minimum port that that a GameServer can be allocated to. Can also use MIN_PORT env variable.")
 	pflag.Int32(maxPortFlag, 0, "Required. The maximum port that that a GameServer can be allocated to. Can also use MAX_PORT env variable")
 	pflag.String(keyFileFlag, viper.GetString(keyFileFlag), "Optional. Path to the key file")
@@ -266,6 +269,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(sidecarCPULimitFlag))
 	runtime.Must(viper.BindEnv(sidecarCPURequestFlag))
 	runtime.Must(viper.BindEnv(pullSidecarFlag))
+	runtime.Must(viper.BindEnv(sdkServerAccountFlag))
 	runtime.Must(viper.BindEnv(minPortFlag))
 	runtime.Must(viper.BindEnv(maxPortFlag))
 	runtime.Must(viper.BindEnv(keyFileFlag))
@@ -297,6 +301,7 @@ func parseEnvFlags() config {
 		SidecarImage:          viper.GetString(sidecarImageFlag),
 		SidecarCPURequest:     request,
 		SidecarCPULimit:       limit,
+		SdkServiceAccount:     viper.GetString(sdkServerAccountFlag),
 		AlwaysPullSidecar:     viper.GetBool(pullSidecarFlag),
 		KeyFile:               viper.GetString(keyFileFlag),
 		CertFile:              viper.GetString(certFileFlag),
@@ -319,6 +324,7 @@ type config struct {
 	SidecarImage          string
 	SidecarCPURequest     resource.Quantity
 	SidecarCPULimit       resource.Quantity
+	SdkServiceAccount     string
 	AlwaysPullSidecar     bool
 	PrometheusMetrics     bool
 	Stackdriver           bool

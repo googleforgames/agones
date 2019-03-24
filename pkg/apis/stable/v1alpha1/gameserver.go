@@ -76,8 +76,6 @@ const (
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = stable.GroupName + "/container"
-	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
-	SidecarServiceAccountName = "agones-sdk"
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
 	DevAddressAnnotation = "stable.agones.dev/dev-address"
@@ -377,14 +375,6 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 
 	gs.podObjectMeta(pod)
 
-	// if the service account is not set, then you are in the "opinionated"
-	// mode. If the user sets the service account, we assume they know what they are
-	// doing, and don't disable the gameserver container.
-	if pod.Spec.ServiceAccountName == "" {
-		pod.Spec.ServiceAccountName = SidecarServiceAccountName
-		gs.disableServiceAccount(pod)
-	}
-
 	i, gsContainer, err := gs.FindGameServerContainer()
 	// this shouldn't happen, but if it does.
 	if err != nil {
@@ -474,8 +464,8 @@ func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 	}
 }
 
-// disableServiceAccount disables the service account for the gameserver container
-func (gs *GameServer) disableServiceAccount(pod *corev1.Pod) {
+// DisableServiceAccount disables the service account for the gameserver container
+func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) {
 	// gameservers don't get access to the k8s api.
 	emptyVol := corev1.Volume{Name: "empty", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}}
 	pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVol)

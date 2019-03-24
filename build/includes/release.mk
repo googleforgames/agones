@@ -25,6 +25,7 @@
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
+gen-changelog: RELEASE_BRANCH ?= master
 gen-changelog:
 	read -p 'Github Token: ' TOKEN && \
     docker run -it --rm -v "$(agones_path)":/project markmandel/github-changelog-generator \
@@ -32,6 +33,7 @@ gen-changelog:
 		--bug-labels=kind/bug --enhancement-labels=kind/feature \
 		--breaking-labels=kind/breaking --security-labels=area/security \
 		--future-release "v$(RELEASE_VERSION)" \
+		--release-branch=$(RELEASE_BRANCH) \
 		--token $$TOKEN
 
 # Creates a release. Version defaults to the base_version

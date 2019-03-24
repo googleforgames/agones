@@ -86,9 +86,9 @@ github_repo = "https://github.com/GoogleCloudPlatform/agones"
 gcs_engine_id = "002375903941309441958:rceiko9wfuw"
 
 # current release branch - could be rc
-release_branch = "release-0.8.0"
+release_branch = "release-0.8.1"
 # the main version. Never is rc.
-release_version = "0.8.0"
+release_version = "0.8.1"
 
 # User interface configuration
 [params.ui]

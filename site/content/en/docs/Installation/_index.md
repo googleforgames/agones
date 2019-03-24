@@ -82,7 +82,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
   --password=supersecretpassword \
   --scopes=gke-default \
   --num-nodes=3 \
-  --machine-type=n1-standard-1
+  --machine-type=n1-standard-2
 ```
 
 Flag explanations:
@@ -93,7 +93,7 @@ Flag explanations:
 * enable-basic-auth/password: Sets the master auth scheme for interacting with the cluster.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 3
-* machine-type: The type of machine to use for nodes. Default: n1-standard-1.
+* machine-type: The type of machine to use for nodes. Default: n1-standard-2. Depending on the needs of you game, you may wish to [have a bigger machines](https://cloud.google.com/compute/docs/machine-types).
 
 Finally, let's tell `gcloud` that we are speaking with this cluster, and get auth credentials for `kubectl` to use.
 
