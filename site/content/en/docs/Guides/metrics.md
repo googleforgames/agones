@@ -54,7 +54,7 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | agones_fleet_allocations_total                  | The total of fleet allocations per fleet                            | counter   |
 | agones_fleets_replicas_count                    | The number of replicas per fleet (total, desired, ready, allocated) | gauge     |
 | agones_fleet_autoscalers_able_to_scale          | The fleet autoscaler can access the fleet to scale                  | gauge     |
-| agones_fleet_autoscalers_buffer_limits          | he limits of buffer based fleet autoscalers (min, max)              | gauge     |
+| agones_fleet_autoscalers_buffer_limits          | The limits of buffer based fleet autoscalers (min, max)              | gauge     |
 | agones_fleet_autoscalers_buffer_size            | The buffer size of fleet autoscalers (count or percentage)          | gauge     |
 | agones_fleet_autoscalers_current_replicas_count | The current replicas count as seen by autoscalers                   | gauge     |
 | agones_fleet_autoscalers_desired_replicas_count | The desired replicas count as seen by autoscalers                   | gauge     |
