@@ -113,7 +113,7 @@ static void InitDefaultsEmpty() {
   ::stable::agones::dev::sdk::Empty::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_Empty =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_Empty =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsEmpty}, {}};
 
 static void InitDefaultsKeyValue() {
@@ -127,7 +127,7 @@ static void InitDefaultsKeyValue() {
   ::stable::agones::dev::sdk::KeyValue::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_KeyValue =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_KeyValue =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsKeyValue}, {}};
 
 static void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse() {
@@ -140,7 +140,7 @@ static void InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta_AnnotationsEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_ObjectMeta_AnnotationsEntry_DoNotUse}, {}};
 
 static void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse() {
@@ -153,7 +153,7 @@ static void InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta_LabelsEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_ObjectMeta_LabelsEntry_DoNotUse}, {}};
 
 static void InitDefaultsGameServer_ObjectMeta() {
@@ -167,7 +167,7 @@ static void InitDefaultsGameServer_ObjectMeta() {
   ::stable::agones::dev::sdk::GameServer_ObjectMeta::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<2> scc_info_GameServer_ObjectMeta =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<2> scc_info_GameServer_ObjectMeta =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 2, InitDefaultsGameServer_ObjectMeta}, {
       &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta_AnnotationsEntry_DoNotUse.base,
       &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta_LabelsEntry_DoNotUse.base,}};
@@ -183,7 +183,7 @@ static void InitDefaultsGameServer_Spec_Health() {
   ::stable::agones::dev::sdk::GameServer_Spec_Health::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Spec_Health =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Spec_Health =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_Spec_Health}, {}};
 
 static void InitDefaultsGameServer_Spec() {
@@ -197,7 +197,7 @@ static void InitDefaultsGameServer_Spec() {
   ::stable::agones::dev::sdk::GameServer_Spec::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Spec =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Spec =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsGameServer_Spec}, {
       &protobuf_sdk_2eproto::scc_info_GameServer_Spec_Health.base,}};
 
@@ -212,7 +212,7 @@ static void InitDefaultsGameServer_Status_Port() {
   ::stable::agones::dev::sdk::GameServer_Status_Port::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Status_Port =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_GameServer_Status_Port =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsGameServer_Status_Port}, {}};
 
 static void InitDefaultsGameServer_Status() {
@@ -226,7 +226,7 @@ static void InitDefaultsGameServer_Status() {
   ::stable::agones::dev::sdk::GameServer_Status::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Status =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_GameServer_Status =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsGameServer_Status}, {
       &protobuf_sdk_2eproto::scc_info_GameServer_Status_Port.base,}};
 
@@ -241,7 +241,7 @@ static void InitDefaultsGameServer() {
   ::stable::agones::dev::sdk::GameServer::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<3> scc_info_GameServer =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<3> scc_info_GameServer =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 3, InitDefaultsGameServer}, {
       &protobuf_sdk_2eproto::scc_info_GameServer_ObjectMeta.base,
       &protobuf_sdk_2eproto::scc_info_GameServer_Spec.base,

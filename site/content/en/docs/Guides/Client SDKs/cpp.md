@@ -11,7 +11,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 ## Download
 
 Download the source from the [Releases Page](https://github.com/GoogleCloudPlatform/agones/releases) 
-or {{< ghlink href="sdks/rust" >}}directly from Github{{< /ghlink >}}.
+or {{< ghlink href="sdks/cpp" >}}directly from Github{{< /ghlink >}}.
 
 ## Usage
 
@@ -117,9 +117,9 @@ sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
     std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
 });
 ```
-
+{{% feature expiryVersion="0.9.0" %}}
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
-{{< ghlink href="sdks/cpp/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
+{{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
 {{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
 
 ### Failure
@@ -153,3 +153,58 @@ If you wish to compile from source, you will need to compile and install the fol
 If you are building a server on Windows or macOS, and need a development build to run on
 that platform, at this time you will need to compile from source. Windows and macOS libraries
 for the C++ SDK for easier cross platform development are planned and will be provided in the near future.
+{{% /feature %}}
+{{% feature publishVersion="0.9.0" %}}
+For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
+{{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
+{{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
+
+### Failure
+When running on Agones, the above functions should only fail under exceptional circumstances, so please 
+file a bug if it occurs.
+
+### Building the Libraries from source
+CMake is used to build SDK for all platforms. It is possible to build SDK as a static or dynamic library.
+
+## Prerequisites
+* CMake >= 3.13.0
+* Git
+* C++14 compiler
+
+## Options
+Following options are available
+- **AGONES_BUILD_SHARED** (default is OFF) - build sdk as a shared library.
+- **AGONES_CREATE_PACKAGE** (default is ON) - create an "install" step, to create a cmake package.
+
+## Windows
+Building with Visual Studio:
+```
+md .build
+cd .build
+cmake .. -G "Visual Studio 15 2017 Win64" -Wno-dev
+cmake --build . --config Release
+```
+Building with NMake
+```
+md .build
+cd .build
+cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -Wno-dev
+cmake --build .
+```
+
+## Linux / MacOS
+```
+mkdir -p .build
+cd .build
+cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev
+cmake --build .
+```
+
+## Remarks
+CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC depencency.
+
+### Using SDK
+In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
+If **AGONES_CREATE_PACKAGE** option is off, then `CMAKE_PREFIX_PATH` should be set to a path where SDK is built (usualy `agones/sdks/cpp/.build`).
+It maybe useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+{{% /feature %}}

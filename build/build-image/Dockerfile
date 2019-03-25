@@ -138,3 +138,8 @@ RUN echo "export EDITOR=nano" >> /root/.bashrc
 # code generation scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.sh && mkdir /opt/cmake && \
+    sh ./cmake-3.14.0-Linux-x86_64.sh --skip-license --prefix=/opt/cmake && export PATH=$PATH:/opt/cmake/bin
+
+WORKDIR /go

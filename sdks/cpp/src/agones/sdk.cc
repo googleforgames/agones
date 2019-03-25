@@ -12,27 +12,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sdk.h"
-#include "sdk.pb.h"
+#include "agones/sdk.h"
+#include <grpcpp/grpcpp.h>
+
+
+namespace{
+    const int kPort = 59357;
+
+}
 
 namespace agones {
 
-    const int port = 59357;
+    class SDKImpl final {
+    public:
+        std::shared_ptr<grpc::Channel> channel_;
+        std::unique_ptr<stable::agones::dev::sdk::SDK::Stub> stub_;
+        std::unique_ptr<grpc::ClientWriter<stable::agones::dev::sdk::Empty>> health_;
+    };
 
-    SDK::SDK() {
-        channel = grpc::CreateChannel("localhost:" + std::to_string(port), grpc::InsecureChannelCredentials());
+    SDK::SDK()
+        : pimpl_{std::make_unique<SDKImpl>()} {
+        pimpl_->channel_ = grpc::CreateChannel("localhost:" + std::to_string(kPort), grpc::InsecureChannelCredentials());
+    }
+
+    SDK::~SDK()
+    {
     }
 
     bool SDK::Connect() {
-        if (!channel->WaitForConnected(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)))) {
+        if (!pimpl_->channel_->WaitForConnected(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)))) {
             return false;
         }
 
-        stub = stable::agones::dev::sdk::SDK::NewStub(channel);
+        pimpl_->stub_ = stable::agones::dev::sdk::SDK::NewStub( pimpl_->channel_);
 
         // make the health connection
         stable::agones::dev::sdk::Empty response;
-        health = stub->Health(new grpc::ClientContext(), &response);
+        pimpl_->health_ = pimpl_->stub_->Health(new grpc::ClientContext(), &response);
 
         return true;
     }
@@ -43,12 +59,12 @@ namespace agones {
         stable::agones::dev::sdk::Empty request;
         stable::agones::dev::sdk::Empty response;
 
-        return stub->Ready(context, request, &response);
+        return pimpl_->stub_->Ready(context, request, &response);
     }
 
     bool SDK::Health() {
         stable::agones::dev::sdk::Empty request;
-        return health->Write(request);
+        return pimpl_->health_->Write(request);
     }
 
     grpc::Status SDK::GameServer(stable::agones::dev::sdk::GameServer* response) {
@@ -56,15 +72,15 @@ namespace agones {
         context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME), gpr_time_from_seconds(30, GPR_TIMESPAN)));
         stable::agones::dev::sdk::Empty request;
 
-        return stub->GetGameServer(context, request, response);
+        return pimpl_->stub_->GetGameServer(context, request, response);
     }
 
-    grpc::Status SDK::WatchGameServer(const std::function<void(stable::agones::dev::sdk::GameServer)> callback) {
+    grpc::Status SDK::WatchGameServer(const std::function<void(stable::agones::dev::sdk::GameServer)>& callback) {
         grpc::ClientContext *context = new grpc::ClientContext();
         stable::agones::dev::sdk::Empty request;
         stable::agones::dev::sdk::GameServer gameServer;
 
-        std::unique_ptr<grpc::ClientReader<stable::agones::dev::sdk::GameServer>> reader = stub->WatchGameServer(context, request);
+        std::unique_ptr<grpc::ClientReader<stable::agones::dev::sdk::GameServer>> reader = pimpl_->stub_->WatchGameServer(context, request);
         while (reader->Read(&gameServer)) {
             callback(gameServer);
         }
@@ -77,7 +93,7 @@ namespace agones {
         stable::agones::dev::sdk::Empty request;
         stable::agones::dev::sdk::Empty response;
 
-        return stub->Shutdown(context, request, &response);
+        return pimpl_->stub_->Shutdown(context, request, &response);
     }
 
     grpc::Status SDK::SetLabel(std::string key, std::string value) {
@@ -90,7 +106,7 @@ namespace agones {
 
         stable::agones::dev::sdk::Empty response;
 
-        return stub->SetLabel(context, request, &response);
+        return pimpl_->stub_->SetLabel(context, request, &response);
     }
 
     grpc::Status SDK::SetAnnotation(std::string key, std::string value) {
@@ -103,6 +119,6 @@ namespace agones {
 
         stable::agones::dev::sdk::Empty response;
 
-        return stub->SetAnnotation(context, request, &response);
+        return pimpl_->stub_->SetAnnotation(context, request, &response);
     }
 }

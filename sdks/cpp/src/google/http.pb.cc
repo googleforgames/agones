@@ -75,7 +75,7 @@ static void InitDefaultsHttp() {
   ::google::api::Http::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_Http =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_Http =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttp}, {
       &protobuf_google_2fapi_2fhttp_2eproto::scc_info_HttpRule.base,}};
 
@@ -90,7 +90,7 @@ static void InitDefaultsHttpRule() {
   ::google::api::HttpRule::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttpRule}, {
       &protobuf_google_2fapi_2fhttp_2eproto::scc_info_CustomHttpPattern.base,}};
 
@@ -105,7 +105,7 @@ static void InitDefaultsCustomHttpPattern() {
   ::google::api::CustomHttpPattern::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern =
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern =
     {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCustomHttpPattern}, {}};
 
 void InitDefaults() {

@@ -131,14 +131,8 @@ steps:
   waitFor:
     - build
     - tests
-  dir: "sdks/cpp/bin"
+  dir: "sdks/cpp/.build"
   args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
-- name: 'gcr.io/cloud-builders/gsutil'
-  waitFor:
-    - build
-    - tests
-  dir: "sdks/cpp/bin"
-  args: ['cp', '*.zip', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
     - build
