@@ -46,11 +46,11 @@
 #include "google/api/http.pb.h"
 #include <google/protobuf/descriptor.pb.h>
 // @@protoc_insertion_point(includes)
-#define PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fannotations_2eproto 
+#define PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fannotations_2eproto AGONES_EXPORT
 
 namespace protobuf_google_2fapi_2fannotations_2eproto {
 // Internal implementation detail -- do not use these members.
-struct TableStruct {
+struct AGONES_EXPORT TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
   static const ::google::protobuf::internal::ParseTable schema[1];
@@ -58,7 +58,7 @@ struct TableStruct {
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
 };
-void AddDescriptors();
+void AGONES_EXPORT AddDescriptors();
 }  // namespace protobuf_google_2fapi_2fannotations_2eproto
 namespace google {
 namespace api {
@@ -73,7 +73,7 @@ namespace api {
 // ===================================================================
 
 static const int kHttpFieldNumber = 72295728;
-extern ::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
+AGONES_EXPORT extern ::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
     ::google::protobuf::internal::MessageTypeTraits< ::google::api::HttpRule >, 11, false >
   http;
 

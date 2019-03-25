@@ -1,0 +1,10 @@
+set(agones_VERSION 0.9.0)
+
+@PACKAGE_INIT@ 
+
+set(agones_INCLUDE_DIRS @PACKAGE__INCLUDE_DIRS@)
+
+include(CMakeFindDependencyMacro)
+include("${CMAKE_CURRENT_LIST_DIR}/agonesTargets.cmake")
+
+check_required_components(agones)

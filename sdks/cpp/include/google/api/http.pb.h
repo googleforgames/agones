@@ -46,11 +46,11 @@
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
-#define PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fhttp_2eproto 
+#define PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fhttp_2eproto AGONES_EXPORT
 
 namespace protobuf_google_2fapi_2fhttp_2eproto {
 // Internal implementation detail -- do not use these members.
-struct TableStruct {
+struct AGONES_EXPORT TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
   static const ::google::protobuf::internal::ParseTable schema[3];
@@ -58,26 +58,26 @@ struct TableStruct {
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
 };
-void AddDescriptors();
+void AGONES_EXPORT AddDescriptors();
 }  // namespace protobuf_google_2fapi_2fhttp_2eproto
 namespace google {
 namespace api {
 class CustomHttpPattern;
 class CustomHttpPatternDefaultTypeInternal;
-extern CustomHttpPatternDefaultTypeInternal _CustomHttpPattern_default_instance_;
+AGONES_EXPORT extern CustomHttpPatternDefaultTypeInternal _CustomHttpPattern_default_instance_;
 class Http;
 class HttpDefaultTypeInternal;
-extern HttpDefaultTypeInternal _Http_default_instance_;
+AGONES_EXPORT extern HttpDefaultTypeInternal _Http_default_instance_;
 class HttpRule;
 class HttpRuleDefaultTypeInternal;
-extern HttpRuleDefaultTypeInternal _HttpRule_default_instance_;
+AGONES_EXPORT extern HttpRuleDefaultTypeInternal _HttpRule_default_instance_;
 }  // namespace api
 }  // namespace google
 namespace google {
 namespace protobuf {
-template<> ::google::api::CustomHttpPattern* Arena::CreateMaybeMessage<::google::api::CustomHttpPattern>(Arena*);
-template<> ::google::api::Http* Arena::CreateMaybeMessage<::google::api::Http>(Arena*);
-template<> ::google::api::HttpRule* Arena::CreateMaybeMessage<::google::api::HttpRule>(Arena*);
+template<> AGONES_EXPORT ::google::api::CustomHttpPattern* Arena::CreateMaybeMessage<::google::api::CustomHttpPattern>(Arena*);
+template<> AGONES_EXPORT ::google::api::Http* Arena::CreateMaybeMessage<::google::api::Http>(Arena*);
+template<> AGONES_EXPORT ::google::api::HttpRule* Arena::CreateMaybeMessage<::google::api::HttpRule>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 namespace google {
@@ -85,7 +85,7 @@ namespace api {
 
 // ===================================================================
 
-class Http : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.Http) */ {
+class AGONES_EXPORT Http : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.Http) */ {
  public:
   Http();
   virtual ~Http();
@@ -216,7 +216,7 @@ class Http : public ::google::protobuf::Message /* @@protoc_insertion_point(clas
 };
 // -------------------------------------------------------------------
 
-class HttpRule : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.HttpRule) */ {
+class AGONES_EXPORT HttpRule : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.HttpRule) */ {
  public:
   HttpRule();
   virtual ~HttpRule();
@@ -589,7 +589,7 @@ class HttpRule : public ::google::protobuf::Message /* @@protoc_insertion_point(
 };
 // -------------------------------------------------------------------
 
-class CustomHttpPattern : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.CustomHttpPattern) */ {
+class AGONES_EXPORT CustomHttpPattern : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:google.api.CustomHttpPattern) */ {
  public:
   CustomHttpPattern();
   virtual ~CustomHttpPattern();
