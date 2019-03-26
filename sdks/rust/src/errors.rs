@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // Wrap in a new error
-error_chain!{
+error_chain! {
     foreign_links {
         Grpc(::grpcio::Error);
     }
