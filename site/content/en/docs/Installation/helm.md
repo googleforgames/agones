@@ -45,11 +45,11 @@ The command deploys Agones on the Kubernetes cluster with the default configurat
 > **Tip**: List all releases using `helm list`
 
 
-> If you are installing a development build of Agones (i.e. not the 0.4.0 release), you will need to install Agones the following way:
+> If you are installing a development build of Agones (i.e. not the {{< release-version >}} release), you will need to install Agones the following way:
 
 ```bash
 $ cd install/helm/
-$ helm install --name my-release --namespace agones-system agones --set agones.image.tag=0.4.0-481970d
+$ helm install --name my-release --namespace agones-system agones --set agones.image.tag={{< release-version >}}-481970d
 ```
 
 The full list of available tags is [here](https://console.cloud.google.com/gcr/images/agones-images/)
@@ -114,7 +114,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
-| `agones.image.tag`                                  | Global image tag for all images                                                                 | `0.4.0`                |
+| `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
 | `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
