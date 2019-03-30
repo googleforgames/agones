@@ -266,6 +266,11 @@ func SendGameServerUDP(gs *v1alpha1.GameServer, msg string) (string, error) {
 	return SendUDP(address, msg)
 }
 
+func (f *Framework) PortForwardGameServer() {
+	t := kube.NewTunnel(f.KubeClient.Core().RESTClient(), config, namespace, podName, tillerPort)
+	return t, t.ForwardPort()
+}
+
 // SendUDP sends a message to an address, and returns its reply if
 // it returns one in 30 seconds
 func SendUDP(address, msg string) (string, error) {

@@ -31,7 +31,7 @@ steps:
 #   dir: "build"
 #   args: ["pull-build-image"] # pull the build image if it exists
 
-# #
+#
 # build the e2e test runner
 #
 
@@ -41,9 +41,9 @@ steps:
   id: build-e2e
   waitFor: ['-']
 
-#
-# Runs the linter -- but also builds the build image, if not able to download
-#
+# #
+# # Runs the linter -- but also builds the build image, if not able to download
+# #
 
 # - name: "make-docker"
 #   id: lint
@@ -52,9 +52,9 @@ steps:
 #   dir: "build"
 #   args: ["lint"] # pull the build image if it exists
 
-#
-# Run the all the automated tests (except e2e) in parallel
-#
+# #
+# # Run the all the automated tests (except e2e) in parallel
+# #
 
 # - name: "make-docker"
 #   id: tests
@@ -63,9 +63,9 @@ steps:
 #   dir: "build"
 #   args: [ "-j", "3", "test" ]
 
-#
-# Push the build image, can run while we do other things.
-#
+# #
+# # Push the build image, can run while we do other things.
+# #
 
 # - name: "make-docker"
 #   waitFor:
@@ -73,9 +73,9 @@ steps:
 #   dir: "build"
 #   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
-#
-# Build all the images and sdks, and push them up to the repository
-#
+# #
+# # Build all the images and sdks, and push them up to the repository
+# #
 
 # - name: "make-docker"
 #   id: build
@@ -90,9 +90,9 @@ steps:
 #   dir: "build"
 #   args: [ "-j", "3", "push"]
 
-#
-# Site preview
-#
+# #
+# # Site preview
+# #
 
 # - name: "make-docker" # build a preview of the website
 #   id: site-static
@@ -149,7 +149,7 @@ steps:
 
 tags: ['ci']
 timeout: "1h"
-images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
+#images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
  machineType: 'N1_HIGHCPU_8'

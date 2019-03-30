@@ -14,22 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 set -e
-
 export SHELL="/bin/bash"
 KIND_PROFILE="agones"
+KIND_CONTAINER_NAME="$KIND_PROFILE-control-plane"
 
 if [ -z $(kind get clusters | grep $KIND_PROFILE) ]; then
     echo "Could not find $KIND_PROFILE cluster. Creating...";
-    kind create cluster --name $KIND_PROFILE --image kindest/node:v1.11.3 --wait 5m;
-    until KUBECONFIG="$(kind get kubeconfig-path --name="$KIND_PROFILE")" kubectl cluster-info; do
+    kind create cluster --name $KIND_PROFILE --config /root/kind.yaml --image kindest/node:v1.11.3 --wait 5m;
+fi
+KIND_KUBE_CONFIG=$(kind get kubeconfig-path --name="$KIND_PROFILE")
+docker network connect cloudbuild $KIND_PROFILE-control-plane
+KUBECONFIG=$KIND_KUBE_CONFIG kubectl config set-cluster $KIND_PROFILE --server=https://$KIND_CONTAINER_NAME:6443
+
+until KUBECONFIG=$KIND_KUBE_CONFIG kubectl cluster-info; do
         echo "Waiting for cluster to start...";
         sleep 3;
-    done
-fi
+done
 
+while :; do echo 'Go Cyril !'; sleep 1; done
+
+mkdir -p /go/src/agones.dev/agones/
 cp -r /workspace/. /go/src/agones.dev/agones/
 cd /go/src/agones.dev/agones/build
-
-echo "creating test cluster"
 DOCKER_RUN= make kind-test-cluster
 echo "installing current release"

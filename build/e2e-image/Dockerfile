@@ -1,5 +1,7 @@
 FROM gcr.io/cloud-builders/docker
 
+ENV Test=test
+
 RUN apt-get update && \
     apt-get install -y wget psmisc make gcc python jq zip && \
     apt-get clean
@@ -51,6 +53,11 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 # scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
+
+# cluster yaml.
+COPY kind.yaml /root/kind.yaml
+RUN chmod +r /root/kind.yaml
+
 
 WORKDIR /go
 
