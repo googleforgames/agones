@@ -1,7 +1,5 @@
 FROM gcr.io/cloud-builders/docker
 
-ENV Test=test
-
 RUN apt-get update && \
     apt-get install -y wget psmisc make gcc python jq zip && \
     apt-get clean
@@ -10,7 +8,7 @@ RUN apt-get update && \
 WORKDIR /usr/local
 ENV GO_VERSION=1.12
 ENV GOPATH /go
-ENV GO111MODULE=on
+ENV GO111MODULE=off
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
 

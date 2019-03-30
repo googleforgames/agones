@@ -31,10 +31,11 @@ until KUBECONFIG=$KIND_KUBE_CONFIG kubectl cluster-info; do
         sleep 3;
 done
 
-while :; do echo 'Go Cyril !'; sleep 1; done
-
 mkdir -p /go/src/agones.dev/agones/
 cp -r /workspace/. /go/src/agones.dev/agones/
 cd /go/src/agones.dev/agones/build
-DOCKER_RUN= make kind-test-cluster
+DOCKER_RUN= make kind-push
+DOCKER_RUN= make install
 echo "installing current release"
+
+while :; do echo 'Go Cyril !'; sleep 1; done
