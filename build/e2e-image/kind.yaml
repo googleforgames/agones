@@ -4,4 +4,3 @@ networking:
   apiServerAddress: "0.0.0.0"
 nodes:
 - role: control-plane
-- role: worker

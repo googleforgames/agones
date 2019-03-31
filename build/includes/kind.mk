@@ -49,9 +49,9 @@ kind-install:
 
 # pushses the current dev version of agones to the kind single node cluster.
 kind-push:
-	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane,$(KIND_PROFILE)-worker
-	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane,$(KIND_PROFILE)-worker
-	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane,$(KIND_PROFILE)-worker
+	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane
+	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane
+	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)" --nodes=$(KIND_PROFILE)-control-plane
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:
