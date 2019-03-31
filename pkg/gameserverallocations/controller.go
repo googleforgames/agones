@@ -15,34 +15,37 @@
 package gameserverallocations
 
 import (
-	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	"agones.dev/agones/pkg/apis/stable"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/util/crd"
+	"agones.dev/agones/pkg/util/apiserver"
+	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
-	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -66,31 +69,27 @@ type Controller struct {
 	readyGameServers gameServerCacheEntry
 	// Instead of selecting the top one, controller selects a random one
 	// from the topNGameServerCount of Ready gameservers
-	topNGameServerCount        int
-	crdGetter                  v1beta1.CustomResourceDefinitionInterface
-	gameServerSynced           cache.InformerSynced
-	gameServerGetter           getterv1alpha1.GameServersGetter
-	gameServerLister           listerv1alpha1.GameServerLister
-	gameServerAllocationSynced cache.InformerSynced
-	gameServerAllocationGetter getterv1alpha1.GameServerAllocationsGetter
-	stop                       <-chan struct{}
-	workerqueue                *workerqueue.WorkerQueue
-	gsWorkerqueue              *workerqueue.WorkerQueue
-	recorder                   record.EventRecorder
+	topNGameServerCount int
+	gameServerSynced    cache.InformerSynced
+	gameServerGetter    getterv1alpha1.GameServersGetter
+	gameServerLister    listerv1alpha1.GameServerLister
+	stop                <-chan struct{}
+	workerqueue         *workerqueue.WorkerQueue
+	recorder            record.EventRecorder
 }
 
 // gameserver cache to keep the Ready state gameserver.
 type gameServerCacheEntry struct {
 	mu    sync.RWMutex
-	cache map[string]*v1alpha1.GameServer
+	cache map[string]*stablev1alpha1.GameServer
 }
 
 // Store saves the data in the cache.
-func (e *gameServerCacheEntry) Store(key string, gs *v1alpha1.GameServer) {
+func (e *gameServerCacheEntry) Store(key string, gs *stablev1alpha1.GameServer) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if e.cache == nil {
-		e.cache = map[string]*v1alpha1.GameServer{}
+		e.cache = map[string]*stablev1alpha1.GameServer{}
 	}
 	e.cache[key] = gs.DeepCopy()
 }
@@ -111,7 +110,7 @@ func (e *gameServerCacheEntry) Delete(key string) bool {
 }
 
 // Load returns the data from cache. It return true if the value exists in the cache
-func (e *gameServerCacheEntry) Load(key string) (*v1alpha1.GameServer, bool) {
+func (e *gameServerCacheEntry) Load(key string) (*stablev1alpha1.GameServer, bool) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	val, ok := e.cache[key]
@@ -120,7 +119,7 @@ func (e *gameServerCacheEntry) Load(key string) (*v1alpha1.GameServer, bool) {
 }
 
 // Range extracts data from the cache based on provided function f.
-func (e *gameServerCacheEntry) Range(f func(key string, gs *v1alpha1.GameServer) bool) {
+func (e *gameServerCacheEntry) Range(f func(key string, gs *stablev1alpha1.GameServer) bool) {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 	for k, v := range e.cache {
@@ -143,59 +142,42 @@ var allocationRetry = wait.Backoff{
 }
 
 // NewController returns a controller for a GameServerAllocation
-func NewController(wh *webhooks.WebHook,
+func NewController(apiServer *apiserver.APIServer,
 	health healthcheck.Handler,
 	counter *gameservers.PerNodeCounter,
 	topNGameServerCnt int,
 	kubeClient kubernetes.Interface,
-	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
 ) *Controller {
 
 	agonesInformer := agonesInformerFactory.Stable().V1alpha1()
 	c := &Controller{
-		counter:                    counter,
-		topNGameServerCount:        topNGameServerCnt,
-		crdGetter:                  extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
-		gameServerSynced:           agonesInformer.GameServers().Informer().HasSynced,
-		gameServerGetter:           agonesClient.StableV1alpha1(),
-		gameServerLister:           agonesInformer.GameServers().Lister(),
-		gameServerAllocationSynced: agonesInformer.GameServerAllocations().Informer().HasSynced,
-		gameServerAllocationGetter: agonesClient.StableV1alpha1(),
+		counter:             counter,
+		topNGameServerCount: topNGameServerCnt,
+		gameServerSynced:    agonesInformer.GameServers().Informer().HasSynced,
+		gameServerGetter:    agonesClient.StableV1alpha1(),
+		gameServerLister:    agonesInformer.GameServers().Lister(),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncDelete, c.baseLogger, logfields.GameServerAllocationKey, stable.GroupName+".GameServerAllocationController")
-	c.gsWorkerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
-	health.AddLivenessCheck("gameserverallocation-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
-	health.AddLivenessCheck("gameserverallocation-gameserver-workerqueue", healthcheck.Check(c.gsWorkerqueue.Healthy))
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
+	health.AddLivenessCheck("gameserverallocation-gameserver-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(c.baseLogger.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-controller"})
 
-	kind := v1alpha1.Kind("GameServerAllocation")
-	wh.AddHandler("/mutate", kind, admv1beta1.Create, c.creationMutationHandler)
-	wh.AddHandler("/validate", kind, admv1beta1.Update, c.mutationValidationHandler)
-
-	agonesInformer.GameServerAllocations().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			gsa := obj.(*v1alpha1.GameServerAllocation)
-			if gsa.Status.State == v1alpha1.GameServerAllocationUnAllocated || gsa.Status.State == v1alpha1.GameServerAllocationContention {
-				c.workerqueue.Enqueue(gsa)
-			}
-		},
-	})
+	c.registerAPIResource(apiServer)
 
 	agonesInformer.GameServers().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// only interested in if the old / new state was/is Ready
-			oldGs := oldObj.(*v1alpha1.GameServer)
-			newGs := newObj.(*v1alpha1.GameServer)
-			if oldGs.Status.State == v1alpha1.GameServerStateReady || newGs.Status.State == v1alpha1.GameServerStateReady {
+			oldGs := oldObj.(*stablev1alpha1.GameServer)
+			newGs := newObj.(*stablev1alpha1.GameServer)
+			if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
 				if key, ok := c.getKey(newGs); ok {
-					if newGs.Status.State == v1alpha1.GameServerStateReady {
+					if newGs.Status.State == stablev1alpha1.GameServerStateReady {
 						c.readyGameServers.Store(key, newGs)
 					} else {
 						c.readyGameServers.Delete(key)
@@ -208,32 +190,39 @@ func NewController(wh *webhooks.WebHook,
 	return c
 }
 
-// Run runs this controller. Will block until stop is closed.
-// Runs threadiness number workers to process the rate limited queue
-// Probably only needs 1 worker, as its just deleting unallocated GameServerAllocations
-func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "gameserverallocations."+stable.GroupName, c.baseLogger)
-	if err != nil {
-		return err
+// registers the api resource for gameserverallocation
+func (c *Controller) registerAPIResource(api *apiserver.APIServer) {
+	resource := metav1.APIResource{
+		Name:         "gameserverallocations",
+		SingularName: "gameserverallocation",
+		Namespaced:   true,
+		Kind:         "GameServerAllocation",
+		Verbs: []string{
+			"create",
+		},
+		ShortNames: []string{"gsa"},
 	}
+	api.AddAPIResource(v1alpha1.SchemeGroupVersion.String(), resource, c.allocationHandler)
+}
 
+// Run runs this controller. Will block until stop is closed.
+// Ignores threadiness, as we only needs 1 worker for cache sync
+func (c *Controller) Run(_ int, stop <-chan struct{}) error {
 	c.stop = stop
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerAllocationSynced, c.gameServerSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
 	// build the cache
-	err = c.syncReadyGSServerCache()
+	err := c.syncReadyGSServerCache()
 	if err != nil {
 		return err
 	}
 
-	c.workerqueue.Run(workers, stop)
-
 	// we don't want mutiple workers refresh cache at the same time so one worker will be better.
 	// Also we don't expect to have too many failures when allocating
-	c.gsWorkerqueue.Run(1, stop)
+	c.workerqueue.Run(1, stop)
 
 	return nil
 }
@@ -254,21 +243,53 @@ func (c *Controller) loggerForGameServerAllocation(gsa *v1alpha1.GameServerAlloc
 	return c.loggerForGameServerAllocationKey(gsaName).WithField("gsa", gsa)
 }
 
-// creationMutationHandler will intercept when a GameServerAllocation is created, and allocate it a GameServer
-// assuming that one is available. If not, it will reject the AdmissionReview.
-func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Info("creationMutationHandler")
-	obj := review.Request.Object
-	gsa := &v1alpha1.GameServerAllocation{}
-
-	err := json.Unmarshal(obj.Raw, gsa)
-	if err != nil {
-		c.baseLogger.WithError(err).Error("error unmarshalling json")
-		return review, errors.Wrapf(err, "error unmarshalling original GameServerAllocation json: %s", obj.Raw)
+// allocationHandler CRDHandler for allocating a gameserver. Only accepts POST
+// commands
+func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, namespace string) error {
+	if r.Body != nil {
+		defer r.Body.Close() // nolint: errcheck
 	}
 
-	gsa.ApplyDefaults()
-	var gs *v1alpha1.GameServer
+	log := https.LogRequest(c.baseLogger, r)
+
+	if r.Method != http.MethodPost {
+		log.Warn("allocation handler only supports POST")
+		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
+		return nil
+	}
+
+	gsa, err := c.allocationDeserialization(r, namespace)
+	if err != nil {
+		return err
+	}
+
+	// server side validation
+	if causes, ok := gsa.Validate(); !ok {
+		status := &metav1.Status{
+			Status:  metav1.StatusFailure,
+			Message: fmt.Sprintf("GameServerAllocation is invalid: Invalid value: %#v", gsa),
+			Reason:  metav1.StatusReasonInvalid,
+			Details: &metav1.StatusDetails{
+				Kind:   "GameServerAllocation",
+				Group:  v1alpha1.SchemeGroupVersion.Group,
+				Causes: causes,
+			},
+			Code: http.StatusUnprocessableEntity,
+		}
+
+		var gvks []schema.GroupVersionKind
+		gvks, _, err = apiserver.Scheme.ObjectKinds(status)
+		if err != nil {
+			return errors.Wrap(err, "could not find objectkinds for status")
+		}
+
+		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
+
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return c.serialisation(r, w, status, apiserver.Codecs)
+	}
+
+	var gs *stablev1alpha1.GameServer
 	err = Retry(allocationRetry, func() error {
 		gs, err = c.allocate(gsa)
 		return err
@@ -276,9 +297,8 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 
 	if err != nil && err != ErrNoGameServerReady && err != ErrConflictInGameServerSelection {
 		// this will trigger syncing of the cache (assuming cache might not be up to date)
-		c.gsWorkerqueue.EnqueueImmediately(gs)
-
-		return review, err
+		c.workerqueue.EnqueueImmediately(gs)
+		return err
 	}
 
 	if err == ErrNoGameServerReady {
@@ -286,9 +306,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	} else if err == ErrConflictInGameServerSelection {
 		gsa.Status.State = v1alpha1.GameServerAllocationContention
 	} else {
-		// When a GameServer is deleted, the GameServerAllocation should go with it
-		ref := metav1.NewControllerRef(gs, v1alpha1.SchemeGroupVersion.WithKind("GameServer"))
-		gsa.ObjectMeta.OwnerReferences = append(gsa.ObjectMeta.OwnerReferences, *ref)
+		gsa.ObjectMeta.Name = gs.ObjectMeta.Name
 		gsa.Status.State = v1alpha1.GameServerAllocationAllocated
 		gsa.Status.GameServerName = gs.ObjectMeta.Name
 		gsa.Status.Ports = gs.Status.Ports
@@ -296,77 +314,69 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		gsa.Status.NodeName = gs.Status.NodeName
 	}
 
-	newFA, err := json.Marshal(gsa)
-	if err != nil {
-		c.baseLogger.WithError(err).Error("error marshalling")
-		return review, errors.Wrapf(err, "error marshalling GameServerAllocation %s to json", gsa.ObjectMeta.Name)
-	}
+	c.loggerForGameServerAllocation(gsa).Info("game server allocation")
 
-	patch, err := jsonpatch.CreatePatch(obj.Raw, newFA)
-	if err != nil {
-		c.baseLogger.WithError(err).Error("error creating the patch")
-		return review, errors.Wrapf(err, "error creating patch for GameServerAllocation %s", gsa.ObjectMeta.Name)
-	}
-
-	json, err := json.Marshal(patch)
-	if err != nil {
-		c.baseLogger.WithError(err).Error("error creating the json for the patch")
-		return review, errors.Wrapf(err, "error creating json for patch for GameServerAllocation %s", gs.ObjectMeta.Name)
-	}
-
-	c.loggerForGameServerAllocation(gsa).WithField("patch", string(json)).Infof("patch created!")
-
-	pt := admv1beta1.PatchTypeJSONPatch
-	review.Response.PatchType = &pt
-	review.Response.Patch = json
-
-	return review, nil
+	return c.serialisation(r, w, gsa, scheme.Codecs)
 }
 
-// GameServerAllocation fleetName value
-// nolint: dupl
-func (c *Controller) mutationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Info("mutationValidationHandler")
+// allocationDeserialization processes the request and namespace, and attempts to deserialise its values
+// into a GameServerAllocation. Returns an error if it fails for whatever reason.
+func (c *Controller) allocationDeserialization(r *http.Request, namespace string) (*v1alpha1.GameServerAllocation, error) {
+	gsa := &v1alpha1.GameServerAllocation{}
 
-	newGSA := &v1alpha1.GameServerAllocation{}
-	oldGSA := &v1alpha1.GameServerAllocation{}
-
-	if err := json.Unmarshal(review.Request.Object.Raw, newGSA); err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling new GameServerAllocation json: %s", review.Request.Object.Raw)
+	gvks, _, err := scheme.Scheme.ObjectKinds(gsa)
+	if err != nil {
+		return gsa, errors.Wrap(err, "error getting objectkinds for gameserverallocation")
 	}
 
-	if err := json.Unmarshal(review.Request.OldObject.Raw, oldGSA); err != nil {
-		return review, errors.Wrapf(err, "error unmarshalling old GameServerAllocation json: %s", review.Request.Object.Raw)
+	gsa.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
+
+	mediaTypes := scheme.Codecs.SupportedMediaTypes()
+	info, ok := k8sruntime.SerializerInfoForMediaType(mediaTypes, r.Header.Get("Content-Type"))
+	if !ok {
+		return gsa, errors.New("Could not find deserializer")
 	}
 
-	if causes, ok := oldGSA.ValidateUpdate(newGSA); !ok {
-		review.Response.Allowed = false
-		details := metav1.StatusDetails{
-			Name:   review.Request.Name,
-			Group:  review.Request.Kind.Group,
-			Kind:   review.Request.Kind.Kind,
-			Causes: causes,
-		}
-		review.Response.Result = &metav1.Status{
-			Status:  metav1.StatusFailure,
-			Message: "GameServerAllocation update is invalid",
-			Reason:  metav1.StatusReasonInvalid,
-			Details: &details,
-		}
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return gsa, errors.Wrap(err, "could not read body")
 	}
 
-	return review, nil
+	gvk := v1alpha1.SchemeGroupVersion.WithKind("GameServerAllocation")
+	_, _, err = info.Serializer.Decode(b, &gvk, gsa)
+	if err != nil {
+		c.baseLogger.WithField("body", string(b)).Error("error decoding body")
+		return gsa, errors.Wrap(err, "error decoding body")
+	}
+
+	gsa.ObjectMeta.Namespace = namespace
+	gsa.ObjectMeta.CreationTimestamp = metav1.Now()
+	gsa.ApplyDefaults()
+
+	return gsa, nil
+}
+
+// serialisation takes a runtime.Object, and serislises it to the ResponseWriter in the requested format
+func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, codecs serializer.CodecFactory) error {
+	info, err := apiserver.AcceptedSerializer(r, codecs)
+	if err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", info.MediaType)
+	err = info.Serializer.Encode(obj, w)
+	return errors.Wrapf(err, "error encoding %T", obj)
 }
 
 // allocate allocated a GameServer from a given Fleet
-func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.GameServer, error) {
-	var allocation *v1alpha1.GameServer
+func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alpha1.GameServer, error) {
+	var allocation *stablev1alpha1.GameServer
 	var comparator findComparator
 
 	switch gsa.Spec.Scheduling {
-	case v1alpha1.Packed:
+	case apis.Packed:
 		comparator = packedComparator
-	case v1alpha1.Distributed:
+	case apis.Distributed:
 		comparator = distributedComparator
 	}
 
@@ -381,7 +391,7 @@ func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.Gam
 	}
 
 	gsCopy := allocation.DeepCopy()
-	gsCopy.Status.State = v1alpha1.GameServerStateAllocated
+	gsCopy.Status.State = stablev1alpha1.GameServerStateAllocated
 
 	c.patchMetadata(gsCopy, gsa.Spec.MetaPatch)
 
@@ -399,7 +409,7 @@ func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.Gam
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation
-func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam v1alpha1.MetaPatch) {
+func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam v1alpha1.MetaPatch) {
 	// patch ObjectMeta labels
 	if fam.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
@@ -420,27 +430,13 @@ func (c *Controller) patchMetadata(gs *v1alpha1.GameServer, fam v1alpha1.MetaPat
 	}
 }
 
-// syncDelete takes unallocated GameServerAllocations, and deletes them!
-func (c *Controller) syncDelete(key string) error {
-	c.loggerForGameServerAllocationKey(key).Info("Deleting gameserverallocation")
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.loggerForGameServerAllocationKey(key), errors.Wrapf(err, "invalid resource key"))
-		return nil
-	}
-
-	err = c.gameServerAllocationGetter.GameServerAllocations(namespace).Delete(name, nil)
-	return errors.Wrapf(err, "could not delete GameServerAllocation %s", key)
-}
-
 // findReadyGameServerForAllocation returns the most appropriate GameServer from the set, taking into account
 // preferred selectors, as well as the passed in comparator
-func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAllocation, comparator findComparator) (*v1alpha1.GameServer, error) {
+func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAllocation, comparator findComparator) (*stablev1alpha1.GameServer, error) {
 	// track the best node count
 	var bestCount *gameservers.NodeCount
 	// the current GameServer from the node with the most GameServers (allocated, ready)
-	var bestGS *v1alpha1.GameServer
+	var bestGS *stablev1alpha1.GameServer
 
 	selector, err := metav1.LabelSelectorAsSelector(&gsa.Spec.Required)
 	if err != nil {
@@ -457,18 +453,18 @@ func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAl
 	counts := c.counter.Counts()
 
 	// track potential GameServers, one for each node
-	allocatableRequired := map[string]*v1alpha1.GameServer{}
-	allocatablePreferred := make([]map[string]*v1alpha1.GameServer, len(preferred))
+	allocatableRequired := map[string]*stablev1alpha1.GameServer{}
+	allocatablePreferred := make([]map[string]*stablev1alpha1.GameServer, len(preferred))
 
 	// build the index of possible allocatable GameServers
 	for _, gs := range gsList {
-		if gs.DeletionTimestamp.IsZero() && gs.Status.State == v1alpha1.GameServerStateReady {
+		if gs.DeletionTimestamp.IsZero() && gs.Status.State == stablev1alpha1.GameServerStateReady {
 			allocatableRequired[gs.Status.NodeName] = gs
 
 			for i, p := range preferred {
 				if p.Matches(labels.Set(gs.Labels)) {
 					if allocatablePreferred[i] == nil {
-						allocatablePreferred[i] = map[string]*v1alpha1.GameServer{}
+						allocatablePreferred[i] = map[string]*stablev1alpha1.GameServer{}
 					}
 					allocatablePreferred[i][gs.Status.NodeName] = gs
 				}
@@ -486,7 +482,7 @@ func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAl
 		}
 	}
 
-	bestGSList := []v1alpha1.GameServer{}
+	var bestGSList []stablev1alpha1.GameServer
 	for nodeName, gs := range allocationSet {
 		count := counts[nodeName]
 		// bestGS == nil: if there is no best GameServer, then this node & GameServer is the always the best
@@ -528,7 +524,7 @@ func (c *Controller) syncReadyGSServerCache() error {
 	}
 
 	// convert list of current gameservers to map for faster access
-	currGameservers := make(map[string]*v1alpha1.GameServer)
+	currGameservers := make(map[string]*stablev1alpha1.GameServer)
 	for _, gs := range gsList {
 		if key, ok := c.getKey(gs); ok {
 			currGameservers[key] = gs
@@ -537,7 +533,7 @@ func (c *Controller) syncReadyGSServerCache() error {
 
 	// first remove the gameservers are not in the list anymore
 	tobeDeletedGSInCache := make([]string, 0)
-	c.readyGameServers.Range(func(key string, gs *v1alpha1.GameServer) bool {
+	c.readyGameServers.Range(func(key string, gs *stablev1alpha1.GameServer) bool {
 		if _, ok := currGameservers[key]; !ok {
 			tobeDeletedGSInCache = append(tobeDeletedGSInCache, key)
 		}
@@ -551,12 +547,12 @@ func (c *Controller) syncReadyGSServerCache() error {
 	// refresh the cache of possible allocatable GameServers
 	for key, gs := range currGameservers {
 		if gsCache, ok := c.readyGameServers.Load(key); ok {
-			if !(gs.DeletionTimestamp.IsZero() && gs.Status.State == v1alpha1.GameServerStateReady) {
+			if !(gs.DeletionTimestamp.IsZero() && gs.Status.State == stablev1alpha1.GameServerStateReady) {
 				c.readyGameServers.Delete(key)
 			} else if gs.ObjectMeta.ResourceVersion != gsCache.ObjectMeta.ResourceVersion {
 				c.readyGameServers.Store(key, gs)
 			}
-		} else if gs.DeletionTimestamp.IsZero() && gs.Status.State == v1alpha1.GameServerStateReady {
+		} else if gs.DeletionTimestamp.IsZero() && gs.Status.State == stablev1alpha1.GameServerStateReady {
 			c.readyGameServers.Store(key, gs)
 		}
 	}
@@ -565,8 +561,8 @@ func (c *Controller) syncReadyGSServerCache() error {
 }
 
 // selectGameServers selects the appropriate gameservers from cache based on selector.
-func (c *Controller) selectGameServers(selector labels.Selector) (res []*v1alpha1.GameServer) {
-	c.readyGameServers.Range(func(key string, gs *v1alpha1.GameServer) bool {
+func (c *Controller) selectGameServers(selector labels.Selector) (res []*stablev1alpha1.GameServer) {
+	c.readyGameServers.Range(func(key string, gs *stablev1alpha1.GameServer) bool {
 		if selector.Matches(labels.Set(gs.ObjectMeta.GetLabels())) {
 			res = append(res, gs)
 		}
@@ -576,7 +572,7 @@ func (c *Controller) selectGameServers(selector labels.Selector) (res []*v1alpha
 }
 
 // getKey extract the key of gameserver object
-func (c *Controller) getKey(gs *v1alpha1.GameServer) (string, bool) {
+func (c *Controller) getKey(gs *stablev1alpha1.GameServer) (string, bool) {
 	var key string
 	ok := true
 	var err error
@@ -610,7 +606,7 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 }
 
 // getRandomlySelectedGS selects a GS from the set of Gameservers randomly. This will reduce the contentions
-func (c *Controller) getRandomlySelectedGS(gsa *v1alpha1.GameServerAllocation, bestGSList []v1alpha1.GameServer) *v1alpha1.GameServer {
+func (c *Controller) getRandomlySelectedGS(gsa *v1alpha1.GameServerAllocation, bestGSList []stablev1alpha1.GameServer) *stablev1alpha1.GameServer {
 	seed, err := strconv.Atoi(gsa.ObjectMeta.ResourceVersion)
 	if err != nil {
 		seed = 1234567

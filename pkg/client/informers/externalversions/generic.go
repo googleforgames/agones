@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,8 +61,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAutoscalers().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gameservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServers().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocations"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServerAllocations().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("gameserversets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServerSets().Informer()}, nil
 

@@ -2219,13 +2219,352 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 
 
 
+
+
+
+
+
 {{% feature publishVersion="0.10.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
+<a href="#allocation.agones.dev">allocation.agones.dev</a>
+</li>
+<li>
 <a href="#stable.agones.dev">stable.agones.dev</a>
 </li>
 </ul>
+<h2 id="allocation.agones.dev">allocation.agones.dev</h2>
+<p>
+<p>Package v1alpha1 is the v1alpha1 version of the API.</p>
+</p>
+Resource Types:
+<ul><li>
+<a href="#GameServerAllocation">GameServerAllocation</a>
+</li></ul>
+<h3 id="GameServerAllocation">GameServerAllocation
+</h3>
+<p>
+<p>GameServerAllocation is the data structure for allocating against a set of
+GameServers, defined <code>required</code> and <code>preferred</code> selectors</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+allocation.agones.dev/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>GameServerAllocation</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#GameServerAllocationSpec">
+GameServerAllocationSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>required</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Required The required allocation. Defaults to all GameServers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preferred</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
+[]Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
+If the first selector is not matched,
+the selection attempts the second selector, and so on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="#MetaPatch">
+MetaPatch
+</a>
+</em>
+</td>
+<td>
+<p>MetaPatch is optional custom metadata that is added to the game server at allocation
+You can use this to tell the server necessary session data</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code></br>
+<em>
+<a href="#GameServerAllocationStatus">
+GameServerAllocationStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="GameServerAllocationSpec">GameServerAllocationSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocation">GameServerAllocation</a>)
+</p>
+<p>
+<p>GameServerAllocationSpec is the spec for a GameServerAllocation</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>required</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Required The required allocation. Defaults to all GameServers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preferred</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
+[]Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
+If the first selector is not matched,
+the selection attempts the second selector, and so on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="#MetaPatch">
+MetaPatch
+</a>
+</em>
+</td>
+<td>
+<p>MetaPatch is optional custom metadata that is added to the game server at allocation
+You can use this to tell the server necessary session data</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="GameServerAllocationState">GameServerAllocationState
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocationStatus">GameServerAllocationStatus</a>)
+</p>
+<p>
+<p>GameServerAllocationState is the Allocation state</p>
+</p>
+<h3 id="GameServerAllocationStatus">GameServerAllocationStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocation">GameServerAllocation</a>)
+</p>
+<p>
+<p>GameServerAllocationStatus is the status for an GameServerAllocation resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>state</code></br>
+<em>
+<a href="#GameServerAllocationState">
+GameServerAllocationState
+</a>
+</em>
+</td>
+<td>
+<p>GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>gameServerName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code></br>
+<em>
+<a href="#GameServerStatusPort">
+[]GameServerStatusPort
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>address</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="MetaPatch">MetaPatch
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>MetaPatch is the metadata used to patch the GameServer metadata on allocation</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code></br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<hr/>
 <h2 id="stable.agones.dev">stable.agones.dev</h2>
 <p>
 <p>Package v1alpha1 is the v1alpha1 version of the API.</p>
@@ -2239,8 +2578,6 @@ Resource Types:
 <a href="#FleetAutoscaler">FleetAutoscaler</a>
 </li><li>
 <a href="#GameServer">GameServer</a>
-</li><li>
-<a href="#GameServerAllocation">GameServerAllocation</a>
 </li><li>
 <a href="#GameServerSet">GameServerSet</a>
 </li></ul>
@@ -2329,9 +2666,7 @@ Kubernetes apps/v1.DeploymentStrategy
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -2664,9 +2999,7 @@ Health
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -2695,136 +3028,6 @@ Kubernetes core/v1.PodTemplateSpec
 <em>
 <a href="#GameServerStatus">
 GameServerStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="GameServerAllocation">GameServerAllocation
-</h3>
-<p>
-<p>GameServerAllocation is the data structure for allocating against a set of
-GameServers, defined <code>required</code> and <code>preferred</code> selectors</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>apiVersion</code></br>
-string</td>
-<td>
-<code>
-stable.agones.dev/v1alpha1
-</code>
-</td>
-</tr>
-<tr>
-<td>
-<code>kind</code></br>
-string
-</td>
-<td><code>GameServerAllocation</code></td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#GameServerAllocationSpec">
-GameServerAllocationSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>required</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Required The required allocation. Defaults to all GameServers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preferred</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
-[]Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
-If the first selector is not matched,
-the selection attempts the second selector, and so on.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="#MetaPatch">
-MetaPatch
-</a>
-</em>
-</td>
-<td>
-<p>MetaPatch is optional custom metadata that is added to the game server at allocation
-You can use this to tell the server necessary session data</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code></br>
-<em>
-<a href="#GameServerAllocationStatus">
-GameServerAllocationStatus
 </a>
 </em>
 </td>
@@ -2907,9 +3110,7 @@ int32
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -3483,9 +3684,7 @@ Kubernetes apps/v1.DeploymentStrategy
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -3556,163 +3755,6 @@ int32
 </td>
 <td>
 <p>AllocatedReplicas are the number of Allocated GameServer replicas</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="GameServerAllocationSpec">GameServerAllocationSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#GameServerAllocation">GameServerAllocation</a>)
-</p>
-<p>
-<p>GameServerAllocationSpec is the spec for a GameServerAllocation</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>required</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Required The required allocation. Defaults to all GameServers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preferred</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
-[]Kubernetes meta/v1.LabelSelector
-</a>
-</em>
-</td>
-<td>
-<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
-If the first selector is not matched,
-the selection attempts the second selector, and so on.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="#MetaPatch">
-MetaPatch
-</a>
-</em>
-</td>
-<td>
-<p>MetaPatch is optional custom metadata that is added to the game server at allocation
-You can use this to tell the server necessary session data</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="GameServerAllocationState">GameServerAllocationState
-(<code>string</code> alias)</p></h3>
-<p>
-(<em>Appears on:</em>
-<a href="#GameServerAllocationStatus">GameServerAllocationStatus</a>)
-</p>
-<p>
-<p>GameServerAllocationState is the Allocation state</p>
-</p>
-<h3 id="GameServerAllocationStatus">GameServerAllocationStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#GameServerAllocation">GameServerAllocation</a>)
-</p>
-<p>
-<p>GameServerAllocationStatus is the status for an GameServerAllocation resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>state</code></br>
-<em>
-<a href="#GameServerAllocationState">
-GameServerAllocationState
-</a>
-</em>
-</td>
-<td>
-<p>GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>gameServerName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code></br>
-<em>
-<a href="#GameServerStatusPort">
-[]GameServerStatusPort
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>address</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
 </td>
 </tr>
 </tbody>
@@ -3832,9 +3874,7 @@ int32
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -3968,9 +4008,7 @@ Health
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -4193,9 +4231,7 @@ Health
 <td>
 <code>scheduling</code></br>
 <em>
-<a href="#SchedulingStrategy">
-SchedulingStrategy
-</a>
+agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
@@ -4287,8 +4323,7 @@ int32
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#FleetAllocationSpec">FleetAllocationSpec</a>, 
-<a href="#GameServerAllocationSpec">GameServerAllocationSpec</a>)
+<a href="#FleetAllocationSpec">FleetAllocationSpec</a>)
 </p>
 <p>
 <p>MetaPatch is the metadata used to patch the GameServer metadata on allocation</p>
@@ -4331,19 +4366,6 @@ map[string]string
 </p>
 <p>
 <p>PortPolicy is the port policy for the GameServer</p>
-</p>
-<h3 id="SchedulingStrategy">SchedulingStrategy
-(<code>string</code> alias)</p></h3>
-<p>
-(<em>Appears on:</em>
-<a href="#FleetSpec">FleetSpec</a>, 
-<a href="#GameServerAllocationSpec">GameServerAllocationSpec</a>, 
-<a href="#GameServerSetSpec">GameServerSetSpec</a>, 
-<a href="#GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>SchedulingStrategy is the strategy that a Fleet &amp; GameServers will use
-when scheduling GameServers&rsquo; Pods across a cluster.</p>
 </p>
 <h3 id="WebhookPolicy">WebhookPolicy
 </h3>

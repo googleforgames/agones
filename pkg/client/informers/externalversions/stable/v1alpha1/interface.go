@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,6 @@ type Interface interface {
 	FleetAutoscalers() FleetAutoscalerInformer
 	// GameServers returns a GameServerInformer.
 	GameServers() GameServerInformer
-	// GameServerAllocations returns a GameServerAllocationInformer.
-	GameServerAllocations() GameServerAllocationInformer
 	// GameServerSets returns a GameServerSetInformer.
 	GameServerSets() GameServerSetInformer
 }
@@ -67,11 +65,6 @@ func (v *version) FleetAutoscalers() FleetAutoscalerInformer {
 // GameServers returns a GameServerInformer.
 func (v *version) GameServers() GameServerInformer {
 	return &gameServerInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// GameServerAllocations returns a GameServerAllocationInformer.
-func (v *version) GameServerAllocations() GameServerAllocationInformer {
-	return &gameServerAllocationInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // GameServerSets returns a GameServerSetInformer.
