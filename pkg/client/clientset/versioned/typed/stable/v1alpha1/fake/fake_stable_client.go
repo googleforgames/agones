@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,10 +42,6 @@ func (c *FakeStableV1alpha1) FleetAutoscalers(namespace string) v1alpha1.FleetAu
 
 func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerInterface {
 	return &FakeGameServers{c, namespace}
-}
-
-func (c *FakeStableV1alpha1) GameServerAllocations(namespace string) v1alpha1.GameServerAllocationInterface {
-	return &FakeGameServerAllocations{c, namespace}
 }
 
 func (c *FakeStableV1alpha1) GameServerSets(namespace string) v1alpha1.GameServerSetInterface {

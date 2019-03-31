@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ package fake
 
 import (
 	clientset "agones.dev/agones/pkg/client/clientset/versioned"
+	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
+	fakeallocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1/fake"
 	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	fakestablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -70,6 +72,16 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// AllocationV1alpha1 retrieves the AllocationV1alpha1Client
+func (c *Clientset) AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface {
+	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
+}
+
+// Allocation retrieves the AllocationV1alpha1Client
+func (c *Clientset) Allocation() allocationv1alpha1.AllocationV1alpha1Interface {
+	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
+}
 
 // StableV1alpha1 retrieves the StableV1alpha1Client
 func (c *Clientset) StableV1alpha1() stablev1alpha1.StableV1alpha1Interface {

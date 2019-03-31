@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -152,7 +153,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		gsSet.ObjectMeta.Name = "gsSet1"
 		gsSet.ObjectMeta.UID = "1234"
 		gsSet.Spec.Replicas = f.Spec.Replicas
-		gsSet.Spec.Scheduling = v1alpha1.Distributed
+		gsSet.Spec.Scheduling = apis.Distributed
 		updated := false
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -794,7 +795,7 @@ func defaultFixture() *v1alpha1.Fleet {
 		},
 		Spec: v1alpha1.FleetSpec{
 			Replicas:   5,
-			Scheduling: v1alpha1.Packed,
+			Scheduling: apis.Packed,
 			Template:   v1alpha1.GameServerTemplateSpec{},
 		},
 	}
