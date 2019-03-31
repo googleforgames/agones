@@ -17,16 +17,23 @@ set -e
 export SHELL="/bin/bash"
 KIND_PROFILE="agones"
 KIND_CONTAINER_NAME="$KIND_PROFILE-control-plane"
+# we run from local images so we don't pull
+export IMAGE_PULL_POLICY="IfNotPresent"
+export DOCKER_RUN=
 
 if [ -z $(kind get clusters | grep $KIND_PROFILE) ]; then
     echo "Could not find $KIND_PROFILE cluster. Creating...";
     kind create cluster --name $KIND_PROFILE --config /root/kind.yaml --image kindest/node:v1.11.3 --wait 5m;
 fi
 KIND_KUBE_CONFIG=$(kind get kubeconfig-path --name="$KIND_PROFILE")
-docker network connect cloudbuild $KIND_PROFILE-control-plane
-KUBECONFIG=$KIND_KUBE_CONFIG kubectl config set-cluster $KIND_PROFILE --server=https://$KIND_CONTAINER_NAME:6443
+export KUBECONFIG=$KIND_KUBE_CONFIG
 
-until KUBECONFIG=$KIND_KUBE_CONFIG kubectl cluster-info; do
+# attach the kind container to our GCB network
+docker network connect cloudbuild $KIND_PROFILE-control-plane
+# use the dns and the expose port from kind docker container
+kubectl config set-cluster $KIND_PROFILE --server=https://$KIND_CONTAINER_NAME:6443
+
+until kubectl cluster-info; do
         echo "Waiting for cluster to start...";
         sleep 3;
 done
@@ -34,8 +41,11 @@ done
 mkdir -p /go/src/agones.dev/agones/
 cp -r /workspace/. /go/src/agones.dev/agones/
 cd /go/src/agones.dev/agones/build
-DOCKER_RUN= make kind-push
-DOCKER_RUN= make install
-echo "installing current release"
 
-while :; do echo 'Go Cyril !'; sleep 1; done
+make kind-push
+kubectl apply -f ./helm.yaml
+helm init --wait --service-account helm
+echo "installing current release"
+make install
+export GO_E2E_TEST_ARGS=--kubeconfig $KIND_KUBE_CONFIG
+make test-e2e

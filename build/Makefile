@@ -123,7 +123,7 @@ endif
 
 go_test_cmd = go test -mod=vendor $(RACE_DETECTOR_ARGS)
 GO_TEST=$(DOCKER_RUN) $(go_test_cmd)
-GO_E2E_TEST_ARGS=--kubeconfig /root/.kube/$(kubeconfig_file)
+GO_E2E_TEST_ARGS ?= --kubeconfig /root/.kube/$(kubeconfig_file)
 
 PERF_OUTPUT_DIR=$(mount_path)/build/.perf
 
@@ -271,7 +271,7 @@ push: push-controller-image push-agones-sdk-image push-ping-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
-install: IMAGE_PULL_POLICY := "Always"
+install: IMAGE_PULL_POLICY ?= "Always"
 install: PING_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: $(ensure-build-image) install-custom-pull-secret

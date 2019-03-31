@@ -8,6 +8,7 @@ require (
 	fortio.org/fortio v1.3.1
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/aws/aws-sdk-go v1.16.20 // indirect
+	github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c // indirect
 	github.com/evanphx/json-patch v4.1.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect

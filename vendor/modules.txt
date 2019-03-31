@@ -46,6 +46,9 @@ github.com/aws/aws-sdk-go/private/protocol
 github.com/beorn7/perks/quantile
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c
+github.com/docker/spdystream
+github.com/docker/spdystream/spdy
 # github.com/evanphx/json-patch v4.1.0+incompatible
 github.com/evanphx/json-patch
 # github.com/fsnotify/fsnotify v1.4.7
@@ -363,6 +366,8 @@ k8s.io/apimachinery/pkg/util/strategicpatch
 k8s.io/apimachinery/pkg/util/cache
 k8s.io/apimachinery/pkg/util/diff
 k8s.io/apimachinery/pkg/util/rand
+k8s.io/apimachinery/pkg/util/httpstream
+k8s.io/apimachinery/pkg/util/httpstream/spdy
 k8s.io/apimachinery/third_party/forked/golang/reflect
 k8s.io/apimachinery/pkg/util/framer
 k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
@@ -370,6 +375,7 @@ k8s.io/apimachinery/pkg/apis/meta/v1beta1
 k8s.io/apimachinery/pkg/util/mergepatch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/pkg/apis/meta/internalversion
+k8s.io/apimachinery/third_party/forked/golang/netutil
 # k8s.io/client-go v8.0.0+incompatible
 k8s.io/client-go/informers
 k8s.io/client-go/kubernetes
@@ -388,6 +394,8 @@ k8s.io/client-go/util/workqueue
 k8s.io/client-go/tools/metrics
 k8s.io/client-go/kubernetes/fake
 k8s.io/client-go/plugin/pkg/client/auth/gcp
+k8s.io/client-go/tools/portforward
+k8s.io/client-go/transport/spdy
 k8s.io/client-go/informers/admissionregistration
 k8s.io/client-go/informers/apps
 k8s.io/client-go/informers/autoscaling

@@ -22,14 +22,14 @@ steps:
 # Creates the initial make + docker build platform
 #
 
-# - name: "ubuntu"
-#   args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
-# - name: "gcr.io/cloud-builders/docker"
-#   args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
-# - name: "make-docker"
-#   id: make-docker
-#   dir: "build"
-#   args: ["pull-build-image"] # pull the build image if it exists
+- name: "ubuntu"
+  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+- name: "gcr.io/cloud-builders/docker"
+  args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
+- name: "make-docker"
+  id: make-docker
+  dir: "build"
+  args: ["pull-build-image"] # pull the build image if it exists
 
 #
 # build the e2e test runner
@@ -41,9 +41,9 @@ steps:
   id: build-e2e
   waitFor: ['-']
 
-# #
-# # Runs the linter -- but also builds the build image, if not able to download
-# #
+#
+# Runs the linter -- but also builds the build image, if not able to download
+#
 
 # - name: "make-docker"
 #   id: lint
@@ -52,9 +52,9 @@ steps:
 #   dir: "build"
 #   args: ["lint"] # pull the build image if it exists
 
-# #
-# # Run the all the automated tests (except e2e) in parallel
-# #
+#
+# Run the all the automated tests (except e2e) in parallel
+#
 
 # - name: "make-docker"
 #   id: tests
@@ -63,36 +63,36 @@ steps:
 #   dir: "build"
 #   args: [ "-j", "3", "test" ]
 
-# #
-# # Push the build image, can run while we do other things.
-# #
+#
+# Push the build image, can run while we do other things.
+#
 
-# - name: "make-docker"
+- name: "make-docker"
 #   waitFor:
 #     - lint
-#   dir: "build"
-#   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
+  dir: "build"
+  args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
-# #
-# # Build all the images and sdks, and push them up to the repository
-# #
+#
+# Build all the images and sdks, and push them up to the repository
+#
 
-# - name: "make-docker"
-#   id: build
+- name: "make-docker"
+  id: build
 #   waitFor:
 #     - lint
-#   dir: "build"
-#   args: [ "-j", "4", "build"]
-# - name: "make-docker"
-#   id: push-images
-#   waitFor:
-#     - build
-#   dir: "build"
-#   args: [ "-j", "3", "push"]
+  dir: "build"
+  args: [ "-j", "4", "build"]
+- name: "make-docker"
+  id: push-images
+  waitFor:
+    - build
+  dir: "build"
+  args: [ "-j", "3", "push"]
 
-# #
-# # Site preview
-# #
+#
+# Site preview
+#
 
 # - name: "make-docker" # build a preview of the website
 #   id: site-static
@@ -118,10 +118,9 @@ steps:
 # Run the e2e tests
 #
 
-
 - name: 'e2e-runner'
   waitFor:
-    # - push-images
+    - push-images
     - build-e2e
 
 #
@@ -131,15 +130,9 @@ steps:
 # - name: 'gcr.io/cloud-builders/gsutil'
 #   waitFor:
 #     - build
-#     - tests
-#   dir: "sdks/cpp/bin"
+#     # - tests
+#   dir: "sdks/cpp/.build"
 #   args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
-# - name: 'gcr.io/cloud-builders/gsutil'
-#   waitFor:
-#     - build
-#     - tests
-#   dir: "sdks/cpp/bin"
-#   args: ['cp', '*.zip', 'gs://agones-artifacts/cpp-sdk']
 # - name: 'gcr.io/cloud-builders/gsutil'
 #   waitFor:
 #     - build
@@ -149,7 +142,7 @@ steps:
 
 tags: ['ci']
 timeout: "1h"
-#images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
+images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
  machineType: 'N1_HIGHCPU_8'

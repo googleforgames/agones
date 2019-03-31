@@ -33,6 +33,7 @@ import (
 
 	// required to use gcloud login see: https://github.com/kubernetes/client-go/issues/242
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -46,6 +47,7 @@ const (
 type Framework struct {
 	KubeClient      kubernetes.Interface
 	AgonesClient    versioned.Interface
+	config          *restclient.Config
 	GameServerImage string
 	PullSecret      string
 	StressTestLevel int
@@ -72,6 +74,7 @@ func New(kubeconfig string) (*Framework, error) {
 	return &Framework{
 		KubeClient:   kubeClient,
 		AgonesClient: agonesClient,
+		config:       config,
 	}, nil
 }
 
@@ -261,15 +264,21 @@ func (f *Framework) CleanUp(ns string) error {
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
 // assumes the first port is the port to send the message to
-func SendGameServerUDP(gs *v1alpha1.GameServer, msg string) (string, error) {
-	address := fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port)
+func (f *Framework) SendGameServerUDP(gs *v1alpha1.GameServer, msg string) (string, error) {
+	t := NewTunnel(f.KubeClient.Core().RESTClient(),
+		f.config, gs.Namespace, gs.Name, int(gs.Status.Ports[0].Port))
+	if err := t.ForwardPort(); err != nil {
+		return "", err
+	}
+	defer t.Close()
+	address := fmt.Sprintf("%s:%d", "localhost", t.Local)
 	return SendUDP(address, msg)
 }
 
-func (f *Framework) PortForwardGameServer() {
-	t := kube.NewTunnel(f.KubeClient.Core().RESTClient(), config, namespace, podName, tillerPort)
-	return t, t.ForwardPort()
-}
+// func (f *Framework) PortForwardGameServer() {
+// 	t := kube.NewTunnel(f.KubeClient.Core().RESTClient(), config, namespace, podName, tillerPort)
+// 	return t, t.ForwardPort()
+// }
 
 // SendUDP sends a message to an address, and returns its reply if
 // it returns one in 30 seconds
