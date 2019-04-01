@@ -18,13 +18,12 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -179,6 +178,32 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
 	assert.Nil(t, err)
 }
+
+func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	gsClient := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs)
+	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
+
+	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+
+	pod, err := podClient.Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+
+	assert.True(t, metav1.IsControlledBy(pod, readyGs))
+
+	err = podClient.Delete(pod.ObjectMeta.Name, nil)
+	assert.NoError(t, err)
+
+	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
+	assert.NoError(t, err)
+}
+
 func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	t.Parallel()
 	gs := &v1alpha1.GameServer{
