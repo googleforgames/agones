@@ -66,6 +66,12 @@ func (s *SDK) Ready() error {
 	return errors.Wrap(err, "could not send Ready message")
 }
 
+// Allocate self marks this gameserver as Allocated.
+func (s *SDK) Allocate() error {
+	_, err := s.client.Allocate(s.ctx, &sdk.Empty{})
+	return errors.Wrap(err, "could not mark self as Allocated")
+}
+
 // Shutdown marks the Game Server as ready to
 // shutdown
 func (s *SDK) Shutdown() error {
