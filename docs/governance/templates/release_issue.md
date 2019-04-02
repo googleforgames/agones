@@ -23,8 +23,8 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] Site updated
   - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
   - [ ] If full release, review and remove all instances of the `feature` shortcode
-  - [ ] If full release, update to the new release branch {version}+1.
-  - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}+1
+  - [ ] If full release, update to the new release branch {version}.
+  - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}
   - [ ] If full release, update documentation with updated example images tags
   - [ ] If full release, add link to previous version's documentation to nav dropdown
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 

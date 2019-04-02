@@ -96,7 +96,7 @@ agones:
       timeoutSeconds: 1
   image:
     registry: gcr.io/agones-images
-    tag: 0.9.0-rc
+    tag: 0.9.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
