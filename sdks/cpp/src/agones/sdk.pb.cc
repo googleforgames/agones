@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -419,28 +419,30 @@ void AddDescriptorsImpl() {
       "state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\005ports\030\003 "
       "\003(\0132-.stable.agones.dev.sdk.GameServer.S"
       "tatus.Port\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004port"
-      "\030\002 \001(\0052\307\005\n\003SDK\022V\n\005Ready\022\034.stable.agones."
+      "\030\002 \001(\0052\245\006\n\003SDK\022V\n\005Ready\022\034.stable.agones."
       "dev.sdk.Empty\032\034.stable.agones.dev.sdk.Em"
-      "pty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022\\\n\010Shutdown\022\034.sta"
+      "pty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022\\\n\010Allocate\022\034.sta"
       "ble.agones.dev.sdk.Empty\032\034.stable.agones"
-      ".dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/shutdown:\001*\022Z\n\006"
-      "Health\022\034.stable.agones.dev.sdk.Empty\032\034.s"
-      "table.agones.dev.sdk.Empty\"\022\202\323\344\223\002\014\"\007/hea"
-      "lth:\001*(\001\022e\n\rGetGameServer\022\034.stable.agone"
-      "s.dev.sdk.Empty\032!.stable.agones.dev.sdk."
-      "GameServer\"\023\202\323\344\223\002\r\022\013/gameserver\022o\n\017Watch"
-      "GameServer\022\034.stable.agones.dev.sdk.Empty"
-      "\032!.stable.agones.dev.sdk.GameServer\"\031\202\323\344"
-      "\223\002\023\022\021/watch/gameserver0\001\022e\n\010SetLabel\022\037.s"
-      "table.agones.dev.sdk.KeyValue\032\034.stable.a"
-      "gones.dev.sdk.Empty\"\032\202\323\344\223\002\024\032\017/metadata/l"
-      "abel:\001*\022o\n\rSetAnnotation\022\037.stable.agones"
-      ".dev.sdk.KeyValue\032\034.stable.agones.dev.sd"
-      "k.Empty\"\037\202\323\344\223\002\031\032\024/metadata/annotation:\001*"
-      "B\005Z\003sdkb\006proto3"
+      ".dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/allocate:\001*\022\\\n\010"
+      "Shutdown\022\034.stable.agones.dev.sdk.Empty\032\034"
+      ".stable.agones.dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/s"
+      "hutdown:\001*\022Z\n\006Health\022\034.stable.agones.dev"
+      ".sdk.Empty\032\034.stable.agones.dev.sdk.Empty"
+      "\"\022\202\323\344\223\002\014\"\007/health:\001*(\001\022e\n\rGetGameServer\022"
+      "\034.stable.agones.dev.sdk.Empty\032!.stable.a"
+      "gones.dev.sdk.GameServer\"\023\202\323\344\223\002\r\022\013/games"
+      "erver\022o\n\017WatchGameServer\022\034.stable.agones"
+      ".dev.sdk.Empty\032!.stable.agones.dev.sdk.G"
+      "ameServer\"\031\202\323\344\223\002\023\022\021/watch/gameserver0\001\022e"
+      "\n\010SetLabel\022\037.stable.agones.dev.sdk.KeyVa"
+      "lue\032\034.stable.agones.dev.sdk.Empty\"\032\202\323\344\223\002"
+      "\024\032\017/metadata/label:\001*\022o\n\rSetAnnotation\022\037"
+      ".stable.agones.dev.sdk.KeyValue\032\034.stable"
+      ".agones.dev.sdk.Empty\"\037\202\323\344\223\002\031\032\024/metadata"
+      "/annotation:\001*B\005Z\003sdkb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1775);
+      descriptor, 1869);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
   ::protobuf_google_2fapi_2fannotations_2eproto::AddDescriptors();
