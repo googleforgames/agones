@@ -137,6 +137,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
 | `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
 | `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
+| `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
+| `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
 | `agones.ping.install`                               | Whether to install the [ping service][ping]                                                     | `true`                 |
 | `agones.ping.replicas`                              | The number of replicas to run in the deployment                                                 | `2`                    |
 | `agones.ping.http.expose`                           | Expose the http ping service via a Service                                                      | `true`                 |
@@ -159,13 +161,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="0.9.0" %}}
+{{% feature publishVersion="0.10.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
-| `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
 
 {{% /feature %}}
 
