@@ -40,7 +40,7 @@ and copy it into a release issue. Fill in relevent values, found inside {}
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1
-- [ ] Run `make gen-install`
+- [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
 - [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:

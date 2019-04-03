@@ -36,4 +36,4 @@ archive:
 	cd $(package_path) && tar cvf $(build_path)/agonessdk-$(VERSION)-linux-arch_64.tar.gz *
 	
 clean:
-	-rm -r $(build_path)
+	-rm -rf $(build_path)
