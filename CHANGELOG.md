@@ -1,5 +1,26 @@
 # Changelog
 
+## [v0.9.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0) (2019-04-02)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.9.0-rc...v0.9.0)
+
+**Fixed bugs:**
+
+- Url pointing to install.yaml pointing to master [\#676](https://github.com/GoogleCloudPlatform/agones/pull/676) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.9.0-rc [\#673](https://github.com/GoogleCloudPlatform/agones/issues/673)
+- Move to go modules [\#625](https://github.com/GoogleCloudPlatform/agones/issues/625)
+- Documentation for the extended Kubernetes API [\#409](https://github.com/GoogleCloudPlatform/agones/issues/409)
+
+**Merged pull requests:**
+
+- Add the GDC presentation to the website [\#685](https://github.com/GoogleCloudPlatform/agones/pull/685) ([markmandel](https://github.com/markmandel))
+- Forgot to highlight the breaking change. [\#680](https://github.com/GoogleCloudPlatform/agones/pull/680) ([markmandel](https://github.com/markmandel))
+- Minor tweaks to documentation [\#677](https://github.com/GoogleCloudPlatform/agones/pull/677) ([markmandel](https://github.com/markmandel))
+- Update do-release to fully build images [\#675](https://github.com/GoogleCloudPlatform/agones/pull/675) ([markmandel](https://github.com/markmandel))
+
 ## [v0.9.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0-rc) (2019-03-26)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.1...v0.9.0-rc)
@@ -39,6 +60,7 @@
 
 **Merged pull requests:**
 
+- Release 0.9.0-rc [\#674](https://github.com/GoogleCloudPlatform/agones/pull/674) ([markmandel](https://github.com/markmandel))
 - Fix typo on metrics documentation [\#671](https://github.com/GoogleCloudPlatform/agones/pull/671) ([princyraza](https://github.com/princyraza))
 - Moved Azure link, breaking builds. [\#669](https://github.com/GoogleCloudPlatform/agones/pull/669) ([markmandel](https://github.com/markmandel))
 - Add hash of account to clusterrolebinding name to support multiple accounts [\#666](https://github.com/GoogleCloudPlatform/agones/pull/666) ([aLekSer](https://github.com/aLekSer))

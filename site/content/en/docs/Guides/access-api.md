@@ -12,9 +12,7 @@ description: >
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
 which can be accessed and manipulated through the Kubernetes API. 
 
-{{% feature publishVersion="0.9.0" %}}
 The detailed list of Agones CRDs with their parameters could be found here - [Agones CRD API Reference](../../reference/agones_crd_api_reference/).
-{{% /feature %}}
 
 Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/using-api/client-libraries/), however,
 at time of writing, only
@@ -237,7 +235,6 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
 }
 
 # allocate a gameserver from a fleet named 'simple-udp'
-# (in 0.4.0 you won't need to specify the namespace in the FleetAllocation metadata config)
 
 $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","metadata":{"generateName":"simple-udp-", "namespace": "default"},"spec":{"fleetName":"simple-udp"}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fleetallocations
 
@@ -344,12 +341,11 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
 }
 ```
 
+You may wish to review the [Agones Kubernetes API]({{< ref "/docs/Reference/agones_crd_api_reference.html" >}}) for the full data structure reference.
+
 The [Verb Resources](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#verbs-on-resources)
-section provide the more details on the API conventions that are used in the Kubernetes API.
-
-It may also be useful to look at the [API patterns for standard Kubernetes resources](https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#-strong-write-operations-strong--54).
-
+section may also provide the more details on the API conventions that are used in the Kubernetes API.
 
 ## Next Steps
 
-Learn how to interact with Agones programmatically through the API while creating an [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}).
+- Learn how to interact with Agones programmatically through the API while creating an [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}).
