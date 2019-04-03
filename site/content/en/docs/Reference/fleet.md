@@ -12,42 +12,6 @@ Like any other Kubernetes resource you describe a `Fleet`'s desired state via a 
 
 A full `Fleet` specification is available below and in the {{< ghlink href="examples/fleet.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-
-{{% feature expiryVersion="0.9.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: Fleet
-metadata:
-  name: fleet-example
-spec:
-  replicas: 2
-  scheduling: Packed
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%  
-  template:
-    metadata:
-      labels:
-        foo: bar
-    spec:
-      ports:
-      - name: default
-        portPolicy: "dynamic"
-        containerPort: 26000
-      health:
-        initialDelaySeconds: 30
-        periodSeconds: 60
-      template:
-        spec:
-          containers:
-          - name: example-server
-            image: gcr.io/agones/test-server:0.1
-```
-{{% /feature %}}
-
-{{% feature publishVersion="0.9.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: Fleet
@@ -79,8 +43,6 @@ spec:
           - name: example-server
             image: gcr.io/agones/test-server:0.1
 ```
-{{% /feature %}}
-
 
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 

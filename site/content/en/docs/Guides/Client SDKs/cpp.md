@@ -117,44 +117,7 @@ sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
     std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
 });
 ```
-{{% feature expiryVersion="0.9.0" %}}
-For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
-{{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
-{{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
 
-### Failure
-When running on Agones, the above functions should only fail under exceptional circumstances, so please 
-file a bug if it occurs.
-
-## Dynamic and Static Libraries
-
-In the [releases](https://github.com/googlecloudplatform/agones/releases) folder
-you will find two archives for download that contain both static and dynamic libraries for building your
-game server on Linux:
-
-- `argonsdk-$(VERSION)-dev-linux-arch_64.tar.gz`: This includes all the 
-headers as well as dynamic and static libraries that are needed for development and runtime.
-- `argonsdk-$(VERSION)-runtime-linux-arch_64.tar.gz`: This includes just the dynamic libraries that 
-are needed to run a binary compiled against the SDK and its dependencies.
-
-### Building the Libraries
-
-If you want to build the libraries from Agones source, 
-the `make` target `build-sdk-cpp` will compile both static and dynamic libraries for Debian/Linux
-for your usage, to be found in the `bin` directory inside this one.
-
-## Building From Source
-If you wish to compile from source, you will need to compile and install the following dependencies:
-
-- [gRPC](https://grpc.io), v1.16.1 - [C++ compilation guide](https://github.com/grpc/grpc/tree/v1.16.x/src/cpp)
-
-## Windows and macOS
-
-If you are building a server on Windows or macOS, and need a development build to run on
-that platform, at this time you will need to compile from source. Windows and macOS libraries
-for the C++ SDK for easier cross platform development are planned and will be provided in the near future.
-{{% /feature %}}
-{{% feature publishVersion="0.9.0" %}}
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
 {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
 {{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
@@ -207,4 +170,3 @@ CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cma
 In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
 If **AGONES_CREATE_PACKAGE** option is off, then `CMAKE_PREFIX_PATH` should be set to a path where SDK is built (usualy `agones/sdks/cpp/.build`).
 It maybe useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
-{{% /feature %}}

@@ -12,9 +12,7 @@ description: >
 Installing Agones creates several [Custom Resource Definitions (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources),
 which can be accessed and manipulated through the Kubernetes API. 
 
-{{% feature publishVersion="0.9.0" %}}
 The detailed list of Agones CRDs with their parameters could be found here - [Agones CRD API Reference](../../reference/agones_crd_api_reference/).
-{{% /feature %}}
 
 Kubernetes has multiple [client libraries](https://kubernetes.io/docs/reference/using-api/client-libraries/), however,
 at time of writing, only

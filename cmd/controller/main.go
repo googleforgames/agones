@@ -34,6 +34,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/gameserversets"
 	"agones.dev/agones/pkg/metrics"
+	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
@@ -141,6 +142,10 @@ func main() {
 	// https server and the items that share the Mux for routing
 	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
 	wh := webhooks.NewWebHook(httpsServer.Mux)
+	// will register openapi endpoint, which is currently not used
+	// but gets the code ready for usage in a later PR.
+	_ = apiserver.NewAPIServer(httpsServer.Mux)
+
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
