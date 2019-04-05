@@ -155,7 +155,7 @@ type GameServerPort struct {
 	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
-	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
+	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// ContainerPort is the port that is being opened on the game server process
