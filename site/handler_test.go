@@ -125,10 +125,6 @@ func TestHandler(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("%s: status code = %s; want 200 OK", test.name, resp.Status)
 		}
-		if err != nil {
-			t.Errorf("%s: ioutil.ReadAll: %v", test.name, err)
-			continue
-		}
 		if got := findMeta(data, "go-import"); got != test.goImport {
 			t.Errorf("%s: meta go-import = %q; want %q", test.name, got, test.goImport)
 		}
