@@ -125,7 +125,7 @@ RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \
-    cd /go/src/github.com/ahmetb && git clone https://github.com/ahmetb/gen-crd-api-reference-docs && \
+    cd /go/src/github.com/ahmetb && git clone -b v0.1.1 https://github.com/ahmetb/gen-crd-api-reference-docs && \
     cd ./gen-crd-api-reference-docs && go build
 
 # html checker
