@@ -832,7 +832,7 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	err = wait.Poll(time.Second, 30*time.Second, func() (done bool, err error) {
+	err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
 		_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if err != nil && k8serrors.IsNotFound(err) {
