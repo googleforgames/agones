@@ -499,7 +499,7 @@ func (c *Controller) syncDevelopmentGameServer(gs *v1alpha1.GameServer) (*v1alph
 	}
 
 	gsCopy := gs.DeepCopy()
-	ports := []v1alpha1.GameServerStatusPort{}
+	var ports []v1alpha1.GameServerStatusPort
 	for _, p := range gs.Spec.Ports {
 		ports = append(ports, p.Status())
 	}
