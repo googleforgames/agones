@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2019 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ bool FAgonesHook::SendRequest(const FString& URL)
 		}
 		else
 		{
-			UE_LOG(LogAgonesHook, Error, TEXT("ERROR - failed sending: %s"), *URL);
+			UE_LOG(LogAgonesHook, Error, TEXT("Failed sending: %s"), *URL);
 		}
 	}
 	return bSuccess;

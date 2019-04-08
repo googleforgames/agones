@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2019 Google Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,30 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using UnrealBuildTool;
+#pragma once
 
-public class Agones : ModuleRules
+#include "CoreMinimal.h"
+#include "ModuleManager.h"
+#include "Engine/World.h"
+
+class FAgonesModule : public IModuleInterface
 {
-	public Agones(ReadOnlyTargetRules Target) : base(Target)
-	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
-			});
+public:
 
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-			});
-		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"Http",
-			});
-	}
-}
+	/** IModuleInterface implementation */
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
+
+private:
+	void OnWorldInitialized(UWorld* World, UWorld::InitializationValues IVS);
+
+	/** Communicates with the Agones sidecar. */
+	TSharedPtr<class FAgonesHook> HookPtr;
+};
