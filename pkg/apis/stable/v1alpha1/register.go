@@ -16,7 +16,6 @@ package v1alpha1
 
 import (
 	"agones.dev/agones/pkg/apis/stable"
-	"agones.dev/agones/pkg/util/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -44,7 +43,9 @@ var (
 )
 
 func init() {
-	runtime.Must(AddToScheme(scheme.Scheme))
+	if err := AddToScheme(scheme.Scheme); err != nil {
+		panic(err)
+	}
 }
 
 // Adds the list of known types to api.Scheme.
