@@ -74,7 +74,7 @@ type GameServerAllocationSpec struct {
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
 }
 
-// PreferredSelectors converts all the the preferred label selectors into an array of
+// PreferredSelectors converts all the preferred label selectors into an array of
 // labels.Selectors. This is useful as they all have `Match()` functions!
 func (gsas *GameServerAllocationSpec) PreferredSelectors() ([]labels.Selector, error) {
 	list := make([]labels.Selector, len(gsas.Preferred))
