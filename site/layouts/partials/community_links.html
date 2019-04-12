@@ -1,14 +1,14 @@
 {{ $links := .Site.Params.links }}
 
-<section class="row td-box td-box--3 td-box--gradient td-box--height-auto">
-<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+<section id="community" class="row td-box td-box--2 td-box--gradient td-box--height-auto">
+<div class="col-sm-12 col-md-6 p-5">
 <h2>Learn and Connect</h2>		
 <p>Using or want to use {{ .Site.Title }}? Find out more here:
 {{ with index $links "user"}}
 {{ template "community-links-list"  . }}
 {{ end }}
 </div>
-<div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+<div class=" col-sm-12 col-md-6 p-5">
 <h2>Develop and Contribute</h2>
 <p>If you want to get more involved by contributing to {{ .Site.Title }}, join us here:
 {{ with index $links "developer"}}
