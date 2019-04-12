@@ -31,7 +31,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -77,11 +76,17 @@ func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned
 	podInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
-			if owner := metav1.GetControllerOf(pod); owner != nil && owner.Kind == "GameServer" {
-				if v1alpha1.GameServerRolePodSelector.Matches(labels.Set(pod.Labels)) && hc.isUnhealthy(pod) {
-					key := pod.ObjectMeta.Namespace + "/" + owner.Name
-					hc.workerqueue.Enqueue(cache.ExplicitKey(key))
-				}
+			if isGameServerPod(pod) && hc.isUnhealthy(pod) {
+				owner := metav1.GetControllerOf(pod)
+				hc.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
+			pod, ok := obj.(*corev1.Pod)
+			if ok && isGameServerPod(pod) {
+				owner := metav1.GetControllerOf(pod)
+				hc.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
 			}
 		},
 	})
@@ -158,33 +163,21 @@ func (hc *HealthController) syncGameServer(key string) error {
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
 	}
 
-	var reason string
-	unhealthy := false
-
-	switch gs.Status.State {
-
-	case v1alpha1.GameServerStateStarting:
-		hc.loggerForGameServer(gs).Info("GameServer cannot start on this port")
-		unhealthy = true
-		reason = "No nodes have free ports for the allocated ports"
-
-	case v1alpha1.GameServerStateReady:
-		hc.loggerForGameServer(gs).Info("GameServer container has terminated")
-		unhealthy = true
-		reason = "GameServer container terminated"
+	// at this point we don't care, we're already Unhealthy / deleting
+	if !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == v1alpha1.GameServerStateShutdown ||
+		gs.Status.State == v1alpha1.GameServerStateUnhealthy {
+		return nil
 	}
 
-	if unhealthy {
-		hc.loggerForGameServer(gs).Infof("Marking GameServer as GameServerStateUnhealthy")
-		gsCopy := gs.DeepCopy()
-		gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
+	hc.loggerForGameServer(gs).Info("Issue with GameServer pod, marking as GameServerStateUnhealthy")
+	gsCopy := gs.DeepCopy()
+	gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
 
-		if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
-			return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)
-		}
-
-		hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), reason)
+	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
+		return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)
 	}
+
+	hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), "Issue with Gameserver pod")
 
 	return nil
 }
