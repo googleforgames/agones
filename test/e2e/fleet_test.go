@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -832,7 +832,7 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	err = wait.Poll(time.Second, 30*time.Second, func() (done bool, err error) {
+	err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
 		_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if err != nil && k8serrors.IsNotFound(err) {

@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -499,7 +499,7 @@ func (c *Controller) syncDevelopmentGameServer(gs *v1alpha1.GameServer) (*v1alph
 	}
 
 	gsCopy := gs.DeepCopy()
-	ports := []v1alpha1.GameServerStatusPort{}
+	var ports []v1alpha1.GameServerStatusPort
 	for _, p := range gs.Spec.Ports {
 		ports = append(ports, p.Status())
 	}
