@@ -8,11 +8,6 @@ description: "This is the Rust version of the Agones Game Server Client SDK."
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
-{{< alert color="warning">}}
-The Rust SDK has not been actively maintained, and doesn't have all the SDK functionality, although it _should_ still work.
-  Pull Requests and updates are welcome.
-{{< /alert >}}
-
 ## Download
 
 Download the source {{< ghlink href="sdks/rust" >}}directly from Github{{< /ghlink >}}.
@@ -58,3 +53,41 @@ if sdk.shutdown().is_err() {
     println!("Could not run Shutdown");
 }
 ```
+
+{{% feature publishVersion="0.10.0" %}}
+
+To [set a Label]({{< relref "_index.md#setlabel-key-value" >}}) on the backing `GameServer` call `sdk.set_label(key, value)`.
+
+```rust
+sdk.set_label("test-label", "test-value")?;
+```
+
+To [set an Annotation]({{< relref "_index.md#setannotation-key-value" >}}) on the backing `GameServer` call `sdk.set_annotation(key, value)`.
+
+```rust
+sdk.set_annotation("test-annotation", "test value")?;
+```
+
+To get [details of the backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk.get_gameserver()`.
+
+The function will return an instance of `agones::types::GameServer` including `GameServer` configuration info.
+
+```rust
+let gameserver = sdk.get_gameserver()?;
+```
+
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, call `sdk.watch_gameserver(|gameserver| {...})`.
+
+This will call the passed closure synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer` is updated.
+
+```rust
+sdk.watch_gameserver(|gameserver| {
+    println!("GameServer Update, name: {}", gameserver.object_meta.unwrap().name);
+    println!("GameServer Update, state: {}", gameserver.status.unwrap().state);
+})?;
+```
+
+{{% /feature %}}
+
+
+For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/rust/src/sdk.rs" >}}agones sdk implementation{{< /ghlink >}} and also look at the {{< ghlink href="examples/rust-simple" >}}Rust example{{< / >}}.
