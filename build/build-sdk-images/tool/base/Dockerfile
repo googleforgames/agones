@@ -25,9 +25,9 @@ RUN apt-get update && apt-get install -y \
   automake libtool curl make g++ unzip \
   && apt-get clean
 
+ARG GRPC_RELEASE_TAG
 # install protobuf first, then grpc
-ENV GRPC_RELEASE_TAG v1.16.1
-RUN git clone -b ${GRPC_RELEASE_TAG} --depth=5 https://github.com/grpc/grpc /var/local/git/grpc && \
+RUN git clone -b $GRPC_RELEASE_TAG --depth=5 https://github.com/grpc/grpc /var/local/git/grpc && \
 		cd /var/local/git/grpc && \
     git submodule update --init && \
     echo "--- installing protobuf ---" && \
@@ -37,3 +37,10 @@ RUN git clone -b ${GRPC_RELEASE_TAG} --depth=5 https://github.com/grpc/grpc /var
     echo "--- installing grpc ---" && \
     cd /var/local/git/grpc && \
     make -j$(nproc) && make install && make clean && ldconfig
+
+WORKDIR /go/src/agones.dev/agones
+
+# code generation scripts
+COPY entrypoint.sh /root/
+RUN chmod +x /root/entrypoint.sh
+ENTRYPOINT [ "/root/entrypoint.sh" ]
