@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,10 @@ package gameserversets
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,41 +28,43 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestFilterGameServersOnLeastFullNodes(t *testing.T) {
+func TestSortGameServersByLeastFullNodes(t *testing.T) {
 	t.Parallel()
 
-	gsList := []*v1alpha1.GameServer{
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.GameServerStateReady}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{NodeName: "n1", State: v1alpha1.GameServerStateStarting}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.GameServerStateReady}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{NodeName: "n2", State: v1alpha1.GameServerStateReady}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs5"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateAllocated}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs6"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateAllocated}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "gs7"}, Status: v1alpha1.GameServerStatus{NodeName: "n3", State: v1alpha1.GameServerStateReady}},
+	nc := map[string]gameservers.NodeCount{
+		"n1": {Ready: 1, Allocated: 0},
+		"n2": {Ready: 0, Allocated: 2},
 	}
 
-	t.Run("normal", func(t *testing.T) {
-		limit := 4
-		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
-		assert.Len(t, result, limit)
-		assert.Equal(t, "gs1", result[0].Name)
-		assert.Equal(t, "n2", result[1].Status.NodeName)
-		assert.Equal(t, "n2", result[2].Status.NodeName)
-		assert.Equal(t, "n3", result[3].Status.NodeName)
-	})
+	list := []*v1alpha1.GameServer{
+		{ObjectMeta: metav1.ObjectMeta{Name: "g1"}, Status: v1alpha1.GameServerStatus{NodeName: "n2"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: v1alpha1.GameServerStatus{NodeName: ""}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: v1alpha1.GameServerStatus{NodeName: "n1"}},
+	}
 
-	t.Run("zero", func(t *testing.T) {
-		limit := 0
-		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
-		assert.Len(t, result, limit)
-	})
+	result := sortGameServersByLeastFullNodes(list, nc)
 
-	t.Run("negative", func(t *testing.T) {
-		limit := -1
-		result := filterGameServersOnLeastFullNodes(gsList, int32(limit))
-		assert.Len(t, result, 0)
-		assert.Empty(t, result)
-	})
+	assert.Len(t, result, len(list))
+	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
+	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
+	assert.Equal(t, "g1", result[2].ObjectMeta.Name)
+}
+
+func TestSortGameServersByNewFirst(t *testing.T) {
+	now := metav1.Now()
+
+	list := []*v1alpha1.GameServer{
+		{ObjectMeta: metav1.ObjectMeta{Name: "g1", CreationTimestamp: metav1.Time{Time: now.Add(10 * time.Second)}}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g2", CreationTimestamp: now}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g3", CreationTimestamp: metav1.Time{Time: now.Add(30 * time.Second)}}},
+	}
+	l := len(list)
+
+	result := sortGameServersByNewFirst(list)
+	assert.Len(t, result, l)
+	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
+	assert.Equal(t, "g1", result[1].ObjectMeta.Name)
+	assert.Equal(t, "g3", result[2].ObjectMeta.Name)
 }
 
 func TestListGameServersByGameServerSetOwner(t *testing.T) {

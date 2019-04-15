@@ -1,5 +1,125 @@
 # Changelog
 
+## [v0.9.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0) (2019-04-02)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.9.0-rc...v0.9.0)
+
+**Fixed bugs:**
+
+- Url pointing to install.yaml pointing to master [\#676](https://github.com/GoogleCloudPlatform/agones/pull/676) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 0.9.0-rc [\#673](https://github.com/GoogleCloudPlatform/agones/issues/673)
+- Move to go modules [\#625](https://github.com/GoogleCloudPlatform/agones/issues/625)
+- Documentation for the extended Kubernetes API [\#409](https://github.com/GoogleCloudPlatform/agones/issues/409)
+
+**Merged pull requests:**
+
+- Add the GDC presentation to the website [\#685](https://github.com/GoogleCloudPlatform/agones/pull/685) ([markmandel](https://github.com/markmandel))
+- Forgot to highlight the breaking change. [\#680](https://github.com/GoogleCloudPlatform/agones/pull/680) ([markmandel](https://github.com/markmandel))
+- Minor tweaks to documentation [\#677](https://github.com/GoogleCloudPlatform/agones/pull/677) ([markmandel](https://github.com/markmandel))
+- Update do-release to fully build images [\#675](https://github.com/GoogleCloudPlatform/agones/pull/675) ([markmandel](https://github.com/markmandel))
+
+## [v0.9.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0-rc) (2019-03-26)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.1...v0.9.0-rc)
+
+**Breaking changes:**
+
+- Consistency: Portpolicy static=\>Static & dynamic=\>Dynamic [\#617](https://github.com/GoogleCloudPlatform/agones/pull/617) ([markmandel](https://github.com/markmandel))
+
+**Implemented enhancements:**
+
+- Adding a section in the documentation about deploying Agones using GCP Marketplace. [\#664](https://github.com/GoogleCloudPlatform/agones/pull/664) ([bbf](https://github.com/bbf))
+- Add Agones Kubernetes API docs generator [\#645](https://github.com/GoogleCloudPlatform/agones/pull/645) ([aLekSer](https://github.com/aLekSer))
+- Added support for persisting logs in 'emptyDir' volume attached to agones controller. [\#620](https://github.com/GoogleCloudPlatform/agones/pull/620) ([jkowalski](https://github.com/jkowalski))
+- Adding Locust tests - initial changes for \#412 [\#611](https://github.com/GoogleCloudPlatform/agones/pull/611) ([pm7h](https://github.com/pm7h))
+- Emit stress test metrics in Fortio format. [\#586](https://github.com/GoogleCloudPlatform/agones/pull/586) ([jkowalski](https://github.com/jkowalski))
+- Add Node.js SDK and example - closes \#538 [\#581](https://github.com/GoogleCloudPlatform/agones/pull/581) ([steven-supersolid](https://github.com/steven-supersolid))
+- Cpp sdk cmake [\#464](https://github.com/GoogleCloudPlatform/agones/pull/464) ([dsazonoff](https://github.com/dsazonoff))
+
+**Fixed bugs:**
+
+- Feature shortcode does not behave correctly for versions \> "0.10.0" \(2 digit minor version\) [\#650](https://github.com/GoogleCloudPlatform/agones/issues/650)
+- Labels referencing resources name can be too long [\#541](https://github.com/GoogleCloudPlatform/agones/issues/541)
+- Fix feature shortcode for Hugo [\#655](https://github.com/GoogleCloudPlatform/agones/pull/655) ([aLekSer](https://github.com/aLekSer))
+- \[Regression\] Fleet scale down didn't adhere to Packed Scheduling [\#638](https://github.com/GoogleCloudPlatform/agones/pull/638) ([markmandel](https://github.com/markmandel))
+- Fixed gameserverset overshooting the number of GameServers [\#621](https://github.com/GoogleCloudPlatform/agones/pull/621) ([jkowalski](https://github.com/jkowalski))
+- Update GameServerSet scheduling when Fleet scheduling is changed. [\#582](https://github.com/GoogleCloudPlatform/agones/pull/582) ([pooneh-m](https://github.com/pooneh-m))
+
+**Security fixes:**
+
+- Remove serviceaccount for game server container [\#640](https://github.com/GoogleCloudPlatform/agones/pull/640) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- gcloud-auth-cluster: Create unique name for cluster role binding [\#662](https://github.com/GoogleCloudPlatform/agones/issues/662)
+- Hotfix 0.8.1 [\#652](https://github.com/GoogleCloudPlatform/agones/issues/652)
+- Slow game servers deletion [\#540](https://github.com/GoogleCloudPlatform/agones/issues/540)
+
+**Merged pull requests:**
+
+- Release 0.9.0-rc [\#674](https://github.com/GoogleCloudPlatform/agones/pull/674) ([markmandel](https://github.com/markmandel))
+- Fix typo on metrics documentation [\#671](https://github.com/GoogleCloudPlatform/agones/pull/671) ([princyraza](https://github.com/princyraza))
+- Moved Azure link, breaking builds. [\#669](https://github.com/GoogleCloudPlatform/agones/pull/669) ([markmandel](https://github.com/markmandel))
+- Add hash of account to clusterrolebinding name to support multiple accounts [\#666](https://github.com/GoogleCloudPlatform/agones/pull/666) ([aLekSer](https://github.com/aLekSer))
+- Simplify homepage messaging [\#665](https://github.com/GoogleCloudPlatform/agones/pull/665) ([markmandel](https://github.com/markmandel))
+- GKE installation n1-standard-1 -\> n1-standard-2 [\#663](https://github.com/GoogleCloudPlatform/agones/pull/663) ([markmandel](https://github.com/markmandel))
+- Switch Agones to Go Modules [\#661](https://github.com/GoogleCloudPlatform/agones/pull/661) ([heartrobotninja](https://github.com/heartrobotninja))
+-  Merge hotfix 0.8.1 back into master [\#658](https://github.com/GoogleCloudPlatform/agones/pull/658) ([markmandel](https://github.com/markmandel))
+- Cleanup Xonotic image [\#654](https://github.com/GoogleCloudPlatform/agones/pull/654) ([markmandel](https://github.com/markmandel))
+- E2E Cleanup: Implement SendGameServerUDP [\#644](https://github.com/GoogleCloudPlatform/agones/pull/644) ([markmandel](https://github.com/markmandel))
+- Refactor https server into its own component [\#643](https://github.com/GoogleCloudPlatform/agones/pull/643) ([markmandel](https://github.com/markmandel))
+- Add .gocache directory for WSL users [\#642](https://github.com/GoogleCloudPlatform/agones/pull/642) ([heartrobotninja](https://github.com/heartrobotninja))
+- E2E test for Disabled Health checks. [\#641](https://github.com/GoogleCloudPlatform/agones/pull/641) ([markmandel](https://github.com/markmandel))
+- Refactor AllocationCounter to GameServerCounter [\#639](https://github.com/GoogleCloudPlatform/agones/pull/639) ([markmandel](https://github.com/markmandel))
+- Adding Kubernetes API server requests metrics [\#637](https://github.com/GoogleCloudPlatform/agones/pull/637) ([aLekSer](https://github.com/aLekSer))
+- Partial revert "Emit stress test metrics in Fortio format." which accidentally overwrote our vendored fixes to wait.go [\#633](https://github.com/GoogleCloudPlatform/agones/pull/633) ([jkowalski](https://github.com/jkowalski))
+- Switch to using default gke-cluster oauthScopes settings for clusters [\#632](https://github.com/GoogleCloudPlatform/agones/pull/632) ([aLekSer](https://github.com/aLekSer))
+- Update docs Create Gameserver with current state [\#627](https://github.com/GoogleCloudPlatform/agones/pull/627) ([aLekSer](https://github.com/aLekSer))
+- Add input parameters check on CRD loggers [\#626](https://github.com/GoogleCloudPlatform/agones/pull/626) ([aLekSer](https://github.com/aLekSer))
+- New logo for the website! [\#618](https://github.com/GoogleCloudPlatform/agones/pull/618) ([markmandel](https://github.com/markmandel))
+- Unified logging of resource identifiers so that we can reliably get entire history of a resource in stack driver. [\#616](https://github.com/GoogleCloudPlatform/agones/pull/616) ([jkowalski](https://github.com/jkowalski))
+- Organising Makefile into includes [\#615](https://github.com/GoogleCloudPlatform/agones/pull/615) ([markmandel](https://github.com/markmandel))
+- Upgraed go-lint tooling. [\#612](https://github.com/GoogleCloudPlatform/agones/pull/612) ([markmandel](https://github.com/markmandel))
+- Moving to 0.9.0! [\#610](https://github.com/GoogleCloudPlatform/agones/pull/610) ([markmandel](https://github.com/markmandel))
+- Adding resources limits for E2E tests gameserver Spec [\#606](https://github.com/GoogleCloudPlatform/agones/pull/606) ([aLekSer](https://github.com/aLekSer))
+- Add Fleet and Gameserverset Validation handler [\#598](https://github.com/GoogleCloudPlatform/agones/pull/598) ([aLekSer](https://github.com/aLekSer))
+- Improve allocation performance [\#583](https://github.com/GoogleCloudPlatform/agones/pull/583) ([ilkercelikyilmaz](https://github.com/ilkercelikyilmaz))
+- Add status subresource to fleet and Gameserverset [\#575](https://github.com/GoogleCloudPlatform/agones/pull/575) ([aLekSer](https://github.com/aLekSer))
+
+## [v0.8.1](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.1) (2019-03-15)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.0...v0.8.1)
+
+**Implemented enhancements:**
+
+- Create Node.js library [\#538](https://github.com/GoogleCloudPlatform/agones/issues/538)
+
+**Fixed bugs:**
+
+- CPU/Memory leak issue caused by go routines that never completes [\#636](https://github.com/GoogleCloudPlatform/agones/issues/636)
+- Quickstart: Create a Game Server [\#609](https://github.com/GoogleCloudPlatform/agones/issues/609)
+- Fleet status completely out-of-sync with GameServerSet status [\#570](https://github.com/GoogleCloudPlatform/agones/issues/570)
+- GameServerSet sometimes creates more GameServers than necessary [\#569](https://github.com/GoogleCloudPlatform/agones/issues/569)
+- If you modify the `Scheduling` on a Fleet, it does not flow down to the `GameServerSet`. [\#495](https://github.com/GoogleCloudPlatform/agones/issues/495)
+- SDK Service Account was Hardcoded [\#629](https://github.com/GoogleCloudPlatform/agones/pull/629) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- GKE scopes in installation and testing are overkill [\#614](https://github.com/GoogleCloudPlatform/agones/issues/614)
+- Release 0.8.0 [\#604](https://github.com/GoogleCloudPlatform/agones/issues/604)
+- Grafana: add basic API Server graphs [\#546](https://github.com/GoogleCloudPlatform/agones/issues/546)
+- Remove all the kubectl custom commands from the quickstarts [\#521](https://github.com/GoogleCloudPlatform/agones/issues/521)
+
+**Merged pull requests:**
+
+- Final release pieces for 0.8.1 hotfix. [\#653](https://github.com/GoogleCloudPlatform/agones/pull/653) ([markmandel](https://github.com/markmandel))
+- Tarballing source into the images for dependencies that are required by their licenses. [\#634](https://github.com/GoogleCloudPlatform/agones/pull/634) ([bbf](https://github.com/bbf))
+- 2 Hotfixes: Allow Helm to reference image digests and inject licenses [\#631](https://github.com/GoogleCloudPlatform/agones/pull/631) ([bbf](https://github.com/bbf))
+- \[Hotfix\] Prep work for hotfix 0.8.1 [\#628](https://github.com/GoogleCloudPlatform/agones/pull/628) ([markmandel](https://github.com/markmandel))
+
 ## [v0.8.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.8.0) (2019-02-20)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.8.0-rc...v0.8.0)
@@ -22,6 +142,7 @@
 
 **Merged pull requests:**
 
+- Release 0.8.0 [\#605](https://github.com/GoogleCloudPlatform/agones/pull/605) ([markmandel](https://github.com/markmandel))
 - Remove deprecation from FleetAllocation [\#603](https://github.com/GoogleCloudPlatform/agones/pull/603) ([markmandel](https://github.com/markmandel))
 - Remove -v from Go testing - becomes too noisy [\#595](https://github.com/GoogleCloudPlatform/agones/pull/595) ([markmandel](https://github.com/markmandel))
 - Minor tweaks to release process. [\#592](https://github.com/GoogleCloudPlatform/agones/pull/592) ([markmandel](https://github.com/markmandel))
@@ -80,6 +201,7 @@
 **Closed issues:**
 
 - Grafana: add graph of nodes in cluster [\#547](https://github.com/GoogleCloudPlatform/agones/issues/547)
+- Replace global allocation mutex with fine-grained concurrency controls. [\#535](https://github.com/GoogleCloudPlatform/agones/issues/535)
 - Approver access for @jkowalski [\#526](https://github.com/GoogleCloudPlatform/agones/issues/526)
 - Docker images layers not optimal [\#481](https://github.com/GoogleCloudPlatform/agones/issues/481)
 - Release 0.7.0 [\#477](https://github.com/GoogleCloudPlatform/agones/issues/477)
@@ -462,14 +584,14 @@
 - Update dependencies to support K8s 1.10.x [\#276](https://github.com/GoogleCloudPlatform/agones/pull/276) ([markmandel](https://github.com/markmandel))
 - Remove line [\#274](https://github.com/GoogleCloudPlatform/agones/pull/274) ([markmandel](https://github.com/markmandel))
 - Update minikube instructions to 0.28.0 [\#273](https://github.com/GoogleCloudPlatform/agones/pull/273) ([markmandel](https://github.com/markmandel))
-- Added list of various libs used in code [\#272](https://github.com/GoogleCloudPlatform/agones/pull/272) ([mean-mango](https://github.com/mean-mango))
+- Added list of various libs used in code [\#272](https://github.com/GoogleCloudPlatform/agones/pull/272) ([meanmango](https://github.com/meanmango))
 - More Docker and Kubernetes Getting Started Resources [\#270](https://github.com/GoogleCloudPlatform/agones/pull/270) ([markmandel](https://github.com/markmandel))
 - Fixing Flaky test TestControllerSyncFleet [\#268](https://github.com/GoogleCloudPlatform/agones/pull/268) ([markmandel](https://github.com/markmandel))
 - Update Helm App Version [\#267](https://github.com/GoogleCloudPlatform/agones/pull/267) ([markmandel](https://github.com/markmandel))
 - Give linter 15 minutes. [\#264](https://github.com/GoogleCloudPlatform/agones/pull/264) ([markmandel](https://github.com/markmandel))
 - Upgrade to Go 1.10.3 [\#263](https://github.com/GoogleCloudPlatform/agones/pull/263) ([markmandel](https://github.com/markmandel))
 - Upgrade Helm for build tools [\#262](https://github.com/GoogleCloudPlatform/agones/pull/262) ([markmandel](https://github.com/markmandel))
-- Fixed some links & typos [\#261](https://github.com/GoogleCloudPlatform/agones/pull/261) ([mean-mango](https://github.com/mean-mango))
+- Fixed some links & typos [\#261](https://github.com/GoogleCloudPlatform/agones/pull/261) ([meanmango](https://github.com/meanmango))
 - Flaky test fix: TestWorkQueueHealthCheck [\#260](https://github.com/GoogleCloudPlatform/agones/pull/260) ([markmandel](https://github.com/markmandel))
 - Upgrade gRPC to 1.12.0 [\#259](https://github.com/GoogleCloudPlatform/agones/pull/259) ([markmandel](https://github.com/markmandel))
 - Flakey test fix: TestControllerUpdateFleetStatus [\#257](https://github.com/GoogleCloudPlatform/agones/pull/257) ([markmandel](https://github.com/markmandel))

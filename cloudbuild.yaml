@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc. All Rights Reserved.
+# Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -131,14 +131,8 @@ steps:
   waitFor:
     - build
     - tests
-  dir: "sdks/cpp/bin"
+  dir: "sdks/cpp/.build"
   args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
-- name: 'gcr.io/cloud-builders/gsutil'
-  waitFor:
-    - build
-    - tests
-  dir: "sdks/cpp/bin"
-  args: ['cp', '*.zip', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
     - build

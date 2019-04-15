@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,8 +76,6 @@ const (
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
 	GameServerContainerAnnotation = stable.GroupName + "/container"
-	// SidecarServiceAccountName is the default service account for managing access to get/update GameServers
-	SidecarServiceAccountName = "agones-sdk"
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
 	DevAddressAnnotation = "stable.agones.dev/dev-address"
@@ -157,7 +155,7 @@ type GameServerPort struct {
 	// PortPolicy defines the policy for how the HostPort is populated.
 	// Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
 	// at installation time.
-	// When `static` is the policy specified, `HostPort` is required, to specify the port that game clients will
+	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// ContainerPort is the port that is being opened on the game server process
@@ -354,6 +352,19 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gs.Spec.Container)
 }
 
+// ApplyToPodGameServerContainer applies func(v1.Container) to the pod's gameserver container
+func (gs *GameServer) ApplyToPodGameServerContainer(pod *corev1.Pod, f func(corev1.Container) corev1.Container) *corev1.Pod {
+	for i, c := range pod.Spec.Containers {
+		if c.Name == gs.Spec.Container {
+			c = f(c)
+			pod.Spec.Containers[i] = c
+			break
+		}
+	}
+
+	return pod
+}
+
 // Pod creates a new Pod from the PodTemplateSpec
 // attached to the GameServer resource
 func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
@@ -363,10 +374,6 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
-
-	if pod.Spec.ServiceAccountName == "" {
-		pod.Spec.ServiceAccountName = SidecarServiceAccountName
-	}
 
 	i, gsContainer, err := gs.FindGameServerContainer()
 	// this shouldn't happen, but if it does.
@@ -455,6 +462,20 @@ func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 
 		pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution = append(pod.Spec.Affinity.PodAffinity.PreferredDuringSchedulingIgnoredDuringExecution, wpat)
 	}
+}
+
+// DisableServiceAccount disables the service account for the gameserver container
+func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) {
+	// gameservers don't get access to the k8s api.
+	emptyVol := corev1.Volume{Name: "empty", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}}
+	pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVol)
+	mount := corev1.VolumeMount{MountPath: "/var/run/secrets/kubernetes.io/serviceaccount", Name: emptyVol.Name, ReadOnly: true}
+
+	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+		c.VolumeMounts = append(c.VolumeMounts, mount)
+
+		return c
+	})
 }
 
 // HasPortPolicy checks if there is a port with a given

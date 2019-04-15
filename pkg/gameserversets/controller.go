@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ package gameserversets
 
 import (
 	"encoding/json"
-	"sort"
 	"sync"
 
 	"agones.dev/agones/pkg/apis/stable"
@@ -25,6 +24,7 @@ import (
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -66,6 +66,7 @@ const (
 // Controller is a the GameServerSet controller
 type Controller struct {
 	baseLogger          *logrus.Entry
+	counter             *gameservers.PerNodeCounter
 	crdGetter           v1beta1.CustomResourceDefinitionInterface
 	gameServerGetter    getterv1alpha1.GameServersGetter
 	gameServerLister    listerv1alpha1.GameServerLister
@@ -83,6 +84,7 @@ type Controller struct {
 func NewController(
 	wh *webhooks.WebHook,
 	health healthcheck.Handler,
+	counter *gameservers.PerNodeCounter,
 	kubeClient kubernetes.Interface,
 	extClient extclientset.Interface,
 	agonesClient versioned.Interface,
@@ -95,6 +97,7 @@ func NewController(
 
 	c := &Controller{
 		crdGetter:           extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		counter:             counter,
 		gameServerGetter:    agonesClient.StableV1alpha1(),
 		gameServerLister:    gameServers.Lister(),
 		gameServerSynced:    gsInformer.HasSynced,
@@ -305,7 +308,8 @@ func (c *Controller) syncGameServerSet(key string) error {
 
 	list = c.stateCache.forGameServerSet(gsSet).reconcileWithUpdatedServerList(list)
 
-	numServersToAdd, toDelete, isPartial := computeReconciliationAction(list, int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
+	numServersToAdd, toDelete, isPartial := computeReconciliationAction(gsSet.Spec.Scheduling, list, c.counter.Counts(),
+		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
 	status := computeStatus(list)
 	fields := logrus.Fields{}
 
@@ -353,33 +357,39 @@ func (c *Controller) syncGameServerSet(key string) error {
 
 // computeReconciliationAction computes the action to take to reconcile a game server set set given
 // the list of game servers that were found and target replica count.
-func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount int, maxCreations int, maxDeletions int, maxPending int) (int, []*v1alpha1.GameServer, bool) {
-	var upCount int // up == Ready or will become ready
+func computeReconciliationAction(strategy v1alpha1.SchedulingStrategy, list []*v1alpha1.GameServer,
+	counts map[string]gameservers.NodeCount, targetReplicaCount int, maxCreations int, maxDeletions int,
+	maxPending int) (int, []*v1alpha1.GameServer, bool) {
+	var upCount int     // up == Ready or will become ready
+	var deleteCount int // number of gameservers to delete
 
 	// track the number of pods that are being created at any given moment by the GameServerSet
 	// so we can limit it at a throughput that Kubernetes can handle
 	var podPendingCount int // podPending == "up" but don't have a Pod running yet
+
+	var potentialDeletions []*v1alpha1.GameServer
 	var toDelete []*v1alpha1.GameServer
 
 	scheduleDeletion := func(gs *v1alpha1.GameServer) {
-		if gs.ObjectMeta.DeletionTimestamp.IsZero() {
-			toDelete = append(toDelete, gs)
-		}
+		toDelete = append(toDelete, gs)
+		deleteCount--
 	}
 
 	handleGameServerUp := func(gs *v1alpha1.GameServer) {
 		if upCount >= targetReplicaCount {
-			scheduleDeletion(gs)
+			deleteCount++
 		} else {
 			upCount++
 		}
+
+		// Track gameservers that could be potentially deleted
+		potentialDeletions = append(potentialDeletions, gs)
 	}
 
 	// pass 1 - count allocated servers only, since those can't be touched
 	for _, gs := range list {
 		if gs.IsAllocated() {
 			upCount++
-			continue
 		}
 	}
 
@@ -446,12 +456,17 @@ func computeReconciliationAction(list []*v1alpha1.GameServer, targetReplicaCount
 		}
 	}
 
-	if len(toDelete) > maxDeletions {
-		// we have to pick which GS to delete, let's delete the newest ones first.
-		sort.Slice(toDelete, func(i, j int) bool {
-			return toDelete[i].ObjectMeta.CreationTimestamp.After(toDelete[j].ObjectMeta.CreationTimestamp.Time)
-		})
+	if deleteCount > 0 {
+		if strategy == v1alpha1.Packed {
+			potentialDeletions = sortGameServersByLeastFullNodes(potentialDeletions, counts)
+		} else {
+			potentialDeletions = sortGameServersByNewFirst(potentialDeletions)
+		}
 
+		toDelete = append(toDelete, potentialDeletions[0:deleteCount]...)
+	}
+
+	if deleteCount > maxDeletions {
 		toDelete = toDelete[0:maxDeletions]
 		partialReconciliation = true
 	}

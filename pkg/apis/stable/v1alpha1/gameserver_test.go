@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+// Copyright 2017 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -322,7 +322,6 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
 	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
-	assert.Equal(t, "agones-sdk", pod.Spec.ServiceAccountName)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, fixture.Spec.Ports[0].HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
@@ -401,6 +400,28 @@ func TestGameServerPodScheduling(t *testing.T) {
 	})
 }
 
+func TestGameServerDisableServiceAccount(t *testing.T) {
+	t.Parallel()
+
+	gs := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: GameServerSpec{
+		Template: corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+			},
+		}}}
+
+	gs.ApplyDefaults()
+	pod, err := gs.Pod()
+	assert.NoError(t, err)
+	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
+
+	gs.DisableServiceAccount(pod)
+	assert.Len(t, pod.Spec.Containers, 1)
+	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
+	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
+}
+
 func TestGameServerCountPorts(t *testing.T) {
 	fixture := &GameServer{Spec: GameServerSpec{Ports: []GameServerPort{
 		{PortPolicy: Dynamic},
@@ -425,7 +446,7 @@ func TestGameServerPatch(t *testing.T) {
 
 	assert.Contains(t, string(patch), `{"op":"replace","path":"/spec/container","value":"bear"}`)
 }
-func TestGetDevAddress(t *testing.T) {
+func TestGameServerGetDevAddress(t *testing.T) {
 	devGs := &GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        "dev-game",
@@ -450,4 +471,36 @@ func TestGetDevAddress(t *testing.T) {
 	devAddress, isDev = regularGs.GetDevAddress()
 	assert.False(t, isDev, "dev-game should NOT have a dev-address")
 	assert.Equal(t, "", devAddress, "dev-address IP address should be 127.1.1.1")
+}
+
+func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
+	t.Parallel()
+
+	name := "mycontainer"
+	gs := &GameServer{
+		Spec: GameServerSpec{
+			Container: name,
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{Name: name, Image: "foo/mycontainer"},
+						{Name: "notmycontainer", Image: "foo/notmycontainer"},
+					},
+				},
+			},
+		},
+	}
+
+	p1 := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
+
+	p2 := gs.ApplyToPodGameServerContainer(p1, func(c corev1.Container) corev1.Container {
+		//  easy thing to change and test for
+		c.TTY = true
+
+		return c
+	})
+
+	assert.Len(t, p2.Spec.Containers, 2)
+	assert.True(t, p2.Spec.Containers[0].TTY)
+	assert.False(t, p2.Spec.Containers[1].TTY)
 }

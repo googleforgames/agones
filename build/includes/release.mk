@@ -1,4 +1,4 @@
-# Copyright 2019 Google Inc. All Rights Reserved.
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
+gen-changelog: RELEASE_BRANCH ?= master
 gen-changelog:
 	read -p 'Github Token: ' TOKEN && \
     docker run -it --rm -v "$(agones_path)":/project markmandel/github-changelog-generator \
@@ -32,6 +33,7 @@ gen-changelog:
 		--bug-labels=kind/bug --enhancement-labels=kind/feature \
 		--breaking-labels=kind/breaking --security-labels=area/security \
 		--future-release "v$(RELEASE_VERSION)" \
+		--release-branch=$(RELEASE_BRANCH) \
 		--token $$TOKEN
 
 # Creates a release. Version defaults to the base_version
@@ -43,28 +45,23 @@ gen-changelog:
 do-release: RELEASE_VERSION ?= $(base_version)
 do-release:
 	@echo "Starting release for version: $(RELEASE_VERSION)"
+
+	# switch to the right project
+	$(DOCKER_RUN) gcloud config configurations activate agones-images
+
 	git checkout -b release-$(RELEASE_VERSION)
-	$(MAKE) lint test FULL_BUILD=1
 	-rm -rf $(agones_path)/release
 	mkdir $(agones_path)/release
-	docker run --rm $(common_mounts) -w $(mount_path)/sdks/cpp $(build_tag) make clean
-	$(MAKE) build-sdks build-agones-sdk-binary VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
+
+	$(MAKE) -j 4 build VERSION=$(RELEASE_VERSION) REGISTRY=$(release_registry) FULL_BUILD=1
 	cp $(agones_path)/cmd/sdk-server/bin/agonessdk-server-$(RELEASE_VERSION).zip $(agones_path)/release
-	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-runtime-linux-arch_64.tar.gz $(agones_path)/release
-	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-dev-linux-arch_64.tar.gz $(agones_path)/release
-	cp $(agones_path)/sdks/cpp/bin/agonessdk-$(RELEASE_VERSION)-src.zip $(agones_path)/release
+	cp $(agones_path)/sdks/cpp/.build/agonessdk-$(RELEASE_VERSION)-linux-arch_64.tar.gz $(agones_path)/release
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 
-	# retag the current master commit images with the release tag.
-	$(MAKE) do-relase-tag-images RELEASE_VERSION=$(RELEASE_VERSION)
+	$(MAKE) gcloud-auth-docker
+	$(MAKE) -j 3 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 
 	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
 	@echo "Now go make the $(RELEASE_VERSION) release on Github!"
-
-do-relase-tag-images: RELEASE_VERSION ?= $(base_version)
-do-relase-tag-images:
-	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-controller:$(VERSION) $(release_registry)/agones-controller:$(RELEASE_VERSION) --quiet
-	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-sdk:$(VERSION) $(release_registry)/agones-sdk:$(RELEASE_VERSION) --quiet
-	docker run --rm $(common_mounts) $(build_tag) gcloud container images add-tag $(release_registry)/agones-ping:$(VERSION) $(release_registry)/agones-ping:$(RELEASE_VERSION) --quiet

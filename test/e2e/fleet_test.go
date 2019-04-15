@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import (
 	v1betaext "k8s.io/api/extensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -797,6 +798,52 @@ func TestUpdateFleetScheduling(t *testing.T) {
 				})
 			assert.Nil(t, err)
 		})
+}
+
+// TestFleetRecreateGameServerOnPodDeletion ensure that if a pod from a GameServer
+// is deleted, the GameServer is deleted and replaced.
+func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
+	t.Parallel()
+
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+	flt := defaultFleet()
+	flt.Spec.Replicas = 1
+
+	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
+
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
+	list, err := alpha1.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
+	assert.NoError(t, err)
+
+	assert.Len(t, list.Items, 1)
+	gs := list.Items[0]
+	pod, err := podClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+
+	assert.True(t, metav1.IsControlledBy(pod, &gs))
+
+	err = podClient.Delete(pod.ObjectMeta.Name, nil)
+	assert.NoError(t, err)
+
+	err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+		_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+
+		if err != nil && k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	})
+	assert.NoError(t, err)
+
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 }
 
 // Counts the number of gameservers with the specified scheduling strategy in a fleet

@@ -1,4 +1,4 @@
-# Copyright 2017 Google Inc. All Rights Reserved.
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,66 +16,23 @@
 # Makefile for testing and building the C++ SDK
 #
 
-#  __     __         _       _     _
-#  \ \   / /_ _ _ __(_) __ _| |__ | | ___ ___
-#   \ \ / / _` | '__| |/ _` | '_ \| |/ _ \ __|
-#    \ V / (_| | |  | | (_| | |_) | |  __\__ \
-#     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
-#
-
-CXX = g++
-CPPFLAGS += -I/usr/local/include -I$(build_path) -pthread -fPIC
-CXXFLAGS += -std=c++11
-LDFLAGS += -L/usr/local/lib -lgrpc++_unsecure -lgrpc -lprotobuf -lpthread -ldl
-
-# Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-build_path := $(dir $(mkfile_path))
+source_path := $(dir $(mkfile_path))
+build_path := $(source_path)/.build
+package_path := $(build_path)/.install
+install_path := /opt/local
 
-#   _____                    _
-#  |_   _|_ _ _ __ __ _  ___| |_ ___
-#    | |/ _` | '__/ _` |/ _ \ __/ __|
-#    | | (_| | | | (_| |  __/ |_\__ \
-#    |_|\__,_|_|  \__, |\___|\__|___/
-#                 |___/
-
-# build the library
-build: ensure-bin libagonessdk
-
-# install into /usr/local in the appropriate places
-# make sure to install protoc and grpc from source first to build dependencies
+build:
+	-mkdir $(build_path)
+	cd $(build_path) && cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
+	cd $(build_path) && cmake --build . --target install
+	
 install:
-	cp $(build_path)/bin/libagonessdk.* /usr/local/lib
-	-mkdir -p /usr/local/include/agones
-	cp $(build_path)/*.h /usr/local/include/agones/
-	-mkdir -p /usr/local/include/google/api
-	cp -r $(build_path)/google/api/*.h /usr/local/include/google/api/
-	ldconfig
-
-# make the .so build
-libagonessdk: google/api/annotations.pb.o google/api/http.pb.o sdk.grpc.pb.o sdk.pb.o sdk.o
-	$(CXX) $^ $(LDFLAGS) -shared -o $(build_path)/bin/$@.so
-	ar rcs $(build_path)/bin/$@.a $^
-
-# make sure the bin directory exists
-ensure-bin:
-	-mkdir $(build_path)/bin
-
-# build dev and runtime tarballs
+	cp -r $(build_path)/.install $(install_path)
+	
 archive: VERSION = "dev"
 archive:
-	-rm $(build_path)/bin/agonessdk-$(VERSION)-src.zip
-	-rm $(build_path)/bin/agonessdk-$(VERSION)-dev-linux-arch_64.tar.gz
-	-rm $(build_path)/bin/agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz
-	cp /usr/local/lib/libgrpc.so.6 $(build_path)/bin/
-	cp /usr/local/lib/libprotobuf.so.* $(build_path)/bin/
-	cp /usr/local/lib/libagonessdk.so $(build_path)/bin/
-	cp /usr/local/lib/libgpr.so.6 $(build_path)/bin/
-	cp /usr/local/lib/libgrpc_unsecure.so.6 $(build_path)/bin/
-	cd $(build_path)/bin && tar cvf agonessdk-$(VERSION)-runtime-linux-arch_64.tar.gz --exclude='*.zip' --exclude='*.tar.gz' *
-	cd /usr/local && tar cvf $(build_path)/bin/agonessdk-$(VERSION)-dev-linux-arch_64.tar.gz lib include
-	cd $(build_path) && zip ./bin/agonessdk-$(VERSION)-src.zip Makefile *.md *.cc *.h
-
+	cd $(package_path) && tar cvf $(build_path)/agonessdk-$(VERSION)-linux-arch_64.tar.gz *
+	
 clean:
-	-rm -r $(build_path)/bin
-	-find -name '*.o' -delete
+	-rm -rf $(build_path)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2017 Google Inc. All Rights Reserved.
+# Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@ header() {
     cat /go/src/agones.dev/agones/build/boilerplate.go.txt $1 >> /tmp/cpp/$1 && mv /tmp/cpp/$1 .
 }
 
-googlepais=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
 
 cd /go/src/agones.dev/agones/sdks/cpp
 find -name '*.pb.*' -delete
 
 cd /go/src/agones.dev/agones
-protoc -I ${googlepais} -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
-protoc -I ${googlepais} -I . --cpp_out=./sdks/cpp sdk.proto ${googlepais}/google/api/annotations.proto  ${googlepais}/google/api/http.proto
+protoc -I ${googleapis} -I . --grpc_out=./sdks/cpp --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
+protoc -I ${googleapis} -I . --cpp_out=./sdks/cpp sdk.proto ${googleapis}/google/api/annotations.proto  ${googleapis}/google/api/http.proto
 
 mkdir -p /tmp/cpp
 

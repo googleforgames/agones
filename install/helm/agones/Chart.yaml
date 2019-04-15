@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc. All Rights Reserved.
+# Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
 # Declare variables to be passed into your templates.
 
 apiVersion: v1
-appVersion: "0.9.0"
-version: 0.9.0
+appVersion: "0.10.0"
+version: 0.10.0
 name: agones
 description: a library for hosting, running and scaling dedicated game servers on Kubernetes.
 keywords:

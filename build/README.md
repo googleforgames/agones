@@ -89,8 +89,10 @@ Table of Contents
         * [make clean-custom-test-cluster](#make-clean-custom-test-cluster)
   * [Dependencies](#dependencies)
   * [Troubleshooting](#troubleshooting)
-        * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
-        * [I want to use pprof to profile the controller.](#i-want-to-use-pprof-to-profile-the-controller)
+      * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
+      * [Error: cluster-admin-binding already exists](#error-cluster-admin-binding-already-exists)
+      * [Error: releases do not exist](#error-releases-do-not-exist)
+      * [I want to use pprof to profile the controller](#i-want-to-use-pprof-to-profile-the-controller)
 
 ## Building on Different Platforms
 
@@ -238,6 +240,8 @@ created at the beginning of this section. (if you want to see the resulting inst
 
 Finally to run end-to-end tests against your development version previously installed in your test cluster run `make test-e2e`, this will validate the whole application flow (from start to finish). If you're curious about how they work head to [tests/e2e](../test/e2e/)
 
+When your are finished, you can run `make clean-gcloud-e2e-test-cluster` to tear down your cluster.
+
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
 
@@ -348,7 +352,7 @@ The second step is to prepare your cluster for the Agones deployments. Run `make
 
 Now you're ready to begin the development/test cycle:
 - `make build` will build Agones
-- `make test` will run local tests
+- `make test` will run local tests, which includes `site-test` target
 - `make push` will push the Agones images to your image repository 
 - `make test-e2e` will run end-to-end tests in your cluster
 - `make install` will install/upgrade Agones into your cluster
@@ -374,6 +378,13 @@ The Kubernetes config file used to access the cluster. Defaults to `~/.kube/conf
 
 ### CLUSTER_NAME
 The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`
+
+### GCP_PROJECT
+Your GCP project for deploying GKE cluster. Defaults to gcloud default project settings.
+
+### GKE_PASSWORD
+If specified basic authentication would be enabled for your cluster with username "admin".
+Empty string `""` would disable basic authentication.
 
 ### IMAGE_PULL_SECRET
 The name of the secret required to pull the Agones images, if needed.
@@ -407,6 +418,18 @@ Build the cpp sdk static and dynamic libraries (linux libraries only)
 
 #### `make test`
 Run the linter and tests
+
+#### `make site-server`
+Generate `https://agones.dev` website locally and host on `http://localhost:1313`
+
+#### `make site-test`
+Check the links in website
+
+#### `make gen-api-docs`
+Generate Agones CRD reference documentation [Agones CRD API reference](../site/content/en/docs/Reference/agones_crd_api_reference.html). Set `feature` shortcode with proper version automatically
+
+#### `make test-gen-api-docs`
+Verifies that there is no changes in generated [Agones CRD API reference](../site/content/en/docs/Reference/agones_crd_api_reference.html) compared to the current one (useful for CI)
 
 #### `make push`
 Pushes all built images up to the `$(REGISTRY)`
@@ -525,6 +548,27 @@ Pulls down authentication information for kubectl against a cluster, name can be
 #### `make gcloud-auth-docker`
 Creates a short lived access to Google Cloud container repositories, so that you are able to call
 `docker push` directly. Useful when used in combination with `make push` command.
+
+### Terraform
+
+Utilities for deploying a Kubernetes Engine cluster on Google Cloud Platform using `google` Terraform provider.
+
+#### `make terraform-init`
+Install `google` and `google-beta` terraform providers and authorize.
+
+#### `make gcloud-terraform-cluster`
+Run next command with your project ID specified:
+```
+[GKE_PASSWORD="<YOUR_PASSWORD>"] make gcloud-terraform-cluster
+```
+Where `<YOUR_PASSWORD>` should be at least 16 characters in length. You can omit GKE_PASSWORD and then basic auth would be disabled. Also you change `ports="7000-8000"` setting using tfvars file.
+Also you can define password `password=<YOUR_PASSWORD>` string in `build/terraform.tfvars`.
+
+#### `make gcloud-terraform-destroy-cluster`
+Run `terraform destroy` on your cluster.
+
+#### `make terraform-clean`
+Remove .terraform directory with configs as well as tfstate files.
 
 ### Minikube
 
@@ -646,7 +690,29 @@ Cleans up your custom cluster by reseting Helm.
 
 ## Dependencies
 
-This project uses the [dep](https://github.com/golang/dep) as a dependency manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/Gopkg.toml).
+This project uses the [go modules](https://github.com/golang/go/wiki/Modules) as its manager. You can see the list of dependencies [here](https://github.com/GoogleCloudPlatform/agones/blob/master/go.mod).
+
+#### Vendoring
+
+Agones uses [module vendoring](https://tip.golang.org/cmd/go/#hdr-Modules_and_vendoring) to reliably produce versioned builds with consistent behavior.
+
+Adding a new dependency to Agones:
+
+*  `go mod tidy` This will import your new deps into the go.mod file and trim out any removed dependencies.
+*  `go mod vendor` Pulls module code into the vendor directory.
+
+Sometimes the code added to vendor may not include a subdirectory that houses code being used but not as an import
+(protos passed as args to scripts is a good example). In this case you can go into the module cache and copy what you need to the path in vendor. 
+
+Here is an example for getting third_party from grpc-ecosystem/grpc-gateway v1.5.1 into vendor:
+
+*  AGONES_PATH=/wherever/your/agones/path/is
+*  cp -R $GOPATH/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@v1.5.1/third_party $AGONES_PATH/vendor/github.com/grpc-ecosystem/grpc-gateway/
+
+Note the version in the pathname. Go may eliminate the need to do this in future versions.
+
+We also use vendor to hold code patches while waiting for the project to release the fixes in their own code. An example is in [k8s.io/apimachinery](https://github.com/GoogleCloudPlatform/agones/issues/414) where a fix will be released later this year, but we updated our own vendored version in order to fix the issue sooner.
+
 
 ## Troubleshooting
 
@@ -663,6 +729,14 @@ If you get this error when building Agones in WSL (`make build`, `make test` or 
 
 - Are your project files on a different folder than C? If yes, then you should either move them on drive C or set up Docker for Windows to share your project drive as well
 - Did you set up the volume mount for Docker correctly? By default, drive C is mapped by WSL as /mnt/c, but Docker expects it as /c. You can test by executing `ls /c` in your linux shell. If you get an error, then follow the instructions for [setting up volume mount for Docker](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly#ensure-volume-mounts-work)
+
+#### Error: cluster-admin-binding already exists
+
+This surfaces while running `make gcloud-auth-cluster`. The solution is to run `kubectl describe clusterrolebinding | grep cluster-admin-binding- -A10`, find clusterrolebinding which belongs to your `User` account and then run `kubectl delete clusterrolebindings cluster-admin-binding-<md5Hash>` where `<md5Hash>` is a value specific to your account. Now you can execute `make gcloud-auth-cluster` again. If you run into a permission denied error when attempting the delete operation, you need to run `sudo chown <your username> <path to .kube/config>` to change ownership of the file to yourself.
+
+#### Error: releases do not exist
+
+Run `make uninstall` then run `make install` again.
 
 #### I want to use pprof to profile the controller.
 

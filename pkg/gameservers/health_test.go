@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,7 +79,6 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 	type expected struct {
 		updated bool
-		state   v1alpha1.GameServerState
 	}
 	fixtures := map[string]struct {
 		state    v1alpha1.GameServerState
@@ -89,21 +88,30 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			state: v1alpha1.GameServerStateStarting,
 			expected: expected{
 				updated: true,
-				state:   v1alpha1.GameServerStateUnhealthy,
 			},
 		},
-		"scheduled": {
-			state: v1alpha1.GameServerStateScheduled,
+		"shutdown": {
+			state: v1alpha1.GameServerStateShutdown,
 			expected: expected{
 				updated: false,
-				state:   v1alpha1.GameServerStateScheduled,
+			},
+		},
+		"unhealthy": {
+			state: v1alpha1.GameServerStateUnhealthy,
+			expected: expected{
+				updated: false,
 			},
 		},
 		"ready": {
 			state: v1alpha1.GameServerStateReady,
 			expected: expected{
 				updated: true,
-				state:   v1alpha1.GameServerStateUnhealthy,
+			},
+		},
+		"allocated": {
+			state: v1alpha1.GameServerStateAllocated,
+			expected: expected{
+				updated: true,
 			},
 		},
 	}
@@ -128,7 +136,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
 				gsObj := ua.GetObject().(*v1alpha1.GameServer)
-				assert.Equal(t, test.expected.state, gsObj.Status.State)
+				assert.Equal(t, v1alpha1.GameServerStateUnhealthy, gsObj.Status.State)
 				return true, gsObj, nil
 			})
 
@@ -207,6 +215,15 @@ func TestHealthControllerRun(t *testing.T) {
 
 	podWatch.Modify(pod)
 
+	select {
+	case <-updated:
+	case <-time.After(10 * time.Second):
+		assert.FailNow(t, "timeout on GameServer update")
+	}
+
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
+
+	podWatch.Delete(pod)
 	select {
 	case <-updated:
 	case <-time.After(10 * time.Second):

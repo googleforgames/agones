@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc. All Rights Reserved.
+// Copyright 2018 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
 //! the Rust game server SDK
 #[macro_use]
 extern crate error_chain;
+extern crate futures;
 extern crate grpcio;
 extern crate grpcio_proto;
 extern crate protobuf;
-extern crate futures;
 
+pub mod errors;
 mod grpc;
 mod sdk;
-pub mod errors;
+pub mod types;
 
 pub use sdk::Sdk;

@@ -1,4 +1,4 @@
-# Copyright 2018 Google Inc. All Rights Reserved.
+# Copyright 2018 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ spec:
       {{- end }}
       containers:
         - name: agones-ping
-          image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ .Values.agones.image.tag }}"
+          image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.ping.name}}:{{ default .Values.agones.image.tag .Values.agones.image.ping.tag }}"
           imagePullPolicy: {{ .Values.agones.image.ping.pullPolicy }}
 {{- if .Values.agones.ping.resources }}
           resources:
