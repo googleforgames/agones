@@ -177,6 +177,7 @@ include ./includes/google-cloud.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk
+include ./includes/sdk.mk
 
 # personal includes, excluded from the git repository
 -include ./local-includes/*.mk
@@ -220,20 +221,13 @@ push-release-chart: $(ensure-build-image)
 	mv /tmp/agones/install/helm/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 
-#build all the sdks
-build-sdks: build-sdk-cpp
-
 # Run all tests
-test: $(ensure-build-image) test-go test-nodejs test-install-yaml site-test
+test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test
 
 # Run go tests
 test-go:
 	$(GO_TEST) $(agones_package)/pkg/... \
 	    $(agones_package)/sdks/... $(agones_package)/cmd/...
-
-# Run Node.js SDK tests
-test-nodejs:
-	docker run --rm $(common_mounts) -w $(workdir_path)/sdks/nodejs $(build_tag) npm install-test
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
@@ -353,10 +347,6 @@ push-ping-image: $(ensure-build-image)
 build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
-# Build the cpp sdk linux archive
-build-sdk-cpp: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(workdir_path)/sdks/cpp $(build_tag) make build install archive VERSION=$(VERSION)
-
 # push the gameservers sidecar image
 push-agones-sdk-image: $(ensure-build-image)
 	docker push $(sidecar_tag)
@@ -368,13 +358,6 @@ gen-install: $(ensure-build-image)
 		--set agones.controller.generateTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
-
-# Generate the SDK gRPC server and client code
-gen-gameservers-sdk-grpc: $(ensure-build-image)
-	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-go.sh
-	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-cpp.sh
-	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-rust.sh
-	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-grpc-nodejs.sh
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: $(ensure-build-image)

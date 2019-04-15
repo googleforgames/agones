@@ -1,4 +1,6 @@
-# Copyright 2017 Google LLC All Rights Reserved.
+#!/usr/bin/env bash
+
+# Copyright 2019 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.*
-!.gitignore
-!.helmignore
-!.gitattributes
-!.dockerignore
-!.golangci.yml
-!.gcloudignore
-!.eslintrc.*
-!.nycrc
-*.iml
-bin
-*.o
-tmp
-terraform.tfvars
-terraform.tfstate*
-build/local-includes/*
-!build/local-includes/README.md
-/release
-debug.test
+set -ex
+/root/$1.sh

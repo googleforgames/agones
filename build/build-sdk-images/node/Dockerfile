@@ -1,4 +1,4 @@
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2019 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,23 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+ARG BASE_IMAGE=agones-build-sdk-base:latest
+FROM $BASE_IMAGE
 
-.*
-!.gitignore
-!.helmignore
-!.gitattributes
-!.dockerignore
-!.golangci.yml
-!.gcloudignore
-!.eslintrc.*
-!.nycrc
-*.iml
-bin
-*.o
-tmp
-terraform.tfvars
-terraform.tfstate*
-build/local-includes/*
-!build/local-includes/README.md
-/release
-debug.test
+RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
+    apt-get install -y nodejs
+
+# code generation scripts
+COPY *.sh /root/
+RUN chmod +x /root/*.sh
