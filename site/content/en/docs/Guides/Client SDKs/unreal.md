@@ -1,7 +1,8 @@
 ---
 title: "Unreal Engine Game Server Client Plugin"
 linkTitle: "Unreal Engine"
-date: 2019-01-02T10:17:50Z
+date: 2019-06-13T10:17:50Z
+publishDate: 2019-06-13
 weight: 10
 description: "This is the Unreal Engine 4 Agones Game Server Client Plugin. "
 ---
