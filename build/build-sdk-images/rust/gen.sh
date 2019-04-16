@@ -16,7 +16,7 @@
 
 set -ex
 
-googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 cd /go/src/agones.dev/agones
 

@@ -20,7 +20,7 @@ header() {
     cat /go/src/agones.dev/agones/build/boilerplate.go.txt $1 >> /tmp/cpp/$1 && mv /tmp/cpp/$1 .
 }
 
-googleapis=/go/src/agones.dev/agones/vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 cd /go/src/agones.dev/agones/sdks/cpp
 find -name '*.pb.*' -delete
