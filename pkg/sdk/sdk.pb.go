@@ -50,7 +50,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{0}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -83,7 +83,7 @@ func (m *KeyValue) Reset()         { *m = KeyValue{} }
 func (m *KeyValue) String() string { return proto.CompactTextString(m) }
 func (*KeyValue) ProtoMessage()    {}
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{1}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{1}
 }
 func (m *KeyValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
@@ -133,7 +133,7 @@ func (m *GameServer) Reset()         { *m = GameServer{} }
 func (m *GameServer) String() string { return proto.CompactTextString(m) }
 func (*GameServer) ProtoMessage()    {}
 func (*GameServer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2}
 }
 func (m *GameServer) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer.Unmarshal(m, b)
@@ -196,7 +196,7 @@ func (m *GameServer_ObjectMeta) Reset()         { *m = GameServer_ObjectMeta{} }
 func (m *GameServer_ObjectMeta) String() string { return proto.CompactTextString(m) }
 func (*GameServer_ObjectMeta) ProtoMessage()    {}
 func (*GameServer_ObjectMeta) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 0}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2, 0}
 }
 func (m *GameServer_ObjectMeta) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_ObjectMeta.Unmarshal(m, b)
@@ -290,7 +290,7 @@ func (m *GameServer_Spec) Reset()         { *m = GameServer_Spec{} }
 func (m *GameServer_Spec) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Spec) ProtoMessage()    {}
 func (*GameServer_Spec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 1}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2, 1}
 }
 func (m *GameServer_Spec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Spec.Unmarshal(m, b)
@@ -331,7 +331,7 @@ func (m *GameServer_Spec_Health) Reset()         { *m = GameServer_Spec_Health{}
 func (m *GameServer_Spec_Health) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Spec_Health) ProtoMessage()    {}
 func (*GameServer_Spec_Health) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 1, 0}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2, 1, 0}
 }
 func (m *GameServer_Spec_Health) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Spec_Health.Unmarshal(m, b)
@@ -392,7 +392,7 @@ func (m *GameServer_Status) Reset()         { *m = GameServer_Status{} }
 func (m *GameServer_Status) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Status) ProtoMessage()    {}
 func (*GameServer_Status) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 2}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2, 2}
 }
 func (m *GameServer_Status) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Status.Unmarshal(m, b)
@@ -445,7 +445,7 @@ func (m *GameServer_Status_Port) Reset()         { *m = GameServer_Status_Port{}
 func (m *GameServer_Status_Port) String() string { return proto.CompactTextString(m) }
 func (*GameServer_Status_Port) ProtoMessage()    {}
 func (*GameServer_Status_Port) Descriptor() ([]byte, []int) {
-	return fileDescriptor_sdk_d3fbd562dbd9fd17, []int{2, 2, 0}
+	return fileDescriptor_sdk_fdecc22016921ca8, []int{2, 2, 0}
 }
 func (m *GameServer_Status_Port) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServer_Status_Port.Unmarshal(m, b)
@@ -838,9 +838,9 @@ var _SDK_serviceDesc = grpc.ServiceDesc{
 	Metadata: "sdk.proto",
 }
 
-func init() { proto.RegisterFile("sdk.proto", fileDescriptor_sdk_d3fbd562dbd9fd17) }
+func init() { proto.RegisterFile("sdk.proto", fileDescriptor_sdk_fdecc22016921ca8) }
 
-var fileDescriptor_sdk_d3fbd562dbd9fd17 = []byte{
+var fileDescriptor_sdk_fdecc22016921ca8 = []byte{
 	// 789 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xef, 0x6e, 0xe3, 0x44,
 	0x10, 0x97, 0x1b, 0xdb, 0x4d, 0xc6, 0x94, 0xa6, 0xdb, 0x20, 0xf9, 0xac, 0x8a, 0x2b, 0x16, 0x42,
