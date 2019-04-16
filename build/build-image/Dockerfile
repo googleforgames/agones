@@ -38,6 +38,9 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && un
 # update the path for both go and gcloud
 ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 
+# install go tooling for development, building and testing
+RUN go get -u golang.org/x/tools/cmd/goimports
+
 # RUN gcloud components update
 RUN gcloud components update && gcloud components install app-engine-go
 
