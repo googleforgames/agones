@@ -75,7 +75,9 @@ mount_path = /go/src/$(agones_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(kubeconfig_path):/root/.kube \
 				-v $(helm_path):/root/.helm \
-				-v $(agones_path):$(mount_path)
+				-v $(agones_path):$(mount_path) \
+				-v $(build_path)/.gomod:/go/pkg/mod
+
 # Its possible for this to change in the future, so it gets its own variable.
 workdir_path = $(mount_path)
 
