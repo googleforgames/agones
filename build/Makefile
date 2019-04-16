@@ -81,8 +81,8 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 # Its possible for this to change in the future, so it gets its own variable.
 workdir_path = $(mount_path)
 
+build_version = $(call sha,$(build_path)/build-image/Dockerfile)
 build_tag = agones-build:$(build_version)
-build_remote_tag = $(REGISTRY)/$(build_tag)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
@@ -177,6 +177,7 @@ include ./includes/$(osinclude)
 # personal includes, excluded from the git repository
 -include ./local-includes/*.mk
 
+include ./includes/build-image.mk
 include ./includes/release.mk
 include ./includes/google-cloud.mk
 include ./includes/minikube.mk
@@ -392,37 +393,6 @@ shell: $(ensure-build-image)
 godoc:
 	docker run -p 8888:8888 --rm $(common_mounts) -v $(build_path)/.index:/root/.index \
 		$(build_tag) godoc -http=":8888" -index=true
-
-# Creates the build docker image
-build-build-image:
-	docker build --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
-
-# Deletes the local build docker image
-clean-build-image:
-	docker rmi $(build_tag)
-
-ensure-build-config:
-	-mkdir -p $(kubeconfig_path)
-	-mkdir -p $(build_path)/.gocache
-	-mkdir -p $(build_path)/.config/gcloud
-	-mkdir -p $(helm_path)
-
-# create the build image if it doesn't exist
-ensure-build-image: ensure-build-config
-	@if [ -z $$(docker images -q $(build_tag)) ]; then\
-		echo "Could not find $(build_tag) image. Building...";\
-		$(MAKE) build-build-image;\
-	fi
-
-# attempt to pull the image, if it exists and rename it to the local tag
-# exit's clean if it doesn't exist, so can be used on CI
-pull-build-image:
-	-docker pull $(build_remote_tag) && docker tag $(build_remote_tag) $(build_tag)
-
-# push the local build image up to your repository
-push-build-image:
-	docker tag $(build_tag) $(build_remote_tag)
-	docker push $(build_remote_tag)
 
 # start pprof with a web ui
 pprof-web:
