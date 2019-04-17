@@ -75,8 +75,9 @@ RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
 #     \_/\_/ \___|_.__/|___/_|\__\___|
 #
 
+ENV HUGO_VER 0.55.2
 RUN mkdir /tmp/hugo && \
-    wget -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v0.53/hugo_extended_0.53_Linux-64bit.tar.gz && \
+    wget -q -O /tmp/hugo/hugo.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VER}/hugo_extended_${HUGO_VER}_Linux-64bit.tar.gz && \
     tar -zxvf /tmp/hugo/hugo.tar.gz -C /tmp/hugo/ && \
     mv /tmp/hugo/hugo /usr/local/bin/ && \
     rm -r /tmp/hugo
