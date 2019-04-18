@@ -61,7 +61,7 @@ steps:
   waitFor:
     - lint
   dir: "build"
-  args: [ "-j", "3", "test" ]
+  args: [ "-j", "4", "--output-sync=target", "test" ]
 
 #
 # Push the build image, can run while we do other things.
