@@ -97,6 +97,25 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	//10% with only one allocated GS means only one ready server
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
+	// get the Status of the fleetautoscaler
+	fas, err = framework.AgonesClient.StableV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.Name, metav1.GetOptions{})
+	assert.Nil(t, err, "could not get fleetautoscaler")
+	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
+
+	// check that we are able to scale
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
+		return fas.Status.ScalingLimited == false
+	})
+
+	// patch autoscaler to a maxReplicas count equal to current replicas count
+	_, err = patchFleetAutoscaler(fas, intstr.FromInt(1), 1, 1)
+	assert.Nil(t, err, "could not patch fleetautoscaler")
+
+	// check that we are not able to scale
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
+		return fas.Status.ScalingLimited == true
+	})
+
 	// delete the allocated GameServer and watch the fleet scale down
 	gp := int64(1)
 	err = alpha1.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
