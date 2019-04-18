@@ -53,16 +53,13 @@ rules:
   resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["gameserversets/status"]
-  verbs: ["update"]
-- apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets/status"]
+  resources: ["fleets/status",  "fleetautoscalers/status", "gameserversets/status"]
   verbs: ["update"]
 
 ---
