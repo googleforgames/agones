@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#
+# A GameServerAllocation against a Fleet named 'simple-udp'
 # (GameServerAllocation is currently experimental, and likely to change in upcoming releases)
+#
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "allocation.agones.dev/v1alpha1"
 kind: GameServerAllocation
-metadata:
-  # We recommend using the following to generate a unique name when creating Allocations
-  # This will need to be created with `kubectl create` if using the command line tooling
-  generateName: simple-udp-
 spec:
   # GameServer selector from which to choose GameServers from.
   # GameServers still have the hard requirement to be `Ready` to be allocated from

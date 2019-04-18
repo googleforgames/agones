@@ -45,7 +45,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 rules:
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets", "fleetallocations", "fleetautoscalers", "gameservers", "gameserversets", "gameserverallocations"]
+  resources: ["fleets", "fleetallocations", "fleetautoscalers", "gameservers", "gameserversets", "gameserverallocationpolicies"]
   verbs: ["delete", "list" ]
 - apiGroups: [""]
   resources: ["pods"]

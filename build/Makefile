@@ -174,15 +174,15 @@ include ./includes/$(osinclude)
 #  |___|_| |_|\___|_|\__,_|\__,_|\___|___/
 #
 
+# personal includes, excluded from the git repository
+-include ./local-includes/*.mk
+
 include ./includes/release.mk
 include ./includes/google-cloud.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk
 include ./includes/sdk.mk
-
-# personal includes, excluded from the git repository
--include ./local-includes/*.mk
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

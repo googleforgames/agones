@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,11 @@
 package v1alpha1
 
 import (
+	"fmt"
+
+	"agones.dev/agones/pkg/apis"
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -35,6 +38,7 @@ const (
 type GameServerAllocationState string
 
 // +genclient
+// +genclient:onlyVerbs=create
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GameServerAllocation is the data structure for allocating against a set of
@@ -67,11 +71,17 @@ type GameServerAllocationSpec struct {
 	Preferred []metav1.LabelSelector `json:"preferred,omitempty"`
 
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling"`
+	Scheduling apis.SchedulingStrategy `json:"scheduling"`
 
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
+}
+
+// MetaPatch is the metadata used to patch the GameServer metadata on allocation
+type MetaPatch struct {
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // PreferredSelectors converts all the preferred label selectors into an array of
@@ -93,30 +103,34 @@ func (gsas *GameServerAllocationSpec) PreferredSelectors() ([]labels.Selector, e
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
 type GameServerAllocationStatus struct {
 	// GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated
-	State          GameServerAllocationState `json:"state"`
-	GameServerName string                    `json:"gameServerName"`
-	Ports          []GameServerStatusPort    `json:"ports,omitempty"`
-	Address        string                    `json:"address,omitempty"`
-	NodeName       string                    `json:"nodeName,omitempty"`
+	State          GameServerAllocationState       `json:"state"`
+	GameServerName string                          `json:"gameServerName"`
+	Ports          []v1alpha1.GameServerStatusPort `json:"ports,omitempty"`
+	Address        string                          `json:"address,omitempty"`
+	NodeName       string                          `json:"nodeName,omitempty"`
 }
 
 // ApplyDefaults applies the default values to this GameServerAllocation
 func (gsa *GameServerAllocation) ApplyDefaults() {
 	if gsa.Spec.Scheduling == "" {
-		gsa.Spec.Scheduling = Packed
+		gsa.Spec.Scheduling = apis.Packed
 	}
 }
 
-// ValidateUpdate validates when an update occurs
-func (gsa *GameServerAllocation) ValidateUpdate(new *GameServerAllocation) ([]metav1.StatusCause, bool) {
+// Validate validation for the GameServerAllocation
+func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
-	if !equality.Semantic.DeepEqual(gsa.Spec, new.Spec) {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "spec",
-			Message: "spec cannot be updated",
-		})
+	valid := false
+	for _, v := range []apis.SchedulingStrategy{apis.Packed, apis.Distributed} {
+		if gsa.Spec.Scheduling == v {
+			valid = true
+		}
+	}
+	if !valid {
+		causes = append(causes, metav1.StatusCause{Type: metav1.CauseTypeFieldValueInvalid,
+			Field:   "spec.scheduling",
+			Message: fmt.Sprintf("Invalid value: %s, value must be either Packed or Distributed", gsa.Spec.Scheduling)})
 	}
 
 	return causes, len(causes) == 0
