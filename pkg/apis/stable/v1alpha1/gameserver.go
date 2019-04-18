@@ -22,6 +22,7 @@ import (
 	"github.com/mattbaird/jsonpatch"
 
 	"agones.dev/agones/pkg"
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -124,7 +125,7 @@ type GameServerSpec struct {
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
 	// Scheduling strategy. Defaults to "Packed".
-	Scheduling SchedulingStrategy `json:"scheduling,omitempty"`
+	Scheduling apis.SchedulingStrategy `json:"scheduling,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
 }
@@ -241,7 +242,7 @@ func (gs *GameServer) applyPortDefaults() {
 
 func (gs *GameServer) applySchedulingDefaults() {
 	if gs.Spec.Scheduling == "" {
-		gs.Spec.Scheduling = Packed
+		gs.Spec.Scheduling = apis.Packed
 	}
 }
 
@@ -423,7 +424,7 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	ref := metav1.NewControllerRef(gs, SchemeGroupVersion.WithKind("GameServer"))
 	pod.ObjectMeta.OwnerReferences = append(pod.ObjectMeta.OwnerReferences, *ref)
 
-	if gs.Spec.Scheduling == Packed {
+	if gs.Spec.Scheduling == apis.Packed {
 		// This means that the autoscaler cannot remove the Node that this Pod is on.
 		// (and evict the Pod in the process)
 		pod.ObjectMeta.Annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] = "false"
@@ -444,7 +445,7 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 // pods to a host topology. Basically doing a half decent job of packing GameServer
 // pods together.
 func (gs *GameServer) podScheduling(pod *corev1.Pod) {
-	if gs.Spec.Scheduling == Packed {
+	if gs.Spec.Scheduling == apis.Packed {
 		if pod.Spec.Affinity == nil {
 			pod.Spec.Affinity = &corev1.Affinity{}
 		}

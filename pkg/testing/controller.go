@@ -16,6 +16,7 @@ package testing
 
 import (
 	"context"
+	"net/http"
 	gotesting "testing"
 	"time"
 
@@ -41,6 +42,7 @@ type Mocks struct {
 	AgonesClient          *agonesfake.Clientset
 	AgonesInformerFactory externalversions.SharedInformerFactory
 	FakeRecorder          *record.FakeRecorder
+	Mux                   *http.ServeMux
 }
 
 // NewMocks creates a new set of fakes and mocks.
