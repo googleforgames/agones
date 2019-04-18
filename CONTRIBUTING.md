@@ -40,6 +40,11 @@ When submitting pull requests, make sure to do the following:
 - Format all Go code with [gofmt](https://golang.org/cmd/gofmt/). Many people
   use [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) which
   fixes import statements and formats code in the same style of `gofmt`.
+- C++ code should follow the [Google C++ Style
+  Guide](https://google.github.io/styleguide/cppguide.html), which can be
+  applied automatically using the
+  [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) command-line tool
+  (e.g., `clang-format -style=Google foo.cc`).
 - Remove trailing whitespace. Many editors will do this automatically.
 - Ensure any new files have [a trailing newline](https://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
 
