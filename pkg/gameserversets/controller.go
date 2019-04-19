@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -357,7 +358,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 
 // computeReconciliationAction computes the action to take to reconcile a game server set set given
 // the list of game servers that were found and target replica count.
-func computeReconciliationAction(strategy v1alpha1.SchedulingStrategy, list []*v1alpha1.GameServer,
+func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*v1alpha1.GameServer,
 	counts map[string]gameservers.NodeCount, targetReplicaCount int, maxCreations int, maxDeletions int,
 	maxPending int) (int, []*v1alpha1.GameServer, bool) {
 	var upCount int     // up == Ready or will become ready
@@ -457,7 +458,7 @@ func computeReconciliationAction(strategy v1alpha1.SchedulingStrategy, list []*v
 	}
 
 	if deleteCount > 0 {
-		if strategy == v1alpha1.Packed {
+		if strategy == apis.Packed {
 			potentialDeletions = sortGameServersByLeastFullNodes(potentialDeletions, counts)
 		} else {
 			potentialDeletions = sortGameServersByNewFirst(potentialDeletions)

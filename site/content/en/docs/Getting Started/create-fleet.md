@@ -176,6 +176,7 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 You should get back a response that looks like the following:
 
+{{% feature expiryVersion="0.10.0" %}}
 ```yaml
 apiVersion: stable.agones.dev/v1alpha1
 kind: GameServerAllocation
@@ -210,6 +211,32 @@ status:
     port: 7623
   state: Allocated
 ```
+{{% /feature %}}
+
+{{% feature publishVersion="0.10.0" %}}
+```yaml
+apiVersion: allocation.agones.dev/v1alpha1
+kind: GameServerAllocation
+metadata:
+  creationTimestamp: 2019-02-19T02:13:12Z
+  name: simple-udp-dph9b-hfk24
+  namespace: default
+spec:
+  metadata: {}
+  required:
+    matchLabels:
+      stable.agones.dev/fleet: simple-udp
+  scheduling: Packed
+status:
+  address: 192.168.122.152
+  gameServerName: simple-udp-dph9b-hfk24
+  nodeName: minikube
+  ports:
+  - name: default
+    port: 7714
+  state: Allocated
+```
+{{% /feature %}}
 
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
@@ -239,6 +266,11 @@ simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623   minikube  52m
 simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
 simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
+
+{{% feature publishVersion="0.10.0" %}}
+> `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
+  them after they have been created - but you can see their effects on `GameServers`
+{{% /feature %}}
 
 #### FleetAllocation
 

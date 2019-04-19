@@ -29,7 +29,7 @@ HEAD="/tmp/head.html"
 RESULT="/tmp/agones_crd_api_reference.html"
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/stable/v1alpha1/ --out-file $RESULT
+./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 awk '//{flag=1}/\ feature\ publishVersion/{flag=0;exit}flag' $FILE > $HEAD

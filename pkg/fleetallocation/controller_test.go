@@ -22,6 +22,7 @@ import (
 	"sync"
 	"testing"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
@@ -285,7 +286,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 	run(t, "distributed", func(t *testing.T, c *Controller, f *v1alpha1.Fleet) {
 		// make a copy, to avoid the race check
 		f = f.DeepCopy()
-		f.Spec.Scheduling = v1alpha1.Distributed
+		f.Spec.Scheduling = apis.Distributed
 		// should go node2, then node1
 		gs, err := c.allocate(f, nil)
 		assert.Nil(t, err)

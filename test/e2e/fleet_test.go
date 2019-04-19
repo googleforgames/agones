@@ -20,6 +20,8 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
+	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
@@ -46,7 +48,7 @@ const (
 func TestCreateFleetAndFleetAllocate(t *testing.T) {
 	t.Parallel()
 
-	fixtures := []v1alpha1.SchedulingStrategy{v1alpha1.Packed, v1alpha1.Distributed}
+	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
 		t.Run(string(strategy), func(t *testing.T) {
@@ -79,7 +81,7 @@ func TestCreateFleetAndFleetAllocate(t *testing.T) {
 func TestCreateFullFleetAndCantFleetAllocate(t *testing.T) {
 	t.Parallel()
 
-	fixtures := []v1alpha1.SchedulingStrategy{v1alpha1.Packed, v1alpha1.Distributed}
+	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
 		t.Run(string(strategy), func(t *testing.T) {
@@ -220,14 +222,14 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
 			// get an allocation
-			gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
-				Spec: v1alpha1.GameServerAllocationSpec{
+			gsa := &allocationv1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+				Spec: allocationv1alpha1.GameServerAllocationSpec{
 					Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 				}}
 
-			gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
+			gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs).Create(gsa)
 			assert.Nil(t, err)
-			assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
+			assert.Equal(t, allocationv1alpha1.GameServerAllocationAllocated, gsa.Status.State)
 			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 1
 			})
@@ -336,14 +338,14 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	// get an allocation
-	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
-		Spec: v1alpha1.GameServerAllocationSpec{
+	gsa := &allocationv1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+		Spec: allocationv1alpha1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 		}}
 
-	gsa, err = alpha1.GameServerAllocations(defaultNs).Create(gsa)
+	gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs).Create(gsa)
 	assert.Nil(t, err, "cloud not create gameserver allocation")
-	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
+	assert.Equal(t, allocationv1alpha1.GameServerAllocationAllocated, gsa.Status.State)
 	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
@@ -558,12 +560,12 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 			for {
 				// this gives room for fleet scaling to go down - makes it more likely for the race condition to fire
 				time.Sleep(100 * time.Millisecond)
-				gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
-					Spec: v1alpha1.GameServerAllocationSpec{
+				gsa := &allocationv1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
+					Spec: allocationv1alpha1.GameServerAllocationSpec{
 						Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 					}}
-				gsa, err = framework.AgonesClient.StableV1alpha1().GameServerAllocations(defaultNs).Create(gsa)
-				if err != nil || gsa.Status.State == v1alpha1.GameServerAllocationUnAllocated {
+				gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs).Create(gsa)
+				if err != nil || gsa.Status.State == allocationv1alpha1.GameServerAllocationUnAllocated {
 					logrus.WithError(err).Info("Allocation ended")
 					break
 				}
@@ -772,7 +774,7 @@ func TestUpdateFleetScheduling(t *testing.T) {
 
 			flt := defaultFleet()
 			flt.Spec.Replicas = 1
-			flt.Spec.Scheduling = v1alpha1.Packed
+			flt.Spec.Scheduling = apis.Packed
 			flt, err := alpha1.Fleets(defaultNs).Create(flt)
 
 			if assert.Nil(t, err) {
@@ -780,21 +782,21 @@ func TestUpdateFleetScheduling(t *testing.T) {
 			}
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
-			assert.Equal(t, v1alpha1.Packed, flt.Spec.Scheduling)
+			assert.Equal(t, apis.Packed, flt.Spec.Scheduling)
 
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			const targetScale = 2
-			flt = schedulingFleetPatch(t, flt, v1alpha1.Distributed, targetScale)
+			flt = schedulingFleetPatch(t, flt, apis.Distributed, targetScale)
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
 			assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
-			assert.Equal(t, v1alpha1.Distributed, flt.Spec.Scheduling)
+			assert.Equal(t, apis.Distributed, flt.Spec.Scheduling)
 
 			err = framework.WaitForFleetGameServerListCondition(flt,
 				func(gsList []v1alpha1.GameServer) bool {
-					return countFleetScheduling(gsList, v1alpha1.Distributed) == 1 &&
-						countFleetScheduling(gsList, v1alpha1.Packed) == 1
+					return countFleetScheduling(gsList, apis.Distributed) == 1 &&
+						countFleetScheduling(gsList, apis.Packed) == 1
 				})
 			assert.Nil(t, err)
 		})
@@ -847,7 +849,7 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 }
 
 // Counts the number of gameservers with the specified scheduling strategy in a fleet
-func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling v1alpha1.SchedulingStrategy) int {
+func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling apis.SchedulingStrategy) int {
 	count := 0
 	for _, gs := range gsList {
 		if gs.Spec.Scheduling == scheduling {
@@ -860,7 +862,7 @@ func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling v1alpha1.Sche
 // Patches fleet with scheduling and scale values
 func schedulingFleetPatch(t *testing.T,
 	f *v1alpha1.Fleet,
-	scheduling v1alpha1.SchedulingStrategy,
+	scheduling apis.SchedulingStrategy,
 	scale int32) *v1alpha1.Fleet {
 
 	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/scheduling", "value": "%s" },

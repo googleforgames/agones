@@ -142,9 +142,7 @@ func main() {
 	// https server and the items that share the Mux for routing
 	httpsServer := https.NewServer(ctlConf.CertFile, ctlConf.KeyFile)
 	wh := webhooks.NewWebHook(httpsServer.Mux)
-	// will register openapi endpoint, which is currently not used
-	// but gets the code ready for usage in a later PR.
-	_ = apiserver.NewAPIServer(httpsServer.Mux)
+	api := apiserver.NewAPIServer(httpsServer.Mux)
 
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -201,8 +199,8 @@ func main() {
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(wh, health, gsCounter, topNGSForAllocation,
-		kubeClient, extClient, agonesClient, agonesInformerFactory)
+	gasController := gameserverallocations.NewController(api, health, gsCounter, topNGSForAllocation,
+		kubeClient, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 

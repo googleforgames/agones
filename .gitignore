@@ -21,6 +21,7 @@
 !.gcloudignore
 !.eslintrc.*
 !.nycrc
+!.clang-format
 *.iml
 bin
 *.o
