@@ -103,7 +103,7 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
 # update CMake
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.sh && mkdir /opt/cmake && \
+RUN wget -nv https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.sh && mkdir /opt/cmake && \
     sh ./cmake-3.14.0-Linux-x86_64.sh --skip-license --prefix=/opt/cmake && export PATH=$PATH:/opt/cmake/bin
 
 # install terraform
