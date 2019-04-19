@@ -15,6 +15,9 @@
 package v1alpha1
 
 import (
+	"math/rand"
+	"sort"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -53,4 +56,125 @@ type GameServerAllocationPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []GameServerAllocationPolicy `json:"items"`
+}
+
+// clusterToPolicy map type definition for cluster to policy map
+type clusterToPolicy map[string][]*GameServerAllocationPolicy
+
+// ConnectionInfoIterator an iterator on ClusterConnectionInfo
+type ConnectionInfoIterator struct {
+	// currPriority Current priority index from the orderedPriorities
+	currPriority int
+	// orderedPriorities list of ordered priorities
+	orderedPriorities []int
+	// priorityToCluster Map of priority to cluster-policies map
+	priorityToCluster map[int]clusterToPolicy
+	// clusterBlackList the cluster blacklist for the clusters that has already returned
+	clusterBlackList map[string]bool
+}
+
+// Next returns the next ClusterConnectionInfo value if available or nil if iterator reaches the end.
+func (it *ConnectionInfoIterator) Next() *ClusterConnectionInfo {
+	for it.currPriority < len(it.orderedPriorities) {
+		// Get clusters with the highest priority
+		currPriority := it.orderedPriorities[it.currPriority]
+		clusterPolicy := it.priorityToCluster[currPriority]
+
+		if result := it.getClusterConnectionInfo(&clusterPolicy); result == nil {
+			// If there is no cluster with the current priority, choose cluster with next highest priority
+			it.currPriority++
+		} else {
+			// To avoid the same cluster again add that to a black list
+			it.clusterBlackList[result.ClusterName] = true
+			return result
+		}
+	}
+
+	return nil
+}
+
+// NewConnectionInfoIterator creates an iterator for connection info
+func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *ConnectionInfoIterator {
+	priorityToCluster := make(map[int]clusterToPolicy)
+	for _, policy := range policies {
+		priority := policy.Spec.Priority
+		clusterName := policy.Spec.ConnectionInfo.ClusterName
+
+		// 1. Add priorities to the map of priority to cluster-priorities map
+		clusterPolicy, ok := priorityToCluster[priority]
+		if !ok {
+			clusterPolicy = make(clusterToPolicy)
+			priorityToCluster[priority] = clusterPolicy
+		}
+
+		// 2. Add cluster to the cluster-priorities map
+		if _, ok := clusterPolicy[clusterName]; !ok {
+			clusterPolicy[clusterName] = []*GameServerAllocationPolicy{policy}
+		} else {
+			clusterPolicy[clusterName] = append(clusterPolicy[clusterName], policy)
+		}
+	}
+
+	// 3. Sort priorities
+	priorities := make([]int, 0, len(priorityToCluster))
+	for k := range priorityToCluster {
+		priorities = append(priorities, k)
+	}
+	sort.Slice(priorities, func(i, j int) bool { return priorities[i] < priorities[j] })
+
+	// 4. Store initial values for the iterator
+	return &ConnectionInfoIterator{priorityToCluster: priorityToCluster, currPriority: 0, orderedPriorities: priorities, clusterBlackList: make(map[string]bool)}
+}
+
+// getClusterConnectionInfo returns a ClusterConnectionInfo selected base on weighted randomization.
+func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy *clusterToPolicy) *ClusterConnectionInfo {
+	connections := []*ClusterConnectionInfo{}
+	weights := []int{}
+	for cluster, policies := range *clusterPolicy {
+		if _, ok := it.clusterBlackList[cluster]; ok {
+			continue
+		}
+		weights = append(weights, avgWeight(policies))
+		connections = append(connections, &policies[0].Spec.ConnectionInfo)
+	}
+
+	if len(connections) == 0 {
+		return nil
+	}
+
+	return selectRandomWeighted(connections, &weights)
+}
+
+// avgWeight calculates average over allocation policy Weight field.
+func avgWeight(policies []*GameServerAllocationPolicy) int {
+	if len(policies) == 0 {
+		return 0
+	}
+	var sum int
+	for _, policy := range policies {
+		sum += policy.Spec.Weight
+	}
+	return sum / len(policies)
+}
+
+// selectRandomWeighted selects a ClusterConnectionInfo info from a weighted list of ClusterConnectionInfo
+func selectRandomWeighted(connections []*ClusterConnectionInfo, weights *[]int) *ClusterConnectionInfo {
+	sum := 0
+	for _, weight := range *weights {
+		sum += weight
+	}
+
+	if sum <= 0 {
+		return nil
+	}
+
+	rand := rand.Intn(sum)
+	sum = 0
+	for i, weight := range *weights {
+		sum += weight
+		if rand < sum {
+			return connections[i]
+		}
+	}
+	return nil
 }
