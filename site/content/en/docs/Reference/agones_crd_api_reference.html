@@ -2226,6 +2226,7 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 
 
 
+
 {{% feature publishVersion="0.10.0" %}}
 <p>Packages:</p>
 <ul>
@@ -2302,6 +2303,20 @@ GameServerAllocationSpec
 <br/>
 <br/>
 <table>
+<tr>
+<td>
+<code>multiClusterSetting</code></br>
+<em>
+<a href="#MultiClusterSetting">
+MultiClusterSetting
+</a>
+</em>
+</td>
+<td>
+<p>MultiClusterPolicySelector if specified, multi-cluster policies are applied.
+Otherwise, allocation will happen locally.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>required</code></br>
@@ -2389,6 +2404,20 @@ GameServerAllocationStatus
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>multiClusterSetting</code></br>
+<em>
+<a href="#MultiClusterSetting">
+MultiClusterSetting
+</a>
+</em>
+</td>
+<td>
+<p>MultiClusterPolicySelector if specified, multi-cluster policies are applied.
+Otherwise, allocation will happen locally.</p>
+</td>
+</tr>
 <tr>
 <td>
 <code>required</code></br>
@@ -2559,6 +2588,47 @@ map[string]string
 <code>annotations</code></br>
 <em>
 map[string]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="MultiClusterSetting">MultiClusterSetting
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>MultiClusterSetting specifies settings for multi-cluster allocation.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>policySelector</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
 </em>
 </td>
 <td>

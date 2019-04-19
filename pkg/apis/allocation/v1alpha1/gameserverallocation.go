@@ -62,6 +62,10 @@ type GameServerAllocationList struct {
 
 // GameServerAllocationSpec is the spec for a GameServerAllocation
 type GameServerAllocationSpec struct {
+	// MultiClusterPolicySelector if specified, multi-cluster policies are applied.
+	// Otherwise, allocation will happen locally.
+	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty"`
+
 	// Required The required allocation. Defaults to all GameServers.
 	Required metav1.LabelSelector `json:"required,omitempty"`
 
@@ -76,6 +80,12 @@ type GameServerAllocationSpec struct {
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
+}
+
+// MultiClusterSetting specifies settings for multi-cluster allocation.
+type MultiClusterSetting struct {
+	Enabled        bool                 `json:"enabled,omitempty"`
+	PolicySelector metav1.LabelSelector `json:"policySelector,omitempty"`
 }
 
 // MetaPatch is the metadata used to patch the GameServer metadata on allocation

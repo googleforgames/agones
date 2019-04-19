@@ -26,6 +26,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -725,6 +726,174 @@ func TestGetRandomlySelectedGS(t *testing.T) {
 	selectedGS = c.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
 	assert.Equal(t, "gs1", selectedGS.ObjectMeta.Name)
+}
+
+func TestMultiClusterAllocation(t *testing.T) {
+	t.Parallel()
+	t.Run("Handle allocation request locally", func(t *testing.T) {
+		c, m := newFakeController()
+		fleetName := addReactorForGameServer(&m)
+
+		stop, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+								AllocationEndpoint: "localhost",
+								ClusterName:        "multicluster",
+								SecretName:         "localhostsecret",
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Labels: map[string]string{"cluster": "onprem"},
+						},
+					},
+				},
+			}, nil
+		})
+
+		m.AgonesClient.AddReactor("get", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				t.Error("Should not get secrets for local cluster")
+				return false, nil, nil
+			})
+
+		gsa := &v1alpha1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "multicluster",
+			},
+			Spec: v1alpha1.GameServerAllocationSpec{
+				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+					Enabled: true,
+					PolicySelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"cluster": "onprem",
+						},
+					},
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		ret, err := executeAllocation(gsa, c)
+		assert.NoError(t, err)
+		assert.Equal(t, gsa.Spec.Required, ret.Spec.Required)
+		expectedState := v1alpha1.GameServerAllocationAllocated
+		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
+	})
+
+	t.Run("Missing multicluster policy", func(t *testing.T) {
+		c, m := newFakeController()
+		fleetName := addReactorForGameServer(&m)
+
+		stop, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{},
+			}, nil
+		})
+
+		m.AgonesClient.AddReactor("get", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				t.Error("Should not get secrets for local cluster")
+				return false, nil, nil
+			})
+
+		gsa := &v1alpha1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "multicluster",
+			},
+			Spec: v1alpha1.GameServerAllocationSpec{
+				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+					Enabled: true,
+					PolicySelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"cluster": "onprem",
+						},
+					},
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		ret, err := executeAllocation(gsa, c)
+		assert.NoError(t, err)
+		assert.Equal(t, gsa.Spec.Required, ret.Spec.Required)
+		expectedState := v1alpha1.GameServerAllocationAllocated
+		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
+	})
+}
+
+func executeAllocation(gsa *v1alpha1.GameServerAllocation, c *Controller) (*v1alpha1.GameServerAllocation, error) {
+	r, err := createRequest(gsa)
+	if err != nil {
+		return nil, err
+	}
+	rec := httptest.NewRecorder()
+	if err = c.allocationHandler(rec, r, defaultNs); err != nil {
+		return nil, err
+	}
+
+	ret := &v1alpha1.GameServerAllocation{}
+	err = json.Unmarshal(rec.Body.Bytes(), ret)
+	return ret, err
+}
+
+func addReactorForGameServer(m *agtesting.Mocks) string {
+	f, _, gsList := defaultFixtures(3)
+	gsWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		return true, &stablev1alpha1.GameServerList{Items: gsList}, nil
+	})
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*stablev1alpha1.GameServer)
+		gsWatch.Modify(gs)
+		return true, gs, nil
+	})
+	return f.ObjectMeta.Name
+}
+
+func createRequest(gsa *v1alpha1.GameServerAllocation) (*http.Request, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := json.NewEncoder(buf).Encode(gsa); err != nil {
+		return nil, err
+	}
+
+	r, err := http.NewRequest(http.MethodPost, "/", buf)
+	r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
+
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 func defaultFixtures(gsLen int) (*stablev1alpha1.Fleet, *stablev1alpha1.GameServerSet, []stablev1alpha1.GameServer) {
