@@ -42,12 +42,11 @@ ensure-build-image: ensure-build-config
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI
 pull-build-image:
-	-docker pull $(build_remote_tag) && docker tag $(build_remote_tag) $(build_tag)
+	$(MAKE) pull-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(build_tag)
 
 # push the local build image up to your repository
 push-build-image:
-	docker tag $(build_tag) $(build_remote_tag)
-	docker push $(build_remote_tag)
+	$(MAKE) push-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(build_tag)
 
 # ensure passed in image exists, if not, run the target
 ensure-image:
@@ -55,3 +54,12 @@ ensure-image:
 		echo "Could not find $(IMAGE_TAG) image. Building...";\
 		$(MAKE) $(BUILD_TARGET);\
 	fi
+
+# push a local build image up to a remote repository
+push-remote-build-image:
+	docker tag $(LOCAL_TAG) $(REMOTE_TAG)
+	docker push $(REMOTE_TAG)
+
+# pull a local image that may exist on a remote repository, to a local image
+pull-remote-build-image:
+	-docker pull $(REMOTE_TAG) && docker tag $(REMOTE_TAG) $(LOCAL_TAG)

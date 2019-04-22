@@ -14,8 +14,7 @@
 
 
 #
-# This image is manually built (for now)
-# as gcr.io/agones-images/grpc-cxx:1.16.1
+# Base images for SDKs
 #
 
 FROM debian:stretch
