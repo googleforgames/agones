@@ -23,7 +23,7 @@
 #
 # Website targets
 #
-	
+
 # generate the latest website
 site-server: ARGS ?=-F
 site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=master

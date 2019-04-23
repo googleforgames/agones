@@ -24,15 +24,15 @@ install_path := /opt/local
 
 build:
 	-mkdir $(build_path)
-	cd $(build_path) && cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
-	cd $(build_path) && cmake --build . --target install
+	cd $(build_path) && cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=ON -G "Unix Makefiles" -Wno-dev -DCMAKE_INSTALL_PREFIX=.install
+	cd $(build_path) && cmake --build . --target install -- -s
 	
 install:
 	cp -r $(build_path)/.install $(install_path)
 	
 archive: VERSION = "dev"
 archive:
-	cd $(package_path) && tar cvf $(build_path)/agonessdk-$(VERSION)-linux-arch_64.tar.gz *
+	cd $(package_path) && tar cf $(build_path)/agonessdk-$(VERSION)-linux-arch_64.tar.gz *
 	
 clean:
 	-rm -rf $(build_path)
