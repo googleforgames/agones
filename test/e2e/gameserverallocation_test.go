@@ -126,9 +126,17 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 			},
 		}}
 
-	gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
-	if assert.Nil(t, err) {
-		assert.Equal(t, v1alpha1.GameServerAllocationAllocated, gsa.Status.State)
+	err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
+		gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
+
+		if err != nil {
+			return true, err
+		}
+
+		return v1alpha1.GameServerAllocationAllocated == gsa.Status.State, nil
+	})
+	if err != nil {
+		assert.FailNow(t, err.Error())
 	}
 
 	gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(gsa.Status.GameServerName, metav1.GetOptions{})
