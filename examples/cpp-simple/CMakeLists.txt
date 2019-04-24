@@ -48,3 +48,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC agones)
 if (MSVS)
   target_compile_options(${PROJECT_NAME} PUBLIC /wd4101 /wd4146 /wd4251 /wd4661)
 endif()
+
+# Installation
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME} RUNTIME DESTINATION .)
