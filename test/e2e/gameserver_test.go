@@ -23,6 +23,7 @@ import (
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -176,7 +177,11 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	assert.Nil(t, err)
 
 	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
+
+	_, err = gameServers.Get(newGs.Name, metav1.GetOptions{})
+	assert.NotNil(t, err)
+	assert.True(t, errors.IsNotFound(err))
 }
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
