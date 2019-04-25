@@ -258,7 +258,7 @@ func (c *Controller) updateStatus(fas *stablev1alpha1.FleetAutoscaler, currentRe
 			c.recorder.Eventf(fas, corev1.EventTypeWarning, "ScalingLimited", "Scaling fleet %s was limited to maximum size of %d", fas.Spec.FleetName, desiredReplicas)
 		}
 
-		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).Update(fasCopy)
+		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(fasCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating status for fleetautoscaler %s", fas.ObjectMeta.Name)
 		}
@@ -276,7 +276,7 @@ func (c *Controller) updateStatusUnableToScale(fas *stablev1alpha1.FleetAutoscal
 	fasCopy.Status.DesiredReplicas = 0
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
-		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).Update(fasCopy)
+		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(fasCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating status for fleetautoscaler %s", fas.ObjectMeta.Name)
 		}

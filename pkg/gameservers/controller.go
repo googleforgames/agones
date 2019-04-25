@@ -455,11 +455,6 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 
 	c.loggerForGameServer(gs).Info("Syncing Create State")
 
-	// Wait for pod cache sync, so that we don't end up with multiple pods for a GameServer
-	if !(cache.WaitForCacheSync(c.stop, c.podSynced)) {
-		return nil, errors.New("could not sync pod cache state")
-	}
-
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
 	ret, err := c.listGameServerPods(gs)
 	if err != nil {
@@ -734,7 +729,8 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 
 // syncGameServerShutdownState deletes the GameServer (and therefore the backing Pod) if it is in shutdown state
 func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error {
-	if !(gs.Status.State == v1alpha1.GameServerStateShutdown && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+	if !gs.ObjectMeta.DeletionTimestamp.IsZero() ||
+		(gs.Status.State != v1alpha1.GameServerStateShutdown && gs.Status.State != v1alpha1.GameServerStateUnhealthy) {
 		return nil
 	}
 
