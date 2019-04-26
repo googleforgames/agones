@@ -197,8 +197,8 @@ AKS_LOCATION=westeurope     # Azure region in which you'll deploy your AKS clust
 az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
 
 # Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
-# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.11. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A1_v2 --kubernetes-version 1.11 --enable-rbac
+# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.11.8. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.11.8
 
 # Install kubectl
 sudo az aks install-cli
