@@ -78,4 +78,7 @@ spec:
                           type: string
                     url:
                       type: string
+  subresources:
+    # status enables the status subresource.
+    status: {}
 {{- end }}

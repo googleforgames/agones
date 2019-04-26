@@ -94,6 +94,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		case "GAMESERVER":
 			writeGameServerName(s, conn, sender)
 
+		case "ALLOCATE":
+			allocate(s)
+
 		case "WATCH":
 			watchGameServerEvents(s)
 
@@ -123,6 +126,14 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		}
 
 		respond(conn, sender, "ACK: "+txt+"\n")
+	}
+}
+
+// allocate attemps to allocate this gameserver
+func allocate(s *sdk.SDK) {
+	err := s.Allocate()
+	if err != nil {
+		log.Fatalf("could not allocate gameserver: %v", err)
 	}
 }
 

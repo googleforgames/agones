@@ -19,17 +19,59 @@
 steps:
 
 #
+# Restore any caches
+#
+
+- name: gcr.io/$PROJECT_ID/restore_cache
+  id: htmltest-restore-cache
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_HTMLTEST_CACHE_KEY'
+  waitFor: ['-']
+
+#
 # Creates the initial make + docker build platform
 #
 
 - name: "ubuntu"
   args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+  waitFor: ['-']
 - name: "gcr.io/cloud-builders/docker"
+  id: build-make-docker
   args: ['build', '-f', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
+
+#
+# pull the main build image if it exists
+#
 - name: "make-docker"
-  id: make-docker
+  id: pull-build-image
   dir: "build"
-  args: ["pull-build-image"] # pull the build image if it exists
+  args: ["pull-build-image"]
+  waitFor:
+    - build-make-docker
+
+#
+# pull the sdk base image, if it exists
+#
+
+- name: "make-docker"
+  id: pull-build-sdk-base-image
+  dir: "build"
+  args: ["pull-build-sdk-base-image"]
+  waitFor:
+    - build-make-docker
+
+#
+# Ensure that there is the sdk base image, so that both tests
+# and build can use them
+#
+
+- name: "make-docker"
+  id: ensure-build-sdk-image-base
+  waitFor:
+    - pull-build-sdk-base-image
+  dir: "build"
+  args: ["ensure-build-sdk-image-base"]
 
 #
 # build the e2e test runner
@@ -48,7 +90,7 @@ steps:
 - name: "make-docker"
   id: lint
   waitFor:
-    - make-docker
+    - pull-build-image
   dir: "build"
   args: ["lint"] # pull the build image if it exists
 
@@ -60,8 +102,22 @@ steps:
   id: tests
   waitFor:
     - lint
+    - ensure-build-sdk-image-base
+    - htmltest-restore-cache
   dir: "build"
-  args: [ "-j", "3", "test" ]
+  args: [ "-j", "4", "--output-sync=target", "test" ]
+
+#
+# Cache the htmltest url checks. Faster builds, and lower network flakiness.
+#
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_HTMLTEST_CACHE_KEY'
+    - '--path=site/tmp'
+  id: htmltest-save-cache
+  waitFor:
+    - tests
 
 #
 # Push the build image, can run while we do other things.
@@ -74,6 +130,16 @@ steps:
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
 #
+# Push the sdk base build image, which can also run while we do other things
+#
+
+- name: "make-docker"
+  waitFor:
+    - ensure-build-sdk-image-base
+  dir: "build"
+  args: ["push-build-sdk-base-image"]
+
+#
 # Build all the images and sdks, and push them up to the repository
 #
 
@@ -81,6 +147,7 @@ steps:
   id: build
   waitFor:
     - lint
+    - ensure-build-sdk-image-base
   dir: "build"
   args: [ "-j", "4", "build"]
 - name: "make-docker"
@@ -139,6 +206,10 @@ steps:
     - tests
   dir: "cmd/sdk-server/bin"
   args: ['cp', '*.zip', 'gs://agones-artifacts/sdk-server']
+
+substitutions:
+  _CACHE_BUCKET: agones-build-cache
+  _HTMLTEST_CACHE_KEY: htmltest-0.10.1
 
 tags: ['ci']
 timeout: "1h"

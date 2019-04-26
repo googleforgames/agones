@@ -49,6 +49,10 @@ func TestSDK(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, sm.hm.healthy)
 
+	err = s.Allocate()
+	assert.NoError(t, err)
+	assert.True(t, sm.allocated)
+
 	err = s.Shutdown()
 	assert.Nil(t, err)
 	assert.True(t, sm.ready)
@@ -126,6 +130,7 @@ var _ sdk.SDK_WatchGameServerClient = &watchMock{}
 type sdkMock struct {
 	ready       bool
 	shutdown    bool
+	allocated   bool
 	hm          *healthMock
 	wm          *watchMock
 	labels      map[string]string
@@ -152,6 +157,11 @@ func (m *sdkMock) GetGameServer(ctx context.Context, in *sdk.Empty, opts ...grpc
 
 func (m *sdkMock) Ready(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
 	m.ready = true
+	return e, nil
+}
+
+func (m *sdkMock) Allocate(ctx context.Context, e *sdk.Empty, opts ...grpc.CallOption) (*sdk.Empty, error) {
+	m.allocated = true
 	return e, nil
 }
 
