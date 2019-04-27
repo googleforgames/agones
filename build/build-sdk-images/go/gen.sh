@@ -22,10 +22,10 @@ mkdir -p /go/src/
 cp -r /go/src/agones.dev/agones/vendor/* /go/src/
 
 cd /go/src/agones.dev/agones
-go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-googleapis=/go/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
+googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 
 protoc -I ${googleapis} -I . sdk.proto --go_out=plugins=grpc:pkg/sdk

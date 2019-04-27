@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -160,7 +161,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Distributed, tc.list, map[string]gameservers.NodeCount{},
+			toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, tc.list, map[string]gameservers.NodeCount{},
 				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
 
 			assert.Equal(t, tc.wantNumServersToAdd, toAdd, "# of GameServers to add")
@@ -178,7 +179,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 		}
 
 		counts := map[string]gameservers.NodeCount{"node1": {Ready: 1}, "node3": {Ready: 2}}
-		toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Packed, list, counts, 2,
+		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Packed, list, counts, 2,
 			1000, 1000, 1000)
 
 		assert.Empty(t, toAdd)
@@ -203,7 +204,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 				CreationTimestamp: metav1.Time{Time: now.Add(30 * time.Second)}}, Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}},
 		}
 
-		toAdd, toDelete, isPartial := computeReconciliationAction(v1alpha1.Distributed, list, map[string]gameservers.NodeCount{},
+		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, list, map[string]gameservers.NodeCount{},
 			2, 1000, 1000, 1000)
 
 		assert.Empty(t, toAdd)
@@ -597,7 +598,7 @@ func defaultFixture() *v1alpha1.GameServerSet {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test", UID: "1234"},
 		Spec: v1alpha1.GameServerSetSpec{
 			Replicas:   10,
-			Scheduling: v1alpha1.Packed,
+			Scheduling: apis.Packed,
 			Template:   v1alpha1.GameServerTemplateSpec{},
 		},
 	}

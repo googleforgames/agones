@@ -166,6 +166,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.registerApiService`                         | Registers the apiservice(s) used for the Kubernetes API extension                               | `true`                 |
 
 {{% /feature %}}
 

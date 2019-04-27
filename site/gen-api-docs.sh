@@ -15,6 +15,11 @@
 # limitations under the License.
 
 cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
+
+#Use local version of agones
+go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
+go build
+
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
 
 FILE=${FILE:-/go/src/agones.dev/agones/site/content/en/docs/Reference/agones_crd_api_reference.html}
@@ -24,7 +29,7 @@ HEAD="/tmp/head.html"
 RESULT="/tmp/agones_crd_api_reference.html"
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/stable/v1alpha1/ --out-file $RESULT
+./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 awk '//{flag=1}/\ feature\ publishVersion/{flag=0;exit}flag' $FILE > $HEAD

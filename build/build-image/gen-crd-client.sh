@@ -14,9 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -x
+
+# k8s.io/code-generator/generate-groups is not module-ready so it breaks things.
+export GO111MODULE=off
+rm -r $GOPATH/src/agones.dev/agones/pkg/client
 rsync -r /go/src/agones.dev/agones/vendor/k8s.io/ /go/src/k8s.io/
 cd /go/src/k8s.io/code-generator
 ./generate-groups.sh "all" \
     agones.dev/agones/pkg/client \
-    agones.dev/agones/pkg/apis stable:v1alpha1 \
+    agones.dev/agones/pkg/apis "allocation:v1alpha1 stable:v1alpha1 multicluster:v1alpha1" \
     --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt
+

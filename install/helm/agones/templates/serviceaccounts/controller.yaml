@@ -53,20 +53,14 @@ rules:
   resources: ["gameservers", "gameserversets"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["gameserversets/status"]
-  verbs: ["update"]
-- apiGroups: ["stable.agones.dev"]
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets", "fleetallocations", "fleetautoscalers"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets/status"]
+  resources: ["fleets/status",  "fleetautoscalers/status", "gameserversets/status"]
   verbs: ["update"]
-- apiGroups: ["stable.agones.dev"]
-  resources: ["gameserverallocations"]
-  verbs: ["list", "watch",  "delete"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -87,4 +81,34 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: {{ .Values.agones.serviceaccount.controller }}
+---
+#
+# RBACs for APIService
+#
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.agones.serviceaccount.controller }}:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: apiserver
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Values.agones.serviceaccount.controller }}-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - kind: ServiceAccount
+    name: apiserver
+    namespace: {{ .Release.Namespace }}
 {{- end }}

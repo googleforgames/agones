@@ -124,6 +124,7 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 }
 
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
+// nolint: dupl
 func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) {
 	t.Helper()
 	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
@@ -138,6 +139,25 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, con
 	if err != nil {
 		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
 		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
+	}
+}
+
+// WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.
+// nolint: dupl
+func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *v1alpha1.FleetAutoscaler, condition func(fas *v1alpha1.FleetAutoscaler) bool) {
+	t.Helper()
+	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
+	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+		fleetautoscaler, err := f.AgonesClient.StableV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+
+		return condition(fleetautoscaler), nil
+	})
+	if err != nil {
+		logrus.WithField("fleetautoscaler", fas.Name).WithError(err).Info("error waiting for fleetautoscaler condition")
+		t.Fatalf("error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
 	}
 }
 
@@ -236,11 +256,6 @@ func (f *Framework) CleanUp(ns string) error {
 	}
 
 	err = alpha1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
-	if err != nil {
-		return err
-	}
-
-	err = alpha1.GameServerAllocations(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}

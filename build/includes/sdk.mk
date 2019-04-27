@@ -20,7 +20,9 @@
 #   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |	
 #   |___/                                               |___/ 
 
-build_sdk_base_tag = agones-build-sdk-base:$(build_version)
+build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
+build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
+build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
 grpc_release_tag = v1.16.1
 sdk_build_folder = build-sdk-images/
@@ -82,9 +84,18 @@ build-build-sdk-image: DOCKER_BUILD_ARGS= --build-arg BASE_IMAGE=$(build_sdk_bas
 build-build-sdk-image: ensure-build-sdk-image-base
 		docker build --tag=$(build_sdk_prefix)$(SDK_FOLDER):$(build_version) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
 
+# attempt to pull the image, if it exists and rename it to the local tag
+# exit's clean if it doesn't exist, so can be used on CI
+pull-build-sdk-base-image:
+	$(MAKE) pull-remote-build-image REMOTE_TAG=$(build_sdk_base_remote_tag) LOCAL_TAG=$(build_sdk_base_tag)
+
+# push the local build image up to your repository
+push-build-sdk-base-image:
+	$(MAKE) push-remote-build-image REMOTE_TAG=$(build_sdk_base_remote_tag) LOCAL_TAG=$(build_sdk_base_tag)
+
 # create the sdk base build image if it doesn't exist
 ensure-build-sdk-image-base:
-	$(MAKE) build-build-sdk-image-base
+	$(MAKE) ensure-image IMAGE_TAG=$(build_sdk_base_tag) BUILD_TARGET=build-build-sdk-image-base
 
 # create the build image sdk if it doesn't exist
 ensure-build-sdk-image:

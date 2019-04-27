@@ -68,6 +68,18 @@ var SDKService = exports.SDKService = {
     responseSerialize: serialize_stable_agones_dev_sdk_Empty,
     responseDeserialize: deserialize_stable_agones_dev_sdk_Empty,
   },
+  // Call to self Allocation the GameServer
+  allocate: {
+    path: '/stable.agones.dev.sdk.SDK/Allocate',
+    requestStream: false,
+    responseStream: false,
+    requestType: sdk_pb.Empty,
+    responseType: sdk_pb.Empty,
+    requestSerialize: serialize_stable_agones_dev_sdk_Empty,
+    requestDeserialize: deserialize_stable_agones_dev_sdk_Empty,
+    responseSerialize: serialize_stable_agones_dev_sdk_Empty,
+    responseDeserialize: deserialize_stable_agones_dev_sdk_Empty,
+  },
   // Call when the GameServer is shutting down
   shutdown: {
     path: '/stable.agones.dev.sdk.SDK/Shutdown',

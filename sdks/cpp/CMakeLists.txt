@@ -14,6 +14,30 @@
 
 cmake_minimum_required (VERSION 3.13.0)
 
+# Silent cmake/build output (internal option)
+# Extra command line options
+# For windows: cmake --build . --config Release --target install -- /v:quiet /nologo
+# For *nix: cmake --build . --target install -- -s
+option(AGONES_SILENT_OUTPUT "Show only warnings/error messages" OFF)
+if (AGONES_SILENT_OUTPUT)
+  function(message)
+    list(GET ARGV 0 MessageType)
+    if(MessageType STREQUAL FATAL_ERROR OR
+      MessageType STREQUAL SEND_ERROR OR
+      MessageType STREQUAL WARNING OR
+      MessageType STREQUAL AUTHOR_WARNING)
+      list(REMOVE_AT ARGV 0)
+      _message(${MessageType} "${ARGV}")
+    endif()
+  endfunction()  
+  
+  set(CMAKE_INSTALL_MESSAGE NEVER)
+  set(CMAKE_VERBOSE_MAKEFILE OFF)
+  set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+  set_property(GLOBAL PROPERTY TARGET_MESSAGES OFF)
+endif(AGONES_SILENT_OUTPUT)
+
+# Project AGONES
 project(agones VERSION 0.9.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
 
 # Build options

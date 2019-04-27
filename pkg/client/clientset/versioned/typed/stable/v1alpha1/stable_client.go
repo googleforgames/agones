@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ type StableV1alpha1Interface interface {
 	FleetAllocationsGetter
 	FleetAutoscalersGetter
 	GameServersGetter
-	GameServerAllocationsGetter
 	GameServerSetsGetter
 }
 
@@ -54,10 +53,6 @@ func (c *StableV1alpha1Client) FleetAutoscalers(namespace string) FleetAutoscale
 
 func (c *StableV1alpha1Client) GameServers(namespace string) GameServerInterface {
 	return newGameServers(c, namespace)
-}
-
-func (c *StableV1alpha1Client) GameServerAllocations(namespace string) GameServerAllocationInterface {
-	return newGameServerAllocations(c, namespace)
 }
 
 func (c *StableV1alpha1Client) GameServerSets(namespace string) GameServerSetInterface {

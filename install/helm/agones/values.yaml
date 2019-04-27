@@ -23,6 +23,7 @@ agones:
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true
+  registerApiService: true
   crds:
     install: true
     cleanupOnDelete: true

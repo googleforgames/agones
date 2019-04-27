@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,8 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	stable_v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -52,18 +53,20 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=stable.agones.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("fleets"):
+	// Group=multicluster, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer()}, nil
+
+		// Group=stable.agones.dev, Version=v1alpha1
+	case stable_v1alpha1.SchemeGroupVersion.WithResource("fleets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().Fleets().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("fleetallocations"):
+	case stable_v1alpha1.SchemeGroupVersion.WithResource("fleetallocations"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAllocations().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("fleetautoscalers"):
+	case stable_v1alpha1.SchemeGroupVersion.WithResource("fleetautoscalers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAutoscalers().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("gameservers"):
+	case stable_v1alpha1.SchemeGroupVersion.WithResource("gameservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServers().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocations"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServerAllocations().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("gameserversets"):
+	case stable_v1alpha1.SchemeGroupVersion.WithResource("gameserversets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServerSets().Informer()}, nil
 
 	}

@@ -557,12 +557,22 @@ Utilities for deploying a Kubernetes Engine cluster on Google Cloud Platform usi
 Install `google` and `google-beta` terraform providers and authorize.
 
 #### `make gcloud-terraform-cluster`
-Run next command with your project ID specified:
+Create GKE cluster and install release version of agones.
+Run next command to create GKE cluster with agones (version from helm repository):
 ```
 [GKE_PASSWORD="<YOUR_PASSWORD>"] make gcloud-terraform-cluster
 ```
 Where `<YOUR_PASSWORD>` should be at least 16 characters in length. You can omit GKE_PASSWORD and then basic auth would be disabled. Also you change `ports="7000-8000"` setting using tfvars file.
 Also you can define password `password=<YOUR_PASSWORD>` string in `build/terraform.tfvars`.
+Change AGONES_VERSION to a specific version you want to install.
+
+#### `make gcloud-terraform-install`
+Create GKE cluster and install current version of agones.
+The current version should be built and pushed to release_registry beforehand:
+```
+make build-images
+make push
+```
 
 #### `make gcloud-terraform-destroy-cluster`
 Run `terraform destroy` on your cluster.
