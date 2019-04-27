@@ -1,8 +1,8 @@
 const AgonesSDK = require('agones');
 
-let agonesSDK = new AgonesSDK();
+const  agonesSDK = new AgonesSDK();
 
-let connect = async function() {
+const connect = async function() {
 	agonesSDK.watchGameServer((result) => {
 		console.log('watch', result);
 	});
@@ -11,7 +11,7 @@ let connect = async function() {
 		await agonesSDK.ready();
 		await agonesSDK.setLabel("label", "labelValue");
 		await agonesSDK.setAnnotation("annotation", "annotationValue");
-		let result = await agonesSDK.getGameServer();
+		const result = await agonesSDK.getGameServer();
 		console.log('gameServer', result);
 		setTimeout(() => {
 			console.log('send health ping');
