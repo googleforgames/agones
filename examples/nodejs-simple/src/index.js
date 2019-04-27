@@ -22,7 +22,7 @@ let connect = async function() {
 			agonesSDK.shutdown();
 		}, 4000);
 		setTimeout(() => {
-			process.exit();
+			agonesSDK.close();
 		}, 6000);
 	} catch (error) {
 		console.error(error);
