@@ -5,22 +5,21 @@ const services = require('../lib/sdk_grpc_pb');
 
 class AgonesSDK {
 	constructor() {
-		console.log('constructor called')
-		this._client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
-		this._healthStream = undefined;
-		this._emitters = [];
+		this.client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
+		this.healthStream = undefined;
+		this.emitters = [];
 	}
 	async close(){
 		if (this.healthStream !== undefined){
-			this._healthStream.destroy()
+			this.healthStream.destroy()
 		}
-		this._emitters.forEach(emitter => emitter.call.cancel());
-		this._client.close();
+		this.emitters.forEach(emitter => emitter.call.cancel());
+		this.client.close();
 	}
 	async ready() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
-			this._client.ready(request, (error, response) => {
+			this.client.ready(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -32,7 +31,7 @@ class AgonesSDK {
 	async shutdown() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
-			this._client.shutdown(request, (error, response) => {
+			this.client.shutdown(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -42,17 +41,17 @@ class AgonesSDK {
 		});
 	}
 	health() {
-		if (this._healthStream === undefined) {
-			this._healthStream = this._client.health((error) => {
+		if (this.healthStream === undefined) {
+			this.healthStream = this.client.health((error) => {
 				// Ignore error as this can't be caught
 			});
 		}
-		this._healthStream.write(new messages.Empty());
+		this.healthStream.write(new messages.Empty());
 	}
 	async getGameServer() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
-			this._client.getGameServer(request, (error, response) => {
+			this.client.getGameServer(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -62,7 +61,7 @@ class AgonesSDK {
 		});
 	}
 	watchGameServer(callback) {	
-		const emitter = this._client.watchGameServer(new messages.Empty());
+		const emitter = this.client.watchGameServer(new messages.Empty());
 		emitter.on('data', (data) => {
 			callback(data.toObject());
 		});
@@ -71,14 +70,14 @@ class AgonesSDK {
      			return; 
      		}
   		})
-		this._emitters.push(emitter);
+		this.emitters.push(emitter);
 	}
 	async setLabel(key, value) {
 		const request = new messages.KeyValue();
 		request.setKey(key);
 		request.setValue(value);
 		return new Promise((resolve, reject) => {
-			this._client.setLabel(request, (error, response) => {
+			this.client.setLabel(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -92,7 +91,7 @@ class AgonesSDK {
 		request.setKey(key);
 		request.setValue(value);
 		return new Promise((resolve, reject) => {
-			this._client.setAnnotation(request, (error, response) => {
+			this.client.setAnnotation(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
