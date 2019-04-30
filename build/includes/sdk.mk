@@ -29,7 +29,7 @@ sdk_build_folder = build-sdk-images/
 SDK_FOLDER ?= go
 COMMAND ?= gen
 
-.PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command
+.PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command 
 
 # Tests all the sdks
 test-sdks: COMMAND := test
@@ -56,23 +56,31 @@ gen-sdk-grpc: COMMAND := gen
 gen-sdk-grpc: run-sdk-command
 
 # Runs a command on all supported languages, use COMMAND variable to select which command.
-run-all-sdk-command:
-	cd $(sdk_build_folder); \
-	for d in */ ; do \
-		if [ "$${d%?}" != "tool" ] &&  [ -f $$d/$(COMMAND).sh ]; then  \
-			( cd .. && $(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=$${d%?} ) \
-			|| { failed=1; break; }; \
-		fi \
-	done; \
-	if (( failed )); then \
-   		echo "Failed to run SDK command"; exit -1; \
-	fi
+run-all-sdk-command: run-sdk-command-go run-sdk-command-rust run-sdk-command-cpp run-sdk-command-node
 
-# Runs a command for a specific SDK.
+run-sdk-command-node:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=node
+
+run-sdk-command-cpp:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=cpp
+
+run-sdk-command-rust:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=rust
+
+run-sdk-command-go:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=go
+
+# Runs a command for a specific SDK if it exists.
 run-sdk-command:
-	$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
-	docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" \
-		$(DOCKER_RUN_ARGS) $(build_sdk_prefix)$(SDK_FOLDER):$(build_version) $(COMMAND)
+	cd $(sdk_build_folder); \
+	if [ "$(SDK_FOLDER)" != "tool" ] && [ -f $(SDK_FOLDER)/$(COMMAND).sh ] ; then \
+		cd - ; \
+		$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER) ; \
+		docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" \
+			$(DOCKER_RUN_ARGS) $(build_sdk_prefix)$(SDK_FOLDER):$(build_version) $(COMMAND) ; \
+	else \
+		echo "Command $(COMMAND) not found - nothing to execute" ; \
+	fi
 
 # Builds the base GRPC docker image.
 build-build-sdk-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
