@@ -17,6 +17,8 @@
 # out of a Fleet so it can be handed to a set of players to play on.
 #
 
+# (Deprecated; Look at gameserverallocation.yaml instead)
+
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: FleetAllocation
 metadata:
