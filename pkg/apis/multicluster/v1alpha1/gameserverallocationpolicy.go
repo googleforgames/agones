@@ -80,7 +80,7 @@ func (it *ConnectionInfoIterator) Next() *ClusterConnectionInfo {
 		currPriority := it.orderedPriorities[it.currPriority]
 		clusterPolicy := it.priorityToCluster[currPriority]
 
-		if result := it.getClusterConnectionInfo(&clusterPolicy); result == nil {
+		if result := it.getClusterConnectionInfo(clusterPolicy); result == nil {
 			// If there is no cluster with the current priority, choose cluster with next highest priority
 			it.currPriority++
 		} else {
@@ -127,10 +127,10 @@ func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *Connecti
 }
 
 // getClusterConnectionInfo returns a ClusterConnectionInfo selected base on weighted randomization.
-func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy *clusterToPolicy) *ClusterConnectionInfo {
+func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy clusterToPolicy) *ClusterConnectionInfo {
 	connections := []*ClusterConnectionInfo{}
 	weights := []int{}
-	for cluster, policies := range *clusterPolicy {
+	for cluster, policies := range clusterPolicy {
 		if _, ok := it.clusterBlackList[cluster]; ok {
 			continue
 		}
@@ -142,7 +142,7 @@ func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy *cluste
 		return nil
 	}
 
-	return selectRandomWeighted(connections, &weights)
+	return selectRandomWeighted(connections, weights)
 }
 
 // avgWeight calculates average over allocation policy Weight field.
@@ -158,9 +158,9 @@ func avgWeight(policies []*GameServerAllocationPolicy) int {
 }
 
 // selectRandomWeighted selects a ClusterConnectionInfo info from a weighted list of ClusterConnectionInfo
-func selectRandomWeighted(connections []*ClusterConnectionInfo, weights *[]int) *ClusterConnectionInfo {
+func selectRandomWeighted(connections []*ClusterConnectionInfo, weights []int) *ClusterConnectionInfo {
 	sum := 0
-	for _, weight := range *weights {
+	for _, weight := range weights {
 		sum += weight
 	}
 
@@ -170,7 +170,7 @@ func selectRandomWeighted(connections []*ClusterConnectionInfo, weights *[]int) 
 
 	rand := rand.Intn(sum)
 	sum = 0
-	for i, weight := range *weights {
+	for i, weight := range weights {
 		sum += weight
 		if rand < sum {
 			return connections[i]

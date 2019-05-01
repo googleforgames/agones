@@ -61,6 +61,9 @@ rules:
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets/status",  "fleetautoscalers/status", "gameserversets/status"]
   verbs: ["update"]
+- apiGroups: ["multicluster.agones.dev"]
+  resources: ["gameserverallocationpolicies"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

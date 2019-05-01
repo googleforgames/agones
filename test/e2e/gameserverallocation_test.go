@@ -21,6 +21,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
@@ -52,6 +53,114 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 					Scheduling: strategy,
 					Required:   metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 				}}
+
+			gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(gsa)
+			if assert.Nil(t, err) {
+				assert.Equal(t, string(v1alpha1.GameServerAllocationAllocated), string(gsa.Status.State))
+			}
+		})
+	}
+}
+
+func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
+	t.Parallel()
+
+	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
+
+	for _, strategy := range fixtures {
+		t.Run(string(strategy), func(t *testing.T) {
+			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleet := defaultFleet()
+			fleet.Spec.Scheduling = strategy
+			flt, err := fleets.Create(fleet)
+			if assert.Nil(t, err) {
+				defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+			// Allocation Policy #1: local cluster with desired label
+			mca := &multiclusterv1alpha1.GameServerAllocationPolicy{
+				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+					Priority: 1,
+					Weight:   100,
+					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+						AllocationEndpoint: "localhost",
+						ClusterName:        "multicluster1",
+						SecretName:         "sec1",
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:       map[string]string{"cluster": "onprem"},
+					GenerateName: "allocationpolicy-",
+				},
+			}
+			resp, err := framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			if assert.Nil(t, err) {
+				assert.Equal(t, mca.Spec, resp.Spec)
+			}
+
+			// Allocation Policy #2: another cluster with desired label, but lower priority
+			mca = &multiclusterv1alpha1.GameServerAllocationPolicy{
+				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+					Priority: 2,
+					Weight:   100,
+					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+						AllocationEndpoint: "another-endpoint",
+						ClusterName:        "multicluster2",
+						SecretName:         "sec1",
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:       map[string]string{"cluster": "onprem"},
+					GenerateName: "allocationpolicy-",
+				},
+			}
+			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			assert.Nil(t, err)
+			if assert.Nil(t, err) {
+				assert.Equal(t, mca.Spec, resp.Spec)
+			}
+
+			// Allocation Policy #3: another cluster with highest priority, but missing desired label (will not be selected)
+			mca = &multiclusterv1alpha1.GameServerAllocationPolicy{
+				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+					Priority: 1,
+					Weight:   10,
+					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+						AllocationEndpoint: "another-endpoint",
+						ClusterName:        "multicluster3",
+						SecretName:         "sec1",
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: "allocationpolicy-",
+				},
+			}
+			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			assert.Nil(t, err)
+			if assert.Nil(t, err) {
+				assert.Equal(t, mca.Spec, resp.Spec)
+			}
+
+			gsa := &v1alpha1.GameServerAllocation{
+				Spec: v1alpha1.GameServerAllocationSpec{
+					Scheduling: strategy,
+					Required:   metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+					MultiClusterSetting: v1alpha1.MultiClusterSetting{
+						Enabled: true,
+						PolicySelector: metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"cluster": "onprem",
+							},
+						},
+					},
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					ClusterName:  "multicluster1",
+					GenerateName: "allocation-",
+				},
+			}
 
 			gsa, err = framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(gsa)
 			if assert.Nil(t, err) {
