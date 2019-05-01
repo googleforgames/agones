@@ -57,7 +57,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=kind-$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.7
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.8
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -180,6 +180,7 @@ include ./includes/$(osinclude)
 include ./includes/build-image.mk
 include ./includes/release.mk
 include ./includes/google-cloud.mk
+include ./includes/terraform.mk
 include ./includes/minikube.mk
 include ./includes/kind.mk
 include ./includes/website.mk

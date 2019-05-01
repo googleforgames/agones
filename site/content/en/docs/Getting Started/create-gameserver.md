@@ -107,7 +107,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.7
+        Image:  gcr.io/agones-images/udp-server:0.8
         Name:   simple-udp
         Resources:
           Limits:

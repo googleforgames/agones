@@ -16,7 +16,7 @@
 
 set -x
 
-# not sure why the modules break things, but they do.
+# k8s.io/code-generator/generate-groups is not module-ready so it breaks things.
 export GO111MODULE=off
 rm -r $GOPATH/src/agones.dev/agones/pkg/client
 rsync -r /go/src/agones.dev/agones/vendor/k8s.io/ /go/src/k8s.io/

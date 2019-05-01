@@ -23,11 +23,14 @@ import (
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/sdk"
 	agtesting "agones.dev/agones/pkg/testing"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
@@ -101,6 +104,15 @@ func TestSidecarRun(t *testing.T) {
 					metadataPrefix + "test-2": "annotation-2"},
 			},
 		},
+		"allocated": {
+			f: func(sc *SDKServer, ctx context.Context) {
+				_, err := sc.Allocate(ctx, &sdk.Empty{})
+				assert.NoError(t, err)
+			},
+			expected: expected{
+				state: v1alpha1.GameServerStateAllocated,
+			},
+		},
 	}
 
 	for k, v := range fixtures {
@@ -143,6 +155,11 @@ func TestSidecarRun(t *testing.T) {
 			})
 
 			sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+			stop := make(chan struct{})
+			defer close(stop)
+			sc.informerFactory.Start(stop)
+			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
 
@@ -628,6 +645,177 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 
 	assert.NotNil(t, sdkGS)
 	assert.Equal(t, fixture.ObjectMeta.Name, sdkGS.ObjectMeta.Name)
+}
+
+func TestSDKServerAllocate(t *testing.T) {
+	t.Parallel()
+
+	defaultGs := &v1alpha1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: v1alpha1.GameServerStatus{
+			State: v1alpha1.GameServerStateReady,
+		},
+	}
+
+	setup := func(t *testing.T, fixture *v1alpha1.GameServer) (agtesting.Mocks, *SDKServer, chan struct{}) {
+		m := agtesting.NewMocks()
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*fixture}}, nil
+		})
+		stop := make(chan struct{})
+		sc, err := defaultSidecar(m)
+		assert.Nil(t, err)
+		sc.informerFactory.Start(stop)
+		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+		return m, sc, stop
+	}
+
+	t.Run("works perfectly", func(t *testing.T) {
+		m, sc, stop := setup(t, defaultGs.DeepCopy())
+		defer close(stop)
+
+		done := make(chan struct{}, 10)
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+
+			defer func() {
+				done <- struct{}{}
+			}()
+
+			return true, gs, nil
+		})
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.NoError(t, err)
+
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			assert.Fail(t, "should be updated")
+		}
+	})
+
+	t.Run("contention on first build", func(t *testing.T) {
+		m, sc, stop := setup(t, defaultGs.DeepCopy())
+		defer close(stop)
+
+		done := make(chan struct{}, 10)
+		count := 0
+
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ua := action.(k8stesting.UpdateAction)
+			defer func() {
+				done <- struct{}{}
+			}()
+
+			count++
+			if count == 1 {
+				return true, nil, k8serrors.NewConflict(schema.ParseGroupResource(""), "gameservers", errors.New("contention"))
+			}
+
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+			return true, gs, nil
+		})
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.NoError(t, err)
+
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			assert.Fail(t, "have contention")
+		}
+
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			assert.Fail(t, "should be updated")
+		}
+	})
+
+	t.Run("timeout", func(t *testing.T) {
+		m, sc, stop := setup(t, defaultGs.DeepCopy())
+		defer close(stop)
+
+		now := time.Now()
+		fc := clock.NewFakeClock(now)
+		sc.clock = fc
+
+		done := make(chan struct{}, 10)
+
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			defer func() {
+				done <- struct{}{}
+			}()
+
+			// move past timeout
+			fc.Step(40 * time.Second)
+			return true, nil, k8serrors.NewConflict(schema.ParseGroupResource(""), "gameservers", errors.New("contention"))
+		})
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.EqualError(t, err, "Allocation request timed out")
+
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			assert.Fail(t, "have contention")
+		}
+	})
+
+	t.Run("unhealthy gameserver", func(t *testing.T) {
+		gs := defaultGs.DeepCopy()
+		gs.Status.State = v1alpha1.GameServerStateUnhealthy
+		_, sc, stop := setup(t, gs.DeepCopy())
+		defer close(stop)
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.EqualError(t, err, "cannot Allocate an Unhealthy GameServer")
+	})
+
+	t.Run("Shutdown gameserver", func(t *testing.T) {
+		gs := defaultGs.DeepCopy()
+		gs.Status.State = v1alpha1.GameServerStateShutdown
+		_, sc, stop := setup(t, gs.DeepCopy())
+		defer close(stop)
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.EqualError(t, err, "cannot Allocate a Shutdown GameServer")
+	})
+
+	t.Run("Deleting gameserver", func(t *testing.T) {
+		gs := defaultGs.DeepCopy()
+		now := metav1.Now()
+		gs.ObjectMeta.DeletionTimestamp = &now
+		_, sc, stop := setup(t, gs.DeepCopy())
+		defer close(stop)
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.NoError(t, err)
+	})
+
+	t.Run("Unexpected error", func(t *testing.T) {
+		m, sc, stop := setup(t, defaultGs.DeepCopy())
+		defer close(stop)
+		done := make(chan struct{}, 10)
+
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			defer func() {
+				done <- struct{}{}
+			}()
+
+			return true, nil, errors.New("a bad thing happened")
+		})
+
+		_, err := sc.Allocate(context.Background(), &sdk.Empty{})
+		assert.Error(t, err)
+	})
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
