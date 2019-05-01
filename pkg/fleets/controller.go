@@ -509,11 +509,13 @@ func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
 	fCopy := fleet.DeepCopy()
 	fCopy.Status.Replicas = 0
 	fCopy.Status.ReadyReplicas = 0
+	fCopy.Status.ReservedReplicas = 0
 	fCopy.Status.AllocatedReplicas = 0
 
 	for _, gsSet := range list {
 		fCopy.Status.Replicas += gsSet.Status.Replicas
 		fCopy.Status.ReadyReplicas += gsSet.Status.ReadyReplicas
+		fCopy.Status.ReservedReplicas += gsSet.Status.ReservedReplicas
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
 	}
 

@@ -460,6 +460,27 @@ func TestGameServerGetDevAddress(t *testing.T) {
 	assert.Equal(t, "", devAddress, "dev-address IP address should be 127.1.1.1")
 }
 
+func TestGameServerIsDeletable(t *testing.T) {
+	gs := &GameServer{Status: GameServerStatus{State: GameServerStateStarting}}
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateAllocated
+	assert.False(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateReserved
+	assert.False(t, gs.IsDeletable())
+
+	now := metav1.Now()
+	gs.ObjectMeta.DeletionTimestamp = &now
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateAllocated
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateReady
+	assert.True(t, gs.IsDeletable())
+}
+
 func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 	t.Parallel()
 

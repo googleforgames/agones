@@ -71,6 +71,9 @@ type FleetStatus struct {
 	Replicas int32 `json:"replicas"`
 	// ReadyReplicas are the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
+	// ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+	// Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up.
+	ReservedReplicas int32 `json:"reservedReplicas"`
 	// AllocatedReplicas are the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
