@@ -54,10 +54,6 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-var (
-	errPodNotFound = errors.New("A Pod for this GameServer Was Not Found")
-)
-
 // Controller is a the main GameServer crd controller
 type Controller struct {
 	baseLogger             *logrus.Entry
@@ -302,7 +298,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
@@ -389,20 +385,24 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *v1alpha1.GameServer) (*
 	}
 
 	c.loggerForGameServer(gs).Info("Syncing with Deletion Timestamp")
-	pods, err := c.listGameServerPods(gs)
-	if err != nil {
+
+	pod, err := c.gameServerPod(gs)
+	if err != nil && !k8serrors.IsNotFound(err) {
 		return gs, err
 	}
 
-	if len(pods) > 0 {
-		c.loggerForGameServer(gs).WithField("pods", pods).Info("Found pods, deleting")
-		for _, p := range pods {
-			err = c.podGetter.Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, nil)
+	_, isDev := gs.GetDevAddress()
+	if pod != nil && !isDev {
+		// only need to do this once
+		if pod.ObjectMeta.DeletionTimestamp.IsZero() {
+			err = c.podGetter.Pods(pod.ObjectMeta.Namespace).Delete(pod.ObjectMeta.Name, nil)
 			if err != nil {
-				return gs, errors.Wrapf(err, "error deleting pod for GameServer %s, %s", gs.ObjectMeta.Name, p.ObjectMeta.Name)
+				return gs, errors.Wrapf(err, "error deleting pod for GameServer %s, %s", gs.ObjectMeta.Name, pod.ObjectMeta.Name)
 			}
-			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), fmt.Sprintf("Deleting Pod %s", p.ObjectMeta.Name))
+			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), fmt.Sprintf("Deleting Pod %s", pod.ObjectMeta.Name))
 		}
+
+		// but no removing finalizers until it's truly gone
 		return gs, nil
 	}
 
@@ -456,16 +456,16 @@ func (c *Controller) syncGameServerCreatingState(gs *v1alpha1.GameServer) (*v1al
 	c.loggerForGameServer(gs).Info("Syncing Create State")
 
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
-	ret, err := c.listGameServerPods(gs)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(ret) == 0 {
+	_, err := c.gameServerPod(gs)
+	if k8serrors.IsNotFound(err) {
 		gs, err = c.createGameServerPod(gs)
 		if err != nil || gs.Status.State == v1alpha1.GameServerStateError {
 			return gs, err
 		}
+	}
+
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
 
 	gsCopy := gs.DeepCopy()
@@ -703,7 +703,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 	if gs.Status.NodeName == "" {
 		addressPopulated = true
 		pod, err := c.gameServerPod(gs)
-		// errPodNotFound should never happen, and if it does -- something bad happened,
+		// NotFound should never happen, and if it does -- something bad happened,
 		// so go into workerqueue backoff.
 		if err != nil {
 			return nil, err
@@ -766,38 +766,19 @@ func (c *Controller) gameServerPod(gs *v1alpha1.GameServer) (*corev1.Pod, error)
 	if _, isDev := gs.GetDevAddress(); isDev {
 		return &corev1.Pod{}, nil
 	}
-	pods, err := c.listGameServerPods(gs)
-	if err != nil {
+
+	pod, err := c.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
+
+	// if not found, propagate this error up, so we can use it in checks
+	if k8serrors.IsNotFound(err) {
 		return nil, err
 	}
-	len := len(pods)
-	if len == 0 {
-		return nil, errPodNotFound
-	}
-	if len > 1 {
-		return nil, errors.Errorf("Found %d pods for Game Server %s", len, gs.ObjectMeta.Name)
-	}
-	return pods[0], nil
-}
 
-// listGameServerPods returns all the Pods that the GameServer created.
-// This should only ever be one.
-func (c *Controller) listGameServerPods(gs *v1alpha1.GameServer) ([]*corev1.Pod, error) {
-	pods, err := c.podLister.List(labels.SelectorFromSet(labels.Set{v1alpha1.GameServerPodLabel: gs.ObjectMeta.Name}))
-	if err != nil {
-		return pods, errors.Wrapf(err, "error checking if pod exists for GameServer %s", gs.Name)
+	if !metav1.IsControlledBy(pod, gs) {
+		return nil, k8serrors.NewNotFound(corev1.Resource("pod"), gs.ObjectMeta.Name)
 	}
 
-	// there is a small chance that the GameServer name is not unique, and a Pod for a previous
-	// GameServer is has yet to Terminate so check its controller, just to be sure.
-	var result []*corev1.Pod
-	for _, p := range pods {
-		if metav1.IsControlledBy(p, gs) {
-			result = append(result, p)
-		}
-	}
-
-	return result, nil
+	return pod, errors.Wrapf(err, "error retrieving pod for GameServer %s", gs.ObjectMeta.Name)
 }
 
 // address returns the IP that the given Pod is being run on
