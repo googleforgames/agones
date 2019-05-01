@@ -200,7 +200,7 @@ func main() {
 	faController := fleetallocation.NewController(wh, allocationMutex,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	gasController := gameserverallocations.NewController(api, health, gsCounter, topNGSForAllocation,
-		kubeClient, agonesClient, agonesInformerFactory)
+		kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
