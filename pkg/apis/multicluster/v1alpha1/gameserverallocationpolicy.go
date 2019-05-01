@@ -32,9 +32,9 @@ type GameServerAllocationPolicySpec struct {
 
 // ClusterConnectionInfo defines the connection information for a cluster
 type ClusterConnectionInfo struct {
-	ClusterName       string `json:"clusterName"`
-	APIServerEndpoint string `json:"apiServerEndpoint"`
-	SecretName        string `json:"secretName"`
+	ClusterName        string `json:"clusterName"`
+	AllocationEndpoint string `json:"allocationEndpoint"`
+	SecretName         string `json:"secretName"`
 }
 
 // +genclient
