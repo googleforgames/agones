@@ -274,6 +274,11 @@ simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 
 #### FleetAllocation
 
+{{% feature publishVersion="0.10.0" %}}
+> Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
+  Migrate to using GameServer Allocation instead.
+{{% /feature %}}
+
 We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
 and also move it to the `Allocated` state.
 
