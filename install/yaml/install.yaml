@@ -732,13 +732,13 @@ spec:
               properties:
                 secretName:
                   type: string
-                apiServerEndpoint:
+                allocationEndpoint:
                   type: string
                 clusterName:
                   type: string
               required:
               - clusterName
-              - apiServerEndpoint
+              - allocationEndpoint
               - secretName
               type: object
             priority:
