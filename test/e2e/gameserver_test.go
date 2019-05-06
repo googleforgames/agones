@@ -21,6 +21,7 @@ import (
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -192,6 +193,8 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
 
+	logrus.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
+
 	gsClient := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs)
 	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
 
@@ -205,7 +208,27 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
+	// TODO [markmandel@google.com]: Should GameServers that are Unhealthy and not in a fleet be deleted?
+	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
+		gs, err := framework.AgonesClient.StableV1alpha1().GameServers(readyGs.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+
+		// just in case
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		if err != nil {
+			logrus.WithError(err).Warn("error retrieving gameserver")
+			return false, nil
+		}
+
+		if gs.Status.State == v1alpha1.GameServerStateUnhealthy {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
 	assert.NoError(t, err)
 }
 
