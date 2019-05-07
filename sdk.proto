@@ -28,6 +28,15 @@ service SDK {
             body: "*"
         };
     }
+
+    // Call to self Allocation the GameServer
+    rpc Allocate(Empty) returns (Empty) {
+        option (google.api.http) = {
+            post: "/allocate"
+            body: "*"
+        };
+    }
+
     // Call when the GameServer is shutting down
     rpc Shutdown (Empty) returns (Empty) {
         option (google.api.http) = {

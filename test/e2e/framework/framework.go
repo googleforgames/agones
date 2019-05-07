@@ -107,6 +107,7 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 		readyGs, pollErr = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
 		if pollErr != nil {
+			logrus.WithError(pollErr).Warn("error retrieving gameserver")
 			return false, nil
 		}
 

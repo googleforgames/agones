@@ -15,21 +15,26 @@
 package gameserverallocations
 
 import (
+	"bytes"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	"agones.dev/agones/pkg/apis/stable"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	multiclusterlisterv1alpha1 "agones.dev/agones/pkg/client/listers/multicluster/v1alpha1"
 	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/apiserver"
@@ -47,9 +52,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	corev1lister "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 )
@@ -62,6 +69,12 @@ var (
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 )
 
+const (
+	secretClientCertName = "client-cert"
+	secretClientKeyName  = "client-key"
+	secretCaCertName     = "ca-cert"
+)
+
 // Controller is a the GameServerAllocation controller
 type Controller struct {
 	baseLogger       *logrus.Entry
@@ -69,64 +82,15 @@ type Controller struct {
 	readyGameServers gameServerCacheEntry
 	// Instead of selecting the top one, controller selects a random one
 	// from the topNGameServerCount of Ready gameservers
-	topNGameServerCount int
-	gameServerSynced    cache.InformerSynced
-	gameServerGetter    getterv1alpha1.GameServersGetter
-	gameServerLister    listerv1alpha1.GameServerLister
-	stop                <-chan struct{}
-	workerqueue         *workerqueue.WorkerQueue
-	recorder            record.EventRecorder
-}
-
-// gameserver cache to keep the Ready state gameserver.
-type gameServerCacheEntry struct {
-	mu    sync.RWMutex
-	cache map[string]*stablev1alpha1.GameServer
-}
-
-// Store saves the data in the cache.
-func (e *gameServerCacheEntry) Store(key string, gs *stablev1alpha1.GameServer) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	if e.cache == nil {
-		e.cache = map[string]*stablev1alpha1.GameServer{}
-	}
-	e.cache[key] = gs.DeepCopy()
-}
-
-// Delete deletes the data. If it exists returns true.
-func (e *gameServerCacheEntry) Delete(key string) bool {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	ret := false
-	if e.cache != nil {
-		if _, ok := e.cache[key]; ok {
-			delete(e.cache, key)
-			ret = true
-		}
-	}
-
-	return ret
-}
-
-// Load returns the data from cache. It return true if the value exists in the cache
-func (e *gameServerCacheEntry) Load(key string) (*stablev1alpha1.GameServer, bool) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	val, ok := e.cache[key]
-
-	return val, ok
-}
-
-// Range extracts data from the cache based on provided function f.
-func (e *gameServerCacheEntry) Range(f func(key string, gs *stablev1alpha1.GameServer) bool) {
-	e.mu.RLock()
-	defer e.mu.RUnlock()
-	for k, v := range e.cache {
-		if !f(k, v) {
-			break
-		}
-	}
+	topNGameServerCount    int
+	gameServerSynced       cache.InformerSynced
+	gameServerGetter       getterv1alpha1.GameServersGetter
+	gameServerLister       listerv1alpha1.GameServerLister
+	allocationPolicyLister multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
+	secretLister           corev1lister.SecretLister
+	stop                   <-chan struct{}
+	workerqueue            *workerqueue.WorkerQueue
+	recorder               record.EventRecorder
 }
 
 // findComparator is a comparator function specifically for the
@@ -147,17 +111,20 @@ func NewController(apiServer *apiserver.APIServer,
 	counter *gameservers.PerNodeCounter,
 	topNGameServerCnt int,
 	kubeClient kubernetes.Interface,
+	kubeInformerFactory informers.SharedInformerFactory,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
 ) *Controller {
 
 	agonesInformer := agonesInformerFactory.Stable().V1alpha1()
 	c := &Controller{
-		counter:             counter,
-		topNGameServerCount: topNGameServerCnt,
-		gameServerSynced:    agonesInformer.GameServers().Informer().HasSynced,
-		gameServerGetter:    agonesClient.StableV1alpha1(),
-		gameServerLister:    agonesInformer.GameServers().Lister(),
+		counter:                counter,
+		topNGameServerCount:    topNGameServerCnt,
+		gameServerSynced:       agonesInformer.GameServers().Informer().HasSynced,
+		gameServerGetter:       agonesClient.StableV1alpha1(),
+		gameServerLister:       agonesInformer.GameServers().Lister(),
+		allocationPolicyLister: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Lister(),
+		secretLister:           kubeInformerFactory.Core().V1().Secrets().Lister(),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
@@ -289,8 +256,26 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 		return c.serialisation(r, w, status, apiserver.Codecs)
 	}
 
+	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
+	var out *v1alpha1.GameServerAllocation
+	if gsa.Spec.MultiClusterSetting.Enabled {
+		out, err = c.applyMultiClusterAllocation(gsa)
+	} else {
+		out, err = c.allocateFromLocalCluster(gsa)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return c.serialisation(r, w, out, scheme.Codecs)
+}
+
+// allocateFromLocalCluster allocates gameservers from the local cluster.
+func (c *Controller) allocateFromLocalCluster(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.GameServerAllocation, error) {
 	var gs *stablev1alpha1.GameServer
-	err = Retry(allocationRetry, func() error {
+	err := Retry(allocationRetry, func() error {
+		var err error
 		gs, err = c.allocate(gsa)
 		return err
 	})
@@ -298,7 +283,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	if err != nil && err != ErrNoGameServerReady && err != ErrConflictInGameServerSelection {
 		// this will trigger syncing of the cache (assuming cache might not be up to date)
 		c.workerqueue.EnqueueImmediately(gs)
-		return err
+		return nil, err
 	}
 
 	if err == ErrNoGameServerReady {
@@ -315,8 +300,143 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	}
 
 	c.loggerForGameServerAllocation(gsa).Info("game server allocation")
+	return gsa, nil
+}
 
-	return c.serialisation(r, w, gsa, scheme.Codecs)
+// applyMultiClusterAllocation retrieves allocation policies and iterate on policies.
+// Then allocate gameservers from local or remote cluster accordingly.
+func (c *Controller) applyMultiClusterAllocation(gsa *v1alpha1.GameServerAllocation) (result *v1alpha1.GameServerAllocation, err error) {
+
+	selector := labels.Everything()
+	if len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchLabels)+len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchExpressions) != 0 {
+		selector, err = metav1.LabelSelectorAsSelector(&gsa.Spec.MultiClusterSetting.PolicySelector)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	policies, err := c.allocationPolicyLister.GameServerAllocationPolicies(gsa.ObjectMeta.Namespace).List(selector)
+	if err != nil {
+		return nil, err
+	} else if len(policies) == 0 {
+		return nil, errors.New("no multi-cluster allocation policy is specified")
+	}
+
+	it := multiclusterv1alpha1.NewConnectionInfoIterator(policies)
+	for {
+		connectionInfo := it.Next()
+		if connectionInfo == nil {
+			break
+		}
+		if connectionInfo.ClusterName == gsa.ObjectMeta.ClusterName {
+			result, err = c.allocateFromLocalCluster(gsa)
+			c.baseLogger.Error(err)
+		} else {
+			result, err = c.allocateFromRemoteCluster(*gsa, connectionInfo, gsa.ObjectMeta.Namespace)
+			c.baseLogger.Error(err)
+		}
+		if result != nil {
+			return result, nil
+		}
+	}
+	return nil, err
+}
+
+// allocateFromRemoteCluster allocates gameservers from a remote cluster by making
+// an http call to allocation service in that cluster.
+func (c *Controller) allocateFromRemoteCluster(gsa v1alpha1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*v1alpha1.GameServerAllocation, error) {
+	var gsaResult v1alpha1.GameServerAllocation
+
+	// TODO: handle converting error to apiserver error
+	// TODO: cache the client
+	client, err := c.createRemoteClusterRestClient(namespace, connectionInfo.SecretName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Forward the game server allocation request to another cluster,
+	// and disable multicluster settings to avoid the target cluster
+	// forward the allocation request again.
+	gsa.Spec.MultiClusterSetting.Enabled = false
+	body, err := json.Marshal(gsa)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Retry on transient error --> response.StatusCode >= 500
+	response, err := client.Post(connectionInfo.AllocationEndpoint, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close() // nolint: errcheck
+
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	if response.StatusCode >= 400 {
+		return nil, errors.New(string(data))
+	}
+
+	err = json.Unmarshal(data, &gsaResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gsaResult, nil
+}
+
+// createRemoteClusterRestClient creates a rest client with proper certs to make a remote call.
+func (c *Controller) createRemoteClusterRestClient(namespace, secretName string) (*http.Client, error) {
+	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, secretName)
+	if err != nil {
+		return nil, err
+	}
+	if clientCert == nil || clientKey == nil {
+		return nil, fmt.Errorf("missing client certificate key pair in secret %s", secretName)
+	}
+
+	// Load client cert
+	cert, err := tls.X509KeyPair(clientCert, clientKey)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	if len(caCert) != 0 {
+		// Load CA cert, if provided and trust the server certificate.
+		// This is required for self-signed certs.
+		tlsConfig.RootCAs = x509.NewCertPool()
+		ca, err := x509.ParseCertificate(caCert)
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.RootCAs.AddCert(ca)
+	}
+
+	// Setup HTTPS client
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}, nil
+}
+
+// getClientCertificates returns the client certificates and CA cert for remote allocation cluster call
+func (c *Controller) getClientCertificates(namespace, secretName string) (clientCert, clientKey, caCert []byte, err error) {
+	secret, err := c.secretLister.Secrets(namespace).Get(secretName)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if secret == nil || len(secret.Data) == 0 {
+		return nil, nil, nil, fmt.Errorf("secert %s does not have data", secretName)
+	}
+
+	// Create http client using cert
+	clientCert = secret.Data[secretClientCertName]
+	clientKey = secret.Data[secretClientKeyName]
+	caCert = secret.Data[secretCaCertName]
+	return clientCert, clientKey, caCert, nil
 }
 
 // allocationDeserialization processes the request and namespace, and attempts to deserialise its values

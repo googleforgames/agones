@@ -21,9 +21,10 @@ import (
 	"agones.dev/agones/pkg/apis/stable"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -181,7 +182,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 	_, err = gameServers.Get(newGs.Name, metav1.GetOptions{})
 	assert.NotNil(t, err)
-	assert.True(t, errors.IsNotFound(err))
+	assert.True(t, k8serrors.IsNotFound(err))
 }
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
@@ -191,6 +192,8 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
+
+	logrus.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
 
 	gsClient := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs)
 	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
@@ -205,7 +208,27 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
+	// TODO [markmandel@google.com]: Should GameServers that are Unhealthy and not in a fleet be deleted?
+	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
+		gs, err := framework.AgonesClient.StableV1alpha1().GameServers(readyGs.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+
+		// just in case
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		if err != nil {
+			logrus.WithError(err).Warn("error retrieving gameserver")
+			return false, nil
+		}
+
+		if gs.Status.State == v1alpha1.GameServerStateUnhealthy {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
 	assert.NoError(t, err)
 }
 
@@ -240,9 +263,55 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
+
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
+
+	//confirm delete works, because if the finalisers don't get removed, this won't work.
+	err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil)
+	assert.NoError(t, err)
+
+	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+		_, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	})
+
+	assert.NoError(t, err)
+}
+
+func TestGameServerSelfAllocate(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
 	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "ALLOCATE")
+
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK: ALLOCATE\n", reply)
+
+	// the label is set in a queue, so it may take a moment
+	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+
+		return gs.Status.State == v1alpha1.GameServerStateAllocated, nil
+	})
+
+	assert.NoError(t, err)
 }
 
 func defaultGameServer() *v1alpha1.GameServer {

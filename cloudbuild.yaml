@@ -105,7 +105,7 @@ steps:
     - ensure-build-sdk-image-base
     - htmltest-restore-cache
   dir: "build"
-  args: [ "-j", "4", "--output-sync=target", "test" ]
+  args: [ "-j", "5", "--output-sync=target", "test" ]
 
 #
 # Cache the htmltest url checks. Faster builds, and lower network flakiness.

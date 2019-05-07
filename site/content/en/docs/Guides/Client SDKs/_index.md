@@ -106,6 +106,19 @@ specifically at the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
+{{% feature publishVersion="0.10.0" %}}
+
+### Allocate()
+
+With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
+For those scenarios, this SDK functionality exists. 
+
+> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}) is preferred in all other scenarios, 
+as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
+relinquish control to an external service which likely doesn't have as much information as Agones.
+
+{{% /feature %}}
+
 ## Writing your own SDK
 
 If there isn't a SDK for the language and platform you are looking for, you have several options:

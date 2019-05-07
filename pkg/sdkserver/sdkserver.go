@@ -35,6 +35,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/clock"
@@ -55,7 +56,17 @@ const (
 	updateAnnotation Operation = "updateAnnotation"
 )
 
-var _ sdk.SDKServer = &SDKServer{}
+var (
+	_ sdk.SDKServer = &SDKServer{}
+
+	defaultTimeout = 30 * time.Second
+	defaultBackoff = wait.Backoff{
+		Duration: 100 * time.Millisecond,
+		Factor:   1,
+		Jitter:   0.1,
+		Steps:    5,
+	}
+)
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
@@ -328,6 +339,50 @@ func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error)
 	s.logger.Info("Received Ready request, adding to queue")
 	s.enqueueState(stablev1alpha1.GameServerStateRequestReady)
 	return e, nil
+}
+
+// Allocate set the GameServer to Allocate, as longs as it's not in UnHealthy,
+// Shutdown or has a DeletionTimeStamp(). Times out after 30 seconds if it cannot
+// complete the operation due to contention issues.
+func (s *SDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
+	s.logger.Info("Received self Allocate request")
+
+	now := s.clock.Now()
+	err := wait.ExponentialBackoff(defaultBackoff, func() (done bool, err error) {
+		gs, err := s.gameServer()
+		if err != nil {
+			return true, err
+		}
+
+		if !gs.ObjectMeta.DeletionTimestamp.IsZero() {
+			return true, nil
+		}
+
+		switch gs.Status.State {
+		case stablev1alpha1.GameServerStateUnhealthy:
+			return true, errors.New("cannot Allocate an Unhealthy GameServer")
+
+		case stablev1alpha1.GameServerStateShutdown:
+			return true, errors.New("cannot Allocate a Shutdown GameServer")
+		}
+
+		gsCopy := gs.DeepCopy()
+		gsCopy.Status.State = stablev1alpha1.GameServerStateAllocated
+		_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+
+		// if a contention, and we are under the timeout period.
+		if k8serrors.IsConflict(err) {
+			if s.clock.Since(now) > defaultTimeout {
+				return true, errors.New("Allocation request timed out")
+			}
+
+			return false, nil
+		}
+
+		return true, errors.Wrap(err, "could not update gameserver to Allocated")
+	})
+
+	return &sdk.Empty{}, errors.WithStack(err)
 }
 
 // Shutdown enters the Shutdown state change for this GameServer into

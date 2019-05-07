@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,13 @@
 const METHOD_SDK_READY: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
     name: "/stable.agones.dev.sdk.SDK/Ready",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
+
+const METHOD_SDK_ALLOCATE: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::Unary,
+    name: "/stable.agones.dev.sdk.SDK/Allocate",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
@@ -107,6 +114,22 @@ impl SdkClient {
 
     pub fn ready_async(&self, req: &super::sdk::Empty) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
         self.ready_async_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn allocate_opt(&self, req: &super::sdk::Empty, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::Empty> {
+        self.client.unary_call(&METHOD_SDK_ALLOCATE, req, opt)
+    }
+
+    pub fn allocate(&self, req: &super::sdk::Empty) -> ::grpcio::Result<super::sdk::Empty> {
+        self.allocate_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn allocate_async_opt(&self, req: &super::sdk::Empty, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.client.unary_call_async(&METHOD_SDK_ALLOCATE, req, opt)
+    }
+
+    pub fn allocate_async(&self, req: &super::sdk::Empty) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.allocate_async_opt(req, ::grpcio::CallOption::default())
     }
 
     pub fn shutdown_opt(&self, req: &super::sdk::Empty, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::Empty> {
@@ -195,6 +218,7 @@ impl SdkClient {
 
 pub trait Sdk {
     fn ready(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn allocate(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
     fn shutdown(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
     fn health(&self, ctx: ::grpcio::RpcContext, stream: ::grpcio::RequestStream<super::sdk::Empty>, sink: ::grpcio::ClientStreamingSink<super::sdk::Empty>);
     fn get_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::GameServer>);
@@ -208,6 +232,10 @@ pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_READY, move |ctx, req, resp| {
         instance.ready(ctx, req, resp)
+    });
+    let instance = s.clone();
+    builder = builder.add_unary_handler(&METHOD_SDK_ALLOCATE, move |ctx, req, resp| {
+        instance.allocate(ctx, req, resp)
     });
     let instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SHUTDOWN, move |ctx, req, resp| {

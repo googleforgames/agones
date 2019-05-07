@@ -59,6 +59,9 @@ rules:
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets/status",  "fleetautoscalers/status", "gameserversets/status"]
   verbs: ["update"]
+- apiGroups: ["multicluster.agones.dev"]
+  resources: ["gameserverallocationpolicies"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -732,13 +735,13 @@ spec:
               properties:
                 secretName:
                   type: string
-                apiServerEndpoint:
+                allocationEndpoint:
                   type: string
                 clusterName:
                   type: string
               required:
               - clusterName
-              - apiServerEndpoint
+              - allocationEndpoint
               - secretName
               type: object
             priority:

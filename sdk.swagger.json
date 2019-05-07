@@ -14,6 +14,33 @@
     "application/json"
   ],
   "paths": {
+    "/allocate": {
+      "post": {
+        "summary": "Call to self Allocation the GameServer",
+        "operationId": "Allocate",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
     "/gameserver": {
       "get": {
         "summary": "Retrieve the current GameServer data",
