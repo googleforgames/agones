@@ -12,12 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+FROM gcc:8 as builder
+
+WORKDIR /project
+
+ADD https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh /cmake-3.14.1-Linux-x86_64.sh
+RUN mkdir /opt/cmake
+RUN sh /cmake-3.14.1-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
+RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+RUN cmake --version
+
+COPY ./sdks/cpp sdk
+RUN cd sdk && mkdir -p .build && \
+    cd .build && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev && \
+    cmake --build . --target install
+
+COPY ./examples/cpp-simple cpp-simple
+RUN cd cpp-simple && mkdir -p .build && \
+    cd .build && \
+    cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
+    cmake --build . --target install
+
 FROM debian:stretch
 RUN useradd -m server
 
-COPY ./bin/server-static /home/server/server-static
+COPY --from=builder /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple
 RUN chown -R server /home/server && \
-    chmod o+x /home/server/server-static
+    chmod o+x /home/server/cpp-simple
 
 USER server
-ENTRYPOINT /home/server/server-static
+ENTRYPOINT /home/server/cpp-simple
