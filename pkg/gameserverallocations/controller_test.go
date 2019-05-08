@@ -1014,7 +1014,7 @@ func TestCreateRestClientError(t *testing.T) {
 				return true, &corev1.SecretList{
 					Items: []corev1.Secret{{
 						Data: map[string][]byte{
-							"client-cert": clientCert,
+							"client.crt": clientCert,
 						},
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "secret-name",
@@ -1038,8 +1038,8 @@ func TestCreateRestClientError(t *testing.T) {
 				return true, &corev1.SecretList{
 					Items: []corev1.Secret{{
 						Data: map[string][]byte{
-							"client-cert": []byte("XXX"),
-							"client-key":  []byte("XXX"),
+							"client.crt": []byte("XXX"),
+							"client.key": []byte("XXX"),
 						},
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      "secret-name",
@@ -1159,9 +1159,9 @@ func getTestSecret(secretName string, serverCert []byte) *corev1.SecretList {
 		Items: []corev1.Secret{
 			{
 				Data: map[string][]byte{
-					"ca-cert":     serverCert,
-					"client-key":  clientKey,
-					"client-cert": clientCert,
+					"ca.crt":     serverCert,
+					"client.key": clientKey,
+					"client.crt": clientCert,
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      secretName,
