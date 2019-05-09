@@ -1,6 +1,87 @@
 # Changelog
 
-## [v0.9.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0) (2019-04-02)
+## [v0.10.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.10.0-rc) (2019-05-07)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.9.0...v0.10.0-rc)
+
+**Breaking changes:**
+
+- Add status subresource for FleetAutoscaler [\#730](https://github.com/GoogleCloudPlatform/agones/pull/730) ([aLekSer](https://github.com/aLekSer))
+- Implement GameServerAlocation as API Extension  [\#682](https://github.com/GoogleCloudPlatform/agones/pull/682) ([markmandel](https://github.com/markmandel))
+
+**Implemented enhancements:**
+
+- Implementing cross cluster allocation request [\#757](https://github.com/GoogleCloudPlatform/agones/pull/757) ([pooneh-m](https://github.com/pooneh-m))
+- Rename APIServerEndpoint to AllocationEndpoint for multi-cluster allocation [\#755](https://github.com/GoogleCloudPlatform/agones/pull/755) ([pooneh-m](https://github.com/pooneh-m))
+- Implement multicluster allocation for local cluster allocation. [\#753](https://github.com/GoogleCloudPlatform/agones/pull/753) ([pooneh-m](https://github.com/pooneh-m))
+- Implementing cluster selector from multi-cluster allocation policies. [\#733](https://github.com/GoogleCloudPlatform/agones/pull/733) ([pooneh-m](https://github.com/pooneh-m))
+- Added Supersolid logo to the homepage [\#727](https://github.com/GoogleCloudPlatform/agones/pull/727) ([KamiShepard](https://github.com/KamiShepard))
+- Implementation of SDK.Allocate\(\) [\#721](https://github.com/GoogleCloudPlatform/agones/pull/721) ([markmandel](https://github.com/markmandel))
+- Add allocation policy CRD and schema definition. [\#698](https://github.com/GoogleCloudPlatform/agones/pull/698) ([pooneh-m](https://github.com/pooneh-m))
+- Helm support for Terraform [\#696](https://github.com/GoogleCloudPlatform/agones/pull/696) ([aLekSer](https://github.com/aLekSer))
+- Implement lacking functions in Rust SDK [\#693](https://github.com/GoogleCloudPlatform/agones/pull/693) ([thara](https://github.com/thara))
+- Terraform support to generate test cluster [\#670](https://github.com/GoogleCloudPlatform/agones/pull/670) ([aLekSer](https://github.com/aLekSer))
+- Lightweight library for implementing APIServer extensions [\#659](https://github.com/GoogleCloudPlatform/agones/pull/659) ([markmandel](https://github.com/markmandel))
+- Unreal Engine 4 Plugin [\#647](https://github.com/GoogleCloudPlatform/agones/pull/647) ([YannickLange](https://github.com/YannickLange))
+
+**Fixed bugs:**
+
+- Ensure memory leak fix in apimachinery wait.go fix does not get overwritten [\#734](https://github.com/GoogleCloudPlatform/agones/issues/734)
+- Flaky Test: TestGameServerAllocationMetaDataPatch [\#725](https://github.com/GoogleCloudPlatform/agones/issues/725)
+- gen-api-docs make target is not generating API docs for GameServerAllocation [\#705](https://github.com/GoogleCloudPlatform/agones/issues/705)
+- Agones controller does not remove deleted pod from game server list [\#678](https://github.com/GoogleCloudPlatform/agones/issues/678)
+- Flaky: Fix test for TestGameServerUnhealthyAfterDeletingPod [\#758](https://github.com/GoogleCloudPlatform/agones/pull/758) ([markmandel](https://github.com/markmandel))
+- Updated the filtering condition on GameServerShutdown to include the undeleted Unhealthy GSs [\#740](https://github.com/GoogleCloudPlatform/agones/pull/740) ([ilkercelikyilmaz](https://github.com/ilkercelikyilmaz))
+- Add back goimports 🔥 [\#714](https://github.com/GoogleCloudPlatform/agones/pull/714) ([markmandel](https://github.com/markmandel))
+- Add proto directory and update tooling. [\#709](https://github.com/GoogleCloudPlatform/agones/pull/709) ([heartrobotninja](https://github.com/heartrobotninja))
+- Add explicit local version of agones in go.mod [\#706](https://github.com/GoogleCloudPlatform/agones/pull/706) ([aLekSer](https://github.com/aLekSer))
+- Move GameServer to Unheathy when Pod Deleted [\#694](https://github.com/GoogleCloudPlatform/agones/pull/694) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Agones e2e tests are flakey [\#700](https://github.com/GoogleCloudPlatform/agones/issues/700)
+- Release 0.9.0 [\#686](https://github.com/GoogleCloudPlatform/agones/issues/686)
+- Integration with Unreal Engine [\#138](https://github.com/GoogleCloudPlatform/agones/issues/138)
+
+**Merged pull requests:**
+
+- Add tests for gameServerCacheEntry in GameServerAllocation controller [\#754](https://github.com/GoogleCloudPlatform/agones/pull/754) ([markmandel](https://github.com/markmandel))
+- Fix instructions to create AKS cluster [\#752](https://github.com/GoogleCloudPlatform/agones/pull/752) ([aLekSer](https://github.com/aLekSer))
+- Deprecate Fleet Allocation. [\#750](https://github.com/GoogleCloudPlatform/agones/pull/750) ([markmandel](https://github.com/markmandel))
+- Cleanup - no longer need to list Pods for GameServers [\#747](https://github.com/GoogleCloudPlatform/agones/pull/747) ([markmandel](https://github.com/markmandel))
+- Convert C++ Example to Docker Build Pattern [\#746](https://github.com/GoogleCloudPlatform/agones/pull/746) ([markmandel](https://github.com/markmandel))
+- Switch to parrallel execution of SDK commands [\#742](https://github.com/GoogleCloudPlatform/agones/pull/742) ([aLekSer](https://github.com/aLekSer))
+- Move terraform targets into a separate file [\#741](https://github.com/GoogleCloudPlatform/agones/pull/741) ([aLekSer](https://github.com/aLekSer))
+- We don't need CMake in the base build image [\#739](https://github.com/GoogleCloudPlatform/agones/pull/739) ([markmandel](https://github.com/markmandel))
+- CI Speedup: Cache Build SDK between builds [\#738](https://github.com/GoogleCloudPlatform/agones/pull/738) ([markmandel](https://github.com/markmandel))
+- Intial tool vendoring commit. [\#737](https://github.com/GoogleCloudPlatform/agones/pull/737) ([heartrobotninja](https://github.com/heartrobotninja))
+- Add vendor\_fixed directory with apimachinery module [\#735](https://github.com/GoogleCloudPlatform/agones/pull/735) ([heartrobotninja](https://github.com/heartrobotninja))
+- Option for CMake silent output [\#731](https://github.com/GoogleCloudPlatform/agones/pull/731) ([dsazonoff](https://github.com/dsazonoff))
+- Cache htmltest url checks for 2 weeks [\#729](https://github.com/GoogleCloudPlatform/agones/pull/729) ([markmandel](https://github.com/markmandel))
+- Fix for flaky TestGameServerAllocationMetaDataPatch [\#726](https://github.com/GoogleCloudPlatform/agones/pull/726) ([markmandel](https://github.com/markmandel))
+- Adds a .clang-format file making Google style the default [\#724](https://github.com/GoogleCloudPlatform/agones/pull/724) ([devjgm](https://github.com/devjgm))
+- Group make test output in cloudbuild.yaml [\#723](https://github.com/GoogleCloudPlatform/agones/pull/723) ([markmandel](https://github.com/markmandel))
+- Upgrade Hugo to 0.55.2 [\#722](https://github.com/GoogleCloudPlatform/agones/pull/722) ([markmandel](https://github.com/markmandel))
+- Remove dependency to util/runtime from allocation/v1alpha1/register.go [\#720](https://github.com/GoogleCloudPlatform/agones/pull/720) ([pooneh-m](https://github.com/pooneh-m))
+- Clang-formatted the C++ SDK files. [\#716](https://github.com/GoogleCloudPlatform/agones/pull/716) ([devjgm](https://github.com/devjgm))
+- Abstract build image ensuring and building [\#715](https://github.com/GoogleCloudPlatform/agones/pull/715) ([markmandel](https://github.com/markmandel))
+- Mount go mod cache [\#712](https://github.com/GoogleCloudPlatform/agones/pull/712) ([markmandel](https://github.com/markmandel))
+- Move local-includes above others [\#711](https://github.com/GoogleCloudPlatform/agones/pull/711) ([markmandel](https://github.com/markmandel))
+- We no longer need gen-grpc-cpp.sh [\#710](https://github.com/GoogleCloudPlatform/agones/pull/710) ([markmandel](https://github.com/markmandel))
+- Update issue templates [\#708](https://github.com/GoogleCloudPlatform/agones/pull/708) ([thisisnotapril](https://github.com/thisisnotapril))
+- Change  the website theme  and add Ubisoft logo [\#704](https://github.com/GoogleCloudPlatform/agones/pull/704) ([Kuqd](https://github.com/Kuqd))
+- Fixed typo in URL [\#702](https://github.com/GoogleCloudPlatform/agones/pull/702) ([devjgm](https://github.com/devjgm))
+- Fixed a minor typo [\#701](https://github.com/GoogleCloudPlatform/agones/pull/701) ([pooneh-m](https://github.com/pooneh-m))
+- Change License from Google Inc. to Google LLC due to branding change in 2015 [\#699](https://github.com/GoogleCloudPlatform/agones/pull/699) ([pooneh-m](https://github.com/pooneh-m))
+- Remove dependency to util/runtime from APIS package [\#697](https://github.com/GoogleCloudPlatform/agones/pull/697) ([pooneh-m](https://github.com/pooneh-m))
+- Update Linter to 1.16.0 [\#692](https://github.com/GoogleCloudPlatform/agones/pull/692) ([markmandel](https://github.com/markmandel))
+- Choose specific release version of gen-crd-api-reference-docs [\#691](https://github.com/GoogleCloudPlatform/agones/pull/691) ([aLekSer](https://github.com/aLekSer))
+- Upgrade Testify to 1.3.0 [\#689](https://github.com/GoogleCloudPlatform/agones/pull/689) ([markmandel](https://github.com/markmandel))
+- Setup for release 0.10.0 [\#688](https://github.com/GoogleCloudPlatform/agones/pull/688) ([markmandel](https://github.com/markmandel))
+- End to end tests for GameServer Pod Deletion [\#684](https://github.com/GoogleCloudPlatform/agones/pull/684) ([markmandel](https://github.com/markmandel))
+- Removes the sdk generation tooling from our main build image [\#630](https://github.com/GoogleCloudPlatform/agones/pull/630) ([Kuqd](https://github.com/Kuqd))
+
+## [v0.9.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.9.0) (2019-04-03)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.9.0-rc...v0.9.0)
 
@@ -16,6 +97,7 @@
 
 **Merged pull requests:**
 
+- Changes for 0.9.0 release! [\#687](https://github.com/GoogleCloudPlatform/agones/pull/687) ([markmandel](https://github.com/markmandel))
 - Add the GDC presentation to the website [\#685](https://github.com/GoogleCloudPlatform/agones/pull/685) ([markmandel](https://github.com/markmandel))
 - Forgot to highlight the breaking change. [\#680](https://github.com/GoogleCloudPlatform/agones/pull/680) ([markmandel](https://github.com/markmandel))
 - Minor tweaks to documentation [\#677](https://github.com/GoogleCloudPlatform/agones/pull/677) ([markmandel](https://github.com/markmandel))
