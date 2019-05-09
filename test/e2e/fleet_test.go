@@ -809,7 +809,8 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 
 	alpha1 := framework.AgonesClient.StableV1alpha1()
 	flt := defaultFleet()
-	flt.Spec.Replicas = 1
+	// add more game servers, to hunt for race conditions
+	flt.Spec.Replicas = 5
 
 	flt, err := alpha1.Fleets(defaultNs).Create(flt)
 	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
@@ -824,26 +825,30 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 	list, err := alpha1.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
 	assert.NoError(t, err)
 
-	assert.Len(t, list.Items, 1)
-	gs := list.Items[0]
-	pod, err := podClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
-	assert.NoError(t, err)
+	assert.Len(t, list.Items, 5)
 
-	assert.True(t, metav1.IsControlledBy(pod, &gs))
+	for _, gs := range list.Items {
+		pod, err := podClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+		assert.NoError(t, err)
 
-	err = podClient.Delete(pod.ObjectMeta.Name, nil)
-	assert.NoError(t, err)
+		assert.True(t, metav1.IsControlledBy(pod, &gs))
 
-	err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
-		_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+		err = podClient.Delete(pod.ObjectMeta.Name, nil)
+		assert.NoError(t, err)
+	}
 
-		if err != nil && k8serrors.IsNotFound(err) {
-			return true, nil
-		}
+	for _, gs := range list.Items {
+		err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+			_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
 
-		return false, err
-	})
-	assert.NoError(t, err)
+			if err != nil && k8serrors.IsNotFound(err) {
+				return true, nil
+			}
+
+			return false, err
+		})
+		assert.NoError(t, err)
+	}
 
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 }

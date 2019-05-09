@@ -208,27 +208,7 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	// TODO [markmandel@google.com]: Should GameServers that are Unhealthy and not in a fleet be deleted?
-	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
-		gs, err := framework.AgonesClient.StableV1alpha1().GameServers(readyGs.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
-
-		// just in case
-		if k8serrors.IsNotFound(err) {
-			return true, nil
-		}
-
-		if err != nil {
-			logrus.WithError(err).Warn("error retrieving gameserver")
-			return false, nil
-		}
-
-		if gs.Status.State == v1alpha1.GameServerStateUnhealthy {
-			return true, nil
-		}
-
-		return false, nil
-	})
-
+	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
 	assert.NoError(t, err)
 }
 
@@ -313,6 +293,27 @@ func TestGameServerSelfAllocate(t *testing.T) {
 
 	assert.NoError(t, err)
 }
+
+func TestGameServerShutdown(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
+
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "EXIT")
+
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK: EXIT\n", reply)
+	// TOXO: write a e2e test for server shutdown!
+		// work from here!
+}
+
 
 func defaultGameServer() *v1alpha1.GameServer {
 	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
