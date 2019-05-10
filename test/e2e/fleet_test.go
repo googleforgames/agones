@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -802,58 +803,96 @@ func TestUpdateFleetScheduling(t *testing.T) {
 		})
 }
 
-// TestFleetRecreateGameServerOnPodDeletion ensure that if a pod from a GameServer
-// is deleted, the GameServer is deleted and replaced.
-func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
+// TestFleetRecreateGameServers tests various gameserver shutdown scenarios to ensure
+// that recreation happens as expected
+func TestFleetRecreateGameServers(t *testing.T) {
 	t.Parallel()
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
-	flt := defaultFleet()
-	// add more game servers, to hunt for race conditions
-	flt.Spec.Replicas = 5
+	tests := map[string]struct {
+		f func(t *testing.T, list *v1alpha1.GameServerList)
+	}{
+		"pod deletion": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+			podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
 
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
-	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
+			for _, gs := range list.Items {
+				pod, err := podClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+				assert.NoError(t, err)
 
-	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				assert.True(t, metav1.IsControlledBy(pod, &gs))
+
+				err = podClient.Delete(pod.ObjectMeta.Name, nil)
+				assert.NoError(t, err)
+			}
+		}},
+		"gameserver shutdown": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+			for _, gs := range list.Items {
+				var reply string
+				reply, err := e2e.SendGameServerUDP(&gs, "EXIT")
+				if err != nil {
+					t.Fatalf("Could not message GameServer: %v", err)
+				}
+
+				assert.Equal(t, "ACK: EXIT\n", reply)
+			}
+		}},
+		"gameserver unhealthy": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+			for _, gs := range list.Items {
+				var reply string
+				reply, err := e2e.SendGameServerUDP(&gs, "UNHEALTHY")
+				if err != nil {
+					t.Fatalf("Could not message GameServer: %v", err)
+				}
+
+				assert.Equal(t, "ACK: UNHEALTHY\n", reply)
+			}
+		}},
 	}
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	for k, v := range tests {
+		t.Run(k, func(t *testing.T) {
+			alpha1 := framework.AgonesClient.StableV1alpha1()
+			flt := defaultFleet()
+			// add more game servers, to hunt for race conditions
+			flt.Spec.Replicas = 10
 
-	selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
-	list, err := alpha1.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
-	assert.NoError(t, err)
-
-	assert.Len(t, list.Items, 5)
-
-	for _, gs := range list.Items {
-		pod, err := podClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
-		assert.NoError(t, err)
-
-		assert.True(t, metav1.IsControlledBy(pod, &gs))
-
-		err = podClient.Delete(pod.ObjectMeta.Name, nil)
-		assert.NoError(t, err)
-	}
-
-	for _, gs := range list.Items {
-		err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
-			_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
-
-			if err != nil && k8serrors.IsNotFound(err) {
-				return true, nil
+			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			if assert.Nil(t, err) {
+				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			return false, err
-		})
-		assert.NoError(t, err)
-	}
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+			list, err := listGameServers(flt, alpha1)
+			assert.NoError(t, err)
+			assert.Len(t, list.Items, int(flt.Spec.Replicas))
+
+			// apply deletion function
+			logrus.Info("applying deletion function")
+			v.f(t, list)
+
+			for i, gs := range list.Items {
+				err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+					_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+
+					if err != nil && k8serrors.IsNotFound(err) {
+						logrus.Infof("gameserver %d/%d not found", i+1, flt.Spec.Replicas)
+						return true, nil
+					}
+
+					return false, err
+				})
+				assert.NoError(t, err)
+			}
+
+			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+		})
+	}
 }
 
-// TOXO: e2e test run shutdown on lots of gameservers
+func listGameServers(flt *v1alpha1.Fleet, getter stablev1alpha1.GameServersGetter) (*v1alpha1.GameServerList, error) {
+	selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
+	return getter.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
+}
 
 // Counts the number of gameservers with the specified scheduling strategy in a fleet
 func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling apis.SchedulingStrategy) int {

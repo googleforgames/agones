@@ -175,14 +175,10 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	}
 
 	newGs, err := gameServers.Create(gs.DeepCopy())
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
-	assert.NotNil(t, err)
-
-	_, err = gameServers.Get(newGs.Name, metav1.GetOptions{})
-	assert.NotNil(t, err)
-	assert.True(t, k8serrors.IsNotFound(err))
+	_, err = framework.WaitForGameServerState(newGs, v1alpha1.GameServerStateUnhealthy, time.Minute)
+	assert.NoError(t, err)
 }
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
@@ -208,7 +204,7 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, 10*time.Second)
+	_, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateUnhealthy, time.Minute)
 	assert.NoError(t, err)
 }
 
@@ -310,7 +306,7 @@ func TestGameServerShutdown(t *testing.T) {
 
 	assert.Equal(t, "ACK: EXIT\n", reply)
 
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if k8serrors.IsNotFound(err) {
@@ -322,7 +318,6 @@ func TestGameServerShutdown(t *testing.T) {
 
 	assert.NoError(t, err)
 }
-
 
 func defaultGameServer() *v1alpha1.GameServer {
 	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
