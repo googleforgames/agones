@@ -304,14 +304,23 @@ func TestGameServerShutdown(t *testing.T) {
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
 
 	reply, err := e2eframework.SendGameServerUDP(readyGs, "EXIT")
-
 	if err != nil {
 		t.Fatalf("Could not message GameServer: %v", err)
 	}
 
 	assert.Equal(t, "ACK: EXIT\n", reply)
-	// TOXO: write a e2e test for server shutdown!
-		// work from here!
+
+	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	})
+
+	assert.NoError(t, err)
 }
 
 

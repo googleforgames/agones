@@ -853,6 +853,8 @@ func TestFleetRecreateGameServerOnPodDeletion(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 }
 
+// TOXO: e2e test run shutdown on lots of gameservers
+
 // Counts the number of gameservers with the specified scheduling strategy in a fleet
 func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling apis.SchedulingStrategy) int {
 	count := 0
