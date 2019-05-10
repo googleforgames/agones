@@ -70,9 +70,9 @@ var (
 )
 
 const (
-	secretClientCertName = "client-cert"
-	secretClientKeyName  = "client-key"
-	secretCaCertName     = "ca-cert"
+	secretClientCertName = "client.crt"
+	secretClientKeyName  = "client.key"
+	secretCaCertName     = "ca.crt"
 )
 
 // Controller is a the GameServerAllocation controller
@@ -375,6 +375,7 @@ func (c *Controller) allocateFromRemoteCluster(gsa v1alpha1.GameServerAllocation
 		return nil, err
 	}
 	if response.StatusCode >= 400 {
+		// For error responses return the body without deserializing to an object.
 		return nil, errors.New(string(data))
 	}
 
