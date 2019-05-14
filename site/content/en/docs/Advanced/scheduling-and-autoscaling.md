@@ -31,11 +31,12 @@ or their cloud specific documentation.
 
 ## Fleet Autoscaling
 
-Fleet autoscaling is the only type of autoscaling that exists in Agones. It is currently only available as a simple
-buffer autoscaling strategy. Have a look at the [Create a Fleet Autoscaler]({{< relref "../Getting Started/create-fleetautoscaler.md" >}}) quickstart,
-and the [Fleet Autoscaler Specification]({{< relref "../Reference/fleetautoscaler.md" >}}) for details.
+Fleet autoscaling is the only type of autoscaling that exists in Agones. It is currently available as a
+buffer autoscaling strategy or as a webhook driven strategy, such that you can provide your own autoscaling logic. 
 
-More sophisticated fleet autoscaling will be coming in future releases.
+Have a look at the [Create a Fleet Autoscaler]({{< relref "../Getting Started/create-fleetautoscaler.md" >}}) quickstart, the
+[Create a Webhook Fleet Autoscaler]({{< relref "../Getting Started/create-webhook-fleetautoscaler.md" >}}) quickstart,
+and the [Fleet Autoscaler Specification]({{< relref "../Reference/fleetautoscaler.md" >}}) for details.
 
 ## Autoscaling Concepts
 
