@@ -21,7 +21,7 @@ These are full examples for each of the resource types of Agones
 
 ## Game server implementations
 
-These are all example of simple game server implementations, that integrate the Agones game server SDK. 
+These are all examples of simple game server implementations, that integrate the Agones game server SDK. 
 
 - {{< ghlink href="examples/simple-udp" >}}Simple UDP{{< /ghlink >}} (Go) - simple server and client that send UDP packets back and forth.
 - {{< ghlink href="examples/cpp-simple" >}}CPP Simple{{< /ghlink >}} (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
