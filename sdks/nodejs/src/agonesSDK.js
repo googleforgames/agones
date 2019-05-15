@@ -8,6 +8,19 @@ class AgonesSDK {
 		this.client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
 	}
 
+	async allocate() {
+		const request = new messages.Empty();
+		return new Promise((resolve, reject) => {
+			this.client.allocate(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.toObject());
+				}
+			});
+		});
+	}
+
 	async ready() {
 		let request = new messages.Empty();
 		return new Promise((resolve, reject) => {
