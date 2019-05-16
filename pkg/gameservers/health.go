@@ -164,8 +164,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 	}
 
 	// at this point we don't care, we're already Unhealthy / deleting
-	if !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == v1alpha1.GameServerStateShutdown ||
-		gs.Status.State == v1alpha1.GameServerStateUnhealthy {
+	if gs.IsBeingDeleted() || gs.Status.State == v1alpha1.GameServerStateUnhealthy {
 		return nil
 	}
 

@@ -85,6 +85,8 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		switch parts[0] {
 		// shuts down the gameserver
 		case "EXIT":
+			// respond here, as we os.Exit() before we get to below
+			respond(conn, sender, "ACK: "+txt+"\n")
 			exit(s)
 
 		// turns off the health pings
