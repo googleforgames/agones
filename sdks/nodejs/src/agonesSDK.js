@@ -46,7 +46,8 @@ class AgonesSDK {
 				// Ignore error as this can't be caught
 			});
 		}
-		this.healthStream.write(new messages.Empty());
+                const request = new messages.Empty();
+		this.healthStream.write(request);
 	}
 	async getGameServer() {
 		const request = new messages.Empty();
@@ -60,8 +61,9 @@ class AgonesSDK {
 			});
 		});
 	}
-	watchGameServer(callback) {	
-		const emitter = this.client.watchGameServer(new messages.Empty());
+	watchGameServer(callback) {
+                const request = new messages.Empty();	
+		const emitter = this.client.watchGameServer(request);
 		emitter.on('data', (data) => {
 			callback(data.toObject());
 		});
