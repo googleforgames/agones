@@ -10,6 +10,31 @@ describe('agones', () => {
 		agonesSDK = new AgonesSDK();
 	});
 
+	describe('allocate', () => {
+		it('calls the server and handles success', async () => {
+			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
+				let result = new messages.Empty();
+				callback(undefined, result);
+			});
+			let result = await agonesSDK.allocate();
+			expect(agonesSDK.client.allocate).toHaveBeenCalled();
+			expect(result).toEqual({});
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await agonesSDK.allocate();
+				fail();
+			} catch (error) {
+				expect(agonesSDK.client.allocate).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
 	describe('ready', () => {
 		it('calls the server and handles success', async () => {
 			spyOn(agonesSDK.client, 'ready').and.callFake((request, callback) => {
