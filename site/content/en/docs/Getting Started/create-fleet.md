@@ -176,44 +176,6 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 You should get back a response that looks like the following:
 
-{{% feature expiryVersion="0.10.0" %}}
-```yaml
-apiVersion: stable.agones.dev/v1alpha1
-kind: GameServerAllocation
-metadata:
-  creationTimestamp: 2018-12-31T22:52:41Z
-  generateName: simple-udp-
-  generation: 1
-  name: simple-udp-czw2b
-  namespace: default
-  ownerReferences:
-  - apiVersion: stable.agones.dev/v1alpha1
-    blockOwnerDeletion: true
-    controller: true
-    kind: GameServer
-    name: simple-udp-sdhzn-r4d6x
-    uid: b0ad460b-0d4e-11e9-9986-dcbf85d40d0b
-  resourceVersion: "4085"
-  selfLink: /apis/stable.agones.dev/v1alpha1/namespaces/default/gameserverallocations/simple-udp-czw2b
-  uid: c7547505-0d4e-11e9-9986-dcbf85d40d0b
-spec:
-  metadata: {}
-  required:
-    matchLabels:
-      stable.agones.dev/fleet: simple-udp
-  scheduling: Packed
-status:
-  address: 192.168.122.205
-  gameServerName: simple-udp-sdhzn-r4d6x
-  nodeName: minikube
-  ports:
-  - name: default
-    port: 7623
-  state: Allocated
-```
-{{% /feature %}}
-
-{{% feature publishVersion="0.10.0" %}}
 ```yaml
 apiVersion: allocation.agones.dev/v1alpha1
 kind: GameServerAllocation
@@ -236,7 +198,6 @@ status:
     port: 7714
   state: Allocated
 ```
-{{% /feature %}}
 
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
@@ -267,17 +228,13 @@ simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
 simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
 
-{{% feature publishVersion="0.10.0" %}}
 > `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
   them after they have been created - but you can see their effects on `GameServers`
-{{% /feature %}}
 
 #### FleetAllocation
 
-{{% feature publishVersion="0.10.0" %}}
 > Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
   Migrate to using GameServer Allocation instead.
-{{% /feature %}}
 
 We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
 and also move it to the `Allocated` state.
