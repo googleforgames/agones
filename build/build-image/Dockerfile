@@ -102,10 +102,6 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 # make nano the editor
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
-# update CMake
-RUN wget -nv https://github.com/Kitware/CMake/releases/download/v3.14.0/cmake-3.14.0-Linux-x86_64.sh && mkdir /opt/cmake && \
-    sh ./cmake-3.14.0-Linux-x86_64.sh --skip-license --prefix=/opt/cmake && export PATH=$PATH:/opt/cmake/bin
-
 # install terraform
 RUN wget -nv https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_386.zip && unzip ./terraform_0.11.13_linux_386.zip && mv terraform /usr/local/bin/
 

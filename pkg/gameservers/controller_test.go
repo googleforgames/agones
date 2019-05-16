@@ -454,7 +454,6 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		fixture.ApplyDefaults()
 		pod, err := fixture.Pod()
 		assert.Nil(t, err)
-		pod.ObjectMeta.Name = pod.ObjectMeta.GenerateName
 
 		deleted := false
 		mocks.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -471,7 +470,7 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 		defer cancel()
 
 		result, err := c.syncGameServerDeletionTimestamp(fixture)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.True(t, deleted, "pod should be deleted")
 		assert.Equal(t, fixture, result)
 		assert.Equal(t, fmt.Sprintf("%s %s %s", corev1.EventTypeNormal,
@@ -496,6 +495,37 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 
 			return true, gs, nil
 		})
+		_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		defer cancel()
+
+		result, err := c.syncGameServerDeletionTimestamp(fixture)
+		assert.Nil(t, err)
+		assert.True(t, updated, "gameserver should be updated, to remove the finaliser")
+		assert.Equal(t, fixture.ObjectMeta.Name, result.ObjectMeta.Name)
+		assert.Empty(t, result.ObjectMeta.Finalizers)
+	})
+
+	t.Run("Local development GameServer", func(t *testing.T) {
+		c, mocks := newFakeController()
+		now := metav1.Now()
+		fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default",
+			Annotations:       map[string]string{v1alpha1.DevAddressAnnotation: "1.1.1.1"},
+			DeletionTimestamp: &now},
+			Spec: newSingleContainerSpec()}
+		fixture.ApplyDefaults()
+
+		updated := false
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			updated = true
+
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*v1alpha1.GameServer)
+			assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+			assert.Empty(t, gs.ObjectMeta.Finalizers)
+
+			return true, gs, nil
+		})
+
 		_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
 		defer cancel()
 
@@ -1082,54 +1112,81 @@ func TestControllerAddress(t *testing.T) {
 func TestControllerGameServerPod(t *testing.T) {
 	t.Parallel()
 
-	c, mocks := newFakeController()
-	fakeWatch := watch.NewFake()
-	mocks.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: newSingleContainerSpec()}
-	gs.ApplyDefaults()
-	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod1", Labels: map[string]string{v1alpha1.GameServerPodLabel: gs.ObjectMeta.Name}}}
+	setup := func() (*Controller, *v1alpha1.GameServer, *watch.FakeWatcher, <-chan struct{}, context.CancelFunc) {
+		c, mocks := newFakeController()
+		fakeWatch := watch.NewFake()
+		mocks.KubeClient.AddWatchReactor("pods", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+		stop, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver",
+			Namespace: defaultNs, UID: "1234"}, Spec: newSingleContainerSpec()}
+		gs.ApplyDefaults()
+		return c, gs, fakeWatch, stop, cancel
+	}
 
-	stop, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
-	defer cancel()
+	t.Run("no pod exists", func(t *testing.T) {
+		c, gs, _, stop, cancel := setup()
+		defer cancel()
 
-	_, err := c.gameServerPod(gs)
-	assert.Equal(t, errPodNotFound, err)
+		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		_, err := c.gameServerPod(gs)
+		assert.Error(t, err)
+		assert.True(t, k8serrors.IsNotFound(err))
+	})
 
-	// not owned
-	fakeWatch.Add(pod.DeepCopy())
-	cache.WaitForCacheSync(stop, c.gameServerSynced)
-	_, err = c.gameServerPod(gs)
-	assert.Equal(t, errPodNotFound, err)
+	t.Run("a pod exists", func(t *testing.T) {
+		c, gs, fakeWatch, stop, cancel := setup()
 
-	// owned
-	ownedPod, err := gs.Pod()
-	assert.Nil(t, err)
-	ownedPod.ObjectMeta.Name = "owned1"
-	fakeWatch.Add(ownedPod)
-	cache.WaitForCacheSync(stop, c.gameServerSynced)
-	// should be fine
-	pod2, err := c.gameServerPod(gs)
-	assert.Nil(t, err)
-	assert.Equal(t, ownedPod, pod2)
+		defer cancel()
+		pod, err := gs.Pod()
+		assert.Nil(t, err)
 
-	// add another non-owned pod
-	p2 := pod.DeepCopy()
-	p2.ObjectMeta.Name = "pod2"
-	fakeWatch.Add(p2)
-	cache.WaitForCacheSync(stop, c.gameServerSynced)
-	// should still be fine
-	pod2, err = c.gameServerPod(gs)
-	assert.Nil(t, err)
-	assert.Equal(t, ownedPod, pod2)
+		fakeWatch.Add(pod.DeepCopy())
+		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		pod2, err := c.gameServerPod(gs)
+		assert.NoError(t, err)
+		assert.Equal(t, pod, pod2)
 
-	// now add another owned pod
-	p3 := ownedPod.DeepCopy()
-	p3.ObjectMeta.Name = "pod3"
-	fakeWatch.Add(p3)
-	cache.WaitForCacheSync(stop, c.gameServerSynced)
-	// should error out
-	_, err = c.gameServerPod(gs)
-	assert.NotNil(t, err)
+		fakeWatch.Delete(pod.DeepCopy())
+		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		_, err = c.gameServerPod(gs)
+		assert.Error(t, err)
+		assert.True(t, k8serrors.IsNotFound(err))
+	})
+
+	t.Run("a pod exists, but isn't owned by the gameserver", func(t *testing.T) {
+		c, gs, fakeWatch, stop, cancel := setup()
+		defer cancel()
+
+		pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: gs.ObjectMeta.Name, Labels: map[string]string{v1alpha1.GameServerPodLabel: gs.ObjectMeta.Name, "owned": "false"}}}
+		fakeWatch.Add(pod.DeepCopy())
+
+		// gate
+		cache.WaitForCacheSync(stop, c.podSynced)
+		pod, err := c.podGetter.Pods(defaultNs).Get(pod.ObjectMeta.Name, metav1.GetOptions{})
+		assert.NoError(t, err)
+		assert.NotNil(t, pod)
+
+		_, err = c.gameServerPod(gs)
+		assert.Error(t, err)
+		assert.True(t, k8serrors.IsNotFound(err))
+	})
+
+	t.Run("dev gameserver pod", func(t *testing.T) {
+		c, _ := newFakeController()
+
+		gs := &v1alpha1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", Namespace: defaultNs,
+				Annotations: map[string]string{
+					v1alpha1.DevAddressAnnotation: "1.1.1.1",
+				},
+				UID: "1234"},
+
+			Spec: newSingleContainerSpec()}
+
+		pod, err := c.gameServerPod(gs)
+		assert.NoError(t, err)
+		assert.Empty(t, pod.ObjectMeta.Name)
+	})
 }
 
 func TestControllerAddGameServerHealthCheck(t *testing.T) {

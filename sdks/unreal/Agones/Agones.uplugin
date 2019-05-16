@@ -1,0 +1,23 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1",
+  "FriendlyName": "Agones",
+  "Description": "Unreal Engine Plugin for Agones Game Server Client",
+  "Category": "Google",
+  "CreatedBy": "Google Inc",
+  "CreatedByURL": "https://agones.dev",
+  "DocsURL": "https://agones.dev/site/docs/",
+  "MarketplaceURL": "",
+  "SupportURL": "https://github.com/GoogleCloudPlatform/agones/issues",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Installed": true,
+  "Modules": [
+    {
+      "Name": "Agones",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

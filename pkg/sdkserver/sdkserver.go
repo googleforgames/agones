@@ -372,7 +372,6 @@ func (s *SDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 
 		// if a contention, and we are under the timeout period.
 		if k8serrors.IsConflict(err) {
-			// TODO: write a test for this
 			if s.clock.Since(now) > defaultTimeout {
 				return true, errors.New("Allocation request timed out")
 			}

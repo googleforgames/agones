@@ -144,6 +144,11 @@ The `spec` field is the actual `GameServerAllocation` specification and it is co
 
 # Fleet Allocation Specification
 
+{{% feature publishVersion="0.10.0" %}}
+> Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
+  Migrate to using GameServer Allocation instead.
+{{% /feature %}}
+
 A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet`
 
 A full `FleetAllocation` specification is available below and in the 

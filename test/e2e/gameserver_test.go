@@ -23,7 +23,7 @@ import (
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -181,7 +181,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 	_, err = gameServers.Get(newGs.Name, metav1.GetOptions{})
 	assert.NotNil(t, err)
-	assert.True(t, errors.IsNotFound(err))
+	assert.True(t, k8serrors.IsNotFound(err))
 }
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
@@ -240,9 +240,24 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
+
+	//confirm delete works, because if the finalisers don't get removed, this won't work.
+	err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil)
+	assert.NoError(t, err)
+
+	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+		_, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	})
+
+	assert.NoError(t, err)
 }
 
 func TestGameServerSelfAllocate(t *testing.T) {
