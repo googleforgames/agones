@@ -102,6 +102,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.rbacEnabled`                                | Creates RBAC resources. Must be set for any cluster configured with RBAC                        | `true`                 |
 | `agones.registerWebhooks`                           | Registers the webhooks used for the admission controller                                        | `true`                 |
+| `agones.registerApiService`                         | Registers the apiservice(s) used for the Kubernetes API extension                               | `true`                 |
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
 | `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
 | `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
@@ -161,12 +162,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="0.10.0" %}}
+{{% feature publishVersion="0.11.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.registerApiService`                         | Registers the apiservice(s) used for the Kubernetes API extension                               | `true`                 |
 
 {{% /feature %}}
 

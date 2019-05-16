@@ -149,8 +149,6 @@ Response:
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 ```
 
-{{% feature publishVersion="0.10.0" %}}
-
 ### Allocate
 
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
@@ -165,5 +163,3 @@ relinquish control to an external service which likely doesn't have as much info
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/allocate
 ```
-
-{{% /feature %}}

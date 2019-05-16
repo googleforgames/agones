@@ -295,37 +295,62 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 func TestSidecarUpdateState(t *testing.T) {
 	t.Parallel()
 
-	t.Run("ignore state change when unhealthy", func(t *testing.T) {
-		m := agtesting.NewMocks()
-		sc, err := defaultSidecar(m)
-		assert.Nil(t, err)
-		sc.gsState = v1alpha1.GameServerStateReady
+	fixtures := map[string]struct {
+		f func(gs *v1alpha1.GameServer)
+	}{
+		"unhealthy": {
+			f: func(gs *v1alpha1.GameServer) {
+				gs.Status.State = v1alpha1.GameServerStateUnhealthy
+			},
+		},
+		"shutdown": {
+			f: func(gs *v1alpha1.GameServer) {
+				gs.Status.State = v1alpha1.GameServerStateShutdown
+			},
+		},
+		"deleted": {
+			f: func(gs *v1alpha1.GameServer) {
+				now := metav1.Now()
+				gs.ObjectMeta.DeletionTimestamp = &now
+			},
+		},
+	}
 
-		updated := false
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			m := agtesting.NewMocks()
+			sc, err := defaultSidecar(m)
+			assert.Nil(t, err)
+			sc.gsState = v1alpha1.GameServerStateReady
 
-		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			gs := v1alpha1.GameServer{
-				ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
-				Status: v1alpha1.GameServerStatus{
-					State: v1alpha1.GameServerStateUnhealthy,
-				},
-			}
-			return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+			updated := false
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				gs := v1alpha1.GameServer{
+					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
+					Status:     v1alpha1.GameServerStatus{},
+				}
+
+				// apply mutation
+				v.f(&gs)
+
+				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+			})
+			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				updated = true
+				return true, nil, nil
+			})
+
+			stop := make(chan struct{})
+			defer close(stop)
+			sc.informerFactory.Start(stop)
+			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+			err = sc.updateState()
+			assert.Nil(t, err)
+			assert.False(t, updated)
 		})
-		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			updated = true
-			return true, nil, nil
-		})
-
-		stop := make(chan struct{})
-		defer close(stop)
-		sc.informerFactory.Start(stop)
-		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
-
-		err = sc.updateState()
-		assert.Nil(t, err)
-		assert.False(t, updated)
-	})
+	}
 }
 
 func TestSidecarHealthLastUpdated(t *testing.T) {

@@ -157,6 +157,44 @@ func TestComputeReconciliationAction(t *testing.T) {
 			wantNumServersToAdd: 0,
 			wantIsPartial:       true,
 		},
+		{
+			desc: "DeletingUnhealthyGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 2,
+		},
+		{
+			desc: "DeletingErrorGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateError),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 2,
+		},
+		{
+			desc: "DeletingPartialGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 3,
+			wantIsPartial:          true,
+		},
 	}
 
 	for _, tc := range cases {
