@@ -16,6 +16,20 @@ class AgonesSDK {
 		this.emitters.forEach(emitter => emitter.call.cancel());
 		this.client.close();
 	}
+
+	async allocate() {
+		const request = new messages.Empty();
+		return new Promise((resolve, reject) => {
+			this.client.allocate(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.toObject());
+				}
+			});
+		});
+	}
+
 	async ready() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
