@@ -1016,9 +1016,9 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.toObject = function
 proto.stable.agones.dev.sdk.GameServer.Spec.Health.toObject = function(includeInstance, msg) {
   var f, obj = {
     disabled: jspb.Message.getFieldWithDefault(msg, 1, false),
-    periodseconds: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    failurethreshold: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    initialdelayseconds: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    periodSeconds: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    failureThreshold: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    initialDelaySeconds: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -1061,15 +1061,15 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.deserializeBinaryFromReader =
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPeriodseconds(value);
+      msg.setPeriodSeconds(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setFailurethreshold(value);
+      msg.setFailureThreshold(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setInitialdelayseconds(value);
+      msg.setInitialDelaySeconds(value);
       break;
     default:
       reader.skipField();
@@ -1107,21 +1107,21 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter = fun
       f
     );
   }
-  f = message.getPeriodseconds();
+  f = message.getPeriodSeconds();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getFailurethreshold();
+  f = message.getFailureThreshold();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
-  f = message.getInitialdelayseconds();
+  f = message.getInitialDelaySeconds();
   if (f !== 0) {
     writer.writeInt32(
       4,
@@ -1132,7 +1132,7 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.serializeBinaryToWriter = fun
 
 
 /**
- * optional bool Disabled = 1;
+ * optional bool disabled = 1;
  * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
  * You should avoid comparisons like {@code val === true/false} in those cases.
  * @return {boolean}
@@ -1149,46 +1149,46 @@ proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setDisabled = funct
 
 
 /**
- * optional int32 PeriodSeconds = 2;
+ * optional int32 period_seconds = 2;
  * @return {number}
  */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getPeriodseconds = function() {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getPeriodSeconds = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
 
 /** @param {number} value */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setPeriodseconds = function(value) {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setPeriodSeconds = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional int32 FailureThreshold = 3;
+ * optional int32 failure_threshold = 3;
  * @return {number}
  */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getFailurethreshold = function() {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getFailureThreshold = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /** @param {number} value */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setFailurethreshold = function(value) {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setFailureThreshold = function(value) {
   jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int32 InitialDelaySeconds = 4;
+ * optional int32 initial_delay_seconds = 4;
  * @return {number}
  */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getInitialdelayseconds = function() {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.getInitialDelaySeconds = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /** @param {number} value */
-proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setInitialdelayseconds = function(value) {
+proto.stable.agones.dev.sdk.GameServer.Spec.Health.prototype.setInitialDelaySeconds = function(value) {
   jspb.Message.setProto3IntField(this, 4, value);
 };
 
