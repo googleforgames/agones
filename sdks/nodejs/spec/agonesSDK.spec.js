@@ -243,4 +243,11 @@ describe('agones', () => {
 			}
 		});
 	});
+	describe('close', () => {
+		it('closes the client connection when called', async () => {
+			spyOn(agonesSDK.client, 'close').and.callFake(()=>{});
+			await agonesSDK.close();
+			expect(agonesSDK.client.close).toHaveBeenCalled();
+		});
+	});
 });
