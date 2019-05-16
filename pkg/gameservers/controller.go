@@ -729,8 +729,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 
 // syncGameServerShutdownState deletes the GameServer (and therefore the backing Pod) if it is in shutdown state
 func (c *Controller) syncGameServerShutdownState(gs *v1alpha1.GameServer) error {
-	if !gs.ObjectMeta.DeletionTimestamp.IsZero() ||
-		(gs.Status.State != v1alpha1.GameServerStateShutdown && gs.Status.State != v1alpha1.GameServerStateUnhealthy) {
+	if !(gs.Status.State == v1alpha1.GameServerStateShutdown && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return nil
 	}
 

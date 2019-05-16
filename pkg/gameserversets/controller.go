@@ -467,7 +467,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*v1alp
 		toDelete = append(toDelete, potentialDeletions[0:deleteCount]...)
 	}
 
-	if deleteCount > maxDeletions {
+	if len(toDelete) > maxDeletions {
 		toDelete = toDelete[0:maxDeletions]
 		partialReconciliation = true
 	}

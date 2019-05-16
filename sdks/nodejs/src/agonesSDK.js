@@ -6,6 +6,15 @@ const services = require('../lib/sdk_grpc_pb');
 class AgonesSDK {
 	constructor() {
 		this.client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
+		this.healthStream = undefined;
+		this.emitters = [];
+	}
+	async close(){
+		if (this.healthStream !== undefined){
+			this.healthStream.destroy()
+		}
+		this.emitters.forEach(emitter => emitter.call.cancel());
+		this.client.close();
 	}
 
 	async allocate() {
@@ -22,7 +31,7 @@ class AgonesSDK {
 	}
 
 	async ready() {
-		let request = new messages.Empty();
+		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
 			this.client.ready(request, (error, response) => {
 				if (error) {
@@ -33,9 +42,8 @@ class AgonesSDK {
 			});
 		});
 	}
-
 	async shutdown() {
-		let request = new messages.Empty();
+		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
 			this.client.shutdown(request, (error, response) => {
 				if (error) {
@@ -46,19 +54,17 @@ class AgonesSDK {
 			});
 		});
 	}
-
 	health() {
-		if (!this.healthStream) {
+		if (this.healthStream === undefined) {
 			this.healthStream = this.client.health((error) => {
 				// Ignore error as this can't be caught
 			});
 		}
-		let request = new messages.Empty();
+		const request = new messages.Empty();
 		this.healthStream.write(request);
 	}
-
 	async getGameServer() {
-		let request = new messages.Empty();
+		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
 			this.client.getGameServer(request, (error, response) => {
 				if (error) {
@@ -69,17 +75,21 @@ class AgonesSDK {
 			});
 		});
 	}
-
 	watchGameServer(callback) {
-		let request = new messages.Empty();
-		let emitter = this.client.watchGameServer(request);
+		const request = new messages.Empty();
+		const emitter = this.client.watchGameServer(request);
 		emitter.on('data', (data) => {
 			callback(data.toObject());
 		});
+		emitter.on('error', (error) => {
+     		if (error.code === grpc.status.CANCELLED) {  // this happens when call is cancelled
+     			return; 
+     		}
+  		})
+		this.emitters.push(emitter);
 	}
-
 	async setLabel(key, value) {
-		let request = new messages.KeyValue();
+		const request = new messages.KeyValue();
 		request.setKey(key);
 		request.setValue(value);
 		return new Promise((resolve, reject) => {
@@ -92,9 +102,8 @@ class AgonesSDK {
 			});
 		});
 	}
-
 	async setAnnotation(key, value) {
-		let request = new messages.KeyValue();
+		const request = new messages.KeyValue();
 		request.setKey(key);
 		request.setValue(value);
 		return new Promise((resolve, reject) => {

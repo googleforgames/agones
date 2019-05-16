@@ -252,6 +252,12 @@ func (s *SDKServer) updateState() error {
 		return err
 	}
 
+	// if we are currently in shutdown/being deleted, there is no escaping
+	if gs.IsBeingDeleted() {
+		s.logger.Info("GameServerState being shutdown. Skipping update.")
+		return nil
+	}
+
 	// if the state is currently unhealthy, you can't go back to Ready
 	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
 		s.logger.Info("GameServerState already unhealthy. Skipping update.")
@@ -484,7 +490,7 @@ func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
 func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
-		s.logger.WithField("gameServerName", s.gameServerName).Info("being marked as not healthy")
+		s.logger.WithField("gameServerName", s.gameServerName).Info("has failed health check")
 		s.enqueueState(stablev1alpha1.GameServerStateUnhealthy)
 	}
 }

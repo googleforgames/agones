@@ -1,4 +1,4 @@
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: GameServer
-metadata:
-  generateName: "simple-udp-"
-spec:
-  ports:
-  - name: default
-    portPolicy: Dynamic
-    containerPort: 7654
-  template:
-    spec:
-      containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.9
-        resources:
-          requests:
-            memory: "32Mi"
-            cpu: "20m"
-          limits:
-            memory: "32Mi"
-            cpu: "20m"
+variable "machine_type" {
+  default = "Standard_D2_v2"
+}
+
+variable "cluster_name" {
+  default="test-cluster"
+}

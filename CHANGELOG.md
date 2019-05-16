@@ -1,6 +1,24 @@
 # Changelog
 
-## [v0.10.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.10.0-rc) (2019-05-07)
+## [v0.10.0](https://github.com/GoogleCloudPlatform/agones/tree/v0.10.0) (2019-05-15)
+
+[Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.10.0-rc...v0.10.0)
+
+**Fixed bugs:**
+
+- Add secret list and watch permissions to RBAC rules [\#762](https://github.com/GoogleCloudPlatform/agones/pull/762) ([pooneh-m](https://github.com/pooneh-m))
+
+**Closed issues:**
+
+- Release 0.10.0-rc [\#759](https://github.com/GoogleCloudPlatform/agones/issues/759)
+
+**Merged pull requests:**
+
+- Update examples list [\#767](https://github.com/GoogleCloudPlatform/agones/pull/767) ([markmandel](https://github.com/markmandel))
+- Update Fleet autoscaling documentation [\#764](https://github.com/GoogleCloudPlatform/agones/pull/764) ([markmandel](https://github.com/markmandel))
+- Bad copy paste on 0.10.0 rc release page [\#761](https://github.com/GoogleCloudPlatform/agones/pull/761) ([markmandel](https://github.com/markmandel))
+
+## [v0.10.0-rc](https://github.com/GoogleCloudPlatform/agones/tree/v0.10.0-rc) (2019-05-08)
 
 [Full Changelog](https://github.com/GoogleCloudPlatform/agones/compare/v0.9.0...v0.10.0-rc)
 
@@ -45,6 +63,7 @@
 
 **Merged pull requests:**
 
+- Release 0.10.0-rc [\#760](https://github.com/GoogleCloudPlatform/agones/pull/760) ([markmandel](https://github.com/markmandel))
 - Add tests for gameServerCacheEntry in GameServerAllocation controller [\#754](https://github.com/GoogleCloudPlatform/agones/pull/754) ([markmandel](https://github.com/markmandel))
 - Fix instructions to create AKS cluster [\#752](https://github.com/GoogleCloudPlatform/agones/pull/752) ([aLekSer](https://github.com/aLekSer))
 - Deprecate Fleet Allocation. [\#750](https://github.com/GoogleCloudPlatform/agones/pull/750) ([markmandel](https://github.com/markmandel))
