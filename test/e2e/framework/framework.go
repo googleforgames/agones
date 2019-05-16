@@ -94,6 +94,8 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
 	}
 
+	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer Ready")
+
 	return readyGs, nil
 }
 
