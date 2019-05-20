@@ -15,12 +15,53 @@
 package fleetallocation
 
 import (
+	"sync"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func TestFindParallelPackedGameServer(t *testing.T) {
+	t.Parallel()
+
+	t.Run("test packed parallel simulation", func(t *testing.T) {
+		n := metav1.Now()
+
+		gsList := []*v1alpha1.GameServer{
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs6", DeletionTimestamp: &n}, Status: v1alpha1.GameServerStatus{NodeName: "node1", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs1"}, Status: v1alpha1.GameServerStatus{NodeName: "node1", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs2"}, Status: v1alpha1.GameServerStatus{NodeName: "node1", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs3"}, Status: v1alpha1.GameServerStatus{NodeName: "node1", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs4"}, Status: v1alpha1.GameServerStatus{NodeName: "node1", State: v1alpha1.GameServerStateError}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs5"}, Status: v1alpha1.GameServerStatus{NodeName: "node2", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs6"}, Status: v1alpha1.GameServerStatus{NodeName: "node2", State: v1alpha1.GameServerStateReady}},
+			{ObjectMeta: metav1.ObjectMeta{Name: "gs7"}, Status: v1alpha1.GameServerStatus{NodeName: "node2", State: v1alpha1.GameServerStateReady}},
+		}
+
+		allocate := func(waitGroup *sync.WaitGroup, i int) {
+			defer waitGroup.Done()
+			gs := findReadyGameServerForAllocation(gsList, packedComparator)
+			assert.Equal(t, "node1", gs.Status.NodeName)
+			assert.Equal(t, v1alpha1.GameServerStateReady, gs.Status.State)
+			// mock that the first game server is allocated
+			time.Sleep(1 * time.Second)
+			for i, _ := range gsList {
+				if gsList[i].ObjectMeta.Name == gs.Name {
+					gsList[i].Status.State = v1alpha1.GameServerStateAllocated
+				}
+			}
+		}
+		var waitGroup sync.WaitGroup
+		for i := 0; i < 3; i++ {
+			waitGroup.Add(1)
+			go allocate(&waitGroup, i)
+		}
+		waitGroup.Wait()
+	})
+}
 
 func TestFindPackedReadyGameServer(t *testing.T) {
 	t.Parallel()

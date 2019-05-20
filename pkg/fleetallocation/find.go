@@ -23,6 +23,7 @@ import (
 type nodeCount struct {
 	ready     int64
 	allocated int64
+	nodeName  string
 }
 
 // findReadyGameServerForAllocation is a O(n) implementation to find a GameServer with priority
@@ -41,7 +42,7 @@ func findReadyGameServerForAllocation(gsList []*v1alpha1.GameServer, comparator 
 			(gs.Status.State == v1alpha1.GameServerStateAllocated || gs.Status.State == v1alpha1.GameServerStateReady) {
 			_, ok := counts[gs.Status.NodeName]
 			if !ok {
-				counts[gs.Status.NodeName] = &nodeCount{}
+				counts[gs.Status.NodeName] = &nodeCount{nodeName: gs.Status.NodeName}
 			}
 
 			if gs.Status.State == v1alpha1.GameServerStateAllocated {
@@ -60,7 +61,7 @@ func findReadyGameServerForAllocation(gsList []*v1alpha1.GameServer, comparator 
 
 	for nodeName, count := range counts {
 		// count.ready > 0: no reason to check if we don't have ready GameServers on this node
-		// bestGS == nil: if there is no best GameServer, then this node & GameServer is the always the best
+		// bestGS == nil: if there is no best GameServer, then this node & GameServer is always the best
 		if count.ready > 0 && (bestGS == nil || comparator(bestCount, count)) {
 			bestCount = count
 			bestGS = allocatableGameServers[nodeName]
@@ -76,6 +77,8 @@ func packedComparator(bestCount, currentCount *nodeCount) bool {
 	if currentCount.allocated == bestCount.allocated && currentCount.ready > bestCount.ready {
 		return true
 	} else if currentCount.allocated > bestCount.allocated {
+		return true
+	} else if currentCount.nodeName < bestCount.nodeName {
 		return true
 	}
 

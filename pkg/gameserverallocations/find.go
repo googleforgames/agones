@@ -18,10 +18,13 @@ import "agones.dev/agones/pkg/gameservers"
 
 // packedComparator prioritises Nodes with GameServers that are allocated, and then Nodes with the most
 // Ready GameServers -- this will bin pack allocated game servers together.
+// If all other criterias are equal than sort by NodeNames alphabetically.
 func packedComparator(bestCount, currentCount gameservers.NodeCount) bool {
 	if currentCount.Allocated == bestCount.Allocated && currentCount.Ready > bestCount.Ready {
 		return true
 	} else if currentCount.Allocated > bestCount.Allocated {
+		return true
+	} else if currentCount.NodeName < bestCount.NodeName {
 		return true
 	}
 

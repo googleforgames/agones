@@ -48,6 +48,9 @@ type NodeCount struct {
 	Ready int64
 	// Allocated is allocated out
 	Allocated int64
+	// Name of a node suitable for dealing with tie situations on Packed Strategy
+	// When NodeCount1.Ready == NodeCount2.Ready on different nodes as well as Allocated
+	NodeName string
 }
 
 // NewPerNodeCounter returns a new PerNodeCounter
@@ -153,7 +156,7 @@ func (pnc *PerNodeCounter) Run(_ int, stop <-chan struct{}) error {
 	for _, gs := range gsList {
 		_, ok := counts[gs.Status.NodeName]
 		if !ok {
-			counts[gs.Status.NodeName] = &NodeCount{}
+			counts[gs.Status.NodeName] = &NodeCount{NodeName: gs.Status.NodeName}
 		}
 
 		switch gs.Status.State {
@@ -189,7 +192,7 @@ func (pnc *PerNodeCounter) inc(gs *v1alpha1.GameServer, ready, allocated int64) 
 
 	_, ok := pnc.counts[gs.Status.NodeName]
 	if !ok {
-		pnc.counts[gs.Status.NodeName] = &NodeCount{}
+		pnc.counts[gs.Status.NodeName] = &NodeCount{NodeName: gs.Status.NodeName}
 	}
 
 	pnc.counts[gs.Status.NodeName].Allocated += allocated
