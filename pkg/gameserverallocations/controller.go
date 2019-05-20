@@ -604,10 +604,16 @@ func (c *Controller) findReadyGameServerForAllocation(gsa *v1alpha1.GameServerAl
 	}
 
 	var bestGSList []stablev1alpha1.GameServer
+	bestNode := ""
 	for nodeName, gs := range allocationSet {
 		count := counts[nodeName]
-		// bestGS == nil: if there is no best GameServer, then this node & GameServer is the always the best
+		// bestGS == nil: if there is no best GameServer, then this node & GameServer is always the best
 		if bestGS == nil || comparator(*bestCount, count) {
+			if gsa.Spec.Scheduling == apis.Packed && bestNode != gs.Status.NodeName {
+				bestNode = gs.Status.NodeName
+				// Clear the list if we found new node for Packed strategy
+				bestGSList = bestGSList[:0]
+			}
 			bestCount = &count
 			bestGS = gs
 			bestGSList = append(bestGSList, *gs)
