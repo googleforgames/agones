@@ -471,7 +471,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	err := c.deleteGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
 	assert.Nil(t, err)
 
-	assert.Equal(t, 3, updatedCount, "Updates should have occured")
+	assert.Equal(t, 3, updatedCount, "Updates should have occurred")
 }
 
 func TestSyncMoreGameServers(t *testing.T) {
