@@ -75,7 +75,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -254,7 +254,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -646,7 +646,7 @@ func TestControllerRunCacheSync(t *testing.T) {
 
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
 
-	stop, cancel := agtesting.StartInformers(m)
+	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	assertCacheEntries := func(expected int) {
@@ -759,7 +759,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -805,7 +805,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 			}, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -893,7 +893,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
 			})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -968,7 +968,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
 			})
 
-		stop, cancel := agtesting.StartInformers(m)
+		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
@@ -1023,7 +1023,7 @@ func TestCreateRestClientError(t *testing.T) {
 					}}}, nil
 			})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.secretSynced)
 		defer cancel()
 
 		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
@@ -1048,7 +1048,7 @@ func TestCreateRestClientError(t *testing.T) {
 					}}}, nil
 			})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.secretSynced)
 		defer cancel()
 
 		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
@@ -1063,7 +1063,7 @@ func TestCreateRestClientError(t *testing.T) {
 				return true, getTestSecret("secret-name", []byte("XXX")), nil
 			})
 
-		_, cancel := agtesting.StartInformers(m)
+		_, cancel := agtesting.StartInformers(m, c.secretSynced)
 		defer cancel()
 
 		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")

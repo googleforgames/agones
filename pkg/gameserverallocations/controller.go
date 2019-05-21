@@ -87,7 +87,9 @@ type Controller struct {
 	gameServerGetter       getterv1alpha1.GameServersGetter
 	gameServerLister       listerv1alpha1.GameServerLister
 	allocationPolicyLister multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
+	allocationPolicySynced cache.InformerSynced
 	secretLister           corev1lister.SecretLister
+	secretSynced           cache.InformerSynced
 	stop                   <-chan struct{}
 	workerqueue            *workerqueue.WorkerQueue
 	recorder               record.EventRecorder
@@ -124,7 +126,9 @@ func NewController(apiServer *apiserver.APIServer,
 		gameServerGetter:       agonesClient.StableV1alpha1(),
 		gameServerLister:       agonesInformer.GameServers().Lister(),
 		allocationPolicyLister: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Lister(),
+		allocationPolicySynced: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer().HasSynced,
 		secretLister:           kubeInformerFactory.Core().V1().Secrets().Lister(),
+		secretSynced:           kubeInformerFactory.Core().V1().Secrets().Informer().HasSynced,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
@@ -177,7 +181,7 @@ func (c *Controller) registerAPIResource(api *apiserver.APIServer) {
 func (c *Controller) Run(_ int, stop <-chan struct{}) error {
 	c.stop = stop
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.secretSynced, c.allocationPolicySynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
