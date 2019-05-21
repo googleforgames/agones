@@ -70,6 +70,7 @@ type Controller struct {
 	gameServerLister       listerv1alpha1.GameServerLister
 	gameServerSynced       cache.InformerSynced
 	nodeLister             corelisterv1.NodeLister
+	nodeSynced             cache.InformerSynced
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	workerqueue            *workerqueue.WorkerQueue
@@ -114,6 +115,7 @@ func NewController(
 		gameServerLister:       gameServers.Lister(),
 		gameServerSynced:       gsInformer.HasSynced,
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
+		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
@@ -298,7 +300,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.podSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.podSynced, c.nodeSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 

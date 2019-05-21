@@ -158,6 +158,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.nodeSelector`                          | Ping [node labels][nodeSelector] for pod assignment                                             | `{}`                   |
 | `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
 | `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
+| `agones.allocator.install`                          | Whether to install the [allocator service][allocator]                                           | `true`                 |
+| `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
+| `agones.allocator.http.expose`                      | Expose the http allocator service via a Service                                                 | `true`                 |
+| `agones.allocator.http.response`                    | The string response returned from the http service                                              | `ok`                   |
+| `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
+| `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |

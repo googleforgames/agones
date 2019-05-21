@@ -70,8 +70,8 @@ var (
 )
 
 const (
-	secretClientCertName = "client.crt"
-	secretClientKeyName  = "client.key"
+	secretClientCertName = "tls.crt"
+	secretClientKeyName  = "tls.key"
 	secretCaCertName     = "ca.crt"
 )
 
