@@ -466,15 +466,15 @@ func TestControllerSyncGameServerDeletionTimestamp(t *testing.T) {
 			return true, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(mocks, c.podSynced)
 		defer cancel()
 
 		result, err := c.syncGameServerDeletionTimestamp(fixture)
 		assert.NoError(t, err)
 		assert.True(t, deleted, "pod should be deleted")
 		assert.Equal(t, fixture, result)
-		assert.Equal(t, fmt.Sprintf("%s %s %s", corev1.EventTypeNormal,
-			fixture.Status.State, "Deleting Pod "+pod.ObjectMeta.Name), <-mocks.FakeRecorder.Events)
+		agtesting.AssertEventContains(t, mocks.FakeRecorder.Events, fmt.Sprintf("%s %s %s", corev1.EventTypeNormal,
+			fixture.Status.State, "Deleting Pod "+pod.ObjectMeta.Name))
 	})
 
 	t.Run("GameServer's Pods have been deleted", func(t *testing.T) {
@@ -757,7 +757,7 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced, c.nodeSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerStartingState(gsFixture)

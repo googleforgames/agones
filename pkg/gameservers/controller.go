@@ -76,9 +76,8 @@ type Controller struct {
 	workerqueue            *workerqueue.WorkerQueue
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
-	stop                   <-chan struct {
-	}
-	recorder record.EventRecorder
+	stop                   <-chan struct{}
+	recorder               record.EventRecorder
 }
 
 // NewController returns a new gameserver crd controller
