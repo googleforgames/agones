@@ -66,3 +66,42 @@ $ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.ya
 {"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 {"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 ```
+
+#### Mocking `status` for `GameServer()` and `WatchGameServer()`
+
+You can emulate returning allocated ports and addresses by adding a `status` object to the root of the `gameserver.yaml` file provided to the sidecar binary.
+
+Example `gameserver.yaml`:
+
+```yaml
+apiVersion: "stable.agones.dev/v1alpha1"
+kind: GameServer
+metadata:
+  name: "gds-example"
+spec:
+  ports:
+  - name: game
+    portPolicy: Dynamic
+    containerPort: 7777
+    protocol: UDP
+  # Rest of spec ...
+status:
+  # "state" - the current state of a GameServer, one of the following:
+  # PortAllocation, Creating, Starting, Scheduled, RequestReady, Ready, Shutdown, Error, Unhealthy, Allocated
+  state: Ready
+  # "ports" - an array of port objects containing the keys name (String) and port (Number)
+  ports:
+  - name: game
+    port: 7777
+  # "address" - the network address of this gameserver instance
+  address: 127.0.0.1
+  # "nodeName" - the name of the node this gameserver instance runs on
+  nodeName: my-gameserver-node
+```
+
+Example invocation:
+
+```console
+$ curl localhost:59358/gameserver
+{"object_meta":{"name":"gds-example","creation_timestamp":"-62135596800"},"spec":{"health":{}},"status":{"state":"ready","address":"127.0.0.1","ports":[{"name":"game","port":7777}]}}
+```
