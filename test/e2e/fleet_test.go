@@ -494,8 +494,72 @@ func TestFleetAllocationDuringGameServerDeletion(t *testing.T) {
 	})
 }
 
+// TestFleetGSSpecValidation is built to test Fleet's underlying Gameserver template
+// validation. Gameserver Spec contained in a Fleet should be valid to create a fleet.
+func TestFleetGSSpecValidation(t *testing.T) {
+	t.Parallel()
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	// check two Containers in Gameserver Spec Template validation
+	flt := defaultFleet()
+	containerName := "container2"
+	flt.Spec.Template.Spec.Template =
+		corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "myImage"}, {Name: containerName, Image: "myImage2"}},
+			},
+		}
+	flt.Spec.Template.Spec.Container = "testing"
+	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
+
+	flt.Spec.Template.Spec.Container = ""
+	_, err = alpha1.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	CausesMessages := []string{"Container is required when using multiple containers in the pod template", "Could not find a container named "}
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
+	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[1].Message)
+
+	// use valid name for a container, one of two defined above
+	flt.Spec.Template.Spec.Container = containerName
+	_, err = alpha1.Fleets(defaultNs).Create(flt)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	// check port configuration validation
+	fltPort := defaultFleet()
+
+	fltPort.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{Name: "Dyn", HostPort: 5555, PortPolicy: v1alpha1.Dynamic, ContainerPort: 5555}}
+
+	_, err = alpha1.Fleets(defaultNs).Create(fltPort)
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, "HostPort cannot be specified with a Dynamic PortPolicy", statusErr.Status().Details.Causes[0].Message)
+
+	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = v1alpha1.Static
+	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0
+	fltPort.Spec.Template.Spec.Ports[0].ContainerPort = 5555
+	_, err = alpha1.Fleets(defaultNs).Create(fltPort)
+	if assert.Nil(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(fltPort.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+}
+
 // TestFleetNameValidation is built to test Fleet Name length validation,
-// Fleet Name should have at most 63 chars
+// Fleet Name should have at most 63 chars.
 func TestFleetNameValidation(t *testing.T) {
 	t.Parallel()
 	alpha1 := framework.AgonesClient.StableV1alpha1()
@@ -512,14 +576,13 @@ func TestFleetNameValidation(t *testing.T) {
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
-	assert.Equal(t, statusErr.Status().Details.Causes[0].Type, metav1.CauseTypeFieldValueInvalid)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet()
 	goodFlt.Name = string(bytes[0 : nameLen-1])
 	goodFlt, err = alpha1.Fleets(defaultNs).Create(goodFlt)
 	if assert.Nil(t, err) {
 		defer alpha1.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
-
 }
 
 func assertSuccessOrUpdateConflict(t *testing.T, err error) {
