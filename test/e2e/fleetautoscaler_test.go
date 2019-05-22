@@ -104,7 +104,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// check that we are able to scale
 	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
-		return fas.Status.ScalingLimited == false
+		return !fas.Status.ScalingLimited
 	})
 
 	// patch autoscaler to a maxReplicas count equal to current replicas count
@@ -113,7 +113,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// check that we are not able to scale
 	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
-		return fas.Status.ScalingLimited == true
+		return fas.Status.ScalingLimited
 	})
 
 	// delete the allocated GameServer and watch the fleet scale down

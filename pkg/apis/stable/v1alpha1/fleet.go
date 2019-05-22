@@ -153,6 +153,14 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 		})
 	}
 
+	// check gameserver specification in a fleet
+	gsSpec := f.Spec.Template.Spec
+	gsSpec.ApplyDefaults()
+	gsCauses, ok := gsSpec.Validate("")
+	if !ok {
+		causes = append(causes, gsCauses...)
+	}
+
 	return causes, len(causes) == 0
 }
 

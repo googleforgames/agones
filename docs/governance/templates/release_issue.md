@@ -2,7 +2,7 @@
 
 <!--
 This is the release issue template. Make a copy of the markdown in this page
-and copy it into a release issue. Fill in relevent values, found inside {}
+and copy it into a release issue. Fill in relevant values, found inside {}
 !-->
 
 - [ ] Review closed issues have appropriate tags.

@@ -32,7 +32,7 @@ To lookup the details of this service, run `kubectl describe service agones-ping
 
 ## UDP Service
 
-The UDP ping service is a rate limited UDP echo service that returns the udp packet that it recieves to its designated
+The UDP ping service is a rate limited UDP echo service that returns the udp packet that it receives to its designated
 sender.
 
 Since UDP sender details can be spoofed, this service is rate limited to 20 requests per second, 

@@ -69,7 +69,7 @@ Let's create a Fleet Autoscaler using the following command:
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
 ```
 
-You should see a successful ouput similar to this:
+You should see a successful output similar to this:
 
 ```
 fleetautoscaler.stable.agones.sev "webhook-fleet-autoscaler" created
@@ -201,7 +201,7 @@ Double-check the actual number of game server instances and status by running:
  kubectl get gs -n default
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS         PORT     NODE        AGE
@@ -266,7 +266,7 @@ kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/m
 
 Using TLS and CA bundle we can establish trusted communication between Fleetautoscaler and Webhook which controls size of the fleet (Replicas count). The certificate of the webhook should be signed by Certificate Authority provided in fleetautoscaler yaml configuration file. Which eliminates the possibility to perform man in the middle attack when using HTTP connection to a webhook which can be located inside or outside of our cluster.
 
-Description of common steps with Chapter 1 would be ommited for simplicity, you can see pervious chapter for the details.
+Description of common steps with Chapter 1 would be omitted for simplicity, you can see previous chapter for the details.
 
 #### 1. Deploy the fleet
 
@@ -400,7 +400,7 @@ Double-check the actual number of game server instances and status by running:
  kubectl get gs -n default
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS         PORT      NODE      AGE
