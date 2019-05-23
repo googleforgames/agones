@@ -12,8 +12,11 @@ The client SDKs are required for a game server to work with Agones.
 
 The current supported SDKs are:
 
+- [Unreal Engine]({{< relref "unreal.md" >}})
 - [C++]({{< relref "cpp.md" >}})
-- [Go](https://godoc.org/agones.dev/agones/sdks/go)
+- [Node.js]({{< relref "nodejs.md" >}})
+- [Go]({{< relref "go.md" >}})
+- [Rust]({{< relref "rust.md" >}})
 - [REST]({{< relref "rest.md" >}})
 
 The SDKs are relatively thin wrappers around [gRPC](https://grpc.io) generated clients,
