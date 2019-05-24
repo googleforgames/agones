@@ -299,21 +299,7 @@ func TestGameServerValidate(t *testing.T) {
 }
 
 func TestGameServerPod(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
-		Spec: GameServerSpec{
-			Ports: []GameServerPort{
-				{
-					ContainerPort: 7777,
-					HostPort:      9999,
-					PortPolicy:    Static,
-				},
-			},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
-				},
-			},
-		}, Status: GameServerStatus{State: GameServerStateCreating}}
+	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
 
 	pod, err := fixture.Pod()
@@ -504,4 +490,22 @@ func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 	assert.Len(t, p2.Spec.Containers, 2)
 	assert.True(t, p2.Spec.Containers[0].TTY)
 	assert.False(t, p2.Spec.Containers[1].TTY)
+}
+
+func defaultGameServer() *GameServer {
+	return &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{
+				{
+					ContainerPort: 7777,
+					HostPort:      9999,
+					PortPolicy:    Static,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+				},
+			},
+		}, Status: GameServerStatus{State: GameServerStateCreating}}
 }

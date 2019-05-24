@@ -524,7 +524,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
-	CausesMessages := []string{"Container is required when using multiple containers in the pod template", "Could not find a container named "}
+	CausesMessages := []string{v1alpha1.ErrContainerRequired, "Could not find a container named "}
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
@@ -547,7 +547,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, "HostPort cannot be specified with a Dynamic PortPolicy", statusErr.Status().Details.Causes[0].Message)
+	assert.Equal(t, v1alpha1.ErrHostPortDynamic, statusErr.Status().Details.Causes[0].Message)
 
 	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = v1alpha1.Static
 	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0
