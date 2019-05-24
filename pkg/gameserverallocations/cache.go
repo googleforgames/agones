@@ -70,3 +70,10 @@ func (e *gameServerCacheEntry) Range(f func(key string, gs *stablev1alpha1.GameS
 		}
 	}
 }
+
+// Len returns the current length of the cache
+func (e *gameServerCacheEntry) Len() int {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return len(e.cache)
+}
