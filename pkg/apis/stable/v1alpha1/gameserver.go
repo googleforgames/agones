@@ -28,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -280,7 +279,7 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueRequired,
 					Field:   fmt.Sprintf("%s.portPolicy", p.Name),
-					Message: fmt.Sprintf("PortPolicy must be Static"),
+					Message: fmt.Sprint(ErrPortPolicyStatic),
 				})
 			}
 		}
@@ -290,7 +289,7 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   "container",
-				Message: "Container is required when using multiple containers in the pod template",
+				Message: ErrContainerRequired,
 			})
 		}
 
@@ -300,7 +299,7 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+					Message: ErrHostPortDynamic,
 				})
 			}
 		}
@@ -323,16 +322,7 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 // If a GameServer is invalid there will be > 0 values in
 // the returned array
 func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-
-	// Long GS name would produce an invalid Label for Pod
-	if len(gs.Name) > validation.LabelValueMaxLength {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   fmt.Sprintf("Name"),
-			Message: fmt.Sprintf("Length of Gameserver '%s' name should be no more than 63 characters.", gs.ObjectMeta.Name),
-		})
-	}
+	causes := validateName(gs)
 
 	// make sure the host port is specified if this is a development server
 	devAddress, _ := gs.GetDevAddress()
