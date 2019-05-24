@@ -148,6 +148,8 @@ minikube start --kubernetes-version v1.11.0 --vm-driver virtualbox \
 		--extra-config=apiserver.authorization-mode=RBAC
 ```
 
+Continue to [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
+
 ## Setting up an Amazon Web Services EKS cluster
 
 ### Create EKS Instance

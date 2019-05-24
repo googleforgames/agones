@@ -22,12 +22,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func TestAllocator(t *testing.T) {
@@ -70,9 +73,23 @@ func TestAllocator(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
-	response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
-	if !assert.Nil(t, err) {
-		return
+
+	// wait for the allocation system to come online
+	var response *http.Response
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		response, err = client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+
+		if err != nil {
+			response.Body.Close() // nolint: errcheck
+			logrus.WithError(err).Infof("failing http request")
+			return false, nil
+		}
+
+		return true, nil
+	})
+
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Http test failed")
 	}
 	defer response.Body.Close() // nolint: errcheck
 

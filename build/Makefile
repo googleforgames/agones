@@ -237,9 +237,11 @@ test-go:
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e: $(ensure-build-image)
+	echo "Starting e2e test runner!"
 	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET)
+	echo "Finishing e2e test runner!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets
