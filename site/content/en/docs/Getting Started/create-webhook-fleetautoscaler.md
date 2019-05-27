@@ -429,6 +429,27 @@ kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/m
 
 Note that now secure communication is established and we can trust our webhook. If we need to use server outside of the kubernetes cluster we can use other Root certificate authority and put it into as caBundle parameter in fleetautoscaler configuration (in pem format, base64-encoded).
 
+## Troubleshooting Guide
+
+There could be some problems with configuration of fleetautoscaler and webhook service.
+Easiest way to debug this is to run:
+```
+kubectl describe fleetautoscaler <FleetAutoScalerName>
+```
+Then you would see events at the bottom of the output.
+
+### Common error messages.
+
+Error when you configure wrong Service Path for the FleetAutoscaler:
+```
+Error calculating desired fleet size on FleetAutoscaler simple-fleet-r7fdv-autoscaler. Error: bad status code 404 from the server: https://autoscaler-tls-service.default.svc:8000/scale
+```
+
+Using hostname other than `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` when creating certificate using `openssl` tool:
+```
+Post https://autoscaler-tls-service.default.svc:8000/scale: x509: certificate is not valid for any names, but wanted to match autoscaler-tls-service.default.svc
+```
+
 ## Next Steps
 
 Read the advanced [Scheduling and Autoscaling]({{< relref "../Advanced/scheduling-and-autoscaling.md" >}}) guide, for more details on autoscaling.

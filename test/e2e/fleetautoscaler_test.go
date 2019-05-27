@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -240,7 +241,7 @@ func defaultFleetAutoscaler(f *v1alpha1.Fleet) *v1alpha1.FleetAutoscaler {
 func getAllocation(f *v1alpha1.Fleet) *v1alpha1.FleetAllocation {
 	// get an allocation
 	return &v1alpha1.FleetAllocation{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: defaultNs},
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: f.ObjectMeta.Namespace},
 		Spec: v1alpha1.FleetAllocationSpec{
 			FleetName: f.ObjectMeta.Name,
 		},
@@ -312,6 +313,25 @@ func TestAutoscalerWebhook(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
+
+	// Cause an error in Webhook config
+	// Use wrong service Path
+	fas, err = fleetautoscalers.Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+	assert.Nil(t, err)
+	newPath := path + "2"
+	fas.Spec.Policy.Webhook.Service.Path = &newPath
+	labels := map[string]string{"fleetautoscaler": "wrong"}
+	fas.ObjectMeta.Labels = labels
+	_, err = fleetautoscalers.Update(fas)
+	assert.Nil(t, err)
+	time.Sleep(1 * time.Second)
+	events := framework.KubeClient.CoreV1().Events(defaultNs)
+	l, err := events.List(metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, len(l.Items))
+	for _, v := range l.Items {
+		assert.Contains(t, v.Message, "Error calculating desired fleet size on FleetAutoscaler", "Received unexpected error")
+	}
 }
 
 var webhookKey = `

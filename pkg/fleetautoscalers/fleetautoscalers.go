@@ -49,7 +49,7 @@ func computeDesiredFleetSize(fas *stablev1alpha1.FleetAutoscaler, f *stablev1alp
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
-	return f.Status.Replicas, false, errors.New("wrong policy type")
+	return f.Status.Replicas, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
 func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
@@ -100,7 +100,7 @@ func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet
 	if u.Scheme == "https" {
 		rootCAs := x509.NewCertPool()
 		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
-			return f.Status.Replicas, false, errors.New("No certs appended from caBundle")
+			return f.Status.Replicas, false, errors.New("no certs were appended from caBundle")
 		}
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -119,7 +119,7 @@ func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet
 	}
 	defer res.Body.Close() // nolint: errcheck
 	if res.StatusCode != http.StatusOK {
-		return f.Status.Replicas, false, errors.New("bad status code from the server")
+		return f.Status.Replicas, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, urlStr)
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
