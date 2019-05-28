@@ -66,6 +66,7 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 
 	t.Run("bufferSize good percent", func(t *testing.T) {
 		fas := defaultFixture()
+		fas.Spec.Policy.Buffer.MinReplicas = 1
 		fas.Spec.Policy.Buffer.BufferSize = intstr.FromString("20%")
 		causes := fas.Validate(nil)
 
@@ -74,6 +75,7 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 
 	t.Run("bufferSize bad percent", func(t *testing.T) {
 		fas := defaultFixture()
+		fas.Spec.Policy.Buffer.MinReplicas = 1
 
 		fasCopy := fas.DeepCopy()
 		fasCopy.Spec.Policy.Buffer.BufferSize = intstr.FromString("120%")
@@ -98,6 +100,17 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 		causes = fasCopy.Validate(nil)
 		assert.Len(t, causes, 1)
 		assert.Equal(t, "bufferSize", causes[0].Field)
+	})
+
+	t.Run("bad min replicas with percentage value of bufferSize", func(t *testing.T) {
+		fas := defaultFixture()
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromString("10%")
+		fas.Spec.Policy.Buffer.MinReplicas = 0
+
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "minReplicas", causes[0].Field)
 	})
 }
 func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {

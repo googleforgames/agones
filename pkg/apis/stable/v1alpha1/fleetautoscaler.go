@@ -279,6 +279,17 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 				Message: "bufferSize does not have a valid percentage value (1%-99%)",
 			})
 		}
+		// When there is no allocated gameservers in a fleet,
+		// Fleetautoscaler would reduce size of a fleet to MinReplicas.
+		// If we have 0 MinReplicas and 0 Allocated then Fleetautoscaler would set Ready Replicas to 0
+		// and we will not be able to raise the number of GS in a Fleet above zero
+		if b.MinReplicas < 1 {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "minReplicas",
+				Message: "minReplicas should be above 0 when used with percentage value bufferSize",
+			})
+		}
 	}
 	return causes
 }
