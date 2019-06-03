@@ -145,7 +145,7 @@ if (NOT ${gRPC_FOUND})
 
     invoke_cmake_build(zlib ${gRPC_SOURCE_DIR}/third_party/zlib)
     invoke_cmake_build(cares ${gRPC_SOURCE_DIR}/third_party/cares/cares)
-    invoke_cmake_build(protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf/cmake
+    invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf/cmake
         "-DZLIB_ROOT=${zlib_DIR}"
         "-Dprotobuf_MSVC_STATIC_RUNTIME=OFF"
         "-Dprotobuf_BUILD_TESTS=OFF"

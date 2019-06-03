@@ -66,8 +66,8 @@ set(AGONES_gRPC_VERSION "1.16.1")
 
 # Third party
 include(./cmake/prerequisites.cmake)
+find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC ${AGONES_gRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} CONFIG REQUIRED)
-find_package(protobuf CONFIG REQUIRED)
 
 # Platform specific stuff
 if (WIN32)
@@ -113,7 +113,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 if (MSVC)
   set(OPT_DISABLE_COMPILER_WARNINGS /wd4101 /wd4146 /wd4251 /wd4661)
 else()
-  set(OPT_DISABLE_COMPILER_WARNINGS -wd4101 -wd4146 -wd4251 -wd4661)
+  # set(OPT_DISABLE_COMPILER_WARNINGS -wd4101 -wd4146 -wd4251 -wd4661)
 endif()
 target_compile_options(${PROJECT_NAME} PUBLIC ${OPT_DISABLE_COMPILER_WARNINGS})
 
