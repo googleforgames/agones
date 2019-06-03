@@ -55,6 +55,8 @@ const (
 	GameServerStateError GameServerState = "Error"
 	// GameServerStateUnhealthy is when the GameServer has failed its health checks
 	GameServerStateUnhealthy GameServerState = "Unhealthy"
+	// GameServerStateReserved is for when a GameServer is reserved and therefore can be allocated but not removed
+	GameServerStateReserved GameServerState = "Reserved"
 	// GameServerStateAllocated is when the GameServer has been allocated to a session
 	GameServerStateAllocated GameServerState = "Allocated"
 
@@ -337,9 +339,14 @@ func (gs *GameServer) GetDevAddress() (string, bool) {
 	return devAddress, hasDevAddress
 }
 
-// IsAllocated returns true if the server is currently allocated.
-func (gs *GameServer) IsAllocated() bool {
-	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == GameServerStateAllocated
+// IsDeletable returns false if the server is currently allocated/reserved and is not already in the
+// process of being deleted
+func (gs *GameServer) IsDeletable() bool {
+	if gs.Status.State == GameServerStateAllocated || gs.Status.State == GameServerStateReserved {
+		return !gs.ObjectMeta.DeletionTimestamp.IsZero()
+	}
+
+	return true
 }
 
 // IsBeingDeleted returns true if the server is in the process of being deleted.

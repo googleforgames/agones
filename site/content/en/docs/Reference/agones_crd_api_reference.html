@@ -2229,6 +2229,9 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 
 
 
+
+
+
 {{% feature publishVersion="0.10.0" %}}
 <p>Packages:</p>
 <ul>
@@ -3823,6 +3826,18 @@ int32
 </tr>
 <tr>
 <td>
+<code>reservedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+Reserved instances won&rsquo;t be deleted on scale down, but won&rsquo;t cause an autoscaler to scale up.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>allocatedReplicas</code></br>
 <em>
 int32
@@ -4008,6 +4023,17 @@ int32
 </td>
 <td>
 <p>ReadyReplicas are the number of Ready GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reservedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReservedReplicas are the number of Reserved GameServer replicas</p>
 </td>
 </tr>
 <tr>

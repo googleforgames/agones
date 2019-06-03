@@ -371,6 +371,58 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	assert.Nil(t, err, "gameservers don't have expected container port")
 }
 
+func TestReservedGameServerInFleet(t *testing.T) {
+	alpha1 := framework.AgonesClient.StableV1alpha1()
+
+	flt := defaultFleet()
+	flt.Spec.Replicas = 3
+	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	if assert.NoError(t, err) {
+		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	gsList, err := framework.ListGameServersFromFleet(flt)
+	assert.NoError(t, err)
+
+	assert.Len(t, gsList, int(flt.Spec.Replicas))
+
+	// mark one as reserved
+	gsCopy := gsList[0].DeepCopy()
+	gsCopy.Status.State = v1alpha1.GameServerStateReserved
+	_, err = alpha1.GameServers(defaultNs).Update(gsCopy)
+	assert.NoError(t, err)
+
+	// make sure counts are correct
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+		return fleet.Status.ReadyReplicas == 2 && fleet.Status.ReservedReplicas == 1
+	})
+
+	// scale down to 0
+	flt = scaleFleetSubresource(t, flt, 0)
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
+
+	// one should be left behind
+	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+		result := fleet.Status.ReservedReplicas == 1
+		logrus.WithField("reserved", fleet.Status.ReservedReplicas).WithField("result", result).Info("waiting for 1 reserved replica")
+		return result
+	})
+
+	// check against gameservers directly too, just to be extra sure
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (done bool, err error) {
+		list, err := framework.ListGameServersFromFleet(flt)
+		if err != nil {
+			return true, err
+		}
+		l := len(list)
+		logrus.WithField("len", l).WithField("state", list[0].Status.State).Info("waiting for 1 reserved gs")
+		return l == 1 && list[0].Status.State == v1alpha1.GameServerStateReserved, nil
+	})
+	assert.NoError(t, err)
+}
+
 // TestFleetAllocationDuringGameServerDeletion is built to specifically
 // test for race conditions of allocations when doing scale up/down,
 // rolling updates, etc. Failures may not happen ALL the time -- as that is the
