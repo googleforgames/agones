@@ -16,6 +16,7 @@ package fleets
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"agones.dev/agones/pkg/apis/stable"
@@ -348,6 +349,7 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *st
 func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
 	// if there is nothing `rest`, then it's either brand Fleet, or we can just jump to the fleet value,
 	// since there is nothing else scaling down at this point
+
 	if len(rest) == 0 {
 		return fleet.Spec.Replicas, nil
 	}
@@ -367,7 +369,7 @@ func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, active
 func (c *Controller) deleteEmptyGameServerSets(fleet *stablev1alpha1.Fleet, list []*stablev1alpha1.GameServerSet) error {
 	p := metav1.DeletePropagationBackground
 	for _, gsSet := range list {
-		if gsSet.Status.Replicas == 0 {
+		if gsSet.Status.Replicas == 0 && gsSet.Status.ShutdownReplicas == 0 {
 			err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).Delete(gsSet.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
 			if err != nil {
 				return errors.Wrapf(err, "error updating gameserverset %s", gsSet.ObjectMeta.Name)
@@ -475,27 +477,30 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 		if gsSet.Status.Replicas <= 0 {
 			continue
 		}
+
 		// If the Spec.Replicas does not equal the Status.Replicas for this GameServerSet, this means
 		// that the rolling down process is currently ongoing, and we should therefore exit so we can wait for it to finish
 		if gsSet.Spec.Replicas != gsSet.Status.Replicas {
 			break
 		}
-
 		gsSetCopy := gsSet.DeepCopy()
-		gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
+		if gsSet.Status.ShutdownReplicas == 0 {
+			gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 
-		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
-			Info("applying rolling update to inactive gameserverset")
+			c.loggerForFleet(fleet).Info(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
+			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
+				Info("applying rolling update to inactive gameserverset")
 
-		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
-			return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
+				return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+			}
+			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+
+			// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
+			// to make sure we don't overshoot the amount that is being shutdown at any given point and time
+			break
 		}
-		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
-			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
-
-		// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
-		// to make sure we don't overshoot the amount that is being shutdown at any given point and time
-		break
 	}
 	return nil
 }

@@ -74,6 +74,8 @@ type GameServerSetStatus struct {
 	ReservedReplicas int32 `json:"reservedReplicas"`
 	// AllocatedReplicas are the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
+	// ShutdownReplicas are the number of Shutdown GameServers replicas
+	ShutdownReplicas int32 `json:"shutdownReplicas"`
 }
 
 // ValidateUpdate validates when updates occur. The argument
