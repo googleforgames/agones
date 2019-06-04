@@ -512,12 +512,15 @@ func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k
 // allocate allocated a GameServer from a given GameServerAllocation
 // this sets up allocation through a batch process.
 func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alpha1.GameServer, error) {
+	// creates an allocation request. This contains the requested GameServerAllocation, as well as the
+	// channel we expect the return values to come back for this GameServerAllocation
 	req := request{gsa: gsa, response: make(chan response)}
 
+	// this pushes the request into the batching process
 	c.pendingRequests <- req
 
 	select {
-	case res := <-req.response:
+	case res := <-req.response: // wait for the batch to be completed
 		return res.gs, res.err
 	case <-c.stop:
 		return nil, errors.New("shutting down")
@@ -527,8 +530,40 @@ func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alph
 // runLocalAllocations is a blocking function that runs in a loop
 // looking at c.requestBatches for batches of requests that are coming through.
 func (c *Controller) runLocalAllocations(updateWorkerCount int) {
-	// setup workers for allocation updates
+	// setup workers for allocation updates. Push response values into
+	// this queue for concurrent updating of GameServers to Allocated
 	updateQueue := c.allocationUpdateWorkers(updateWorkerCount)
+
+	// Batch processing strategy:
+	// We constantly loop around the below for loop. If nothing is found in c.pendingRequests, we move to
+	// default: which will wait for half a second, to allow for some requests to backup in c.pendingRequests,
+	// providing us with a batch of Allocation requests in that channel
+
+	// Once we have 1 or more requests in c.pendingRequests (which is buffered to 100), we can start the batch process.
+
+	// Assuming this is the first run (either entirely, or for a while), list will be nil, and therefore the first
+	// thing that will be done is retrieving the Ready GameSerers and sorting them for this batch via
+	// c.listSortedReadyGameServers(). This list is maintained as we flow through the batch.
+
+	// We then use findGameServerForAllocation to loop around the sorted list of Ready GameServers to look for matches
+	// against the preferred and required selectors of the GameServerAllocation. If there is an error, we immediately
+	// pass that straight back to the response channel for this GameServerAllocation.
+
+	// Assuming we find a matching GameServer to our GameServerAllocation, we remove it from the list and the backing
+	// Ready GameServer cache.
+
+	// We then pass the found GameServers into the updateQueue, where there are updateWorkerCount number of goroutines
+	// waiting to concurrently attempt to move the GameServer into an Allocated state, and return the result to
+	// GameServerAllocation request's response channel
+
+	// Then we get the next item off the batch (c.pendingRequests), and do this all over again, but this time, we have
+	// an already sorted list of GameServers, so we only need to find one that matches our GameServerAllocation
+	// selectors, and put it into updateQueue
+
+	// The tracking of requestCount >= maxBatchBeforeRefresh is necessary, because without it, at high enough load
+	// the list of GameServers that we are using to allocate would never get refreshed (list = nil) with an updated
+	// list of Ready GameServers, and you would eventually never be able to Allocate anything as long as the load
+	// continued.
 
 	var list []*stablev1alpha1.GameServer
 	requestCount := 0
@@ -575,7 +610,11 @@ func (c *Controller) runLocalAllocations(updateWorkerCount int) {
 	}
 }
 
-// allocationUpdateWorkers runs
+// allocationUpdateWorkers runs workerCount number of goroutines as workers to
+// process each GameServer passed into the returned updateQueue
+// Each worker will concurrently attempt to move the GameServer to an Allocated
+// state and then respond to the initial request's response channel with the
+// details of that update
 func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
 	updateQueue := make(chan response)
 
