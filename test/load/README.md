@@ -22,7 +22,7 @@ This test uses the HTTP proxy on the local machine to access the k8s API. The de
 server:
 
 ```
-kubectl proxy [--port=PORT] &
+kubectl proxy [--port=PORT --address='0.0.0.0' --accept-hosts='.*'] &
 ```
 
 Next, we need to build the Docker images and run the container:
@@ -35,16 +35,19 @@ The above will build a Docker container to install Locust, Grafana, and Graphite
 them. To run Locust tests for game server allocation:
 
 ```
-docker run --rm --network="host" -e "LOCUST_FILE=gameserver_allocation.py"  -e "TARGET_HOST=http://127.0.0.1:8001" locust-files:latest
+docker run --rm --network="host" -e "LOCUST_FILE=gameserver_allocation.py"  -e "TARGET_HOST=http://127.0.0.1:8001" -p 8089:8089 locust-files:latest
 ```
 
 To run Locust tests for fleet autoscaling:
 
 ```
-docker run --rm --network="host" -e "LOCUST_FILE=fleet_autoscaling.py" -e "TARGET_HOST=http://127.0.0.1:8001" locust-files:latest
+docker run --rm --network="host" -e "LOCUST_FILE=fleet_autoscaling.py" -e "TARGET_HOST=http://127.0.0.1:8001" -p 8089:8089 locust-files:latest
 ```
 
-NOTE: The Docker network host only works for Linux. For macOS and Windows you can use the special DNS name host.docker.internal.
+NOTE: The Docker network host only works for Linux. For macOS and Windows you can use the special DNS name host.docker.internal. If you use Docker on macOS run this command instead:
+```
+docker run --rm -e "LOCUST_FILE=fleet_autoscaling.py" -e "TARGET_HOST=http:// host.docker.internal:8001" -p 8089:8089 locust-files:latest
+```
 
 After running the Docker container you can access Locust on port 8089 of your local machine. When running Locust tests, it is recommended to use the same value for number of users and hatch rate. For game server allocation, these numbers can be large, but for fleet autoscaling a single user is sufficient.
 
