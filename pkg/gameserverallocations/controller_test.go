@@ -580,8 +580,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			return true, gs, nil
 		})
 
-		updateQueue := make(chan response)
-		c.allocationUpdateWorkers(updateQueue, 1)
+		updateQueue := c.allocationUpdateWorkers(1)
 
 		go func() {
 			updateQueue <- r
@@ -654,8 +653,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			return true, gs, errors.New("something went wrong")
 		})
 
-		updateQueue := make(chan response)
-		c.allocationUpdateWorkers(updateQueue, 1)
+		updateQueue := c.allocationUpdateWorkers(1)
 
 		go func() {
 			updateQueue <- r

@@ -527,9 +527,8 @@ func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alph
 // runLocalAllocations is a blocking function that runs in a loop
 // looking at c.requestBatches for batches of requests that are coming through.
 func (c *Controller) runLocalAllocations(updateWorkerCount int) {
-	updateQueue := make(chan response)
 	// setup workers for allocation updates
-	c.allocationUpdateWorkers(updateQueue, updateWorkerCount)
+	updateQueue := c.allocationUpdateWorkers(updateWorkerCount)
 
 	var list []*stablev1alpha1.GameServer
 	requestCount := 0
@@ -577,7 +576,9 @@ func (c *Controller) runLocalAllocations(updateWorkerCount int) {
 }
 
 // allocationUpdateWorkers runs
-func (c *Controller) allocationUpdateWorkers(updateQueue chan response, workerCount int) {
+func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
+	updateQueue := make(chan response)
+
 	for i := 0; i < workerCount; i++ {
 		go func() {
 			for {
@@ -605,6 +606,8 @@ func (c *Controller) allocationUpdateWorkers(updateQueue chan response, workerCo
 			}
 		}()
 	}
+
+	return updateQueue
 }
 
 // listSortedReadyGameServers returns a list of the cache ready gameservers
