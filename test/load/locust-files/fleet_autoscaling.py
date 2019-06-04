@@ -48,7 +48,7 @@ class UserBehavior(TaskSet):
                         "ports": [
                             {
                                 "name": "default",
-                                "portPolicy": "dynamic",
+                                "portPolicy": "Dynamic",
                                 "containerPort": 26000
                             }
                         ],
@@ -171,7 +171,7 @@ class UserBehavior(TaskSet):
                             "spec": {
                                 "containers": [
                                     {
-                                        "name": simple-udp",
+                                        "name": "simple-udp",
                                         "image": (
                                             "gcr.io/agones-images"
                                             "/udp-server:0.5")
