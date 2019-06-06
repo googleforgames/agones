@@ -40,7 +40,7 @@ if (AGONES_SILENT_OUTPUT)
 endif(AGONES_SILENT_OUTPUT)
 
 # Project AGONES
-project(agones VERSION 0.10.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
+project(agones VERSION 0.11.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
 
 # Build options
 option(AGONES_FORCE_gRPC_VERSION "Build Agones C++ SDK only with officially supported gRPC version" ON)
@@ -66,8 +66,8 @@ set(AGONES_gRPC_VERSION "1.16.1")
 
 # Third party
 include(./cmake/prerequisites.cmake)
-find_package(Protobuf CONFIG REQUIRED)
-find_package(gRPC ${AGONES_gRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} CONFIG REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
+find_package(gRPC ${AGONES_gRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
 # Platform specific stuff
 if (WIN32)
@@ -111,11 +111,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 # Fix compiler warnings
 # https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings
 if (MSVC)
-  set(OPT_DISABLE_COMPILER_WARNINGS /wd4101 /wd4146 /wd4251 /wd4661)
-else()
-  # set(OPT_DISABLE_COMPILER_WARNINGS -wd4101 -wd4146 -wd4251 -wd4661)
+    set(OPT_DISABLE_COMPILER_WARNINGS /wd4101 /wd4146 /wd4251 /wd4661)
+    target_compile_options(${PROJECT_NAME} PUBLIC ${OPT_DISABLE_COMPILER_WARNINGS})
 endif()
-target_compile_options(${PROJECT_NAME} PUBLIC ${OPT_DISABLE_COMPILER_WARNINGS})
 
 # Export header
 include(GenerateExportHeader)
