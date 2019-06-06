@@ -69,7 +69,7 @@ function(download_git_repo NAME REPO TAG)
             TEST_COMMAND        ""
         )
     endif()
-    set(${NAME}_SOURCE_DIR "${${NAME}_SOURCE_DIR}" PARENT_SCOPE)
+    set(${NAME}_SOURCE_DIR "${${NAME}_SOURCE_DIR}" CACHE PATH "Source directory for ${NAME}" FORCE)
 endfunction(download_git_repo)
 
 function(execute_and_check WORKING_DIR)
@@ -114,7 +114,7 @@ function(invoke_cmake_build NAME CMAKELISTS_PATH)
     endif()
     
     execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} --build . ${ARG_CONFIG_RELEASE} --target install)
-    set(${NAME}_DIR "${INSTALL_DIR}" PARENT_SCOPE)
+    set(${NAME}_DIR "${INSTALL_DIR}" CACHE PATH "CMake package directory for ${NAME}" FORCE)
 endfunction(invoke_cmake_build)
 
 find_package(gRPC CONFIG QUIET)
@@ -122,7 +122,7 @@ find_package(OpenSSL QUIET)
 
 # OpenSSL // Required only for gRPC build. Do not build, if gRPC is found.
 if (NOT ${OpenSSL_FOUND} AND NOT ${gRPC_FOUND})
-    set(OPENSSL_ROOT_DIR "${THIRDPARTY_INSTALL_PATH}/OpenSSL")
+    set(OPENSSL_ROOT_DIR "${THIRDPARTY_INSTALL_PATH}/OpenSSL" CACHE PATH "OpenSSL root directory" FORCE)
     find_package(OpenSSL QUIET)
     if (NOT ${OpenSSL_FOUND})
         download_git_repo(openssl ${OPENSSL_GIT_REPO} ${OPENSSL_GIT_TAG})
@@ -147,6 +147,7 @@ if (NOT ${gRPC_FOUND})
 
     # Build gRPC prerequisites
     invoke_cmake_build(zlib ${gRPC_SOURCE_DIR}/third_party/zlib)
+    set(ZLIB_ROOT "${zlib_DIR}" CACHE PATH "ZLIB root dir for find_package" FORCE)
     invoke_cmake_build(c-ares ${gRPC_SOURCE_DIR}/third_party/cares/cares)
     invoke_cmake_build(Protobuf ${gRPC_SOURCE_DIR}/third_party/protobuf/cmake
         "-DZLIB_ROOT=${zlib_DIR}"

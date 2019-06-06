@@ -66,6 +66,7 @@ set(AGONES_gRPC_VERSION "1.16.1")
 
 # Third party
 include(./cmake/prerequisites.cmake)
+find_package(ZLIB REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC ${AGONES_gRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
@@ -97,7 +98,7 @@ else()
   add_definitions(-include ${GLOBAL_HEADER})
 endif()
 
-set(AGONES_DEPENDENCIES gRPC::grpc++_unsecure protobuf::libprotobuf)
+set(AGONES_DEPENDENCIES protobuf::libprotobuf gRPC::grpc++_unsecure)
 
 add_library(${PROJECT_NAME} STATIC ${ALL_FILES})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${AGONES_DEPENDENCIES})
