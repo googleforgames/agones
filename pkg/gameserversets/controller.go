@@ -593,6 +593,7 @@ func computeStatus(list []*v1alpha1.GameServer) v1alpha1.GameServerSetStatus {
 	for _, gs := range list {
 		if gs.IsBeingDeleted() {
 			// don't count GS that are being deleted
+			status.ShutdownReplicas++
 			continue
 		}
 
