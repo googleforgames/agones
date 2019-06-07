@@ -316,19 +316,37 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	// Cause an error in Webhook config
 	// Use wrong service Path
-	fas, err = fleetautoscalers.Get(fas.ObjectMeta.Name, metav1.GetOptions{})
-	assert.Nil(t, err)
-	newPath := path + "2"
-	fas.Spec.Policy.Webhook.Service.Path = &newPath
-	labels := map[string]string{"fleetautoscaler": "wrong"}
-	fas.ObjectMeta.Labels = labels
-	_, err = fleetautoscalers.Update(fas)
-	assert.Nil(t, err)
-	time.Sleep(1 * time.Second)
-	events := framework.KubeClient.CoreV1().Events(defaultNs)
-	l, err := events.List(metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
-	assert.Nil(t, err)
-	assert.NotEqual(t, 0, len(l.Items))
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+		fas, err = fleetautoscalers.Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+		if err != nil {
+			return true, err
+		}
+		newPath := path + "2"
+		fas.Spec.Policy.Webhook.Service.Path = &newPath
+		labels := map[string]string{"fleetautoscaler": "wrong"}
+		fas.ObjectMeta.Labels = labels
+		_, err = fleetautoscalers.Update(fas)
+		if err != nil {
+			logrus.WithError(err).Warn("could not update fleet autoscaler")
+			return false, nil
+		}
+
+		return true, nil
+	})
+	assert.NoError(t, err)
+
+	var l *corev1.EventList
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+		events := framework.KubeClient.CoreV1().Events(defaultNs)
+		l, err = events.List(metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
+		if err != nil {
+			return true, err
+		}
+
+		return len(l.Items) > 0, nil
+	})
+	assert.NoError(t, err)
+
 	for _, v := range l.Items {
 		assert.Contains(t, v.Message, "Error calculating desired fleet size on FleetAutoscaler", "Received unexpected error")
 	}
