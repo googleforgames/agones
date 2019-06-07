@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"fmt"
+	"math"
 	"sync"
 	"testing"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -34,6 +36,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -220,6 +223,116 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 				return fleet.Status.AllocatedReplicas == 0
 			})
 		})
+	}
+}
+
+// TestFleetRollingUpdate - test that the limited number of gameservers are created and deleted at a time
+// maxUnavailable and maxSurge parameters check.
+func TestFleetRollingUpdate(t *testing.T) {
+	t.Parallel()
+
+	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	fixtures := []bool{true, false}
+	maxSurge := []string{"25%", "10%"}
+
+	for _, usePatch := range fixtures {
+		for _, maxSurgeParam := range maxSurge {
+			t.Run(fmt.Sprintf("Use fleet Patch %t %s", usePatch, maxSurgeParam), func(t *testing.T) {
+				alpha1 := framework.AgonesClient.StableV1alpha1()
+
+				flt := defaultFleet()
+				flt.ApplyDefaults()
+				flt.Spec.Replicas = 1
+				rollingUpdatePercent := intstr.FromString(maxSurgeParam)
+				flt.Spec.Strategy.RollingUpdate.MaxSurge = &rollingUpdatePercent
+				flt.Spec.Strategy.RollingUpdate.MaxUnavailable = &rollingUpdatePercent
+
+				flt, err := alpha1.Fleets(defaultNs).Create(flt)
+				if assert.Nil(t, err) {
+					defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				}
+
+				assert.Equal(t, int32(1), flt.Spec.Replicas)
+
+				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+				// scale up
+				const targetScale = 8
+				if usePatch {
+					flt = scaleFleetPatch(t, flt, targetScale)
+					assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
+				} else {
+					flt = scaleFleetSubresource(t, flt, targetScale)
+				}
+
+				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
+
+				flt, err = alpha1.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
+				assert.NoError(t, err)
+
+				// Change ContainerPort to trigger creating a new GSSet
+				fltCopy := flt.DeepCopy()
+				fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
+				flt, err = alpha1.Fleets(defaultNs).Update(fltCopy)
+				assert.NoError(t, err)
+
+				selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
+				// New GSS was created
+				err = wait.PollImmediate(1*time.Second, 30*time.Second, func() (bool, error) {
+					gssList, err := framework.AgonesClient.StableV1alpha1().GameServerSets(defaultNs).List(
+						metav1.ListOptions{LabelSelector: selector.String()})
+					if err != nil {
+						return false, err
+					}
+					return len(gssList.Items) == 2, nil
+				})
+				assert.NoError(t, err)
+				// Check that total number of gameservers in the system does not exceed the RollingUpdate
+				// parameters (creating no more than maxSurge, deleting maxUnavailable servers at a time)
+				// Wait for old GSSet to be deleted
+				err = wait.PollImmediate(1*time.Second, 2*time.Minute, func() (bool, error) {
+					list, err := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).List(
+						metav1.ListOptions{LabelSelector: selector.String()})
+					if err != nil {
+						return false, err
+					}
+
+					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, 100, true)
+					assert.Nil(t, err)
+					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, 100, true)
+					assert.Nil(t, err)
+					target := float64(targetScale)
+					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
+						err = errors.New("New replicas should be less then target + maxSurge + maxUnavailable")
+					}
+					if err != nil {
+						return false, err
+					}
+					gssList, err := framework.AgonesClient.StableV1alpha1().GameServerSets(defaultNs).List(
+						metav1.ListOptions{LabelSelector: selector.String()})
+					if err != nil {
+						return false, err
+					}
+					return len(gssList.Items) == 1, nil
+				})
+
+				assert.NoError(t, err)
+
+				// scale down, with allocation
+				const scaleDownTarget = 1
+				if usePatch {
+					flt = scaleFleetPatch(t, flt, scaleDownTarget)
+				} else {
+					flt = scaleFleetSubresource(t, flt, scaleDownTarget)
+				}
+
+				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
+
+				framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+					return fleet.Status.AllocatedReplicas == 0
+				})
+			})
+		}
 	}
 }
 

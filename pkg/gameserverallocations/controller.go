@@ -159,14 +159,28 @@ func NewController(apiServer *apiserver.APIServer,
 			// only interested in if the old / new state was/is Ready
 			oldGs := oldObj.(*stablev1alpha1.GameServer)
 			newGs := newObj.(*stablev1alpha1.GameServer)
-			if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
-				if key, ok := c.getKey(newGs); ok {
-					if newGs.Status.State == stablev1alpha1.GameServerStateReady {
-						c.readyGameServers.Store(key, newGs)
-					} else {
-						c.readyGameServers.Delete(key)
-					}
+			key, ok := c.getKey(newGs)
+			if !ok {
+				return
+			}
+			if newGs.IsBeingDeleted() {
+				c.readyGameServers.Delete(key)
+			} else if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
+				if newGs.Status.State == stablev1alpha1.GameServerStateReady {
+					c.readyGameServers.Store(key, newGs)
+				} else {
+					c.readyGameServers.Delete(key)
 				}
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			gs, ok := obj.(*stablev1alpha1.GameServer)
+			if !ok {
+				return
+			}
+			var key string
+			if key, ok = c.getKey(gs); ok {
+				c.readyGameServers.Delete(key)
 			}
 		},
 	})

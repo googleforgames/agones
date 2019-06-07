@@ -143,12 +143,37 @@ func (f *Fleet) GetGameServerSpec() *GameServerSpec {
 	return &f.Spec.Template.Spec
 }
 
+func (f *Fleet) validateRollingUpdate(value *intstr.IntOrString, causes *[]metav1.StatusCause, parameter string) {
+	r, err := intstr.GetValueFromIntOrPercent(value, 100, true)
+	if value.Type == intstr.String {
+		if err != nil || r < 1 || r > 99 {
+			*causes = append(*causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   parameter,
+				Message: parameter + " does not have a valid percentage value (1%-99%)",
+			})
+		}
+	} else {
+		if r < 1 {
+			*causes = append(*causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   parameter,
+				Message: parameter + " does not have a valid integer value (>1)",
+			})
+		}
+	}
+}
+
 // Validate validates the Fleet configuration.
 // If a Fleet is invalid there will be > 0 values in
 // the returned array
 func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 	causes := validateName(f)
 
+	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
+		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, &causes, "MaxUnavailable")
+		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, &causes, "MaxSurge")
+	}
 	// check Gameserver specification in a Fleet
 	gsCauses := validateGSSpec(f)
 	if len(gsCauses) > 0 {

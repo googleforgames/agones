@@ -26,6 +26,7 @@ import (
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"github.com/stretchr/testify/assert"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -36,11 +37,13 @@ func TestAllocateHandler(t *testing.T) {
 	fakeAgones := &agonesfake.Clientset{}
 	h := httpHandler{
 		agonesClient: fakeAgones,
-		namespace:    "default",
 	}
 
 	fakeAgones.AddReactor("create", "gameserverallocations", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &v1alpha1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: "default",
+			},
 			Status: v1alpha1.GameServerAllocationStatus{
 				State: v1alpha1.GameServerAllocationContention,
 			},
@@ -72,7 +75,6 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 	fakeAgones := &agonesfake.Clientset{}
 	h := httpHandler{
 		agonesClient: fakeAgones,
-		namespace:    "default",
 	}
 
 	fakeAgones.AddReactor("create", "gameserverallocations", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
