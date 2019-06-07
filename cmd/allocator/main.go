@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -53,7 +52,6 @@ func main() {
 
 	h := httpHandler{
 		agonesClient: agonesClient,
-		namespace:    os.Getenv("NAMESPACE"),
 	}
 
 	// TODO: add liveness probe
@@ -133,7 +131,6 @@ func (h *httpHandler) postOnly(in handler) handler {
 
 type httpHandler struct {
 	agonesClient versioned.Interface
-	namespace    string
 }
 
 func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +140,7 @@ func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allocation := h.agonesClient.AllocationV1alpha1().GameServerAllocations(h.namespace)
+	allocation := h.agonesClient.AllocationV1alpha1().GameServerAllocations(gsa.ObjectMeta.Namespace)
 	allocatedGsa, err := allocation.Create(&gsa)
 	if err != nil {
 		http.Error(w, err.Error(), httpCode(err))

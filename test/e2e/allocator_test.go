@@ -60,6 +60,9 @@ func TestAllocator(t *testing.T) {
 	}
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	gsa := &v1alpha1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: defaultNs,
+		},
 		Spec: v1alpha1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 		}}
@@ -78,13 +81,10 @@ func TestAllocator(t *testing.T) {
 	var response *http.Response
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		response, err = client.Post(requestURL, "application/json", bytes.NewBuffer(body))
-
 		if err != nil {
-			response.Body.Close() // nolint: errcheck
 			logrus.WithError(err).Infof("failing http request")
 			return false, nil
 		}
-
 		return true, nil
 	})
 
