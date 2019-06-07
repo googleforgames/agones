@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC All Rights Reserved.
+# Copyright 2017 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,25 +13,25 @@
 # limitations under the License.
 
 apiVersion: "stable.agones.dev/v1alpha1"
-kind: Fleet
+kind: GameServer
 metadata:
-  name: simple-udp
+  generateName: "simple-udp-"
 spec:
-  replicas: 2
+  ports:
+  - name: default
+    portPolicy: Passthrough
   template:
     spec:
-      ports:
-      - name: default
-        containerPort: 7654
-      template:
-        spec:
-          containers:
-          - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.10
-            resources:
-              requests:
-                memory: "64Mi"
-                cpu: "20m"
-              limits:
-                memory: "64Mi"
-                cpu: "20m"
+      containers:
+      - name: simple-udp
+        image: gcr.io/agones-images/udp-server:0.10
+        env:
+          - name: "PASSTHROUGH"
+            value: "TRUE"
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "20m"
+          limits:
+            memory: "32Mi"
+            cpu: "20m"
