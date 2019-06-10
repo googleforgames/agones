@@ -14,14 +14,20 @@
 
 cmake_minimum_required (VERSION 3.13.0)
 
-option(BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" ON)
-set(OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
-set(THIRDPARTY_INSTALL_PATH "${CMAKE_BINARY_DIR}/third_party" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
+option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" ON)
+set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
+set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_BINARY_DIR}/third_party" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
 
 if (NOT MSVC)
-    set(BUILD_THIRDPARTY_DEBUG FALSE)
-    set(OPENSSL_CONFIG_STRING "" CACHE STRING "" FORCE)
+    set(AGONES_BUILD_THIRDPARTY_DEBUG FALSE)
+    set(AGONES_OPENSSL_CONFIG_STRING "" CACHE STRING "" FORCE)
 endif()
+
+include(ProcessorCount)
+ProcessorCount(CPU_COUNT)
+if (CPU_COUNT GREATER 0 AND NOT DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
+    set($ENV{CMAKE_BUILD_PARALLEL_LEVEL} ${CPU_COUNT})
+endif(CPU_COUNT)
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
@@ -83,7 +89,6 @@ function(execute_and_check WORKING_DIR)
     set(OUTPUT_TYPE STATUS)
     if (NOT ${result} EQUAL 0)
         set(OUTPUT_TYPE FATAL_ERROR)
-        message(SEND_ERROR "Command:${ARGN}\n${result}\n")
     endif()
     message(${OUTPUT_TYPE} ${output})
 endfunction()
@@ -93,7 +98,7 @@ function(invoke_cmake_build NAME CMAKELISTS_PATH)
 
     # Build directory
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${NAME}/.bin)
-    set(INSTALL_DIR ${THIRDPARTY_INSTALL_PATH}/${NAME})
+    set(INSTALL_DIR ${AGONES_THIRDPARTY_INSTALL_PATH}/${NAME})
     file(MAKE_DIRECTORY ${BUILD_DIR})
     
     # Makefile generation
@@ -106,10 +111,10 @@ function(invoke_cmake_build NAME CMAKELISTS_PATH)
         set(ARG_CONFIG_RELEASE "")
     endif()
 
-    execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} ${CMAKELISTS_PATH} -G ${CMAKE_GENERATOR} -Wno-dev ${ARG_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DCMAKE_MODULE_PATH=${THIRDPARTY_INSTALL_PATH} -DCMAKE_PREFIX_PATH=${THIRDPARTY_INSTALL_PATH} ${ARGN})
+    execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} ${CMAKELISTS_PATH} -G ${CMAKE_GENERATOR} -Wno-dev ${ARG_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DCMAKE_MODULE_PATH=${AGONES_THIRDPARTY_INSTALL_PATH} -DCMAKE_PREFIX_PATH=${AGONES_THIRDPARTY_INSTALL_PATH} ${ARGN})
 
     # Building
-    if (BUILD_THIRDPARTY_DEBUG)
+    if (AGONES_BUILD_THIRDPARTY_DEBUG)
         execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} --build . ${ARG_CONFIG_DEBUG} --target install)
     endif()
     
@@ -122,13 +127,13 @@ find_package(OpenSSL QUIET)
 
 # OpenSSL // Required only for gRPC build. Do not build, if gRPC is found.
 if (NOT ${OpenSSL_FOUND} AND NOT ${gRPC_FOUND})
-    set(OPENSSL_ROOT_DIR "${THIRDPARTY_INSTALL_PATH}/OpenSSL" CACHE PATH "OpenSSL root directory" FORCE)
+    set(OPENSSL_ROOT_DIR "${AGONES_THIRDPARTY_INSTALL_PATH}/OpenSSL" CACHE PATH "OpenSSL root directory" FORCE)
     find_package(OpenSSL QUIET)
     if (NOT ${OpenSSL_FOUND})
         download_git_repo(openssl ${OPENSSL_GIT_REPO} ${OPENSSL_GIT_TAG})
-        message(STATUS "Building OpenSSL... ${OPENSSL_CONFIG_STRING}")
+        message(STATUS "Building OpenSSL... ${AGONES_OPENSSL_CONFIG_STRING}")
         if (WIN32)
-            execute_and_check(${openssl_SOURCE_DIR} perl Configure ${OPENSSL_CONFIG_STRING} "--prefix=${OPENSSL_ROOT_DIR}" "--openssldir=${OPENSSL_ROOT_DIR}")
+            execute_and_check(${openssl_SOURCE_DIR} perl Configure ${AGONES_OPENSSL_CONFIG_STRING} "--prefix=${OPENSSL_ROOT_DIR}" "--openssldir=${OPENSSL_ROOT_DIR}")
             execute_and_check(${openssl_SOURCE_DIR} nmake)
             execute_and_check(${openssl_SOURCE_DIR} nmake install)
         else()
@@ -142,8 +147,8 @@ endif()
 # gRPC
 if (NOT ${gRPC_FOUND})
     download_git_repo(gRPC ${gRPC_GIT_REPO} ${gRPC_GIT_TAG})
-    file(MAKE_DIRECTORY ${THIRDPARTY_INSTALL_PATH})
-    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${THIRDPARTY_INSTALL_PATH})
+    file(MAKE_DIRECTORY ${AGONES_THIRDPARTY_INSTALL_PATH})
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${AGONES_THIRDPARTY_INSTALL_PATH})
 
     # Build gRPC prerequisites
     invoke_cmake_build(zlib ${gRPC_SOURCE_DIR}/third_party/zlib)

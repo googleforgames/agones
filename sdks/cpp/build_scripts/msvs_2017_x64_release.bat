@@ -17,6 +17,6 @@ pushd ..
 if not exist ".build" md ".build"
 pushd ".build"
 cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=./install -Wno-dev 
-cmake --build . --config Release --target INSTALL
+cmake --build . --config Release --target install
 popd
 popd

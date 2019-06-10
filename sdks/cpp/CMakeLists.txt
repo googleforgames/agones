@@ -43,13 +43,13 @@ endif(AGONES_SILENT_OUTPUT)
 project(agones VERSION 0.11.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
 
 # Build options
-option(AGONES_FORCE_gRPC_VERSION "Build Agones C++ SDK only with officially supported gRPC version" ON)
+option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC version" ON)
 
 # Currently we doesn't support build time generation of proto/gRPC files,
 # so gRPC version should be strict
-set(AGONES_FORCE_gRPC_VERSION ON)
+set(AGONES_FORCE_GRPC_VERSION ON)
 set(AGONES_GRPC_VERSION_MATCH "")
-if (AGONES_FORCE_gRPC_VERSION)
+if (AGONES_FORCE_GRPC_VERSION)
     set(AGONES_GRPC_VERSION_MATCH EXACT)
 endif()
 
@@ -62,13 +62,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_DEBUG_POSTFIX "d")
-set(AGONES_gRPC_VERSION "1.16.1")
+set(AGONES_GRPC_VERSION "1.16.1")
 
 # Third party
 include(./cmake/prerequisites.cmake)
 find_package(ZLIB REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
-find_package(gRPC ${AGONES_gRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
+find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
 # Platform specific stuff
 if (WIN32)
