@@ -16,6 +16,7 @@ package fleets
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"agones.dev/agones/pkg/apis/stable"
@@ -223,7 +224,7 @@ func (c *Controller) loggerForFleetKey(key string) *logrus.Entry {
 func (c *Controller) loggerForFleet(f *v1alpha1.Fleet) *logrus.Entry {
 	fleetName := "NilFleet"
 	if f != nil {
-		fleetName = f.Namespace + "/" + f.Name
+		fleetName = f.ObjectMeta.Namespace + "/" + f.ObjectMeta.Name
 	}
 	return c.loggerForFleetKey(fleetName).WithField("fleet", f)
 }
@@ -278,6 +279,7 @@ func (c *Controller) syncFleet(key string) error {
 	}
 
 	active, rest := c.filterGameServerSetByActive(fleet, list)
+
 	// if there isn't an active gameServerSet, create one (but don't persist yet)
 	if active == nil {
 		c.loggerForFleet(fleet).Info("could not find active GameServerSet, creating")
@@ -347,6 +349,7 @@ func (c *Controller) upsertGameServerSet(fleet *stablev1alpha1.Fleet, active *st
 func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
 	// if there is nothing `rest`, then it's either brand Fleet, or we can just jump to the fleet value,
 	// since there is nothing else scaling down at this point
+
 	if len(rest) == 0 {
 		return fleet.Spec.Replicas, nil
 	}
@@ -366,7 +369,7 @@ func (c *Controller) applyDeploymentStrategy(fleet *stablev1alpha1.Fleet, active
 func (c *Controller) deleteEmptyGameServerSets(fleet *stablev1alpha1.Fleet, list []*stablev1alpha1.GameServerSet) error {
 	p := metav1.DeletePropagationBackground
 	for _, gsSet := range list {
-		if gsSet.Status.Replicas == 0 {
+		if gsSet.Status.Replicas == 0 && gsSet.Status.ShutdownReplicas == 0 {
 			err := c.gameServerSetGetter.GameServerSets(gsSet.ObjectMeta.Namespace).Delete(gsSet.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
 			if err != nil {
 				return errors.Wrapf(err, "error updating gameserverset %s", gsSet.ObjectMeta.Name)
@@ -416,13 +419,19 @@ func (c *Controller) rollingUpdateDeployment(fleet *stablev1alpha1.Fleet, active
 // and returns what its replica value should be set to
 func (c *Controller) rollingUpdateActive(fleet *stablev1alpha1.Fleet, active *stablev1alpha1.GameServerSet, rest []*stablev1alpha1.GameServerSet) (int32, error) {
 	replicas := active.Spec.Replicas
+	// always leave room for Allocated GameServers
+	sumAllocated := stablev1alpha1.SumStatusAllocatedReplicas(rest)
 
 	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
 	// need to another rolling update upwards.
 	// Likewise if the active spec replicas don't equal the active status replicas, this means we are
 	// in the middle of a rolling update, and should wait for it to complete.
-	if active.Spec.Replicas >= fleet.Spec.Replicas || active.Spec.Replicas != active.Status.Replicas {
+
+	if active.Spec.Replicas != active.Status.Replicas {
 		return replicas, nil
+	}
+	if active.Spec.Replicas >= (fleet.Spec.Replicas - sumAllocated) {
+		return fleet.Spec.Replicas - sumAllocated, nil
 	}
 
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
@@ -439,12 +448,9 @@ func (c *Controller) rollingUpdateActive(fleet *stablev1alpha1.Fleet, active *st
 		replicas = fleet.LowerBoundReplicas(replicas - (total - maxSurge))
 	}
 
-	// always leave room for Allocated GameServers
-	sumAllocated := stablev1alpha1.SumStatusAllocatedReplicas(rest)
-
 	// make room for allocated game servers, but not over the fleet replica count
 	if replicas+sumAllocated > fleet.Spec.Replicas {
-		replicas = fleet.LowerBoundReplicas(replicas - sumAllocated)
+		replicas = fleet.LowerBoundReplicas(fleet.Spec.Replicas - sumAllocated)
 	}
 
 	c.loggerForFleet(fleet).WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
@@ -471,27 +477,30 @@ func (c *Controller) rollingUpdateRest(fleet *stablev1alpha1.Fleet, rest []*stab
 		if gsSet.Status.Replicas <= 0 {
 			continue
 		}
+
 		// If the Spec.Replicas does not equal the Status.Replicas for this GameServerSet, this means
 		// that the rolling down process is currently ongoing, and we should therefore exit so we can wait for it to finish
 		if gsSet.Spec.Replicas != gsSet.Status.Replicas {
 			break
 		}
-
 		gsSetCopy := gsSet.DeepCopy()
-		gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
+		if gsSet.Status.ShutdownReplicas == 0 {
+			gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 
-		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
-			Info("applying rolling update to inactive gameserverset")
+			c.loggerForFleet(fleet).Info(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
+			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
+				Info("applying rolling update to inactive gameserverset")
 
-		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
-			return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
+				return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+			}
+			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+
+			// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
+			// to make sure we don't overshoot the amount that is being shutdown at any given point and time
+			break
 		}
-		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
-			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
-
-		// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
-		// to make sure we don't overshoot the amount that is being shutdown at any given point and time
-		break
 	}
 	return nil
 }
@@ -506,18 +515,22 @@ func (c *Controller) updateFleetStatus(fleet *stablev1alpha1.Fleet) error {
 		return err
 	}
 
-	fCopy := fleet.DeepCopy()
+	fCopy, err := c.fleetGetter.Fleets(fleet.ObjectMeta.Namespace).Get(fleet.ObjectMeta.GetName(), metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
 	fCopy.Status.Replicas = 0
 	fCopy.Status.ReadyReplicas = 0
+	fCopy.Status.ReservedReplicas = 0
 	fCopy.Status.AllocatedReplicas = 0
 
 	for _, gsSet := range list {
 		fCopy.Status.Replicas += gsSet.Status.Replicas
 		fCopy.Status.ReadyReplicas += gsSet.Status.ReadyReplicas
+		fCopy.Status.ReservedReplicas += gsSet.Status.ReservedReplicas
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
 	}
-
-	_, err = c.fleetGetter.Fleets(fCopy.Namespace).UpdateStatus(fCopy)
+	_, err = c.fleetGetter.Fleets(fCopy.ObjectMeta.Namespace).UpdateStatus(fCopy)
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
 

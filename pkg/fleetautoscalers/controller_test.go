@@ -456,12 +456,13 @@ func defaultFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
 			UID:       "1234",
 		},
 		Spec: v1alpha1.FleetSpec{
-			Replicas: 5,
+			Replicas: 8,
 			Template: v1alpha1.GameServerTemplateSpec{},
 		},
 		Status: v1alpha1.FleetStatus{
 			Replicas:          5,
 			ReadyReplicas:     3,
+			ReservedReplicas:  3,
 			AllocatedReplicas: 2,
 		},
 	}

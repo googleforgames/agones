@@ -387,16 +387,16 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*v1alp
 		potentialDeletions = append(potentialDeletions, gs)
 	}
 
-	// pass 1 - count allocated servers only, since those can't be touched
+	// pass 1 - count allocated/reserved servers only, since those can't be touched
 	for _, gs := range list {
-		if gs.IsAllocated() {
+		if !gs.IsDeletable() {
 			upCount++
 		}
 	}
 
 	// pass 2 - handle all other statuses
 	for _, gs := range list {
-		if gs.IsAllocated() {
+		if !gs.IsDeletable() {
 			// already handled above
 			continue
 		}
@@ -422,6 +422,8 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*v1alp
 		case v1alpha1.GameServerStateRequestReady:
 			handleGameServerUp(gs)
 		case v1alpha1.GameServerStateReady:
+			handleGameServerUp(gs)
+		case v1alpha1.GameServerStateReserved:
 			handleGameServerUp(gs)
 
 		// GameServerStateShutdown - already handled above
@@ -591,6 +593,7 @@ func computeStatus(list []*v1alpha1.GameServer) v1alpha1.GameServerSetStatus {
 	for _, gs := range list {
 		if gs.IsBeingDeleted() {
 			// don't count GS that are being deleted
+			status.ShutdownReplicas++
 			continue
 		}
 
@@ -600,6 +603,8 @@ func computeStatus(list []*v1alpha1.GameServer) v1alpha1.GameServerSetStatus {
 			status.ReadyReplicas++
 		case v1alpha1.GameServerStateAllocated:
 			status.AllocatedReplicas++
+		case v1alpha1.GameServerStateReserved:
+			status.ReservedReplicas++
 		}
 	}
 

@@ -97,7 +97,7 @@ roleRef:
   name: system:auth-delegator
 subjects:
   - kind: ServiceAccount
-    name: apiserver
+    name: agones-controller
     namespace: agones-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -111,7 +111,7 @@ roleRef:
   name: extension-apiserver-authentication-reader
 subjects:
   - kind: ServiceAccount
-    name: apiserver
+    name: agones-controller
     namespace: agones-system
 
 ---
@@ -1077,16 +1077,11 @@ spec:
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
-        env:
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
 
 ---
-# Create a Role in the default namespace that grants access to the agones api
+# Create a ClusterRole in that grants access to the agones allocation api
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: gameserver-allocator
   namespace: agones-system
@@ -1114,9 +1109,9 @@ metadata:
     heritage: Tiller
 
 ---
-# Bind the gameserver-allocator ServiceAccount to the gameserver-allocator Role
+# Bind the gameserver-allocator ServiceAccount to the gameserver-allocator ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: gameserver-allocator
   namespace: agones-system
@@ -1130,7 +1125,7 @@ subjects:
   name: gameserver-allocator
   namespace: agones-system
 roleRef:
-  kind: Role
+  kind: ClusterRole
   name: gameserver-allocator
 
 ---
@@ -1177,6 +1172,7 @@ metadata:
     heritage: "Tiller"
 data:
   tls-ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUR5ekNDQXJPZ0F3SUJBZ0lVS2JaV1IwSmk2QlRxa2RiQjkwT200dUpIaTM4d0RRWUpLb1pJaHZjTkFRRUwKQlFBd2RURUxNQWtHQTFVRUJoTUNRVlV4RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeElUQWZCZ05WQkFvTQpHRWx1ZEdWeWJtVjBJRmRwWkdkcGRITWdVSFI1SUV4MFpERXVNQ3dHQ1NxR1NJYjNEUUVKQVJZZllXZHZibVZ6CkxXUnBjMk4xYzNOQVoyOXZaMnhsWjNKdmRYQnpMbU52YlRBZUZ3MHhPVEExTVRReE9ETXhOVGxhRncweU9UQTEKTVRFeE9ETXhOVGxhTUhVeEN6QUpCZ05WQkFZVEFrRlZNUk13RVFZRFZRUUlEQXBUYjIxbExWTjBZWFJsTVNFdwpId1lEVlFRS0RCaEpiblJsY201bGRDQlhhV1JuYVhSeklGQjBlU0JNZEdReExqQXNCZ2txaGtpRzl3MEJDUUVXCkgyRm5iMjVsY3kxa2FYTmpkWE56UUdkdmIyZHNaV2R5YjNWd2N5NWpiMjB3Z2dFaU1BMEdDU3FHU0liM0RRRUIKQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUURldHlVTHdOdWpGYlhadEdGY09DQXdUWWZVNTRENEd3ZGsxdDdSV3FhNQovL3JpS3N3cWtjcnc2OGxOa0lObSt5TU5nRmtkdDJ6Z2x3akNnakpaWGNGb3ZQLzcvZzMyQ041VzZneXg3Y0IwCkZUWEpWV2UzdVVHNlBXNVlQYUgxMkN1Y0hDcTVpTnp3bEV5RFVQQ0pBYVBPNWZVQmxiQ1JVTFlQaEJuSlhaWHIKQjZ6ZHRjNlIxdXlrWE5mVmhaWUh2SVZyNW9XSUZ5Z0NObmp2TWdIbWt2ZkxOeGltU2dwc0tYeUxqVzExU1d3eApteHBwb3drbHdLMlFxYXhuYVNPVFl2N3VjbUwwTzhYRTg5bi9TbzFZbklPZ2RReU5tTmFVSjRENk1oeHZLZUpBClRmZzZrOTFRd1c5K0VJaWh0K05qQ01zcHg0bjZ5bGlSbm8xR01Ic1pJamJIQWdNQkFBR2pVekJSTUIwR0ExVWQKRGdRV0JCUXhqcnJ0S3BOcE02TUg5ODY4cTY1ZHE0NzcwVEFmQmdOVkhTTUVHREFXZ0JReGpycnRLcE5wTTZNSAo5ODY4cTY1ZHE0NzcwVEFQQmdOVkhSTUJBZjhFQlRBREFRSC9NQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUNvCmNGc3hzY0ZOajh3VGt1aHZtRUcyODV6Q3M5OFFqR3FzT1RCNC9Ha3JUbWJOUW9xT2JuYzZpTkM0YnM5QUM2SE8KYWJOUkM2bTVVYVZRVkgzVUI2TzMrRm00MFROb1RadDFHQkYzL0x0ZHdnZFJrbUZUaGlCL2ZJdHRUMFBHYUVmZQpBK3lleWhOYlZ5VWdPWUk3bks1UEs1czdnQlN5a0dMelhJaWVsb21tckE2SzI5L1pObGoraE53S1dISUJaL0NuCmNPa1ZnUEJrZUJrWStWclZjM24vSEJjbGorczdSNzVLcmhwTktPTWZ2M2pvcmhSQVE4ZVFvSWhIYmlxY2JNN3EKbHpwbDM5VXhzajJWMVlCYXl1OWlubXFKaUJmNFNNdW50elVwUHpLYWwwTytpZUtBMmJLU1NUbEdHbnIzUlJ2eQpNWGRnN1pYWmV3S3FiYlMvQnJIcQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+
 ---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
