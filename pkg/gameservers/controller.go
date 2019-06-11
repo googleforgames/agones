@@ -116,7 +116,7 @@ func NewController(
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
-		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -309,7 +309,12 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	// Run the Health Controller
-	go c.healthController.Run(stop)
+	go func() {
+		err = c.healthController.Run(stop)
+		if err != nil {
+			c.baseLogger.WithError(err).Error("error running health controller")
+		}
+	}()
 
 	// start work queues
 	var wg sync.WaitGroup
