@@ -753,7 +753,7 @@ Run `make uninstall` then run `make install` again.
 Run `make build-images GO_BUILD_TAGS=profile` and this will build images with [pprof](https://golang.org/pkg/net/http/pprof/)
 enabled in the controller, which you can then push and install on your cluster.
 
-To get the pprof ui working, run `make controller-portforward` (or `minikube-controller-portforward` if you are on minikube),
+To get the pprof ui working, run `make controller-portforward PORT=6060` (or `minikube-controller-portforward PORT=6060` if you are on minikube),
 which will setup the port forwarding to the pprof http endpoint.
 
 Run `make pprof-web`, which will start the web interface. It may take a few minutes to start up, but it can be opened on
