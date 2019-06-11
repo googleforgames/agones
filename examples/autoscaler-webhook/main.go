@@ -25,7 +25,7 @@ import (
 	"os"
 	"strconv"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
 )
 

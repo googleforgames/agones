@@ -17,7 +17,7 @@
 # up and down depending on usage
 #
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "autoscaling.agones.dev/v1alpha1"
 kind: FleetAutoscaler
 metadata:
   name: xonotic-autoscaler

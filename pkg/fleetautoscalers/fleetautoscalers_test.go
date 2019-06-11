@@ -24,7 +24,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )

@@ -19,7 +19,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -54,7 +54,7 @@ type fleetAutoscalers struct {
 }
 
 // newFleetAutoscalers returns a FleetAutoscalers
-func newFleetAutoscalers(c *StableV1alpha1Client, namespace string) *fleetAutoscalers {
+func newFleetAutoscalers(c *AutoscalingV1alpha1Client, namespace string) *fleetAutoscalers {
 	return &fleetAutoscalers{
 		client: c.RESTClient(),
 		ns:     namespace,

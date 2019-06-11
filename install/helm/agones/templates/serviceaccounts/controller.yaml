@@ -56,14 +56,20 @@ rules:
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets", "fleetallocations", "fleetautoscalers"]
+  resources: ["fleets", "fleetallocations"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets/status",  "fleetautoscalers/status", "gameserversets/status"]
+  resources: ["fleets/status", "gameserversets/status"]
   verbs: ["update"]
 - apiGroups: ["multicluster.agones.dev"]
   resources: ["gameserverallocationpolicies"]
   verbs: ["create", "delete", "get", "list", "update", "watch"]
+- apiGroups: ["autoscaling.agones.dev"]
+  resources: ["fleetautoscalers"]
+  verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["autoscaling.agones.dev"]
+  resources: ["fleetautoscalers/status"]
+  verbs: ["update"]
 
 
 ---
