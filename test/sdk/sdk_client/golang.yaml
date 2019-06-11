@@ -1,0 +1,91 @@
+# Copyright 2019 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+functions:
+  health: |
+    time.Sleep(1*time.Second)
+    for i := 0 ; i < 5; i ++ {
+      err = s.Health()
+      if err != nil {
+        log.Fatalf("Could not send Health check")
+      } else {
+        log.Println("Health message sent")
+      }
+    }
+  ready:  |
+    err = s.Ready()
+    if err != nil {
+      log.Fatalf("Could not send ready message")
+    }
+  shutdown: |
+    err = s.Shutdown()
+    if err != nil {
+      log.Fatalf("Could not send shutdown request")
+    }
+  getGameServer: |
+    gs, err := s.GameServer()
+    if err != nil {
+      log.Fatalf("Could not get gameserver parameters")
+    }
+    log.Println(gs)
+  watchGameServer: |
+    err = s.WatchGameServer(func(*pkgSdk.GameServer) {
+      // TODO: add error if not received
+      log.Println("Received GameServer update")
+    })
+    if err != nil {
+      log.Fatalf("Could not watch gameserver")
+    }
+  allocate: |
+    err = s.Allocate()
+    if err != nil {
+      log.Fatalf("Could not send allocate request")
+    }
+  setlabel: |
+    err = s.SetLabel("new", "label")
+    if err != nil {
+      log.Fatalf("Could not set label")
+    }
+  setannotation: |
+    err = s.SetAnnotation("new", "annotation")
+    if err != nil {
+      log.Fatalf("Could not set annotation")
+    }
+  init: |
+    package main
+
+    import (
+      "time"
+      "log"
+
+      goSdk "agones.dev/agones/sdks/go"
+      pkgSdk "agones.dev/agones/pkg/sdk"
+    )
+
+    func main() {
+      log.SetFlags(log.Lshortfile)
+      log.Println("starting")
+      // Additional call to supress errors
+      e := pkgSdk.Empty{}
+      e.ProtoMessage()
+      time.Sleep(100 * time.Millisecond)
+      s, err := goSdk.NewSDK()
+      if err != nil {
+        log.Fatalf("Could not connect to sdk: %v", err)
+      } else {
+        log.Println("SDK initialised")
+      }
+  cleanup: |
+      time.Sleep(3*time.Second)
+      }

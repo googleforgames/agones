@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -51,6 +52,7 @@ const (
 	localFlag   = "local"
 	fileFlag    = "file"
 	addressFlag = "address"
+	timeout     = "timeout"
 )
 
 var (
@@ -69,6 +71,7 @@ func main() {
 		logger.WithField("grpcPort", grpcPort).WithField("Address", ctlConf.Address).Fatalf("Could not listen on grpcPort")
 	}
 	stop := signals.NewStopChannel()
+	timedStop := make(chan struct{})
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a kill signal
 	// then the gameserver is being shut down, and we no longer
@@ -88,6 +91,12 @@ func main() {
 		err = registerLocal(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start local sdk server")
+		}
+		if ctlConf.Timeout != 0 {
+			go func() {
+				time.Sleep(time.Duration(ctlConf.Timeout) * time.Second)
+				close(timedStop)
+			}()
 		}
 	} else {
 		var config *rest.Config
@@ -127,7 +136,11 @@ func main() {
 	go runGrpc(grpcServer, lis)
 	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
-	<-stop
+	select {
+	case <-stop:
+	case <-timedStop:
+	}
+
 	logger.Info("shutting down sdk server")
 }
 
@@ -190,22 +203,26 @@ func parseEnvFlags() config {
 	viper.SetDefault(localFlag, false)
 	viper.SetDefault(fileFlag, "")
 	viper.SetDefault(addressFlag, "localhost")
+	viper.SetDefault(timeout, 0)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
-	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost")
+	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost'")
+	pflag.Int(timeout, viper.GetInt(timeout), "Time of execution before close. Useful for tests")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
+	runtime.Must(viper.BindEnv(timeout))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
 		IsLocal:   viper.GetBool(localFlag),
 		Address:   viper.GetString(addressFlag),
 		LocalFile: viper.GetString(fileFlag),
+		Timeout:   viper.GetInt(timeout),
 	}
 }
 
@@ -214,4 +231,5 @@ type config struct {
 	Address   string
 	IsLocal   bool
 	LocalFile string
+	Timeout   int
 }

@@ -26,6 +26,7 @@ build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
 grpc_release_tag = v1.16.1
 sdk_build_folder = build-sdk-images/
+sdk_build_conformance-folder = build-sdk-conformance/
 SDK_FOLDER ?= go
 COMMAND ?= gen
 
@@ -108,3 +109,14 @@ ensure-build-sdk-image-base:
 # create the build image sdk if it doesn't exist
 ensure-build-sdk-image:
 	$(MAKE) build-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
+
+build-conformance-tests:
+	cd $(sdk_build_conformance-folder); \
+	docker build --tag=conformance:$(build_version) ./ $(DOCKER_BUILD_ARGS)
+	docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" $(DOCKER_RUN_ARGS) conformance:$(build_version) /root/sidecar.sh
+
+run-conformance-tests:
+	docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" $(DOCKER_RUN_ARGS) conformance:$(build_version) /root/test.sh
+
+run-conformance-jstests:
+	docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" $(DOCKER_RUN_ARGS) conformance:$(build_version) /root/jstest.sh
