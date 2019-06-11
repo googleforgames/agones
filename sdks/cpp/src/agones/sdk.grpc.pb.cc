@@ -44,6 +44,7 @@ static const char* SDK_method_names[] = {
   "/stable.agones.dev.sdk.SDK/WatchGameServer",
   "/stable.agones.dev.sdk.SDK/SetLabel",
   "/stable.agones.dev.sdk.SDK/SetAnnotation",
+  "/stable.agones.dev.sdk.SDK/Reserve",
 };
 
 std::unique_ptr< SDK::Stub> SDK::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -61,6 +62,7 @@ SDK::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   , rpcmethod_WatchGameServer_(SDK_method_names[5], ::grpc::internal::RpcMethod::SERVER_STREAMING, channel)
   , rpcmethod_SetLabel_(SDK_method_names[6], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SetAnnotation_(SDK_method_names[7], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_Reserve_(SDK_method_names[8], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status SDK::Stub::Ready(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Empty& request, ::stable::agones::dev::sdk::Empty* response) {
@@ -183,6 +185,22 @@ void SDK::Stub::experimental_async::SetAnnotation(::grpc::ClientContext* context
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_SetAnnotation_, context, request, false);
 }
 
+::grpc::Status SDK::Stub::Reserve(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Duration& request, ::stable::agones::dev::sdk::Empty* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Reserve_, context, request, response);
+}
+
+void SDK::Stub::experimental_async::Reserve(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Duration* request, ::stable::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)> f) {
+  return ::grpc::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Reserve_, context, request, response, std::move(f));
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::AsyncReserveRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Reserve_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::stable::agones::dev::sdk::Empty>* SDK::Stub::PrepareAsyncReserveRaw(::grpc::ClientContext* context, const ::stable::agones::dev::sdk::Duration& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::stable::agones::dev::sdk::Empty>::Create(channel_.get(), cq, rpcmethod_Reserve_, context, request, false);
+}
+
 SDK::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       SDK_method_names[0],
@@ -224,6 +242,11 @@ SDK::Service::Service() {
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::KeyValue, ::stable::agones::dev::sdk::Empty>(
           std::mem_fn(&SDK::Service::SetAnnotation), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      SDK_method_names[8],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< SDK::Service, ::stable::agones::dev::sdk::Duration, ::stable::agones::dev::sdk::Empty>(
+          std::mem_fn(&SDK::Service::Reserve), this)));
 }
 
 SDK::Service::~Service() {
@@ -279,6 +302,13 @@ SDK::Service::~Service() {
 }
 
 ::grpc::Status SDK::Service::SetAnnotation(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::KeyValue* request, ::stable::agones::dev::sdk::Empty* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status SDK::Service::Reserve(::grpc::ServerContext* context, const ::stable::agones::dev::sdk::Duration* request, ::stable::agones::dev::sdk::Empty* response) {
   (void) context;
   (void) request;
   (void) response;
