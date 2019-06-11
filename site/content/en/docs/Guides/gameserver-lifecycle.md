@@ -4,7 +4,7 @@ linkTitle: "GameServer Lifecycle"
 date: 2019-02-01T02:15:18Z
 weight: 15
 description: >
-  Shows the life cycle of `GameServer` creation and integration with the SDK, 
+  Shows the most common life cycle of `GameServer` creation and integration with the SDK, 
   when being started and match made.
 ---
 
