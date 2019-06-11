@@ -695,6 +695,33 @@ func TestControllerRunCacheSync(t *testing.T) {
 	watch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(0)
+
+	// add back in ready gameserver
+	gs.Status.State = stablev1alpha1.GameServerStateReady
+	watch.Modify(gs.DeepCopy())
+	assertCacheEntries(0)
+	gs.Status.State = stablev1alpha1.GameServerStateReady
+	watch.Modify(gs.DeepCopy())
+	assertCacheEntries(1)
+
+	// update with deletion timestamp
+	n := metav1.Now()
+	deletedCopy := gs.DeepCopy()
+	deletedCopy.ObjectMeta.DeletionTimestamp = &n
+	watch.Modify(deletedCopy)
+	assertCacheEntries(0)
+
+	// add back in ready gameserver
+	gs.Status.State = stablev1alpha1.GameServerStateReady
+	watch.Modify(gs.DeepCopy())
+	assertCacheEntries(0)
+	gs.Status.State = stablev1alpha1.GameServerStateReady
+	watch.Modify(gs.DeepCopy())
+	assertCacheEntries(1)
+
+	// now actually delete it
+	watch.Delete(gs.DeepCopy())
+	assertCacheEntries(0)
 }
 
 func TestGetRandomlySelectedGS(t *testing.T) {
