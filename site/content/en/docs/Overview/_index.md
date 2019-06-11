@@ -12,32 +12,42 @@ _Agones, is derived from the Greek word agōn which roughly translates to “con
 ## Disclaimer
 This software is currently alpha, and subject to change. Not to be used in production systems.
 
-## Why does this project exist?
-Agones replaces usual bespoke or proprietary cluster management and game server scaling solutions with a [Kubernetes](https://kubernetes.io/) cluster
-that includes the Agones custom _[Kubernetes Controller](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#custom-controllers)_ and matching [Custom Resource Definitions](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions) for _GameServers_, _Fleets_ and more.
+## What is Agones?
 
-With Agones, Kubernetes gets native abilities to create, run, manage and scale dedicated game server processes within Kubernetes clusters using standard Kubernetes tooling and APIs. This model also allows any matchmaker to interact directly with Agones via the Kubernetes API to provision a dedicated a game server.
+Agones is an open source platform, for deploying, hosting, scaling, and orchestrating dedicated game servers for
+large scale multiplayer games, built on top of the industry standard, distributed system platform [Kubernetes](https://kubernetes.io).
 
-For more details on why this project was written, read the
-[announcement blog post](https://cloudplatform.googleblog.com/2018/03/introducing-Agones-open-source-multiplayer-dedicated-game-server-hosting-built-on-Kubernetes.html).
+Agones replaces bespoke or proprietary cluster management and game server scaling solutions with an open source solution that
+can be utilised and communally developed - so that you can focus on the important aspects of building a multiplayer game,
+rather than developing the infrastructure to support it. 
+
+Built with both Cloud and on-premises infrastructure in mind, Agones can adjust its strategies as needed
+for Fleet management, autoscaling, and more to ensure the resources being used to host dedicated game servers are
+cost optimal for the environment that they are in. 
+
+## Why Agones?
+
+Some of Agones' advantages:
+
+- Lower development and operational costs for hosting, scaling and orchestrating multiplayer game servers.  
+- Any game server that can run on Linux can be hosted and orchestrated on Agones - in any language, or set of dependencies.
+- Run Agones anywhere Kubernetes can run - in the cloud, on premise, on your local machine or anywhere else you need it.
+- Game services and your game servers can be on the same foundational platform - simplifying your tooling and your operations knowledge.
+- By extending Kubernetes, Agones allows you to take advantage of the thousands of developers that have worked on the features of Kubernetes, and the ecosystem of tools surround it.
+- Agones is free, open source and developed entirely in the public. Help shape its future by getting involved with the community.
 
 ## Major Features
-- Define a single `GameServer`, and/or large game server `Fleets` within Kubernetes - either through yaml or via the API
-- Manage GameServer lifecycles - including health checking and connection information.
-- `Fleet` Autoscaling capabilities that integrate with Kubernetes' native cluster autoscaling
-- Gameserver specific metric exports and dashboards for ops teams
 
-## Requirements
-- Kubernetes cluster version 1.11+
-    - [Minikube](https://github.com/kubernetes/minikube), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) and [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) have been tested
-    - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
-    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
-    admission controllers are required.
-    We also recommend following the
-    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
-- Firewall access for the range of ports that Game Servers can be connected to in the cluster.
-- Game Servers must have the [project SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
+Agones incorporates these abilities:
+
+- Agones extends Kubernetes, such that it gets native abilities to create, run, manage and scale dedicated game server processes within
+  Kubernetes clusters using standard Kubernetes tooling and APIs.
+- Deploy game servers inside a [Docker container](https://www.docker.com/resources/what-container), with any combination of dependencies or binaries.
+- Integrated game server SDK for game server lifecycle managements, including health checking, state management, configuration and more.
+- Autoscaling capabilities to ensure players always have a game server availble to play on.
+- Out of the box metrics and log aggregation to track and visualise what is happening across all your game server sessions.
+- Modular architecture that can be tailored to your specific multiplayer game mechanics.
+- Game server scheduling and allocation strategies to ensure cost optimisation across cloud and on-premise environments. 
 
 ## Code of Conduct
 
@@ -51,4 +61,10 @@ Participation in this project comes under the {{< ghlink href="code-of-conduct.m
 
 ### Kubernetes
 - [You should totally read this comic, and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
+- [Kubernetes concepts, explained](https://kubernetes.io/docs/concepts/)
 - [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
+
+## What Next?
+- Have a look at our [installation guides]({{< ref "/docs/Installation/_index.md" >}}), for setting up a Kubernetes cluster
+  and installing Agones on it.
+- Go through our [Quickstart Guides]({{< ref "/docs/Getting Started/_index.md" >}}) to take you through setting up a simple game server on Agones.
