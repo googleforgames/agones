@@ -128,7 +128,17 @@ class AgonesUser(HttpLocust):
                                         "name": "simple-udp",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.5")
+                                            "/udp-server:0.9"),
+                                        "resources": {
+                                            "limits": {
+                                                "cpu": "20m",
+                                                "memory": "64Mi"
+                                            },
+                                            "requests": {
+                                                "cpu": "20m",
+                                                "memory": "64Mi"
+                                            }
+                                        }
                                     }
                                 ]
                             }

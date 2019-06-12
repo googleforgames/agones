@@ -301,22 +301,23 @@ spec:
                       title: array of ports to expose on the game server container
                       type: array
                       minItems: 1
-                      required:
-                        - containerPort
                       items:
                         type: object
                         properties:
                           portPolicy:
                             title: the port policy that will be applied to the game server
                             description: |
-                                portPolicy has two options:
-                                - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                                portPolicy has three options:
+                                - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
                                 - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                                 port is available. When static is the policy specified, `hostPort` is required to be populated
+                                - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                                This will mean that users will need to lookup what port has been opened through the server side SDK.
                             type: string
                             enum:
                             - Dynamic
                             - Static
+                            - Passthrough
                           protocol:
                             title: Protocol being used. Defaults to UDP. TCP is the only other option
                             type: string
@@ -330,7 +331,7 @@ spec:
                             maximum: 65535
                           hostPort:
                             title: The port exposed on the host
-                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
+                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
                             type: integer
                             minimum: 1
                             maximum: 65535
@@ -620,22 +621,23 @@ spec:
               title: array of ports to expose on the game server container
               type: array
               minItems: 1
-              required:
-                - containerPort
               items:
                 type: object
                 properties:
                   portPolicy:
                     title: the port policy that will be applied to the game server
                     description: |
-                        portPolicy has two options:
-                        - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                        portPolicy has three options:
+                        - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
                         - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                         port is available. When static is the policy specified, `hostPort` is required to be populated
+                        - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                        This will mean that users will need to lookup what port has been opened through the server side SDK.
                     type: string
                     enum:
                     - Dynamic
                     - Static
+                    - Passthrough
                   protocol:
                     title: Protocol being used. Defaults to UDP. TCP is the only other option
                     type: string
@@ -649,7 +651,7 @@ spec:
                     maximum: 65535
                   hostPort:
                     title: The port exposed on the host
-                    description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
+                    description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
                     type: integer
                     minimum: 1
                     maximum: 65535
@@ -882,22 +884,23 @@ spec:
                       title: array of ports to expose on the game server container
                       type: array
                       minItems: 1
-                      required:
-                        - containerPort
                       items:
                         type: object
                         properties:
                           portPolicy:
                             title: the port policy that will be applied to the game server
                             description: |
-                                portPolicy has two options:
-                                - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+                                portPolicy has three options:
+                                - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
                                 - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                                 port is available. When static is the policy specified, `hostPort` is required to be populated
+                                - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                                This will mean that users will need to lookup what port has been opened through the server side SDK.
                             type: string
                             enum:
                             - Dynamic
                             - Static
+                            - Passthrough
                           protocol:
                             title: Protocol being used. Defaults to UDP. TCP is the only other option
                             type: string
@@ -911,7 +914,7 @@ spec:
                             maximum: 65535
                           hostPort:
                             title: The port exposed on the host
-                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "dynamic".
+                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
                             type: integer
                             minimum: 1
                             maximum: 65535
@@ -1125,6 +1128,7 @@ subjects:
   name: gameserver-allocator
   namespace: agones-system
 roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: gameserver-allocator
 
