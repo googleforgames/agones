@@ -1128,6 +1128,7 @@ subjects:
   name: gameserver-allocator
   namespace: agones-system
 roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: gameserver-allocator
 
