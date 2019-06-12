@@ -54,6 +54,7 @@ type Controller struct {
 	crdGetter             v1beta1.CustomResourceDefinitionInterface
 	fleetGetter           getterv1alpha1.FleetsGetter
 	fleetLister           listerv1alpha1.FleetLister
+	fleetSynced           cache.InformerSynced
 	fleetAutoscalerGetter getterv1alpha1.FleetAutoscalersGetter
 	fleetAutoscalerLister listerv1alpha1.FleetAutoscalerLister
 	fleetAutoscalerSynced cache.InformerSynced
@@ -77,6 +78,7 @@ func NewController(
 		crdGetter:             extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		fleetGetter:           agonesClient.StableV1alpha1(),
 		fleetLister:           agonesInformer.Fleets().Lister(),
+		fleetSynced:           agonesInformer.Fleets().Informer().HasSynced,
 		fleetAutoscalerGetter: agonesClient.StableV1alpha1(),
 		fleetAutoscalerLister: agonesInformer.FleetAutoscalers().Lister(),
 		fleetAutoscalerSynced: fasInformer.HasSynced,
@@ -113,7 +115,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.fleetAutoscalerSynced) {
+	if !cache.WaitForCacheSync(stop, c.fleetSynced, c.fleetAutoscalerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
