@@ -540,7 +540,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Node avaibility (stacked)",
+          "title": "Node availability (stacked)",
           "tooltip": {
             "shared": true,
             "sort": 0,

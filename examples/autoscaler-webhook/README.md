@@ -15,7 +15,7 @@ To learn how to deploy the fleet to GKE, please see the tutorial [Create a Fleet
 
 1. Fleet with 100 Replicas (gameservers) was created.
 2. 70 gameservers got allocated -> No scaling for now.
-3. One more server allocated, we got 71 allocated gamesevers, fraction in a fleet is over 0.7 `AllocatedPart > 0.7` so we are scaling by `scaleFactor`. Which results in doubling fleet size.
+3. One more server allocated, we got 71 allocated gameservers, fraction in a fleet is over 0.7 `AllocatedPart > 0.7` so we are scaling by `scaleFactor`. Which results in doubling fleet size.
 4. Fleet now has 200 Replicas.
 5. `AllocatedPart = 71/200 = 0.355` so no downscaling for now.
 6. 22 gameservers were shutdown and now this count of gameservers is not in Allocated state.

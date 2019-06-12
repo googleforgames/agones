@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
-
-# Copyright 2018 Google LLC All Rights Reserved.
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
-echo "installing current release"
-DOCKER_RUN= make install
-echo "starting e2e test"
-DOCKER_RUN= make test-e2e ARGS=-parallel=32
-echo "completed e2e test"
+
+FROM alpine:3.8
+
+RUN apk --update add ca-certificates && \
+    adduser -D agones
+
+COPY --chown=agones:root ./bin/allocator /home/agones/allocator
+COPY --chown=agones:root ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+
+USER agones
+ENTRYPOINT ["/home/agones/allocator"]

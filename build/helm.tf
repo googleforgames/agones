@@ -68,6 +68,9 @@ variable "image_pull_secret" {
 variable "ping_service_type" {
   default = "LoadBalancer"
 }
+variable "allocator_service_type" {
+  default = "LoadBalancer"
+}
 
 variable "values_file" {
   default = "../install/helm/agones/values.yaml"
@@ -176,6 +179,10 @@ resource "helm_release" "agones" {
   set {
     name  = "agones.ping.udp.serviceType"
     value = "${var.ping_service_type}"
+  }
+  set {
+    name  = " agones.allocator.http.serviceType"
+    value = "${var.allocator_service_type}"
   }
   version = "${var.agones_version}"
   namespace  = "agones-system"

@@ -28,7 +28,7 @@ Let's create a Fleet Autoscaler using the following command :
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetautoscaler.yaml
 ```
 
-You should see a successful ouput similar to this :
+You should see a successful output similar to this :
 
 ```
 fleetautoscaler.stable.agones.sev "simple-udp-autoscaler" created
@@ -153,7 +153,7 @@ Double-check the actual number of game server instances and status by running
 kubectl get gs
 ``` 
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS        PORT     NODE        AGE
@@ -226,7 +226,7 @@ Double-check the actual number of game server instances and status by running
 kubectl get gs
 ``` 
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE     ADDRESS        PORT    NODE       AGE

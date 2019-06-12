@@ -210,6 +210,9 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 	currentReplicas := fleet.Status.Replicas
 	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet)
 	if err != nil {
+		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
+			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
+
 		if err := c.updateStatusUnableToScale(fas); err != nil {
 			return err
 		}
@@ -231,6 +234,8 @@ func (c *Controller) scaleFleet(fas *stablev1alpha1.FleetAutoscaler, f *stablev1
 		fCopy.Spec.Replicas = replicas
 		fCopy, err := c.fleetGetter.Fleets(f.ObjectMeta.Namespace).Update(fCopy)
 		if err != nil {
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "AutoScalingFleetError",
+				"Error on scaling fleet %s from %d to %d. Error: %s", fCopy.ObjectMeta.Name, f.Spec.Replicas, fCopy.Spec.Replicas, err.Error())
 			return errors.Wrapf(err, "error updating replicas for fleet %s", f.ObjectMeta.Name)
 		}
 

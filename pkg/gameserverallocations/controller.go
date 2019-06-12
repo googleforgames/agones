@@ -70,8 +70,8 @@ var (
 )
 
 const (
-	secretClientCertName = "client.crt"
-	secretClientKeyName  = "client.key"
+	secretClientCertName = "tls.crt"
+	secretClientKeyName  = "tls.key"
 	secretCaCertName     = "ca.crt"
 )
 
@@ -87,7 +87,9 @@ type Controller struct {
 	gameServerGetter       getterv1alpha1.GameServersGetter
 	gameServerLister       listerv1alpha1.GameServerLister
 	allocationPolicyLister multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
+	allocationPolicySynced cache.InformerSynced
 	secretLister           corev1lister.SecretLister
+	secretSynced           cache.InformerSynced
 	stop                   <-chan struct{}
 	workerqueue            *workerqueue.WorkerQueue
 	recorder               record.EventRecorder
@@ -124,7 +126,9 @@ func NewController(apiServer *apiserver.APIServer,
 		gameServerGetter:       agonesClient.StableV1alpha1(),
 		gameServerLister:       agonesInformer.GameServers().Lister(),
 		allocationPolicyLister: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Lister(),
+		allocationPolicySynced: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer().HasSynced,
 		secretLister:           kubeInformerFactory.Core().V1().Secrets().Lister(),
+		secretSynced:           kubeInformerFactory.Core().V1().Secrets().Informer().HasSynced,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
@@ -142,14 +146,28 @@ func NewController(apiServer *apiserver.APIServer,
 			// only interested in if the old / new state was/is Ready
 			oldGs := oldObj.(*stablev1alpha1.GameServer)
 			newGs := newObj.(*stablev1alpha1.GameServer)
-			if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
-				if key, ok := c.getKey(newGs); ok {
-					if newGs.Status.State == stablev1alpha1.GameServerStateReady {
-						c.readyGameServers.Store(key, newGs)
-					} else {
-						c.readyGameServers.Delete(key)
-					}
+			key, ok := c.getKey(newGs)
+			if !ok {
+				return
+			}
+			if newGs.IsBeingDeleted() {
+				c.readyGameServers.Delete(key)
+			} else if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
+				if newGs.Status.State == stablev1alpha1.GameServerStateReady {
+					c.readyGameServers.Store(key, newGs)
+				} else {
+					c.readyGameServers.Delete(key)
 				}
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			gs, ok := obj.(*stablev1alpha1.GameServer)
+			if !ok {
+				return
+			}
+			var key string
+			if key, ok = c.getKey(gs); ok {
+				c.readyGameServers.Delete(key)
 			}
 		},
 	})
@@ -177,7 +195,7 @@ func (c *Controller) registerAPIResource(api *apiserver.APIServer) {
 func (c *Controller) Run(_ int, stop <-chan struct{}) error {
 	c.stop = stop
 	c.baseLogger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.secretSynced, c.allocationPolicySynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 

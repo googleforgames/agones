@@ -24,7 +24,7 @@ FLEET_NAME = "scale-test-fleet"
 FLEET_RESOURCE_PATH = (
     "/apis/stable.agones.dev/v1alpha1/namespaces/default/fleets")
 ALLOCATION_RESOURCE_PATH = (
-    "/apis/stable.agones.dev/v1alpha1/namespaces/default"
+    "/apis/allocation.agones.dev/v1alpha1/namespaces/default"
     "/gameserverallocations")
 
 
@@ -38,7 +38,7 @@ class UserBehavior(TaskSet):
         ready_replicas = response_json['status']['readyReplicas']
         # Allocate game servers.
         payload = {
-            "apiVersion": "stable.agones.dev/v1alpha1",
+            "apiVersion": "allocation.agones.dev/v1alpha1",
             "kind": "GameServerAllocation",
             "metadata": {
                 "generateName": "gs-allocation-",
@@ -117,7 +117,7 @@ class AgonesUser(HttpLocust):
                         "ports": [
                             {
                                 "name": "default",
-                                "portPolicy": "dynamic",
+                                "portPolicy": "Dynamic",
                                 "containerPort": 26000
                             }
                         ],
@@ -128,7 +128,17 @@ class AgonesUser(HttpLocust):
                                         "name": "simple-udp",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.5")
+                                            "/udp-server:0.9"),
+                                        "resources": {
+                                            "limits": {
+                                                "cpu": "20m",
+                                                "memory": "64Mi"
+                                            },
+                                            "requests": {
+                                                "cpu": "20m",
+                                                "memory": "64Mi"
+                                            }
+                                        }
                                     }
                                 ]
                             }
