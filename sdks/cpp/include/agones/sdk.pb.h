@@ -682,38 +682,38 @@ class AGONES_EXPORT GameServer_Spec_Health : public ::google::protobuf::Message 
 
   // accessors -------------------------------------------------------
 
-  // bool Disabled = 1;
+  // bool disabled = 1;
   void clear_disabled();
   static const int kDisabledFieldNumber = 1;
   bool disabled() const;
   void set_disabled(bool value);
 
-  // int32 PeriodSeconds = 2;
-  void clear_periodseconds();
+  // int32 period_seconds = 2;
+  void clear_period_seconds();
   static const int kPeriodSecondsFieldNumber = 2;
-  ::google::protobuf::int32 periodseconds() const;
-  void set_periodseconds(::google::protobuf::int32 value);
+  ::google::protobuf::int32 period_seconds() const;
+  void set_period_seconds(::google::protobuf::int32 value);
 
-  // int32 FailureThreshold = 3;
-  void clear_failurethreshold();
+  // int32 failure_threshold = 3;
+  void clear_failure_threshold();
   static const int kFailureThresholdFieldNumber = 3;
-  ::google::protobuf::int32 failurethreshold() const;
-  void set_failurethreshold(::google::protobuf::int32 value);
+  ::google::protobuf::int32 failure_threshold() const;
+  void set_failure_threshold(::google::protobuf::int32 value);
 
-  // int32 InitialDelaySeconds = 4;
-  void clear_initialdelayseconds();
+  // int32 initial_delay_seconds = 4;
+  void clear_initial_delay_seconds();
   static const int kInitialDelaySecondsFieldNumber = 4;
-  ::google::protobuf::int32 initialdelayseconds() const;
-  void set_initialdelayseconds(::google::protobuf::int32 value);
+  ::google::protobuf::int32 initial_delay_seconds() const;
+  void set_initial_delay_seconds(::google::protobuf::int32 value);
 
   // @@protoc_insertion_point(class_scope:stable.agones.dev.sdk.GameServer.Spec.Health)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   bool disabled_;
-  ::google::protobuf::int32 periodseconds_;
-  ::google::protobuf::int32 failurethreshold_;
-  ::google::protobuf::int32 initialdelayseconds_;
+  ::google::protobuf::int32 period_seconds_;
+  ::google::protobuf::int32 failure_threshold_;
+  ::google::protobuf::int32 initial_delay_seconds_;
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_sdk_2eproto::TableStruct;
 };
@@ -1649,60 +1649,60 @@ GameServer_ObjectMeta::mutable_labels() {
 
 // GameServer_Spec_Health
 
-// bool Disabled = 1;
+// bool disabled = 1;
 inline void GameServer_Spec_Health::clear_disabled() {
   disabled_ = false;
 }
 inline bool GameServer_Spec_Health::disabled() const {
-  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.Disabled)
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.disabled)
   return disabled_;
 }
 inline void GameServer_Spec_Health::set_disabled(bool value) {
   
   disabled_ = value;
-  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.Disabled)
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.disabled)
 }
 
-// int32 PeriodSeconds = 2;
-inline void GameServer_Spec_Health::clear_periodseconds() {
-  periodseconds_ = 0;
+// int32 period_seconds = 2;
+inline void GameServer_Spec_Health::clear_period_seconds() {
+  period_seconds_ = 0;
 }
-inline ::google::protobuf::int32 GameServer_Spec_Health::periodseconds() const {
-  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.PeriodSeconds)
-  return periodseconds_;
+inline ::google::protobuf::int32 GameServer_Spec_Health::period_seconds() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.period_seconds)
+  return period_seconds_;
 }
-inline void GameServer_Spec_Health::set_periodseconds(::google::protobuf::int32 value) {
+inline void GameServer_Spec_Health::set_period_seconds(::google::protobuf::int32 value) {
   
-  periodseconds_ = value;
-  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.PeriodSeconds)
+  period_seconds_ = value;
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.period_seconds)
 }
 
-// int32 FailureThreshold = 3;
-inline void GameServer_Spec_Health::clear_failurethreshold() {
-  failurethreshold_ = 0;
+// int32 failure_threshold = 3;
+inline void GameServer_Spec_Health::clear_failure_threshold() {
+  failure_threshold_ = 0;
 }
-inline ::google::protobuf::int32 GameServer_Spec_Health::failurethreshold() const {
-  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.FailureThreshold)
-  return failurethreshold_;
+inline ::google::protobuf::int32 GameServer_Spec_Health::failure_threshold() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.failure_threshold)
+  return failure_threshold_;
 }
-inline void GameServer_Spec_Health::set_failurethreshold(::google::protobuf::int32 value) {
+inline void GameServer_Spec_Health::set_failure_threshold(::google::protobuf::int32 value) {
   
-  failurethreshold_ = value;
-  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.FailureThreshold)
+  failure_threshold_ = value;
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.failure_threshold)
 }
 
-// int32 InitialDelaySeconds = 4;
-inline void GameServer_Spec_Health::clear_initialdelayseconds() {
-  initialdelayseconds_ = 0;
+// int32 initial_delay_seconds = 4;
+inline void GameServer_Spec_Health::clear_initial_delay_seconds() {
+  initial_delay_seconds_ = 0;
 }
-inline ::google::protobuf::int32 GameServer_Spec_Health::initialdelayseconds() const {
-  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.InitialDelaySeconds)
-  return initialdelayseconds_;
+inline ::google::protobuf::int32 GameServer_Spec_Health::initial_delay_seconds() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.GameServer.Spec.Health.initial_delay_seconds)
+  return initial_delay_seconds_;
 }
-inline void GameServer_Spec_Health::set_initialdelayseconds(::google::protobuf::int32 value) {
+inline void GameServer_Spec_Health::set_initial_delay_seconds(::google::protobuf::int32 value) {
   
-  initialdelayseconds_ = value;
-  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.InitialDelaySeconds)
+  initial_delay_seconds_ = value;
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.GameServer.Spec.Health.initial_delay_seconds)
 }
 
 // -------------------------------------------------------------------
