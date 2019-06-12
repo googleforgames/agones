@@ -8,6 +8,23 @@ description: >
 
 In this quickstart, we will create a Kubernetes cluster, and populate it with the resource types that power Agones.
 
+## Usage Requirements
+
+- Kubernetes cluster version 1.11
+    - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/), 
+      [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
+    - If you are creating and managing your own Kubernetes cluster, the
+    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
+    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
+    admission controllers are required.
+    We also recommend following the
+    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
+- Firewall access for the range of ports that Game Servers can be connected to in the cluster.
+- Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
+
+> Later versions of Kubernetes may work, but this project is tested against 1.11, and is therefore the supported version.
+> Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
+
 ## Setting up a Google Kubernetes Engine (GKE) cluster
 
 Follow these steps to create a cluster and install Agones directly on Google Kubernetes Engine (GKE).
@@ -87,7 +104,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
 
 Flag explanations:
 
-* cluster-version: Agones requires Kubernetes version 1.11+.
+* cluster-version: Agones requires Kubernetes version 1.11.
 * no-enable-legacy-authorization: This enables RBAC, the authorization scheme used by Agones to control access to resources.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * enable-basic-auth/password: Sets the master auth scheme for interacting with the cluster.
