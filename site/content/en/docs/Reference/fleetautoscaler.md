@@ -59,7 +59,8 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
                     as instances are being allocated or terminated
                     it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
     - `minReplicas` is the minimum fleet size to be set by this FleetAutoscaler. 
-                    if not specified, the minimum fleet size will be bufferSize
+                    if not specified, the minimum fleet size will be bufferSize if absolute value is used.
+                    When `bufferSize` in percentage format is used, `minReplicas` should be more than 0.
     - `maxReplicas` is the maximum fleet size that can be set by this FleetAutoscaler. Required. 
   - `webhook` parameters of the webhook policy type
     - `service` is a reference to the service for this webhook. Either `service` or `url` must be specified. If the webhook is running within the cluster, then you should use `service`. Port 8000 will be used if it is open, otherwise it is an error.
@@ -127,7 +128,7 @@ type FleetStatus struct {
 }
 ```
 
-For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by presense of `caBundle`.
+For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by presence of `caBundle`.
 The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
 
 It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.

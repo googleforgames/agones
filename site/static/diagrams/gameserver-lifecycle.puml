@@ -35,20 +35,20 @@ GameServer <-- SDK: Update to <i>Ready</i> State
 
 == Matchmaker requesting GameServer ==
 
-Matchmaker -> K8sAPI: Create: <i>FleetAllocation</i>
+Matchmaker -> K8sAPI: Create: <i>GameServerAllocation</i>
 note left
   Allocation atomically provides
   a GameServer from a pool
   of existing GameServers
   (Usually a <i>Fleet</i>)
 end note
-K8sAPI -> Agones: Intercepts <i>FleetAllocation</i>\nrequest
+K8sAPI -> Agones: Intercepts <i>GameServerAllocation</i>\nrequest
 "Agones" -> GameServer: Finds a Ready <i>GameServer</i>,\nsets it to <i>Allocated</i> State
 K8sAPI <-- Agones: returns <i>Allocated</i>\nGameServer record
-Matchmaker <-- K8sAPI : <i>FleetAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+Matchmaker <-- K8sAPI : <i>GameServerAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
 note left
 If no <i>GameServer</i> can be
-provided, <i>FleetAllocation</i> is
+provided, <i>GameServerAllocation</i> is
 returned with a Status
 of <i>UnAllocated</i>
 end note

@@ -72,7 +72,7 @@ NAME                         NETWORK  DIRECTION  PRIORITY  ALLOW  DENY  DISABLED
 fleet-allocator-healthcheck  default  INGRESS    1000      tcp          False
 ```
 
-Create a firewall rule for nodePort traffic on the range of ports used by Ingress services of type nodePort.  We are using nobdePort becuase it supports TLS.
+Create a firewall rule for nodePort traffic on the range of ports used by Ingress services of type nodePort.  We are using nodePort because it supports TLS.
 ```
 gcloud compute firewall-rules create nodeport-rule \
   --allow=tcp:30000-32767 \

@@ -52,8 +52,10 @@ func init() {
 // HandleError wraps runtime.HandleError so that it is possible to
 // use WithField with logrus.
 func HandleError(logger *logrus.Entry, err error) {
-	// it's a bit of a double handle, but I can't see a better way to do it
-	logger.WithError(err).Error()
+	if logger != nil {
+		// it's a bit of a double handle, but I can't see a better way to do it
+		logger.WithError(err).Error()
+	}
 	runtime.HandleError(err)
 }
 

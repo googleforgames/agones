@@ -59,13 +59,15 @@ func TestGameServerSetGameServer(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(gs, &gsSet))
 }
 
+// TestGameServerSetValidateUpdate test GameServerSet Validate() and ValidateUpdate()
 func TestGameServerSetValidateUpdate(t *testing.T) {
+	gsSpec := defaultGameServer().Spec
 	gsSet := GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{Name: "test"},
 		Spec: GameServerSetSpec{
 			Replicas: 10,
 			Template: GameServerTemplateSpec{
-				Spec: GameServerSpec{Ports: []GameServerPort{{ContainerPort: 1234}}},
+				Spec: gsSpec,
 			},
 		},
 	}
@@ -103,4 +105,23 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	causes, ok = newGSS.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
+
+	newGSS = gsSet.DeepCopy()
+	newGSS.Name = string(bytes)
+	causes, ok = gsSet.ValidateUpdate(newGSS)
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Name", causes[0].Field)
+
+	gsSet.Spec.Template.Spec.Template =
+		corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "myimage"}, {Name: "container2", Image: "myimage"}},
+			},
+		}
+	causes, ok = gsSet.Validate()
+
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+	assert.Equal(t, "container", causes[0].Field)
 }

@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 0.10.0
+base_version = 0.11.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -57,7 +57,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=kind-$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.8
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.10
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -86,6 +86,7 @@ build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
+allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 
 gomod_on = GO111MODULE=on
 
@@ -197,7 +198,7 @@ include ./includes/sdk.mk
 build: build-images build-sdks
 
 # build the docker images
-build-images: build-controller-image build-agones-sdk-image build-ping-image
+build-images: build-controller-image build-agones-sdk-image build-ping-image build-allocator-image
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -236,9 +237,11 @@ test-go:
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
 test-e2e: $(ensure-build-image)
+	echo "Starting e2e test runner!"
 	$(GO_TEST) $(agones_package)/test/e2e $(ARGS) $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET)
+	echo "Finishing e2e test runner!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets
@@ -262,12 +265,13 @@ test-install-yaml:
 	diff /tmp/agones-install/install.yaml.sorted /tmp/agones-install/install.current.yaml.sorted
 
 # Push all the images up to $(REGISTRY)
-push: push-controller-image push-agones-sdk-image push-ping-image
+push: push-controller-image push-agones-sdk-image push-ping-image push-allocator-image
 
 # Installs the current development version of Agones into the Kubernetes cluster
 install: ALWAYS_PULL_SIDECAR := true
 install: IMAGE_PULL_POLICY := "Always"
 install: PING_SERVICE_TYPE := "LoadBalancer"
+install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
@@ -276,6 +280,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
 		--set agones.ping.http.serviceType=$(PING_SERVICE_TYPE),agones.ping.udp.serviceType=$(PING_SERVICE_TYPE) \
+		--set agones.allocator.http.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		agones $(mount_path)/install/helm/agones/
 
@@ -351,6 +356,20 @@ push-ping-image: $(ensure-build-image)
 build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
+# Build a static binary for the allocator service
+build-allocator-binary: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+
+# Pushes up the allocator image
+push-allocator-image: $(ensure-build-image)
+	docker push $(allocator_tag)
+
+# Build the image for the allocator service
+build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
+
 # push the gameservers sidecar image
 push-agones-sdk-image: $(ensure-build-image)
 	docker push $(sidecar_tag)
@@ -360,6 +379,7 @@ gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
+		--set agones.allocator.generateTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
 

@@ -34,7 +34,7 @@ Let's create a GameServer using the following command :
 kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 ```
 
-You should see a successful ouput similar to this :
+You should see a successful output similar to this :
 
 ```
 gameserver "simple-udp" created
@@ -107,7 +107,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.8
+        Image:  gcr.io/agones-images/udp-server:0.10
         Name:   simple-udp
         Resources:
           Limits:
@@ -143,7 +143,7 @@ Let's retrieve the IP address and the allocated port of your Game Server :
 kubectl get gs
 ```
 
-This should ouput your Game Server IP address and ports, eg:
+This should output your Game Server IP address and ports, eg:
 
 ```
 NAME               STATE   ADDRESS         PORT   NODE     AGE

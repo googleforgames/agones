@@ -94,6 +94,29 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 			},
 		},
+		"defaults on passthrough": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{PortPolicy: Passthrough}},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{
+							{Name: "testing", Image: "testing/image"},
+						}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol:   "UDP",
+				state:      GameServerStatePortAllocation,
+				policy:     Passthrough,
+				scheduling: apis.Packed,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    3,
+					InitialDelaySeconds: 5,
+					PeriodSeconds:       5,
+				},
+			},
+		},
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
@@ -242,9 +265,10 @@ func TestGameServerValidate(t *testing.T) {
 		fields = append(fields, f.Field)
 	}
 	assert.False(t, ok)
-	assert.Len(t, causes, 3)
+	assert.Len(t, causes, 4)
 	assert.Contains(t, fields, "container")
 	assert.Contains(t, fields, "main.hostPort")
+	assert.Contains(t, fields, "main.containerPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 
 	gs = GameServer{
@@ -296,24 +320,27 @@ func TestGameServerValidate(t *testing.T) {
 	causes, ok = gs.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
+
+	gs = GameServer{
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "one", PortPolicy: Passthrough, ContainerPort: 1294}, {PortPolicy: Passthrough, Name: "two", HostPort: 7890}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+	assert.Contains(t, fields, "one.containerPort")
+	assert.Contains(t, fields, "two.hostPort")
 }
 
 func TestGameServerPod(t *testing.T) {
-	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
-		Spec: GameServerSpec{
-			Ports: []GameServerPort{
-				{
-					ContainerPort: 7777,
-					HostPort:      9999,
-					PortPolicy:    Static,
-				},
-			},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
-				},
-			},
-		}, Status: GameServerStatus{State: GameServerStateCreating}}
+	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
 
 	pod, err := fixture.Pod()
@@ -431,8 +458,12 @@ func TestGameServerCountPorts(t *testing.T) {
 		{PortPolicy: Static},
 	}}}
 
-	assert.Equal(t, 3, fixture.CountPorts(Dynamic))
-	assert.Equal(t, 1, fixture.CountPorts(Static))
+	assert.Equal(t, 3, fixture.CountPorts(func(policy PortPolicy) bool {
+		return policy == Dynamic
+	}))
+	assert.Equal(t, 1, fixture.CountPorts(func(policy PortPolicy) bool {
+		return policy == Static
+	}))
 }
 
 func TestGameServerPatch(t *testing.T) {
@@ -474,6 +505,27 @@ func TestGameServerGetDevAddress(t *testing.T) {
 	assert.Equal(t, "", devAddress, "dev-address IP address should be 127.1.1.1")
 }
 
+func TestGameServerIsDeletable(t *testing.T) {
+	gs := &GameServer{Status: GameServerStatus{State: GameServerStateStarting}}
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateAllocated
+	assert.False(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateReserved
+	assert.False(t, gs.IsDeletable())
+
+	now := metav1.Now()
+	gs.ObjectMeta.DeletionTimestamp = &now
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateAllocated
+	assert.True(t, gs.IsDeletable())
+
+	gs.Status.State = GameServerStateReady
+	assert.True(t, gs.IsDeletable())
+}
+
 func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 	t.Parallel()
 
@@ -504,4 +556,22 @@ func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 	assert.Len(t, p2.Spec.Containers, 2)
 	assert.True(t, p2.Spec.Containers[0].TTY)
 	assert.False(t, p2.Spec.Containers[1].TTY)
+}
+
+func defaultGameServer() *GameServer {
+	return &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{
+				{
+					ContainerPort: 7777,
+					HostPort:      9999,
+					PortPolicy:    Static,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
+				},
+			},
+		}, Status: GameServerStatus{State: GameServerStateCreating}}
 }

@@ -38,7 +38,7 @@ Let's create a Fleet using the following command :
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
 ```
 
-You should see a successful ouput similar to this :
+You should see a successful output similar to this :
 
 ```
 fleet "simple-udp" created
@@ -111,7 +111,7 @@ Spec:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.8
+            Image:  gcr.io/agones-images/udp-server:0.10
             Name:   simple-udp
             Resources:
 Status:
@@ -202,7 +202,7 @@ status:
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
 If there are too many concurrent requests overwhelmed the system, `state` will be set to 
-`Contention`even though there are available `GameServer`.
+`Contention` even though there are available `GameServers`.
 
 However, we see that the `status.state` value was set to `Allocated`. 
 This means you have been successfully allocated a `GameServer` out of the fleet, and you can now connect your players to it!
@@ -217,7 +217,7 @@ We can also check to see how many `GameServers` you have `Allocated` vs `Ready` 
 kubectl get gs
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status.State`.
+This will get you a list of all the current `GameServers` and their `Status.State`.
 
 ```
 NAME                     STATE       ADDRESS           PORT   NODE      AGE
@@ -308,7 +308,7 @@ status:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.8
+          - image: gcr.io/agones-images/udp-server:0.10
             name: simple-udp
             resources: {}
     status:
@@ -330,7 +330,7 @@ A handy trick for checking to see how many `GameServers` you have `Allocated` vs
 kubectl get gs
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS          PORT   NODE        AGE
@@ -434,7 +434,7 @@ with a Container Port of `6000`.
 > NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
 
 Run `watch kubectl get gs`
-until you can see that there are
+until you can see that there is
 one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
 is the new configuration.
 

@@ -100,7 +100,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 			desc: "DeleteServers",
 			list: []*v1alpha1.GameServer{
 				gsWithState(v1alpha1.GameServerStateReady),
-				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReserved),
 				gsWithState(v1alpha1.GameServerStateReady),
 			},
 			targetReplicaCount:     1,
@@ -132,6 +132,16 @@ func TestComputeReconciliationAction(t *testing.T) {
 			wantNumServersToDelete: 1,
 		},
 		{
+			desc: "DeleteIgnoresReservedServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateReserved),
+				gsWithState(v1alpha1.GameServerStateReserved),
+			},
+			targetReplicaCount:     0,
+			wantNumServersToDelete: 1,
+		},
+		{
 			desc: "CreateWhileDeletionsPending",
 			list: []*v1alpha1.GameServer{
 				// 2 being deleted, one ready, target is 4, we add 3 more.
@@ -156,6 +166,44 @@ func TestComputeReconciliationAction(t *testing.T) {
 			targetReplicaCount:  10,
 			wantNumServersToAdd: 0,
 			wantIsPartial:       true,
+		},
+		{
+			desc: "DeletingUnhealthyGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 2,
+		},
+		{
+			desc: "DeletingErrorGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateError),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 2,
+		},
+		{
+			desc: "DeletingPartialGameServers",
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReady),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+				gsWithState(v1alpha1.GameServerStateUnhealthy),
+				gsWithState(v1alpha1.GameServerStateError),
+			},
+			targetReplicaCount:     3,
+			wantNumServersToAdd:    2,
+			wantNumServersToDelete: 3,
+			wantIsPartial:          true,
 		},
 	}
 
@@ -232,6 +280,14 @@ func TestComputeStatus(t *testing.T) {
 			gsWithState(v1alpha1.GameServerStateCreating),
 			gsWithState(v1alpha1.GameServerStateReady),
 		}, v1alpha1.GameServerSetStatus{ReadyReplicas: 1, AllocatedReplicas: 2, Replicas: 4}},
+		{
+			list: []*v1alpha1.GameServer{
+				gsWithState(v1alpha1.GameServerStateReserved),
+				gsWithState(v1alpha1.GameServerStateReserved),
+				gsWithState(v1alpha1.GameServerStateReady),
+			},
+			wantStatus: v1alpha1.GameServerSetStatus{Replicas: 3, ReadyReplicas: 1, ReservedReplicas: 2},
+		},
 	}
 
 	for _, tc := range cases {
@@ -433,7 +489,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 	err := c.deleteGameServers(gsSet, []*v1alpha1.GameServer{gs1, gs2, gs3})
 	assert.Nil(t, err)
 
-	assert.Equal(t, 3, updatedCount, "Updates should have occured")
+	assert.Equal(t, 3, updatedCount, "Updates should have occurred")
 }
 
 func TestSyncMoreGameServers(t *testing.T) {

@@ -20,10 +20,12 @@ import (
 
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -32,7 +34,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -56,7 +58,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
 	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
@@ -119,7 +121,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	for name, test := range fixtures {
 		t.Run(name, func(t *testing.T) {
 			m := agtesting.NewMocks()
-			hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+			hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 			hc.recorder = m.FakeRecorder
 
 			gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
@@ -154,7 +156,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 
 func TestHealthControllerRun(t *testing.T) {
 	m := agtesting.NewMocks()
-	hc := NewHealthController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	hc.recorder = m.FakeRecorder
 
 	gsWatch := watch.NewFake()
@@ -184,17 +186,21 @@ func TestHealthControllerRun(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	go hc.Run(stop)
+	gsWatch.Add(gs.DeepCopy())
+	podWatch.Add(pod.DeepCopy())
 
-	gsWatch.Add(gs)
-	podWatch.Add(pod)
+	go hc.Run(stop) // nolint: errcheck
+	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+		return hc.workerqueue.RunCount() == 1, nil
+	})
+	assert.NoError(t, err)
 
 	pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gs.Spec.Container, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}
 	// gate
 	assert.True(t, hc.failedContainer(pod))
 	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 
-	podWatch.Modify(pod)
+	podWatch.Modify(pod.DeepCopy())
 
 	select {
 	case <-updated:
@@ -213,7 +219,7 @@ func TestHealthControllerRun(t *testing.T) {
 	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
 	assert.False(t, hc.failedContainer(pod))
 
-	podWatch.Modify(pod)
+	podWatch.Modify(pod.DeepCopy())
 
 	select {
 	case <-updated:
@@ -223,7 +229,7 @@ func TestHealthControllerRun(t *testing.T) {
 
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
 
-	podWatch.Delete(pod)
+	podWatch.Delete(pod.DeepCopy())
 	select {
 	case <-updated:
 	case <-time.After(10 * time.Second):

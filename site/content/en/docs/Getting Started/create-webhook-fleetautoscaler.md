@@ -69,7 +69,7 @@ Let's create a Fleet Autoscaler using the following command:
 kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
 ```
 
-You should see a successful ouput similar to this:
+You should see a successful output similar to this:
 
 ```
 fleetautoscaler.stable.agones.sev "webhook-fleet-autoscaler" created
@@ -201,7 +201,7 @@ Double-check the actual number of game server instances and status by running:
  kubectl get gs -n default
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS         PORT     NODE        AGE
@@ -266,7 +266,7 @@ kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/m
 
 Using TLS and CA bundle we can establish trusted communication between Fleetautoscaler and Webhook which controls size of the fleet (Replicas count). The certificate of the webhook should be signed by Certificate Authority provided in fleetautoscaler yaml configuration file. Which eliminates the possibility to perform man in the middle attack when using HTTP connection to a webhook which can be located inside or outside of our cluster.
 
-Description of common steps with Chapter 1 would be ommited for simplicity, you can see pervious chapter for the details.
+Description of common steps with Chapter 1 would be omitted for simplicity, you can see previous chapter for the details.
 
 #### 1. Deploy the fleet
 
@@ -364,7 +364,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-for i in {0..2} ; do kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
+for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
 ```
 
 #### 7. Check new Autoscaler and Fleet status
@@ -400,7 +400,7 @@ Double-check the actual number of game server instances and status by running:
  kubectl get gs -n default
 ```
 
-This will get you a list of all the current `GameSevers` and their `Status > State`.
+This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
 NAME                     STATE       ADDRESS         PORT      NODE      AGE
@@ -428,6 +428,27 @@ kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/m
 ### Comments 
 
 Note that now secure communication is established and we can trust our webhook. If we need to use server outside of the kubernetes cluster we can use other Root certificate authority and put it into as caBundle parameter in fleetautoscaler configuration (in pem format, base64-encoded).
+
+## Troubleshooting Guide
+
+There could be some problems with configuration of fleetautoscaler and webhook service.
+Easiest way to debug this is to run:
+```
+kubectl describe fleetautoscaler <FleetAutoScalerName>
+```
+Then you would see events at the bottom of the output.
+
+### Common error messages.
+
+Error when you configure wrong Service Path for the FleetAutoscaler:
+```
+Error calculating desired fleet size on FleetAutoscaler simple-fleet-r7fdv-autoscaler. Error: bad status code 404 from the server: https://autoscaler-tls-service.default.svc:8000/scale
+```
+
+Using hostname other than `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` when creating certificate using `openssl` tool:
+```
+Post https://autoscaler-tls-service.default.svc:8000/scale: x509: certificate is not valid for any names, but wanted to match autoscaler-tls-service.default.svc
+```
 
 ## Next Steps
 

@@ -28,7 +28,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -56,6 +55,8 @@ const (
 	GameServerStateError GameServerState = "Error"
 	// GameServerStateUnhealthy is when the GameServer has failed its health checks
 	GameServerStateUnhealthy GameServerState = "Unhealthy"
+	// GameServerStateReserved is for when a GameServer is reserved and therefore can be allocated but not removed
+	GameServerStateReserved GameServerState = "Reserved"
 	// GameServerStateAllocated is when the GameServer has been allocated to a session
 	GameServerStateAllocated GameServerState = "Allocated"
 
@@ -65,6 +66,9 @@ const (
 	// Dynamic PortPolicy means that the system will choose an open
 	// port for the GameServer in question
 	Dynamic PortPolicy = "Dynamic"
+	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+	// This will mean that users will need to lookup what port has been opened through the server side SDK.
+	Passthrough PortPolicy = "Passthrough"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -160,7 +164,7 @@ type GameServerPort struct {
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// ContainerPort is the port that is being opened on the game server process
-	ContainerPort int32 `json:"containerPort"`
+	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
@@ -187,31 +191,36 @@ type GameServerStatusPort struct {
 func (gs *GameServer) ApplyDefaults() {
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
 
-	gs.applyContainerDefaults()
-	gs.applyPortDefaults()
+	gs.Spec.ApplyDefaults()
 	gs.applyStateDefaults()
-	gs.applyHealthDefaults()
-	gs.applySchedulingDefaults()
+}
+
+// ApplyDefaults applies default values to the GameServerSpec if they are not already populated
+func (gss *GameServerSpec) ApplyDefaults() {
+	gss.applyContainerDefaults()
+	gss.applyPortDefaults()
+	gss.applyHealthDefaults()
+	gss.applySchedulingDefaults()
 }
 
 // applyContainerDefaults applues the container defaults
-func (gs *GameServer) applyContainerDefaults() {
-	if len(gs.Spec.Template.Spec.Containers) == 1 {
-		gs.Spec.Container = gs.Spec.Template.Spec.Containers[0].Name
+func (gss *GameServerSpec) applyContainerDefaults() {
+	if len(gss.Template.Spec.Containers) == 1 {
+		gss.Container = gss.Template.Spec.Containers[0].Name
 	}
 }
 
 // applyHealthDefaults applies health checking defaults
-func (gs *GameServer) applyHealthDefaults() {
-	if !gs.Spec.Health.Disabled {
-		if gs.Spec.Health.PeriodSeconds <= 0 {
-			gs.Spec.Health.PeriodSeconds = 5
+func (gss *GameServerSpec) applyHealthDefaults() {
+	if !gss.Health.Disabled {
+		if gss.Health.PeriodSeconds <= 0 {
+			gss.Health.PeriodSeconds = 5
 		}
-		if gs.Spec.Health.FailureThreshold <= 0 {
-			gs.Spec.Health.FailureThreshold = 3
+		if gss.Health.FailureThreshold <= 0 {
+			gss.Health.FailureThreshold = 3
 		}
-		if gs.Spec.Health.InitialDelaySeconds <= 0 {
-			gs.Spec.Health.InitialDelaySeconds = 5
+		if gss.Health.InitialDelaySeconds <= 0 {
+			gss.Health.InitialDelaySeconds = 5
 		}
 	}
 }
@@ -220,50 +229,40 @@ func (gs *GameServer) applyHealthDefaults() {
 func (gs *GameServer) applyStateDefaults() {
 	if gs.Status.State == "" {
 		gs.Status.State = GameServerStateCreating
-		if gs.HasPortPolicy(Dynamic) {
+		// applyStateDefaults() should be called after applyPortDefaults()
+		if gs.HasPortPolicy(Dynamic) || gs.HasPortPolicy(Passthrough) {
 			gs.Status.State = GameServerStatePortAllocation
 		}
 	}
 }
 
 // applyPortDefaults applies default values for all ports
-func (gs *GameServer) applyPortDefaults() {
-	for i, p := range gs.Spec.Ports {
+func (gss *GameServerSpec) applyPortDefaults() {
+	for i, p := range gss.Ports {
 		// basic spec
 		if p.PortPolicy == "" {
-			gs.Spec.Ports[i].PortPolicy = Dynamic
+			gss.Ports[i].PortPolicy = Dynamic
 		}
 
 		if p.Protocol == "" {
-			gs.Spec.Ports[i].Protocol = "UDP"
+			gss.Ports[i].Protocol = "UDP"
 		}
 	}
 }
 
-func (gs *GameServer) applySchedulingDefaults() {
-	if gs.Spec.Scheduling == "" {
-		gs.Spec.Scheduling = apis.Packed
+func (gss *GameServerSpec) applySchedulingDefaults() {
+	if gss.Scheduling == "" {
+		gss.Scheduling = apis.Packed
 	}
 }
 
-// Validate validates the GameServer configuration.
-// If a GameServer is invalid there will be > 0 values in
+// Validate validates the GameServerSpec configuration.
+// devAddress is a specific IP address used for local Gameservers, for fleets "" is used
+// If a GameServer Spec is invalid there will be > 0 values in
 // the returned array
-func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
+func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
-
-	// Long GS name would produce an invalid Label for Pod
-	if len(gs.Name) > validation.LabelValueMaxLength {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   fmt.Sprintf("Name"),
-			Message: fmt.Sprintf("Length of Gameserver '%s' name should be no more than 63 characters.", gs.ObjectMeta.Name),
-		})
-	}
-
-	// make sure the host port is specified if this is a development server
-	devAddress, hasDevAddress := gs.GetDevAddress()
-	if hasDevAddress {
+	if devAddress != "" {
 		// verify that the value is a valid IP address.
 		if net.ParseIP(devAddress) == nil {
 			causes = append(causes, metav1.StatusCause{
@@ -273,7 +272,7 @@ func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
 			})
 		}
 
-		for _, p := range gs.Spec.Ports {
+		for _, p := range gss.Ports {
 			if p.HostPort == 0 {
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueRequired,
@@ -285,33 +284,51 @@ func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueRequired,
 					Field:   fmt.Sprintf("%s.portPolicy", p.Name),
-					Message: fmt.Sprintf("PortPolicy must be Static"),
+					Message: fmt.Sprint(ErrPortPolicyStatic),
 				})
 			}
 		}
 	} else {
 		// make sure a name is specified when there is multiple containers in the pod.
-		if len(gs.Spec.Container) == 0 && len(gs.Spec.Template.Spec.Containers) > 1 {
+		if len(gss.Container) == 0 && len(gss.Template.Spec.Containers) > 1 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   "container",
-				Message: "Container is required when using multiple containers in the pod template",
+				Message: ErrContainerRequired,
 			})
 		}
 
 		// no host port when using dynamic PortPolicy
-		for _, p := range gs.Spec.Ports {
-			if p.HostPort > 0 && p.PortPolicy == Dynamic {
+		for _, p := range gss.Ports {
+			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+				if p.ContainerPort <= 0 {
+					causes = append(causes, metav1.StatusCause{
+						Type:    metav1.CauseTypeFieldValueInvalid,
+						Field:   fmt.Sprintf("%s.containerPort", p.Name),
+						Message: ErrContainerPortRequired,
+					})
+				}
+			}
+
+			if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueInvalid,
+					Field:   fmt.Sprintf("%s.containerPort", p.Name),
+					Message: ErrContainerPortPassthrough,
+				})
+			}
+
+			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: "HostPort cannot be specified with a Dynamic PortPolicy",
+					Message: ErrHostPortDynamic,
 				})
 			}
 		}
 
 		// make sure the container value points to a valid container
-		_, _, err := gs.FindGameServerContainer()
+		_, _, err := gss.FindGameServerContainer()
 		if err != nil {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
@@ -320,7 +337,20 @@ func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
 			})
 		}
 	}
+	return causes, len(causes) == 0
 
+}
+
+// Validate validates the GameServer configuration.
+// If a GameServer is invalid there will be > 0 values in
+// the returned array
+func (gs *GameServer) Validate() ([]metav1.StatusCause, bool) {
+	causes := validateName(gs)
+
+	// make sure the host port is specified if this is a development server
+	devAddress, _ := gs.GetDevAddress()
+	gssCauses, _ := gs.Spec.Validate(devAddress)
+	causes = append(causes, gssCauses...)
 	return causes, len(causes) == 0
 }
 
@@ -330,9 +360,14 @@ func (gs *GameServer) GetDevAddress() (string, bool) {
 	return devAddress, hasDevAddress
 }
 
-// IsAllocated returns true if the server is currently allocated.
-func (gs *GameServer) IsAllocated() bool {
-	return gs.ObjectMeta.DeletionTimestamp == nil && gs.Status.State == GameServerStateAllocated
+// IsDeletable returns false if the server is currently allocated/reserved and is not already in the
+// process of being deleted
+func (gs *GameServer) IsDeletable() bool {
+	if gs.Status.State == GameServerStateAllocated || gs.Status.State == GameServerStateReserved {
+		return !gs.ObjectMeta.DeletionTimestamp.IsZero()
+	}
+
+	return true
 }
 
 // IsBeingDeleted returns true if the server is in the process of being deleted.
@@ -341,16 +376,23 @@ func (gs *GameServer) IsBeingDeleted() bool {
 }
 
 // FindGameServerContainer returns the container that is specified in
-// spec.gameServer.container. Returns the index and the value.
+// gameServer.Spec.Container. Returns the index and the value.
 // Returns an error if not found
-func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
-	for i, c := range gs.Spec.Template.Spec.Containers {
-		if c.Name == gs.Spec.Container {
+func (gss *GameServerSpec) FindGameServerContainer() (int, corev1.Container, error) {
+	for i, c := range gss.Template.Spec.Containers {
+		if c.Name == gss.Container {
 			return i, c, nil
 		}
 	}
 
-	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gs.Spec.Container)
+	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gss.Container)
+}
+
+// FindGameServerContainer returns the container that is specified in
+// gameServer.Spec.Container. Returns the index and the value.
+// Returns an error if not found
+func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
+	return gs.Spec.FindGameServerContainer()
 }
 
 // ApplyToPodGameServerContainer applies func(v1.Container) to the pod's gameserver container
@@ -496,11 +538,11 @@ func (p GameServerPort) Status() GameServerStatusPort {
 }
 
 // CountPorts returns the number of
-// ports that have this type of PortPolicy
-func (gs *GameServer) CountPorts(policy PortPolicy) int {
+// ports that match condition function
+func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 	count := 0
 	for _, p := range gs.Spec.Ports {
-		if p.PortPolicy == policy {
+		if f(p.PortPolicy) {
 			count++
 		}
 	}

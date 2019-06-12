@@ -15,13 +15,11 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"reflect"
 
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -72,14 +70,18 @@ type GameServerSetStatus struct {
 	Replicas int32 `json:"replicas"`
 	// ReadyReplicas are the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
+	// ReservedReplicas are the number of Reserved GameServer replicas
+	ReservedReplicas int32 `json:"reservedReplicas"`
 	// AllocatedReplicas are the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
+	// ShutdownReplicas are the number of Shutdown GameServers replicas
+	ShutdownReplicas int32 `json:"shutdownReplicas"`
 }
 
 // ValidateUpdate validates when updates occur. The argument
 // is the new GameServerSet, being passed into the old GameServerSet
 func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
+	causes := validateName(new)
 	if !reflect.DeepEqual(gsSet.Spec.Template, new.Spec.Template) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
@@ -93,16 +95,20 @@ func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusC
 
 // Validate validates when Create occur. Check the name szie
 func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
-	if len(gsSet.Name) > validation.LabelValueMaxLength {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "Name",
-			Message: fmt.Sprintf("Length of GameServerSet '%s' name should be no more than 63 characters.", gsSet.ObjectMeta.Name),
-		})
+	causes := validateName(gsSet)
+
+	// check Gameserver specification in a Gameserverset
+	gsCauses := validateGSSpec(gsSet)
+	if len(gsCauses) > 0 {
+		causes = append(causes, gsCauses...)
 	}
 
 	return causes, len(causes) == 0
+}
+
+// GetGameServerSpec get underlying Gameserver specification
+func (gsSet *GameServerSet) GetGameServerSpec() *GameServerSpec {
+	return &gsSet.Spec.Template.Spec
 }
 
 // GameServer returns a single GameServer derived

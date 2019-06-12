@@ -36,17 +36,15 @@ func main() {
 	go doSignal()
 
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
+	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
-
-	log.Printf("Starting UDP server, listening on port %s", *port)
-	conn, err := net.ListenPacket("udp", ":"+*port)
-	if err != nil {
-		log.Fatalf("Could not start udp server: %v", err)
+	if epass := os.Getenv("PASSTHROUGH"); epass != "" {
+		p := strings.ToUpper(epass) == "TRUE"
+		passthrough = &p
 	}
-	defer conn.Close() // nolint: errcheck
 
 	log.Print("Creating SDK instance")
 	s, err := sdk.NewSDK()
@@ -57,6 +55,24 @@ func main() {
 	log.Print("Starting Health Ping")
 	stop := make(chan struct{})
 	go doHealth(s, stop)
+
+	if *passthrough {
+		var gs *coresdk.GameServer
+		gs, err = s.GameServer()
+		if err != nil {
+			log.Fatalf("Could not get gameserver port details: %s", err)
+		}
+
+		p := strconv.FormatInt(int64(gs.Status.Ports[0].Port), 10)
+		port = &p
+	}
+
+	log.Printf("Starting UDP server, listening on port %s", *port)
+	conn, err := net.ListenPacket("udp", ":"+*port)
+	if err != nil {
+		log.Fatalf("Could not start udp server: %v", err)
+	}
+	defer conn.Close() // nolint: errcheck
 
 	log.Print("Marking this server as ready")
 	// This tells Agones that the server is ready to receive connections.
@@ -85,6 +101,8 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		switch parts[0] {
 		// shuts down the gameserver
 		case "EXIT":
+			// respond here, as we os.Exit() before we get to below
+			respond(conn, sender, "ACK: "+txt+"\n")
 			exit(s)
 
 		// turns off the health pings

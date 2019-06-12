@@ -177,7 +177,7 @@ steps:
   waitFor:
     - site-gopath
   dir: "go/src/site"
-  args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
+  args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
 

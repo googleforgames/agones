@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
 
@@ -100,8 +101,62 @@ func TestSumStatusAllocatedReplicas(t *testing.T) {
 	assert.Equal(t, int32(5), SumStatusAllocatedReplicas([]*GameServerSet{gsSet1, gsSet2}))
 }
 
+func TestFleetGameserverSpec(t *testing.T) {
+	f := defaultFleet()
+	f.ApplyDefaults()
+	causes, ok := f.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
+
+	f.Spec.Template.Spec.Template =
+		corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{{Name: "container", Image: "myimage"}, {Name: "container2", Image: "myimage"}},
+			},
+		}
+	causes, ok = f.Validate()
+
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "container", causes[0].Field)
+
+	f.Spec.Template.Spec.Container = "testing"
+	causes, ok = f.Validate()
+
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "Could not find a container named testing", causes[0].Message)
+
+	f.Spec.Template.Spec.Container = "container"
+	causes, ok = f.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
+
+	// Verify RollingUpdate parameters validation
+	percent := intstr.FromString("0%")
+	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &percent
+	f.Spec.Strategy.RollingUpdate.MaxSurge = &percent
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+
+	intParam := intstr.FromInt(0)
+	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &intParam
+	f.Spec.Strategy.RollingUpdate.MaxSurge = &intParam
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+
+	percent = intstr.FromString("2a")
+	f.Spec.Strategy.RollingUpdate.MaxUnavailable = &percent
+	f.Spec.Strategy.RollingUpdate.MaxSurge = &percent
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+}
+
 func TestFleetName(t *testing.T) {
-	f := Fleet{}
+	f := defaultFleet()
 
 	nameLen := validation.LabelValueMaxLength + 1
 	bytes := make([]byte, nameLen)
@@ -129,4 +184,21 @@ func TestSumStatusReplicas(t *testing.T) {
 	}
 
 	assert.Equal(t, int32(30), SumStatusReplicas(fixture))
+}
+
+func defaultFleet() *Fleet {
+	gs := GameServer{
+		Spec: GameServerSpec{
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+	}
+	return &Fleet{
+		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-", Namespace: "defaultNs"},
+		Spec: FleetSpec{
+			Replicas: 2,
+			Template: GameServerTemplateSpec{
+				Spec: gs.Spec,
+			},
+		},
+	}
 }

@@ -15,15 +15,12 @@
 package v1alpha1
 
 import (
-	"fmt"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 const (
@@ -74,6 +71,9 @@ type FleetStatus struct {
 	Replicas int32 `json:"replicas"`
 	// ReadyReplicas are the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
+	// ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+	// Reserved instances won't be deleted on scale down, but won't cause an autoscaler to scale up.
+	ReservedReplicas int32 `json:"reservedReplicas"`
 	// AllocatedReplicas are the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
@@ -138,19 +138,46 @@ func (f *Fleet) ApplyDefaults() {
 	f.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 }
 
+// GetGameServerSpec get underlying Gameserver specification
+func (f *Fleet) GetGameServerSpec() *GameServerSpec {
+	return &f.Spec.Template.Spec
+}
+
+func (f *Fleet) validateRollingUpdate(value *intstr.IntOrString, causes *[]metav1.StatusCause, parameter string) {
+	r, err := intstr.GetValueFromIntOrPercent(value, 100, true)
+	if value.Type == intstr.String {
+		if err != nil || r < 1 || r > 99 {
+			*causes = append(*causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   parameter,
+				Message: parameter + " does not have a valid percentage value (1%-99%)",
+			})
+		}
+	} else {
+		if r < 1 {
+			*causes = append(*causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   parameter,
+				Message: parameter + " does not have a valid integer value (>1)",
+			})
+		}
+	}
+}
+
 // Validate validates the Fleet configuration.
 // If a Fleet is invalid there will be > 0 values in
 // the returned array
 func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
-	var causes []metav1.StatusCause
+	causes := validateName(f)
 
-	// make sure the Name of a Fleet does not oversize the Label size in GSS and GS
-	if len(f.Name) > validation.LabelValueMaxLength {
-		causes = append(causes, metav1.StatusCause{
-			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   fmt.Sprintf("Name"),
-			Message: fmt.Sprintf("Length of Fleet '%s' name should be no more than 63 characters.", f.ObjectMeta.Name),
-		})
+	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
+		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, &causes, "MaxUnavailable")
+		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, &causes, "MaxSurge")
+	}
+	// check Gameserver specification in a Fleet
+	gsCauses := validateGSSpec(f)
+	if len(gsCauses) > 0 {
+		causes = append(causes, gsCauses...)
 	}
 
 	return causes, len(causes) == 0

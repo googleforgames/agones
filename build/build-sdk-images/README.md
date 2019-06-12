@@ -2,7 +2,7 @@
 
 As we seen before GameServers can communicate their current state back to Agones controller using a side car. This sidecar runs a GRPC server handling the communication to Agones, the GameServer connects using a SDK which a thin wrapper around GRPC client code.
 
-By using GRPC, adding more languages should be pretty straigthforward as it supports code generation for many of them.
+By using GRPC, adding more languages should be pretty straightforward as it supports code generation for many of them.
 
 > if your language doesn't support GRPC you can still create a SDK by connecting to the HTTP GRPC gateway.
 

@@ -95,9 +95,23 @@ agones:
       periodSeconds: 3
       failureThreshold: 3
       timeoutSeconds: 1
+  allocator:
+    install: true
+    tolerations:
+    - key: "stable.agones.dev/agones-system"
+      operator: "Equal"
+      value: "true"
+      effect: "NoExecute"
+    replicas: 3
+    http:
+      expose: true
+      response: ok
+      port: 443
+      serviceType: LoadBalancer
+    generateTLS: true
   image:
     registry: gcr.io/agones-images
-    tag: 0.10.0
+    tag: 0.11.0
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
@@ -109,6 +123,10 @@ agones:
     ping:
       name: agones-ping
       pullPolicy: IfNotPresent
+    allocator:
+      name: agones-allocator
+      pullPolicy: IfNotPresent
+
 
 gameservers:
   namespaces:

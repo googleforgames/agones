@@ -1,0 +1,199 @@
+# Copyright 2019 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{- if .Values.agones.allocator.install }}
+# Define a Service for the gameserver-allocator
+apiVersion: v1
+kind: Service
+metadata:
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    component: allocator
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    multicluster.agones.dev/role: allocator
+  ports:
+    - port: {{ .Values.agones.allocator.http.port }}
+      name: https
+      targetPort: 8443
+      protocol: TCP
+  type: {{ .Values.agones.allocator.http.serviceType }}
+
+---
+# Deploy a pod to run the gameserver-allocator code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: {{ template "agones.name" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.agones.allocator.replicas }}
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+      app: {{ template "agones.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  template:
+    metadata:
+      labels:
+        multicluster.agones.dev/role: allocator
+        app: {{ template "agones.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      serviceAccountName: gameserver-allocator
+      volumes:
+      - name: tls
+        secret:
+          secretName: allocator-tls
+      - name: client-ca
+        secret:
+          secretName: allocator-client-ca
+      containers:
+      - name: agones-allocator
+        image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
+        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        ports:
+        - name: https
+          containerPort: 8443
+        volumeMounts:
+        - mountPath: /home/allocator/tls
+          name: tls
+          readOnly: true
+        - mountPath: /home/allocator/client-ca
+          name: client-ca
+          readOnly: true
+
+---
+# Create a ClusterRole in that grants access to the agones allocation api
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "agones.name" $ }}
+    chart: {{ template "agones.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+rules:
+- apiGroups: ["allocation.agones.dev"]
+  resources: ["gameserverallocations"]
+  verbs: ["create"]
+
+---
+# Create a ServiceAccount that will be bound to the above role
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "agones.name" $ }}
+    chart: {{ template "agones.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+
+---
+# Bind the gameserver-allocator ServiceAccount to the gameserver-allocator ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "agones.name" $ }}
+    chart: {{ template "agones.chart" $ }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+subjects:
+- kind: ServiceAccount
+  name: gameserver-allocator
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gameserver-allocator
+ 
+{{- end }}
+
+---
+# Allocation CA
+{{- $ca := genCA "allocation-ca" 3650 }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: allocator-client-ca
+  labels:
+    app: {{ template "agones.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+{{- if .Values.agones.allocator.generateTLS }}
+  client-ca.crt: {{ b64enc $ca.Cert }}
+{{- else }}
+  {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
+{{- end }}
+
+---
+# Allocation TLS certs
+{{- $cert := genSignedCert "" nil nil 3650 $ca }}
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: allocator-tls
+  labels:
+    app: {{ template "agones.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+{{- if .Values.agones.allocator.generateTLS }}
+  tls.crt: {{ b64enc $cert.Cert }}
+  tls.key: {{ b64enc $cert.Key }}
+{{- else }}
+  tls.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
+  tls.key: {{ .Files.Get "certs/allocator/server.key" | b64enc }}
+{{- end }}
+
+---
+# Allocation TLS CA
+apiVersion: v1
+kind: Secret
+metadata:
+  name: allocator-tls-ca
+  labels:
+    app: {{ template "agones.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+{{- if .Values.agones.allocator.generateTLS }}
+  tls-ca.crt: {{ b64enc $ca.Cert }}
+{{- else }}
+  tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
+{{- end }}
