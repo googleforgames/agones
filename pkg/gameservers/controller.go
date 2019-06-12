@@ -17,6 +17,7 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -792,7 +793,7 @@ func (c *Controller) address(gs *v1alpha1.GameServer, pod *corev1.Pod) (string, 
 	}
 
 	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeExternalIP {
+		if a.Type == corev1.NodeExternalIP && net.ParseIP(a.Address) != nil {
 			return a.Address, nil
 		}
 	}
@@ -800,7 +801,7 @@ func (c *Controller) address(gs *v1alpha1.GameServer, pod *corev1.Pod) (string, 
 	// minikube only has an InternalIP on a Node, so we'll fall back to that.
 	c.loggerForGameServer(gs).WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
 	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeInternalIP {
+		if a.Type == corev1.NodeInternalIP && net.ParseIP(a.Address) != nil {
 			return a.Address, nil
 		}
 	}
