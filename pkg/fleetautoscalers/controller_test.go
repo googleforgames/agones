@@ -160,7 +160,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, f, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
 		err := c.syncFleetAutoscaler("default/fas-1")
@@ -214,7 +214,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, f, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
 		err := c.syncFleetAutoscaler("default/fas-1")
@@ -251,7 +251,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return false, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
 		err := c.syncFleetAutoscaler(fas.ObjectMeta.Name)
@@ -280,7 +280,7 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
 		err := c.syncFleetAutoscaler("default/fas-1")
