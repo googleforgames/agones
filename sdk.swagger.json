@@ -285,19 +285,19 @@
     "SpecHealth": {
       "type": "object",
       "properties": {
-        "Disabled": {
+        "disabled": {
           "type": "boolean",
           "format": "boolean"
         },
-        "PeriodSeconds": {
+        "period_seconds": {
           "type": "integer",
           "format": "int32"
         },
-        "FailureThreshold": {
+        "failure_threshold": {
           "type": "integer",
           "format": "int32"
         },
-        "InitialDelaySeconds": {
+        "initial_delay_seconds": {
           "type": "integer",
           "format": "int32"
         }

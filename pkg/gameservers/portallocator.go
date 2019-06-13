@@ -138,19 +138,25 @@ func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer 
 	// this allows us to do recursion, within the mutex lock
 	var allocate func(gs *v1alpha1.GameServer) *v1alpha1.GameServer
 	allocate = func(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
-		amount := gs.CountPorts(v1alpha1.Dynamic)
+		amount := gs.CountPorts(func(policy v1alpha1.PortPolicy) bool {
+			return policy == v1alpha1.Dynamic || policy == v1alpha1.Passthrough
+		})
 		allocations := findOpenPorts(amount)
 
 		if len(allocations) == amount {
 			pa.gameServerRegistry[gs.ObjectMeta.UID] = true
 
 			for i, p := range gs.Spec.Ports {
-				if p.PortPolicy == v1alpha1.Dynamic {
+				if p.PortPolicy == v1alpha1.Dynamic || p.PortPolicy == v1alpha1.Passthrough {
 					// pop off allocation
 					var a pn
 					a, allocations = allocations[0], allocations[1:]
 					a.pa[a.port] = true
 					gs.Spec.Ports[i].HostPort = a.port
+
+					if p.PortPolicy == v1alpha1.Passthrough {
+						gs.Spec.Ports[i].ContainerPort = a.port
+					}
 				}
 			}
 
@@ -265,7 +271,7 @@ func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*v1alpha1
 
 	for _, gs := range gameservers {
 		for _, p := range gs.Spec.Ports {
-			if p.PortPolicy == v1alpha1.Dynamic {
+			if p.PortPolicy == v1alpha1.Dynamic || p.PortPolicy == v1alpha1.Passthrough {
 				gsRegistry[gs.ObjectMeta.UID] = true
 
 				// if the node doesn't exist, it's likely unscheduled

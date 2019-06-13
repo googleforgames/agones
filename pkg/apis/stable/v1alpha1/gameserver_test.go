@@ -94,6 +94,29 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 			},
 		},
+		"defaults on passthrough": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{PortPolicy: Passthrough}},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{
+							{Name: "testing", Image: "testing/image"},
+						}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol:   "UDP",
+				state:      GameServerStatePortAllocation,
+				policy:     Passthrough,
+				scheduling: apis.Packed,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    3,
+					InitialDelaySeconds: 5,
+					PeriodSeconds:       5,
+				},
+			},
+		},
 		"defaults are already set": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
@@ -242,9 +265,10 @@ func TestGameServerValidate(t *testing.T) {
 		fields = append(fields, f.Field)
 	}
 	assert.False(t, ok)
-	assert.Len(t, causes, 3)
+	assert.Len(t, causes, 4)
 	assert.Contains(t, fields, "container")
 	assert.Contains(t, fields, "main.hostPort")
+	assert.Contains(t, fields, "main.containerPort")
 	assert.Equal(t, causes[0].Type, metav1.CauseTypeFieldValueInvalid)
 
 	gs = GameServer{
@@ -296,6 +320,23 @@ func TestGameServerValidate(t *testing.T) {
 	causes, ok = gs.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
+
+	gs = GameServer{
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "one", PortPolicy: Passthrough, ContainerPort: 1294}, {PortPolicy: Passthrough, Name: "two", HostPort: 7890}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+	assert.Contains(t, fields, "one.containerPort")
+	assert.Contains(t, fields, "two.hostPort")
 }
 
 func TestGameServerPod(t *testing.T) {
@@ -417,8 +458,12 @@ func TestGameServerCountPorts(t *testing.T) {
 		{PortPolicy: Static},
 	}}}
 
-	assert.Equal(t, 3, fixture.CountPorts(Dynamic))
-	assert.Equal(t, 1, fixture.CountPorts(Static))
+	assert.Equal(t, 3, fixture.CountPorts(func(policy PortPolicy) bool {
+		return policy == Dynamic
+	}))
+	assert.Equal(t, 1, fixture.CountPorts(func(policy PortPolicy) bool {
+		return policy == Static
+	}))
 }
 
 func TestGameServerPatch(t *testing.T) {

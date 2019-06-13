@@ -39,7 +39,7 @@ spec:
       serviceAccountName: my-special-service-account # a custom service account
       containers:
       - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.9
+        image: gcr.io/agones-images/udp-server:0.10
 ```
 
 If a service account is configured, the mounted key is not overwritten, as it assumed that you want to have full control

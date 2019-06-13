@@ -118,10 +118,10 @@ message GameServer {
         Health health = 1;
 
         message Health {
-            bool Disabled = 1;
-            int32 PeriodSeconds = 2;
-            int32 FailureThreshold = 3;
-            int32 InitialDelaySeconds = 4;
+            bool disabled = 1;
+            int32 period_seconds = 2;
+            int32 failure_threshold = 3;
+            int32 initial_delay_seconds = 4;
         }
     }
 

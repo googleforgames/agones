@@ -313,9 +313,9 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, disabled_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, periodseconds_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, failurethreshold_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, initialdelayseconds_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, period_seconds_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, failure_threshold_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec_Health, initial_delay_seconds_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::stable::agones::dev::sdk::GameServer_Spec, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -395,7 +395,7 @@ void AddDescriptorsImpl() {
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\tsdk.proto\022\025stable.agones.dev.sdk\032\034goog"
       "le/api/annotations.proto\"\007\n\005Empty\"&\n\010Key"
-      "Value\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\242\007\n\nGa"
+      "Value\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\246\007\n\nGa"
       "meServer\022A\n\013object_meta\030\001 \001(\0132,.stable.a"
       "gones.dev.sdk.GameServer.ObjectMeta\0224\n\004s"
       "pec\030\002 \001(\0132&.stable.agones.dev.sdk.GameSe"
@@ -411,38 +411,38 @@ void AddDescriptorsImpl() {
       "erver.ObjectMeta.LabelsEntry\0322\n\020Annotati"
       "onsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001"
       "\032-\n\013LabelsEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 "
-      "\001(\t:\0028\001\032\257\001\n\004Spec\022=\n\006health\030\001 \001(\0132-.stabl"
+      "\001(\t:\0028\001\032\263\001\n\004Spec\022=\n\006health\030\001 \001(\0132-.stabl"
       "e.agones.dev.sdk.GameServer.Spec.Health\032"
-      "h\n\006Health\022\020\n\010Disabled\030\001 \001(\010\022\025\n\rPeriodSec"
-      "onds\030\002 \001(\005\022\030\n\020FailureThreshold\030\003 \001(\005\022\033\n\023"
-      "InitialDelaySeconds\030\004 \001(\005\032\212\001\n\006Status\022\r\n\005"
-      "state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\005ports\030\003 "
-      "\003(\0132-.stable.agones.dev.sdk.GameServer.S"
-      "tatus.Port\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004port"
-      "\030\002 \001(\0052\245\006\n\003SDK\022V\n\005Ready\022\034.stable.agones."
-      "dev.sdk.Empty\032\034.stable.agones.dev.sdk.Em"
-      "pty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022\\\n\010Allocate\022\034.sta"
-      "ble.agones.dev.sdk.Empty\032\034.stable.agones"
-      ".dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/allocate:\001*\022\\\n\010"
-      "Shutdown\022\034.stable.agones.dev.sdk.Empty\032\034"
-      ".stable.agones.dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/s"
-      "hutdown:\001*\022Z\n\006Health\022\034.stable.agones.dev"
-      ".sdk.Empty\032\034.stable.agones.dev.sdk.Empty"
-      "\"\022\202\323\344\223\002\014\"\007/health:\001*(\001\022e\n\rGetGameServer\022"
-      "\034.stable.agones.dev.sdk.Empty\032!.stable.a"
-      "gones.dev.sdk.GameServer\"\023\202\323\344\223\002\r\022\013/games"
-      "erver\022o\n\017WatchGameServer\022\034.stable.agones"
-      ".dev.sdk.Empty\032!.stable.agones.dev.sdk.G"
-      "ameServer\"\031\202\323\344\223\002\023\022\021/watch/gameserver0\001\022e"
-      "\n\010SetLabel\022\037.stable.agones.dev.sdk.KeyVa"
-      "lue\032\034.stable.agones.dev.sdk.Empty\"\032\202\323\344\223\002"
-      "\024\032\017/metadata/label:\001*\022o\n\rSetAnnotation\022\037"
-      ".stable.agones.dev.sdk.KeyValue\032\034.stable"
-      ".agones.dev.sdk.Empty\"\037\202\323\344\223\002\031\032\024/metadata"
-      "/annotation:\001*B\005Z\003sdkb\006proto3"
+      "l\n\006Health\022\020\n\010disabled\030\001 \001(\010\022\026\n\016period_se"
+      "conds\030\002 \001(\005\022\031\n\021failure_threshold\030\003 \001(\005\022\035"
+      "\n\025initial_delay_seconds\030\004 \001(\005\032\212\001\n\006Status"
+      "\022\r\n\005state\030\001 \001(\t\022\017\n\007address\030\002 \001(\t\022<\n\005port"
+      "s\030\003 \003(\0132-.stable.agones.dev.sdk.GameServ"
+      "er.Status.Port\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004"
+      "port\030\002 \001(\0052\245\006\n\003SDK\022V\n\005Ready\022\034.stable.ago"
+      "nes.dev.sdk.Empty\032\034.stable.agones.dev.sd"
+      "k.Empty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022\\\n\010Allocate\022\034"
+      ".stable.agones.dev.sdk.Empty\032\034.stable.ag"
+      "ones.dev.sdk.Empty\"\024\202\323\344\223\002\016\"\t/allocate:\001*"
+      "\022\\\n\010Shutdown\022\034.stable.agones.dev.sdk.Emp"
+      "ty\032\034.stable.agones.dev.sdk.Empty\"\024\202\323\344\223\002\016"
+      "\"\t/shutdown:\001*\022Z\n\006Health\022\034.stable.agones"
+      ".dev.sdk.Empty\032\034.stable.agones.dev.sdk.E"
+      "mpty\"\022\202\323\344\223\002\014\"\007/health:\001*(\001\022e\n\rGetGameSer"
+      "ver\022\034.stable.agones.dev.sdk.Empty\032!.stab"
+      "le.agones.dev.sdk.GameServer\"\023\202\323\344\223\002\r\022\013/g"
+      "ameserver\022o\n\017WatchGameServer\022\034.stable.ag"
+      "ones.dev.sdk.Empty\032!.stable.agones.dev.s"
+      "dk.GameServer\"\031\202\323\344\223\002\023\022\021/watch/gameserver"
+      "0\001\022e\n\010SetLabel\022\037.stable.agones.dev.sdk.K"
+      "eyValue\032\034.stable.agones.dev.sdk.Empty\"\032\202"
+      "\323\344\223\002\024\032\017/metadata/label:\001*\022o\n\rSetAnnotati"
+      "on\022\037.stable.agones.dev.sdk.KeyValue\032\034.st"
+      "able.agones.dev.sdk.Empty\"\037\202\323\344\223\002\031\032\024/meta"
+      "data/annotation:\001*B\005Z\003sdkb\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 1869);
+      descriptor, 1873);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "sdk.proto", &protobuf_RegisterTypes);
   ::protobuf_google_2fapi_2fannotations_2eproto::AddDescriptors();
@@ -1845,15 +1845,15 @@ GameServer_Spec_Health::GameServer_Spec_Health(const GameServer_Spec_Health& fro
       _internal_metadata_(NULL) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&disabled_, &from.disabled_,
-    static_cast<size_t>(reinterpret_cast<char*>(&initialdelayseconds_) -
-    reinterpret_cast<char*>(&disabled_)) + sizeof(initialdelayseconds_));
+    static_cast<size_t>(reinterpret_cast<char*>(&initial_delay_seconds_) -
+    reinterpret_cast<char*>(&disabled_)) + sizeof(initial_delay_seconds_));
   // @@protoc_insertion_point(copy_constructor:stable.agones.dev.sdk.GameServer.Spec.Health)
 }
 
 void GameServer_Spec_Health::SharedCtor() {
   ::memset(&disabled_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&initialdelayseconds_) -
-      reinterpret_cast<char*>(&disabled_)) + sizeof(initialdelayseconds_));
+      reinterpret_cast<char*>(&initial_delay_seconds_) -
+      reinterpret_cast<char*>(&disabled_)) + sizeof(initial_delay_seconds_));
 }
 
 GameServer_Spec_Health::~GameServer_Spec_Health() {
@@ -1885,8 +1885,8 @@ void GameServer_Spec_Health::Clear() {
   (void) cached_has_bits;
 
   ::memset(&disabled_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&initialdelayseconds_) -
-      reinterpret_cast<char*>(&disabled_)) + sizeof(initialdelayseconds_));
+      reinterpret_cast<char*>(&initial_delay_seconds_) -
+      reinterpret_cast<char*>(&disabled_)) + sizeof(initial_delay_seconds_));
   _internal_metadata_.Clear();
 }
 
@@ -1900,7 +1900,7 @@ bool GameServer_Spec_Health::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // bool Disabled = 1;
+      // bool disabled = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
@@ -1914,42 +1914,42 @@ bool GameServer_Spec_Health::MergePartialFromCodedStream(
         break;
       }
 
-      // int32 PeriodSeconds = 2;
+      // int32 period_seconds = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &periodseconds_)));
+                 input, &period_seconds_)));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // int32 FailureThreshold = 3;
+      // int32 failure_threshold = 3;
       case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &failurethreshold_)));
+                 input, &failure_threshold_)));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // int32 InitialDelaySeconds = 4;
+      // int32 initial_delay_seconds = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &initialdelayseconds_)));
+                 input, &initial_delay_seconds_)));
         } else {
           goto handle_unusual;
         }
@@ -1982,24 +1982,24 @@ void GameServer_Spec_Health::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // bool Disabled = 1;
+  // bool disabled = 1;
   if (this->disabled() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->disabled(), output);
   }
 
-  // int32 PeriodSeconds = 2;
-  if (this->periodseconds() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->periodseconds(), output);
+  // int32 period_seconds = 2;
+  if (this->period_seconds() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->period_seconds(), output);
   }
 
-  // int32 FailureThreshold = 3;
-  if (this->failurethreshold() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->failurethreshold(), output);
+  // int32 failure_threshold = 3;
+  if (this->failure_threshold() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->failure_threshold(), output);
   }
 
-  // int32 InitialDelaySeconds = 4;
-  if (this->initialdelayseconds() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->initialdelayseconds(), output);
+  // int32 initial_delay_seconds = 4;
+  if (this->initial_delay_seconds() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->initial_delay_seconds(), output);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -2016,24 +2016,24 @@ void GameServer_Spec_Health::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // bool Disabled = 1;
+  // bool disabled = 1;
   if (this->disabled() != 0) {
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->disabled(), target);
   }
 
-  // int32 PeriodSeconds = 2;
-  if (this->periodseconds() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->periodseconds(), target);
+  // int32 period_seconds = 2;
+  if (this->period_seconds() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->period_seconds(), target);
   }
 
-  // int32 FailureThreshold = 3;
-  if (this->failurethreshold() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->failurethreshold(), target);
+  // int32 failure_threshold = 3;
+  if (this->failure_threshold() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->failure_threshold(), target);
   }
 
-  // int32 InitialDelaySeconds = 4;
-  if (this->initialdelayseconds() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->initialdelayseconds(), target);
+  // int32 initial_delay_seconds = 4;
+  if (this->initial_delay_seconds() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->initial_delay_seconds(), target);
   }
 
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
@@ -2053,30 +2053,30 @@ size_t GameServer_Spec_Health::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // bool Disabled = 1;
+  // bool disabled = 1;
   if (this->disabled() != 0) {
     total_size += 1 + 1;
   }
 
-  // int32 PeriodSeconds = 2;
-  if (this->periodseconds() != 0) {
+  // int32 period_seconds = 2;
+  if (this->period_seconds() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->periodseconds());
+        this->period_seconds());
   }
 
-  // int32 FailureThreshold = 3;
-  if (this->failurethreshold() != 0) {
+  // int32 failure_threshold = 3;
+  if (this->failure_threshold() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->failurethreshold());
+        this->failure_threshold());
   }
 
-  // int32 InitialDelaySeconds = 4;
-  if (this->initialdelayseconds() != 0) {
+  // int32 initial_delay_seconds = 4;
+  if (this->initial_delay_seconds() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->initialdelayseconds());
+        this->initial_delay_seconds());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -2109,14 +2109,14 @@ void GameServer_Spec_Health::MergeFrom(const GameServer_Spec_Health& from) {
   if (from.disabled() != 0) {
     set_disabled(from.disabled());
   }
-  if (from.periodseconds() != 0) {
-    set_periodseconds(from.periodseconds());
+  if (from.period_seconds() != 0) {
+    set_period_seconds(from.period_seconds());
   }
-  if (from.failurethreshold() != 0) {
-    set_failurethreshold(from.failurethreshold());
+  if (from.failure_threshold() != 0) {
+    set_failure_threshold(from.failure_threshold());
   }
-  if (from.initialdelayseconds() != 0) {
-    set_initialdelayseconds(from.initialdelayseconds());
+  if (from.initial_delay_seconds() != 0) {
+    set_initial_delay_seconds(from.initial_delay_seconds());
   }
 }
 
@@ -2145,9 +2145,9 @@ void GameServer_Spec_Health::Swap(GameServer_Spec_Health* other) {
 void GameServer_Spec_Health::InternalSwap(GameServer_Spec_Health* other) {
   using std::swap;
   swap(disabled_, other->disabled_);
-  swap(periodseconds_, other->periodseconds_);
-  swap(failurethreshold_, other->failurethreshold_);
-  swap(initialdelayseconds_, other->initialdelayseconds_);
+  swap(period_seconds_, other->period_seconds_);
+  swap(failure_threshold_, other->failure_threshold_);
+  swap(initial_delay_seconds_, other->initial_delay_seconds_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 

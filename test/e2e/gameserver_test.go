@@ -319,6 +319,33 @@ func TestGameServerShutdown(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGameServerPassthroughPort(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	gs.Spec.Ports[0] = v1alpha1.GameServerPort{PortPolicy: v1alpha1.Passthrough}
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "PASSTHROUGH", Value: "TRUE"}}
+	// gate
+	_, valid := gs.Validate()
+	assert.True(t, valid)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not get a GameServer ready")
+	}
+
+	port := readyGs.Spec.Ports[0]
+	assert.Equal(t, v1alpha1.Passthrough, port.PortPolicy)
+	assert.NotEmpty(t, port.HostPort)
+	assert.Equal(t, port.HostPort, port.ContainerPort)
+
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "Hello World !")
+	if err != nil {
+		t.Fatalf("Could ping GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK: Hello World !\n", reply)
+}
+
 func defaultGameServer() *v1alpha1.GameServer {
 	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
 		Spec: v1alpha1.GameServerSpec{
