@@ -43,7 +43,7 @@ bool ok = await agones.Shutdown();
 
 Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, string value)` are async methods that perform an action.
 
-And there is no need to call `Health()`, it is automatically called by `Monobehaviour.Update()`.
+And there is no need to call `Health()`, it is automatically called.
 
 > Note: The following code causes deadlock. Do not use a `Wait` method with the returned Task.
 ```csharp

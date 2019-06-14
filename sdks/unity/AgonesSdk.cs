@@ -1,4 +1,5 @@
-﻿// Copyright 2019 Google Inc. All Rights Reserved.
+﻿// Copyright 2019 Google LLC
+// All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,15 +28,24 @@ namespace Agones
     /// </summary>
     public class AgonesSdk : MonoBehaviour
     {
-        [Range(1, 5)]
+        /// <summary>
+        /// Interval of the server sending a health ping to the Agones sidecar.
+        /// </summary>
+        [Range(0.01f, 5)]
         public float healthIntervalSecond = 5.0f;
+
+        /// <summary>
+        /// Whether the server sends a health ping to the Agones sidecar.
+        /// </summary>
         public bool healthEnabled = true;
+
+        /// <summary>
+        /// Debug Logging Enabled. Debug logging for development of this Plugin.
+        /// </summary>
         public bool logEnabled = false;
 
         private const string sidecarAddress = "http://localhost:59358";
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-        private float CurrentHealthTime { get; set; } = 0;
 
         private struct KeyValueMessage
         {
@@ -45,26 +55,13 @@ namespace Agones
         }
 
         #region Unity Methods
-        // Use this for initialization
-        void Start()
+        // Use this for initialization.
+        private void Start()
         {
-            CurrentHealthTime = 0;
+            HealthCheckAsync();
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-            if (!healthEnabled) { return; }
-
-            CurrentHealthTime += Time.unscaledDeltaTime;
-            if (CurrentHealthTime >= healthIntervalSecond)
-            {
-                Health();
-                CurrentHealthTime = 0;
-            }
-        }
-
-        void OnApplicationQuit()
+        private void OnApplicationQuit()
         {
             cancellationTokenSource.Dispose();
         }
@@ -72,11 +69,10 @@ namespace Agones
 
         #region AgonesRestClient Public Methods
         /// <summary>
-        /// Marks this Game Server as ready to receive connections
+        /// Marks this Game Server as ready to receive connections.
         /// </summary>
         /// <returns>
-        /// A task that represents the asynchronous operation.
-        /// The task result contains that the request is success or failure.
+        /// A task that represents the asynchronous operation and returns true if the request was successful.
         /// </returns>
         public async Task<bool> Ready()
         {
@@ -84,11 +80,10 @@ namespace Agones
         }
 
         /// <summary>
-        /// Marks this Game Server as ready to shutdown
+        /// Marks this Game Server as ready to shutdown.
         /// </summary>
         /// <returns>
-        /// A task that represents the asynchronous operation.
-        /// The task result contains that the request is success or failure.
+        /// A task that represents the asynchronous operation and returns true if the request was successful.
         /// </returns>
         public async Task<bool> Shutdown()
         {
@@ -96,11 +91,10 @@ namespace Agones
         }
 
         /// <summary>
-        /// Marks this Game Server as Allocated
+        /// Marks this Game Server as Allocated.
         /// </summary>
         /// <returns>
-        /// A task that represents the asynchronous operation.
-        /// The task result contains that the request is success or failure.
+        /// A task that represents the asynchronous operation and returns true if the request was successful.
         /// </returns>
         public async Task<bool> Allocate()
         {
@@ -108,13 +102,12 @@ namespace Agones
         }
 
         /// <summary>
-        /// Set a metadata label that is stored in k8s
+        /// Set a metadata label that is stored in k8s.
         /// </summary>
         /// <param name="key">label key</param>
         /// <param name="value">label value</param>
         /// <returns>
-        /// A task that represents the asynchronous operation.
-        /// The task result contains that the request is success or failure.
+        /// A task that represents the asynchronous operation and returns true if the request was successful.
         /// </returns>
         public async Task<bool> SetLabel(string key, string value)
         {
@@ -123,13 +116,12 @@ namespace Agones
         }
 
         /// <summary>
-        /// Set a metadata annotation that is stored in k8s
+        /// Set a metadata annotation that is stored in k8s.
         /// </summary>
         /// <param name="key">annotation key</param>
         /// <param name="value">annotation value</param>
         /// <returns>
-        /// A task that represents the asynchronous operation.
-        /// The task result contains that the request is success or failure.
+        /// A task that represents the asynchronous operation and returns true if the request was successful.
         /// </returns>
         public async Task<bool> SetAnnotation(string key, string value)
         {
@@ -139,14 +131,26 @@ namespace Agones
         #endregion
 
         #region AgonesRestClient Private Methods
-        void Health()
+        private async void HealthCheckAsync()
         {
-            _ = SendRequestAsync("/health", "{}");
+            while (healthEnabled)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(healthIntervalSecond));
+
+                try
+                {
+                    await SendRequestAsync("/health", "{}");
+                }
+                catch (ObjectDisposedException)
+                {
+                    break;
+                }
+            }
         }
 
-        async Task<bool> SendRequestAsync(string api, string json, string method = UnityWebRequest.kHttpVerbPOST)
+        private async Task<bool> SendRequestAsync(string api, string json, string method = UnityWebRequest.kHttpVerbPOST)
         {
-            // To prevent that an async method leaks after destroying this gameObject
+            // To prevent that an async method leaks after destroying this gameObject.
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
 
             var req = new UnityWebRequest(sidecarAddress + api, method)
@@ -158,7 +162,7 @@ namespace Agones
 
             await new AgonesAsyncOperationWrapper(req.SendWebRequest());
 
-            bool ok = req.responseCode == 200;
+            bool ok = req.responseCode == (long)System.Net.HttpStatusCode.OK;
 
             if (ok)
             {
@@ -172,20 +176,19 @@ namespace Agones
             return ok;
         }
 
-        void Log(object message)
+        private void Log(object message)
         {
-            if (!logEnabled) { return; }
+            if (!logEnabled)
+            {
+                return;
+            }
 
-#if UNITY_EDITOR
             Debug.Log(message);
-#else
-            Console.WriteLine(message);
-#endif
         }
         #endregion
 
         #region AgonesRestClient Nested Classes
-        class AgonesAsyncOperationWrapper
+        private class AgonesAsyncOperationWrapper
         {
             public UnityWebRequestAsyncOperation AsyncOp { get; }
             public AgonesAsyncOperationWrapper(UnityWebRequestAsyncOperation unityOp)
@@ -199,10 +202,11 @@ namespace Agones
             }
         }
 
-        class AgonesAsyncOperationAwaiter : INotifyCompletion
+        private class AgonesAsyncOperationAwaiter : INotifyCompletion
         {
             private UnityWebRequestAsyncOperation asyncOp;
             private Action continuation;
+            public bool IsCompleted => asyncOp.isDone;
 
             public AgonesAsyncOperationAwaiter(AgonesAsyncOperationWrapper wrapper)
             {
@@ -210,15 +214,11 @@ namespace Agones
                 asyncOp.completed += OnRequestCompleted;
             }
 
-            public bool IsCompleted => asyncOp.isDone;
-
+            // C# Awaiter Pattern requires that the GetAwaiter method has GetResult(),
+            // And AgonesAsyncOperationAwaiter does not return a value in this case.
             public void GetResult()
             {
                 asyncOp.completed -= OnRequestCompleted;
-
-                // remove references
-                asyncOp = null;
-                continuation = null;
             }
 
             public void OnCompleted(Action continuation)
@@ -228,10 +228,8 @@ namespace Agones
 
             private void OnRequestCompleted(AsyncOperation _)
             {
-                if (continuation != null)
-                {
-                    continuation();
-                }
+                continuation?.Invoke();
+                continuation = null;
             }
         }
         #endregion
