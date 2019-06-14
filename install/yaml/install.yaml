@@ -738,13 +738,16 @@ spec:
               properties:
                 secretName:
                   type: string
-                allocationEndpoint:
-                  type: string
+                allocationEndpoints:
+                  items:
+                    type: string
+                  type: array
+                  minItems: 1
                 clusterName:
                   type: string
               required:
               - clusterName
-              - allocationEndpoint
+              - allocationEndpoints
               - secretName
               type: object
             priority:
