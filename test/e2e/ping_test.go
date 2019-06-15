@@ -69,6 +69,7 @@ func externalPort(svc *corev1.Service, port corev1.ServicePort) (int32, error) {
 }
 
 func TestPingUDP(t *testing.T) {
+	t.Parallel()
 	kubeCore := framework.KubeClient.CoreV1()
 	svc, err := kubeCore.Services("agones-system").Get("agones-ping-udp-service", metav1.GetOptions{})
 	assert.Nil(t, err)

@@ -103,14 +103,14 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *stable.Game
 // WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires
 func (f *Framework) WaitForGameServerState(gs *stable.GameServer, state stable.GameServerState,
 	timeout time.Duration) (*stable.GameServer, error) {
-	var pollErr error
 	var readyGs *stable.GameServer
 
 	err := wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
-		readyGs, pollErr = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
+		var err error
+		readyGs, err = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
-		if pollErr != nil {
-			logrus.WithError(pollErr).Warn("error retrieving gameserver")
+		if err != nil {
+			logrus.WithError(err).Warn("error retrieving gameserver")
 			return false, nil
 		}
 
@@ -120,11 +120,9 @@ func (f *Framework) WaitForGameServerState(gs *stable.GameServer, state stable.G
 
 		return false, nil
 	})
-	if err != nil {
-		return nil, errors.Wrapf(pollErr, "waiting for GameServer to be %v %v/%v: %v",
-			state, gs.Namespace, gs.Name, err)
-	}
-	return readyGs, nil
+
+	return readyGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
+		state, gs.Namespace, gs.Name)
 }
 
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.

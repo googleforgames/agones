@@ -276,18 +276,38 @@ func TestGameServerSelfAllocate(t *testing.T) {
 	}
 
 	assert.Equal(t, "ACK: ALLOCATE\n", reply)
-
-	// the label is set in a queue, so it may take a moment
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
-		if err != nil {
-			return true, err
-		}
-
-		return gs.Status.State == v1alpha1.GameServerStateAllocated, nil
-	})
-
+	gs, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateAllocated, time.Minute)
 	assert.NoError(t, err)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+}
+
+func TestGameServerReadyAllocateReady(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	assert.Equal(t, readyGs.Status.State, v1alpha1.GameServerStateReady)
+
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "ALLOCATE")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	assert.Equal(t, "ACK: ALLOCATE\n", reply)
+	gs, err = framework.WaitForGameServerState(readyGs, v1alpha1.GameServerStateAllocated, time.Minute)
+	assert.NoError(t, err)
+	assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+
+	reply, err = e2eframework.SendGameServerUDP(readyGs, "READY")
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not message GameServer")
+	}
+	assert.Equal(t, "ACK: READY\n", reply)
+	gs, err = framework.WaitForGameServerState(gs, v1alpha1.GameServerStateReady, time.Minute)
+	assert.NoError(t, err)
+	assert.Equal(t, v1alpha1.GameServerStateReady, gs.Status.State)
 }
 
 func TestGameServerShutdown(t *testing.T) {
