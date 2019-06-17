@@ -788,9 +788,9 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoint: "localhost",
-								ClusterName:        "multicluster",
-								SecretName:         "localhostsecret",
+								AllocationEndpoints: []string{"localhost"},
+								ClusterName:         "multicluster",
+								SecretName:          "localhostsecret",
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -883,6 +883,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 }
 
 func TestMultiClusterAllocationFromRemote(t *testing.T) {
+	const clusterName = "remotecluster"
 	t.Parallel()
 	t.Run("Handle allocation request remotely", func(t *testing.T) {
 		c, m := newFakeController()
@@ -908,7 +909,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		server.TLS.ClientAuth = tls.RequireAndVerifyClientCert
 
 		// Allocation policy reactor
-		clusterName := "remotecluster"
 		secretName := clusterName + "secret"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
@@ -918,9 +918,9 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoint: server.URL,
-								ClusterName:        clusterName,
-								SecretName:         secretName,
+								AllocationEndpoints: []string{server.URL, "non-existing"},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -983,7 +983,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		server.TLS.ClientAuth = tls.RequireAndVerifyClientCert
 
 		// Allocation policy reactor
-		clusterName := "remotecluster"
 		secretName := clusterName + "secret"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
@@ -993,9 +992,9 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoint: server.URL,
-								ClusterName:        clusterName,
-								SecretName:         secretName,
+								AllocationEndpoints: []string{server.URL},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -1038,6 +1037,94 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		_, err = executeAllocation(gsa, c)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "test error message")
+	})
+
+	t.Run("First server fails and second server succeeds", func(t *testing.T) {
+		c, m := newFakeController()
+		fleetName := addReactorForGameServer(&m)
+
+		// Mock server to return error
+		unhealthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "test error message", 500)
+		}))
+		defer unhealthyServer.Close()
+
+		// Set client CA for unhealthy server
+		certpool := x509.NewCertPool()
+		certpool.AppendCertsFromPEM(clientCert)
+		unhealthyServer.TLS.ClientCAs = certpool
+		unhealthyServer.TLS.ClientAuth = tls.RequireAndVerifyClientCert
+
+		// Mock healthyServer
+		expectedGSAName := "mocked"
+		healthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			serverResponse := v1alpha1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: expectedGSAName,
+				},
+			}
+			response, _ := json.Marshal(serverResponse)
+			_, _ = w.Write(response)
+		}))
+		defer healthyServer.Close()
+		healthyServer.TLS = unhealthyServer.TLS
+
+		// Allocation policy reactor
+		secretName := clusterName + "secret"
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+								AllocationEndpoints: []string{unhealthyServer.URL, healthyServer.URL},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: defaultNs,
+						},
+					},
+				},
+			}, nil
+		})
+
+		m.KubeClient.AddReactor("list", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				return true, getTestSecret(secretName, unhealthyServer.TLS.Certificates[0].Certificate[0]), nil
+			})
+
+		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		gsa := &v1alpha1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "localcluster",
+			},
+			Spec: v1alpha1.GameServerAllocationSpec{
+				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+					Enabled: true,
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		result, err := executeAllocation(gsa, c)
+		if assert.NoError(t, err) {
+			assert.Equal(t, expectedGSAName, result.ObjectMeta.Name)
+		}
 	})
 }
 

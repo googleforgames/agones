@@ -35,18 +35,18 @@ func TestConnectionInfoIterator(t *testing.T) {
 						Priority: 1,
 						Weight:   100,
 						ConnectionInfo: ClusterConnectionInfo{
-							ClusterName:        "cluster1",
-							SecretName:         "secret-name",
-							AllocationEndpoint: "allocation-endpoint",
+							ClusterName:         "cluster1",
+							SecretName:          "secret-name",
+							AllocationEndpoints: []string{"allocation-endpoint"},
 						},
 					},
 				},
 			},
 			want: []ClusterConnectionInfo{
 				{
-					ClusterName:        "cluster1",
-					SecretName:         "secret-name",
-					AllocationEndpoint: "allocation-endpoint",
+					ClusterName:         "cluster1",
+					SecretName:          "secret-name",
+					AllocationEndpoints: []string{"allocation-endpoint"},
 				},
 			},
 		},
@@ -216,6 +216,29 @@ func TestConnectionInfoIterator(t *testing.T) {
 			want: []ClusterConnectionInfo{
 				{
 					ClusterName: "cluster2",
+				},
+			},
+		},
+		{
+			name: "Multiple allocation endpoints test",
+			in: []*GameServerAllocationPolicy{
+				{
+					Spec: GameServerAllocationPolicySpec{
+						Priority: 1,
+						Weight:   100,
+						ConnectionInfo: ClusterConnectionInfo{
+							ClusterName:         "cluster1",
+							SecretName:          "secret-name",
+							AllocationEndpoints: []string{"alloc1", "alloc2"},
+						},
+					},
+				},
+			},
+			want: []ClusterConnectionInfo{
+				{
+					ClusterName:         "cluster1",
+					SecretName:          "secret-name",
+					AllocationEndpoints: []string{"alloc1", "alloc2"},
 				},
 			},
 		},
