@@ -38,7 +38,7 @@ if (AGONES_SILENT_OUTPUT)
 endif(AGONES_SILENT_OUTPUT)
 
 # Project AGONES
-project(agones VERSION 0.9.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
+project(agones VERSION 0.9.0 HOMEPAGE_URL https://github.com/googleforgames/agones LANGUAGES C CXX)
 
 # Build options
 option(AGONES_BUILD_SHARED "Build Agones C++ SDK as dynamic library" OFF)

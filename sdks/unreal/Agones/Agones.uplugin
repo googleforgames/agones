@@ -9,7 +9,7 @@
   "CreatedByURL": "https://agones.dev",
   "DocsURL": "https://agones.dev/site/docs/",
   "MarketplaceURL": "",
-  "SupportURL": "https://github.com/GoogleCloudPlatform/agones/issues",
+  "SupportURL": "https://github.com/googleforgames/agones/issues",
   "CanContainContent": false,
   "IsBetaVersion": true,
   "Installed": true,

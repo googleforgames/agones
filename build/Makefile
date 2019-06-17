@@ -222,7 +222,7 @@ push-release-chart: RELEASE_VERSION ?= $(base_version)
 push-release-chart: $(ensure-build-image)
 	rm -rf /tmp/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
 	mkdir -p $(agones_path)/install/.helm-$(RELEASE_VERSION)/
-	cd /tmp && git clone --single-branch -b release-$(RELEASE_VERSION) git@github.com:GoogleCloudPlatform/agones.git
+	cd /tmp && git clone --single-branch -b release-$(RELEASE_VERSION) git@github.com:googleforgames/agones.git
 	mv /tmp/agones/install/helm/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 

@@ -29,7 +29,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] If full release, add link to previous version's documentation to nav dropdown
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
 - [ ] Create PR with these changes, and merge them with approval
-- [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
+- [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
@@ -45,8 +45,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Close this issue.
 - [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
 
-[values]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/values.yaml#L33
-[chart]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/Chart.yaml
+[values]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/values.yaml#L33
+[chart]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/Chart.yaml
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
-[release-template]: https://github.com/GoogleCloudPlatform/agones/blob/master/docs/governance/templates/release.md
-[build-makefile]: https://github.com/GoogleCloudPlatform/agones/blob/master/build/Makefile
+[release-template]: https://github.com/googleforgames/agones/blob/master/docs/governance/templates/release.md
+[build-makefile]: https://github.com/googleforgames/agones/blob/master/build/Makefile

@@ -4,7 +4,7 @@ You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }
 
 Once ready you can create your first GameServer using our examples:
 
-'kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/gameserver.yaml'
+'kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/gameserver.yaml'
 
 An example GameServer that makes use of the controller:
 
@@ -23,7 +23,7 @@ spec:
 
 Finally don't forget to explore our documentation and usage guides on how to develop and host dedicated game servers on top of Agones. :
 
- - [Create a Game Server](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/create_gameserver.md)
- - [Integrating the Game Server SDK](https://github.com/GoogleCloudPlatform/agones/tree/master/sdks)
- - [GameServer Health Checking](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/health_checking.md)
- - [Accessing Agones via the Kubernetes API](https://github.com/GoogleCloudPlatform/agones/blob/master/docs/access_api.md)
+ - [Create a Game Server](https://github.com/googleforgames/agones/blob/master/docs/create_gameserver.md)
+ - [Integrating the Game Server SDK](https://github.com/googleforgames/agones/tree/master/sdks)
+ - [GameServer Health Checking](https://github.com/googleforgames/agones/blob/master/docs/health_checking.md)
+ - [Accessing Agones via the Kubernetes API](https://github.com/googleforgames/agones/blob/master/docs/access_api.md)
