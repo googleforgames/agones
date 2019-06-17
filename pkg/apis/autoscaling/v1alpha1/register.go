@@ -1,4 +1,4 @@
-// Copyright 2017 Google LLC All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 package v1alpha1
 
 import (
-	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/autoscaling"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,7 +23,7 @@ import (
 )
 
 // SchemeGroupVersion is group version used to register these objects
-var SchemeGroupVersion = schema.GroupVersion{Group: stable.GroupName, Version: "v1alpha1"}
+var SchemeGroupVersion = schema.GroupVersion{Group: autoscaling.GroupName, Version: "v1alpha1"}
 
 // Kind takes an unqualified kind and returns back a Group qualified GroupKind
 func Kind(kind string) schema.GroupKind {
@@ -51,14 +51,8 @@ func init() {
 // Adds the list of known types to api.Scheme.
 func addKnownTypes(scheme *k8sruntime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&GameServer{},
-		&GameServerList{},
-		&GameServerSet{},
-		&GameServerSetList{},
-		&Fleet{},
-		&FleetList{},
-		&FleetAllocation{},
-		&FleetAllocationList{},
+		&FleetAutoscaler{},
+		&FleetAutoscalerList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -40,19 +40,19 @@ var client = http.Client{
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(fas *stablev1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet) (int32, bool, error) {
+func computeDesiredFleetSize(fas *v1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet) (int32, bool, error) {
 
 	switch fas.Spec.Policy.Type {
-	case stablev1alpha1.BufferPolicyType:
+	case v1alpha1.BufferPolicyType:
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
-	case stablev1alpha1.WebhookPolicyType:
+	case v1alpha1.WebhookPolicyType:
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
 	return f.Status.Replicas, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
+func applyWebhookPolicy(w *v1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
 	faReq := v1alpha1.FleetAutoscaleReview{
 		Request: &v1alpha1.FleetAutoscaleRequest{
 			UID:       uuid.NewUUID(),
@@ -135,7 +135,7 @@ func applyWebhookPolicy(w *stablev1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet
 	return f.Status.Replicas, false, nil
 }
 
-func applyBufferPolicy(b *stablev1alpha1.BufferPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
+func applyBufferPolicy(b *v1alpha1.BufferPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
 	var replicas int32
 
 	if b.BufferSize.Type == intstr.Int {

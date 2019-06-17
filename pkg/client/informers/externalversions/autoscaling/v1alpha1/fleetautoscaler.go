@@ -21,10 +21,10 @@ package v1alpha1
 import (
 	time "time"
 
-	stable_v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	autoscaling_v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/client/listers/autoscaling/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -61,16 +61,16 @@ func NewFilteredFleetAutoscalerInformer(client versioned.Interface, namespace st
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StableV1alpha1().FleetAutoscalers(namespace).List(options)
+				return client.AutoscalingV1alpha1().FleetAutoscalers(namespace).List(options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.StableV1alpha1().FleetAutoscalers(namespace).Watch(options)
+				return client.AutoscalingV1alpha1().FleetAutoscalers(namespace).Watch(options)
 			},
 		},
-		&stable_v1alpha1.FleetAutoscaler{},
+		&autoscaling_v1alpha1.FleetAutoscaler{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *fleetAutoscalerInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *fleetAutoscalerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&stable_v1alpha1.FleetAutoscaler{}, f.defaultInformer)
+	return f.factory.InformerFor(&autoscaling_v1alpha1.FleetAutoscaler{}, f.defaultInformer)
 }
 
 func (f *fleetAutoscalerInformer) Lister() v1alpha1.FleetAutoscalerLister {

@@ -20,7 +20,8 @@ import (
 	"net/http"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
@@ -34,7 +35,7 @@ import (
 )
 
 var (
-	gvk = metav1.GroupVersionKind(v1alpha1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
+	gvk = metav1.GroupVersionKind(stablev1alpha1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
 )
 
 func TestControllerCreationValidationHandler(t *testing.T) {
@@ -149,13 +150,13 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		})
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
+			return true, &stablev1alpha1.FleetList{Items: []stablev1alpha1.Fleet{*f}}, nil
 		})
 
 		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			fUpdated = true
 			ca := action.(k8stesting.UpdateAction)
-			f := ca.GetObject().(*v1alpha1.Fleet)
+			f := ca.GetObject().(*stablev1alpha1.Fleet)
 			assert.Equal(t, f.Spec.Replicas, int32(12))
 			return true, f, nil
 		})
@@ -202,13 +203,13 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		})
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &v1alpha1.FleetList{Items: []v1alpha1.Fleet{*f}}, nil
+			return true, &stablev1alpha1.FleetList{Items: []stablev1alpha1.Fleet{*f}}, nil
 		})
 
 		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			fUpdated = true
 			ca := action.(k8stesting.UpdateAction)
-			f := ca.GetObject().(*v1alpha1.Fleet)
+			f := ca.GetObject().(*stablev1alpha1.Fleet)
 			assert.Equal(t, f.Spec.Replicas, int32(13))
 
 			return true, f, nil
@@ -304,7 +305,7 @@ func TestControllerScaleFleet(t *testing.T) {
 		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			update = true
 			ca := action.(k8stesting.UpdateAction)
-			f := ca.GetObject().(*v1alpha1.Fleet)
+			f := ca.GetObject().(*stablev1alpha1.Fleet)
 			assert.Equal(t, replicas, f.Spec.Replicas)
 
 			return true, f, nil
@@ -448,18 +449,18 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 	})
 }
 
-func defaultFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
-	f := &v1alpha1.Fleet{
+func defaultFixtures() (*v1alpha1.FleetAutoscaler, *stablev1alpha1.Fleet) {
+	f := &stablev1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fleet-1",
 			Namespace: "default",
 			UID:       "1234",
 		},
-		Spec: v1alpha1.FleetSpec{
+		Spec: stablev1alpha1.FleetSpec{
 			Replicas: 8,
-			Template: v1alpha1.GameServerTemplateSpec{},
+			Template: stablev1alpha1.GameServerTemplateSpec{},
 		},
-		Status: v1alpha1.FleetStatus{
+		Status: stablev1alpha1.FleetStatus{
 			Replicas:          5,
 			ReadyReplicas:     3,
 			ReservedReplicas:  3,
@@ -487,7 +488,7 @@ func defaultFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
 	return fas, f
 }
 
-func defaultWebhookFixtures() (*v1alpha1.FleetAutoscaler, *v1alpha1.Fleet) {
+func defaultWebhookFixtures() (*v1alpha1.FleetAutoscaler, *stablev1alpha1.Fleet) {
 	fas, f := defaultFixtures()
 	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
