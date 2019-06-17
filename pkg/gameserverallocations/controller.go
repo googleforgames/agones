@@ -398,26 +398,33 @@ func (c *Controller) allocateFromRemoteCluster(gsa v1alpha1.GameServerAllocation
 	}
 
 	// TODO: Retry on transient error --> response.StatusCode >= 500
-	response, err := client.Post(connectionInfo.AllocationEndpoint, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close() // nolint: errcheck
+	for i, endpoint := range connectionInfo.AllocationEndpoints {
+		response, err := client.Post(endpoint, "application/json", bytes.NewBuffer(body))
+		if err != nil {
+			return nil, err
+		}
+		defer response.Body.Close() // nolint: errcheck
 
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	if response.StatusCode >= 400 {
-		// For error responses return the body without deserializing to an object.
-		return nil, errors.New(string(data))
-	}
+		data, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, err
+		}
+		if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
+			// If there is a server error try a different endpoint
+			c.baseLogger.WithError(err).WithField("endpoint", endpoint).Warn("The request sent failed, trying next endpoint")
+			continue
+		}
+		if response.StatusCode >= 400 {
+			// For error responses return the body without deserializing to an object.
+			return nil, errors.New(string(data))
+		}
 
-	err = json.Unmarshal(data, &gsaResult)
-	if err != nil {
-		return nil, err
+		err = json.Unmarshal(data, &gsaResult)
+		if err != nil {
+			return nil, err
+		}
+		break
 	}
-
 	return &gsaResult, nil
 }
 
