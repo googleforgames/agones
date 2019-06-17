@@ -99,6 +99,20 @@ func (wq *WorkerQueue) EnqueueImmediately(obj interface{}) {
 	wq.queue.Add(key)
 }
 
+// EnqueueAfter delays an enqueuee operation by duration
+func (wq *WorkerQueue) EnqueueAfter(obj interface{}, duration time.Duration) {
+	var key string
+	var err error
+	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
+		err = errors.Wrap(err, "Error creating key for object")
+		runtime.HandleError(wq.logger.WithField("obj", obj), err)
+		return
+	}
+
+	wq.logger.WithField(wq.keyName, key).WithField("duration", duration).Info("Enqueueing after duration")
+	wq.queue.AddAfter(key, duration)
+}
+
 // runWorker is a long-running function that will continually call the
 // processNextWorkItem function in order to read and process a message on the
 // workqueue.

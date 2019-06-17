@@ -164,3 +164,32 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	assert.Error(t, wq.Healthy())
 	f(t, url, http.StatusServiceUnavailable)
 }
+
+func TestWorkerQueueEnqueueAfter(t *testing.T) {
+	t.Parallel()
+
+	updated := make(chan bool)
+	syncHandler := func(s string) error {
+		updated <- true
+		return nil
+	}
+	wq := NewWorkerQueue(syncHandler, logrus.WithField("source", "test"), "testKey", "test")
+	stop := make(chan struct{})
+	defer close(stop)
+
+	go wq.Run(1, stop)
+
+	wq.EnqueueAfter(cache.ExplicitKey("default/test"), 2*time.Second)
+
+	select {
+	case <-updated:
+		assert.FailNow(t, "should not be a result in queue yet")
+	case <-time.After(time.Second):
+	}
+
+	select {
+	case <-updated:
+	case <-time.After(2 * time.Second):
+		assert.Fail(t, "should have got a queue'd message by now")
+	}
+}
