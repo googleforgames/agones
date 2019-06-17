@@ -21,9 +21,7 @@ import (
 	"sync"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/client-go/listers/core/v1"
-
+	autoscalingv1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -33,11 +31,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
+	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -80,7 +80,7 @@ func NewController(
 	faInformer := fa.Informer()
 	fleets := agonesInformerFactory.Stable().V1alpha1().Fleets()
 	fInformer := fleets.Informer()
-	fas := agonesInformerFactory.Stable().V1alpha1().FleetAutoscalers()
+	fas := agonesInformerFactory.Autoscaling().V1alpha1().FleetAutoscalers()
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
@@ -129,7 +129,7 @@ func NewController(
 
 func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 
-	fas, ok := new.(*stablev1alpha1.FleetAutoscaler)
+	fas, ok := new.(*autoscalingv1alpha1.FleetAutoscaler)
 	if !ok {
 		return
 	}
@@ -137,7 +137,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 	// we looking for fleet name changes if that happens we need to reset
 	// metrics for the old fas.
 	if old != nil {
-		if oldFas, ok := old.(*stablev1alpha1.FleetAutoscaler); ok &&
+		if oldFas, ok := old.(*autoscalingv1alpha1.FleetAutoscaler); ok &&
 			oldFas.Spec.FleetName != fas.Spec.FleetName {
 			c.recordFleetAutoScalerDeletion(old)
 		}
@@ -194,7 +194,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 }
 
 func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
-	fas, ok := obj.(*stablev1alpha1.FleetAutoscaler)
+	fas, ok := obj.(*autoscalingv1alpha1.FleetAutoscaler)
 	if !ok {
 		return
 	}

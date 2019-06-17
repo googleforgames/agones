@@ -19,7 +19,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"

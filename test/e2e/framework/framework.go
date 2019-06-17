@@ -22,7 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	stable "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -76,7 +77,7 @@ func New(kubeconfig string) (*Framework, error) {
 }
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
-func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.GameServer) (*v1alpha1.GameServer, error) {
+func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *stable.GameServer) (*stable.GameServer, error) {
 	newGs, err := f.AgonesClient.StableV1alpha1().GameServers(ns).Create(gs)
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
@@ -84,7 +85,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 
 	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
-	readyGs, err := f.WaitForGameServerState(newGs, v1alpha1.GameServerStateReady, 5*time.Minute)
+	readyGs, err := f.WaitForGameServerState(newGs, stable.GameServerStateReady, 5*time.Minute)
 
 	if err != nil {
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
@@ -100,10 +101,10 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *v1alpha1.Ga
 }
 
 // WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires
-func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alpha1.GameServerState,
-	timeout time.Duration) (*v1alpha1.GameServer, error) {
+func (f *Framework) WaitForGameServerState(gs *stable.GameServer, state stable.GameServerState,
+	timeout time.Duration) (*stable.GameServer, error) {
 	var pollErr error
-	var readyGs *v1alpha1.GameServer
+	var readyGs *stable.GameServer
 
 	err := wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		readyGs, pollErr = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
@@ -128,7 +129,7 @@ func (f *Framework) WaitForGameServerState(gs *v1alpha1.GameServer, state v1alph
 
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
 // nolint: dupl
-func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, condition func(fleet *v1alpha1.Fleet) bool) {
+func (f *Framework) WaitForFleetCondition(t *testing.T, flt *stable.Fleet, condition func(fleet *stable.Fleet) bool) {
 	t.Helper()
 	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
@@ -147,11 +148,11 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *v1alpha1.Fleet, con
 
 // WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.
 // nolint: dupl
-func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *v1alpha1.FleetAutoscaler, condition func(fas *v1alpha1.FleetAutoscaler) bool) {
+func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(fas *autoscaling.FleetAutoscaler) bool) {
 	t.Helper()
 	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
-		fleetautoscaler, err := f.AgonesClient.StableV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+		fleetautoscaler, err := f.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -165,17 +166,17 @@ func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *v1alpha1.
 }
 
 // ListGameServersFromFleet lists GameServers from a particular fleet
-func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.GameServer, error) {
-	var results []v1alpha1.GameServer
+func (f *Framework) ListGameServersFromFleet(flt *stable.Fleet) ([]stable.GameServer, error) {
+	var results []stable.GameServer
 
-	opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}.String()}
+	opts := metav1.ListOptions{LabelSelector: labels.Set{stable.FleetNameLabel: flt.ObjectMeta.Name}.String()}
 	gsSetList, err := f.AgonesClient.StableV1alpha1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
 	if err != nil {
 		return results, err
 	}
 
 	for _, gsSet := range gsSetList.Items {
-		opts := metav1.ListOptions{LabelSelector: labels.Set{v1alpha1.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
+		opts := metav1.ListOptions{LabelSelector: labels.Set{stable.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
 		gsList, err := f.AgonesClient.StableV1alpha1().GameServers(flt.ObjectMeta.Namespace).List(opts)
 		if err != nil {
 			return results, err
@@ -188,8 +189,8 @@ func (f *Framework) ListGameServersFromFleet(flt *v1alpha1.Fleet) ([]v1alpha1.Ga
 }
 
 // FleetReadyCount returns the ready count in a fleet
-func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
-	return func(fleet *v1alpha1.Fleet) bool {
+func FleetReadyCount(amount int32) func(fleet *stable.Fleet) bool {
+	return func(fleet *stable.Fleet) bool {
 		logrus.Infof("fleet %v has %v/%v ready replicas", fleet.Name, fleet.Status.ReadyReplicas, amount)
 		return fleet.Status.ReadyReplicas == amount
 	}
@@ -197,10 +198,10 @@ func FleetReadyCount(amount int32) func(fleet *v1alpha1.Fleet) bool {
 
 // WaitForFleetGameServersCondition waits for all GameServers for a given fleet to match
 // a condition specified by a callback.
-func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet,
-	cond func(server v1alpha1.GameServer) bool) error {
+func (f *Framework) WaitForFleetGameServersCondition(flt *stable.Fleet,
+	cond func(server stable.GameServer) bool) error {
 	return f.WaitForFleetGameServerListCondition(flt,
-		func(servers []v1alpha1.GameServer) bool {
+		func(servers []stable.GameServer) bool {
 			for _, gs := range servers {
 				if !cond(gs) {
 					return false
@@ -212,8 +213,8 @@ func (f *Framework) WaitForFleetGameServersCondition(flt *v1alpha1.Fleet,
 
 // WaitForFleetGameServerListCondition waits for the list of GameServers to match a condition
 // specified by a callback and the size of GameServers to match fleet's Spec.Replicas.
-func (f *Framework) WaitForFleetGameServerListCondition(flt *v1alpha1.Fleet,
-	cond func(servers []v1alpha1.GameServer) bool) error {
+func (f *Framework) WaitForFleetGameServerListCondition(flt *stable.Fleet,
+	cond func(servers []stable.GameServer) bool) error {
 	return wait.Poll(2*time.Second, 5*time.Minute, func() (done bool, err error) {
 		gsList, err := f.ListGameServersFromFleet(flt)
 		if err != nil {
@@ -239,7 +240,7 @@ func (f *Framework) NewStatsCollector(name string) *StatsCollector {
 func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Cleaning up now.")
 	defer logrus.Info("Finished cleanup.")
-	alpha1 := f.AgonesClient.StableV1alpha1()
+	stable := f.AgonesClient.StableV1alpha1()
 	deleteOptions := &metav1.DeleteOptions{}
 	listOptions := metav1.ListOptions{}
 
@@ -258,28 +259,28 @@ func (f *Framework) CleanUp(ns string) error {
 		}
 	}
 
-	err = alpha1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
+	err = stable.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	err = alpha1.FleetAllocations(ns).DeleteCollection(deleteOptions, listOptions)
+	err = stable.FleetAllocations(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	err = alpha1.FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
+	err = f.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	return alpha1.GameServers(ns).
+	return stable.GameServers(ns).
 		DeleteCollection(deleteOptions, listOptions)
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
 // assumes the first port is the port to send the message to
-func SendGameServerUDP(gs *v1alpha1.GameServer, msg string) (string, error) {
+func SendGameServerUDP(gs *stable.GameServer, msg string) (string, error) {
 	address := fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port)
 	return SendUDP(address, msg)
 }

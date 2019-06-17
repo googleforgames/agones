@@ -71,9 +71,17 @@ kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{
 
 You should see a successful output similar to this:
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 fleetautoscaler.stable.agones.sev "webhook-fleet-autoscaler" created
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+fleetautoscaler.autoscaling.agones.sev "webhook-fleet-autoscaler" created
+```
+{{% /feature %}}
+
 
 This has created a FleetAutoscaler record inside Kubernetes.
 It has the link to Webhook service we deployed above.
@@ -94,6 +102,7 @@ kubectl describe fleetautoscaler webhook-fleet-autoscaler
 
 It should look something like this:
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 Name:         webhook-fleet-autoscaler
 Namespace:    default
@@ -126,6 +135,42 @@ Status:
   Scaling Limited:   false
 Events:              <none>
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+Name:         webhook-fleet-autoscaler
+Namespace:    default
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"autoscaling.agones.dev/v1alpha1","kind":"FleetAutoscaler","metadata":{"annotations":{},"name":"webhook-fleet-autoscaler","namespace":"default...
+API Version:  autoscaling.agones.dev/v1alpha1
+Kind:         FleetAutoscaler
+etadata:
+  Cluster Name:
+  Creation Timestamp:  2018-12-22T12:52:23Z
+  Generation:          1
+  Resource Version:    2274579
+  Self Link:           /apis/autoscaling.agones.dev/v1alpha1/namespaces/default/fleetautoscalers/webhook-fleet-autoscaler
+  UID:                 6d03eae4-05e8-11e9-84c2-42010a8a01c9
+Spec:
+  Fleet Name:  simple-udp
+  Policy:
+    Type:  Webhook
+    Webhook:
+      Service:
+        Name:       autoscaler-webhook-service
+        Namespace:  default
+        Path:       scale
+      URL:
+Status:
+  Able To Scale:     true
+  Current Replicas:  2
+  Desired Replicas:  2
+  Last Scale Time:   <nil>
+  Scaling Limited:   false
+Events:              <none>
+```
+{{% /feature %}}
+
 
 You can see the status (able to scale, not limited), the last time the fleet was scaled (nil for never), current and desired fleet size.
 

@@ -19,43 +19,28 @@
 package v1alpha1
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	rest "k8s.io/client-go/rest"
 )
 
-type StableV1alpha1Interface interface {
+type AutoscalingV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	FleetsGetter
-	FleetAllocationsGetter
-	GameServersGetter
-	GameServerSetsGetter
+	FleetAutoscalersGetter
 }
 
-// StableV1alpha1Client is used to interact with features provided by the stable.agones.dev group.
-type StableV1alpha1Client struct {
+// AutoscalingV1alpha1Client is used to interact with features provided by the autoscaling.agones.dev group.
+type AutoscalingV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *StableV1alpha1Client) Fleets(namespace string) FleetInterface {
-	return newFleets(c, namespace)
+func (c *AutoscalingV1alpha1Client) FleetAutoscalers(namespace string) FleetAutoscalerInterface {
+	return newFleetAutoscalers(c, namespace)
 }
 
-func (c *StableV1alpha1Client) FleetAllocations(namespace string) FleetAllocationInterface {
-	return newFleetAllocations(c, namespace)
-}
-
-func (c *StableV1alpha1Client) GameServers(namespace string) GameServerInterface {
-	return newGameServers(c, namespace)
-}
-
-func (c *StableV1alpha1Client) GameServerSets(namespace string) GameServerSetInterface {
-	return newGameServerSets(c, namespace)
-}
-
-// NewForConfig creates a new StableV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*StableV1alpha1Client, error) {
+// NewForConfig creates a new AutoscalingV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*AutoscalingV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -64,12 +49,12 @@ func NewForConfig(c *rest.Config) (*StableV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &StableV1alpha1Client{client}, nil
+	return &AutoscalingV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new StableV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new AutoscalingV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *StableV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *AutoscalingV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -77,9 +62,9 @@ func NewForConfigOrDie(c *rest.Config) *StableV1alpha1Client {
 	return client
 }
 
-// New creates a new StableV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *StableV1alpha1Client {
-	return &StableV1alpha1Client{c}
+// New creates a new AutoscalingV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *AutoscalingV1alpha1Client {
+	return &AutoscalingV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -97,7 +82,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *StableV1alpha1Client) RESTClient() rest.Interface {
+func (c *AutoscalingV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

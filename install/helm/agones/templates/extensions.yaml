@@ -75,7 +75,6 @@ webhooks:
           - "gameservers"
           - "gameserversets"
           - "fleetallocations"
-          - "fleetautoscalers"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -86,11 +85,20 @@ webhooks:
           - "fleets"
           - "gameserversets"
           - "fleetallocations"
-          - "fleetautoscalers"
         apiVersions:
           - "v1alpha1"
         operations:
           - UPDATE
+      - apiGroups:
+          - autoscaling.agones.dev
+        resources:
+          - "fleetautoscalers"
+        apiVersions:
+          - "v1alpha1"
+        operations:
+          - CREATE
+          - UPDATE
+
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
