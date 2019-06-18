@@ -42,8 +42,23 @@ endif(AGONES_SILENT_OUTPUT)
 # Project AGONES
 project(agones VERSION 0.11.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
 
-# Build options
+# Options
 option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC version" ON)
+
+option(AGONES_BUILD_ONLY_PREREQUISITIES "Build only prerequisites of Agones" OFF)
+option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" ON)
+set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_BINARY_DIR}/third_party" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
+set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
+
+# Prerequisities
+include(./cmake/prerequisites.cmake)
+find_package(ZLIB REQUIRED)
+find_package(Protobuf REQUIRED CONFIG)
+find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
+
+if (AGONES_BUILD_ONLY_PREREQUISITIES)
+    return()
+endif()
 
 # Currently we doesn't support build time generation of proto/gRPC files,
 # so gRPC version should be strict
@@ -64,11 +79,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_DEBUG_POSTFIX "d")
 set(AGONES_GRPC_VERSION "1.16.1")
 
-# Third party
-include(./cmake/prerequisites.cmake)
-find_package(ZLIB REQUIRED)
-find_package(Protobuf REQUIRED CONFIG)
-find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
 
 # Platform specific stuff
 if (WIN32)
