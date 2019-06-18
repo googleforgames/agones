@@ -1200,7 +1200,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 			v.f(t, list)
 
 			for i, gs := range list.Items {
-				err = wait.Poll(time.Second, time.Minute, func() (done bool, err error) {
+				err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
 					_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
 
 					if err != nil && k8serrors.IsNotFound(err) {
