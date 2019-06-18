@@ -140,7 +140,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.Equal(t, "ACK: ANNOTATION\n", reply)
 
 	// the label is set in a queue, so it may take a moment
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
@@ -150,7 +150,11 @@ func TestSDKSetAnnotation(t *testing.T) {
 		return ok, nil
 	})
 
-	assert.Nil(t, err)
+	logrus.WithField("annotations", gs.ObjectMeta.Annotations).Info("annotation information")
+
+	if !assert.Nil(t, err) {
+		assert.FailNow(t, "error waiting on annotation to be set")
+	}
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[annotation])
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[stable.VersionAnnotation])
 }
