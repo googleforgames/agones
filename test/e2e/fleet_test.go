@@ -290,7 +290,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 				// Check that total number of gameservers in the system does not exceed the RollingUpdate
 				// parameters (creating no more than maxSurge, deleting maxUnavailable servers at a time)
 				// Wait for old GSSet to be deleted
-				err = wait.PollImmediate(1*time.Second, 2*time.Minute, func() (bool, error) {
+				err = wait.PollImmediate(1*time.Second, 5*time.Minute, func() (bool, error) {
 					list, err := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).List(
 						metav1.ListOptions{LabelSelector: selector.String()})
 					if err != nil {
