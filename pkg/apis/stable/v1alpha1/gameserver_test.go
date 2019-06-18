@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"testing"
 
+	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/stable"
 	"github.com/stretchr/testify/assert"
@@ -222,6 +223,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 	for name, test := range data {
 		t.Run(name, func(t *testing.T) {
 			test.gameServer.ApplyDefaults()
+
+			assert.Equal(t, pkg.Version, test.gameServer.Annotations[stable.VersionAnnotation])
 
 			spec := test.gameServer.Spec
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
