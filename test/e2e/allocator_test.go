@@ -72,14 +72,16 @@ func TestAllocator(t *testing.T) {
 		return
 	}
 
-	client, err := creatRestClient("agones-system", "allocator-tls")
-	if !assert.Nil(t, err) {
-		return
-	}
-
 	// wait for the allocation system to come online
 	var response *http.Response
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		// create the rest client each time, as we may end up looking at an old cert
+		var client *http.Client
+		client, err = creatRestClient("agones-system", "allocator-tls")
+		if err != nil {
+			return true, err
+		}
+
 		response, err = client.Post(requestURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			logrus.WithError(err).Infof("failing http request")
