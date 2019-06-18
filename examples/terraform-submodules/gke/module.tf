@@ -30,7 +30,7 @@ variable "machine_type" {default = "n1-standard-4"}
 //Additional 2 node pools would be created with 1 node each for "agones-system" and "agones-metrics"
 variable "node_count" {default = "4"}
 module "agones" {
-  source = "git::https://github.com/GoogleCloudPlatform/agones.git//build/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//build/?ref=master"
   
   password     = "${var.password}"
   cluster = {

@@ -80,7 +80,7 @@ weight = 1
 [params]
 copyright = "Copyright Google LLC All Rights Reserved."
 privacy_policy = "https://policies.google.com/privacy"
-github_repo = "https://github.com/GoogleCloudPlatform/agones"
+github_repo = "https://github.com/googleforgames/agones"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
 gcs_engine_id = "002375903941309441958:rceiko9wfuw"
@@ -104,8 +104,8 @@ breadcrumb_disable = false
 [params.ui.feedback]
 enable = true
 # The responses that the user sees after clicking "yes" (the page was helpful) or "no" (the page was not helpful).
-yes = 'Glad to hear it! Please <a href="https://github.com/GoogleCloudPlatform/agones/issues/new">tell us how we can improve</a>.'
-no = 'Sorry to hear that. Please <a href="https://github.com/GoogleCloudPlatform/agones/issues/new">tell us how we can improve</a>.'
+yes = 'Glad to hear it! Please <a href="https://github.com/googleforgames/agones/issues/new">tell us how we can improve</a>.'
+no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agones/issues/new">tell us how we can improve</a>.'
 
 [params.links]
 # End user relevant links. These will show up on left side of footer and in the community page if you have one.
@@ -127,7 +127,7 @@ no = 'Sorry to hear that. Please <a href="https://github.com/GoogleCloudPlatform
 # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
 [[params.links.developer]]
 	name = "GitHub"
-	url = "https://github.com/GoogleCloudPlatform/agones"
+	url = "https://github.com/googleforgames/agones"
 	icon = "fab fa-github"
         desc = "Development takes place here!"
 [[params.links.developer]]

@@ -38,7 +38,7 @@ spec:
     spec:
       containers:
       - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.10
+        image: gcr.io/agones-images/udp-server:0.11
         resources:
           limit:
             cpu: "250m" #this is our limit here

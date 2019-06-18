@@ -189,6 +189,12 @@ type GameServerStatusPort struct {
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
 func (gs *GameServer) ApplyDefaults() {
+	// VersionAnnotation is the annotation that stores
+	// the version of sdk which runs in a sidecar
+	if gs.ObjectMeta.Annotations == nil {
+		gs.ObjectMeta.Annotations = map[string]string{}
+	}
+	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
 
 	gs.Spec.ApplyDefaults()
@@ -477,9 +483,6 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	if gs.ObjectMeta.Annotations == nil {
 		gs.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
-	// VersionAnnotation is the annotation that stores
-	// the version of sdk which runs in a sidecar
-	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod
