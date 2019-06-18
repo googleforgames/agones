@@ -11,6 +11,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Review closed PRs have been applied to the current milestone.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
+- [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout master && git pull --rebase upstream master`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
@@ -40,6 +41,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1
+- [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
