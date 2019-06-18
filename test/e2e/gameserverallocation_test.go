@@ -347,6 +347,8 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 }
 
 func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
+	t.Parallel()
+
 	allocations := framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs)
 
 	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},

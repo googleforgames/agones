@@ -57,7 +57,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=kind-$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.10
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.11
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -222,7 +222,7 @@ push-release-chart: RELEASE_VERSION ?= $(base_version)
 push-release-chart: $(ensure-build-image)
 	rm -rf /tmp/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
 	mkdir -p $(agones_path)/install/.helm-$(RELEASE_VERSION)/
-	cd /tmp && git clone --single-branch -b release-$(RELEASE_VERSION) git@github.com:GoogleCloudPlatform/agones.git
+	cd /tmp && git clone --single-branch -b release-$(RELEASE_VERSION) git@github.com:googleforgames/agones.git
 	mv /tmp/agones/install/helm/agones $(agones_path)/install/.helm-$(RELEASE_VERSION)/
 	CHART_DIR=install/.helm-$(RELEASE_VERSION)/agones $(MAKE) push-chart
 

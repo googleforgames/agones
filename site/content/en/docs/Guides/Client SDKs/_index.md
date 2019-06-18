@@ -82,7 +82,7 @@ the GameServer is currently allocated to.
 
 Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
 the returned object is limited to that configuration that was deemed useful. If there are
-areas that you feel are missing, please [file an issue](https://github.com/GoogleCloudPlatform/agones/issues) or pull request.
+areas that you feel are missing, please [file an issue](https://github.com/googleforgames/agones/issues) or pull request.
 
 The easiest way to see what is exposed, is to check the  {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}},
 specifically at the `message GameServer`.
@@ -101,7 +101,7 @@ This is especially useful when combined with `FleetAllocation` [applied metadata
 
 Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
 the returned object is limited to that configuration that was deemed useful. If there are
-areas that you feel are missing, please [file an issue](https://github.com/GoogleCloudPlatform/agones/issues) or pull request.
+areas that you feel are missing, please [file an issue](https://github.com/googleforgames/agones/issues) or pull request.
 
 The easiest way to see what is exposed, is to check the {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}},
 specifically at the `message GameServer`.

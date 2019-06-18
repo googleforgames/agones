@@ -209,4 +209,4 @@ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fl
   }
 ```
 
-Also exposing a Scale subresource would allow you to configure HorizontalPodAutoscaler and PodDisruptionBudget for a fleet in the future. Howeber these features have not been tested, and are not currently supported - but if you are looking for these features, please be sure to let us know in the [ticket](https://github.com/GoogleCloudPlatform/agones/issues/553). 
+Also exposing a Scale subresource would allow you to configure HorizontalPodAutoscaler and PodDisruptionBudget for a fleet in the future. However these features have not been tested, and are not currently supported - but if you are looking for these features, please be sure to let us know in the [ticket](https://github.com/googleforgames/agones/issues/553). 
