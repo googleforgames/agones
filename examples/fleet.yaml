@@ -35,7 +35,7 @@ spec:
   # cluster
   scheduling: Packed
   # a GameServer template - see:
-  # https://github.com/GoogleCloudPlatform/agones/blob/master/docs/gameserver_spec.md for all the options
+  # https://agones.dev/site/docs/reference/gameserver/ for all the options
   strategy:
     # The replacement strategy for when the GameServer template is changed. Default option is "RollingUpdate",
     # "RollingUpdate" will increment by maxSurge value on each iteration, while decrementing by maxUnavailable on each
@@ -67,4 +67,4 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.10
+            image: gcr.io/agones-images/udp-server:0.11

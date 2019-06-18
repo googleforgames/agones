@@ -25,7 +25,7 @@ and you have a running fleet of game servers.
 Let's create a Fleet Autoscaler using the following command : 
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetautoscaler.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetautoscaler.yaml
 ```
 
 You should see a successful output similar to this :
@@ -150,7 +150,7 @@ If you're interested in more details for game server allocation, you should cons
 In here we are only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:

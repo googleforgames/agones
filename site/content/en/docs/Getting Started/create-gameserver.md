@@ -31,7 +31,7 @@ For the purpose of this guide we're going to use the {{< ghlink href="examples/s
 Let's create a GameServer using the following command :
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 ```
 
 You should see a successful output similar to this :
@@ -107,7 +107,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.10
+        Image:  gcr.io/agones-images/udp-server:0.11
         Name:   simple-udp
         Resources:
           Limits:

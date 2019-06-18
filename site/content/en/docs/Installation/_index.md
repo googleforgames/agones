@@ -279,14 +279,14 @@ This will install Agones in your cluster.
 ### Install with YAML
 
 We can install Agones to the cluster using the
-[install.yaml](https://github.com/GoogleCloudPlatform/agones/blob/{{< release-branch >}}/install/yaml/install.yaml) file.
+[install.yaml](https://github.com/googleforgames/agones/blob/{{< release-branch >}}/install/yaml/install.yaml) file.
 
 ```bash
 kubectl create namespace agones-system
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/install/yaml/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
 ```
 
-You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/GoogleCloudPlatform/agones/releases) archive.
+You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/googleforgames/agones/releases) archive.
 
 > Note: Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
 > kubernetes webhooks communication. If you want to generate new certificates or use your own,
