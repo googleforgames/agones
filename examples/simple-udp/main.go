@@ -75,11 +75,7 @@ func main() {
 	defer conn.Close() // nolint: errcheck
 
 	log.Print("Marking this server as ready")
-	// This tells Agones that the server is ready to receive connections.
-	err = s.Ready()
-	if err != nil {
-		log.Fatalf("Could not send ready message")
-	}
+	ready(s)
 
 	readWriteLoop(conn, stop, s)
 }
@@ -111,6 +107,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 
 		case "GAMESERVER":
 			writeGameServerName(s, conn, sender)
+
+		case "READY":
+			ready(s)
 
 		case "ALLOCATE":
 			allocate(s)
@@ -147,7 +146,15 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 	}
 }
 
-// allocate attemps to allocate this gameserver
+// ready attempts to mark this gameserver as ready
+func ready(s *sdk.SDK) {
+	err := s.Ready()
+	if err != nil {
+		log.Fatalf("Could not send ready message")
+	}
+}
+
+// allocate attempts to allocate this gameserver
 func allocate(s *sdk.SDK) {
 	err := s.Allocate()
 	if err != nil {
