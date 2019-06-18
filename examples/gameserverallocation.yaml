@@ -13,8 +13,6 @@
 # limitations under the License.
 
 #
-# (GameServerAllocation is currently experimental, and likely to change in upcoming releases)
-#
 # Full example of a GameServerAllocation. This is used to allocate
 # A GameServer out of a set of GameServers. This could be a Fleet,
 # multiple Fleets, or a self managed group of GameServers.

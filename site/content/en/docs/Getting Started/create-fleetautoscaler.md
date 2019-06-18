@@ -30,9 +30,17 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 
 You should see a successful output similar to this :
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 fleetautoscaler.stable.agones.sev "simple-udp-autoscaler" created
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+fleetautoscaler.autoscaling.agones.sev "simple-udp-autoscaler" created
+```
+{{% /feature %}}
+
 
 This has created a FleetAutoscaler record inside Kubernetes.
 
@@ -44,6 +52,7 @@ kubectl describe fleetautoscaler simple-udp-autoscaler
 
 It should look something like this:
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 Name:         simple-udp-autoscaler
 Namespace:    default
@@ -84,6 +93,50 @@ Status:
   Scaling Limited:   false
 Events:              <none>
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+Name:         simple-udp-autoscaler
+Namespace:    default
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"st
+able.agones.dev/v1alpha1","kind":"FleetAutoscaler","metadata":{"annotations":{},
+"name":"simple-udp-autoscaler","namespace":"default"},...
+API Version:  autoscaling.agones.dev/v1alpha1
+Kind:         FleetAutoscaler
+Metadata:
+  Cluster Name:
+  Creation Timestamp:  2018-10-02T15:19:58Z
+  Generation:          1
+  Owner References:
+    API Version:           autoscaling.agones.dev/v1alpha1
+    Block Owner Deletion:  true
+    Controller:            true
+    Kind:                  Fleet
+    Name:                  simple-udp
+    UID:                   9960762e-c656-11e8-933e-fa163e07a1d4
+  Resource Version:        6123197
+  Self Link:               /apis/autoscaling.agones.dev/v1alpha1/namespaces/default/f
+leetautoscalers/simple-udp-autoscaler
+  UID:                     9fd0efa1-c656-11e8-933e-fa163e07a1d4
+Spec:
+  Fleet Name:  simple-udp
+  Policy:
+    Buffer:
+      Buffer Size:   2
+      Max Replicas:  10
+      Min Replicas:  2
+    Type:            Buffer
+Status:
+  Able To Scale:     true
+  Current Replicas:  2
+  Desired Replicas:  2
+  Last Scale Time:   <nil>
+  Scaling Limited:   false
+Events:              <none>
+```
+{{% /feature %}}
+
 
 You can see the status (able to scale, not limited), the last time the fleet was scaled (nil for never)
 and the current and desired fleet size. 

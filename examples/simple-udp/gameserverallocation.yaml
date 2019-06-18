@@ -14,7 +14,6 @@
 
 #
 # A GameServerAllocation against a Fleet named 'simple-udp'
-# (GameServerAllocation is currently experimental, and likely to change in upcoming releases)
 #
 
 apiVersion: "allocation.agones.dev/v1alpha1"

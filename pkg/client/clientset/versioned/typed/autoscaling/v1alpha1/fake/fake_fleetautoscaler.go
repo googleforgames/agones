@@ -19,7 +19,7 @@
 package fake
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,13 +30,13 @@ import (
 
 // FakeFleetAutoscalers implements FleetAutoscalerInterface
 type FakeFleetAutoscalers struct {
-	Fake *FakeStableV1alpha1
+	Fake *FakeAutoscalingV1alpha1
 	ns   string
 }
 
-var fleetautoscalersResource = schema.GroupVersionResource{Group: "stable.agones.dev", Version: "v1alpha1", Resource: "fleetautoscalers"}
+var fleetautoscalersResource = schema.GroupVersionResource{Group: "autoscaling.agones.dev", Version: "v1alpha1", Resource: "fleetautoscalers"}
 
-var fleetautoscalersKind = schema.GroupVersionKind{Group: "stable.agones.dev", Version: "v1alpha1", Kind: "FleetAutoscaler"}
+var fleetautoscalersKind = schema.GroupVersionKind{Group: "autoscaling.agones.dev", Version: "v1alpha1", Kind: "FleetAutoscaler"}
 
 // Get takes name of the fleetAutoscaler, and returns the corresponding fleetAutoscaler object, and an error if there is any.
 func (c *FakeFleetAutoscalers) Get(name string, options v1.GetOptions) (result *v1alpha1.FleetAutoscaler, err error) {

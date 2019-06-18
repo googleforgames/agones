@@ -19,13 +19,15 @@ import (
 	"fmt"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/autoscaling"
+	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
-	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	autoscalingv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
+	typedstablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listerv1alpha1 "agones.dev/agones/pkg/client/listers/autoscaling/v1alpha1"
+	listerstablev1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -52,10 +54,10 @@ import (
 type Controller struct {
 	baseLogger            *logrus.Entry
 	crdGetter             v1beta1.CustomResourceDefinitionInterface
-	fleetGetter           getterv1alpha1.FleetsGetter
-	fleetLister           listerv1alpha1.FleetLister
+	fleetGetter           typedstablev1alpha1.FleetsGetter
+	fleetLister           listerstablev1alpha1.FleetLister
 	fleetSynced           cache.InformerSynced
-	fleetAutoscalerGetter getterv1alpha1.FleetAutoscalersGetter
+	fleetAutoscalerGetter autoscalingv1alpha1.FleetAutoscalersGetter
 	fleetAutoscalerLister listerv1alpha1.FleetAutoscalerLister
 	fleetAutoscalerSynced cache.InformerSynced
 	workerqueue           *workerqueue.WorkerQueue
@@ -71,20 +73,19 @@ func NewController(
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
-	agonesInformer := agonesInformerFactory.Stable().V1alpha1()
-	fasInformer := agonesInformer.FleetAutoscalers().Informer()
-
+	autoscaler := agonesInformerFactory.Autoscaling().V1alpha1().FleetAutoscalers()
+	fleetInformer := agonesInformerFactory.Stable().V1alpha1().Fleets()
 	c := &Controller{
 		crdGetter:             extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
 		fleetGetter:           agonesClient.StableV1alpha1(),
-		fleetLister:           agonesInformer.Fleets().Lister(),
-		fleetSynced:           agonesInformer.Fleets().Informer().HasSynced,
-		fleetAutoscalerGetter: agonesClient.StableV1alpha1(),
-		fleetAutoscalerLister: agonesInformer.FleetAutoscalers().Lister(),
-		fleetAutoscalerSynced: fasInformer.HasSynced,
+		fleetLister:           fleetInformer.Lister(),
+		fleetSynced:           fleetInformer.Informer().HasSynced,
+		fleetAutoscalerGetter: agonesClient.AutoscalingV1alpha1(),
+		fleetAutoscalerLister: autoscaler.Lister(),
+		fleetAutoscalerSynced: autoscaler.Informer().HasSynced,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, stable.GroupName+".FleetAutoscalerController")
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, autoscaling.GroupName+".FleetAutoscalerController")
 	health.AddLivenessCheck("fleetautoscaler-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -92,11 +93,11 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
-	kind := stablev1alpha1.Kind("FleetAutoscaler")
+	kind := v1alpha1.Kind("FleetAutoscaler")
 	wh.AddHandler("/validate", kind, admv1beta1.Create, c.validationHandler)
 	wh.AddHandler("/validate", kind, admv1beta1.Update, c.validationHandler)
 
-	fasInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
 		UpdateFunc: func(_, newObj interface{}) {
 			c.workerqueue.Enqueue(newObj)
@@ -109,7 +110,7 @@ func NewController(
 // Run the FleetAutoscaler controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetautoscalers."+stable.GroupName, c.baseLogger)
+	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetautoscalers."+autoscaling.GroupName, c.baseLogger)
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func (c *Controller) loggerForFleetAutoscaler(fas *v1alpha1.FleetAutoscaler) *lo
 // validate its settings.
 func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	obj := review.Request.Object
-	fas := &stablev1alpha1.FleetAutoscaler{}
+	fas := &v1alpha1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
 	if err != nil {
 		c.baseLogger.WithField("review", review).WithError(err).Info("validationHandler")
@@ -230,7 +231,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 }
 
 // scaleFleet scales the fleet of the autoscaler to a new number of replicas
-func (c *Controller) scaleFleet(fas *stablev1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet, replicas int32) error {
+func (c *Controller) scaleFleet(fas *v1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet, replicas int32) error {
 	if replicas != f.Spec.Replicas {
 		fCopy := f.DeepCopy()
 		fCopy.Spec.Replicas = replicas
@@ -249,7 +250,7 @@ func (c *Controller) scaleFleet(fas *stablev1alpha1.FleetAutoscaler, f *stablev1
 }
 
 // updateStatus updates the status of the given FleetAutoscaler
-func (c *Controller) updateStatus(fas *stablev1alpha1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
+func (c *Controller) updateStatus(fas *v1alpha1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = true
 	fasCopy.Status.ScalingLimited = scalingLimited
@@ -275,7 +276,7 @@ func (c *Controller) updateStatus(fas *stablev1alpha1.FleetAutoscaler, currentRe
 }
 
 // updateStatus updates the status of the given FleetAutoscaler in the case we're not able to scale
-func (c *Controller) updateStatusUnableToScale(fas *stablev1alpha1.FleetAutoscaler) error {
+func (c *Controller) updateStatusUnableToScale(fas *v1alpha1.FleetAutoscaler) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = false
 	fasCopy.Status.ScalingLimited = false
