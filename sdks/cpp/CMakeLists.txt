@@ -50,7 +50,7 @@ if (Git_FOUND)
         OUTPUT_VARIABLE output
     )
     if (${result} EQUAL 0)
-        string(REPLACE "v" "" AGONES_VERSION ${output})
+        string(REGEX MATCH "\\d+.\\d+.\\d+" AGONES_VERSION ${output})
     endif()
 else()
     message(WARNING "Git was not found. Current Agones version is set to ${AGONES_VERSION}")
