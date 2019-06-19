@@ -93,7 +93,6 @@ A [cluster][cluster] consists of at least one *cluster master* machine and multi
 
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
-  --no-enable-legacy-authorization \
   --tags=game-server \
   --enable-basic-auth \
   --password=supersecretpassword \
@@ -105,7 +104,6 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
 Flag explanations:
 
 * cluster-version: Agones requires Kubernetes version 1.11.
-* no-enable-legacy-authorization: This enables RBAC, the authorization scheme used by Agones to control access to resources.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * enable-basic-auth/password: Sets the master auth scheme for interacting with the cluster.
 * scopes: Defines the Oauth scopes required by the nodes.
