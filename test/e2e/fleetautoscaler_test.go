@@ -17,6 +17,7 @@ package e2e
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -337,20 +338,26 @@ func TestAutoscalerWebhook(t *testing.T) {
 	assert.NoError(t, err)
 
 	var l *corev1.EventList
+	errString := "Error calculating desired fleet size on FleetAutoscaler"
+	found := false
+
+	// Error - net/http: request canceled while waiting for connection (Client.Timeout exceeded
+	// while awaiting headers)
 	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		events := framework.KubeClient.CoreV1().Events(defaultNs)
 		l, err = events.List(metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
 		if err != nil {
-			return true, err
+			return false, err
 		}
-
-		return len(l.Items) > 0, nil
+		for _, v := range l.Items {
+			if strings.Contains(v.Message, errString) {
+				found = true
+			}
+		}
+		return found, nil
 	})
-	assert.NoError(t, err)
-
-	for _, v := range l.Items {
-		assert.Contains(t, v.Message, "Error calculating desired fleet size on FleetAutoscaler", "Received unexpected error")
-	}
+	assert.NoError(t, err, "Received unexpected error")
+	assert.True(t, found, "Expected error was not received")
 }
 
 var webhookKey = `
