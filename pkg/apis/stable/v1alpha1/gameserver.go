@@ -66,6 +66,9 @@ const (
 	// Dynamic PortPolicy means that the system will choose an open
 	// port for the GameServer in question
 	Dynamic PortPolicy = "Dynamic"
+	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+	// This will mean that users will need to lookup what port has been opened through the server side SDK.
+	Passthrough PortPolicy = "Passthrough"
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
@@ -161,7 +164,7 @@ type GameServerPort struct {
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// ContainerPort is the port that is being opened on the game server process
-	ContainerPort int32 `json:"containerPort"`
+	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
@@ -186,6 +189,12 @@ type GameServerStatusPort struct {
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
 func (gs *GameServer) ApplyDefaults() {
+	// VersionAnnotation is the annotation that stores
+	// the version of sdk which runs in a sidecar
+	if gs.ObjectMeta.Annotations == nil {
+		gs.ObjectMeta.Annotations = map[string]string{}
+	}
+	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
 
 	gs.Spec.ApplyDefaults()
@@ -227,7 +236,7 @@ func (gs *GameServer) applyStateDefaults() {
 	if gs.Status.State == "" {
 		gs.Status.State = GameServerStateCreating
 		// applyStateDefaults() should be called after applyPortDefaults()
-		if gs.HasPortPolicy(Dynamic) {
+		if gs.HasPortPolicy(Dynamic) || gs.HasPortPolicy(Passthrough) {
 			gs.Status.State = GameServerStatePortAllocation
 		}
 	}
@@ -297,7 +306,25 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 
 		// no host port when using dynamic PortPolicy
 		for _, p := range gss.Ports {
-			if p.HostPort > 0 && p.PortPolicy == Dynamic {
+			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+				if p.ContainerPort <= 0 {
+					causes = append(causes, metav1.StatusCause{
+						Type:    metav1.CauseTypeFieldValueInvalid,
+						Field:   fmt.Sprintf("%s.containerPort", p.Name),
+						Message: ErrContainerPortRequired,
+					})
+				}
+			}
+
+			if p.PortPolicy == Passthrough && p.ContainerPort > 0 {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueInvalid,
+					Field:   fmt.Sprintf("%s.containerPort", p.Name),
+					Message: ErrContainerPortPassthrough,
+				})
+			}
+
+			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
@@ -456,9 +483,6 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	if gs.ObjectMeta.Annotations == nil {
 		gs.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
-	// VersionAnnotation is the annotation that stores
-	// the version of sdk which runs in a sidecar
-	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
 }
 
 // podScheduling applies the Fleet scheduling strategy to the passed in Pod
@@ -517,11 +541,11 @@ func (p GameServerPort) Status() GameServerStatusPort {
 }
 
 // CountPorts returns the number of
-// ports that have this type of PortPolicy
-func (gs *GameServer) CountPorts(policy PortPolicy) int {
+// ports that match condition function
+func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 	count := 0
 	for _, p := range gs.Spec.Ports {
-		if p.PortPolicy == policy {
+		if f(p.PortPolicy) {
 			count++
 		}
 	}

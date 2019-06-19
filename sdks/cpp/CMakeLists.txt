@@ -57,7 +57,7 @@ else()
 endif()
 
 # Project AGONES
-project(agones VERSION ${AGONES_VERSION} HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
+project(agones VERSION ${AGONES_VERSION} HOMEPAGE_URL https://github.com/googleforgames/agones LANGUAGES C CXX)
 
 # Options
 option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC version" ON)

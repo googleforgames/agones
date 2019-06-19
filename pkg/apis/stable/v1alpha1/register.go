@@ -59,8 +59,6 @@ func addKnownTypes(scheme *k8sruntime.Scheme) error {
 		&FleetList{},
 		&FleetAllocation{},
 		&FleetAllocationList{},
-		&FleetAutoscaler{},
-		&FleetAutoscalerList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

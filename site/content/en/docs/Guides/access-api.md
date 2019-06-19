@@ -90,7 +90,7 @@ func main() {
 		Spec: v1alpha1.GameServerSpec{
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "udp-server", Image: "gcr.io/agones-images/udp-server:0.9"}},
+					Containers: []corev1.Container{{Name: "udp-server", Image: "gcr.io/agones-images/udp-server:0.11"}},
 				},
 			},
 		},
@@ -178,7 +178,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
             "kind": "GameServer",
             "metadata": {
                 "annotations": {
-                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"stable.agones.dev/v1alpha1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"gcr.io/agones-images/udp-server:0.9\",\"name\":\"simple-udp\"}]}}}}\n"
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"stable.agones.dev/v1alpha1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"gcr.io/agones-images/udp-server:0.11\",\"name\":\"simple-udp\"}]}}}}\n"
                 },
                 "clusterName": "",
                 "creationTimestamp": "2018-03-02T21:41:05Z",
@@ -210,7 +210,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
                     "spec": {
                         "containers": [
                             {
-                                "image": "gcr.io/agones-images/udp-server:0.9",
+                                "image": "gcr.io/agones-images/udp-server:0.11",
                                 "name": "simple-udp",
                                 "resources": {}
                             }
@@ -317,7 +317,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
                     "spec": {
                         "containers": [
                             {
-                                "image": "gcr.io/agones-images/udp-server:0.9",
+                                "image": "gcr.io/agones-images/udp-server:0.11",
                                 "name": "simple-udp",
                                 "resources": {}
                             }

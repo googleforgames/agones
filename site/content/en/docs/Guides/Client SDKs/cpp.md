@@ -10,7 +10,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Download
 
-Download the source from the [Releases Page](https://github.com/GoogleCloudPlatform/agones/releases) 
+Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases) 
 or {{< ghlink href="sdks/cpp" >}}directly from Github{{< /ghlink >}}.
 
 ## Usage

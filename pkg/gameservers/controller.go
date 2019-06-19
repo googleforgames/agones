@@ -17,6 +17,7 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -116,7 +117,7 @@ func NewController(
 		nodeLister:             kubeInformerFactory.Core().V1().Nodes().Lister(),
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
-		healthController:       NewHealthController(kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -309,7 +310,12 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	}
 
 	// Run the Health Controller
-	go c.healthController.Run(stop)
+	go func() {
+		err = c.healthController.Run(stop)
+		if err != nil {
+			c.baseLogger.WithError(err).Error("error running health controller")
+		}
+	}()
 
 	// start work queues
 	var wg sync.WaitGroup
@@ -792,7 +798,7 @@ func (c *Controller) address(gs *v1alpha1.GameServer, pod *corev1.Pod) (string, 
 	}
 
 	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeExternalIP {
+		if a.Type == corev1.NodeExternalIP && net.ParseIP(a.Address) != nil {
 			return a.Address, nil
 		}
 	}
@@ -800,7 +806,7 @@ func (c *Controller) address(gs *v1alpha1.GameServer, pod *corev1.Pod) (string, 
 	// minikube only has an InternalIP on a Node, so we'll fall back to that.
 	c.loggerForGameServer(gs).WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
 	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeInternalIP {
+		if a.Type == corev1.NodeInternalIP && net.ParseIP(a.Address) != nil {
 			return a.Address, nil
 		}
 	}

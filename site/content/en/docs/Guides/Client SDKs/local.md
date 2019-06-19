@@ -22,7 +22,7 @@ that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
 To do this you will need to download the latest agonessdk-server-{VERSION}.zip from 
-[releases](https://github.com/googlecloudplatform/agones/releases), and unzip it.
+[releases](https://github.com/googleforgames/agones/releases), and unzip it.
 You will find the executables for the SDK server, one for each type of operating system.
 
 - `sdk-server.windows.amd64.exe` - Windows

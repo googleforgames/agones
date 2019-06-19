@@ -35,7 +35,7 @@ While not required, you may wish to go through the [Create a Game Server]({{< re
 Let's create a Fleet using the following command :
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
 ```
 
 You should see a successful output similar to this :
@@ -111,7 +111,7 @@ Spec:
           Creation Timestamp:  <nil>
         Spec:
           Containers:
-            Image:  gcr.io/agones-images/udp-server:0.9
+            Image:  gcr.io/agones-images/udp-server:0.11
             Name:   simple-udp
             Resources:
 Status:
@@ -169,7 +169,7 @@ are often used in conjunction.
 {{< ghlink href="/examples/simple-udp/gameserverallocation.yaml" >}}This example{{< /ghlink >}} uses the label selector to specifically target the `simple-udp` fleet that we just created.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}})
@@ -240,7 +240,7 @@ We can do allocation of a GameServer for usage through a `FleetAllocation`, whic
 and also move it to the `Allocated` state.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#fleet-allocation-specification" >}})
@@ -308,7 +308,7 @@ status:
           creationTimestamp: null
         spec:
           containers:
-          - image: gcr.io/agones-images/udp-server:0.9
+          - image: gcr.io/agones-images/udp-server:0.11
             name: simple-udp
             resources: {}
     status:
@@ -408,7 +408,7 @@ Let's take this for a spin! Run `kubectl scale fleet simple-udp --replicas=5` to
 Let's also allocate ourselves a `GameServer`
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 We should now have four `Ready` `GameServers` and one `Allocated`.

@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc. All Rights Reserved.
+// Copyright 2019 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,4 +69,11 @@ func (e *gameServerCacheEntry) Range(f func(key string, gs *stablev1alpha1.GameS
 			break
 		}
 	}
+}
+
+// Len returns the current length of the cache
+func (e *gameServerCacheEntry) Len() int {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
+	return len(e.cache)
 }

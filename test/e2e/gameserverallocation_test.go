@@ -85,9 +85,9 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					Priority: 1,
 					Weight:   100,
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-						AllocationEndpoint: "localhost",
-						ClusterName:        "multicluster1",
-						SecretName:         "sec1",
+						AllocationEndpoints: []string{"localhost"},
+						ClusterName:         "multicluster1",
+						SecretName:          "sec1",
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -106,9 +106,9 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					Priority: 2,
 					Weight:   100,
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-						AllocationEndpoint: "another-endpoint",
-						ClusterName:        "multicluster2",
-						SecretName:         "sec1",
+						AllocationEndpoints: []string{"another-endpoint"},
+						ClusterName:         "multicluster2",
+						SecretName:          "sec1",
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -128,9 +128,9 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					Priority: 1,
 					Weight:   10,
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-						AllocationEndpoint: "another-endpoint",
-						ClusterName:        "multicluster3",
-						SecretName:         "sec1",
+						AllocationEndpoints: []string{"another-endpoint"},
+						ClusterName:         "multicluster3",
+						SecretName:          "sec1",
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -347,6 +347,8 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 }
 
 func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
+	t.Parallel()
+
 	allocations := framework.AgonesClient.AllocationV1alpha1().GameServerAllocations(defaultNs)
 
 	gsa := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},

@@ -36,17 +36,15 @@ func main() {
 	go doSignal()
 
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
+	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
 	}
-
-	log.Printf("Starting UDP server, listening on port %s", *port)
-	conn, err := net.ListenPacket("udp", ":"+*port)
-	if err != nil {
-		log.Fatalf("Could not start udp server: %v", err)
+	if epass := os.Getenv("PASSTHROUGH"); epass != "" {
+		p := strings.ToUpper(epass) == "TRUE"
+		passthrough = &p
 	}
-	defer conn.Close() // nolint: errcheck
 
 	log.Print("Creating SDK instance")
 	s, err := sdk.NewSDK()
@@ -58,12 +56,26 @@ func main() {
 	stop := make(chan struct{})
 	go doHealth(s, stop)
 
-	log.Print("Marking this server as ready")
-	// This tells Agones that the server is ready to receive connections.
-	err = s.Ready()
-	if err != nil {
-		log.Fatalf("Could not send ready message")
+	if *passthrough {
+		var gs *coresdk.GameServer
+		gs, err = s.GameServer()
+		if err != nil {
+			log.Fatalf("Could not get gameserver port details: %s", err)
+		}
+
+		p := strconv.FormatInt(int64(gs.Status.Ports[0].Port), 10)
+		port = &p
 	}
+
+	log.Printf("Starting UDP server, listening on port %s", *port)
+	conn, err := net.ListenPacket("udp", ":"+*port)
+	if err != nil {
+		log.Fatalf("Could not start udp server: %v", err)
+	}
+	defer conn.Close() // nolint: errcheck
+
+	log.Print("Marking this server as ready")
+	ready(s)
 
 	readWriteLoop(conn, stop, s)
 }
@@ -95,6 +107,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 
 		case "GAMESERVER":
 			writeGameServerName(s, conn, sender)
+
+		case "READY":
+			ready(s)
 
 		case "ALLOCATE":
 			allocate(s)
@@ -131,7 +146,15 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 	}
 }
 
-// allocate attemps to allocate this gameserver
+// ready attempts to mark this gameserver as ready
+func ready(s *sdk.SDK) {
+	err := s.Ready()
+	if err != nil {
+		log.Fatalf("Could not send ready message")
+	}
+}
+
+// allocate attempts to allocate this gameserver
 func allocate(s *sdk.SDK) {
 	err := s.Allocate()
 	if err != nil {

@@ -11,6 +11,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Review closed PRs have been applied to the current milestone.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
+- [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout master && git pull --rebase upstream master`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
@@ -29,7 +30,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] If full release, add link to previous version's documentation to nav dropdown
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
 - [ ] Create PR with these changes, and merge them with approval
-- [ ] Confirm local git remote `upstream` points at `git@github.com:GoogleCloudPlatform/agones.git`
+- [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
@@ -40,13 +41,14 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1
+- [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Close this issue.
 - [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
 
-[values]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/values.yaml#L33
-[chart]: https://github.com/GoogleCloudPlatform/agones/blob/master/install/helm/agones/Chart.yaml
+[values]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/values.yaml#L33
+[chart]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/Chart.yaml
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
-[release-template]: https://github.com/GoogleCloudPlatform/agones/blob/master/docs/governance/templates/release.md
-[build-makefile]: https://github.com/GoogleCloudPlatform/agones/blob/master/build/Makefile
+[release-template]: https://github.com/googleforgames/agones/blob/master/docs/governance/templates/release.md
+[build-makefile]: https://github.com/googleforgames/agones/blob/master/build/Makefile

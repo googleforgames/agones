@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/sdks/go"
+	sdk "agones.dev/agones/sdks/go"
 )
 
 type interceptor struct {

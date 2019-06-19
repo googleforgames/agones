@@ -22,6 +22,8 @@ import (
 	clientset "agones.dev/agones/pkg/client/clientset/versioned"
 	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
 	fakeallocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1/fake"
+	autoscalingv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
+	fakeautoscalingv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1/fake"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
 	fakemulticlusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1/fake"
 	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
@@ -83,6 +85,16 @@ func (c *Clientset) AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1In
 // Allocation retrieves the AllocationV1alpha1Client
 func (c *Clientset) Allocation() allocationv1alpha1.AllocationV1alpha1Interface {
 	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
+}
+
+// AutoscalingV1alpha1 retrieves the AutoscalingV1alpha1Client
+func (c *Clientset) AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha1Interface {
+	return &fakeautoscalingv1alpha1.FakeAutoscalingV1alpha1{Fake: &c.Fake}
+}
+
+// Autoscaling retrieves the AutoscalingV1alpha1Client
+func (c *Clientset) Autoscaling() autoscalingv1alpha1.AutoscalingV1alpha1Interface {
+	return &fakeautoscalingv1alpha1.FakeAutoscalingV1alpha1{Fake: &c.Fake}
 }
 
 // MulticlusterV1alpha1 retrieves the MulticlusterV1alpha1Client

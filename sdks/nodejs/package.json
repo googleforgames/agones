@@ -1,7 +1,7 @@
 {
   "author": "Google LLC",
   "bugs": {
-    "url": "https://github.com/GoogleCloudPlatform/agones/issues"
+    "url": "https://github.com/googleforgames/agones/issues"
   },
   "dependencies": {
     "google-protobuf": "3.7.0-rc.2",
@@ -19,7 +19,7 @@
   "name": "agones",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GoogleCloudPlatform/agones.git"
+    "url": "git+https://github.com/googleforgames/agones.git"
   },
   "scripts": {
     "cover": "nyc jasmine",

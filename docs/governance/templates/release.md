@@ -2,7 +2,7 @@
 
 This is the {version} release of Agones.
 
-Check the [README](https://github.com/GoogleCloudPlatform/agones/tree/release-{version}) for details on features, installation and usage.
+Check the [README](https://github.com/googleforgames/agones/tree/release-{version}) for details on features, installation and usage.
 
 **Implemented enhancements:**
 
@@ -12,7 +12,7 @@ Check the [README](https://github.com/GoogleCloudPlatform/agones/tree/release-{v
 Documentation: https://development.agones.dev/site/
 { end }
 
-See [CHANGELOG](https://github.com/GoogleCloudPlatform/agones/blob/release-{version}/CHANGELOG.md) for more details on changes.
+See [CHANGELOG](https://github.com/googleforgames/agones/blob/release-{version}/CHANGELOG.md) for more details on changes.
 
 This software is currently alpha, and subject to change. Not to be used in production systems.
 

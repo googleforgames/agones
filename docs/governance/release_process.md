@@ -6,7 +6,7 @@
 - Releases occur on a Tuesday.
 - 5 week development cycle, at the end of a which a Release Candidate (RC) will be released with the contents of master.
 - For the next week, the project is in "feature freeze" - i.e. only bug and documentation (.md and examples) fixes during this time.
-  - Any new PRs that are submitted during feature freeze, will be tagged with the label `merge-after-release` 
+  - Any new PRs that are submitted during feature freeze, will be tagged with the label `feature-freeze-do-not-merge` 
     to delineate that they should only be merged after the full release is complete. 
 - At the end of the RC week, the complete version release will occur.
 

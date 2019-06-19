@@ -26,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -47,6 +48,7 @@ type HealthController struct {
 	baseLogger       *logrus.Entry
 	podSynced        cache.InformerSynced
 	podLister        corelisterv1.PodLister
+	gameServerSynced cache.InformerSynced
 	gameServerGetter getterv1alpha1.GameServersGetter
 	gameServerLister listerv1alpha1.GameServerLister
 	workerqueue      *workerqueue.WorkerQueue
@@ -54,19 +56,25 @@ type HealthController struct {
 }
 
 // NewHealthController returns a HealthController
-func NewHealthController(kubeClient kubernetes.Interface, agonesClient versioned.Interface, kubeInformerFactory informers.SharedInformerFactory,
+func NewHealthController(health healthcheck.Handler,
+	kubeClient kubernetes.Interface,
+	agonesClient versioned.Interface,
+	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *HealthController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
+	gameserverInformer := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	hc := &HealthController{
 		podSynced:        podInformer.HasSynced,
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
+		gameServerSynced: gameserverInformer.Informer().HasSynced,
 		gameServerGetter: agonesClient.StableV1alpha1(),
-		gameServerLister: agonesInformerFactory.Stable().V1alpha1().GameServers().Lister(),
+		gameServerLister: gameserverInformer.Lister(),
 	}
 
 	hc.baseLogger = runtime.NewLoggerWithType(hc)
 	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.baseLogger, logfields.GameServerKey, stable.GroupName+".HealthController")
+	health.AddLivenessCheck("gameserver-health-workerqueue", healthcheck.Check(hc.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
 	eventBroadcaster.StartLogging(hc.baseLogger.Infof)
@@ -126,8 +134,15 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (hc *HealthController) Run(stop <-chan struct{}) {
+func (hc *HealthController) Run(stop <-chan struct{}) error {
+	hc.baseLogger.Info("Wait for cache sync")
+	if !cache.WaitForCacheSync(stop, hc.gameServerSynced, hc.podSynced) {
+		return errors.New("failed to wait for caches to sync")
+	}
+
 	hc.workerqueue.Run(1, stop)
+
+	return nil
 }
 
 func (hc *HealthController) loggerForGameServerKey(key string) *logrus.Entry {

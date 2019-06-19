@@ -29,7 +29,7 @@ and you have a running fleet of game servers or you could run command from Step 
 
 Run a fleet in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
 ```
 
 #### 2. Deploy a Webhook service for autoscaling
@@ -45,7 +45,7 @@ The `Scale` flag and `Replicas` values returned in the `FleetAutoscaleResponse` 
 
 Run next command to create a service and a Webhook pod in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service.yaml
 ```
 
 To check that it is running and liveness probe is fine:
@@ -66,14 +66,22 @@ Status:         Running
 Let's create a Fleet Autoscaler using the following command:
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
 ```
 
 You should see a successful output similar to this:
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 fleetautoscaler.stable.agones.sev "webhook-fleet-autoscaler" created
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+fleetautoscaler.autoscaling.agones.sev "webhook-fleet-autoscaler" created
+```
+{{% /feature %}}
+
 
 This has created a FleetAutoscaler record inside Kubernetes.
 It has the link to Webhook service we deployed above.
@@ -94,6 +102,7 @@ kubectl describe fleetautoscaler webhook-fleet-autoscaler
 
 It should look something like this:
 
+{{% feature expiryVersion="0.11.0" %}}
 ```
 Name:         webhook-fleet-autoscaler
 Namespace:    default
@@ -126,6 +135,42 @@ Status:
   Scaling Limited:   false
 Events:              <none>
 ```
+{{% /feature %}}
+{{% feature publishversion="0.11.0" %}}
+```
+Name:         webhook-fleet-autoscaler
+Namespace:    default
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"autoscaling.agones.dev/v1alpha1","kind":"FleetAutoscaler","metadata":{"annotations":{},"name":"webhook-fleet-autoscaler","namespace":"default...
+API Version:  autoscaling.agones.dev/v1alpha1
+Kind:         FleetAutoscaler
+etadata:
+  Cluster Name:
+  Creation Timestamp:  2018-12-22T12:52:23Z
+  Generation:          1
+  Resource Version:    2274579
+  Self Link:           /apis/autoscaling.agones.dev/v1alpha1/namespaces/default/fleetautoscalers/webhook-fleet-autoscaler
+  UID:                 6d03eae4-05e8-11e9-84c2-42010a8a01c9
+Spec:
+  Fleet Name:  simple-udp
+  Policy:
+    Type:  Webhook
+    Webhook:
+      Service:
+        Name:       autoscaler-webhook-service
+        Namespace:  default
+        Path:       scale
+      URL:
+Status:
+  Able To Scale:     true
+  Current Replicas:  2
+  Desired Replicas:  2
+  Last Scale Time:   <nil>
+  Scaling Limited:   false
+Events:              <none>
+```
+{{% /feature %}}
+
 
 You can see the status (able to scale, not limited), the last time the fleet was scaled (nil for never), current and desired fleet size.
 
@@ -138,7 +183,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:
@@ -156,7 +201,7 @@ Note the address and port, you might need them later to connect to the server.
 
 Run the kubectl command one more time so that we have both servers allocated:
 ```
-kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
 ```
 
 #### 6. Check new Autoscaler and Fleet status
@@ -251,13 +296,13 @@ simple-udp-884fg-b7l58   Allocated   35.247.117.202   7766     minikube   5m
 You can delete the autoscaler service and associated resources with the following commands.
 
 ```
-kubeclt delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service.yaml
+kubeclt delete -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/autoscaler-webhook/autoscaler-service.yaml
 ```
 
 
 Removing the fleet:
 ```
-kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/fleet.yaml
 ```
 
 ## Chapter 2 Configuring HTTPS fleetautoscaler webhook with CA Bundle
@@ -272,7 +317,7 @@ Description of common steps with Chapter 1 would be omitted for simplicity, you 
 
 Run a fleet in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/fleet.yaml
 ```
 
 #### 2. Create X509 Root and Webhook certificates
@@ -326,7 +371,7 @@ vim $GOPATH/src/agones.dev/agones/examples/webhookfleetautoscalertls.yaml
 
 Run next command to create a service and a Webhook pod in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
 ```
 
 To check that it is running and liveness probe is fine:
@@ -364,7 +409,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
+for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
 ```
 
 #### 7. Check new Autoscaler and Fleet status
@@ -412,7 +457,7 @@ simple-udp-njmr7-65rp6   Allocated   35.203.159.68   7294      minikube   4m
 You can delete the autoscaler service and associated resources with the following commands.
 
 ```
-kubeclt delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
+kubeclt delete -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/autoscaler-webhook/autoscaler-service-tls.yaml
 ```
 
 Removing x509 key secret:
@@ -422,7 +467,7 @@ kubectl delete secret autoscalersecret
 
 Removing the fleet:
 ```
-kubectl delete -f https://raw.githubusercontent.com/GoogleCloudPlatform/agones/master/examples/simple-udp/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/fleet.yaml
 ```
 
 ### Comments 
