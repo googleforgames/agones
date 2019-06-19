@@ -146,6 +146,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-client-ca
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -166,6 +167,7 @@ kind: Secret
 type: kubernetes.io/tls
 metadata:
   name: allocator-tls
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
@@ -186,6 +188,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-tls-ca
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
