@@ -39,8 +39,25 @@ if (AGONES_SILENT_OUTPUT)
     set_property(GLOBAL PROPERTY TARGET_MESSAGES OFF)
 endif(AGONES_SILENT_OUTPUT)
 
+# Getting version from git
+find_package(Git QUIET)
+set(AGONES_VERSION "0.0.0")
+if (Git_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+    )
+    if (${result} EQUAL 0)
+        string(REPLACE "v" "" AGONES_VERSION ${output})
+    endif()
+else()
+    message(WARNING "Git was not found. Current Agones version is set to ${AGONES_VERSION}")
+endif()
+
 # Project AGONES
-project(agones VERSION 0.11.0 HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
+project(agones VERSION ${AGONES_VERSION} HOMEPAGE_URL https://github.com/GoogleCloudPlatform/agones LANGUAGES C CXX)
 
 # Options
 option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC version" ON)
