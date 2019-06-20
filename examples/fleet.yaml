@@ -15,7 +15,7 @@
 #
 # Full example of a Fleet resource - a set of warm GameServers
 # that are available to be allocated from.
-# To allocate a GameServer from a Fleet, use a FleetAllocation
+# To allocate a GameServer from a Fleet, use a GameServerAllocation
 #
 
 apiVersion: "stable.agones.dev/v1alpha1"
