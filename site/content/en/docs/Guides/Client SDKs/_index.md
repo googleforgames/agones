@@ -13,6 +13,7 @@ The client SDKs are required for a game server to work with Agones.
 The current supported SDKs are:
 
 - [Unreal Engine]({{< relref "unreal.md" >}})
+- [Unity]({{< relref "unity.md" >}})
 - [C++]({{< relref "cpp.md" >}})
 - [Node.js]({{< relref "nodejs.md" >}})
 - [Go]({{< relref "go.md" >}})
