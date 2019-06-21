@@ -50,4 +50,3 @@ require (
 	k8s.io/client-go v8.0.0+incompatible
 )
 
-replace k8s.io/apimachinery => ./vendor_fixes/k8s.io/apimachinery
