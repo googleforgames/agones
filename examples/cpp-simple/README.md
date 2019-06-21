@@ -10,4 +10,7 @@ It will
 
 ## Building
 
-Depends on the [`sdks/cpp`](https://agones.dev/site/docs/guides/client-sdks/cpp/) SDK and its dependencies have been compiled and installed. 
+Easiest way is to run `make build` from this directory. This will run the `docker build` command with the correct context.
+
+This example uses the [Docker builder pattern](https://docs.docker.com/develop/develop-images/multistage-build/) to
+build the SDK, example and host it inside a container.
