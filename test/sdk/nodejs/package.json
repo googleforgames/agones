@@ -1,0 +1,8 @@
+{
+		"dependencies": {
+				"agones": "../../../sdks/nodejs"
+		},
+		"scripts": {
+				"testSDK": "node ./testSDKClient.js"
+		}
+}

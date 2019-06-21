@@ -63,6 +63,22 @@ func TestLocal(t *testing.T) {
 	assert.Equal(t, defaultGs, gs)
 }
 
+func TestLocalSDKWithTestMode(t *testing.T) {
+	a := []string{"ready", "allocate", "setlabel", "setannotation", "gameserver", "health", "shutdown", "watch"}
+	b := []string{"ready", "health", "ready", "watch", "allocate", "gameserver", "setlabel", "setannotation", "health", "health", "shutdown"}
+	assert.True(t, EqualSets(a, a))
+	assert.True(t, EqualSets(a, b))
+	assert.True(t, EqualSets(b, a))
+	assert.True(t, EqualSets(b, b))
+	a[0] = "rady"
+	assert.False(t, EqualSets(a, b))
+	assert.False(t, EqualSets(b, a))
+	a[0] = "ready"
+	b[1] = "halth"
+	assert.False(t, EqualSets(a, b))
+	assert.False(t, EqualSets(b, a))
+}
+
 func TestLocalSDKWithGameServer(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}

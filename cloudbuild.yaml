@@ -95,31 +95,6 @@ steps:
   args: ["lint"] # pull the build image if it exists
 
 #
-# Run the all the automated tests (except e2e) in parallel
-#
-
-- name: "make-docker"
-  id: tests
-  waitFor:
-    - lint
-    - ensure-build-sdk-image-base
-    - htmltest-restore-cache
-  dir: "build"
-  args: [ "-j", "5", "--output-sync=target", "test" ]
-
-#
-# Cache the htmltest url checks. Faster builds, and lower network flakiness.
-#
-- name: 'gcr.io/$PROJECT_ID/save_cache'
-  args:
-    - '--bucket=gs://$_CACHE_BUCKET'
-    - '--key=$_HTMLTEST_CACHE_KEY'
-    - '--path=site/tmp'
-  id: htmltest-save-cache
-  waitFor:
-    - tests
-
-#
 # Push the build image, can run while we do other things.
 #
 
@@ -158,6 +133,32 @@ steps:
   args: [ "-j", "3", "push"]
 
 #
+# Run the all the automated tests (except e2e) in parallel
+#
+
+- name: "make-docker"
+  id: tests
+  waitFor:
+    - lint
+    - ensure-build-sdk-image-base
+    - htmltest-restore-cache
+    - build
+  dir: "build"
+  args: [ "-j", "5", "--output-sync=target", "test" ]
+
+#
+# Cache the htmltest url checks. Faster builds, and lower network flakiness.
+#
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_HTMLTEST_CACHE_KEY'
+    - '--path=site/tmp'
+  id: htmltest-save-cache
+  waitFor:
+    - tests
+
+#
 # Site preview
 #
 
@@ -189,6 +190,18 @@ steps:
   waitFor:
     - push-images
     - build-e2e
+
+#
+# SDK conformance tests
+#
+
+- name: "make-docker"
+  id: sdk-conformance
+  dir: "build"
+  args: [ "run-sdk-conformance-tests"]
+  waitFor:
+    - build
+    - tests
 
 #
 # Zip up artifacts and push to storage
