@@ -54,6 +54,7 @@ kind-push:
 		$(sidecar_tag) \
 		$(controller_tag) \
 		$(ping_tag) \
+		$(allocator_tag) \
 		-o $$BUNDLE_FILE; \
 	docker cp $$BUNDLE_FILE $(KIND_CONTAINER_NAME):/agones.tar.gz; \
 	docker exec $(KIND_CONTAINER_NAME) docker load -i /agones.tar.gz; \
