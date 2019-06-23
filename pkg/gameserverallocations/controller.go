@@ -16,6 +16,7 @@ package gameserverallocations
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -37,6 +38,7 @@ import (
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	multiclusterlisterv1alpha1 "agones.dev/agones/pkg/client/listers/multicluster/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
 	"agones.dev/agones/pkg/util/logfields"
@@ -45,6 +47,9 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opencensus.io/stats"
+	"go.opencensus.io/stats/view"
+	"go.opencensus.io/tag"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -67,7 +72,26 @@ var (
 	ErrNoGameServerReady = errors.New("Could not find a Ready GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
+
+	keyFleetName          = metrics.MustTagKey("fleet_name")
+	keyNodeName           = metrics.MustTagKey("node_name")
+	keyClusterName        = metrics.MustTagKey("cluster_name")
+	keyMultiCluster       = metrics.MustTagKey("is_multicluster")
+	keyStatus             = metrics.MustTagKey("status")
+	keySchedulingStrategy = metrics.MustTagKey("scheduling_strategy")
+
+	gameServerAllocationsTotalStats = stats.Int64("gameserver_allocations/total", "The total of gameserver allocations", "1")
 )
+
+func init() {
+	runtime.Must(view.Register(&view.View{
+		Name:        "gameserver_allocations_total",
+		Measure:     gameServerAllocationsTotalStats,
+		Description: "The total of gameserver allocations created.",
+		Aggregation: view.Count(),
+		TagKeys:     []tag.Key{keyFleetName, keyNodeName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+	}))
+}
 
 const (
 	secretClientCertName  = "tls.crt"
@@ -298,11 +322,41 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 		out, err = c.allocateFromLocalCluster(gsa)
 	}
 
+	c.recordAllocationCount(r.Context(), gsa, out, err)
+
 	if err != nil {
 		return err
 	}
 
 	return c.serialisation(r, w, out, scheme.Codecs)
+}
+
+// we should be able to count per node,fleet,cluster,status : error if not null otherwise state
+func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alpha1.GameServerAllocation, allocErr error) error {
+	tags := []tag.Mutator{
+		tag.Insert(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)),
+		tag.Insert(keyClusterName, in.ClusterName),
+		tag.Insert(keySchedulingStrategy, string(in.Spec.Scheduling)),
+	}
+
+	if allocErr != nil {
+		tags = append(tags, tag.Upsert(keyStatus, "error"))
+		tags = append(tags, tag.Upsert(keyNodeName, ""))
+		tags = append(tags, tag.Upsert(keyFleetName, ""))
+	}
+	if out != nil {
+		tags = append(tags, tag.Upsert(keyStatus, string(out.Status.State)))
+		tags = append(tags, tag.Upsert(keyNodeName, out.Status.NodeName))
+		if gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName); err != nil {
+			tags = append(tags, tag.Upsert(keyFleetName, gs.Labels[stablev1alpha1.FleetNameLabel]))
+		}
+	}
+	ctx, err := tag.New(rCtx, tags...)
+	if err != nil {
+		return err
+	}
+	stats.Record(ctx, gameServerAllocationsTotalStats.M(1))
+	return nil
 }
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
@@ -383,6 +437,8 @@ func (c *Controller) allocateFromRemoteCluster(gsa allocationv1.GameServerAlloca
 
 	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
+	// TODO: instrument client with trace and stats from OpenCensus.
+	// https://github.com/census-instrumentation/opencensus-go/blob/master/plugin/ochttp/client.go
 	client, err := c.createRemoteClusterRestClient(namespace, connectionInfo.SecretName)
 	if err != nil {
 		return nil, err

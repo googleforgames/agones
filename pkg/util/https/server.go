@@ -20,6 +20,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opencensus.io/plugin/ochttp"
 )
 
 // tls is a http server interface to enable easier testing
@@ -43,8 +44,10 @@ type Server struct {
 func NewServer(certFile, keyFile string) *Server {
 	mux := http.NewServeMux()
 	tls := &http.Server{
-		Addr:    ":8081",
-		Handler: mux,
+		Addr: ":8081",
+		Handler: &ochttp.Handler{
+			Handler: mux,
+		},
 	}
 
 	wh := &Server{
