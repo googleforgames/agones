@@ -66,6 +66,12 @@ spec:
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
+      annotations:
+{{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+{{- end }}
     spec:
       {{- if .Values.agones.allocator.affinity }}
       affinity:
@@ -87,6 +93,21 @@ spec:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
         imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+        env:
+        - name: PROMETHEUS_EXPORTER
+          value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
+        - name: STACKDRIVER_EXPORTER
+          value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: GCP_PROJECT_ID
+          value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         ports:
         - name: https
           containerPort: 8443

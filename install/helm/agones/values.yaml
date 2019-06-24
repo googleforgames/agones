@@ -97,6 +97,11 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    healthCheck:
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      failureThreshold: 3
+      timeoutSeconds: 1
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"

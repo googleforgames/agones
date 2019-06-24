@@ -341,14 +341,22 @@ func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alph
 
 	if allocErr != nil {
 		tags = append(tags, tag.Upsert(keyStatus, "error"))
+		//todo cannot be empty
 		tags = append(tags, tag.Upsert(keyNodeName, ""))
 		tags = append(tags, tag.Upsert(keyFleetName, ""))
 	}
 	if out != nil {
 		tags = append(tags, tag.Upsert(keyStatus, string(out.Status.State)))
 		tags = append(tags, tag.Upsert(keyNodeName, out.Status.NodeName))
-		if gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName); err != nil {
-			tags = append(tags, tag.Upsert(keyFleetName, gs.Labels[stablev1alpha1.FleetNameLabel]))
+		if out.Status.State == v1alpha1.GameServerAllocationAllocated {
+			if gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName); err == nil {
+				tags = append(tags, tag.Upsert(keyFleetName, gs.Labels[stablev1alpha1.FleetNameLabel]))
+			} else {
+				c.baseLogger.Warn(err)
+				tags = append(tags, tag.Upsert(keyFleetName, ""))
+			}
+		} else {
+			tags = append(tags, tag.Upsert(keyFleetName, ""))
 		}
 	}
 	ctx, err := tag.New(rCtx, tags...)

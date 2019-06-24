@@ -26,7 +26,6 @@ data:
       "annotations": {
         "list": [
           {
-            "$$hashKey": "object:188",
             "builtIn": 1,
             "datasource": "-- Grafana --",
             "enable": true,
@@ -41,7 +40,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "iteration": 1546913780919,
+      "iteration": 1561322336031,
       "links": [],
       "panels": [
         {
@@ -53,7 +52,6 @@ data:
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "dateTimeFromNow",
           "gauge": {
             "maxValue": 100,
@@ -74,12 +72,10 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:335",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:336",
               "name": "range to text",
               "value": 2
             }
@@ -87,6 +83,7 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -122,7 +119,6 @@ data:
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:338",
               "op": "=",
               "text": "N/A",
               "value": "null"
@@ -139,7 +135,6 @@ data:
             "#d44a3a",
             "#299c46"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -160,12 +155,10 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:390",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:391",
               "name": "range to text",
               "value": 2
             }
@@ -173,6 +166,7 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -193,8 +187,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:323",
-              "expr": "up{app=\"agones\"} OR on() vector(0)",
+              "expr": "up{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"} OR on() vector(0)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -209,13 +202,269 @@ data:
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:393",
               "op": "=",
               "text": "UP",
               "value": "1"
             },
             {
-              "$$hashKey": "object:786",
+              "op": "=",
+              "text": "DOWN",
+              "value": "0"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "format": "dateTimeFromNow",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 8
+          },
+          "id": 19,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "max((process_start_time_seconds{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator.*\"}) * 1000)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "",
+          "title": "Allocators Uptime",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#d44a3a",
+            "#d44a3a",
+            "#299c46"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 12,
+            "y": 8
+          },
+          "id": 20,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "#0a50a1",
+            "full": false,
+            "lineColor": "#052b51",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(up{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator.*\"}) OR on() vector(0)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "timeFrom": null,
+          "title": "Allocators Live Pod",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "UP",
+              "value": "1"
+            },
+            {
+              "op": "=",
+              "text": "DOWN",
+              "value": "0"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "#d44a3a",
+            "#d44a3a",
+            "#299c46"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 18,
+            "y": 8
+          },
+          "id": 21,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "#0a50a1",
+            "full": false,
+            "lineColor": "#052b51",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "count(up{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator.*\"}) OR on() vector(0)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "timeFrom": null,
+          "title": "Allocators Total Pods",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "UP",
+              "value": "1"
+            },
+            {
               "op": "=",
               "text": "DOWN",
               "value": "0"
@@ -232,7 +481,6 @@ data:
             "#299c46",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -245,7 +493,7 @@ data:
             "h": 9,
             "w": 6,
             "x": 0,
-            "y": 8
+            "y": 16
           },
           "id": 2,
           "interval": null,
@@ -253,20 +501,18 @@ data:
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:982",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:983",
               "name": "range to text",
               "value": 2
             }
           ],
           "maxDataPoints": 100,
-          "minSpan": 1,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -283,8 +529,8 @@ data:
           "scopedVars": {
             "healthcheck": {
               "selected": true,
-              "text": "fleet-workerqueue",
-              "value": "fleet-workerqueue"
+              "text": "agones-client",
+              "value": "agones-client"
             }
           },
           "sparkline": {
@@ -296,8 +542,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:930",
-              "expr": "agones_healthcheck_status{check=\"$healthcheck\"} OR on() vector(1)",
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -307,18 +552,15 @@ data:
           ],
           "thresholds": "0,1",
           "title": "health check - $healthcheck",
-          "transparent": false,
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:985",
               "op": "=",
               "text": "OK",
               "value": "0"
             },
             {
-              "$$hashKey": "object:986",
               "op": "=",
               "text": "NOK",
               "value": "1"
@@ -335,7 +577,6 @@ data:
             "#299c46",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -348,28 +589,26 @@ data:
             "h": 9,
             "w": 6,
             "x": 6,
-            "y": 8
+            "y": 16
           },
-          "id": 15,
+          "id": 10,
           "interval": null,
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:982",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:983",
               "name": "range to text",
               "value": 2
             }
           ],
           "maxDataPoints": 100,
-          "minSpan": 1,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -383,7 +622,105 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1546913780919,
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "fleet-workerqueue",
+              "value": "fleet-workerqueue"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 12,
+            "y": 16
+          },
+          "id": 11,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -401,8 +738,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:930",
-              "expr": "agones_healthcheck_status{check=\"$healthcheck\"} OR on() vector(1)",
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -412,18 +748,15 @@ data:
           ],
           "thresholds": "0,1",
           "title": "health check - $healthcheck",
-          "transparent": false,
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:985",
               "op": "=",
               "text": "OK",
               "value": "0"
             },
             {
-              "$$hashKey": "object:986",
               "op": "=",
               "text": "NOK",
               "value": "1"
@@ -440,7 +773,6 @@ data:
             "#299c46",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -452,29 +784,27 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 12,
-            "y": 8
+            "x": 18,
+            "y": 16
           },
-          "id": 16,
+          "id": 12,
           "interval": null,
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:982",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:983",
               "name": "range to text",
               "value": 2
             }
           ],
           "maxDataPoints": 100,
-          "minSpan": 1,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -488,7 +818,301 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1546913780919,
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "gameserver-creation-workerqueue",
+              "value": "gameserver-creation-workerqueue"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 0,
+            "y": 25
+          },
+          "id": 13,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "gameserver-deletion-workerqueue",
+              "value": "gameserver-deletion-workerqueue"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 6,
+            "y": 25
+          },
+          "id": 14,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "gameserver-health-workerqueue",
+              "value": "gameserver-health-workerqueue"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 12,
+            "y": 25
+          },
+          "id": 15,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -506,8 +1130,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:930",
-              "expr": "agones_healthcheck_status{check=\"$healthcheck\"} OR on() vector(1)",
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -517,18 +1140,15 @@ data:
           ],
           "thresholds": "0,1",
           "title": "health check - $healthcheck",
-          "transparent": false,
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:985",
               "op": "=",
               "text": "OK",
               "value": "0"
             },
             {
-              "$$hashKey": "object:986",
               "op": "=",
               "text": "NOK",
               "value": "1"
@@ -545,7 +1165,6 @@ data:
             "#299c46",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -558,28 +1177,26 @@ data:
             "h": 9,
             "w": 6,
             "x": 18,
-            "y": 8
+            "y": 25
           },
-          "id": 17,
+          "id": 16,
           "interval": null,
           "links": [],
           "mappingType": 1,
           "mappingTypes": [
             {
-              "$$hashKey": "object:982",
               "name": "value to text",
               "value": 1
             },
             {
-              "$$hashKey": "object:983",
               "name": "range to text",
               "value": 2
             }
           ],
           "maxDataPoints": 100,
-          "minSpan": 1,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -593,7 +1210,105 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1546913780919,
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "gameserverallocation-gameserver-workerqueue",
+              "value": "gameserverallocation-gameserver-workerqueue"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 0,
+            "y": 34
+          },
+          "id": 17,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -611,8 +1326,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:930",
-              "expr": "agones_healthcheck_status{check=\"$healthcheck\"} OR on() vector(1)",
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -622,18 +1336,113 @@ data:
           ],
           "thresholds": "0,1",
           "title": "health check - $healthcheck",
-          "transparent": false,
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
             {
-              "$$hashKey": "object:985",
               "op": "=",
               "text": "OK",
               "value": "0"
             },
             {
-              "$$hashKey": "object:986",
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 6,
+            "y": 34
+          },
+          "id": 18,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1561322336031,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "https",
+              "value": "https"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
               "op": "=",
               "text": "NOK",
               "value": "1"
@@ -643,7 +1452,7 @@ data:
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 16,
+      "schemaVersion": 18,
       "style": "dark",
       "tags": [
         "agones",
@@ -654,15 +1463,22 @@ data:
           {
             "allValue": null,
             "current": {
-              "text": "fleet-workerqueue + fleetautoscaler-workerqueue + gameserver-workerqueue + gameserverset-workerqueue",
+              "text": "agones-client + fleet-workerqueue + fleetautoscaler-workerqueue + gameserver-creation-workerqueue + gameserver-deletion-workerqueue + gameserver-health-workerqueue + gameserver-workerqueue + gameserverallocation-gameserver-workerqueue + gameserverset-workerqueue + https",
               "value": [
+                "agones-client",
                 "fleet-workerqueue",
                 "fleetautoscaler-workerqueue",
+                "gameserver-creation-workerqueue",
+                "gameserver-deletion-workerqueue",
+                "gameserver-health-workerqueue",
                 "gameserver-workerqueue",
-                "gameserverset-workerqueue"
+                "gameserverallocation-gameserver-workerqueue",
+                "gameserverset-workerqueue",
+                "https"
               ]
             },
             "datasource": "Prometheus",
+            "definition": "",
             "hide": 0,
             "includeAll": false,
             "label": null,
@@ -672,6 +1488,7 @@ data:
             "query": "label_values(agones_healthcheck_status, check)\t",
             "refresh": 2,
             "regex": "",
+            "skipUrlSync": false,
             "sort": 0,
             "tagValuesQuery": "",
             "tags": [],
