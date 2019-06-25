@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -31,7 +31,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -78,7 +78,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -142,7 +142,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -153,7 +153,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -171,7 +171,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -207,7 +207,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -403,7 +403,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -468,7 +468,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -552,7 +552,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -713,7 +713,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -799,7 +799,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -990,7 +990,7 @@ metadata:
   labels:
     stable.agones.dev/role: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1026,7 +1026,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1077,7 +1077,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:0.11.0-rc"
+        image: "gcr.io/agones-images/agones-allocator:0.11.0"
         imagePullPolicy: IfNotPresent
         ports:
         - name: https
@@ -1099,7 +1099,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -1116,7 +1116,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 
@@ -1129,7 +1129,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -1150,7 +1150,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.11.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1167,7 +1167,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.11.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1183,7 +1183,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.11.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1213,7 +1213,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1258,7 +1258,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:0.11.0-rc"
+        image: "gcr.io/agones-images/agones-controller:0.11.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -1268,7 +1268,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:0.11.0-rc"
+          value: "gcr.io/agones-images/agones-sdk:0.11.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -1338,7 +1338,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1375,7 +1375,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:0.11.0-rc"
+          image: "gcr.io/agones-images/agones-ping:0.11.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1399,7 +1399,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1420,7 +1420,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1455,7 +1455,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1475,7 +1475,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1527,7 +1527,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.11.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1558,7 +1558,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.11.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque
