@@ -343,7 +343,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
 
 You may wish to review the [Agones Kubernetes API]({{< ref "/docs/Reference/agones_crd_api_reference.html" >}}) for the full data structure reference.
 
-The [Verb Resources](https://github.com/kubernetes/community/blob/master/contributors/devel/api-conventions.md#verbs-on-resources)
+The [Kubernetes API Concepts](https://kubernetes.io/docs/reference/using-api/api-concepts/)
 section may also provide the more details on the API conventions that are used in the Kubernetes API.
 
 ## Next Steps
