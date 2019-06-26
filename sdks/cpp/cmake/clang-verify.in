@@ -1,0 +1,32 @@
+cmake_minimum_required (VERSION 3.13.0)
+
+set(files @CLANGFORMAT_INPUT@)
+set(workingdir @CLANGFORMAT_WORKING_DIR@)
+
+find_package(Git REQUIRED)
+find_program(
+    CLANG_FORMAT_APP
+    NAMES "clang-format"
+    DOC "Path to clang-format"
+)
+
+if (NOT CLANG_FORMAT_APP)
+    message(FATAL_ERROR "Could not find clang-format")
+endif()
+
+execute_process(
+    COMMAND ${CLANG_FORMAT_APP} -i --style=file --fallback-style=Google ${files}
+    WORKING_DIRECTORY ${workingdir}
+)
+
+foreach(source_file ${files})
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} diff HEAD~1 ${source_file}
+        WORKING_DIRECTORY ${workingdir}
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+    )
+    if (NOT "${output}" STREQUAL "")
+        message(FATAL_ERROR "clang-format code style check failed for: ${source_file}")
+    endif()
+endforeach()

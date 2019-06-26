@@ -201,15 +201,26 @@ if (NOT CLANG_FORMAT_APP)
 else()
     message(STATUS "clang-format found: ${CLANG_FORMAT_APP}")
     
-    set(FILES_TO_FORMAT)
+    set(CLANGFORMAT_INPUT)
     foreach(relpath ${SDK_FILES})
         get_filename_component(fullpath "${CMAKE_CURRENT_LIST_DIR}/${relpath}" ABSOLUTE)
-        list(APPEND FILES_TO_FORMAT ${fullpath})
+        list(APPEND CLANGFORMAT_INPUT ${fullpath})
     endforeach()
-    
+ 
+    # format
     add_custom_target(
         clang-format-apply
-        COMMAND ${CLANG_FORMAT_APP} -i --style=file --fallback-style=Google ${FILES_TO_FORMAT}
+        COMMAND ${CLANG_FORMAT_APP} -i --style=file --fallback-style=Google ${CLANGFORMAT_INPUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
     add_dependencies(${PROJECT_NAME} "clang-format-apply")
+    
+    # verification
+    set(CLANGFORMAT_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    configure_file("cmake/clang-verify.in" "clang-format/CMakeLists.txt" @ONLY)
+    add_custom_target(
+        clang-format-verify
+        COMMAND ${CMAKE_COMMAND} .
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/clang-format"
+    )    
 endif()
