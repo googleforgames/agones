@@ -189,3 +189,27 @@ install(
 
 unset(_INCLUDE_DIRS)
 unset(_CMAKE_CONFIG_DESTINATION)
+
+# clang format
+find_program(
+    CLANG_FORMAT_APP
+    NAMES "clang-format"
+    DOC "Path to clang-format"
+)
+if (NOT CLANG_FORMAT_APP)
+    message(STATUS "clang-format not found.")
+else()
+    message(STATUS "clang-format found: ${CLANG_FORMAT_APP}")
+    
+    set(FILES_TO_FORMAT)
+    foreach(relpath ${SDK_FILES})
+        get_filename_component(fullpath "${CMAKE_CURRENT_LIST_DIR}/${relpath}" ABSOLUTE)
+        list(APPEND FILES_TO_FORMAT ${fullpath})
+    endforeach()
+    
+    add_custom_target(
+        clang-format-apply
+        COMMAND ${CLANG_FORMAT_APP} -i --style=file --fallback-style=Google ${FILES_TO_FORMAT}
+    )
+    add_dependencies(${PROJECT_NAME} "clang-format-apply")
+endif()
