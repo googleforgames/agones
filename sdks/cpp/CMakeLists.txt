@@ -190,7 +190,7 @@ install(
 unset(_INCLUDE_DIRS)
 unset(_CMAKE_CONFIG_DESTINATION)
 
-# clang format
+# clang-format
 find_program(
     CLANG_FORMAT_APP
     NAMES "clang-format"
@@ -217,6 +217,7 @@ else()
     
     # verification
     set(CLANGFORMAT_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    get_filename_component(AGONES_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
     configure_file("cmake/clang-verify.in" "clang-format/CMakeLists.txt" @ONLY)
     add_custom_target(
         clang-format-verify

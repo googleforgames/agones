@@ -22,7 +22,7 @@ const int kPort = 59357;
 
 namespace agones {
 
-class  SDKImpl final {
+class SDKImpl final {
  public:
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<stable::agones::dev::sdk::SDK::Stub> stub_;
