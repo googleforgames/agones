@@ -56,7 +56,7 @@ execute_process(
 
 foreach(source_file ${files})
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} diff HEAD~1 ${source_file}
+        COMMAND ${GIT_EXECUTABLE} diff
         WORKING_DIRECTORY ${workingdir}
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
