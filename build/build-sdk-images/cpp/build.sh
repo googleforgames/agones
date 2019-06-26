@@ -17,4 +17,4 @@
 set -ex
 
 cd ./sdks/cpp
-make build install archive VERSION=$VERSION
+make build verify install archive VERSION=$VERSION

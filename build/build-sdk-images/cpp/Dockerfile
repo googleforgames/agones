@@ -15,7 +15,7 @@ ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
 RUN apt-get update && \
-    apt-get install -y zip wget && \
+    apt-get install -y zip wget clang-format-7 && \
     apt-get clean
 
 ADD https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh /cmake-3.14.1-Linux-x86_64.sh
