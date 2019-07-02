@@ -89,6 +89,13 @@ const METHOD_SDK_SET_ANNOTATION: ::grpcio::Method<super::sdk::KeyValue, super::s
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
+const METHOD_SDK_RESERVE: ::grpcio::Method<super::sdk::Duration, super::sdk::Empty> = ::grpcio::Method {
+    ty: ::grpcio::MethodType::Unary,
+    name: "/stable.agones.dev.sdk.SDK/Reserve",
+    req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+    resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
+};
+
 pub struct SdkClient {
     client: ::grpcio::Client,
 }
@@ -211,6 +218,22 @@ impl SdkClient {
     pub fn set_annotation_async(&self, req: &super::sdk::KeyValue) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
         self.set_annotation_async_opt(req, ::grpcio::CallOption::default())
     }
+
+    pub fn reserve_opt(&self, req: &super::sdk::Duration, opt: ::grpcio::CallOption) -> ::grpcio::Result<super::sdk::Empty> {
+        self.client.unary_call(&METHOD_SDK_RESERVE, req, opt)
+    }
+
+    pub fn reserve(&self, req: &super::sdk::Duration) -> ::grpcio::Result<super::sdk::Empty> {
+        self.reserve_opt(req, ::grpcio::CallOption::default())
+    }
+
+    pub fn reserve_async_opt(&self, req: &super::sdk::Duration, opt: ::grpcio::CallOption) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.client.unary_call_async(&METHOD_SDK_RESERVE, req, opt)
+    }
+
+    pub fn reserve_async(&self, req: &super::sdk::Duration) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
+        self.reserve_async_opt(req, ::grpcio::CallOption::default())
+    }
     pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
         self.client.spawn(f)
     }
@@ -225,6 +248,7 @@ pub trait Sdk {
     fn watch_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::ServerStreamingSink<super::sdk::GameServer>);
     fn set_label(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
     fn set_annotation(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn reserve(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Duration, sink: ::grpcio::UnarySink<super::sdk::Empty>);
 }
 
 pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
@@ -260,6 +284,10 @@ pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SET_ANNOTATION, move |ctx, req, resp| {
         instance.set_annotation(ctx, req, resp)
+    });
+    let instance = s.clone();
+    builder = builder.add_unary_handler(&METHOD_SDK_RESERVE, move |ctx, req, resp| {
+        instance.reserve(ctx, req, resp)
     });
     builder.build()
 }

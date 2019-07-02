@@ -20,6 +20,17 @@ var grpc = require('grpc');
 var sdk_pb = require('./sdk_pb.js');
 var google_api_annotations_pb = require('./google/api/annotations_pb.js');
 
+function serialize_stable_agones_dev_sdk_Duration(arg) {
+  if (!(arg instanceof sdk_pb.Duration)) {
+    throw new Error('Expected argument of type stable.agones.dev.sdk.Duration');
+  }
+  return new Buffer(arg.serializeBinary());
+}
+
+function deserialize_stable_agones_dev_sdk_Duration(buffer_arg) {
+  return sdk_pb.Duration.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_stable_agones_dev_sdk_Empty(arg) {
   if (!(arg instanceof sdk_pb.Empty)) {
     throw new Error('Expected argument of type stable.agones.dev.sdk.Empty');
@@ -149,6 +160,18 @@ var SDKService = exports.SDKService = {
     responseType: sdk_pb.Empty,
     requestSerialize: serialize_stable_agones_dev_sdk_KeyValue,
     requestDeserialize: deserialize_stable_agones_dev_sdk_KeyValue,
+    responseSerialize: serialize_stable_agones_dev_sdk_Empty,
+    responseDeserialize: deserialize_stable_agones_dev_sdk_Empty,
+  },
+  // Marks the GameServer as the Reserved state for Duration
+  reserve: {
+    path: '/stable.agones.dev.sdk.SDK/Reserve',
+    requestStream: false,
+    responseStream: false,
+    requestType: sdk_pb.Duration,
+    responseType: sdk_pb.Empty,
+    requestSerialize: serialize_stable_agones_dev_sdk_Duration,
+    requestDeserialize: deserialize_stable_agones_dev_sdk_Duration,
     responseSerialize: serialize_stable_agones_dev_sdk_Empty,
     responseDeserialize: deserialize_stable_agones_dev_sdk_Empty,
   },
