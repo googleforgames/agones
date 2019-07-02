@@ -167,6 +167,33 @@
         ]
       }
     },
+    "/reserve": {
+      "post": {
+        "summary": "Marks the GameServer as the Reserved state for Duration",
+        "operationId": "Reserve",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/sdkEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sdkDuration"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
     "/shutdown": {
       "post": {
         "summary": "Call when the GameServer is shutting down",
@@ -314,6 +341,16 @@
           "format": "int32"
         }
       }
+    },
+    "sdkDuration": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "time duration, in seconds"
     },
     "sdkEmpty": {
       "type": "object",

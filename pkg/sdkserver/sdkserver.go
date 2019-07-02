@@ -465,6 +465,12 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 	return nil
 }
 
+// Reserve moves this GameServer to the Reserved state for the Duration specified
+// TODO: implement this functionality
+func (s *SDKServer) Reserve(_ context.Context, d *sdk.Duration) (*sdk.Empty, error) {
+	return &sdk.Empty{}, errors.New("not implemented")
+}
+
 // sendGameServerUpdate sends a watch game server event
 func (s *SDKServer) sendGameServerUpdate(gs *stablev1alpha1.GameServer) {
 	s.logger.Info("Sending GameServer Event to connectedStreams")

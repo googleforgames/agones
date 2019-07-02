@@ -31,7 +31,6 @@ for ns in $namespaces; do
   kubectl -n $ns delete fleets --all
   kubectl -n $ns delete gameserversets --all
   kubectl -n $ns delete gameservers --all
-  kubectl -n $ns delete fleetallocations --all
   kubectl -n $ns delete gameserverallocationpolicies --all
 
   # Since we don't have the nifty kubectl wait yet, hack one in the meantime

@@ -79,6 +79,14 @@ service SDK {
 			body: "*"
 		};
     }
+
+    // Marks the GameServer as the Reserved state for Duration
+    rpc Reserve(Duration) returns (Empty) {
+        option (google.api.http) = {
+            post: "/reserve"
+            body: "*"
+        };
+    }
 }
 
 // I am Empty
@@ -89,6 +97,11 @@ message Empty {
 message KeyValue {
     string key = 1;
     string value = 2;
+}
+
+// time duration, in seconds
+message Duration {
+    int64 seconds = 1;
 }
 
 // A GameServer Custom Resource Definition object

@@ -216,6 +216,12 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 	return nil
 }
 
+// Reserve moves this GameServer to the Reserved state for the Duration specified
+func (l *LocalSDKServer) Reserve(_ context.Context, d *sdk.Duration) (*sdk.Empty, error) {
+	logrus.WithField("duration", d).Info("Reserve request has been received!")
+	return &sdk.Empty{}, nil
+}
+
 // Close tears down all the things
 func (l *LocalSDKServer) Close() {
 	l.updateObservers.Range(func(observer, _ interface{}) bool {

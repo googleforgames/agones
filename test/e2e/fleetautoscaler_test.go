@@ -83,10 +83,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// do an allocation and watch the fleet scale up
-	fa := getAllocation(flt)
-	fa, err = stable.FleetAllocations(defaultNs).Create(fa)
-	assert.Nil(t, err)
-	assert.Equal(t, stablev1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
+	gsa := framework.CreateAndApplyAllocation(t, flt)
 	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
@@ -121,7 +118,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// delete the allocated GameServer and watch the fleet scale down
 	gp := int64(1)
-	err = stable.GameServers(defaultNs).Delete(fa.Status.GameServer.ObjectMeta.Name, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+	err = stable.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
 	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
@@ -240,16 +237,6 @@ func defaultFleetAutoscaler(f *stablev1alpha1.Fleet) *v1alpha1.FleetAutoscaler {
 	}
 }
 
-func getAllocation(f *stablev1alpha1.Fleet) *stablev1alpha1.FleetAllocation {
-	// get an allocation
-	return &stablev1alpha1.FleetAllocation{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-", Namespace: f.ObjectMeta.Namespace},
-		Spec: stablev1alpha1.FleetAllocationSpec{
-			FleetName: f.ObjectMeta.Name,
-		},
-	}
-}
-
 //Test fleetautoscaler with webhook policy type
 // scaling from Replicas equals to 1 to 2
 func TestAutoscalerWebhook(t *testing.T) {
@@ -298,16 +285,13 @@ func TestAutoscalerWebhook(t *testing.T) {
 		},
 	}
 	fas, err = fleetautoscalers.Create(fas)
-	if assert.Nil(t, err) {
+	if assert.NoError(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the autoscaler, there is no point going further
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
 	}
-	fa := getAllocation(flt)
-	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa)
-	assert.Nil(t, err)
-	assert.Equal(t, stablev1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
+	framework.CreateAndApplyAllocation(t, flt)
 	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
@@ -523,10 +507,7 @@ func TestTlsWebhook(t *testing.T) {
 		// if we could not create the autoscaler, their is no point going further
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
-	fa := getAllocation(flt)
-	fa, err = alpha1.FleetAllocations(defaultNs).Create(fa.DeepCopy())
-	assert.Nil(t, err)
-	assert.Equal(t, stablev1alpha1.GameServerStateAllocated, fa.Status.GameServer.Status.State)
+	framework.CreateAndApplyAllocation(t, flt)
 	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})

@@ -13,7 +13,6 @@ const (
 	GameServerSetKey        ResourceType = "gssKey"
 	GameServerAllocationKey ResourceType = "gsaKey"
 	FleetKey                ResourceType = "fleetKey"
-	FleetAllocationKey      ResourceType = "faKey"
 	FleetAutoscalerKey      ResourceType = "fasKey"
 )
 

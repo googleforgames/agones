@@ -1,5 +1,21 @@
 # Changelog
 
+## [v0.11.0](https://github.com/googleforgames/agones/tree/v0.11.0) (2019-06-25)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v0.11.0-rc...v0.11.0)
+
+**Fixed bugs:**
+
+- Set secret namespace to agones-system for allocator service [\#843](https://github.com/googleforgames/agones/pull/843) ([pooneh-m](https://github.com/pooneh-m))
+
+**Closed issues:**
+
+- Release 0.11.0-rc [\#841](https://github.com/googleforgames/agones/issues/841)
+
+**Merged pull requests:**
+
+- Flaky: TestAutoscalerWebhook [\#844](https://github.com/googleforgames/agones/pull/844) ([aLekSer](https://github.com/aLekSer))
+
 ## [v0.11.0-rc](https://github.com/googleforgames/agones/tree/v0.11.0-rc) (2019-06-18)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v0.10.0...v0.11.0-rc)
@@ -60,6 +76,7 @@
 
 **Merged pull requests:**
 
+- Release 0.11.0-rc [\#842](https://github.com/googleforgames/agones/pull/842) ([markmandel](https://github.com/markmandel))
 - Flaky: TestFleetRecreateGameServers [\#840](https://github.com/googleforgames/agones/pull/840) ([markmandel](https://github.com/markmandel))
 - Flaky: TestAllocator [\#839](https://github.com/googleforgames/agones/pull/839) ([markmandel](https://github.com/markmandel))
 - Flaky: TestFleetRollingUpdate [\#838](https://github.com/googleforgames/agones/pull/838) ([markmandel](https://github.com/markmandel))

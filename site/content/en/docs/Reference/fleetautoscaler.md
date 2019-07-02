@@ -9,23 +9,6 @@ weight: 30
 A full `FleetAutoscaler` specification is available below and in the 
 {{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{% feature expiryVersion="0.11.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: FleetAutoscaler
-metadata:
-  name: fleet-autoscaler-example
-spec:
-  fleetName: fleet-example
-  policy:
-    type: Buffer
-    buffer:
-      bufferSize: 5
-      minReplicas: 10
-      maxReplicas: 20
-```
-{{% /feature %}}
-{{% feature publishversion="0.11.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1alpha1"
 kind: FleetAutoscaler
@@ -40,29 +23,9 @@ spec:
       minReplicas: 10
       maxReplicas: 20
 ```
-{{% /feature %}}
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
-{{% feature expiryVersion="0.11.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: FleetAutoscaler
-metadata:
-  name: fleet-autoscaler-example
-spec:
-  fleetName: fleet-example
-  policy:
-    type: Webhook
-    webhook:
-      name: "fleet-autoscaler-webhook"
-      namespace: "default"
-      path: "/scale"
-      caBundle: "<base64 encoded string>"
-```
-{{% /feature %}}
-
-{{% feature publishversion="0.11.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1alpha1"
 kind: FleetAutoscaler
@@ -78,16 +41,11 @@ spec:
       path: "/scale"
       caBundle: "<base64 encoded string>"
 ```
-{{% /feature %}}
-
 
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
-we can define a new resource using the kind `FleetAutoscaler` with the custom group 
-{{< feature expiryVersion="0.11.0" >}}<code>stable.agones.dev</code>{{< /feature >}}
-{{< feature publishVersion="0.11.0" >}}<code>autoscaling.agones.dev</code>{{< /feature >}}
-and API 
-version `v1alpha1`.
+we can define a new resource using the kind `FleetAutoscaler` with the custom group `autoscaling.agones.dev` 
+and API version `v1alpha1`.
 
 The `spec` field is the actual `FleetAutoscaler` specification and it is composed as follows:
 
