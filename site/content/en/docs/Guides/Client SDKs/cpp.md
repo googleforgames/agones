@@ -2,7 +2,7 @@
 title: "C++ Game Server Client SDK"
 linkTitle: "C++"
 date: 2019-01-02T10:17:50Z
-weight: 10
+weight: 20
 description: "This is the C++ version of the Agones Game Server Client SDK. "
 ---
 
