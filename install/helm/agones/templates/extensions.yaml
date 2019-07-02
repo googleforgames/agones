@@ -74,7 +74,6 @@ webhooks:
           - "fleets"
           - "gameservers"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -84,7 +83,6 @@ webhooks:
         resources:
           - "fleets"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -129,7 +127,6 @@ webhooks:
         resources:
           - "gameservers"
           - "fleets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:

@@ -54,12 +54,10 @@ func init() {
 type Controller struct {
 	logger           *logrus.Entry
 	gameServerLister listerv1alpha1.GameServerLister
-	faLister         listerv1alpha1.FleetAllocationLister
 	nodeLister       v1.NodeLister
 	gameServerSynced cache.InformerSynced
 	fleetSynced      cache.InformerSynced
 	fasSynced        cache.InformerSynced
-	faSynced         cache.InformerSynced
 	nodeSynced       cache.InformerSynced
 	lock             sync.Mutex
 	gsCount          GameServerCount
@@ -76,8 +74,6 @@ func NewController(
 	gameServer := agonesInformerFactory.Stable().V1alpha1().GameServers()
 	gsInformer := gameServer.Informer()
 
-	fa := agonesInformerFactory.Stable().V1alpha1().FleetAllocations()
-	faInformer := fa.Informer()
 	fleets := agonesInformerFactory.Stable().V1alpha1().Fleets()
 	fInformer := fleets.Informer()
 	fas := agonesInformerFactory.Autoscaling().V1alpha1().FleetAutoscalers()
@@ -88,11 +84,9 @@ func NewController(
 	c := &Controller{
 		gameServerLister: gameServer.Lister(),
 		nodeLister:       node.Lister(),
-		faLister:         fa.Lister(),
 		gameServerSynced: gsInformer.HasSynced,
 		fleetSynced:      fInformer.HasSynced,
 		fasSynced:        fasInformer.HasSynced,
-		faSynced:         faInformer.HasSynced,
 		nodeSynced:       nodeInformer.HasSynced,
 		gsCount:          GameServerCount{},
 		faCount:          map[string]int64{},
@@ -115,10 +109,6 @@ func NewController(
 		UpdateFunc: c.recordFleetAutoScalerChanges,
 		DeleteFunc: c.recordFleetAutoScalerDeletion,
 	})
-
-	faInformer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
-		UpdateFunc: c.recordFleetAllocationChanges,
-	}, 0)
 
 	gsInformer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: c.recordGameServerStatusChanges,
@@ -275,30 +265,11 @@ func (c *Controller) recordGameServerStatusChanges(old, new interface{}) {
 	}
 }
 
-// record fleet allocations total by watching cache changes.
-func (c *Controller) recordFleetAllocationChanges(old, new interface{}) {
-	newFa, ok := new.(*stablev1alpha1.FleetAllocation)
-	if !ok {
-		return
-	}
-	oldFa, ok := old.(*stablev1alpha1.FleetAllocation)
-	if !ok {
-		return
-	}
-	// fleet allocations are added without gameserver allocated
-	// but then get modified on successful allocation with their gameserver
-	if oldFa.Status.GameServer == nil && newFa.Status.GameServer != nil {
-		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyFleetName, newFa.Spec.FleetName)},
-			fleetAllocationTotalStats.M(1))
-	}
-}
-
 // Run the Metrics controller. Will block until stop is closed.
 // Collect metrics via cache changes and parse the cache periodically to record resource counts.
 func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	c.logger.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.fleetSynced,
-		c.fasSynced, c.faSynced) {
+	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.fleetSynced, c.fasSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 	wait.Until(c.collect, MetricResyncPeriod, stop)
@@ -311,31 +282,7 @@ func (c *Controller) collect() {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.collectGameServerCounts()
-	c.collectFleetAllocationCounts()
 	c.collectNodeCounts()
-}
-
-// collects fleet allocations count by going through our informer cache
-func (c *Controller) collectFleetAllocationCounts() {
-	//reset fleet allocations count per fleet name
-	for fleetName := range c.faCount {
-		c.faCount[fleetName] = 0
-	}
-
-	fleetAllocations, err := c.faLister.List(labels.Everything())
-	if err != nil {
-		c.logger.WithError(err).Warn("failed listing fleet allocations")
-		return
-	}
-
-	for _, fa := range fleetAllocations {
-		c.faCount[fa.Spec.FleetName]++
-	}
-
-	for fleetName, count := range c.faCount {
-		recordWithTags(context.Background(), []tag.Mutator{tag.Insert(keyFleetName, fleetName)},
-			fleetAllocationCountStats.M(count))
-	}
 }
 
 // collects gameservers count by going through our informer cache

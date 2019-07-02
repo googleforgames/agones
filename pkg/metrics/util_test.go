@@ -37,25 +37,21 @@ func newFakeController() *fakeController {
 	m := agtesting.NewMocks()
 	c := NewController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	gsWatch := watch.NewFake()
-	faWatch := watch.NewFake()
 	fasWatch := watch.NewFake()
 	fleetWatch := watch.NewFake()
 	nodeWatch := watch.NewFake()
 
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
-	m.AgonesClient.AddWatchReactor("fleetallocations", k8stesting.DefaultWatchReactor(faWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fasWatch, nil))
 	m.AgonesClient.AddWatchReactor("fleets", k8stesting.DefaultWatchReactor(fleetWatch, nil))
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.faSynced,
-		c.fleetSynced, c.fasSynced, c.nodeSynced)
+	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
 
 	return &fakeController{
 		Controller: c,
 		Mocks:      m,
 		gsWatch:    gsWatch,
-		faWatch:    faWatch,
 		fasWatch:   fasWatch,
 		fleetWatch: fleetWatch,
 		nodeWatch:  nodeWatch,
@@ -87,15 +83,13 @@ func (c *fakeController) run(t *testing.T) {
 }
 
 func (c *fakeController) sync() {
-	cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced,
-		c.fasSynced, c.faSynced)
+	cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced)
 }
 
 type fakeController struct {
 	*Controller
 	agtesting.Mocks
 	gsWatch    *watch.FakeWatcher
-	faWatch    *watch.FakeWatcher
 	fasWatch   *watch.FakeWatcher
 	fleetWatch *watch.FakeWatcher
 	nodeWatch  *watch.FakeWatcher
@@ -149,22 +143,6 @@ func generateGsEvents(count int, state v1alpha1.GameServerState, fleetName strin
 	}
 }
 
-func fleetAllocation(fleetName string) *v1alpha1.FleetAllocation {
-	return &v1alpha1.FleetAllocation{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      rand.String(10),
-			Namespace: "default",
-			UID:       uuid.NewUUID(),
-		},
-		Spec: v1alpha1.FleetAllocationSpec{
-			FleetName: fleetName,
-		},
-		Status: v1alpha1.FleetAllocationStatus{
-			GameServer: gameServerWithFleetAndState(fleetName, v1alpha1.GameServerStateAllocated),
-		},
-	}
-}
-
 func fleet(fleetName string, total, allocated, ready, desired int32) *v1alpha1.Fleet {
 	return &v1alpha1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -215,18 +193,6 @@ var gsCountExpected = `# HELP agones_gameservers_count The number of gameservers
 agones_gameservers_count{fleet_name="test-fleet",type="Ready"} 0
 agones_gameservers_count{fleet_name="test-fleet",type="Shutdown"} 1
 agones_gameservers_count{fleet_name="none",type="PortAllocation"} 2
-`
-var faCountExpected = `# HELP agones_fleet_allocations_count The number of fleet allocations
-# TYPE agones_fleet_allocations_count gauge
-agones_fleet_allocations_count{fleet_name="test-fleet"} 3
-agones_fleet_allocations_count{fleet_name="test-fleet2"} 2
-agones_fleet_allocations_count{fleet_name="deleted-fleet"} 0
-`
-
-var faTotalExpected = `# HELP agones_fleet_allocations_total The total of fleet allocations
-# TYPE agones_fleet_allocations_total counter
-agones_fleet_allocations_total{fleet_name="test2"} 2
-agones_fleet_allocations_total{fleet_name="test"} 3
 `
 
 var gsTotalExpected = `# HELP agones_gameservers_total The total of gameservers

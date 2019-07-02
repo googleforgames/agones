@@ -20,8 +20,6 @@ package v1alpha1
 
 type FleetExpansion interface{}
 
-type FleetAllocationExpansion interface{}
-
 type GameServerExpansion interface{}
 
 type GameServerSetExpansion interface{}

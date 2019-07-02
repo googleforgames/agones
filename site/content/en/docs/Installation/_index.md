@@ -93,10 +93,8 @@ A [cluster][cluster] consists of at least one *cluster master* machine and multi
 
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
-  --no-enable-legacy-authorization \
   --tags=game-server \
-  --enable-basic-auth \
-  --password=supersecretpassword \
+  --no-enable-basic-auth \
   --scopes=gke-default \
   --num-nodes=3 \
   --machine-type=n1-standard-2
@@ -105,9 +103,8 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
 Flag explanations:
 
 * cluster-version: Agones requires Kubernetes version 1.11.
-* no-enable-legacy-authorization: This enables RBAC, the authorization scheme used by Agones to control access to resources.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
-* enable-basic-auth/password: Sets the master auth scheme for interacting with the cluster.
+* no-enable-basic-auth/password: Disables basic auth scheme for the cluster (this is the default starting with version 1.12).
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 3
 * machine-type: The type of machine to use for nodes. Default: n1-standard-2. Depending on the needs of you game, you may wish to [have a bigger machines](https://cloud.google.com/compute/docs/machine-types).
