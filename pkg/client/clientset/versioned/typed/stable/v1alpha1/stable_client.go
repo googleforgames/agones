@@ -28,7 +28,6 @@ import (
 type StableV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	FleetsGetter
-	FleetAllocationsGetter
 	GameServersGetter
 	GameServerSetsGetter
 }
@@ -40,10 +39,6 @@ type StableV1alpha1Client struct {
 
 func (c *StableV1alpha1Client) Fleets(namespace string) FleetInterface {
 	return newFleets(c, namespace)
-}
-
-func (c *StableV1alpha1Client) FleetAllocations(namespace string) FleetAllocationInterface {
-	return newFleetAllocations(c, namespace)
 }
 
 func (c *StableV1alpha1Client) GameServers(namespace string) GameServerInterface {

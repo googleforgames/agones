@@ -22,6 +22,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
+	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
 	stable "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -262,11 +265,6 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
-	err = stable.FleetAllocations(ns).DeleteCollection(deleteOptions, listOptions)
-	if err != nil {
-		return err
-	}
-
 	err = f.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
@@ -274,6 +272,17 @@ func (f *Framework) CleanUp(ns string) error {
 
 	return stable.GameServers(ns).
 		DeleteCollection(deleteOptions, listOptions)
+}
+
+// CreateAndApplyAllocation creates and applies an Allocation to a Fleet
+func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *stable.Fleet) *allocationv1alpha1.GameServerAllocation {
+	gsa := GetAllocation(flt)
+	gsa, err := f.AgonesClient.AllocationV1alpha1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(gsa)
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "gameserverallocation could not be created")
+	}
+	assert.Equal(t, string(allocationv1alpha1.GameServerAllocationAllocated), string(gsa.Status.State))
+	return gsa
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
@@ -308,4 +317,14 @@ func SendUDP(address, msg string) (string, error) {
 		return "", err
 	}
 	return string(b[:n]), nil
+}
+
+// GetAllocation returns a GameServerAllocation that is looking for a Ready
+// GameServer from this fleet.
+func GetAllocation(f *stable.Fleet) *allocationv1alpha1.GameServerAllocation {
+	// get an allocation
+	return &allocationv1alpha1.GameServerAllocation{
+		Spec: allocationv1alpha1.GameServerAllocationSpec{
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{stable.FleetNameLabel: f.ObjectMeta.Name}},
+		}}
 }

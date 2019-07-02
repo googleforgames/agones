@@ -65,8 +65,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=stable.agones.dev, Version=v1alpha1
 	case stable_v1alpha1.SchemeGroupVersion.WithResource("fleets"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().Fleets().Informer()}, nil
-	case stable_v1alpha1.SchemeGroupVersion.WithResource("fleetallocations"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().FleetAllocations().Informer()}, nil
 	case stable_v1alpha1.SchemeGroupVersion.WithResource("gameservers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Stable().V1alpha1().GameServers().Informer()}, nil
 	case stable_v1alpha1.SchemeGroupVersion.WithResource("gameserversets"):

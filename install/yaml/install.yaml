@@ -54,7 +54,7 @@ rules:
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets", "fleetallocations"]
+  resources: ["fleets"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets/status", "gameserversets/status"]
@@ -68,8 +68,6 @@ rules:
 - apiGroups: ["autoscaling.agones.dev"]
   resources: ["fleetautoscalers/status"]
   verbs: ["update"]
-
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -379,71 +377,6 @@ spec:
       statusReplicasPath: .status.replicas
       # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
       labelSelectorPath: .status.labelSelector
-
----
-# Source: agones/templates/crds/fleetallocation.yaml
-# Copyright 2018 Google LLC All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: fleetallocations.stable.agones.dev
-  labels:
-    component: crd
-    app: agones
-    chart: agones-0.12.0
-    release: agones-manual
-    heritage: Tiller
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.gameServer.status.state
-    name: State
-    type: string
-  - JSONPath: .status.gameServer.status.address
-    name: Address
-    type: string
-  - JSONPath: .status.gameServer.status.ports[0].port
-    name: Port
-    type: string
-  - JSONPath: .status.gameServer.status.nodeName
-    name: Node
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
-  group: stable.agones.dev
-  version: v1alpha1
-  scope: Namespaced
-  names:
-    kind: FleetAllocation
-    plural: fleetallocations
-    shortNames:
-    - fla
-    singular: fleetallocation
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - fleetName
-          properties:
-            fleetName:
-              type: string
-              minLength: 1
-              maxLength: 63
-              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
 
 ---
 # Source: agones/templates/crds/fleetautoscaler.yaml
@@ -1494,7 +1427,6 @@ webhooks:
           - "fleets"
           - "gameservers"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -1504,7 +1436,6 @@ webhooks:
         resources:
           - "fleets"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -1545,7 +1476,6 @@ webhooks:
         resources:
           - "gameservers"
           - "fleets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
