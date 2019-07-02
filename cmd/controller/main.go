@@ -21,13 +21,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/fleetallocation"
 	"agones.dev/agones/pkg/fleetautoscalers"
 	"agones.dev/agones/pkg/fleets"
 	"agones.dev/agones/pkg/gameserverallocations"
@@ -45,7 +43,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	lumberjack "gopkg.in/natefinch/lumberjack.v2"
+	"gopkg.in/natefinch/lumberjack.v2"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/informers"
@@ -186,8 +184,6 @@ func main() {
 
 	server.Handle("/", health)
 
-	allocationMutex := &sync.Mutex{}
-
 	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
 
 	gsController := gameservers.NewController(wh, health,
@@ -197,15 +193,13 @@ func main() {
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	faController := fleetallocation.NewController(wh, allocationMutex,
-		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	gasController := gameserverallocations.NewController(api, health, gsCounter, topNGSForAllocation,
 		kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
-		httpsServer, gsCounter, gsController, gsSetController, fleetController, faController, fasController, gasController, server)
+		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, gasController, server)
 
 	stop := signals.NewStopChannel()
 

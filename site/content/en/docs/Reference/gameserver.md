@@ -49,14 +49,14 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `container` is the name of container running the GameServer in case you have more than one container defined in the [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). If you do,  this is a mandatory field. For instance this is useful if you want to run a sidecar to ship logs.
 - `ports` are an array of ports that can be exposed as direct connections to the game server container
   - `name` is an optional descriptive name for a port
-  - `portPolicy` has {{< feature expiryVersion="0.11.0" >}}two{{< /feature >}}{{< feature publishVersion="0.11.0" >}}three{{< /feature >}} options:
+  - `portPolicy` has three options:
         - `Dynamic` (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to.
         - `Static`, user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the port is available. When static is the policy specified, `hostPort` is required to be populated.
-{{% feature publishVersion="0.11.0" %}}        - `Passthrough` dynamically sets the `containerPort` to the same value a randomly selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.{{% /feature %}}
-  - `containerPort` the port that is being opened on the game server process, this is a required field{{< feature publishVersion="0.11.0" >}} for <code>Dynamic</code> and <code>Static</code> port policies, and should not be included in <code>Passthrough</code> configuration.{{< /feature >}}.
+        - `Passthrough` dynamically sets the `containerPort` to the same value a randomly selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
+  - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
-- `template` the [pod spec template](https://v1-10.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+- `template` the [pod spec template](https://v1-11.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram
 

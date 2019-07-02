@@ -6,17 +6,17 @@ import (
 	"io"
 	"net/http"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
 
 // Constants which define the fleet and namespace we are using
 const namespace = "default"
 const fleetname = "simple-udp"
-const generatename = "simple-udp-"
 
 // Variables for the logger and Agones Clientset
 var (
@@ -29,7 +29,7 @@ type handler func(w http.ResponseWriter, r *http.Request)
 
 // The structure of the json response
 type result struct {
-	Status v1alpha1.GameServerStatus `json:"status"`
+	Status allocationv1alpha1.GameServerAllocationState `json:"status"`
 }
 
 // Main will set up an http server and three endpoints
@@ -119,8 +119,7 @@ func handleAddress(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	w.Header().Set("Content-Type", "application/json")
-	result, _ := json.Marshal(&result{status})
-	_, err = io.WriteString(w, string(result))
+	err = json.NewEncoder(w).Encode(&result{status})
 	if err != nil {
 		logger.WithError(err).Fatal("Error writing json from /address")
 	}
@@ -131,7 +130,7 @@ func checkReadyReplicas() int32 {
 	// Get a FleetInterface for this namespace
 	fleetInterface := agonesClient.StableV1alpha1().Fleets(namespace)
 	// Get our fleet
-	fleet, err := fleetInterface.Get(fleetname, v1.GetOptions{})
+	fleet, err := fleetInterface.Get(fleetname, metav1.GetOptions{})
 	if err != nil {
 		logger.WithError(err).Info("Get fleet failed")
 	}
@@ -140,45 +139,39 @@ func checkReadyReplicas() int32 {
 }
 
 // Move a replica from ready to allocated and return the GameServerStatus
-func allocate() (v1alpha1.GameServerStatus, error) {
-	var result v1alpha1.GameServerStatus
-
-	// Log the values used in the fleet allocation
-	logger.WithField("namespace", namespace).Info("namespace for fa")
-	logger.WithField("generatename", generatename).Info("generatename for fa")
-	logger.WithField("fleetname", fleetname).Info("fleetname for fa")
+func allocate() (allocationv1alpha1.GameServerAllocationState, error) {
+	// Log the values used in the allocation
+	logger.WithField("namespace", namespace).Info("namespace for gsa")
+	logger.WithField("fleetname", fleetname).Info("fleetname for gsa")
 
 	// Find out how many ready replicas the fleet has - we need at least one
 	readyReplicas := checkReadyReplicas()
-	logger.WithField("readyReplicas", readyReplicas).Info("numer of ready replicas")
+	logger.WithField("readyReplicas", readyReplicas).Info("number of ready replicas")
 
 	// Log and return an error if there are no ready replicas
 	if readyReplicas < 1 {
 		logger.WithField("fleetname", fleetname).Info("Insufficient ready replicas, cannot create fleet allocation")
-		return result, errors.New("Insufficient ready replicas, cannot create fleet allocation")
+		return allocationv1alpha1.GameServerAllocationUnAllocated, errors.New("insufficient ready replicas, cannot create fleet allocation")
 	}
 
-	// Get a FleetAllocationInterface for this namespace
-	fleetAllocationInterface := agonesClient.StableV1alpha1().FleetAllocations(namespace)
+	// Get a AllocationInterface for this namespace
+	allocationInterface := agonesClient.AllocationV1alpha1().GameServerAllocations(namespace)
 
-	// Define the fleet allocation using the constants set earlier
-	fa := &v1alpha1.FleetAllocation{
-		ObjectMeta: v1.ObjectMeta{
-			GenerateName: generatename, Namespace: namespace,
-		},
-		Spec: v1alpha1.FleetAllocationSpec{FleetName: fleetname},
-	}
+	// Define the allocation using the constants set earlier
+	gsa := &allocationv1alpha1.GameServerAllocation{
+		Spec: allocationv1alpha1.GameServerAllocationSpec{
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetname}},
+		}}
 
-	// Create a new fleet allocation
-	newFleetAllocation, err := fleetAllocationInterface.Create(fa)
+	// Create a new allocation
+	gsa, err := allocationInterface.Create(gsa)
 	if err != nil {
 		// Log and return the error if the call to Create fails
-		logger.WithError(err).Info("Failed to create fleet allocation")
-		return result, errors.New("Failed to ceate fleet allocation")
+		logger.WithError(err).Info("Failed to create allocation")
+		return allocationv1alpha1.GameServerAllocationUnAllocated, errors.New("failed to create allocation")
 	}
 
 	// Log the GameServer.Staus of the new allocation, then return those values
-	logger.Info("New GameServer allocated: ", newFleetAllocation.Status.GameServer.Status)
-	result = newFleetAllocation.Status.GameServer.Status
-	return result, nil
+	logger.Info("New GameServer allocated: ", gsa.Status.State)
+	return gsa.Status.State, nil
 }

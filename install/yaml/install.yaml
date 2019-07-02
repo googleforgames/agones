@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -31,7 +31,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -54,7 +54,7 @@ rules:
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets", "fleetallocations"]
+  resources: ["fleets"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets/status", "gameserversets/status"]
@@ -68,8 +68,6 @@ rules:
 - apiGroups: ["autoscaling.agones.dev"]
   resources: ["fleetautoscalers/status"]
   verbs: ["update"]
-
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -78,7 +76,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -142,7 +140,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -153,7 +151,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -171,7 +169,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -207,7 +205,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -381,71 +379,6 @@ spec:
       labelSelectorPath: .status.labelSelector
 
 ---
-# Source: agones/templates/crds/fleetallocation.yaml
-# Copyright 2018 Google LLC All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: fleetallocations.stable.agones.dev
-  labels:
-    component: crd
-    app: agones
-    chart: agones-0.11.0-rc
-    release: agones-manual
-    heritage: Tiller
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .status.gameServer.status.state
-    name: State
-    type: string
-  - JSONPath: .status.gameServer.status.address
-    name: Address
-    type: string
-  - JSONPath: .status.gameServer.status.ports[0].port
-    name: Port
-    type: string
-  - JSONPath: .status.gameServer.status.nodeName
-    name: Node
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
-  group: stable.agones.dev
-  version: v1alpha1
-  scope: Namespaced
-  names:
-    kind: FleetAllocation
-    plural: fleetallocations
-    shortNames:
-    - fla
-    singular: fleetallocation
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - fleetName
-          properties:
-            fleetName:
-              type: string
-              minLength: 1
-              maxLength: 63
-              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-
----
 # Source: agones/templates/crds/fleetautoscaler.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
 #
@@ -468,7 +401,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -552,7 +485,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -713,7 +646,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -799,7 +732,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -990,7 +923,7 @@ metadata:
   labels:
     stable.agones.dev/role: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1026,7 +959,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1077,7 +1010,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:0.11.0-rc"
+        image: "gcr.io/agones-images/agones-allocator:0.12.0"
         imagePullPolicy: IfNotPresent
         ports:
         - name: https
@@ -1099,7 +1032,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -1116,7 +1049,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 
@@ -1129,7 +1062,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -1150,7 +1083,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.12.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1167,7 +1100,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.12.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1183,7 +1116,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.12.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1213,7 +1146,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1258,7 +1191,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:0.11.0-rc"
+        image: "gcr.io/agones-images/agones-controller:0.12.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -1268,7 +1201,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:0.11.0-rc"
+          value: "gcr.io/agones-images/agones-sdk:0.12.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -1338,7 +1271,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1375,7 +1308,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:0.11.0-rc"
+          image: "gcr.io/agones-images/agones-ping:0.12.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1399,7 +1332,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1420,7 +1353,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1455,7 +1388,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1475,7 +1408,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1494,7 +1427,6 @@ webhooks:
           - "fleets"
           - "gameservers"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -1504,7 +1436,6 @@ webhooks:
         resources:
           - "fleets"
           - "gameserversets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -1527,7 +1458,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-0.11.0-rc
+    chart: agones-0.12.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1545,7 +1476,6 @@ webhooks:
         resources:
           - "gameservers"
           - "fleets"
-          - "fleetallocations"
         apiVersions:
           - "v1alpha1"
         operations:
@@ -1558,7 +1488,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-0.11.0-rc"
+    chart: "agones-0.12.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

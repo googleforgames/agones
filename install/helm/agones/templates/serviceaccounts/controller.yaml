@@ -56,7 +56,7 @@ rules:
   resources: ["gameservers"]
   verbs: ["patch"]
 - apiGroups: ["stable.agones.dev"]
-  resources: ["fleets", "fleetallocations"]
+  resources: ["fleets"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["stable.agones.dev"]
   resources: ["fleets/status", "gameserversets/status"]
@@ -70,8 +70,6 @@ rules:
 - apiGroups: ["autoscaling.agones.dev"]
   resources: ["fleetautoscalers/status"]
   verbs: ["update"]
-
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

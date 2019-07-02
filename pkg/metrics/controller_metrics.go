@@ -29,9 +29,7 @@ var (
 	fasAbleToScaleStats       = stats.Int64("fas/able_to_scale", "The fleet autoscaler can access the fleet to scale (0 indicates false, 1 indicates true)", "1")
 	fasLimitedStats           = stats.Int64("fas/limited", "The fleet autoscaler is capped (0 indicates false, 1 indicates true)", "1")
 	gameServerCountStats      = stats.Int64("gameservers/count", "The count of gameservers", "1")
-	fleetAllocationCountStats = stats.Int64("fleet_allocations/count", "The count of fleet allocations", "1")
 	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
-	fleetAllocationTotalStats = stats.Int64("fleet_allocations/total", "The total of fleet allocations", "1")
 	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
 	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
 
@@ -91,20 +89,6 @@ var (
 			Description: "The number of gameservers",
 			Aggregation: view.LastValue(),
 			TagKeys:     []tag.Key{keyType, keyFleetName},
-		},
-		&view.View{
-			Name:        "fleet_allocations_count",
-			Measure:     fleetAllocationCountStats,
-			Description: "The number of fleet allocations",
-			Aggregation: view.LastValue(),
-			TagKeys:     []tag.Key{keyFleetName},
-		},
-		&view.View{
-			Name:        "fleet_allocations_total",
-			Measure:     fleetAllocationTotalStats,
-			Description: "The total of fleet allocations",
-			Aggregation: view.Count(),
-			TagKeys:     []tag.Key{keyFleetName},
 		},
 		&view.View{
 			Name:        "gameservers_total",

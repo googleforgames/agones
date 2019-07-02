@@ -57,7 +57,7 @@ namespace protobuf_sdk_2eproto {
 struct AGONES_EXPORT TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[10];
+  static const ::google::protobuf::internal::ParseTable schema[11];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -68,6 +68,9 @@ namespace stable {
 namespace agones {
 namespace dev {
 namespace sdk {
+class Duration;
+class DurationDefaultTypeInternal;
+AGONES_EXPORT extern DurationDefaultTypeInternal _Duration_default_instance_;
 class Empty;
 class EmptyDefaultTypeInternal;
 AGONES_EXPORT extern EmptyDefaultTypeInternal _Empty_default_instance_;
@@ -104,6 +107,7 @@ AGONES_EXPORT extern KeyValueDefaultTypeInternal _KeyValue_default_instance_;
 }  // namespace stable
 namespace google {
 namespace protobuf {
+template<> AGONES_EXPORT ::stable::agones::dev::sdk::Duration* Arena::CreateMaybeMessage<::stable::agones::dev::sdk::Duration>(Arena*);
 template<> AGONES_EXPORT ::stable::agones::dev::sdk::Empty* Arena::CreateMaybeMessage<::stable::agones::dev::sdk::Empty>(Arena*);
 template<> AGONES_EXPORT ::stable::agones::dev::sdk::GameServer* Arena::CreateMaybeMessage<::stable::agones::dev::sdk::GameServer>(Arena*);
 template<> AGONES_EXPORT ::stable::agones::dev::sdk::GameServer_ObjectMeta* Arena::CreateMaybeMessage<::stable::agones::dev::sdk::GameServer_ObjectMeta>(Arena*);
@@ -345,6 +349,109 @@ class AGONES_EXPORT KeyValue : public ::google::protobuf::Message /* @@protoc_in
 };
 // -------------------------------------------------------------------
 
+class AGONES_EXPORT Duration : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:stable.agones.dev.sdk.Duration) */ {
+ public:
+  Duration();
+  virtual ~Duration();
+
+  Duration(const Duration& from);
+
+  inline Duration& operator=(const Duration& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Duration(Duration&& from) noexcept
+    : Duration() {
+    *this = ::std::move(from);
+  }
+
+  inline Duration& operator=(Duration&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Duration& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Duration* internal_default_instance() {
+    return reinterpret_cast<const Duration*>(
+               &_Duration_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  void Swap(Duration* other);
+  friend void swap(Duration& a, Duration& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Duration* New() const final {
+    return CreateMaybeMessage<Duration>(NULL);
+  }
+
+  Duration* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<Duration>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const Duration& from);
+  void MergeFrom(const Duration& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Duration* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // int64 seconds = 1;
+  void clear_seconds();
+  static const int kSecondsFieldNumber = 1;
+  ::google::protobuf::int64 seconds() const;
+  void set_seconds(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:stable.agones.dev.sdk.Duration)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::int64 seconds_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_sdk_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class GameServer_ObjectMeta_AnnotationsEntry_DoNotUse : public ::google::protobuf::internal::MapEntry<GameServer_ObjectMeta_AnnotationsEntry_DoNotUse, 
     ::std::string, ::std::string,
     ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
@@ -422,7 +529,7 @@ class AGONES_EXPORT GameServer_ObjectMeta : public ::google::protobuf::Message /
                &_GameServer_ObjectMeta_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    5;
 
   void Swap(GameServer_ObjectMeta* other);
   friend void swap(GameServer_ObjectMeta& a, GameServer_ObjectMeta& b) {
@@ -630,7 +737,7 @@ class AGONES_EXPORT GameServer_Spec_Health : public ::google::protobuf::Message 
                &_GameServer_Spec_Health_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    6;
 
   void Swap(GameServer_Spec_Health* other);
   friend void swap(GameServer_Spec_Health& a, GameServer_Spec_Health& b) {
@@ -754,7 +861,7 @@ class AGONES_EXPORT GameServer_Spec : public ::google::protobuf::Message /* @@pr
                &_GameServer_Spec_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    7;
 
   void Swap(GameServer_Spec* other);
   friend void swap(GameServer_Spec& a, GameServer_Spec& b) {
@@ -865,7 +972,7 @@ class AGONES_EXPORT GameServer_Status_Port : public ::google::protobuf::Message 
                &_GameServer_Status_Port_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   void Swap(GameServer_Status_Port* other);
   friend void swap(GameServer_Status_Port& a, GameServer_Status_Port& b) {
@@ -983,7 +1090,7 @@ class AGONES_EXPORT GameServer_Status : public ::google::protobuf::Message /* @@
                &_GameServer_Status_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(GameServer_Status* other);
   friend void swap(GameServer_Status& a, GameServer_Status& b) {
@@ -1124,7 +1231,7 @@ class AGONES_EXPORT GameServer : public ::google::protobuf::Message /* @@protoc_
                &_GameServer_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   void Swap(GameServer* other);
   friend void swap(GameServer& a, GameServer& b) {
@@ -1345,6 +1452,24 @@ inline void KeyValue::set_allocated_value(::std::string* value) {
   }
   value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set_allocated:stable.agones.dev.sdk.KeyValue.value)
+}
+
+// -------------------------------------------------------------------
+
+// Duration
+
+// int64 seconds = 1;
+inline void Duration::clear_seconds() {
+  seconds_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 Duration::seconds() const {
+  // @@protoc_insertion_point(field_get:stable.agones.dev.sdk.Duration.seconds)
+  return seconds_;
+}
+inline void Duration::set_seconds(::google::protobuf::int64 value) {
+  
+  seconds_ = value;
+  // @@protoc_insertion_point(field_set:stable.agones.dev.sdk.Duration.seconds)
 }
 
 // -------------------------------------------------------------------
@@ -2143,6 +2268,8 @@ inline void GameServer::set_allocated_status(::stable::agones::dev::sdk::GameSer
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
