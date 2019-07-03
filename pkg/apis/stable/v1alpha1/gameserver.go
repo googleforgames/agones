@@ -174,10 +174,11 @@ type GameServerPort struct {
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
-	State    GameServerState        `json:"state"`
-	Ports    []GameServerStatusPort `json:"ports"`
-	Address  string                 `json:"address"`
-	NodeName string                 `json:"nodeName"`
+	State         GameServerState        `json:"state"`
+	Ports         []GameServerStatusPort `json:"ports"`
+	Address       string                 `json:"address"`
+	NodeName      string                 `json:"nodeName"`
+	ReservedUntil *metav1.Time           `json:"reservedUntil"`
 }
 
 // GameServerStatusPort shows the port that was allocated to a
