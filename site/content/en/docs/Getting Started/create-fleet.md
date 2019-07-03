@@ -152,10 +152,9 @@ players access it (and therefore, it should not be deleted until they are finish
 > In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 
+{{< feature expiryVersion="0.12.0" >}}
 #### GameServerAllocation
-
-> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
-  However, we welcome you to test it out in its current format and provide feedback.
+{{< /feature >}}
 
 We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
@@ -231,6 +230,7 @@ simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 > `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
   them after they have been created - but you can see their effects on `GameServers`
 
+{{< feature expiryVersion="0.12.0" >}}
 #### FleetAllocation
 
 > Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
@@ -323,6 +323,7 @@ status:
 If you see the `status` section, you should see that there is a `GameServer`, and if you look at its
 `status > state` value, you can also see that it has been moved to `Allocated`. This means you have been successfully
 allocated a `GameServer` out of the fleet, and you can now connect your players to it!
+{{< /feature >}}
 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
