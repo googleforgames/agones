@@ -730,7 +730,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *v1alpha1.GameServer) (*
 	if addressPopulated {
 		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
 	}
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "SDK.Ready() executed")
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "SDK.Ready() complete")
 	return gs, nil
 }
 

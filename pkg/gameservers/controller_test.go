@@ -951,7 +951,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Nil(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
 		assert.Equal(t, v1alpha1.GameServerStateReady, gs.Status.State)
-		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() executed")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
 
 	t.Run("GameServer without an Address, but RequestReady State", func(t *testing.T) {
@@ -995,7 +995,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Equal(t, gs.Status.Address, ipFixture)
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Address and port populated")
-		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() executed")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
 
 	for _, s := range []v1alpha1.GameServerState{"Unknown", v1alpha1.GameServerStateUnhealthy} {

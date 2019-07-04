@@ -267,14 +267,22 @@ func (s *SDKServer) updateState() error {
 	s.gsUpdateMutex.RLock()
 	gs.Status.State = s.gsState
 	s.gsUpdateMutex.RUnlock()
-	_, err = gameServers.Update(gs)
 
-	// state specific work here
-	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
-		s.recorder.Event(gs, corev1.EventTypeWarning, string(gs.Status.State), "No longer healthy")
+	_, err = gameServers.Update(gs)
+	if err != nil {
+		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
 	}
 
-	return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
+	level := corev1.EventTypeNormal
+	// post state specific work here
+	switch gs.Status.State {
+	case stablev1alpha1.GameServerStateUnhealthy:
+		level = corev1.EventTypeWarning
+	}
+
+	s.recorder.Event(gs, level, string(gs.Status.State), "SDK state change")
+
+	return nil
 }
 
 func (s *SDKServer) gameServer() (*stablev1alpha1.GameServer, error) {
