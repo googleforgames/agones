@@ -8,6 +8,10 @@ description: >
 
 In this quickstart, we will create a Kubernetes cluster, and populate it with the resource types that power Agones.
 
+_When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
+ are scheduled for better isolation and resiliency. See the sections below for instructions on how to do this in your
+ preferred environment._
+
 ## Usage Requirements
 
 - Kubernetes cluster version 1.11
@@ -108,6 +112,25 @@ Flag explanations:
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 3
 * machine-type: The type of machine to use for nodes. Default: n1-standard-2. Depending on the needs of you game, you may wish to [have a bigger machines](https://cloud.google.com/compute/docs/machine-types).
+
+By default Agones prefers to be scheduled on nodes labeled with
+`stable.agones.dev/agones-system=true` and tolerates the node taint `stable.agones.dev/agones-system=true:NoExecute`.
+If no dedicated nodes are available, Agones will run on regular nodes, but that’s not recommended for production use.
+
+```bash
+gcloud container node-pools create agones-system \
+  --cluster=[CLUSTER_NAME] \
+  --node-taints stable.agones.dev/agones-system=true:NoExecute \
+  --node-labels stable.agones.dev/agones-system=true \
+  --num-nodes=1
+```
+
+Flag explanations:
+
+* cluster: The name of the cluster in which the node pool is created.
+* node-taints: The Kubernetes taints to automatically apply to nodes in this node pool.
+* node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
+* num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
 
 Finally, let's tell `gcloud` that we are speaking with this cluster, and get auth credentials for `kubectl` to use.
 
