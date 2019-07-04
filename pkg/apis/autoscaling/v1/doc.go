@@ -14,6 +14,6 @@
 
 // +k8s:deepcopy-gen=package,register
 
-// Package v1alpha1 is the v1alpha1 version of the API.
+// Package v1 is the v1 version of the API.
 // +groupName=autoscaling.agones.dev
-package v1alpha1
+package v1
