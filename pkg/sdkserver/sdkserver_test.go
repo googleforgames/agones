@@ -285,6 +285,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			defer close(stop)
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			err = sc.syncGameServer(v.key)
 			assert.Nil(t, err)
@@ -347,6 +348,7 @@ func TestSidecarUpdateState(t *testing.T) {
 			defer close(stop)
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			err = sc.updateState()
 			assert.Nil(t, err)
@@ -579,6 +581,7 @@ func TestSDKServerGetGameServer(t *testing.T) {
 
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
 
 	result, err := sc.GetGameServer(context.Background(), &sdk.Empty{})
 	assert.Nil(t, err)
@@ -650,6 +653,7 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
 
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
@@ -697,6 +701,7 @@ func TestSDKServerAllocate(t *testing.T) {
 		assert.Nil(t, err)
 		sc.informerFactory.Start(stop)
 		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+		sc.gsWaitForSync.Done()
 		return m, sc, stop
 	}
 
