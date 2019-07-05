@@ -6,7 +6,7 @@ description: "A `Fleet` is a set of warm GameServers that are available to be al
 weight: 20
 ---
 
-To allocate a `GameServer` from a `Fleet`, use a `FleetAllocation`.
+To allocate a `GameServer` from a `Fleet`, use a `GameServerAllocation`.
 
 Like any other Kubernetes resource you describe a `Fleet`'s desired state via a specification written in YAML or JSON to the Kubernetes API. The Agones controller will then change the actual state to the desired state.
 
@@ -77,9 +77,6 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 
 ## GameServer Allocation Specification
 
-> GameServerAllocation will eventually replace FleetAllocation, but is currently experimental, and likely to change in upcoming releases.
-  However, we welcome you to test it out in its current format and provide feedback.
-
 A `GameServerAllocation` is used to atomically allocate a GameServer out of a set of GameServers. 
 This could be a single Fleet, multiple Fleets, or a self managed group of GameServers.
 
@@ -142,6 +139,7 @@ The `spec` field is the actual `GameServerAllocation` specification and it is co
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
 
+{{< feature expiryVersion="0.12.0" >}}
 ## Fleet Allocation Specification
 
 > Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
@@ -175,6 +173,7 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
   when the `FleetAllocation` is created
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch 
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
+{{< /feature >}}
 
 ## Fleet Scale Subresource Specification
 

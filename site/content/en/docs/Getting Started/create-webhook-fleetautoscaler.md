@@ -138,25 +138,25 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:
 ```
-    status:
-      address: 35.247.13.175
-      nodeName: gke-test-cluster-default-1c5dec79-qrqv
-      ports:
-      - name: default
-        port: 7047
-      state: Allocated
+status:
+  address: 34.94.118.237
+  gameServerName: simple-udp-v6jwb-6bzkz
+  nodeName: gke-test-cluster-default-f11755a7-5km3
+  ports:
+  - name: default
+    port: 7832
 ```
 
 Note the address and port, you might need them later to connect to the server.
 
 Run the kubectl command one more time so that we have both servers allocated:
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 #### 6. Check new Autoscaler and Fleet status
@@ -364,7 +364,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/fleetallocation.yaml -o yaml ; done
+for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/gameserverallocation.yaml -o yaml ; done
 ```
 
 #### 7. Check new Autoscaler and Fleet status

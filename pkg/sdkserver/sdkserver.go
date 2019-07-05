@@ -70,6 +70,7 @@ var (
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
+// nolint: maligned
 type SDKServer struct {
 	logger             *logrus.Entry
 	gameServerName     string
@@ -94,6 +95,7 @@ type SDKServer struct {
 	gsAnnotations      map[string]string
 	gsState            stablev1alpha1.GameServerState
 	gsUpdateMutex      sync.RWMutex
+	gsWaitForSync      sync.WaitGroup
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -126,6 +128,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsLabels:           map[string]string{},
 		gsAnnotations:      map[string]string{},
 		gsUpdateMutex:      sync.RWMutex{},
+		gsWaitForSync:      sync.WaitGroup{},
 	}
 
 	s.informerFactory = factory
@@ -162,6 +165,8 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		}
 	})
 
+	// we haven't synced yet
+	s.gsWaitForSync.Add(1)
 	s.workerqueue = workerqueue.NewWorkerQueue(
 		s.syncGameServer,
 		s.logger,
@@ -183,11 +188,15 @@ func (s *SDKServer) initHealthLastUpdated(healthInitialDelay time.Duration) {
 // Will block until stop is closed
 func (s *SDKServer) Run(stop <-chan struct{}) error {
 	s.informerFactory.Start(stop)
-	cache.WaitForCacheSync(stop, s.gameServerSynced)
+	if !cache.WaitForCacheSync(stop, s.gameServerSynced) {
+		return errors.New("failed to wait for caches to sync")
+	}
+	// we have the gameserver details now
+	s.gsWaitForSync.Done()
 
-	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
+	gs, err := s.gameServer()
 	if err != nil {
-		return errors.Wrapf(err, "error retrieving gameserver %s/%s", s.namespace, s.gameServerName)
+		return err
 	}
 
 	// grab configuration details
@@ -267,17 +276,28 @@ func (s *SDKServer) updateState() error {
 	s.gsUpdateMutex.RLock()
 	gs.Status.State = s.gsState
 	s.gsUpdateMutex.RUnlock()
-	_, err = gameServers.Update(gs)
 
-	// state specific work here
-	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
-		s.recorder.Event(gs, corev1.EventTypeWarning, string(gs.Status.State), "No longer healthy")
+	_, err = gameServers.Update(gs)
+	if err != nil {
+		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
 	}
 
-	return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
+	level := corev1.EventTypeNormal
+	// post state specific work here
+	switch gs.Status.State {
+	case stablev1alpha1.GameServerStateUnhealthy:
+		level = corev1.EventTypeWarning
+	}
+
+	s.recorder.Event(gs, level, string(gs.Status.State), "SDK state change")
+
+	return nil
 }
 
 func (s *SDKServer) gameServer() (*stablev1alpha1.GameServer, error) {
+	// this ensure that if we get requests for the gameserver before the cache has been synced,
+	// they will block here until it's ready
+	s.gsWaitForSync.Wait()
 	gs, err := s.gameServerLister.GameServers(s.namespace).Get(s.gameServerName)
 	return gs, errors.Wrapf(err, "could not retrieve GameServer %s/%s", s.namespace, s.gameServerName)
 }
