@@ -97,18 +97,19 @@ If you're interested in more details for game server allocation, you should cons
 In here we are only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:
 ```
-    status:
-      address: 10.30.64.99
-      nodeName: universal3
-      ports:
-      - name: default
-        port: 7131
-      state: Allocated
+status:
+  address: 34.94.118.237
+  gameServerName: simple-udp-v6jwb-6bzkz
+  nodeName: gke-test-cluster-default-f11755a7-5km3
+  ports:
+  - name: default
+    port: 7832
+  state: Allocated
 ```
 
 Note the address and port, you might need them later to connect to the server.
@@ -168,7 +169,7 @@ Since we've only got one allocation, we'll just grab the details of the IP and p
 only allocated `GameServer`: 
 
 ```
-kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.GameServer.status.GameServer.status.ports[0].port}'
+kubectl get gameservers | grep Allocated | awk '{print $3":"$4 }'
 ```
 
 This should output your Game Server IP address and port. (eg `10.130.65.208:7936`)
