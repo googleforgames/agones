@@ -26,6 +26,9 @@
 # Get the sha for a file
 sha = $(shell sha256sum $(1) | head -c 10)
 
+# Get the sha of all files in a directory using wildcard in $(1)
+sha_dir = $(shell sha256sum  $(1) | cut -d' ' -f1 | sha256sum | head -c 10 )
+
 # Minikube executable
 MINIKUBE ?= minikube.exe
 # Default minikube driver
