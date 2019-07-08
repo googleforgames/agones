@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/util/runtime"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// TODO: add liveness probe
-	http.HandleFunc("/v1alpha1/gameserverallocation", h.postOnly(h.allocateHandler))
+	http.HandleFunc("/v1/gameserverallocation", h.postOnly(h.allocateHandler))
 
 	caCertPool, err := getCACertPool(certDir)
 	if err != nil {
@@ -134,13 +134,13 @@ type httpHandler struct {
 }
 
 func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
-	gsa := allocationv1alpha1.GameServerAllocation{}
+	gsa := allocationv1.GameServerAllocation{}
 	if err := json.NewDecoder(r.Body).Decode(&gsa); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	allocation := h.agonesClient.AllocationV1alpha1().GameServerAllocations(gsa.ObjectMeta.Namespace)
+	allocation := h.agonesClient.AllocationV1().GameServerAllocations(gsa.ObjectMeta.Namespace)
 	allocatedGsa, err := allocation.Create(&gsa)
 	if err != nil {
 		http.Error(w, err.Error(), httpCode(err))

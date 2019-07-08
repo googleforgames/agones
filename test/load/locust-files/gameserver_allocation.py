@@ -24,7 +24,7 @@ FLEET_NAME = "scale-test-fleet"
 FLEET_RESOURCE_PATH = (
     "/apis/stable.agones.dev/v1alpha1/namespaces/default/fleets")
 ALLOCATION_RESOURCE_PATH = (
-    "/apis/allocation.agones.dev/v1alpha1/namespaces/default"
+    "/apis/allocation.agones.dev/v1/namespaces/default"
     "/gameserverallocations")
 
 
@@ -38,7 +38,7 @@ class UserBehavior(TaskSet):
         ready_replicas = response_json['status']['readyReplicas']
         # Allocate game servers.
         payload = {
-            "apiVersion": "allocation.agones.dev/v1alpha1",
+            "apiVersion": "allocation.agones.dev/v1",
             "kind": "GameServerAllocation",
             "metadata": {
                 "generateName": "gs-allocation-",

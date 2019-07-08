@@ -19,7 +19,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
@@ -34,9 +34,9 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 	labels := map[string]string{"role": "gameserver"}
 	prefLabels := map[string]string{"role": "gameserver", "preferred": "true"}
 
-	gsa := &v1alpha1.GameServerAllocation{
+	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
-		Spec: v1alpha1.GameServerAllocationSpec{
+		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -188,9 +188,9 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	c, m := newFakeController()
 	labels := map[string]string{"role": "gameserver"}
 
-	gsa := &v1alpha1.GameServerAllocation{
+	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
-		Spec: v1alpha1.GameServerAllocationSpec{
+		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{
 				MatchLabels: labels,
 			},
