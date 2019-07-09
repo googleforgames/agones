@@ -12,12 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stable
+package agones
 
 const (
 	// GroupName is the Scheme Group Name for Agones Custom Resource Definitions
-	GroupName = "stable.agones.dev"
-	// VersionAnnotation is the key for version annotation
-	// associated with the CRD
-	VersionAnnotation = GroupName + "/sdk-version"
+	GroupName = "agones.dev"
 )

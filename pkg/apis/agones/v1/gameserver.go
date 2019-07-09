@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ import (
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/agones"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,18 +72,18 @@ const (
 
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
-	RoleLabel = stable.GroupName + "/role"
+	RoleLabel = agones.GroupName + "/role"
 	// GameServerLabelRole is the GameServer label value for RoleLabel
 	GameServerLabelRole = "gameserver"
 	// GameServerPodLabel is the label that the name of the GameServer
 	// is set on the Pod the GameServer controls
-	GameServerPodLabel = stable.GroupName + "/gameserver"
+	GameServerPodLabel = agones.GroupName + "/gameserver"
 	// GameServerContainerAnnotation is the annotation that stores
 	// which container is the container that runs the dedicated game server
-	GameServerContainerAnnotation = stable.GroupName + "/container"
+	GameServerContainerAnnotation = agones.GroupName + "/container"
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
-	DevAddressAnnotation = "stable.agones.dev/dev-address"
+	DevAddressAnnotation = "agones.dev/dev-address"
 )
 
 var (
@@ -194,8 +194,8 @@ func (gs *GameServer) ApplyDefaults() {
 	if gs.ObjectMeta.Annotations == nil {
 		gs.ObjectMeta.Annotations = map[string]string{}
 	}
-	gs.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
-	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, stable.GroupName)
+	gs.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
+	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, agones.GroupName)
 
 	gs.Spec.ApplyDefaults()
 	gs.applyStateDefaults()
@@ -479,7 +479,7 @@ func (gs *GameServer) podObjectMeta(pod *corev1.Pod) {
 	}
 
 	// Add Agones version into Pod Annotations
-	pod.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
+	pod.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
 	if gs.ObjectMeta.Annotations == nil {
 		gs.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
