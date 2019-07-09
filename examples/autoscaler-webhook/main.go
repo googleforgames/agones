@@ -25,7 +25,7 @@ import (
 	"os"
 	"strconv"
 
-	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
 )
 
@@ -136,7 +136,7 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var faReq v1alpha1.FleetAutoscaleReview
+	var faReq autoscalingv1.FleetAutoscaleReview
 	res, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -146,7 +146,7 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	faResp := v1alpha1.FleetAutoscaleResponse{
+	faResp := autoscalingv1.FleetAutoscaleResponse{
 		Scale:    false,
 		Replicas: faReq.Request.Status.Replicas,
 		UID:      faReq.Request.UID,
@@ -166,7 +166,7 @@ func handleAutoscale(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("Content-Type", "application/json")
-	review := &v1alpha1.FleetAutoscaleReview{
+	review := &autoscalingv1.FleetAutoscaleReview{
 		Request:  faReq.Request,
 		Response: &faResp,
 	}

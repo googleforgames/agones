@@ -107,7 +107,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.11
+        Image:  {{< example-image >}}
         Name:   simple-udp
         Resources:
           Limits:
@@ -149,6 +149,10 @@ This should output your Game Server IP address and ports, eg:
 NAME               STATE   ADDRESS         PORT   NODE     AGE
 simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
+
+> Note: if you have Agones installed on minikube the address printed will not be
+  reachable from the host machine. Instead, use the output of `minikube ip` for
+  the following section.
 
 ### 3. Connect to the GameServer
 

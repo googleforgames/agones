@@ -8,7 +8,7 @@ description: >
 ---
 
 To do this, we will implement a [Service](https://kubernetes.io/docs/concepts/services-networking/service/) which allocates a
-Game Server on demand by calling the Create() method of the FleetAllocationInterface.  After creating the fleet
+Game Server on demand by calling the Create() method of the GameServerAllocationInterface.  After creating the fleet
 allocation, we will return the JSON encoded GameServerStatus of the allocated GameServer.
 
 The type of service we will be learning about could be used by a game client to connect directly to a dedicated Game Server, as part of a larger system, such as a matchmaker service, or in conjunction with a database of level transition data.  We will be using the service as a vehicle with which to execute the API calls found in our main.go file.
@@ -163,7 +163,7 @@ allocatorw3secret        kubernetes.io/tls                     2         15s
 
 
 ### 5. Create the Service Account
-This service will interact with Agones via the Agones API by using a [service account](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) named fleet-allocator.  Specifically, the fleet-allocator service account is granted permissions to perform create operations against FleetAllocation objects, and get operations against Fleet objects.
+This service will interact with Agones via the Agones API by using a [service account](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) named fleet-allocator.  Specifically, the fleet-allocator service account is granted permissions to perform create operations against GameServerAllocation objects, and get operations against Fleet objects.
 
 Create the service account by changing directories to your local agones/examples/allocator-service directory and running this command:
 ```

@@ -21,8 +21,8 @@ package externalversions
 import (
 	"fmt"
 
-	v1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
-	multicluster_v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	stable_v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -54,12 +54,12 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=autoscaling.agones.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("fleetautoscalers"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Autoscaling().V1alpha1().FleetAutoscalers().Informer()}, nil
+	// Group=autoscaling.agones.dev, Version=v1
+	case v1.SchemeGroupVersion.WithResource("fleetautoscalers"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Autoscaling().V1().FleetAutoscalers().Informer()}, nil
 
 		// Group=multicluster, Version=v1alpha1
-	case multicluster_v1alpha1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
+	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer()}, nil
 
 		// Group=stable.agones.dev, Version=v1alpha1

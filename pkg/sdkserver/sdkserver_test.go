@@ -57,7 +57,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state: v1alpha1.GameServerStateRequestReady,
+				state:      v1alpha1.GameServerStateRequestReady,
+				recordings: []string{"Normal " + string(v1alpha1.GameServerStateRequestReady)},
 			},
 		},
 		"shutdown": {
@@ -65,7 +66,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state: v1alpha1.GameServerStateShutdown,
+				state:      v1alpha1.GameServerStateShutdown,
+				recordings: []string{"Normal " + string(v1alpha1.GameServerStateShutdown)},
 			},
 		},
 		"unhealthy": {
@@ -75,7 +77,7 @@ func TestSidecarRun(t *testing.T) {
 			},
 			expected: expected{
 				state:      v1alpha1.GameServerStateUnhealthy,
-				recordings: []string{string(v1alpha1.GameServerStateUnhealthy)},
+				recordings: []string{"Warning " + string(v1alpha1.GameServerStateUnhealthy)},
 			},
 		},
 		"label": {
@@ -283,6 +285,7 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			defer close(stop)
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			err = sc.syncGameServer(v.key)
 			assert.Nil(t, err)
@@ -345,6 +348,7 @@ func TestSidecarUpdateState(t *testing.T) {
 			defer close(stop)
 			sc.informerFactory.Start(stop)
 			assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+			sc.gsWaitForSync.Done()
 
 			err = sc.updateState()
 			assert.Nil(t, err)
@@ -577,6 +581,7 @@ func TestSDKServerGetGameServer(t *testing.T) {
 
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
 
 	result, err := sc.GetGameServer(context.Background(), &sdk.Empty{})
 	assert.Nil(t, err)
@@ -648,6 +653,7 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 
 	sc.informerFactory.Start(stop)
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
 
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
@@ -695,6 +701,7 @@ func TestSDKServerAllocate(t *testing.T) {
 		assert.Nil(t, err)
 		sc.informerFactory.Start(stop)
 		assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+		sc.gsWaitForSync.Done()
 		return m, sc, stop
 	}
 
@@ -844,7 +851,13 @@ func TestSDKServerAllocate(t *testing.T) {
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
-	return NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	server, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	if err != nil {
+		return server, err
+	}
+
+	server.recorder = m.FakeRecorder
+	return server, err
 }
 
 func waitForMessage(sc *SDKServer) error {
