@@ -46,6 +46,10 @@ Once a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
 for its public address and connection port will be populated.
 
+While Agones prefers that `Shutdown()` is run once a game has completed to delete the `GameServer` instance,
+if you want or need to move an `Allocated` `GameServer` back to `Ready` to be reused, you can call this SDK method again to do
+this.
+
 ### Health()
 This sends a single ping to designate that the Game Server is alive and
 healthy. Failure to send pings within the configured thresholds will result
