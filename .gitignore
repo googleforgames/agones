@@ -33,6 +33,5 @@ build/local-includes/*
 /release
 debug.test
 /sdks/csharp/AgonesClient/obj
-/sdks/csharp/AgonesClient/Properties
 /sdks/csharp/packages
 /sdks/csharp/AgonesTestCore/obj
