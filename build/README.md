@@ -34,6 +34,7 @@ Table of Contents
         * [make build-images](#make-build-images)
         * [make build-sdks](#make-build-sdks)
         * [make build-sdk-cpp](#make-build-sdk-cpp)
+        * [make run-sdk-conformance-tests](#make-run-sdk-conformance-tests)
         * [make test](#make-test)
         * [make push](#make-push)
         * [make install](#make-install)
@@ -415,6 +416,10 @@ Build all the sdks required for Agones
 
 #### `make build-sdk-cpp`
 Build the cpp sdk static and dynamic libraries (linux libraries only)
+
+#### `make run-sdk-conformance-tests`
+Run SDK conformance test.
+Run SDK server (sidecar) in test mode (which would record all GRPC requests) versus all SDK test clients which should generate those requests. All methods are verified.
 
 #### `make test`
 Run the linter and tests

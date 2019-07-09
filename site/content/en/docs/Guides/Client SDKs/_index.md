@@ -121,7 +121,7 @@ relinquish control to an external service which likely doesn't have as much info
 
 ## Writing your own SDK
 
-If there isn't a SDK for the language and platform you are looking for, you have several options:
+If there isn't an SDK for the language and platform you are looking for, you have several options:
 
 ### gRPC Client Generation
 
@@ -136,6 +136,33 @@ the [REST]({{< relref "rest.md" >}}) HTTP+JSON interface. This could be written 
 the {{< ghlink href="sdk.swagger.json" >}}Swagger/OpenAPI Spec{{< /ghlink >}}.
 
 Finally, if you build something that would be usable by the community, please submit a pull request!
+
+## SDK Conformance Test
+
+There is a tool `SDK server Conformance` checker which will run Local SDK server and record all requests your client is performing.
+
+In order to check that SDK is working properly you should write simple SDK test client which would use all methods of your SDK.
+
+Also to test that SDK cliet is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
+
+Complete list of endpoints which should be called by your test client is the following:
+```
+ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
+```
+
+In order to run this test SDK server locally use:
+```
+SECONDS=30 make run-sdk-conformance-local
+```
+
+Docker container would timeout in 30 seconds and give your the comparison of received requests and expected requests
+
+For instance you could run go sdk conformance test and see how the process goes: 
+```
+SDK_FOLDER=go make run-sdk-conformance-test
+```
+
+In order to add test client for your SDK, write `jstest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go/Dockerfile" >}}Golang SDK testing directory structure{{< /ghlink >}}.
 
 ## Building the Tools
 

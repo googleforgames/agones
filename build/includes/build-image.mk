@@ -63,3 +63,6 @@ push-remote-build-image:
 # pull a local image that may exist on a remote repository, to a local image
 pull-remote-build-image:
 	-docker pull $(REMOTE_TAG) && docker tag $(REMOTE_TAG) $(LOCAL_TAG)
+
+ensure-agones-sdk-image:
+	$(MAKE) ensure-image IMAGE_TAG=$(sidecar_tag) BUILD_TARGET=build-agones-sdk-server-image
