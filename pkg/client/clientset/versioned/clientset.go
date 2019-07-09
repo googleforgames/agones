@@ -20,7 +20,7 @@ package versioned
 
 import (
 	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
-	autoscalingv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
@@ -33,9 +33,9 @@ type Interface interface {
 	AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Allocation() allocationv1alpha1.AllocationV1alpha1Interface
-	AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha1Interface
+	AutoscalingV1() autoscalingv1.AutoscalingV1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Autoscaling() autoscalingv1alpha1.AutoscalingV1alpha1Interface
+	Autoscaling() autoscalingv1.AutoscalingV1Interface
 	MulticlusterV1alpha1() multiclusterv1alpha1.MulticlusterV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Multicluster() multiclusterv1alpha1.MulticlusterV1alpha1Interface
@@ -49,7 +49,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	allocationV1alpha1   *allocationv1alpha1.AllocationV1alpha1Client
-	autoscalingV1alpha1  *autoscalingv1alpha1.AutoscalingV1alpha1Client
+	autoscalingV1        *autoscalingv1.AutoscalingV1Client
 	multiclusterV1alpha1 *multiclusterv1alpha1.MulticlusterV1alpha1Client
 	stableV1alpha1       *stablev1alpha1.StableV1alpha1Client
 }
@@ -65,15 +65,15 @@ func (c *Clientset) Allocation() allocationv1alpha1.AllocationV1alpha1Interface 
 	return c.allocationV1alpha1
 }
 
-// AutoscalingV1alpha1 retrieves the AutoscalingV1alpha1Client
-func (c *Clientset) AutoscalingV1alpha1() autoscalingv1alpha1.AutoscalingV1alpha1Interface {
-	return c.autoscalingV1alpha1
+// AutoscalingV1 retrieves the AutoscalingV1Client
+func (c *Clientset) AutoscalingV1() autoscalingv1.AutoscalingV1Interface {
+	return c.autoscalingV1
 }
 
 // Deprecated: Autoscaling retrieves the default version of AutoscalingClient.
 // Please explicitly pick a version.
-func (c *Clientset) Autoscaling() autoscalingv1alpha1.AutoscalingV1alpha1Interface {
-	return c.autoscalingV1alpha1
+func (c *Clientset) Autoscaling() autoscalingv1.AutoscalingV1Interface {
+	return c.autoscalingV1
 }
 
 // MulticlusterV1alpha1 retrieves the MulticlusterV1alpha1Client
@@ -118,7 +118,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs.autoscalingV1alpha1, err = autoscalingv1alpha1.NewForConfig(&configShallowCopy)
+	cs.autoscalingV1, err = autoscalingv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.allocationV1alpha1 = allocationv1alpha1.NewForConfigOrDie(c)
-	cs.autoscalingV1alpha1 = autoscalingv1alpha1.NewForConfigOrDie(c)
+	cs.autoscalingV1 = autoscalingv1.NewForConfigOrDie(c)
 	cs.multiclusterV1alpha1 = multiclusterv1alpha1.NewForConfigOrDie(c)
 	cs.stableV1alpha1 = stablev1alpha1.NewForConfigOrDie(c)
 
@@ -155,7 +155,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.allocationV1alpha1 = allocationv1alpha1.New(c)
-	cs.autoscalingV1alpha1 = autoscalingv1alpha1.New(c)
+	cs.autoscalingV1 = autoscalingv1.New(c)
 	cs.multiclusterV1alpha1 = multiclusterv1alpha1.New(c)
 	cs.stableV1alpha1 = stablev1alpha1.New(c)
 
