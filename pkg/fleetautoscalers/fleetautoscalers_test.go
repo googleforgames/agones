@@ -24,7 +24,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -131,7 +131,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var faRequest v1alpha1.FleetAutoscaleReview
+	var faRequest autoscalingv1.FleetAutoscaleReview
 
 	res, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -142,7 +142,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	faReq := faRequest.Request
-	faResp := v1alpha1.FleetAutoscaleResponse{
+	faResp := autoscalingv1.FleetAutoscaleResponse{
 		Scale:    false,
 		Replicas: faReq.Status.Replicas,
 		UID:      faReq.UID,
@@ -153,7 +153,7 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		faResp.Replicas = faReq.Status.Replicas * scaleFactor
 	}
 	w.Header().Set("Content-Type", "application/json")
-	review := &v1alpha1.FleetAutoscaleReview{
+	review := &autoscalingv1.FleetAutoscaleReview{
 		Request:  faReq,
 		Response: &faResp,
 	}

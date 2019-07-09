@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -40,21 +40,21 @@ var client = http.Client{
 }
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
-func computeDesiredFleetSize(fas *v1alpha1.FleetAutoscaler, f *stablev1alpha1.Fleet) (int32, bool, error) {
+func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *stablev1alpha1.Fleet) (int32, bool, error) {
 
 	switch fas.Spec.Policy.Type {
-	case v1alpha1.BufferPolicyType:
+	case autoscalingv1.BufferPolicyType:
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
-	case v1alpha1.WebhookPolicyType:
+	case autoscalingv1.WebhookPolicyType:
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
 	return f.Status.Replicas, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func applyWebhookPolicy(w *v1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
-	faReq := v1alpha1.FleetAutoscaleReview{
-		Request: &v1alpha1.FleetAutoscaleRequest{
+func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
+	faReq := autoscalingv1.FleetAutoscaleReview{
+		Request: &autoscalingv1.FleetAutoscaleRequest{
 			UID:       uuid.NewUUID(),
 			Name:      f.Name,
 			Namespace: f.Namespace,
@@ -67,7 +67,7 @@ func applyWebhookPolicy(w *v1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int
 	if w.URL != nil {
 		urlStr = *w.URL
 	}
-	var faResp v1alpha1.FleetAutoscaleReview
+	var faResp autoscalingv1.FleetAutoscaleReview
 	servicePath := ""
 	if w.Service != nil {
 		if w.Service.Path != nil {
@@ -135,7 +135,7 @@ func applyWebhookPolicy(w *v1alpha1.WebhookPolicy, f *stablev1alpha1.Fleet) (int
 	return f.Status.Replicas, false, nil
 }
 
-func applyBufferPolicy(b *v1alpha1.BufferPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
+func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *stablev1alpha1.Fleet) (int32, bool, error) {
 	var replicas int32
 
 	if b.BufferSize.Type == intstr.Int {

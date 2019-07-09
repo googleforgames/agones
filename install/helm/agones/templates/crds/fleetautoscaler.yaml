@@ -26,7 +26,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   group: autoscaling.agones.dev
-  version: v1alpha1
+  version: v1
   scope: Namespaced
   names:
     kind: FleetAutoscaler

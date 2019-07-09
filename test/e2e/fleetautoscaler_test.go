@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
@@ -54,7 +54,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt))
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
@@ -98,12 +98,12 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
 	// get the Status of the fleetautoscaler
-	fas, err = framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.Name, metav1.GetOptions{})
+	fas, err = framework.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.Name, metav1.GetOptions{})
 	assert.Nil(t, err, "could not get fleetautoscaler")
 	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -112,7 +112,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	// check that we are not able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *v1alpha1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
 		return fas.Status.ScalingLimited
 	})
 
@@ -144,7 +144,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 
 	r := rand.New(rand.NewSource(1783))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 
 	for i := 0; i < 5; i++ {
 		fas := defaultFleetAutoscaler(flt)
@@ -194,7 +194,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 
 // scaleFleet creates a patch to apply to a Fleet.
 // easier for testing, as it removes object generational issues.
-func patchFleetAutoscaler(fas *v1alpha1.FleetAutoscaler, bufferSize intstr.IntOrString, minReplicas int32, maxReplicas int32) (*v1alpha1.FleetAutoscaler, error) {
+func patchFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler, bufferSize intstr.IntOrString, minReplicas int32, maxReplicas int32) (*autoscalingv1.FleetAutoscaler, error) {
 	var bufferSizeFmt string
 	if bufferSize.Type == intstr.Int {
 		bufferSizeFmt = fmt.Sprintf("%d", bufferSize.IntValue())
@@ -215,20 +215,20 @@ func patchFleetAutoscaler(fas *v1alpha1.FleetAutoscaler, bufferSize intstr.IntOr
 		WithField("patch", patch).
 		Info("Patching fleetautoscaler")
 
-	fas, err := framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(defaultNs).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	fas, err := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
 	logrus.WithField("fleetautoscaler", fas).Info("Patched fleet autoscaler")
 	return fas, err
 }
 
 // defaultFleetAutoscaler returns a default fleet autoscaler configuration for a given fleet
-func defaultFleetAutoscaler(f *stablev1alpha1.Fleet) *v1alpha1.FleetAutoscaler {
-	return &v1alpha1.FleetAutoscaler{
+func defaultFleetAutoscaler(f *stablev1alpha1.Fleet) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: defaultNs},
-		Spec: v1alpha1.FleetAutoscalerSpec{
+		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,
-			Policy: v1alpha1.FleetAutoscalerPolicy{
-				Type: v1alpha1.BufferPolicyType,
-				Buffer: &v1alpha1.BufferPolicy{
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
 					BufferSize:  intstr.FromInt(3),
 					MaxReplicas: 10,
 				},
@@ -272,12 +272,12 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
-	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
+	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
-	fas.Spec.Policy.Webhook = &v1alpha1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
 			Namespace: defaultNs,
@@ -486,13 +486,13 @@ func TestTlsWebhook(t *testing.T) {
 
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
-	fas.Spec.Policy.Type = v1alpha1.WebhookPolicyType
+	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
 
-	fas.Spec.Policy.Webhook = &v1alpha1.WebhookPolicy{
+	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
 			Namespace: defaultNs,

@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
-	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
 	stable "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
@@ -153,7 +153,7 @@ func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscali
 	t.Helper()
 	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
-		fleetautoscaler, err := f.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -265,7 +265,7 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
-	err = f.AgonesClient.AutoscalingV1alpha1().FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
+	err = f.AgonesClient.AutoscalingV1().FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@
 # Full example of a FleetAutoscaler - this is used to scale a Fleet
 # automatically depending on load
 #
-apiVersion: "autoscaling.agones.dev/v1alpha1"
+apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
 metadata:
   name: webhook-fleet-autoscaler
