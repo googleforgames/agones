@@ -32,3 +32,7 @@ build/local-includes/*
 !build/local-includes/README.md
 /release
 debug.test
+/sdks/csharp/AgonesClient/obj
+/sdks/csharp/AgonesClient/Properties
+/sdks/csharp/packages
+/sdks/csharp/AgonesTestCore/obj
