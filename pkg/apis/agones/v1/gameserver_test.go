@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ import (
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/agones"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -224,10 +224,10 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			test.gameServer.ApplyDefaults()
 
-			assert.Equal(t, pkg.Version, test.gameServer.Annotations[stable.VersionAnnotation])
+			assert.Equal(t, pkg.Version, test.gameServer.Annotations[VersionAnnotation])
 
 			spec := test.gameServer.Spec
-			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, stable.GroupName)
+			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
 			assert.Equal(t, test.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
@@ -350,7 +350,7 @@ func TestGameServerPod(t *testing.T) {
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
-	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
+	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
 	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
@@ -379,7 +379,7 @@ func TestGameServerPodObjectMeta(t *testing.T) {
 		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Name)
 		assert.Equal(t, gs.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
 		assert.Equal(t, GameServerLabelRole, pod.ObjectMeta.Labels[RoleLabel])
-		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[stable.GroupName+"/role"])
+		assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 		assert.Equal(t, gs.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
 		assert.Equal(t, "goat", pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
 		assert.True(t, metav1.IsControlledBy(pod, gs))

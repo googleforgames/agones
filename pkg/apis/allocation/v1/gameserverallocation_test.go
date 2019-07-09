@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -51,7 +51,7 @@ func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Len(t, selectors, 2)
 
-	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
 
 	for _, s := range selectors {
 		assert.False(t, s.Matches(labels.Set(gs.ObjectMeta.Labels)))

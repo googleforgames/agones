@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -26,7 +25,7 @@ import (
 const (
 	// FleetNameLabel is the label that the name of the Fleet
 	// is set to on GameServerSet and GameServer  the Fleet controls
-	FleetNameLabel = stable.GroupName + "/fleet"
+	FleetNameLabel = agones.GroupName + "/fleet"
 )
 
 // +genclient
@@ -135,7 +134,7 @@ func (f *Fleet) ApplyDefaults() {
 	if f.ObjectMeta.Annotations == nil {
 		f.ObjectMeta.Annotations = make(map[string]string, 1)
 	}
-	f.ObjectMeta.Annotations[stable.VersionAnnotation] = pkg.Version
+	f.ObjectMeta.Annotations[VersionAnnotation] = pkg.Version
 }
 
 // GetGameServerSpec get underlying Gameserver specification

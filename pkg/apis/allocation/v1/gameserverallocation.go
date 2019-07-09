@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -115,7 +115,7 @@ type GameServerAllocationStatus struct {
 	// GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated
 	State          GameServerAllocationState       `json:"state"`
 	GameServerName string                          `json:"gameServerName"`
-	Ports          []v1alpha1.GameServerStatusPort `json:"ports,omitempty"`
+	Ports          []agonesv1.GameServerStatusPort `json:"ports,omitempty"`
 	Address        string                          `json:"address,omitempty"`
 	NodeName       string                          `json:"nodeName,omitempty"`
 }

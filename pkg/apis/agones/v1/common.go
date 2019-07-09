@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"fmt"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -38,14 +38,14 @@ type crd interface {
 }
 
 // validateName Check NameSize of a CRD
-func validateName(c crd) []v1.StatusCause {
-	var causes []v1.StatusCause
+func validateName(c crd) []metav1.StatusCause {
+	var causes []metav1.StatusCause
 	name := c.GetName()
 	kind := c.GetObjectKind().GroupVersionKind().Kind
 	// make sure the Name of a Fleet does not oversize the Label size in GSS and GS
 	if len(name) > validation.LabelValueMaxLength {
-		causes = append(causes, v1.StatusCause{
-			Type:    v1.CauseTypeFieldValueInvalid,
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   fmt.Sprintf("Name"),
 			Message: fmt.Sprintf("Length of %s '%s' name should be no more than 63 characters.", kind, name),
 		})
@@ -61,7 +61,7 @@ type gsSpec interface {
 
 // validateGSSpec Check GameserverSpec of a CRD
 // Used by Fleet and Gameserverset
-func validateGSSpec(gs gsSpec) []v1.StatusCause {
+func validateGSSpec(gs gsSpec) []metav1.StatusCause {
 	gsSpec := gs.GetGameServerSpec()
 	gsSpec.ApplyDefaults()
 	causes, _ := gsSpec.Validate("")

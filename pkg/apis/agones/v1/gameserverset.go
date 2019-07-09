@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"reflect"
 
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/stable"
+	"agones.dev/agones/pkg/apis/agones"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	// GameServerSetGameServerLabel is the label that the name of the GameServerSet
 	// is set on the GameServer the GameServerSet controls
-	GameServerSetGameServerLabel = stable.GroupName + "/gameserverset"
+	GameServerSetGameServerLabel = agones.GroupName + "/gameserverset"
 )
 
 // +genclient
