@@ -51,7 +51,7 @@ Table of Contents
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
         * [make gen-crd-client](#make-gen-crd-client)
-        * [make gen-gameservers-sdk-grpc](#make-gen-gameservers-sdk-grpc)
+        * [make gen-sdk-grpc](#make-gen-sdk-grpc)
      * [Build Image Targets](#build-image-targets)
         * [make clean-config](#make-clean-config)
         * [make clean-build-image](#make-clean-build-image)
@@ -514,7 +514,7 @@ Generate the `/install/yaml/install.yaml` from the Helm template
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
 
-#### `make gen-gameservers-sdk-grpc`
+#### `make gen-sdk-grpc`
 Generate the SDK gRPC server and client code
 
 ### Build Image Targets
