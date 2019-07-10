@@ -78,9 +78,14 @@ resource "google_container_cluster" "primary" {
   provider = "google-beta"
 
   # Setting an empty username and password explicitly disables basic auth
+  # TODO(roberthbailey): Remove the entire master_auth block when switching to 1.12.
   master_auth {
     username = "${local.username}"
     password = "${var.password}"
+
+    client_certificate_config {
+      issue_client_certificate = false
+    }
   }
   enable_legacy_abac = "${lookup(var.cluster, "legacyAbac")}"
   node_pool = [
@@ -175,18 +180,6 @@ resource "google_compute_firewall" "default" {
 resource "google_compute_network" "default" {
   project = "${lookup(var.cluster, "project")}"
   name    = "agones-network-${lookup(var.cluster, "name")}"
-}
-
-
-
-# The following outputs allow authentication and connectivity to the GKE Cluster
-# by using certificate-based authentication.
-output "client_certificate" {
-  value = "${google_container_cluster.primary.master_auth.0.client_certificate}"
-}
-
-output "client_key" {
-  value = "${google_container_cluster.primary.master_auth.0.client_key}"
 }
 
 output "cluster_ca_certificate" {
