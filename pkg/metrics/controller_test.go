@@ -84,7 +84,7 @@ func verifyMetricData(exporter *metricExporter, metricName string, expected []ex
 			return fmt.Errorf("label values don't match; got: %v, want: %v", actualLabelValues, e.labels)
 		}
 		if len(tsd.Points) != 1 {
-			return fmt.Errorf("verifyMetricDataValues can only handle a single Point in a TimeSeries. Found %d points.", len(tsd.Points))
+			return fmt.Errorf("verifyMetricDataValues can only handle a single Point in a TimeSeries; found %d points", len(tsd.Points))
 		}
 		if !reflect.DeepEqual(tsd.Points[0].Value, e.val) {
 			return fmt.Errorf("metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
