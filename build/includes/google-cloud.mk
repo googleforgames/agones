@@ -64,8 +64,6 @@ gcloud-auth-cluster: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(build_tag) gcloud config set container/cluster $(GCP_CLUSTER_NAME)
 	docker run --rm $(common_mounts) $(build_tag) gcloud config set compute/zone $(GCP_CLUSTER_ZONE)
 	docker run --rm $(common_mounts) $(build_tag) gcloud container clusters get-credentials $(GCP_CLUSTER_NAME)
-	-docker run --rm $(common_mounts) $(build_tag) bash -c 'echo - n $$(gcloud config get-value account) | md5sum | cut -b-32 > /tmp/hash && \
-	kubectl create clusterrolebinding cluster-admin-binding-$$(cat /tmp/hash) --clusterrole cluster-admin --user $$(gcloud config get-value account)'
 
 # authenticate our docker configuration so that you can do a docker push directly
 # to the gcr.io repository
