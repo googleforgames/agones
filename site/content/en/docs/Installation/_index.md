@@ -181,12 +181,19 @@ minikube profile agones
 The following command starts a local minikube cluster via virtualbox - but this can be
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```bash
 minikube start --kubernetes-version v1.11.0 --vm-driver virtualbox \
 		--extra-config=apiserver.authorization-mode=RBAC
 ```
 
 Continue to [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```bash
+minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
+```
+{{% /feature %}}
 
 ## Setting up an Amazon Web Services EKS cluster
 
@@ -280,6 +287,7 @@ Nodes in AKS don't get a Public IP by default. To assign a Public IP to a Node, 
 
 Continue to [Installing Agones](#installing-agones).
 
+{{% feature expiryVersion="0.12.0" %}}
 ## Enabling creation of RBAC resources
 
 To install Agones, a service account needs permission to create some special RBAC resource types.
@@ -292,6 +300,7 @@ kubectl create clusterrolebinding cluster-admin-binding \
 kubectl create clusterrolebinding cluster-admin-binding \
   --clusterrole=cluster-admin --serviceaccount=kube-system:default
 ```
+{{% /feature %}}
 
 ## Installing Agones
 
