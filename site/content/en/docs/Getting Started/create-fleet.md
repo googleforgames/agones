@@ -171,7 +171,7 @@ are often used in conjunction.
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
-For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}})
+For the full details of the YAML file head to the [GameServerAllocation Specification Guide]({{< ref "/docs/Reference/gameserverallocation.md" >}})
 
 You should get back a response that looks like the following:
 
@@ -445,7 +445,7 @@ You have now deployed a new version of your game!
 
 ## Next Steps
 
-- Have a look at the [GameServerAllocation specification]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}), and see
+- Have a look at the [GameServerAllocation specification]({{< ref "/docs/Reference/gameserverallocation.md" >}}), and see
     how the extra functionality can enable smoke testing, server information communication, and more.
 - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
   See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).

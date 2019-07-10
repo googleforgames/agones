@@ -46,6 +46,10 @@ Once a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
 for its public address and connection port will be populated.
 
+While Agones prefers that `Shutdown()` is run once a game has completed to delete the `GameServer` instance,
+if you want or need to move an `Allocated` `GameServer` back to `Ready` to be reused, you can call this SDK method again to do
+this.
+
 ### Health()
 This sends a single ping to designate that the Game Server is alive and
 healthy. Failure to send pings within the configured thresholds will result
@@ -98,7 +102,7 @@ This can be useful to track `GameServer > Status > State` changes, `metadata` ch
 
 In combination with this SDK, manipulating [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and
 [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can also be a useful way to communicate information through to running game server processes from outside those processes.
-This is especially useful when combined with `GameServerAllocation` [applied metadata]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}).
+This is especially useful when combined with `GameServerAllocation` [applied metadata]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
 
 Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
 the returned object is limited to that configuration that was deemed useful. If there are
@@ -115,7 +119,7 @@ and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
 For those scenarios, this SDK functionality exists. 
 
-> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}) is preferred in all other scenarios, 
+> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
 
