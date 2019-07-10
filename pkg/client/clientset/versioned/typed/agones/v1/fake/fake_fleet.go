@@ -19,7 +19,7 @@
 package fake
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -31,29 +31,29 @@ import (
 
 // FakeFleets implements FleetInterface
 type FakeFleets struct {
-	Fake *FakeStableV1alpha1
+	Fake *FakeAgonesV1
 	ns   string
 }
 
-var fleetsResource = schema.GroupVersionResource{Group: "stable.agones.dev", Version: "v1alpha1", Resource: "fleets"}
+var fleetsResource = schema.GroupVersionResource{Group: "agones.dev", Version: "v1", Resource: "fleets"}
 
-var fleetsKind = schema.GroupVersionKind{Group: "stable.agones.dev", Version: "v1alpha1", Kind: "Fleet"}
+var fleetsKind = schema.GroupVersionKind{Group: "agones.dev", Version: "v1", Kind: "Fleet"}
 
 // Get takes name of the fleet, and returns the corresponding fleet object, and an error if there is any.
-func (c *FakeFleets) Get(name string, options v1.GetOptions) (result *v1alpha1.Fleet, err error) {
+func (c *FakeFleets) Get(name string, options v1.GetOptions) (result *agones_v1.Fleet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(fleetsResource, c.ns, name), &v1alpha1.Fleet{})
+		Invokes(testing.NewGetAction(fleetsResource, c.ns, name), &agones_v1.Fleet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Fleet), err
+	return obj.(*agones_v1.Fleet), err
 }
 
 // List takes label and field selectors, and returns the list of Fleets that match those selectors.
-func (c *FakeFleets) List(opts v1.ListOptions) (result *v1alpha1.FleetList, err error) {
+func (c *FakeFleets) List(opts v1.ListOptions) (result *agones_v1.FleetList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(fleetsResource, fleetsKind, c.ns, opts), &v1alpha1.FleetList{})
+		Invokes(testing.NewListAction(fleetsResource, fleetsKind, c.ns, opts), &agones_v1.FleetList{})
 
 	if obj == nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *FakeFleets) List(opts v1.ListOptions) (result *v1alpha1.FleetList, err 
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.FleetList{ListMeta: obj.(*v1alpha1.FleetList).ListMeta}
-	for _, item := range obj.(*v1alpha1.FleetList).Items {
+	list := &agones_v1.FleetList{ListMeta: obj.(*agones_v1.FleetList).ListMeta}
+	for _, item := range obj.(*agones_v1.FleetList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -80,43 +80,43 @@ func (c *FakeFleets) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a fleet and creates it.  Returns the server's representation of the fleet, and an error, if there is any.
-func (c *FakeFleets) Create(fleet *v1alpha1.Fleet) (result *v1alpha1.Fleet, err error) {
+func (c *FakeFleets) Create(fleet *agones_v1.Fleet) (result *agones_v1.Fleet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(fleetsResource, c.ns, fleet), &v1alpha1.Fleet{})
+		Invokes(testing.NewCreateAction(fleetsResource, c.ns, fleet), &agones_v1.Fleet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Fleet), err
+	return obj.(*agones_v1.Fleet), err
 }
 
 // Update takes the representation of a fleet and updates it. Returns the server's representation of the fleet, and an error, if there is any.
-func (c *FakeFleets) Update(fleet *v1alpha1.Fleet) (result *v1alpha1.Fleet, err error) {
+func (c *FakeFleets) Update(fleet *agones_v1.Fleet) (result *agones_v1.Fleet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(fleetsResource, c.ns, fleet), &v1alpha1.Fleet{})
+		Invokes(testing.NewUpdateAction(fleetsResource, c.ns, fleet), &agones_v1.Fleet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Fleet), err
+	return obj.(*agones_v1.Fleet), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeFleets) UpdateStatus(fleet *v1alpha1.Fleet) (*v1alpha1.Fleet, error) {
+func (c *FakeFleets) UpdateStatus(fleet *agones_v1.Fleet) (*agones_v1.Fleet, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(fleetsResource, "status", c.ns, fleet), &v1alpha1.Fleet{})
+		Invokes(testing.NewUpdateSubresourceAction(fleetsResource, "status", c.ns, fleet), &agones_v1.Fleet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Fleet), err
+	return obj.(*agones_v1.Fleet), err
 }
 
 // Delete takes name of the fleet and deletes it. Returns an error if one occurs.
 func (c *FakeFleets) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(fleetsResource, c.ns, name), &v1alpha1.Fleet{})
+		Invokes(testing.NewDeleteAction(fleetsResource, c.ns, name), &agones_v1.Fleet{})
 
 	return err
 }
@@ -125,19 +125,19 @@ func (c *FakeFleets) Delete(name string, options *v1.DeleteOptions) error {
 func (c *FakeFleets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(fleetsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.FleetList{})
+	_, err := c.Fake.Invokes(action, &agones_v1.FleetList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched fleet.
-func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.Fleet, err error) {
+func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agones_v1.Fleet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(fleetsResource, c.ns, name, data, subresources...), &v1alpha1.Fleet{})
+		Invokes(testing.NewPatchSubresourceAction(fleetsResource, c.ns, name, data, subresources...), &agones_v1.Fleet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.Fleet), err
+	return obj.(*agones_v1.Fleet), err
 }
 
 // GetScale takes name of the fleet, and returns the corresponding scale object, and an error if there is any.

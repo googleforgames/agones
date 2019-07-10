@@ -20,14 +20,14 @@ package fake
 
 import (
 	clientset "agones.dev/agones/pkg/client/clientset/versioned"
+	agonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
+	fakeagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1/fake"
 	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
 	fakeallocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1/fake"
 	autoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
 	fakeautoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1/fake"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
 	fakemulticlusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1/fake"
-	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
-	fakestablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -77,6 +77,16 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
+// AgonesV1 retrieves the AgonesV1Client
+func (c *Clientset) AgonesV1() agonesv1.AgonesV1Interface {
+	return &fakeagonesv1.FakeAgonesV1{Fake: &c.Fake}
+}
+
+// Agones retrieves the AgonesV1Client
+func (c *Clientset) Agones() agonesv1.AgonesV1Interface {
+	return &fakeagonesv1.FakeAgonesV1{Fake: &c.Fake}
+}
+
 // AllocationV1alpha1 retrieves the AllocationV1alpha1Client
 func (c *Clientset) AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface {
 	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
@@ -105,14 +115,4 @@ func (c *Clientset) MulticlusterV1alpha1() multiclusterv1alpha1.MulticlusterV1al
 // Multicluster retrieves the MulticlusterV1alpha1Client
 func (c *Clientset) Multicluster() multiclusterv1alpha1.MulticlusterV1alpha1Interface {
 	return &fakemulticlusterv1alpha1.FakeMulticlusterV1alpha1{Fake: &c.Fake}
-}
-
-// StableV1alpha1 retrieves the StableV1alpha1Client
-func (c *Clientset) StableV1alpha1() stablev1alpha1.StableV1alpha1Interface {
-	return &fakestablev1alpha1.FakeStableV1alpha1{Fake: &c.Fake}
-}
-
-// Stable retrieves the StableV1alpha1Client
-func (c *Clientset) Stable() stablev1alpha1.StableV1alpha1Interface {
-	return &fakestablev1alpha1.FakeStableV1alpha1{Fake: &c.Fake}
 }

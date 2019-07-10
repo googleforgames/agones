@@ -19,30 +19,30 @@
 package fake
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	v1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )
 
-type FakeStableV1alpha1 struct {
+type FakeAgonesV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeStableV1alpha1) Fleets(namespace string) v1alpha1.FleetInterface {
+func (c *FakeAgonesV1) Fleets(namespace string) v1.FleetInterface {
 	return &FakeFleets{c, namespace}
 }
 
-func (c *FakeStableV1alpha1) GameServers(namespace string) v1alpha1.GameServerInterface {
+func (c *FakeAgonesV1) GameServers(namespace string) v1.GameServerInterface {
 	return &FakeGameServers{c, namespace}
 }
 
-func (c *FakeStableV1alpha1) GameServerSets(namespace string) v1alpha1.GameServerSetInterface {
+func (c *FakeAgonesV1) GameServerSets(namespace string) v1.GameServerSetInterface {
 	return &FakeGameServerSets{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeStableV1alpha1) RESTClient() rest.Interface {
+func (c *FakeAgonesV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }
