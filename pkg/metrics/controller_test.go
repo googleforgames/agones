@@ -15,21 +15,94 @@
 package metrics
 
 import (
+	"context"
+	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/stretchr/testify/assert"
+	"go.opencensus.io/metric/metricdata"
+	"go.opencensus.io/metric/metricexport"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestControllerGameServerCount(t *testing.T) {
+type metricExporter struct {
+	metrics []*metricdata.Metric
+}
 
-	registry := prometheus.NewRegistry()
-	_, err := RegisterPrometheusExporter(registry)
-	assert.Nil(t, err)
+func (e *metricExporter) ExportMetrics(ctx context.Context, metrics []*metricdata.Metric) error {
+	e.metrics = metrics
+	return nil
+}
+
+func serialize(args []string) string {
+	return strings.Join(args, "|")
+}
+
+type expectedMetricData struct {
+	labels []string
+	val    interface{}
+}
+
+func verifyMetricData(exporter *metricExporter, metricName string, expected []expectedMetricData) error {
+
+	expectedValuesAsMap := make(map[string]expectedMetricData)
+	for _, e := range expected {
+		expectedValuesAsMap[serialize(e.labels)] = e
+	}
+
+	var wantedMetric *metricdata.Metric
+	for _, m := range exporter.metrics {
+		if m.Descriptor.Name == metricName {
+			wantedMetric = m
+		}
+	}
+	if wantedMetric == nil {
+		return fmt.Errorf("No metric found with name: %s", metricName)
+	}
+
+	if len(expectedValuesAsMap) != len(expected) {
+		return errors.New("Multiple entries in 'expected' slice have the exact same labels")
+	}
+	if len(wantedMetric.TimeSeries) != len(expectedValuesAsMap) {
+		return fmt.Errorf("number of timeseries does not match, got: %d, want: %d", len(wantedMetric.TimeSeries), len(expected))
+	}
+	for _, tsd := range wantedMetric.TimeSeries {
+		actualLabelValues := make([]string, len(tsd.LabelValues))
+		for i, k := range tsd.LabelValues {
+			actualLabelValues[i] = k.Value
+		}
+		e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
+		if !ok {
+			return fmt.Errorf("no TimeSeries found with labels: %v", actualLabelValues)
+		}
+		if !reflect.DeepEqual(actualLabelValues, e.labels) {
+			return fmt.Errorf("label values don't match; got: %v, want: %v", actualLabelValues, e.labels)
+		}
+		if len(tsd.Points) != 1 {
+			return fmt.Errorf("verifyMetricDataValues can only handle a single Point in a TimeSeries. Found %d points.", len(tsd.Points))
+		}
+		if !reflect.DeepEqual(tsd.Points[0].Value, e.val) {
+			return fmt.Errorf("metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
+		}
+
+	}
+	return nil
+}
+
+func resetMetrics() {
+	unRegisterViews()
+	registerViews()
+}
+
+func TestControllerGameServerCount(t *testing.T) {
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
 
 	c := newFakeController()
 	defer c.close()
@@ -40,9 +113,9 @@ func TestControllerGameServerCount(t *testing.T) {
 	gs1.Status.State = v1alpha1.GameServerStateReady
 	c.gsWatch.Modify(gs1)
 
+	c.run(t)
 	c.sync()
 	c.collect()
-	report()
 
 	gs1 = gs1.DeepCopy()
 	gs1.Status.State = v1alpha1.GameServerStateShutdown
@@ -50,19 +123,22 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gameServerWithFleetAndState("", v1alpha1.GameServerStatePortAllocation))
 	c.gsWatch.Add(gameServerWithFleetAndState("", v1alpha1.GameServerStatePortAllocation))
 
+	c.run(t)
 	c.sync()
 	c.collect()
-	report()
-
-	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(gsCountExpected), "agones_gameservers_count"))
+	reader.ReadAndExport(exporter)
+	err := verifyMetricData(exporter, "gameservers_count", []expectedMetricData{
+		{labels: []string{"test-fleet", "Ready"}, val: int64(0)},
+		{labels: []string{"test-fleet", "Shutdown"}, val: int64(1)},
+		{labels: []string{"none", "PortAllocation"}, val: int64(2)},
+	})
+	assert.Nil(t, err)
 }
 
 func TestControllerGameServersTotal(t *testing.T) {
-
-	registry := prometheus.NewRegistry()
-	_, err := RegisterPrometheusExporter(registry)
-	assert.Nil(t, err)
-
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
 	c.run(t)
@@ -82,17 +158,25 @@ func TestControllerGameServersTotal(t *testing.T) {
 	generateGsEvents(1, v1alpha1.GameServerStateUnhealthy, "", c.gsWatch)
 
 	c.sync()
-	report()
-
-	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(gsTotalExpected), "agones_gameservers_total"))
+	reader.ReadAndExport(exporter)
+	err := verifyMetricData(exporter, "gameservers_total", []expectedMetricData{
+		{labels: []string{"test", "Creating"}, val: int64(16)},
+		{labels: []string{"test", "Scheduled"}, val: int64(15)},
+		{labels: []string{"test", "Starting"}, val: int64(10)},
+		{labels: []string{"test", "Unhealthy"}, val: int64(1)},
+		{labels: []string{"none", "Creating"}, val: int64(19)},
+		{labels: []string{"none", "Scheduled"}, val: int64(18)},
+		{labels: []string{"none", "Starting"}, val: int64(16)},
+		{labels: []string{"none", "Unhealthy"}, val: int64(1)},
+	})
+	assert.Nil(t, err)
 }
 
 func TestControllerFleetReplicasCount(t *testing.T) {
 
-	registry := prometheus.NewRegistry()
-	_, err := RegisterPrometheusExporter(registry)
-	assert.Nil(t, err)
-
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
 	c.run(t)
@@ -108,16 +192,25 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 	c.fleetWatch.Delete(fd)
 
 	c.sync()
-	report()
 
-	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(fleetReplicasCountExpected), "agones_fleets_replicas_count"))
+	reader.ReadAndExport(exporter)
+	err := verifyMetricData(exporter, "fleets_replicas_count", []expectedMetricData{
+		{labels: []string{"fleet-deleted", "allocated"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "desired"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "ready"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "total"}, val: int64(0)},
+		{labels: []string{"fleet-test", "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", "desired"}, val: int64(5)},
+		{labels: []string{"fleet-test", "ready"}, val: int64(1)},
+		{labels: []string{"fleet-test", "total"}, val: int64(8)},
+	})
+	assert.Nil(t, err)
 }
 
 func TestControllerFleetAutoScalerState(t *testing.T) {
-	registry := prometheus.NewRegistry()
-	_, err := RegisterPrometheusExporter(registry)
-	assert.Nil(t, err)
-
+	resetMetrics()
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
 	c := newFakeController()
 	defer c.close()
 	c.run(t)
@@ -145,22 +238,53 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 	c.fasWatch.Delete(fasDeleted)
 
 	c.sync()
-	report()
 
-	assert.Nil(t, testutil.GatherAndCompare(registry, strings.NewReader(fasStateExpected),
-		"agones_fleet_autoscalers_able_to_scale", "agones_fleet_autoscalers_buffer_limits", "agones_fleet_autoscalers_buffer_size",
-		"agones_fleet_autoscalers_current_replicas_count", "agones_fleet_autoscalers_desired_replicas_count", "agones_fleet_autoscalers_limited"))
-
+	reader.ReadAndExport(exporter)
+	err := verifyMetricData(exporter, "fleet_autoscalers_able_to_scale", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch"}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "fleet_autoscalers_buffer_limits", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch", "max"}, val: int64(50)},
+		{labels: []string{"first-fleet", "name-switch", "min"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", "max"}, val: int64(50)},
+		{labels: []string{"second-fleet", "name-switch", "min"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", "max"}, val: int64(150)},
+		{labels: []string{"deleted-fleet", "deleted", "min"}, val: int64(15)},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "fleet_autoscalers_buffer_size", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch", "count"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", "count"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", "percentage"}, val: int64(50)},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "fleet_autoscalers_current_replicas_count", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch"}, val: int64(20)},
+		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "fleet_autoscalers_desired_replicas_count", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "fleet_autoscalers_limited", []expectedMetricData{
+		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch"}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+	})
+	assert.Nil(t, err)
 }
 
 func TestControllerGameServersNodeState(t *testing.T) {
-	registry := prometheus.NewRegistry()
-	_, err := RegisterPrometheusExporter(registry)
-	assert.Nil(t, err)
-
+	resetMetrics()
 	c := newFakeController()
 	defer c.close()
-
 	c.nodeWatch.Add(nodeWithName("node1"))
 	c.nodeWatch.Add(nodeWithName("node2"))
 	c.nodeWatch.Add(nodeWithName("node3"))
@@ -168,11 +292,24 @@ func TestControllerGameServersNodeState(t *testing.T) {
 	c.gsWatch.Add(gameServerWithNode("node2"))
 	c.gsWatch.Add(gameServerWithNode("node2"))
 
+	c.run(t)
 	c.sync()
-	c.collect()
-	report()
 
-	if err := testutil.GatherAndCompare(registry, strings.NewReader(nodeCountExpected), "agones_nodes_count", "agones_gameservers_node_count"); err != nil {
-		t.Fatal(err)
-	}
+	exporter := &metricExporter{}
+	reader := metricexport.NewReader()
+	reader.ReadAndExport(exporter)
+	err := verifyMetricData(exporter, "gameservers_node_count", []expectedMetricData{
+		{labels: []string{}, val: &metricdata.Distribution{
+			Count:                 3,
+			Sum:                   3,
+			SumOfSquaredDeviation: 2,
+			BucketOptions:         &metricdata.BucketOptions{Bounds: []float64{0.00001, 1.00001, 2.00001, 3.00001, 4.00001, 5.00001, 6.00001, 7.00001, 8.00001, 9.00001, 10.00001, 11.00001, 12.00001, 13.00001, 14.00001, 15.00001, 16.00001, 32.00001, 40.00001, 50.00001, 60.00001, 70.00001, 80.00001, 90.00001, 100.00001, 110.00001, 120.00001}},
+			Buckets:               []metricdata.Bucket{{Count: 1}, {Count: 1}, {Count: 1}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}, {Count: 0}}}},
+	})
+	assert.Nil(t, err)
+	err = verifyMetricData(exporter, "nodes_count", []expectedMetricData{
+		{labels: []string{"true"}, val: int64(1)},
+		{labels: []string{"false"}, val: int64(2)},
+	})
+	assert.Nil(t, err)
 }

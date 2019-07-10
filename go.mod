@@ -4,15 +4,16 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.34.0 // indirect
+	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.8.0
 	fortio.org/fortio v1.3.1
-	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.1
 	github.com/aws/aws-sdk-go v1.16.20 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/spec v0.19.0
 	github.com/golang/groupcache v0.0.0-20171101203131-84a468cf14b4 // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.1
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c // indirect
 	github.com/google/uuid v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
@@ -34,14 +35,13 @@ require (
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.3.0
-	go.opencensus.io v0.18.0
-	golang.org/x/net v0.0.0-20190311183353-d8887717615a
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
+	go.opencensus.io v0.22.0
+	golang.org/x/net v0.0.0-20190501004415-9ce7a6920f09
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
 	google.golang.org/api v0.0.0-20190117000611-43037ff31f69 // indirect
-	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c
-	google.golang.org/grpc v1.17.0
+	google.golang.org/genproto v0.0.0-20190425155659-357c62f0e4bb
+	google.golang.org/grpc v1.20.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0-20170531160350-a96e63847dc3
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20181126191744-95336914c664

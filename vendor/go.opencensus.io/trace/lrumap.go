@@ -1,4 +1,4 @@
-// Copyright 2018, OpenCensus Authors
+// Copyright 2019, OpenCensus Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal // import "go.opencensus.io/stats/internal"
+package trace
 
-const (
-	MaxNameLength = 255
+import (
+	"github.com/hashicorp/golang-lru/simplelru"
 )
 
-func IsPrintable(str string) bool {
-	for _, r := range str {
-		if !(r >= ' ' && r <= '~') {
-			return false
-		}
+type lruMap struct {
+	simpleLruMap *simplelru.LRU
+	droppedCount int
+}
+
+func newLruMap(size int) *lruMap {
+	lm := &lruMap{}
+	lm.simpleLruMap, _ = simplelru.NewLRU(size, nil)
+	return lm
+}
+
+func (lm *lruMap) add(key, value interface{}) {
+	evicted := lm.simpleLruMap.Add(key, value)
+	if evicted {
+		lm.droppedCount++
 	}
-	return true
 }

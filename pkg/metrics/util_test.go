@@ -66,14 +66,6 @@ func (c *fakeController) close() {
 	}
 }
 
-// hacky: unregistering views force view collections
-// so to not have to wait for the reporting period to hit we can
-// unregister and register again
-func report() {
-	unRegisterViews()
-	registerViews()
-}
-
 func (c *fakeController) run(t *testing.T) {
 	go func() {
 		err := c.Controller.Run(1, c.stop)
@@ -83,7 +75,7 @@ func (c *fakeController) run(t *testing.T) {
 }
 
 func (c *fakeController) sync() {
-	cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced)
+	cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
 }
 
 type fakeController struct {
@@ -187,107 +179,3 @@ func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1alpha1.Flee
 		},
 	}
 }
-
-var gsCountExpected = `# HELP agones_gameservers_count The number of gameservers
-# TYPE agones_gameservers_count gauge
-agones_gameservers_count{fleet_name="test-fleet",type="Ready"} 0
-agones_gameservers_count{fleet_name="test-fleet",type="Shutdown"} 1
-agones_gameservers_count{fleet_name="none",type="PortAllocation"} 2
-`
-
-var gsTotalExpected = `# HELP agones_gameservers_total The total of gameservers
-# TYPE agones_gameservers_total counter
-agones_gameservers_total{fleet_name="test",type="Creating"} 16
-agones_gameservers_total{fleet_name="test",type="Scheduled"} 15
-agones_gameservers_total{fleet_name="test",type="Starting"} 10
-agones_gameservers_total{fleet_name="test",type="Unhealthy"} 1
-agones_gameservers_total{fleet_name="none",type="Creating"} 19
-agones_gameservers_total{fleet_name="none",type="Scheduled"} 18
-agones_gameservers_total{fleet_name="none",type="Starting"} 16
-agones_gameservers_total{fleet_name="none",type="Unhealthy"} 1
-`
-
-var fleetReplicasCountExpected = `# HELP agones_fleets_replicas_count The number of replicas per fleet
-# TYPE agones_fleets_replicas_count gauge
-agones_fleets_replicas_count{name="fleet-deleted",type="allocated"} 0
-agones_fleets_replicas_count{name="fleet-deleted",type="desired"} 0
-agones_fleets_replicas_count{name="fleet-deleted",type="ready"} 0
-agones_fleets_replicas_count{name="fleet-deleted",type="total"} 0
-agones_fleets_replicas_count{name="fleet-test",type="allocated"} 2
-agones_fleets_replicas_count{name="fleet-test",type="desired"} 5
-agones_fleets_replicas_count{name="fleet-test",type="ready"} 1
-agones_fleets_replicas_count{name="fleet-test",type="total"} 8
-`
-
-var fasStateExpected = `# HELP agones_fleet_autoscalers_able_to_scale The fleet autoscaler can access the fleet to scale
-# TYPE agones_fleet_autoscalers_able_to_scale gauge
-agones_fleet_autoscalers_able_to_scale{fleet_name="first-fleet",name="name-switch"} 0
-agones_fleet_autoscalers_able_to_scale{fleet_name="second-fleet",name="name-switch"} 1
-agones_fleet_autoscalers_able_to_scale{fleet_name="deleted-fleet",name="deleted"} 0
-# HELP agones_fleet_autoscalers_buffer_limits The limits of buffer based fleet autoscalers
-# TYPE agones_fleet_autoscalers_buffer_limits gauge
-agones_fleet_autoscalers_buffer_limits{fleet_name="first-fleet",name="name-switch",type="max"} 50
-agones_fleet_autoscalers_buffer_limits{fleet_name="first-fleet",name="name-switch",type="min"} 10
-agones_fleet_autoscalers_buffer_limits{fleet_name="second-fleet",name="name-switch",type="max"} 50
-agones_fleet_autoscalers_buffer_limits{fleet_name="second-fleet",name="name-switch",type="min"} 10
-agones_fleet_autoscalers_buffer_limits{fleet_name="deleted-fleet",name="deleted",type="max"} 150
-agones_fleet_autoscalers_buffer_limits{fleet_name="deleted-fleet",name="deleted",type="min"} 15
-# HELP agones_fleet_autoscalers_buffer_size The buffer size of fleet autoscalers
-# TYPE agones_fleet_autoscalers_buffer_size gauge
-agones_fleet_autoscalers_buffer_size{fleet_name="first-fleet",name="name-switch",type="count"} 10
-agones_fleet_autoscalers_buffer_size{fleet_name="second-fleet",name="name-switch",type="count"} 10
-agones_fleet_autoscalers_buffer_size{fleet_name="deleted-fleet",name="deleted",type="percentage"} 50
-# HELP agones_fleet_autoscalers_current_replicas_count The current replicas count as seen by autoscalers
-# TYPE agones_fleet_autoscalers_current_replicas_count gauge
-agones_fleet_autoscalers_current_replicas_count{fleet_name="first-fleet",name="name-switch"} 0
-agones_fleet_autoscalers_current_replicas_count{fleet_name="second-fleet",name="name-switch"} 20
-agones_fleet_autoscalers_current_replicas_count{fleet_name="deleted-fleet",name="deleted"} 0
-# HELP agones_fleet_autoscalers_desired_replicas_count The desired replicas count as seen by autoscalers
-# TYPE agones_fleet_autoscalers_desired_replicas_count gauge
-agones_fleet_autoscalers_desired_replicas_count{fleet_name="first-fleet",name="name-switch"} 0
-agones_fleet_autoscalers_desired_replicas_count{fleet_name="second-fleet",name="name-switch"} 10
-agones_fleet_autoscalers_desired_replicas_count{fleet_name="deleted-fleet",name="deleted"} 0
-# HELP agones_fleet_autoscalers_limited The fleet autoscaler is capped
-# TYPE agones_fleet_autoscalers_limited gauge
-agones_fleet_autoscalers_limited{fleet_name="first-fleet",name="name-switch"} 0
-agones_fleet_autoscalers_limited{fleet_name="second-fleet",name="name-switch"} 1
-agones_fleet_autoscalers_limited{fleet_name="deleted-fleet",name="deleted"} 0
-`
-
-var nodeCountExpected = `# HELP agones_gameservers_node_count The count of gameservers per node in the cluster
-# TYPE agones_gameservers_node_count histogram
-agones_gameservers_node_count_bucket{le="1e-05"} 1
-agones_gameservers_node_count_bucket{le="1.00001"} 2
-agones_gameservers_node_count_bucket{le="2.00001"} 3
-agones_gameservers_node_count_bucket{le="3.00001"} 3
-agones_gameservers_node_count_bucket{le="4.00001"} 3
-agones_gameservers_node_count_bucket{le="5.00001"} 3
-agones_gameservers_node_count_bucket{le="6.00001"} 3
-agones_gameservers_node_count_bucket{le="7.00001"} 3
-agones_gameservers_node_count_bucket{le="8.00001"} 3
-agones_gameservers_node_count_bucket{le="9.00001"} 3
-agones_gameservers_node_count_bucket{le="10.00001"} 3
-agones_gameservers_node_count_bucket{le="11.00001"} 3
-agones_gameservers_node_count_bucket{le="12.00001"} 3
-agones_gameservers_node_count_bucket{le="13.00001"} 3
-agones_gameservers_node_count_bucket{le="14.00001"} 3
-agones_gameservers_node_count_bucket{le="15.00001"} 3
-agones_gameservers_node_count_bucket{le="16.00001"} 3
-agones_gameservers_node_count_bucket{le="32.00001"} 3
-agones_gameservers_node_count_bucket{le="40.00001"} 3
-agones_gameservers_node_count_bucket{le="50.00001"} 3
-agones_gameservers_node_count_bucket{le="60.00001"} 3
-agones_gameservers_node_count_bucket{le="70.00001"} 3
-agones_gameservers_node_count_bucket{le="80.00001"} 3
-agones_gameservers_node_count_bucket{le="90.00001"} 3
-agones_gameservers_node_count_bucket{le="100.00001"} 3
-agones_gameservers_node_count_bucket{le="110.00001"} 3
-agones_gameservers_node_count_bucket{le="120.00001"} 3
-agones_gameservers_node_count_bucket{le="+Inf"} 3
-agones_gameservers_node_count_sum 3
-agones_gameservers_node_count_count 3
-# HELP agones_nodes_count The count of nodes in the cluster
-# TYPE agones_nodes_count gauge
-agones_nodes_count{empty="false"} 2
-agones_nodes_count{empty="true"} 1
-`

@@ -330,7 +330,6 @@ func (c *Controller) collectNodeCounts() {
 	for _, node := range nodes {
 		stats.Record(context.Background(), gsPerNodesCountStats.M(int64(gsPerNodes[node.Name])))
 	}
-
 }
 
 func removeSystemNodes(nodes []*corev1.Node) []*corev1.Node {

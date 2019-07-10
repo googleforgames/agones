@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"time"
 
+	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	prom "github.com/prometheus/client_golang/prometheus"
-	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 )
 
