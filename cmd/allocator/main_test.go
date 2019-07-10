@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"github.com/stretchr/testify/assert"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
@@ -40,17 +40,17 @@ func TestAllocateHandler(t *testing.T) {
 	}
 
 	fakeAgones.AddReactor("create", "gameserverallocations", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-		return true, &v1alpha1.GameServerAllocation{
+		return true, &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: "default",
 			},
-			Status: v1alpha1.GameServerAllocationStatus{
-				State: v1alpha1.GameServerAllocationContention,
+			Status: allocationv1.GameServerAllocationStatus{
+				State: allocationv1.GameServerAllocationContention,
 			},
 		}, nil
 	})
 
-	gsa := &v1alpha1.GameServerAllocation{}
+	gsa := &allocationv1.GameServerAllocation{}
 	body, _ := json.Marshal(gsa)
 	buf := bytes.NewBuffer(body)
 	req, err := http.NewRequest(http.MethodPost, "/", buf)
@@ -61,12 +61,12 @@ func TestAllocateHandler(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.allocateHandler(rec, req)
 
-	ret := &v1alpha1.GameServerAllocation{}
+	ret := &allocationv1.GameServerAllocation{}
 	assert.Equal(t, rec.Code, 200)
 	assert.Equal(t, "application/json", rec.Header()["Content-Type"][0])
 	err = json.Unmarshal(rec.Body.Bytes(), ret)
 	assert.NoError(t, err)
-	assert.Equal(t, v1alpha1.GameServerAllocationContention, ret.Status.State)
+	assert.Equal(t, allocationv1.GameServerAllocationContention, ret.Status.State)
 }
 
 func TestAllocateHandlerReturnsError(t *testing.T) {
@@ -81,7 +81,7 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 		return true, nil, k8serror.NewBadRequest("error")
 	})
 
-	gsa := &v1alpha1.GameServerAllocation{}
+	gsa := &allocationv1.GameServerAllocation{}
 	body, _ := json.Marshal(gsa)
 	buf := bytes.NewBuffer(body)
 	req, err := http.NewRequest(http.MethodPost, "/", buf)

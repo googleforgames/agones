@@ -27,7 +27,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
@@ -58,8 +58,8 @@ func TestControllerAllocationHandler(t *testing.T) {
 	t.Run("successful allocation", func(t *testing.T) {
 		f, _, gsList := defaultFixtures(3)
 
-		gsa := &v1alpha1.GameServerAllocation{
-			Spec: v1alpha1.GameServerAllocationSpec{
+		gsa := &allocationv1.GameServerAllocation{
+			Spec: allocationv1.GameServerAllocationSpec{
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}},
 			}}
 
@@ -86,7 +86,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		test := func(gsa *v1alpha1.GameServerAllocation, expectedState v1alpha1.GameServerAllocationState) {
+		test := func(gsa *allocationv1.GameServerAllocation, expectedState allocationv1.GameServerAllocationState) {
 			buf := bytes.NewBuffer(nil)
 			err := json.NewEncoder(buf).Encode(gsa)
 			assert.NoError(t, err)
@@ -96,7 +96,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 			rec := httptest.NewRecorder()
 			err = c.allocationHandler(rec, r, "default")
 			assert.NoError(t, err)
-			ret := &v1alpha1.GameServerAllocation{}
+			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
 			assert.NoError(t, err)
 
@@ -104,10 +104,10 @@ func TestControllerAllocationHandler(t *testing.T) {
 			assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
 		}
 
-		test(gsa.DeepCopy(), v1alpha1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), v1alpha1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), v1alpha1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), v1alpha1.GameServerAllocationUnAllocated)
+		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsa.DeepCopy(), allocationv1.GameServerAllocationUnAllocated)
 	})
 
 	t.Run("method not allowed", func(t *testing.T) {
@@ -124,8 +124,8 @@ func TestControllerAllocationHandler(t *testing.T) {
 
 	t.Run("invalid gameserverallocation", func(t *testing.T) {
 		c, _ := newFakeController()
-		gsa := &v1alpha1.GameServerAllocation{
-			Spec: v1alpha1.GameServerAllocationSpec{
+		gsa := &allocationv1.GameServerAllocation{
+			Spec: allocationv1.GameServerAllocationSpec{
 				Scheduling: "wrong",
 			}}
 		buf := bytes.NewBuffer(nil)
@@ -156,7 +156,7 @@ func TestControllerAllocate(t *testing.T) {
 	n := metav1.Now()
 	l := map[string]string{"mode": "deathmatch"}
 	a := map[string]string{"map": "searide"}
-	fam := v1alpha1.MetaPatch{Labels: l, Annotations: a}
+	fam := allocationv1.MetaPatch{Labels: l, Annotations: a}
 
 	gsList[3].ObjectMeta.DeletionTimestamp = &n
 
@@ -188,8 +188,8 @@ func TestControllerAllocate(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	gsa := v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
-		Spec: v1alpha1.GameServerAllocationSpec{
+	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
+		Spec: allocationv1.GameServerAllocationSpec{
 			Required:  metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}},
 			MetaPatch: fam,
 		}}
@@ -232,7 +232,7 @@ func TestControllerAllocate(t *testing.T) {
 func TestControllerAllocatePriority(t *testing.T) {
 	t.Parallel()
 
-	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, gas *v1alpha1.GameServerAllocation)) {
+	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation)) {
 		f, _, gsList := defaultFixtures(4)
 		c, m := newFakeController()
 
@@ -265,8 +265,8 @@ func TestControllerAllocatePriority(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		gas := &v1alpha1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: defaultNs},
-			Spec: v1alpha1.GameServerAllocationSpec{
+		gas := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: defaultNs},
+			Spec: allocationv1.GameServerAllocationSpec{
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}},
 			}}
 		gas.ApplyDefaults()
@@ -276,7 +276,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 		})
 	}
 
-	run(t, "packed", func(t *testing.T, c *Controller, gas *v1alpha1.GameServerAllocation) {
+	run(t, "packed", func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation) {
 		// priority should be node1, then node2
 		gs1, err := c.allocate(gas)
 		assert.NoError(t, err)
@@ -302,7 +302,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 		assert.Equal(t, err, ErrNoGameServerReady)
 	})
 
-	run(t, "distributed", func(t *testing.T, c *Controller, gas *v1alpha1.GameServerAllocation) {
+	run(t, "distributed", func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation) {
 		// make a copy, to avoid the race check
 		gas = gas.DeepCopy()
 		gas.Spec.Scheduling = apis.Distributed
@@ -361,11 +361,11 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: defaultNs,
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
+			Spec: allocationv1.GameServerAllocationSpec{
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}},
 			}}
 		gsa.ApplyDefaults()
@@ -417,11 +417,11 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: defaultNs,
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
+			Spec: allocationv1.GameServerAllocationSpec{
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: "thereisnofleet"}},
 			}}
 		gsa.ApplyDefaults()
@@ -447,7 +447,7 @@ func TestAllocationApiResource(t *testing.T) {
 
 	client := ts.Client()
 
-	resp, err := client.Get(ts.URL + "/apis/" + v1alpha1.SchemeGroupVersion.String())
+	resp, err := client.Get(ts.URL + "/apis/" + allocationv1.SchemeGroupVersion.String())
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, err.Error())
 	}
@@ -548,13 +548,13 @@ func TestControllerRunCacheSync(t *testing.T) {
 func TestGetRandomlySelectedGS(t *testing.T) {
 	c, _ := newFakeController()
 	c.topNGameServerCount = 5
-	gsa := &v1alpha1.GameServerAllocation{
+	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: defaultNs,
 			Name:      "allocation",
 		},
-		Status: v1alpha1.GameServerAllocationStatus{
-			State: v1alpha1.GameServerAllocationUnAllocated,
+		Status: allocationv1.GameServerAllocationStatus{
+			State: allocationv1.GameServerAllocationUnAllocated,
 		},
 	}
 
@@ -589,7 +589,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		}
 		r := response{
 			request: request{
-				gsa:      &v1alpha1.GameServerAllocation{},
+				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
 			},
 			gs: gs1,
@@ -628,7 +628,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		}
 		r = response{
 			request: request{
-				gsa:      &v1alpha1.GameServerAllocation{},
+				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
 			},
 			gs: gs2,
@@ -663,7 +663,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 
 		r := response{
 			request: request{
-				gsa:      &v1alpha1.GameServerAllocation{},
+				gsa:      &allocationv1.GameServerAllocation{},
 				response: make(chan response),
 			},
 			gs: gs1,
@@ -812,14 +812,14 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
 				ClusterName: "multicluster",
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
-				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 					PolicySelector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -834,7 +834,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		ret, err := executeAllocation(gsa, c)
 		assert.NoError(t, err)
 		assert.Equal(t, gsa.Spec.Required, ret.Spec.Required)
-		expectedState := v1alpha1.GameServerAllocationAllocated
+		expectedState := allocationv1.GameServerAllocationAllocated
 		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
 	})
 
@@ -858,14 +858,14 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		})
 		assert.NoError(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
 				ClusterName: "multicluster",
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
-				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 					PolicySelector: metav1.LabelSelector{
 						MatchLabels: map[string]string{
@@ -892,7 +892,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Mock server
 		expectedGSAName := "mocked"
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serverResponse := v1alpha1.GameServerAllocation{
+			serverResponse := allocationv1.GameServerAllocation{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: expectedGSAName,
 				},
@@ -946,14 +946,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
 				ClusterName: "localcluster",
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
-				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
@@ -1020,14 +1020,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
 				ClusterName: "localcluster",
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
-				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
@@ -1058,7 +1058,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Mock healthyServer
 		expectedGSAName := "mocked"
 		healthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serverResponse := v1alpha1.GameServerAllocation{
+			serverResponse := allocationv1.GameServerAllocation{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: expectedGSAName,
 				},
@@ -1107,14 +1107,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		err = c.counter.Run(0, stop)
 		assert.Nil(t, err)
 
-		gsa := &v1alpha1.GameServerAllocation{
+		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace:   defaultNs,
 				Name:        "alloc1",
 				ClusterName: "localcluster",
 			},
-			Spec: v1alpha1.GameServerAllocationSpec{
-				MultiClusterSetting: v1alpha1.MultiClusterSetting{
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
 				Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetName}},
@@ -1202,7 +1202,7 @@ func TestCreateRestClientError(t *testing.T) {
 	})
 }
 
-func executeAllocation(gsa *v1alpha1.GameServerAllocation, c *Controller) (*v1alpha1.GameServerAllocation, error) {
+func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*allocationv1.GameServerAllocation, error) {
 	r, err := createRequest(gsa)
 	if err != nil {
 		return nil, err
@@ -1212,7 +1212,7 @@ func executeAllocation(gsa *v1alpha1.GameServerAllocation, c *Controller) (*v1al
 		return nil, err
 	}
 
-	ret := &v1alpha1.GameServerAllocation{}
+	ret := &allocationv1.GameServerAllocation{}
 	err = json.Unmarshal(rec.Body.Bytes(), ret)
 	return ret, err
 }
@@ -1233,7 +1233,7 @@ func addReactorForGameServer(m *agtesting.Mocks) string {
 	return f.ObjectMeta.Name
 }
 
-func createRequest(gsa *v1alpha1.GameServerAllocation) (*http.Request, error) {
+func createRequest(gsa *allocationv1.GameServerAllocation) (*http.Request, error) {
 	buf := bytes.NewBuffer(nil)
 	if err := json.NewEncoder(buf).Encode(gsa); err != nil {
 		return nil, err
