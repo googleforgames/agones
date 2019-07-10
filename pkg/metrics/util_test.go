@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	autoscalingv1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
@@ -153,25 +153,25 @@ func fleet(fleetName string, total, allocated, ready, desired int32) *v1alpha1.F
 	}
 }
 
-func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1alpha1.FleetAutoscaler {
-	return &autoscalingv1alpha1.FleetAutoscaler{
+func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1.FleetAutoscaler {
+	return &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fasName,
 			Namespace: "default",
 			UID:       uuid.NewUUID(),
 		},
-		Spec: autoscalingv1alpha1.FleetAutoscalerSpec{
+		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: fleetName,
-			Policy: autoscalingv1alpha1.FleetAutoscalerPolicy{
-				Type: autoscalingv1alpha1.BufferPolicyType,
-				Buffer: &autoscalingv1alpha1.BufferPolicy{
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
 					MaxReplicas: 30,
 					MinReplicas: 10,
 					BufferSize:  intstr.FromInt(11),
 				},
 			},
 		},
-		Status: autoscalingv1alpha1.FleetAutoscalerStatus{
+		Status: autoscalingv1.FleetAutoscalerStatus{
 			AbleToScale:     true,
 			ScalingLimited:  false,
 			CurrentReplicas: 10,

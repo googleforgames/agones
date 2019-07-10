@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	autoscalingv1alpha1 "agones.dev/agones/pkg/apis/autoscaling/v1alpha1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -76,7 +76,7 @@ func NewController(
 
 	fleets := agonesInformerFactory.Stable().V1alpha1().Fleets()
 	fInformer := fleets.Informer()
-	fas := agonesInformerFactory.Autoscaling().V1alpha1().FleetAutoscalers()
+	fas := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
@@ -119,7 +119,7 @@ func NewController(
 
 func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 
-	fas, ok := new.(*autoscalingv1alpha1.FleetAutoscaler)
+	fas, ok := new.(*autoscalingv1.FleetAutoscaler)
 	if !ok {
 		return
 	}
@@ -127,7 +127,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 	// we looking for fleet name changes if that happens we need to reset
 	// metrics for the old fas.
 	if old != nil {
-		if oldFas, ok := old.(*autoscalingv1alpha1.FleetAutoscaler); ok &&
+		if oldFas, ok := old.(*autoscalingv1.FleetAutoscaler); ok &&
 			oldFas.Spec.FleetName != fas.Spec.FleetName {
 			c.recordFleetAutoScalerDeletion(old)
 		}
@@ -184,7 +184,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
 }
 
 func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
-	fas, ok := obj.(*autoscalingv1alpha1.FleetAutoscaler)
+	fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
 	if !ok {
 		return
 	}

@@ -34,6 +34,7 @@ Table of Contents
         * [make build-images](#make-build-images)
         * [make build-sdks](#make-build-sdks)
         * [make build-sdk-cpp](#make-build-sdk-cpp)
+        * [make run-sdk-conformance-tests](#make-run-sdk-conformance-tests)
         * [make test](#make-test)
         * [make push](#make-push)
         * [make install](#make-install)
@@ -51,7 +52,7 @@ Table of Contents
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
         * [make gen-crd-client](#make-gen-crd-client)
-        * [make gen-gameservers-sdk-grpc](#make-gen-gameservers-sdk-grpc)
+        * [make gen-sdk-grpc](#make-gen-sdk-grpc)
      * [Build Image Targets](#build-image-targets)
         * [make clean-config](#make-clean-config)
         * [make clean-build-image](#make-clean-build-image)
@@ -416,6 +417,10 @@ Build all the sdks required for Agones
 #### `make build-sdk-cpp`
 Build the cpp sdk static and dynamic libraries (linux libraries only)
 
+#### `make run-sdk-conformance-tests`
+Run SDK conformance test.
+Run SDK server (sidecar) in test mode (which would record all GRPC requests) versus all SDK test clients which should generate those requests. All methods are verified.
+
 #### `make test`
 Run the linter and tests
 
@@ -514,7 +519,7 @@ Generate the `/install/yaml/install.yaml` from the Helm template
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
 
-#### `make gen-gameservers-sdk-grpc`
+#### `make gen-sdk-grpc`
 Generate the SDK gRPC server and client code
 
 ### Build Image Targets

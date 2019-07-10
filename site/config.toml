@@ -90,6 +90,9 @@ release_branch = "release-0.11.0"
 # the main version. Never is rc.
 release_version = "0.11.0"
 
+# example tag
+example_image_tag = "gcr.io/agones-images/udp-server:0.11"
+
 # User interface configuration
 [params.ui]
 # Enable to show the side bar menu in its compact state.

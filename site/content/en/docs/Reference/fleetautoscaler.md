@@ -9,6 +9,7 @@ weight: 30
 A full `FleetAutoscaler` specification is available below and in the 
 {{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1alpha1"
 kind: FleetAutoscaler
@@ -23,9 +24,27 @@ spec:
       minReplicas: 10
       maxReplicas: 20
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-example
+spec:
+  fleetName: fleet-example
+  policy:
+    type: Buffer
+    buffer:
+      bufferSize: 5
+      minReplicas: 10
+      maxReplicas: 20
+```
+{{% /feature %}}
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1alpha1"
 kind: FleetAutoscaler
@@ -41,11 +60,31 @@ spec:
       path: "/scale"
       caBundle: "<base64 encoded string>"
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+metadata:
+  name: fleet-autoscaler-example
+spec:
+  fleetName: fleet-example
+  policy:
+    type: Webhook
+    webhook:
+      name: "fleet-autoscaler-webhook"
+      namespace: "default"
+      path: "/scale"
+      caBundle: "<base64 encoded string>"
+```
+{{% /feature %}}
 
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
 we can define a new resource using the kind `FleetAutoscaler` with the custom group `autoscaling.agones.dev` 
-and API version `v1alpha1`.
+and API version 
+{{< feature expiryVersion="0.12.0" >}}`v1alpha1`{{< /feature >}}
+{{< feature publishVersion="0.12.0" >}}`v1`{{< /feature >}}.
 
 The `spec` field is the actual `FleetAutoscaler` specification and it is composed as follows:
 
@@ -85,6 +124,7 @@ In order to define the path to your Webhook you can use either `URL` or `service
 
 The connection to this webhook endpoint should be defined in `FleetAutoscaler` using Webhook policy type.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```go
 // FleetAutoscaleReview is passed to the webhook with a populated Request value,
 // and then returned with a populated Response.
@@ -127,6 +167,51 @@ type FleetStatus struct {
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
 }
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```go
+// FleetAutoscaleReview is passed to the webhook with a populated Request value,
+// and then returned with a populated Response.
+type FleetAutoscaleReview struct {
+	Request  *FleetAutoscaleRequest  `json:"request"`
+	Response *FleetAutoscaleResponse `json:"response"`
+}
+
+type FleetAutoscaleRequest struct {
+	// UID is an identifier for the individual request/response. It allows us to distinguish instances of requests which are
+	// otherwise identical (parallel requests, requests when earlier requests did not modify etc)
+	// The UID is meant to track the round trip (request/response) between the Autoscaler and the WebHook, not the user request.
+	// It is suitable for correlating log entries between the webhook and apiserver, for either auditing or debugging.
+	UID types.UID `json:"uid""`
+	// Name is the name of the Fleet being scaled
+	Name string `json:"name"`
+	// Namespace is the namespace associated with the request (if any).
+	Namespace string `json:"namespace"`
+	// The Fleet's status values
+	Status v1.FleetStatus `json:"status"`
+}
+
+type FleetAutoscaleResponse struct {
+	// UID is an identifier for the individual request/response.
+	// This should be copied over from the corresponding FleetAutoscaleRequest.
+	UID types.UID `json:"uid"`
+	// Set to false if no scaling should occur to the Fleet
+	Scale bool `json:"scale"`
+	// The targeted replica count
+	Replicas int32 `json:"replicas"`
+}
+
+// FleetStatus is the status of a Fleet
+type FleetStatus struct {
+	// Replicas the total number of current GameServer replicas
+	Replicas int32 `json:"replicas"`
+	// ReadyReplicas are the number of Ready GameServer replicas
+	ReadyReplicas int32 `json:"readyReplicas"`
+	// AllocatedReplicas are the number of Allocated GameServer replicas
+	AllocatedReplicas int32 `json:"allocatedReplicas"`
+}
+```
+{{% /feature %}}
 
 For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching between them occurs depending on https presence in `URL` or by presence of `caBundle`.
 The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.

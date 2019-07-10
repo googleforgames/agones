@@ -33,7 +33,7 @@ const (
 // +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/extensions/v1beta1.Scale,result=k8s.io/api/extensions/v1beta1.Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// GameServerSet is the data structure a set of GameServers
+// GameServerSet is the data structure for a set of GameServers.
 // This matches philosophically with the relationship between
 // Depoyments and ReplicaSets
 type GameServerSet struct {
@@ -54,7 +54,7 @@ type GameServerSetList struct {
 	Items []GameServerSet `json:"items"`
 }
 
-// GameServerSetSpec the specification for
+// GameServerSetSpec the specification for GameServerSet
 type GameServerSetSpec struct {
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
@@ -93,7 +93,7 @@ func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusC
 	return causes, len(causes) == 0
 }
 
-// Validate validates when Create occur. Check the name szie
+// Validate validates when Create occur. Check the name size
 func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	causes := validateName(gsSet)
 

@@ -406,7 +406,7 @@ metadata:
     heritage: Tiller
 spec:
   group: autoscaling.agones.dev
-  version: v1alpha1
+  version: v1
   scope: Namespaced
   names:
     kind: FleetAutoscaler
@@ -1445,7 +1445,7 @@ webhooks:
         resources:
           - "fleetautoscalers"
         apiVersions:
-          - "v1alpha1"
+          - "v1"
         operations:
           - CREATE
           - UPDATE
