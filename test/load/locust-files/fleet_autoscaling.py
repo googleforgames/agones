@@ -31,7 +31,7 @@ class UserBehavior(TaskSet):
         initial_size = 1
         start_time = time.time()
         payload = {
-            "apiVersion": "stable.agones.dev/v1alpha1",
+            "apiVersion": "agones.dev/v1",
             "kind": "Fleet",
             "metadata": {
                 "generateName": "fleet-simple-udp",
@@ -70,7 +70,7 @@ class UserBehavior(TaskSet):
         }
         headers = {'content-type': 'application/json'}
         response = self.client.post(
-            "/apis/stable.agones.dev/v1alpha1/namespaces/default/fleets",
+            "/apis/agones.dev/v1/namespaces/default/fleets",
             data=json.dumps(payload),
             headers=headers)
         response_json = response.json()
@@ -91,7 +91,7 @@ class UserBehavior(TaskSet):
         resource_version = self.getResourceVersion(selfLink)
         start_time = time.time()
         payload = {
-            "apiVersion": "stable.agones.dev/v1alpha1",
+            "apiVersion": "agones.dev/v1",
             "kind": "Fleet",
             "metadata": {
                 "name": str(name),
@@ -145,7 +145,7 @@ class UserBehavior(TaskSet):
         resource_version = self.getResourceVersion(selfLink)
         start_time = time.time()
         payload = {
-            "apiVersion": "stable.agones.dev/v1alpha1",
+            "apiVersion": "agones.dev/v1",
             "kind": "Fleet",
             "metadata": {
                 "name": str(name),

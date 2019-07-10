@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +45,7 @@ var waitForDeletion = &metav1.DeleteOptions{
 func TestAutoscalerBasicFunctions(t *testing.T) {
 	t.Parallel()
 
-	stable := framework.AgonesClient.StableV1alpha1()
+	stable := framework.AgonesClient.AgonesV1()
 	fleets := stable.Fleets(defaultNs)
 	flt, err := fleets.Create(defaultFleet())
 	if assert.Nil(t, err) {
@@ -84,7 +84,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// do an allocation and watch the fleet scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
@@ -120,7 +120,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	gp := int64(1)
 	err = stable.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
@@ -133,7 +133,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 func TestAutoscalerStressCreate(t *testing.T) {
 	t.Parallel()
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
 	flt, err := fleets.Create(defaultFleet())
 	if assert.Nil(t, err) {
@@ -221,7 +221,7 @@ func patchFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler, bufferSize intstr.
 }
 
 // defaultFleetAutoscaler returns a default fleet autoscaler configuration for a given fleet
-func defaultFleetAutoscaler(f *stablev1alpha1.Fleet) *autoscalingv1.FleetAutoscaler {
+func defaultFleetAutoscaler(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: defaultNs},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
@@ -260,7 +260,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating webhook service, aborting TestAutoscalerWebhook")
 	}
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
 	flt := defaultFleet()
 	initialReplicasCount := int32(1)
@@ -292,11 +292,11 @@ func TestAutoscalerWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
@@ -474,7 +474,7 @@ func TestTlsWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating service, aborting TestTlsWebhook")
 	}
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
 	flt := defaultFleet()
 	initialReplicasCount := int32(1)
@@ -508,11 +508,11 @@ func TestTlsWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 }

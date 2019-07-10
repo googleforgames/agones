@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +36,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
@@ -60,7 +60,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
+	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test"}, Spec: newSingleContainerSpec()}
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
@@ -83,35 +83,35 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 		updated bool
 	}
 	fixtures := map[string]struct {
-		state    v1alpha1.GameServerState
+		state    agonesv1.GameServerState
 		expected expected
 	}{
 		"started": {
-			state: v1alpha1.GameServerStateStarting,
+			state: agonesv1.GameServerStateStarting,
 			expected: expected{
 				updated: true,
 			},
 		},
 		"shutdown": {
-			state: v1alpha1.GameServerStateShutdown,
+			state: agonesv1.GameServerStateShutdown,
 			expected: expected{
 				updated: false,
 			},
 		},
 		"unhealthy": {
-			state: v1alpha1.GameServerStateUnhealthy,
+			state: agonesv1.GameServerStateUnhealthy,
 			expected: expected{
 				updated: false,
 			},
 		},
 		"ready": {
-			state: v1alpha1.GameServerStateReady,
+			state: agonesv1.GameServerStateReady,
 			expected: expected{
 				updated: true,
 			},
 		},
 		"allocated": {
-			state: v1alpha1.GameServerStateAllocated,
+			state: agonesv1.GameServerStateAllocated,
 			expected: expected{
 				updated: true,
 			},
@@ -124,21 +124,21 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 			hc.recorder = m.FakeRecorder
 
-			gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
-				Status: v1alpha1.GameServerStatus{State: test.state}}
+			gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+				Status: agonesv1.GameServerStatus{State: test.state}}
 			gs.ApplyDefaults()
 
 			got := false
 			updated := false
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				got = true
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
-				gsObj := ua.GetObject().(*v1alpha1.GameServer)
-				assert.Equal(t, v1alpha1.GameServerStateUnhealthy, gsObj.Status.State)
+				gsObj := ua.GetObject().(*agonesv1.GameServer)
+				assert.Equal(t, agonesv1.GameServerStateUnhealthy, gsObj.Status.State)
 				return true, gsObj, nil
 			})
 
@@ -172,13 +172,13 @@ func TestHealthControllerRun(t *testing.T) {
 			updated <- true
 		}()
 		ua := action.(k8stesting.UpdateAction)
-		gsObj := ua.GetObject().(*v1alpha1.GameServer)
-		assert.Equal(t, v1alpha1.GameServerStateUnhealthy, gsObj.Status.State)
+		gsObj := ua.GetObject().(*agonesv1.GameServer)
+		assert.Equal(t, agonesv1.GameServerStateUnhealthy, gsObj.Status.State)
 		return true, gsObj, nil
 	})
 
-	gs := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady}}
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}}
 	gs.ApplyDefaults()
 	pod, err := gs.Pod()
 	assert.Nil(t, err)
@@ -208,7 +208,7 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(agonesv1.GameServerStateUnhealthy))
 
 	pod.Status.ContainerStatuses = nil
 	pod.Status.Conditions = []corev1.PodCondition{
@@ -227,7 +227,7 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(agonesv1.GameServerStateUnhealthy))
 
 	podWatch.Delete(pod.DeepCopy())
 	select {
@@ -236,5 +236,5 @@ func TestHealthControllerRun(t *testing.T) {
 		assert.FailNow(t, "timeout on GameServer update")
 	}
 
-	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(v1alpha1.GameServerStateUnhealthy))
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, string(agonesv1.GameServerStateUnhealthy))
 }

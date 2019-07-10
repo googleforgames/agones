@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
-	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -57,13 +57,13 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 
 	for _, usePatch := range fixtures {
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
-			alpha1 := framework.AgonesClient.StableV1alpha1()
+			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet()
 			flt.Spec.Replicas = 1
-			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			flt, err := client.Fleets(defaultNs).Create(flt)
 			if assert.Nil(t, err) {
-				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
@@ -82,23 +82,23 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 			gsa := framework.CreateAndApplyAllocation(t, flt)
 
-			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 1
 			})
 
-			flt, err = alpha1.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
+			flt, err = client.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
 			assert.Nil(t, err)
 
 			// Change ContainerPort to trigger creating a new GSSet
 			fltCopy := flt.DeepCopy()
 			fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
-			flt, err = alpha1.Fleets(defaultNs).Update(fltCopy)
+			flt, err = client.Fleets(defaultNs).Update(fltCopy)
 			assert.Nil(t, err)
 
 			// Wait for one more GSSet to be created and ReadyReplicas created in new GSS
 			err = wait.PollImmediate(1*time.Second, 15*time.Second, func() (bool, error) {
-				selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
-				list, err := framework.AgonesClient.StableV1alpha1().GameServerSets(defaultNs).List(
+				selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
+				list, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
 					metav1.ListOptions{LabelSelector: selector.String()})
 				if err != nil {
 					return false, err
@@ -127,12 +127,12 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 
 			// delete the allocated GameServer
 			gp := int64(1)
-			err = alpha1.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+			err = client.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 			assert.Nil(t, err)
 
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 0
 			})
 		})
@@ -151,7 +151,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 	for _, usePatch := range fixtures {
 		for _, maxSurgeParam := range maxSurge {
 			t.Run(fmt.Sprintf("Use fleet Patch %t %s", usePatch, maxSurgeParam), func(t *testing.T) {
-				alpha1 := framework.AgonesClient.StableV1alpha1()
+				client := framework.AgonesClient.AgonesV1()
 
 				flt := defaultFleet()
 				flt.ApplyDefaults()
@@ -160,9 +160,9 @@ func TestFleetRollingUpdate(t *testing.T) {
 				flt.Spec.Strategy.RollingUpdate.MaxSurge = &rollingUpdatePercent
 				flt.Spec.Strategy.RollingUpdate.MaxUnavailable = &rollingUpdatePercent
 
-				flt, err := alpha1.Fleets(defaultNs).Create(flt)
+				flt, err := client.Fleets(defaultNs).Create(flt)
 				if assert.Nil(t, err) {
-					defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+					defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 				}
 
 				assert.Equal(t, int32(1), flt.Spec.Replicas)
@@ -180,19 +180,19 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
-				flt, err = alpha1.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
+				flt, err = client.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
 				assert.NoError(t, err)
 
 				// Change ContainerPort to trigger creating a new GSSet
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
-				flt, err = alpha1.Fleets(defaultNs).Update(fltCopy)
+				flt, err = client.Fleets(defaultNs).Update(fltCopy)
 				assert.NoError(t, err)
 
-				selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
+				selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 				// New GSS was created
 				err = wait.PollImmediate(1*time.Second, 30*time.Second, func() (bool, error) {
-					gssList, err := framework.AgonesClient.StableV1alpha1().GameServerSets(defaultNs).List(
+					gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
 						metav1.ListOptions{LabelSelector: selector.String()})
 					if err != nil {
 						return false, err
@@ -204,7 +204,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 				// parameters (creating no more than maxSurge, deleting maxUnavailable servers at a time)
 				// Wait for old GSSet to be deleted
 				err = wait.PollImmediate(1*time.Second, 5*time.Minute, func() (bool, error) {
-					list, err := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).List(
+					list, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).List(
 						metav1.ListOptions{LabelSelector: selector.String()})
 					if err != nil {
 						return false, err
@@ -221,7 +221,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 					if err != nil {
 						return false, err
 					}
-					gssList, err := framework.AgonesClient.StableV1alpha1().GameServerSets(defaultNs).List(
+					gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
 						metav1.ListOptions{LabelSelector: selector.String()})
 					if err != nil {
 						return false, err
@@ -241,7 +241,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-				framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+				framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 					return fleet.Status.AllocatedReplicas == 0
 				})
 			})
@@ -256,13 +256,13 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 
 	for _, usePatch := range fixtures {
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
-			alpha1 := framework.AgonesClient.StableV1alpha1()
+			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet()
 			flt.Spec.Replicas = 1
-			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			flt, err := client.Fleets(defaultNs).Create(flt)
 			if assert.Nil(t, err) {
-				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
@@ -283,13 +283,13 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 			// get an allocation
 			gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 				Spec: allocationv1.GameServerAllocationSpec{
-					Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 				}}
 
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(gsa)
 			assert.Nil(t, err)
 			assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 1
 			})
 
@@ -305,11 +305,11 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 
 			// delete the allocated GameServer
 			gp := int64(1)
-			err = alpha1.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+			err = client.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 			assert.Nil(t, err)
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-			framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 0
 			})
 		})
@@ -319,13 +319,13 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 func TestFleetUpdates(t *testing.T) {
 	t.Parallel()
 
-	fixtures := map[string]func() *v1alpha1.Fleet{
-		"recreate": func() *v1alpha1.Fleet {
+	fixtures := map[string]func() *agonesv1.Fleet{
+		"recreate": func() *agonesv1.Fleet {
 			flt := defaultFleet()
 			flt.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 			return flt
 		},
-		"rolling": func() *v1alpha1.Fleet {
+		"rolling": func() *agonesv1.Fleet {
 			flt := defaultFleet()
 			flt.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 			return flt
@@ -334,29 +334,29 @@ func TestFleetUpdates(t *testing.T) {
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
-			alpha1 := framework.AgonesClient.StableV1alpha1()
+			client := framework.AgonesClient.AgonesV1()
 
 			flt := v()
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
-			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			flt, err := client.Fleets(defaultNs).Create(flt)
 			if assert.Nil(t, err) {
-				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
-			err = framework.WaitForFleetGameServersCondition(flt, func(gs v1alpha1.GameServer) bool {
+			err = framework.WaitForFleetGameServersCondition(flt, func(gs agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == red
 			})
 			assert.Nil(t, err)
 
 			// if the generation has been updated, it's time to try again.
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-				flt, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+				flt, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 				if err != nil {
 					return false, err
 				}
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
-				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
+				_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Update(fltCopy)
 				if err != nil {
 					logrus.WithError(err).Warn("Could not update fleet, trying again")
 					return false, nil
@@ -366,7 +366,7 @@ func TestFleetUpdates(t *testing.T) {
 			})
 			assert.Nil(t, err)
 
-			err = framework.WaitForFleetGameServersCondition(flt, func(gs v1alpha1.GameServer) bool {
+			err = framework.WaitForFleetGameServersCondition(flt, func(gs agonesv1.GameServer) bool {
 				return gs.ObjectMeta.Annotations[key] == green
 			})
 			assert.Nil(t, err)
@@ -377,20 +377,20 @@ func TestFleetUpdates(t *testing.T) {
 func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	t.Parallel()
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 
 	gsSpec := defaultGameServer().Spec
 	oldPort := int32(7111)
-	gsSpec.Ports = []v1alpha1.GameServerPort{{
+	gsSpec.Ports = []agonesv1.GameServerPort{{
 		ContainerPort: oldPort,
 		Name:          "gameport",
-		PortPolicy:    v1alpha1.Dynamic,
+		PortPolicy:    agonesv1.Dynamic,
 		Protocol:      corev1.ProtocolUDP,
 	}}
 	flt := fleetWithGameServerSpec(gsSpec)
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	flt, err := client.Fleets(defaultNs).Create(flt)
 	assert.Nil(t, err, "could not create fleet")
-	defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 
 	assert.Equal(t, int32(replicasCount), flt.Spec.Replicas)
 
@@ -399,17 +399,17 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	// get an allocation
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		}}
 
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(gsa)
 	assert.Nil(t, err, "cloud not create gameserver allocation")
 	assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	flt, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.Name, metav1.GetOptions{})
+	flt, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Get(flt.Name, metav1.GetOptions{})
 	assert.Nil(t, err, "could not get fleet")
 
 	// Update the configuration of the gameservers of the fleet, i.e. container port.
@@ -418,10 +418,10 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	fltCopy := flt.DeepCopy()
 	fltCopy.Spec.Template.Spec.Ports[0].ContainerPort = newPort
 
-	_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
+	_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Update(fltCopy)
 	assert.Nil(t, err, "could not update fleet")
 
-	err = framework.WaitForFleetGameServersCondition(flt, func(gs v1alpha1.GameServer) bool {
+	err = framework.WaitForFleetGameServersCondition(flt, func(gs agonesv1.GameServer) bool {
 		containerPort := gs.Spec.Ports[0].ContainerPort
 		return (gs.Name == gsa.Status.GameServerName && containerPort == oldPort) ||
 			(gs.Name != gsa.Status.GameServerName && containerPort == newPort)
@@ -430,13 +430,13 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 }
 
 func TestReservedGameServerInFleet(t *testing.T) {
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet()
 	flt.Spec.Replicas = 3
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	flt, err := client.Fleets(defaultNs).Create(flt)
 	if assert.NoError(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
@@ -448,12 +448,12 @@ func TestReservedGameServerInFleet(t *testing.T) {
 
 	// mark one as reserved
 	gsCopy := gsList[0].DeepCopy()
-	gsCopy.Status.State = v1alpha1.GameServerStateReserved
-	_, err = alpha1.GameServers(defaultNs).Update(gsCopy)
+	gsCopy.Status.State = agonesv1.GameServerStateReserved
+	_, err = client.GameServers(defaultNs).Update(gsCopy)
 	assert.NoError(t, err)
 
 	// make sure counts are correct
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.ReadyReplicas == 2 && fleet.Status.ReservedReplicas == 1
 	})
 
@@ -462,7 +462,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	// one should be left behind
-	framework.WaitForFleetCondition(t, flt, func(fleet *v1alpha1.Fleet) bool {
+	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		result := fleet.Status.ReservedReplicas == 1
 		logrus.WithField("reserved", fleet.Status.ReservedReplicas).WithField("result", result).Info("waiting for 1 reserved replica")
 		return result
@@ -476,7 +476,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 		}
 		l := len(list)
 		logrus.WithField("len", l).WithField("state", list[0].Status.State).Info("waiting for 1 reserved gs")
-		return l == 1 && list[0].Status.State == v1alpha1.GameServerStateReserved, nil
+		return l == 1 && list[0].Status.State == agonesv1.GameServerStateReserved, nil
 	})
 	assert.NoError(t, err)
 }
@@ -485,7 +485,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 // validation. Gameserver Spec contained in a Fleet should be valid to create a fleet.
 func TestFleetGSSpecValidation(t *testing.T) {
 	t.Parallel()
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 
 	// check two Containers in Gameserver Spec Template validation
 	flt := defaultFleet()
@@ -497,7 +497,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 			},
 		}
 	flt.Spec.Template.Spec.Container = "testing"
-	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	_, err := client.Fleets(defaultNs).Create(flt)
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
@@ -506,12 +506,12 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
 
 	flt.Spec.Template.Spec.Container = ""
-	_, err = alpha1.Fleets(defaultNs).Create(flt)
+	_, err = client.Fleets(defaultNs).Create(flt)
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
-	CausesMessages := []string{v1alpha1.ErrContainerRequired, "Could not find a container named "}
+	CausesMessages := []string{agonesv1.ErrContainerRequired, "Could not find a container named "}
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
@@ -519,29 +519,29 @@ func TestFleetGSSpecValidation(t *testing.T) {
 
 	// use valid name for a container, one of two defined above
 	flt.Spec.Template.Spec.Container = containerName
-	_, err = alpha1.Fleets(defaultNs).Create(flt)
+	_, err = client.Fleets(defaultNs).Create(flt)
 	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
 	// check port configuration validation
 	fltPort := defaultFleet()
 
-	fltPort.Spec.Template.Spec.Ports = []v1alpha1.GameServerPort{{Name: "Dyn", HostPort: 5555, PortPolicy: v1alpha1.Dynamic, ContainerPort: 5555}}
+	fltPort.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{Name: "Dyn", HostPort: 5555, PortPolicy: agonesv1.Dynamic, ContainerPort: 5555}}
 
-	_, err = alpha1.Fleets(defaultNs).Create(fltPort)
+	_, err = client.Fleets(defaultNs).Create(fltPort)
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, v1alpha1.ErrHostPortDynamic, statusErr.Status().Details.Causes[0].Message)
+	assert.Equal(t, agonesv1.ErrHostPortDynamic, statusErr.Status().Details.Causes[0].Message)
 
-	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = v1alpha1.Static
+	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = agonesv1.Static
 	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0
 	fltPort.Spec.Template.Spec.Ports[0].ContainerPort = 5555
-	_, err = alpha1.Fleets(defaultNs).Create(fltPort)
+	_, err = client.Fleets(defaultNs).Create(fltPort)
 	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(fltPort.ObjectMeta.Name, nil) // nolint:errcheck
+		defer client.Fleets(defaultNs).Delete(fltPort.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 }
 
@@ -549,7 +549,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 // Fleet Name should have at most 63 chars.
 func TestFleetNameValidation(t *testing.T) {
 	t.Parallel()
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet()
 	nameLen := validation.LabelValueMaxLength + 1
@@ -558,7 +558,7 @@ func TestFleetNameValidation(t *testing.T) {
 		bytes[i] = 'f'
 	}
 	flt.Name = string(bytes)
-	_, err := alpha1.Fleets(defaultNs).Create(flt)
+	_, err := client.Fleets(defaultNs).Create(flt)
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
@@ -566,9 +566,9 @@ func TestFleetNameValidation(t *testing.T) {
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet()
 	goodFlt.Name = string(bytes[0 : nameLen-1])
-	goodFlt, err = alpha1.Fleets(defaultNs).Create(goodFlt)
+	goodFlt, err = client.Fleets(defaultNs).Create(goodFlt)
 	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
+		defer client.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 }
 
@@ -586,16 +586,16 @@ func assertSuccessOrUpdateConflict(t *testing.T, err error) {
 func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 	t.Parallel()
 
-	testAllocationRaceCondition := func(t *testing.T, fleet func() *v1alpha1.Fleet, deltaSleep time.Duration, delta func(t *testing.T, flt *v1alpha1.Fleet)) {
-		alpha1 := framework.AgonesClient.StableV1alpha1()
+	testAllocationRaceCondition := func(t *testing.T, fleet func() *agonesv1.Fleet, deltaSleep time.Duration, delta func(t *testing.T, flt *agonesv1.Fleet)) {
+		client := framework.AgonesClient.AgonesV1()
 
 		flt := fleet()
 		flt.ApplyDefaults()
 		size := int32(10)
 		flt.Spec.Replicas = size
-		flt, err := alpha1.Fleets(defaultNs).Create(flt)
+		flt, err := client.Fleets(defaultNs).Create(flt)
 		if assert.Nil(t, err) {
-			defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 		}
 
 		assert.Equal(t, size, flt.Spec.Replicas)
@@ -612,7 +612,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 				gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 					Spec: allocationv1.GameServerAllocationSpec{
-						Required: metav1.LabelSelector{MatchLabels: map[string]string{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+						Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 					}}
 				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(gsa)
 				if err != nil || gsa.Status.State == allocationv1.GameServerAllocationUnAllocated {
@@ -637,7 +637,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 		assert.NotEmpty(t, allocs)
 
 		for _, name := range allocs {
-			gsCheck, err := alpha1.GameServers(defaultNs).Get(name, metav1.GetOptions{})
+			gsCheck, err := client.GameServers(defaultNs).Get(name, metav1.GetOptions{})
 			assert.Nil(t, err)
 			assert.True(t, gsCheck.ObjectMeta.DeletionTimestamp.IsZero())
 		}
@@ -647,7 +647,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 		t.Parallel()
 
 		testAllocationRaceCondition(t, defaultFleet, time.Second,
-			func(t *testing.T, flt *v1alpha1.Fleet) {
+			func(t *testing.T, flt *agonesv1.Fleet) {
 				const targetScale = int32(0)
 				flt = scaleFleetPatch(t, flt, targetScale)
 				assert.Equal(t, targetScale, flt.Spec.Replicas)
@@ -657,7 +657,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 	t.Run("recreate update", func(t *testing.T) {
 		t.Parallel()
 
-		fleet := func() *v1alpha1.Fleet {
+		fleet := func() *agonesv1.Fleet {
 			flt := defaultFleet()
 			flt.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
@@ -666,12 +666,12 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 		}
 
 		testAllocationRaceCondition(t, fleet, time.Second,
-			func(t *testing.T, flt *v1alpha1.Fleet) {
-				flt, err := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+			func(t *testing.T, flt *agonesv1.Fleet) {
+				flt, err := framework.AgonesClient.AgonesV1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 				assert.Nil(t, err)
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
-				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
+				_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Update(fltCopy)
 				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
@@ -679,7 +679,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 	t.Run("rolling update", func(t *testing.T) {
 		t.Parallel()
 
-		fleet := func() *v1alpha1.Fleet {
+		fleet := func() *agonesv1.Fleet {
 			flt := defaultFleet()
 			flt.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 			flt.Spec.Template.ObjectMeta.Annotations = map[string]string{key: red}
@@ -688,12 +688,12 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 		}
 
 		testAllocationRaceCondition(t, fleet, time.Duration(0),
-			func(t *testing.T, flt *v1alpha1.Fleet) {
-				flt, err := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+			func(t *testing.T, flt *agonesv1.Fleet) {
+				flt, err := framework.AgonesClient.AgonesV1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 				assert.Nil(t, err)
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.ObjectMeta.Annotations[key] = green
-				_, err = framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Update(fltCopy)
+				_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Update(fltCopy)
 				assertSuccessOrUpdateConflict(t, err)
 			})
 	})
@@ -703,14 +703,14 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 // test scale subresource usage and its ability to change Fleet Replica size.
 // Both scaling up and down.
 func TestCreateFleetAndUpdateScaleSubresource(t *testing.T) {
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet()
 	const initialReplicas int32 = 1
 	flt.Spec.Replicas = initialReplicas
-	flt, err := alpha1.Fleets(defaultNs).Create(flt)
+	flt, err := client.Fleets(defaultNs).Create(flt)
 	if assert.Nil(t, err) {
-		defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 	assert.Equal(t, initialReplicas, flt.Spec.Replicas)
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
@@ -731,7 +731,7 @@ func TestCreateFleetAndUpdateScaleSubresource(t *testing.T) {
 func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 	t.Parallel()
 
-	alpha1 := framework.AgonesClient.StableV1alpha1()
+	client := framework.AgonesClient.AgonesV1()
 	fleetCount := 2
 	fleetSize := int32(10)
 	repeatCount := 3
@@ -750,7 +750,7 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 		deadline = time.Now().Add(45 * time.Minute)
 	}
 
-	var fleets []*v1alpha1.Fleet
+	var fleets []*agonesv1.Fleet
 
 	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize))
 	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize))
@@ -769,9 +769,9 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 			flt.Spec.Replicas = 0
 		}
 
-		flt, err := alpha1.Fleets(defaultNs).Create(flt)
+		flt, err := client.Fleets(defaultNs).Create(flt)
 		if assert.Nil(t, err) {
-			defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+			defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 		}
 		fleets = append(fleets, flt)
 	}
@@ -789,7 +789,7 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 
 	for fleetNumber, flt := range fleets {
 		wg.Add(1)
-		go func(fleetNumber int, flt *v1alpha1.Fleet) {
+		go func(fleetNumber int, flt *agonesv1.Fleet) {
 			defer wg.Done()
 			defer func() {
 				if err := recover(); err != nil {
@@ -820,15 +820,15 @@ func TestUpdateFleetScheduling(t *testing.T) {
 	t.Parallel()
 	t.Run("Updating Spec.Scheduling on fleet should be updated in GameServer",
 		func(t *testing.T) {
-			alpha1 := framework.AgonesClient.StableV1alpha1()
+			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet()
 			flt.Spec.Replicas = 1
 			flt.Spec.Scheduling = apis.Packed
-			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			flt, err := client.Fleets(defaultNs).Create(flt)
 
 			if assert.Nil(t, err) {
-				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
@@ -844,7 +844,7 @@ func TestUpdateFleetScheduling(t *testing.T) {
 			assert.Equal(t, apis.Distributed, flt.Spec.Scheduling)
 
 			err = framework.WaitForFleetGameServerListCondition(flt,
-				func(gsList []v1alpha1.GameServer) bool {
+				func(gsList []agonesv1.GameServer) bool {
 					return countFleetScheduling(gsList, apis.Distributed) == 1 &&
 						countFleetScheduling(gsList, apis.Packed) == 1
 				})
@@ -858,9 +858,9 @@ func TestFleetRecreateGameServers(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		f func(t *testing.T, list *v1alpha1.GameServerList)
+		f func(t *testing.T, list *agonesv1.GameServerList)
 	}{
-		"pod deletion": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+		"pod deletion": {f: func(t *testing.T, list *agonesv1.GameServerList) {
 			podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
 
 			for _, gs := range list.Items {
@@ -873,7 +873,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		}},
-		"gameserver shutdown": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+		"gameserver shutdown": {f: func(t *testing.T, list *agonesv1.GameServerList) {
 			for _, gs := range list.Items {
 				var reply string
 				reply, err := e2e.SendGameServerUDP(&gs, "EXIT")
@@ -884,7 +884,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 				assert.Equal(t, "ACK: EXIT\n", reply)
 			}
 		}},
-		"gameserver unhealthy": {f: func(t *testing.T, list *v1alpha1.GameServerList) {
+		"gameserver unhealthy": {f: func(t *testing.T, list *agonesv1.GameServerList) {
 			for _, gs := range list.Items {
 				var reply string
 				reply, err := e2e.SendGameServerUDP(&gs, "UNHEALTHY")
@@ -899,19 +899,19 @@ func TestFleetRecreateGameServers(t *testing.T) {
 
 	for k, v := range tests {
 		t.Run(k, func(t *testing.T) {
-			alpha1 := framework.AgonesClient.StableV1alpha1()
+			client := framework.AgonesClient.AgonesV1()
 			flt := defaultFleet()
 			// add more game servers, to hunt for race conditions
 			flt.Spec.Replicas = 10
 
-			flt, err := alpha1.Fleets(defaultNs).Create(flt)
+			flt, err := client.Fleets(defaultNs).Create(flt)
 			if assert.Nil(t, err) {
-				defer alpha1.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+				defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 			}
 
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-			list, err := listGameServers(flt, alpha1)
+			list, err := listGameServers(flt, client)
 			assert.NoError(t, err)
 			assert.Len(t, list.Items, int(flt.Spec.Replicas))
 
@@ -921,7 +921,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 
 			for i, gs := range list.Items {
 				err = wait.Poll(time.Second, 5*time.Minute, func() (done bool, err error) {
-					_, err = alpha1.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+					_, err = client.GameServers(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
 
 					if err != nil && k8serrors.IsNotFound(err) {
 						logrus.Infof("gameserver %d/%d not found", i+1, flt.Spec.Replicas)
@@ -938,13 +938,13 @@ func TestFleetRecreateGameServers(t *testing.T) {
 	}
 }
 
-func listGameServers(flt *v1alpha1.Fleet, getter stablev1alpha1.GameServersGetter) (*v1alpha1.GameServerList, error) {
-	selector := labels.SelectorFromSet(labels.Set{v1alpha1.FleetNameLabel: flt.ObjectMeta.Name})
+func listGameServers(flt *agonesv1.Fleet, getter typedagonesv1.GameServersGetter) (*agonesv1.GameServerList, error) {
+	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 	return getter.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
 }
 
 // Counts the number of gameservers with the specified scheduling strategy in a fleet
-func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling apis.SchedulingStrategy) int {
+func countFleetScheduling(gsList []agonesv1.GameServer, scheduling apis.SchedulingStrategy) int {
 	count := 0
 	for _, gs := range gsList {
 		if gs.Spec.Scheduling == scheduling {
@@ -956,9 +956,9 @@ func countFleetScheduling(gsList []v1alpha1.GameServer, scheduling apis.Scheduli
 
 // Patches fleet with scheduling and scale values
 func schedulingFleetPatch(t *testing.T,
-	f *v1alpha1.Fleet,
+	f *agonesv1.Fleet,
 	scheduling apis.SchedulingStrategy,
-	scale int32) *v1alpha1.Fleet {
+	scale int32) *agonesv1.Fleet {
 
 	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/scheduling", "value": "%s" },
 	                       { "op": "replace", "path": "/spec/replicas", "value": %d }]`,
@@ -971,7 +971,7 @@ func schedulingFleetPatch(t *testing.T,
 		Info("updating scheduling")
 
 	fltRes, err := framework.AgonesClient.
-		StableV1alpha1().
+		AgonesV1().
 		Fleets(defaultNs).
 		Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
 
@@ -979,7 +979,7 @@ func schedulingFleetPatch(t *testing.T,
 	return fltRes
 }
 
-func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Duration {
+func scaleAndWait(t *testing.T, flt *agonesv1.Fleet, fleetSize int32) time.Duration {
 	t0 := time.Now()
 	scaleFleetSubresource(t, flt, fleetSize)
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
@@ -988,32 +988,32 @@ func scaleAndWait(t *testing.T, flt *v1alpha1.Fleet, fleetSize int32) time.Durat
 
 // scaleFleetPatch creates a patch to apply to a Fleet.
 // Easier for testing, as it removes object generational issues.
-func scaleFleetPatch(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
+func scaleFleetPatch(t *testing.T, f *agonesv1.Fleet, scale int32) *agonesv1.Fleet {
 	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/replicas", "value": %d }]`, scale)
 	logrus.WithField("fleet", f.ObjectMeta.Name).WithField("scale", scale).WithField("patch", patch).Info("Scaling fleet")
 
-	fltRes, err := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs).Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	fltRes, err := framework.AgonesClient.AgonesV1().Fleets(defaultNs).Patch(f.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
 	assert.Nil(t, err)
 	return fltRes
 }
 
 // scaleFleetSubresource uses scale subresource to change Replicas size of the Fleet.
 // Returns the same f as in parameter, just to keep signature in sync with scaleFleetPatch
-func scaleFleetSubresource(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alpha1.Fleet {
+func scaleFleetSubresource(t *testing.T, f *agonesv1.Fleet, scale int32) *agonesv1.Fleet {
 	logrus.WithField("fleet", f.ObjectMeta.Name).WithField("scale", scale).Info("Scaling fleet")
 
 	err := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-		alpha1 := framework.AgonesClient.StableV1alpha1()
+		client := framework.AgonesClient.AgonesV1()
 		// GetScale returns current Scale object with resourceVersion which is opaque object
 		// and it will be used to create new Scale object
 		opts := metav1.GetOptions{}
-		sc, err := alpha1.Fleets(defaultNs).GetScale(f.ObjectMeta.Name, opts)
+		sc, err := client.Fleets(defaultNs).GetScale(f.ObjectMeta.Name, opts)
 		if err != nil {
 			return err
 		}
 
 		sc2 := newScale(f.Name, scale, sc.ObjectMeta.ResourceVersion)
-		_, err = alpha1.Fleets(defaultNs).UpdateScale(f.ObjectMeta.Name, sc2)
+		_, err = client.Fleets(defaultNs).UpdateScale(f.ObjectMeta.Name, sc2)
 		return err
 	})
 
@@ -1024,18 +1024,18 @@ func scaleFleetSubresource(t *testing.T, f *v1alpha1.Fleet, scale int32) *v1alph
 }
 
 // defaultFleet returns a default fleet configuration
-func defaultFleet() *v1alpha1.Fleet {
+func defaultFleet() *agonesv1.Fleet {
 	gs := defaultGameServer()
 	return fleetWithGameServerSpec(gs.Spec)
 }
 
 // fleetWithGameServerSpec returns a fleet with specified gameserver spec
-func fleetWithGameServerSpec(gsSpec v1alpha1.GameServerSpec) *v1alpha1.Fleet {
-	return &v1alpha1.Fleet{
+func fleetWithGameServerSpec(gsSpec agonesv1.GameServerSpec) *agonesv1.Fleet {
+	return &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-fleet-", Namespace: defaultNs},
-		Spec: v1alpha1.FleetSpec{
+		Spec: agonesv1.FleetSpec{
 			Replicas: replicasCount,
-			Template: v1alpha1.GameServerTemplateSpec{
+			Template: agonesv1.GameServerTemplateSpec{
 				Spec: gsSpec,
 			},
 		},

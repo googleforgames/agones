@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -64,7 +64,7 @@ func TestAllocator(t *testing.T) {
 			Namespace: defaultNs,
 		},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		}}
 
 	body, err := json.Marshal(gsa)
@@ -141,8 +141,8 @@ func creatRestClient(namespace, clientSecretName string) (*http.Client, error) {
 	}, nil
 }
 
-func createFleet() (*stablev1alpha1.Fleet, error) {
-	fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+func createFleet() (*agonesv1.Fleet, error) {
+	fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 	fleet := defaultFleet()
 	return fleets.Create(fleet)
 }

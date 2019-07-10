@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/sirupsen/logrus"
@@ -39,7 +39,7 @@ func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.GameServerState
+		state       agonesv1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 		recordings  []string
@@ -54,8 +54,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateRequestReady,
-				recordings: []string{"Normal " + string(v1alpha1.GameServerStateRequestReady)},
+				state:      agonesv1.GameServerStateRequestReady,
+				recordings: []string{"Normal " + string(agonesv1.GameServerStateRequestReady)},
 			},
 		},
 		"shutdown": {
@@ -63,8 +63,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateShutdown,
-				recordings: []string{"Normal " + string(v1alpha1.GameServerStateShutdown)},
+				state:      agonesv1.GameServerStateShutdown,
+				recordings: []string{"Normal " + string(agonesv1.GameServerStateShutdown)},
 			},
 		},
 		"unhealthy": {
@@ -73,8 +73,8 @@ func TestSidecarRun(t *testing.T) {
 				time.Sleep(2 * time.Second)
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateUnhealthy,
-				recordings: []string{"Warning " + string(v1alpha1.GameServerStateUnhealthy)},
+				state:      agonesv1.GameServerStateUnhealthy,
+				recordings: []string{"Warning " + string(agonesv1.GameServerStateUnhealthy)},
 			},
 		},
 		"label": {
@@ -109,8 +109,8 @@ func TestSidecarRun(t *testing.T) {
 				assert.NoError(t, err)
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateAllocated,
-				recordings: []string{string(v1alpha1.GameServerStateAllocated)},
+				state:      agonesv1.GameServerStateAllocated,
+				recordings: []string{string(agonesv1.GameServerStateAllocated)},
 			},
 		},
 		"reserved": {
@@ -119,8 +119,8 @@ func TestSidecarRun(t *testing.T) {
 				assert.NoError(t, err)
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateReserved,
-				recordings: []string{string(v1alpha1.GameServerStateReserved)},
+				state:      agonesv1.GameServerStateReserved,
+				recordings: []string{string(agonesv1.GameServerStateReserved)},
 			},
 		},
 	}
@@ -131,24 +131,24 @@ func TestSidecarRun(t *testing.T) {
 			done := make(chan bool)
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{
+				gs := agonesv1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test", Namespace: "default",
 					},
-					Spec: v1alpha1.GameServerSpec{
-						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+					Spec: agonesv1.GameServerSpec{
+						Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 					},
-					Status: v1alpha1.GameServerStatus{
-						State: v1alpha1.GameServerStateStarting,
+					Status: agonesv1.GameServerStatus{
+						State: agonesv1.GameServerStateStarting,
 					},
 				}
 				gs.ApplyDefaults()
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				defer close(done)
 				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*v1alpha1.GameServer)
+				gs := ua.GetObject().(*agonesv1.GameServer)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gs.Status.State)
@@ -206,13 +206,13 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.GameServerState
+		state       agonesv1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 	}
 
 	type scData struct {
-		gsState       v1alpha1.GameServerState
+		gsState       agonesv1.GameServerState
 		gsLabels      map[string]string
 		gsAnnotations map[string]string
 	}
@@ -225,10 +225,10 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 		"ready": {
 			key: string(updateState),
 			scData: scData{
-				gsState: v1alpha1.GameServerStateReady,
+				gsState: agonesv1.GameServerStateReady,
 			},
 			expected: expected{
-				state: v1alpha1.GameServerStateReady,
+				state: agonesv1.GameServerStateReady,
 			},
 		},
 		"label": {
@@ -264,17 +264,17 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			updated := false
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{
+				gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
 					UID:  "1234",
 					Name: sc.gameServerName, Namespace: sc.namespace,
 					Labels: map[string]string{}, Annotations: map[string]string{}},
 				}
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*v1alpha1.GameServer)
+				gs := ua.GetObject().(*agonesv1.GameServer)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gs.Status.State)
@@ -306,20 +306,20 @@ func TestSidecarUpdateState(t *testing.T) {
 	t.Parallel()
 
 	fixtures := map[string]struct {
-		f func(gs *v1alpha1.GameServer)
+		f func(gs *agonesv1.GameServer)
 	}{
 		"unhealthy": {
-			f: func(gs *v1alpha1.GameServer) {
-				gs.Status.State = v1alpha1.GameServerStateUnhealthy
+			f: func(gs *agonesv1.GameServer) {
+				gs.Status.State = agonesv1.GameServerStateUnhealthy
 			},
 		},
 		"shutdown": {
-			f: func(gs *v1alpha1.GameServer) {
-				gs.Status.State = v1alpha1.GameServerStateShutdown
+			f: func(gs *agonesv1.GameServer) {
+				gs.Status.State = agonesv1.GameServerStateShutdown
 			},
 		},
 		"deleted": {
-			f: func(gs *v1alpha1.GameServer) {
+			f: func(gs *agonesv1.GameServer) {
 				now := metav1.Now()
 				gs.ObjectMeta.DeletionTimestamp = &now
 			},
@@ -331,20 +331,20 @@ func TestSidecarUpdateState(t *testing.T) {
 			m := agtesting.NewMocks()
 			sc, err := defaultSidecar(m)
 			assert.Nil(t, err)
-			sc.gsState = v1alpha1.GameServerStateReady
+			sc.gsState = agonesv1.GameServerStateReady
 
 			updated := false
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{
+				gs := agonesv1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
-					Status:     v1alpha1.GameServerStatus{},
+					Status:     agonesv1.GameServerStatus{},
 				}
 
 				// apply mutation
 				v.f(&gs)
 
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
@@ -371,7 +371,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
-	sc.health = v1alpha1.Health{Disabled: false}
+	sc.health = agonesv1.Health{Disabled: false}
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
@@ -418,7 +418,7 @@ func TestSidecarHealthy(t *testing.T) {
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	// manually set the values
-	sc.health = v1alpha1.Health{FailureThreshold: 1}
+	sc.health = agonesv1.Health{FailureThreshold: 1}
 	sc.healthTimeout = 5 * time.Second
 	sc.initHealthLastUpdated(0 * time.Second)
 
@@ -524,14 +524,14 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	sc.clock = fc
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := v1alpha1.GameServer{
+		gs := agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
-			Spec: v1alpha1.GameServerSpec{
-				Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+			Spec: agonesv1.GameServerSpec{
+				Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 			},
 		}
 
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -565,19 +565,19 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 func TestSDKServerGetGameServer(t *testing.T) {
 	t.Parallel()
 
-	fixture := &v1alpha1.GameServer{
+	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 		},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady,
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
 		},
 	}
 
 	m := agtesting.NewMocks()
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*fixture}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 	})
 
 	stop := make(chan struct{})
@@ -631,7 +631,7 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
 
 	sc.sendGameServerUpdate(fixture)
 
@@ -666,8 +666,8 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
-		Spec: v1alpha1.GameServerSpec{},
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
+		Spec: agonesv1.GameServerSpec{},
 	}
 
 	// need to add it before it can be modified
@@ -689,26 +689,26 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
 
-	updated := make(chan v1alpha1.GameServerStatus, 1)
+	updated := make(chan agonesv1.GameServerStatus, 1)
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		n := metav1.NewTime(metav1.Now().Add(time.Second))
 
-		gs := v1alpha1.GameServer{
+		gs := agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test", Namespace: "default",
 			},
-			Status: v1alpha1.GameServerStatus{
-				State:         v1alpha1.GameServerStateReserved,
+			Status: agonesv1.GameServerStatus{
+				State:         agonesv1.GameServerStateReserved,
 				ReservedUntil: &n,
 			},
 		}
 		gs.ApplyDefaults()
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*v1alpha1.GameServer)
+		gs := ua.GetObject().(*agonesv1.GameServer)
 
 		updated <- gs.Status
 
@@ -732,7 +732,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 
 	select {
 	case status := <-updated:
-		assert.Equal(t, v1alpha1.GameServerStateRequestReady, status.State)
+		assert.Equal(t, agonesv1.GameServerStateRequestReady, status.State)
 		assert.Nil(t, status.ReservedUntil)
 	case <-time.After(5 * time.Second):
 		assert.Fail(t, "should have been an update")
@@ -746,23 +746,23 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
 
-	state := make(chan v1alpha1.GameServerStatus, 100)
+	state := make(chan agonesv1.GameServerStatus, 100)
 	defer close(state)
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := v1alpha1.GameServer{
+		gs := agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "test", Namespace: "default",
 			},
-			Spec: v1alpha1.GameServerSpec{Health: v1alpha1.Health{Disabled: true}},
+			Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
 		}
 		gs.ApplyDefaults()
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 
 	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 		ua := action.(k8stesting.UpdateAction)
-		gs := ua.GetObject().(*v1alpha1.GameServer)
+		gs := ua.GetObject().(*agonesv1.GameServer)
 
 		state <- gs.Status
 
@@ -785,7 +785,7 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 		wg.Done()
 	}()
 
-	assertStateChange := func(expected v1alpha1.GameServerState, timeout time.Duration, additional func(status v1alpha1.GameServerStatus)) {
+	assertStateChange := func(expected agonesv1.GameServerState, timeout time.Duration, additional func(status agonesv1.GameServerStatus)) {
 		select {
 		case current := <-state:
 			assert.Equal(t, expected, current.State)
@@ -794,34 +794,34 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 			assert.Fail(t, "should have gone to Reserved by now")
 		}
 	}
-	assertReservedUntilDuration := func(d time.Duration) func(status v1alpha1.GameServerStatus) {
-		return func(status v1alpha1.GameServerStatus) {
+	assertReservedUntilDuration := func(d time.Duration) func(status agonesv1.GameServerStatus) {
+		return func(status agonesv1.GameServerStatus) {
 			assert.Equal(t, time.Now().Add(d).Round(time.Second), status.ReservedUntil.Time.Round(time.Second))
 		}
 	}
-	assertReservedUntilNil := func(status v1alpha1.GameServerStatus) {
+	assertReservedUntilNil := func(status agonesv1.GameServerStatus) {
 		assert.Nil(t, status.ReservedUntil)
 	}
 
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	// Wait for the game server to go back to being Ready.
-	assertStateChange(v1alpha1.GameServerStateRequestReady, 4*time.Second, func(status v1alpha1.GameServerStatus) {
+	assertStateChange(agonesv1.GameServerStateRequestReady, 4*time.Second, func(status agonesv1.GameServerStatus) {
 		assert.Nil(t, status.ReservedUntil)
 	})
 
 	// Test that a 0 second input into Reserved, never will go back to Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 0})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test that a negative input into Reserved, is the same as a 0 input
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: -100})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test that the timer to move Reserved->Ready is reset when requesting another state.
@@ -829,31 +829,31 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 	// Test the return to a Ready state.
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Ready(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateRequestReady, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateRequestReady, 2*time.Second, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test Allocated resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Allocate(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateAllocated, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateAllocated, 2*time.Second, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	// Test Shutdown resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
+	assertStateChange(agonesv1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Shutdown(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateShutdown, 2*time.Second, assertReservedUntilNil)
+	assertStateChange(agonesv1.GameServerStateShutdown, 2*time.Second, assertReservedUntilNil)
 	assert.False(t, sc.reserveTimer.Stop())
 
 	close(stop)

@@ -17,7 +17,7 @@ package gameservers
 import (
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -42,23 +42,23 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	watch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
 
-	hasSynced := m.AgonesInformerFactory.Stable().V1alpha1().GameServers().Informer().HasSynced
+	hasSynced := m.AgonesInformerFactory.Agones().V1().GameServers().Informer().HasSynced
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	assert.Empty(t, pnc.Counts())
 
-	gs := &v1alpha1.GameServer{
+	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateStarting, NodeName: name1}}
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateStarting, NodeName: name1}}
 
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	assert.Empty(t, pnc.Counts())
 
-	gs.Status.State = v1alpha1.GameServerStateReady
+	gs.Status.State = agonesv1.GameServerStateReady
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
@@ -67,7 +67,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	assert.Equal(t, int64(1), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
-	gs.Status.State = v1alpha1.GameServerStateAllocated
+	gs.Status.State = agonesv1.GameServerStateAllocated
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
@@ -76,7 +76,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(1), counts[name1].Allocated)
 
-	gs.Status.State = v1alpha1.GameServerStateShutdown
+	gs.Status.State = agonesv1.GameServerStateShutdown
 	watch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
@@ -86,7 +86,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.ObjectMeta.Name = "gs2"
-	gs.Status.State = v1alpha1.GameServerStateReady
+	gs.Status.State = agonesv1.GameServerStateReady
 	gs.Status.NodeName = name2
 
 	watch.Add(gs.DeepCopy())
@@ -101,7 +101,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 
 	gs.ObjectMeta.Name = "gs3"
 	// not likely, but to test the flow
-	gs.Status.State = v1alpha1.GameServerStateAllocated
+	gs.Status.State = agonesv1.GameServerStateAllocated
 	gs.Status.NodeName = name2
 
 	watch.Add(gs.DeepCopy())
@@ -125,7 +125,7 @@ func TestPerNodeCounterNodeEvents(t *testing.T) {
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-	gsSynced := m.AgonesInformerFactory.Stable().V1alpha1().GameServers().Informer().HasSynced
+	gsSynced := m.AgonesInformerFactory.Agones().V1().GameServers().Informer().HasSynced
 	nodeSynced := m.KubeInformerFactory.Core().V1().Nodes().Informer().HasSynced
 
 	stop, cancel := agtesting.StartInformers(m)
@@ -133,10 +133,10 @@ func TestPerNodeCounterNodeEvents(t *testing.T) {
 
 	assert.Empty(t, pnc.Counts())
 
-	gs := &v1alpha1.GameServer{
+	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady, NodeName: name1}}
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady, NodeName: name1}}
 	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs, Name: name1}}
 
 	gsWatch.Add(gs.DeepCopy())
@@ -153,26 +153,26 @@ func TestPerNodeCounterRun(t *testing.T) {
 	t.Parallel()
 	pnc, m := newFakePerNodeCounter()
 
-	gs1 := &v1alpha1.GameServer{
+	gs1 := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady, NodeName: name1}}
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady, NodeName: name1}}
 
 	gs2 := gs1.DeepCopy()
 	gs2.ObjectMeta.Name = "gs2"
-	gs2.Status.State = v1alpha1.GameServerStateAllocated
+	gs2.Status.State = agonesv1.GameServerStateAllocated
 
 	gs3 := gs1.DeepCopy()
 	gs3.ObjectMeta.Name = "gs3"
-	gs3.Status.State = v1alpha1.GameServerStateStarting
+	gs3.Status.State = agonesv1.GameServerStateStarting
 	gs3.Status.NodeName = name2
 
 	gs4 := gs1.DeepCopy()
 	gs4.ObjectMeta.Name = "gs4"
-	gs4.Status.State = v1alpha1.GameServerStateAllocated
+	gs4.Status.State = agonesv1.GameServerStateAllocated
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*gs1, *gs2, *gs3, *gs4}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, *gs3, *gs4}}, nil
 	})
 
 	stop, cancel := agtesting.StartInformers(m)
