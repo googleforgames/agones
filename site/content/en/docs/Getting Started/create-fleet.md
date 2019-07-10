@@ -160,9 +160,9 @@ We can do allocation of a GameServer for usage through a `GameServerAllocation`,
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
 which demarcates that it has players on it, and should not be removed until `SDK.Shutdown()` is called, or it is manually deleted.
 
-It is worth noting that there is nothing specific that ties a `GameServerAllocation`. A `GameServerAllocation` uses
-a [lable selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to determine what
-group of `GameServers` it will attempt to allocate out of. That being said, a `Fleet` and `GameServerAllocation`
+It is worth noting that there is nothing specific that ties a `GameServerAllocation` to a fleet. 
+A `GameServerAllocation` uses a [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) 
+to determine what group of `GameServers` it will attempt to allocate out of. That being said, a `Fleet` and `GameServerAllocation`
 are often used in conjunction.
 
 {{< ghlink href="/examples/simple-udp/gameserverallocation.yaml" >}}This example{{< /ghlink >}} uses the label selector to specifically target the `simple-udp` fleet that we just created.
@@ -171,7 +171,7 @@ are often used in conjunction.
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
-For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}})
+For the full details of the YAML file head to the [GameServerAllocation Specification Guide]({{< ref "/docs/Reference/gameserverallocation.md" >}})
 
 You should get back a response that looks like the following:
 
@@ -240,7 +240,7 @@ We can do allocation of a GameServer for usage through a `FleetAllocation`, whic
 and also move it to the `Allocated` state.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md#fleet-allocation-specification" >}})
@@ -377,7 +377,7 @@ Since we've only got one allocation, we'll just grab the details of the IP and p
 only allocated `GameServer`:
 
 ```
-kubectl get $(kubectl get fleetallocation -o name) -o jsonpath='{.status.gameServer.status.ports[0].port}'
+kubectl get gameservers | grep Allocated | awk '{print $3":"$4 }'
 ```
 
 This should output your Game Server IP address and port. (eg `10.130.65.208:7936`)
@@ -409,7 +409,7 @@ Let's take this for a spin! Run `kubectl scale fleet simple-udp --replicas=5` to
 Let's also allocate ourselves a `GameServer`
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
 ```
 
 We should now have four `Ready` `GameServers` and one `Allocated`.
@@ -427,7 +427,9 @@ simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
 to run a new game server process, but to make this example simple, change `containerPort` from `7654`
-to `6000`. Save the file and exit.
+to `6000`.
+
+Run `kubectl edit fleet simple-udp`, and make the necessary changes, and then save and exit your editor. 
 
 This will start the deployment of a new set of `GameServers` running
 with a Container Port of `6000`.
@@ -436,14 +438,14 @@ with a Container Port of `6000`.
 
 Run `watch kubectl get gs`
 until you can see that there is
-one of `7654`, which is the `Allocated` `GameServer`, and four instances to `6000` which
+one with a containerPort of `7654`, which is the `Allocated` `GameServer`, and four instances with a containerPort of `6000` which
 is the new configuration.
 
 You have now deployed a new version of your game!
 
 ## Next Steps
 
-- Have a look at the [GameServerAllocation specification]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}), and see
+- Have a look at the [GameServerAllocation specification]({{< ref "/docs/Reference/gameserverallocation.md" >}}), and see
     how the extra functionality can enable smoke testing, server information communication, and more.
 - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
   See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).

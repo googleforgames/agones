@@ -46,6 +46,10 @@ Once a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
 for its public address and connection port will be populated.
 
+While Agones prefers that `Shutdown()` is run once a game has completed to delete the `GameServer` instance,
+if you want or need to move an `Allocated` `GameServer` back to `Ready` to be reused, you can call this SDK method again to do
+this.
+
 ### Health()
 This sends a single ping to designate that the Game Server is alive and
 healthy. Failure to send pings within the configured thresholds will result
@@ -98,7 +102,7 @@ This can be useful to track `GameServer > Status > State` changes, `metadata` ch
 
 In combination with this SDK, manipulating [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and
 [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) can also be a useful way to communicate information through to running game server processes from outside those processes.
-This is especially useful when combined with `GameServerAllocation` [applied metadata]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}).
+This is especially useful when combined with `GameServerAllocation` [applied metadata]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
 
 Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates)
 the returned object is limited to that configuration that was deemed useful. If there are
@@ -115,13 +119,13 @@ and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
 For those scenarios, this SDK functionality exists. 
 
-> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/fleet.md#gameserver-allocation-specification" >}}) is preferred in all other scenarios, 
+> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
 
 ## Writing your own SDK
 
-If there isn't a SDK for the language and platform you are looking for, you have several options:
+If there isn't an SDK for the language and platform you are looking for, you have several options:
 
 ### gRPC Client Generation
 
@@ -136,6 +140,33 @@ the [REST]({{< relref "rest.md" >}}) HTTP+JSON interface. This could be written 
 the {{< ghlink href="sdk.swagger.json" >}}Swagger/OpenAPI Spec{{< /ghlink >}}.
 
 Finally, if you build something that would be usable by the community, please submit a pull request!
+
+## SDK Conformance Test
+
+There is a tool `SDK server Conformance` checker which will run Local SDK server and record all requests your client is performing.
+
+In order to check that SDK is working properly you should write simple SDK test client which would use all methods of your SDK.
+
+Also to test that SDK cliet is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
+
+Complete list of endpoints which should be called by your test client is the following:
+```
+ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
+```
+
+In order to run this test SDK server locally use:
+```
+SECONDS=30 make run-sdk-conformance-local
+```
+
+Docker container would timeout in 30 seconds and give your the comparison of received requests and expected requests
+
+For instance you could run go sdk conformance test and see how the process goes: 
+```
+SDK_FOLDER=go make run-sdk-conformance-test
+```
+
+In order to add test client for your SDK, write `jstest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go/Dockerfile" >}}Golang SDK testing directory structure{{< /ghlink >}}.
 
 ## Building the Tools
 
