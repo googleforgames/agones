@@ -236,6 +236,7 @@ $ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/
 
 # allocate a gameserver from a fleet named 'simple-udp', with GameServerAllocation
 
+{{% feature expiryVersion="0.12.0" %}}
 $ curl -d '{"apiVersion":"allocation.agones.dev/v1alpha1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"stable.agones.dev/fleet":"simple-udp"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1alpha1/namespaces/default/gameserverallocations
 
 {
@@ -271,6 +272,44 @@ $ curl -d '{"apiVersion":"allocation.agones.dev/v1alpha1","kind":"GameServerAllo
         "nodeName": "gke-test-cluster-default-f11755a7-5km3"
     }
 }
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+$ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"stable.agones.dev/fleet":"simple-udp"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
+
+{
+    "kind": "GameServerAllocation",
+    "apiVersion": "allocation.agones.dev/v1",
+    "metadata": {
+        "name": "simple-udp-v6jwb-cmdcv",
+        "namespace": "default",
+        "creationTimestamp": "2019-07-03T17:19:47Z"
+    },
+    "spec": {
+        "multiClusterSetting": {
+            "policySelector": {}
+        },
+        "required": {
+            "matchLabels": {
+                "stable.agones.dev/fleet": "simple-udp"
+            }
+        },
+        "scheduling": "Packed",
+        "metadata": {}
+    },
+    "status": {
+        "state": "Allocated",
+        "gameServerName": "simple-udp-v6jwb-cmdcv",
+        "ports": [
+            {
+                "name": "default",
+                "port": 7445
+            }
+        ],
+        "address": "34.94.118.237",
+        "nodeName": "gke-test-cluster-default-f11755a7-5km3"
+    }
+}
+{{% /feature %}}
 
 {{% feature expiryVersion="0.12.0" %}}
 # allocate a gameserver from a fleet named 'simple-udp', with the deprecated FleetAllocation

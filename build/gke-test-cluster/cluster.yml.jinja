@@ -21,7 +21,7 @@ resources:
     cluster:
       name: {{ properties["cluster.name"] }}
       description: Test cluster for Agones
-      initialClusterVersion: "1.11"
+      initialClusterVersion: "1.12"
       nodePools:
         - name: "default"
           initialNodeCount: {{ properties["cluster.nodePool.initialNodeCount"] }}
@@ -70,11 +70,6 @@ resources:
               - key: "stable.agones.dev/agones-metrics"
                 value: "true"
                 effect: "NO_EXECUTE"
-      masterAuth:
-        username: admin
-        password: supersecretpassword
-      legacyAbac:
-        enabled: {{ properties["cluster.legacyAbac"] }}
 - name: game-server-firewall
   type: compute.beta.firewall
   properties:

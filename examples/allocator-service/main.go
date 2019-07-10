@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
@@ -29,7 +29,7 @@ type handler func(w http.ResponseWriter, r *http.Request)
 
 // The structure of the json response
 type result struct {
-	Status allocationv1alpha1.GameServerAllocationState `json:"status"`
+	Status allocationv1.GameServerAllocationState `json:"status"`
 }
 
 // Main will set up an http server and three endpoints
@@ -139,7 +139,7 @@ func checkReadyReplicas() int32 {
 }
 
 // Move a replica from ready to allocated and return the GameServerStatus
-func allocate() (allocationv1alpha1.GameServerAllocationState, error) {
+func allocate() (allocationv1.GameServerAllocationState, error) {
 	// Log the values used in the allocation
 	logger.WithField("namespace", namespace).Info("namespace for gsa")
 	logger.WithField("fleetname", fleetname).Info("fleetname for gsa")
@@ -151,15 +151,15 @@ func allocate() (allocationv1alpha1.GameServerAllocationState, error) {
 	// Log and return an error if there are no ready replicas
 	if readyReplicas < 1 {
 		logger.WithField("fleetname", fleetname).Info("Insufficient ready replicas, cannot create fleet allocation")
-		return allocationv1alpha1.GameServerAllocationUnAllocated, errors.New("insufficient ready replicas, cannot create fleet allocation")
+		return allocationv1.GameServerAllocationUnAllocated, errors.New("insufficient ready replicas, cannot create fleet allocation")
 	}
 
 	// Get a AllocationInterface for this namespace
-	allocationInterface := agonesClient.AllocationV1alpha1().GameServerAllocations(namespace)
+	allocationInterface := agonesClient.AllocationV1().GameServerAllocations(namespace)
 
 	// Define the allocation using the constants set earlier
-	gsa := &allocationv1alpha1.GameServerAllocation{
-		Spec: allocationv1alpha1.GameServerAllocationSpec{
+	gsa := &allocationv1.GameServerAllocation{
+		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetname}},
 		}}
 
@@ -168,7 +168,7 @@ func allocate() (allocationv1alpha1.GameServerAllocationState, error) {
 	if err != nil {
 		// Log and return the error if the call to Create fails
 		logger.WithError(err).Info("Failed to create allocation")
-		return allocationv1alpha1.GameServerAllocationUnAllocated, errors.New("failed to create allocation")
+		return allocationv1.GameServerAllocationUnAllocated, errors.New("failed to create allocation")
 	}
 
 	// Log the GameServer.Staus of the new allocation, then return those values
