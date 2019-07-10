@@ -24,9 +24,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1alpha1 "agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
-	stable "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -42,7 +42,7 @@ import (
 
 // special labels that can be put on pods to trigger automatic cleanup.
 const (
-	AutoCleanupLabelKey   = "stable.agones.dev/e2e-test-auto-cleanup"
+	AutoCleanupLabelKey   = "agones.dev/e2e-test-auto-cleanup"
 	AutoCleanupLabelValue = "true"
 )
 
@@ -81,7 +81,7 @@ func New(kubeconfig string) (*Framework, error) {
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
 func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *stable.GameServer) (*stable.GameServer, error) {
-	newGs, err := f.AgonesClient.StableV1alpha1().GameServers(ns).Create(gs)
+	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(gs)
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
 	}
@@ -110,7 +110,7 @@ func (f *Framework) WaitForGameServerState(gs *stable.GameServer, state stable.G
 
 	err := wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
 		var err error
-		readyGs, err = f.AgonesClient.StableV1alpha1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
+		readyGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
 		if err != nil {
 			logrus.WithError(err).Warn("error retrieving gameserver")
@@ -134,7 +134,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *stable.Fleet, condi
 	t.Helper()
 	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
-		fleet, err := f.AgonesClient.StableV1alpha1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -171,14 +171,14 @@ func (f *Framework) ListGameServersFromFleet(flt *stable.Fleet) ([]stable.GameSe
 	var results []stable.GameServer
 
 	opts := metav1.ListOptions{LabelSelector: labels.Set{stable.FleetNameLabel: flt.ObjectMeta.Name}.String()}
-	gsSetList, err := f.AgonesClient.StableV1alpha1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
+	gsSetList, err := f.AgonesClient.AgonesV1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
 	if err != nil {
 		return results, err
 	}
 
 	for _, gsSet := range gsSetList.Items {
 		opts := metav1.ListOptions{LabelSelector: labels.Set{stable.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
-		gsList, err := f.AgonesClient.StableV1alpha1().GameServers(flt.ObjectMeta.Namespace).List(opts)
+		gsList, err := f.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).List(opts)
 		if err != nil {
 			return results, err
 		}
@@ -241,7 +241,7 @@ func (f *Framework) NewStatsCollector(name string) *StatsCollector {
 func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Cleaning up now.")
 	defer logrus.Info("Finished cleanup.")
-	stable := f.AgonesClient.StableV1alpha1()
+	stable := f.AgonesClient.AgonesV1()
 	deleteOptions := &metav1.DeleteOptions{}
 	listOptions := metav1.ListOptions{}
 

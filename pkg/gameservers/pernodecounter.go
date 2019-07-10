@@ -17,9 +17,9 @@ package gameservers
 import (
 	"sync"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -36,7 +36,7 @@ import (
 type PerNodeCounter struct {
 	logger           *logrus.Entry
 	gameServerSynced cache.InformerSynced
-	gameServerLister listerv1alpha1.GameServerLister
+	gameServerLister listerv1.GameServerLister
 	countMutex       sync.RWMutex
 	counts           map[string]*NodeCount
 }
@@ -55,7 +55,7 @@ func NewPerNodeCounter(
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *PerNodeCounter {
 
-	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
+	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 	gsInformer := gameServers.Informer()
 
 	ac := &PerNodeCounter{
@@ -69,46 +69,46 @@ func NewPerNodeCounter(
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			gs := obj.(*v1alpha1.GameServer)
+			gs := obj.(*agonesv1.GameServer)
 
 			switch gs.Status.State {
-			case v1alpha1.GameServerStateReady:
+			case agonesv1.GameServerStateReady:
 				ac.inc(gs, 1, 0)
-			case v1alpha1.GameServerStateAllocated:
+			case agonesv1.GameServerStateAllocated:
 				ac.inc(gs, 0, 1)
 			}
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
-			oldGS := oldObj.(*v1alpha1.GameServer)
-			newGS := newObj.(*v1alpha1.GameServer)
+			oldGS := oldObj.(*agonesv1.GameServer)
+			newGS := newObj.(*agonesv1.GameServer)
 
 			var ready int64
 			var allocated int64
 
-			if oldGS.Status.State == v1alpha1.GameServerStateReady && newGS.Status.State != v1alpha1.GameServerStateReady {
+			if oldGS.Status.State == agonesv1.GameServerStateReady && newGS.Status.State != agonesv1.GameServerStateReady {
 				ready = -1
-			} else if newGS.Status.State == v1alpha1.GameServerStateReady && oldGS.Status.State != v1alpha1.GameServerStateReady {
+			} else if newGS.Status.State == agonesv1.GameServerStateReady && oldGS.Status.State != agonesv1.GameServerStateReady {
 				ready = 1
 			}
 
-			if oldGS.Status.State == v1alpha1.GameServerStateAllocated && newGS.Status.State != v1alpha1.GameServerStateAllocated {
+			if oldGS.Status.State == agonesv1.GameServerStateAllocated && newGS.Status.State != agonesv1.GameServerStateAllocated {
 				allocated = -1
-			} else if newGS.Status.State == v1alpha1.GameServerStateAllocated && oldGS.Status.State != v1alpha1.GameServerStateAllocated {
+			} else if newGS.Status.State == agonesv1.GameServerStateAllocated && oldGS.Status.State != agonesv1.GameServerStateAllocated {
 				allocated = 1
 			}
 
 			ac.inc(newGS, ready, allocated)
 		},
 		DeleteFunc: func(obj interface{}) {
-			gs, ok := obj.(*v1alpha1.GameServer)
+			gs, ok := obj.(*agonesv1.GameServer)
 			if !ok {
 				return
 			}
 
 			switch gs.Status.State {
-			case v1alpha1.GameServerStateReady:
+			case agonesv1.GameServerStateReady:
 				ac.inc(gs, -1, 0)
-			case v1alpha1.GameServerStateAllocated:
+			case agonesv1.GameServerStateAllocated:
 				ac.inc(gs, 0, -1)
 			}
 		},
@@ -157,9 +157,9 @@ func (pnc *PerNodeCounter) Run(_ int, stop <-chan struct{}) error {
 		}
 
 		switch gs.Status.State {
-		case v1alpha1.GameServerStateReady:
+		case agonesv1.GameServerStateReady:
 			counts[gs.Status.NodeName].Ready++
-		case v1alpha1.GameServerStateAllocated:
+		case agonesv1.GameServerStateAllocated:
 			counts[gs.Status.NodeName].Allocated++
 		}
 	}
@@ -183,7 +183,7 @@ func (pnc *PerNodeCounter) Counts() map[string]NodeCount {
 	return result
 }
 
-func (pnc *PerNodeCounter) inc(gs *v1alpha1.GameServer, ready, allocated int64) {
+func (pnc *PerNodeCounter) inc(gs *agonesv1.GameServer, ready, allocated int64) {
 	pnc.countMutex.Lock()
 	defer pnc.countMutex.Unlock()
 

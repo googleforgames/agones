@@ -23,7 +23,7 @@ import (
 	"sync"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
@@ -339,7 +339,7 @@ func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
 		return err
 	}
 
-	var gs v1alpha1.GameServer
+	var gs agonesv1.GameServer
 	// 4096 is the number of bytes the YAMLOrJSONDecoder goes looking
 	// into the file to determine if it's JSON or YAML
 	// (JSON == has whitespace followed by an open brace).

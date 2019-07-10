@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,15 +32,15 @@ import (
 func TestListGameServerSetsByFleetOwner(t *testing.T) {
 	t.Parallel()
 
-	f := &v1alpha1.Fleet{
+	f := &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fleet-1",
 			Namespace: "default",
 			UID:       "1234",
 		},
-		Spec: v1alpha1.FleetSpec{
+		Spec: agonesv1.FleetSpec{
 			Replicas: 5,
-			Template: v1alpha1.GameServerTemplateSpec{},
+			Template: agonesv1.GameServerTemplateSpec{},
 		},
 	}
 
@@ -57,10 +57,10 @@ func TestListGameServerSetsByFleetOwner(t *testing.T) {
 
 	m := agtesting.NewMocks()
 	m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerSetList{Items: []v1alpha1.GameServerSet{*gsSet1, *gsSet2, *gsSet3, *gsSet4}}, nil
+		return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet1, *gsSet2, *gsSet3, *gsSet4}}, nil
 	})
 
-	gameServerSets := m.AgonesInformerFactory.Stable().V1alpha1().GameServerSets()
+	gameServerSets := m.AgonesInformerFactory.Agones().V1().GameServerSets()
 	_, cancel := agtesting.StartInformers(m, gameServerSets.Informer().HasSynced)
 	defer cancel()
 
@@ -71,7 +71,7 @@ func TestListGameServerSetsByFleetOwner(t *testing.T) {
 	sort.SliceStable(list, func(i, j int) bool {
 		return list[i].ObjectMeta.Name < list[j].ObjectMeta.Name
 	})
-	assert.Equal(t, []*v1alpha1.GameServerSet{gsSet1, gsSet2}, list)
+	assert.Equal(t, []*agonesv1.GameServerSet{gsSet1, gsSet2}, list)
 }
 
 func TestListGameServersByFleetOwner(t *testing.T) {
@@ -81,7 +81,7 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 	gsSet := f.GameServerSet()
 	gsSet.ObjectMeta.Name = "gsSet1"
 
-	var gsList []v1alpha1.GameServer
+	var gsList []agonesv1.GameServer
 	for i := 1; i <= 3; i++ {
 		gs := gsSet.GameServer()
 		gs.ObjectMeta.Name = "gs" + strconv.Itoa(i)
@@ -91,10 +91,10 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 	m := agtesting.NewMocks()
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: gsList}, nil
+		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
-	informer := m.AgonesInformerFactory.Stable().V1alpha1()
+	informer := m.AgonesInformerFactory.Agones().V1()
 	_, cancel := agtesting.StartInformers(m,
 		informer.GameServers().Informer().HasSynced)
 	defer cancel()

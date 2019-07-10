@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/pkg/errors"
@@ -42,7 +42,7 @@ func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.GameServerState
+		state       agonesv1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 		recordings  []string
@@ -57,8 +57,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Ready(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateRequestReady,
-				recordings: []string{"Normal " + string(v1alpha1.GameServerStateRequestReady)},
+				state:      agonesv1.GameServerStateRequestReady,
+				recordings: []string{"Normal " + string(agonesv1.GameServerStateRequestReady)},
 			},
 		},
 		"shutdown": {
@@ -66,8 +66,8 @@ func TestSidecarRun(t *testing.T) {
 				sc.Shutdown(ctx, &sdk.Empty{}) // nolint: errcheck
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateShutdown,
-				recordings: []string{"Normal " + string(v1alpha1.GameServerStateShutdown)},
+				state:      agonesv1.GameServerStateShutdown,
+				recordings: []string{"Normal " + string(agonesv1.GameServerStateShutdown)},
 			},
 		},
 		"unhealthy": {
@@ -76,8 +76,8 @@ func TestSidecarRun(t *testing.T) {
 				time.Sleep(2 * time.Second)
 			},
 			expected: expected{
-				state:      v1alpha1.GameServerStateUnhealthy,
-				recordings: []string{"Warning " + string(v1alpha1.GameServerStateUnhealthy)},
+				state:      agonesv1.GameServerStateUnhealthy,
+				recordings: []string{"Warning " + string(agonesv1.GameServerStateUnhealthy)},
 			},
 		},
 		"label": {
@@ -112,7 +112,7 @@ func TestSidecarRun(t *testing.T) {
 				assert.NoError(t, err)
 			},
 			expected: expected{
-				state: v1alpha1.GameServerStateAllocated,
+				state: agonesv1.GameServerStateAllocated,
 			},
 		},
 	}
@@ -123,24 +123,24 @@ func TestSidecarRun(t *testing.T) {
 			done := make(chan bool)
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{
+				gs := agonesv1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{
 						Name: "test", Namespace: "default",
 					},
-					Spec: v1alpha1.GameServerSpec{
-						Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+					Spec: agonesv1.GameServerSpec{
+						Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 					},
-					Status: v1alpha1.GameServerStatus{
-						State: v1alpha1.GameServerStateStarting,
+					Status: agonesv1.GameServerStatus{
+						State: agonesv1.GameServerStateStarting,
 					},
 				}
 				gs.ApplyDefaults()
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				defer close(done)
 				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*v1alpha1.GameServer)
+				gs := ua.GetObject().(*agonesv1.GameServer)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gs.Status.State)
@@ -198,13 +198,13 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		state       v1alpha1.GameServerState
+		state       agonesv1.GameServerState
 		labels      map[string]string
 		annotations map[string]string
 	}
 
 	type scData struct {
-		gsState       v1alpha1.GameServerState
+		gsState       agonesv1.GameServerState
 		gsLabels      map[string]string
 		gsAnnotations map[string]string
 	}
@@ -217,10 +217,10 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 		"ready": {
 			key: string(updateState),
 			scData: scData{
-				gsState: v1alpha1.GameServerStateReady,
+				gsState: agonesv1.GameServerStateReady,
 			},
 			expected: expected{
-				state: v1alpha1.GameServerStateReady,
+				state: agonesv1.GameServerStateReady,
 			},
 		},
 		"label": {
@@ -256,17 +256,17 @@ func TestSDKServerSyncGameServer(t *testing.T) {
 			updated := false
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{
+				gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{
 					UID:  "1234",
 					Name: sc.gameServerName, Namespace: sc.namespace,
 					Labels: map[string]string{}, Annotations: map[string]string{}},
 				}
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
-				gs := ua.GetObject().(*v1alpha1.GameServer)
+				gs := ua.GetObject().(*agonesv1.GameServer)
 
 				if v.expected.state != "" {
 					assert.Equal(t, v.expected.state, gs.Status.State)
@@ -299,20 +299,20 @@ func TestSidecarUpdateState(t *testing.T) {
 	t.Parallel()
 
 	fixtures := map[string]struct {
-		f func(gs *v1alpha1.GameServer)
+		f func(gs *agonesv1.GameServer)
 	}{
 		"unhealthy": {
-			f: func(gs *v1alpha1.GameServer) {
-				gs.Status.State = v1alpha1.GameServerStateUnhealthy
+			f: func(gs *agonesv1.GameServer) {
+				gs.Status.State = agonesv1.GameServerStateUnhealthy
 			},
 		},
 		"shutdown": {
-			f: func(gs *v1alpha1.GameServer) {
-				gs.Status.State = v1alpha1.GameServerStateShutdown
+			f: func(gs *agonesv1.GameServer) {
+				gs.Status.State = agonesv1.GameServerStateShutdown
 			},
 		},
 		"deleted": {
-			f: func(gs *v1alpha1.GameServer) {
+			f: func(gs *agonesv1.GameServer) {
 				now := metav1.Now()
 				gs.ObjectMeta.DeletionTimestamp = &now
 			},
@@ -324,20 +324,20 @@ func TestSidecarUpdateState(t *testing.T) {
 			m := agtesting.NewMocks()
 			sc, err := defaultSidecar(m)
 			assert.Nil(t, err)
-			sc.gsState = v1alpha1.GameServerStateReady
+			sc.gsState = agonesv1.GameServerStateReady
 
 			updated := false
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				gs := v1alpha1.GameServer{
+				gs := agonesv1.GameServer{
 					ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
-					Status:     v1alpha1.GameServerStatus{},
+					Status:     agonesv1.GameServerStatus{},
 				}
 
 				// apply mutation
 				v.f(&gs)
 
-				return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+				return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 			})
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true
@@ -364,7 +364,7 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
-	sc.health = v1alpha1.Health{Disabled: false}
+	sc.health = agonesv1.Health{Disabled: false}
 	fc := clock.NewFakeClock(now)
 	sc.clock = fc
 
@@ -411,7 +411,7 @@ func TestSidecarHealthy(t *testing.T) {
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	// manually set the values
-	sc.health = v1alpha1.Health{FailureThreshold: 1}
+	sc.health = agonesv1.Health{FailureThreshold: 1}
 	sc.healthTimeout = 5 * time.Second
 	sc.initHealthLastUpdated(0 * time.Second)
 
@@ -517,14 +517,14 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 	sc.clock = fc
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs := v1alpha1.GameServer{
+		gs := agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{Name: sc.gameServerName, Namespace: sc.namespace},
-			Spec: v1alpha1.GameServerSpec{
-				Health: v1alpha1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
+			Spec: agonesv1.GameServerSpec{
+				Health: agonesv1.Health{Disabled: false, FailureThreshold: 1, PeriodSeconds: 1, InitialDelaySeconds: 0},
 			},
 		}
 
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -558,19 +558,19 @@ func TestSidecarHTTPHealthCheck(t *testing.T) {
 func TestSDKServerGetGameServer(t *testing.T) {
 	t.Parallel()
 
-	fixture := &v1alpha1.GameServer{
+	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 		},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady,
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
 		},
 	}
 
 	m := agtesting.NewMocks()
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*fixture}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 	})
 
 	stop := make(chan struct{})
@@ -624,7 +624,7 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
 
 	sc.sendGameServerUpdate(fixture)
 
@@ -659,8 +659,8 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
-		Spec: v1alpha1.GameServerSpec{},
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
+		Spec: agonesv1.GameServerSpec{},
 	}
 
 	// need to add it before it can be modified
@@ -681,20 +681,20 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 func TestSDKServerAllocate(t *testing.T) {
 	t.Parallel()
 
-	defaultGs := &v1alpha1.GameServer{
+	defaultGs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
 			Namespace: "default",
 		},
-		Status: v1alpha1.GameServerStatus{
-			State: v1alpha1.GameServerStateReady,
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
 		},
 	}
 
-	setup := func(t *testing.T, fixture *v1alpha1.GameServer) (agtesting.Mocks, *SDKServer, chan struct{}) {
+	setup := func(t *testing.T, fixture *agonesv1.GameServer) (agtesting.Mocks, *SDKServer, chan struct{}) {
 		m := agtesting.NewMocks()
 		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*fixture}}, nil
+			return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 		})
 		stop := make(chan struct{})
 		sc, err := defaultSidecar(m)
@@ -712,8 +712,8 @@ func TestSDKServerAllocate(t *testing.T) {
 		done := make(chan struct{}, 10)
 		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ua := action.(k8stesting.UpdateAction)
-			gs := ua.GetObject().(*v1alpha1.GameServer)
-			assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 
 			defer func() {
 				done <- struct{}{}
@@ -750,8 +750,8 @@ func TestSDKServerAllocate(t *testing.T) {
 				return true, nil, k8serrors.NewConflict(schema.ParseGroupResource(""), "gameservers", errors.New("contention"))
 			}
 
-			gs := ua.GetObject().(*v1alpha1.GameServer)
-			assert.Equal(t, v1alpha1.GameServerStateAllocated, gs.Status.State)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 			return true, gs, nil
 		})
 
@@ -803,7 +803,7 @@ func TestSDKServerAllocate(t *testing.T) {
 
 	t.Run("unhealthy gameserver", func(t *testing.T) {
 		gs := defaultGs.DeepCopy()
-		gs.Status.State = v1alpha1.GameServerStateUnhealthy
+		gs.Status.State = agonesv1.GameServerStateUnhealthy
 		_, sc, stop := setup(t, gs.DeepCopy())
 		defer close(stop)
 
@@ -813,7 +813,7 @@ func TestSDKServerAllocate(t *testing.T) {
 
 	t.Run("Shutdown gameserver", func(t *testing.T) {
 		gs := defaultGs.DeepCopy()
-		gs.Status.State = v1alpha1.GameServerStateShutdown
+		gs.Status.State = agonesv1.GameServerStateShutdown
 		_, sc, stop := setup(t, gs.DeepCopy())
 		defer close(stop)
 

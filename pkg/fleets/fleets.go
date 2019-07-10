@@ -17,8 +17,8 @@
 package fleets
 
 import (
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -26,13 +26,13 @@ import (
 
 // ListGameServerSetsByFleetOwner lists all the GameServerSets for a given
 // Fleet
-func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1alpha1.GameServerSetLister, f *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServerSet, error) {
-	list, err := gameServerSetLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetNameLabel: f.ObjectMeta.Name}))
+func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1.GameServerSetLister, f *agonesv1.Fleet) ([]*agonesv1.GameServerSet, error) {
+	list, err := gameServerSetLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: f.ObjectMeta.Name}))
 	if err != nil {
 		return list, errors.Wrapf(err, "error listing gameserversets for fleet %s", f.ObjectMeta.Name)
 	}
 
-	var result []*stablev1alpha1.GameServerSet
+	var result []*agonesv1.GameServerSet
 	for _, gsSet := range list {
 		if metav1.IsControlledBy(gsSet, f) {
 			result = append(result, gsSet)
@@ -44,10 +44,10 @@ func ListGameServerSetsByFleetOwner(gameServerSetLister listerv1alpha1.GameServe
 
 // ListGameServersByFleetOwner lists all GameServers that belong to a fleet through the
 // GameServer -> GameServerSet -> Fleet owner chain
-func ListGameServersByFleetOwner(gameServerLister listerv1alpha1.GameServerLister,
-	fleet *stablev1alpha1.Fleet) ([]*stablev1alpha1.GameServer, error) {
+func ListGameServersByFleetOwner(gameServerLister listerv1.GameServerLister,
+	fleet *agonesv1.Fleet) ([]*agonesv1.GameServer, error) {
 
-	list, err := gameServerLister.List(labels.SelectorFromSet(labels.Set{stablev1alpha1.FleetNameLabel: fleet.ObjectMeta.Name}))
+	list, err := gameServerLister.List(labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: fleet.ObjectMeta.Name}))
 	if err != nil {
 		return list, errors.Wrapf(err, "error listing gameservers for fleets %s", fleet.ObjectMeta.Name)
 	}

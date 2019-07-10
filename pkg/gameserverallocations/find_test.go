@@ -19,8 +19,8 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,20 +51,20 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 	})
 
 	fixtures := map[string]struct {
-		list []stablev1alpha1.GameServer
-		test func(*testing.T, []*stablev1alpha1.GameServer)
+		list []agonesv1.GameServer
+		test func(*testing.T, []*agonesv1.GameServer)
 	}{
 		"required": {
-			list: []stablev1alpha1.GameServer{
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: labels, DeletionTimestamp: &n}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateError}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: "does-not-apply", Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
+			list: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: labels, DeletionTimestamp: &n}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateError}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: "does-not-apply", Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
 			},
-			test: func(t *testing.T, list []*stablev1alpha1.GameServer) {
+			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 3)
 
 				gs, index, err := findGameServerForAllocation(gsa, list)
@@ -75,11 +75,11 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, "node1", gs.Status.NodeName)
 				assert.Equal(t, "gs1", gs.ObjectMeta.Name)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 				// mock that the first found game server is allocated
 				list = append(list[:index], list[index+1:]...)
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, list[0].Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, list[0].Status.State)
 				assert.Len(t, list, 2)
 
 				gs, index, err = findGameServerForAllocation(gsa, list)
@@ -90,7 +90,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, "node2", gs.Status.NodeName)
 				assert.Equal(t, "gs2", gs.ObjectMeta.Name)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 				list = nil
 				gs, _, err = findGameServerForAllocation(gsa, list)
@@ -100,15 +100,15 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			},
 		},
 		"preferred": {
-			list: []stablev1alpha1.GameServer{
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: prefLabels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: prefLabels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: labels}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
+			list: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: prefLabels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: prefLabels}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: labels}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
 			},
-			test: func(t *testing.T, list []*stablev1alpha1.GameServer) {
+			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 6)
 
 				gs, index, err := findGameServerForAllocation(prefGsa, list)
@@ -116,7 +116,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, "node1", gs.Status.NodeName)
 				assert.Equal(t, "gs1", gs.ObjectMeta.Name)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 				list = append(list[:index], list[index+1:]...)
 				gs, index, err = findGameServerForAllocation(prefGsa, list)
@@ -124,7 +124,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, "node2", gs.Status.NodeName)
 				assert.Equal(t, "gs4", gs.ObjectMeta.Name)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 				list = append(list[:index], list[index+1:]...)
 				gs, index, err = findGameServerForAllocation(prefGsa, list)
@@ -132,28 +132,28 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, "node1", gs.Status.NodeName)
 				assert.Contains(t, []string{"gs3", "gs5", "gs6"}, gs.ObjectMeta.Name)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
 		},
 		"allocation trap": {
-			list: []stablev1alpha1.GameServer{
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateAllocated}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs7", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
-				{ObjectMeta: metav1.ObjectMeta{Name: "gs8", Labels: labels, Namespace: defaultNs}, Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
+			list: []agonesv1.GameServer{
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateAllocated}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs7", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
+				{ObjectMeta: metav1.ObjectMeta{Name: "gs8", Labels: labels, Namespace: defaultNs}, Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
 			},
-			test: func(t *testing.T, list []*stablev1alpha1.GameServer) {
+			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 4)
 
 				gs, index, err := findGameServerForAllocation(gsa, list)
 				assert.Nil(t, err)
 				assert.Equal(t, "node2", gs.Status.NodeName)
 				assert.Equal(t, gs, list[index])
-				assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
 		},
 	}
@@ -163,7 +163,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			c, m := newFakeController()
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &stablev1alpha1.GameServerList{Items: v.list}, nil
+				return true, &agonesv1.GameServerList{Items: v.list}, nil
 			})
 
 			stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
@@ -198,25 +198,25 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 		},
 	}
 
-	gsList := []stablev1alpha1.GameServer{
+	gsList := []agonesv1.GameServer{
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs2", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs3", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs4", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node1", State: stablev1alpha1.GameServerStateError}},
+			Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateError}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs5", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs6", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node2", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node2", State: agonesv1.GameServerStateReady}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "gs7", Namespace: defaultNs, Labels: labels},
-			Status: stablev1alpha1.GameServerStatus{NodeName: "node3", State: stablev1alpha1.GameServerStateReady}},
+			Status: agonesv1.GameServerStatus{NodeName: "node3", State: agonesv1.GameServerStateReady}},
 	}
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &stablev1alpha1.GameServerList{Items: gsList}, nil
+		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
 	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
@@ -235,7 +235,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	gs, index, err := findGameServerForAllocation(gsa, list)
 	assert.NoError(t, err)
 	assert.Equal(t, gs, list[index])
-	assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 	past := gs
 	// we should get a different result in 10 tries, so we can see we get some randomness.
@@ -243,7 +243,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 		gs, index, err = findGameServerForAllocation(gsa, list)
 		assert.NoError(t, err)
 		assert.Equal(t, gs, list[index])
-		assert.Equal(t, stablev1alpha1.GameServerStateReady, gs.Status.State)
+		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 
 		if gs.ObjectMeta.Name != past.ObjectMeta.Name {
 			return

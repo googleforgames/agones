@@ -27,15 +27,15 @@ import (
 	"strconv"
 	"time"
 
+	"agones.dev/agones/pkg/apis/agones"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
-	"agones.dev/agones/pkg/apis/stable"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
-	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	multiclusterlisterv1alpha1 "agones.dev/agones/pkg/client/listers/multicluster/v1alpha1"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/https"
@@ -87,7 +87,7 @@ type request struct {
 // response is an async response for a matching request
 type response struct {
 	request request
-	gs      *stablev1alpha1.GameServer
+	gs      *agonesv1.GameServer
 	err     error
 }
 
@@ -100,8 +100,8 @@ type Controller struct {
 	// from the topNGameServerCount of Ready gameservers
 	topNGameServerCount    int
 	gameServerSynced       cache.InformerSynced
-	gameServerGetter       getterv1alpha1.GameServersGetter
-	gameServerLister       listerv1alpha1.GameServerLister
+	gameServerGetter       getterv1.GameServersGetter
+	gameServerLister       listerv1.GameServerLister
 	allocationPolicyLister multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
 	allocationPolicySynced cache.InformerSynced
 	secretLister           corev1lister.SecretLister
@@ -130,12 +130,12 @@ func NewController(apiServer *apiserver.APIServer,
 	agonesInformerFactory externalversions.SharedInformerFactory,
 ) *Controller {
 
-	agonesInformer := agonesInformerFactory.Stable().V1alpha1()
+	agonesInformer := agonesInformerFactory.Agones().V1()
 	c := &Controller{
 		counter:                counter,
 		topNGameServerCount:    topNGameServerCnt,
 		gameServerSynced:       agonesInformer.GameServers().Informer().HasSynced,
-		gameServerGetter:       agonesClient.StableV1alpha1(),
+		gameServerGetter:       agonesClient.AgonesV1(),
 		gameServerLister:       agonesInformer.GameServers().Lister(),
 		allocationPolicyLister: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Lister(),
 		allocationPolicySynced: agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer().HasSynced,
@@ -144,7 +144,7 @@ func NewController(apiServer *apiserver.APIServer,
 		pendingRequests:        make(chan request, maxBatchQueue),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, stable.GroupName+".GameServerUpdateController")
+	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServers, c.baseLogger, logfields.GameServerKey, agones.GroupName+".GameServerUpdateController")
 	health.AddLivenessCheck("gameserverallocation-gameserver-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -157,16 +157,16 @@ func NewController(apiServer *apiserver.APIServer,
 	agonesInformer.GameServers().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// only interested in if the old / new state was/is Ready
-			oldGs := oldObj.(*stablev1alpha1.GameServer)
-			newGs := newObj.(*stablev1alpha1.GameServer)
+			oldGs := oldObj.(*agonesv1.GameServer)
+			newGs := newObj.(*agonesv1.GameServer)
 			key, ok := c.getKey(newGs)
 			if !ok {
 				return
 			}
 			if newGs.IsBeingDeleted() {
 				c.readyGameServers.Delete(key)
-			} else if oldGs.Status.State == stablev1alpha1.GameServerStateReady || newGs.Status.State == stablev1alpha1.GameServerStateReady {
-				if newGs.Status.State == stablev1alpha1.GameServerStateReady {
+			} else if oldGs.Status.State == agonesv1.GameServerStateReady || newGs.Status.State == agonesv1.GameServerStateReady {
+				if newGs.Status.State == agonesv1.GameServerStateReady {
 					c.readyGameServers.Store(key, newGs)
 				} else {
 					c.readyGameServers.Delete(key)
@@ -174,7 +174,7 @@ func NewController(apiServer *apiserver.APIServer,
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
-			gs, ok := obj.(*stablev1alpha1.GameServer)
+			gs, ok := obj.(*agonesv1.GameServer)
 			if !ok {
 				return
 			}
@@ -307,7 +307,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
 func (c *Controller) allocateFromLocalCluster(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.GameServerAllocation, error) {
-	var gs *stablev1alpha1.GameServer
+	var gs *agonesv1.GameServer
 	err := Retry(allocationRetry, func() error {
 		var err error
 		gs, err = c.allocate(gsa)
@@ -532,7 +532,7 @@ func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k
 
 // allocate allocated a GameServer from a given GameServerAllocation
 // this sets up allocation through a batch process.
-func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alpha1.GameServer, error) {
+func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*agonesv1.GameServer, error) {
 	// creates an allocation request. This contains the requested GameServerAllocation, as well as the
 	// channel we expect the return values to come back for this GameServerAllocation
 	req := request{gsa: gsa, response: make(chan response)}
@@ -586,7 +586,7 @@ func (c *Controller) runLocalAllocations(updateWorkerCount int) {
 	// list of Ready GameServers, and you would eventually never be able to Allocate anything as long as the load
 	// continued.
 
-	var list []*stablev1alpha1.GameServer
+	var list []*agonesv1.GameServer
 	requestCount := 0
 
 	for {
@@ -646,7 +646,7 @@ func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
 				case res := <-updateQueue:
 					gsCopy := res.gs.DeepCopy()
 					c.patchMetadata(gsCopy, res.request.gsa.Spec.MetaPatch)
-					gsCopy.Status.State = stablev1alpha1.GameServerStateAllocated
+					gsCopy.Status.State = agonesv1.GameServerStateAllocated
 
 					gs, err := c.gameServerGetter.GameServers(res.gs.ObjectMeta.Namespace).Update(gsCopy)
 					if err != nil {
@@ -672,14 +672,14 @@ func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
 
 // listSortedReadyGameServers returns a list of the cache ready gameservers
 // sorted by most allocated to least
-func (c *Controller) listSortedReadyGameServers() []*stablev1alpha1.GameServer {
+func (c *Controller) listSortedReadyGameServers() []*agonesv1.GameServer {
 	length := c.readyGameServers.Len()
 	if length == 0 {
-		return []*stablev1alpha1.GameServer{}
+		return []*agonesv1.GameServer{}
 	}
 
-	list := make([]*stablev1alpha1.GameServer, 0, length)
-	c.readyGameServers.Range(func(_ string, gs *stablev1alpha1.GameServer) bool {
+	list := make([]*agonesv1.GameServer, 0, length)
+	c.readyGameServers.Range(func(_ string, gs *agonesv1.GameServer) bool {
 		list = append(list, gs)
 		return true
 	})
@@ -723,7 +723,7 @@ func (c *Controller) listSortedReadyGameServers() []*stablev1alpha1.GameServer {
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation
-func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam v1alpha1.MetaPatch) {
+func (c *Controller) patchMetadata(gs *agonesv1.GameServer, fam v1alpha1.MetaPatch) {
 	// patch ObjectMeta labels
 	if fam.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
@@ -766,7 +766,7 @@ func (c *Controller) syncReadyGSServerCache() error {
 	}
 
 	// convert list of current gameservers to map for faster access
-	currGameservers := make(map[string]*stablev1alpha1.GameServer)
+	currGameservers := make(map[string]*agonesv1.GameServer)
 	for _, gs := range gsList {
 		if key, ok := c.getKey(gs); ok {
 			currGameservers[key] = gs
@@ -775,7 +775,7 @@ func (c *Controller) syncReadyGSServerCache() error {
 
 	// first remove the gameservers are not in the list anymore
 	tobeDeletedGSInCache := make([]string, 0)
-	c.readyGameServers.Range(func(key string, gs *stablev1alpha1.GameServer) bool {
+	c.readyGameServers.Range(func(key string, gs *agonesv1.GameServer) bool {
 		if _, ok := currGameservers[key]; !ok {
 			tobeDeletedGSInCache = append(tobeDeletedGSInCache, key)
 		}
@@ -789,12 +789,12 @@ func (c *Controller) syncReadyGSServerCache() error {
 	// refresh the cache of possible allocatable GameServers
 	for key, gs := range currGameservers {
 		if gsCache, ok := c.readyGameServers.Load(key); ok {
-			if !(gs.DeletionTimestamp.IsZero() && gs.Status.State == stablev1alpha1.GameServerStateReady) {
+			if !(gs.DeletionTimestamp.IsZero() && gs.Status.State == agonesv1.GameServerStateReady) {
 				c.readyGameServers.Delete(key)
 			} else if gs.ObjectMeta.ResourceVersion != gsCache.ObjectMeta.ResourceVersion {
 				c.readyGameServers.Store(key, gs)
 			}
-		} else if gs.DeletionTimestamp.IsZero() && gs.Status.State == stablev1alpha1.GameServerStateReady {
+		} else if gs.DeletionTimestamp.IsZero() && gs.Status.State == agonesv1.GameServerStateReady {
 			c.readyGameServers.Store(key, gs)
 		}
 	}
@@ -803,7 +803,7 @@ func (c *Controller) syncReadyGSServerCache() error {
 }
 
 // getKey extract the key of gameserver object
-func (c *Controller) getKey(gs *stablev1alpha1.GameServer) (string, bool) {
+func (c *Controller) getKey(gs *agonesv1.GameServer) (string, bool) {
 	var key string
 	ok := true
 	var err error
@@ -837,7 +837,7 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 }
 
 // getRandomlySelectedGS selects a GS from the set of Gameservers randomly. This will reduce the contentions
-func (c *Controller) getRandomlySelectedGS(gsa *v1alpha1.GameServerAllocation, bestGSList []stablev1alpha1.GameServer) *stablev1alpha1.GameServer {
+func (c *Controller) getRandomlySelectedGS(gsa *v1alpha1.GameServerAllocation, bestGSList []agonesv1.GameServer) *agonesv1.GameServer {
 	seed, err := strconv.Atoi(gsa.ObjectMeta.ResourceVersion)
 	if err != nil {
 		seed = 1234567

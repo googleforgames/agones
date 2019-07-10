@@ -20,7 +20,7 @@ import (
 	"sync"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -72,7 +72,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 		// double port, dynamic
 		copy := fixture.DeepCopy()
-		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
+		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
 		assert.Len(t, copy.Spec.Ports, 2)
 		pa.Allocate(copy.DeepCopy())
 		assert.Nil(t, err)
@@ -80,7 +80,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 		// three ports, dynamic
 		copy = copy.DeepCopy()
-		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
+		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
 		assert.Len(t, copy.Spec.Ports, 3)
 		pa.Allocate(copy)
 		assert.Nil(t, err)
@@ -89,17 +89,17 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		// 4 ports, 1 static, rest dynamic
 		copy = copy.DeepCopy()
 		expected := int32(9999)
-		copy.Spec.Ports = append(copy.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: v1alpha1.Static})
+		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: agonesv1.Static})
 		assert.Len(t, copy.Spec.Ports, 4)
 		pa.Allocate(copy)
 		assert.Nil(t, err)
 		assert.Equal(t, 10, countTotalAllocatedPorts(pa))
-		assert.Equal(t, v1alpha1.Static, copy.Spec.Ports[3].PortPolicy)
+		assert.Equal(t, agonesv1.Static, copy.Spec.Ports[3].PortPolicy)
 		assert.Equal(t, expected, copy.Spec.Ports[3].HostPort)
 
 		// single port, passthrough
 		copy = fixture.DeepCopy()
-		copy.Spec.Ports[0] = v1alpha1.GameServerPort{Name: "passthrough", PortPolicy: v1alpha1.Passthrough}
+		copy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough}
 		assert.Len(t, copy.Spec.Ports, 1)
 		pa.Allocate(copy)
 		assert.NotEmpty(t, copy.Spec.Ports[0].HostPort)
@@ -153,9 +153,9 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		defer cancel()
 
 		morePortFixture := fixture.DeepCopy()
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, v1alpha1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: v1alpha1.Dynamic})
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, v1alpha1.GameServerPort{Name: "static", ContainerPort: 6666, PortPolicy: v1alpha1.Static, HostPort: 9999})
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, v1alpha1.GameServerPort{Name: "passthrough", PortPolicy: v1alpha1.Passthrough})
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "static", ContainerPort: 6666, PortPolicy: agonesv1.Static, HostPort: 9999})
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough})
 
 		assert.Len(t, morePortFixture.Spec.Ports, 4)
 
@@ -180,14 +180,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 				// Passthrough
 				passThrough := gs.Spec.Ports[3]
-				assert.Equal(t, v1alpha1.Passthrough, passThrough.PortPolicy)
+				assert.Equal(t, agonesv1.Passthrough, passThrough.PortPolicy)
 				assert.NotEmpty(t, passThrough.HostPort)
 				assert.Equal(t, passThrough.HostPort, passThrough.ContainerPort)
 
 				logrus.WithField("uid", copy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
 				assert.Nil(t, err)
 				for _, p := range gs.Spec.Ports {
-					if p.PortPolicy == v1alpha1.Dynamic || p.PortPolicy == v1alpha1.Passthrough {
+					if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
 						assert.True(t, 10 <= p.HostPort && p.HostPort <= maxPort, "%v is not between 10 and 20", p)
 					}
 				}
@@ -312,37 +312,37 @@ func TestPortAllocatorSyncPortAllocations(t *testing.T) {
 	})
 
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		gs1 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		gs1 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
-		gs2 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+		gs2 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
-		gs3 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+		gs3 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 11}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n3.ObjectMeta.Name}}
-		gs4 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Passthrough, HostPort: 12}},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 11}}, NodeName: n3.ObjectMeta.Name}}
+		gs4 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Passthrough, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
-		gs5 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", UID: "5"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 12}},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
+		gs5 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs5", UID: "5"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
-		gs6 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", UID: "6"},
-			Spec: v1alpha1.GameServerSpec{
-				Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Static, HostPort: 12}},
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
+		gs6 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs6", UID: "6"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Static, HostPort: 12}},
 			},
-			Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateCreating}}
-		gsl := &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}}
+			Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateCreating}}
+		gsl := &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs1, gs2, gs3, gs4, gs5, gs6}}
 		return true, gsl, nil
 	})
 
@@ -374,26 +374,26 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
-	gs1 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+	gs1 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
-	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+	gs2 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 11}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n1.ObjectMeta.Name}}
-	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Passthrough, HostPort: 10}},
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 11}}, NodeName: n1.ObjectMeta.Name}}
+	gs3 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Passthrough, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
-	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+	gs4 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "4"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n2.ObjectMeta.Name}}
 
 	pa := NewPortAllocator(10, 20, m.KubeInformerFactory, m.AgonesInformerFactory)
 
@@ -482,31 +482,31 @@ func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
 	m := agtesting.NewMocks()
 	pa := NewPortAllocator(10, 13, m.KubeInformerFactory, m.AgonesInformerFactory)
 
-	gs1 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 10}},
+	gs1 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs1", UID: "1"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 10}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 10}}, NodeName: n1.ObjectMeta.Name}}
 
-	gs2 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 11}},
+	gs2 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs2", UID: "2"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 11}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 11}}, NodeName: n2.ObjectMeta.Name}}
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 11}}, NodeName: n2.ObjectMeta.Name}}
 
-	gs3 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Passthrough, HostPort: 12}},
+	gs3 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs3", UID: "3"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Passthrough, HostPort: 12}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStateReady, Ports: []v1alpha1.GameServerStatusPort{{Port: 12}}, NodeName: n1.ObjectMeta.Name}}
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady, Ports: []agonesv1.GameServerStatusPort{{Port: 12}}, NodeName: n1.ObjectMeta.Name}}
 
-	gs4 := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "3"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, HostPort: 13}},
+	gs4 := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gs4", UID: "3"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, HostPort: 13}},
 		},
-		Status: v1alpha1.GameServerStatus{State: v1alpha1.GameServerStatePortAllocation, Ports: []v1alpha1.GameServerStatusPort{{Port: 13}}}}
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStatePortAllocation, Ports: []agonesv1.GameServerStatusPort{{Port: 13}}}}
 
-	allocations, nonReadyNodesPorts := pa.registerExistingGameServerPorts([]*v1alpha1.GameServer{gs1, gs2, gs3, gs4}, []*corev1.Node{&n1, &n2, &n3}, map[types.UID]bool{})
+	allocations, nonReadyNodesPorts := pa.registerExistingGameServerPorts([]*agonesv1.GameServer{gs1, gs2, gs3, gs4}, []*corev1.Node{&n1, &n2, &n3}, map[types.UID]bool{})
 
 	assert.Equal(t, []int32{13}, nonReadyNodesPorts)
 	assert.Equal(t, portAllocation{10: true, 11: false, 12: true, 13: false}, allocations[0])
@@ -514,10 +514,10 @@ func TestPortAllocatorRegisterExistingGameServerPorts(t *testing.T) {
 	assert.Equal(t, portAllocation{10: false, 11: false, 12: false, 13: false}, allocations[2])
 }
 
-func dynamicGameServerFixture() *v1alpha1.GameServer {
-	return &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
-		Spec: v1alpha1.GameServerSpec{
-			Ports: []v1alpha1.GameServerPort{{PortPolicy: v1alpha1.Dynamic, ContainerPort: 7777}},
+func dynamicGameServerFixture() *agonesv1.GameServer {
+	return &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+		Spec: agonesv1.GameServerSpec{
+			Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Dynamic, ContainerPort: 7777}},
 		},
 	}
 }

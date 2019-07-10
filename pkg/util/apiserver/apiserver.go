@@ -117,7 +117,7 @@ func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIReso
 		as.addSerializedHandler(pattern, list)
 		as.logger.WithField("groupversion", groupVersion).WithField("pattern", pattern).Info("Adding Discovery Handler")
 
-		// e.g.  /apis/stable.agones.dev/v1alpha1/namespaces/default/gameservers
+		// e.g.  /apis/agones.dev/v1alpha1/namespaces/default/gameservers
 		// CRD handler
 		pattern = fmt.Sprintf("/apis/%s/namespaces/", groupVersion)
 		as.mux.HandleFunc(pattern, https.ErrorHTTPHandler(as.logger, as.resourceHandler(groupVersion)))

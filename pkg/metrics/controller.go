@@ -21,11 +21,11 @@ import (
 	"sync"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -53,7 +53,7 @@ func init() {
 // Controller is a metrics controller collecting Agones state metrics
 type Controller struct {
 	logger           *logrus.Entry
-	gameServerLister listerv1alpha1.GameServerLister
+	gameServerLister listerv1.GameServerLister
 	nodeLister       v1.NodeLister
 	gameServerSynced cache.InformerSynced
 	fleetSynced      cache.InformerSynced
@@ -71,10 +71,10 @@ func NewController(
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
-	gameServer := agonesInformerFactory.Stable().V1alpha1().GameServers()
+	gameServer := agonesInformerFactory.Agones().V1().GameServers()
 	gsInformer := gameServer.Informer()
 
-	fleets := agonesInformerFactory.Stable().V1alpha1().Fleets()
+	fleets := agonesInformerFactory.Agones().V1().Fleets()
 	fInformer := fleets.Informer()
 	fas := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fasInformer := fas.Informer()
@@ -200,7 +200,7 @@ func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
 }
 
 func (c *Controller) recordFleetChanges(obj interface{}) {
-	f, ok := obj.(*stablev1alpha1.Fleet)
+	f, ok := obj.(*agonesv1.Fleet)
 	if !ok {
 		return
 	}
@@ -216,7 +216,7 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 }
 
 func (c *Controller) recordFleetDeletion(obj interface{}) {
-	f, ok := obj.(*stablev1alpha1.Fleet)
+	f, ok := obj.(*agonesv1.Fleet)
 	if !ok {
 		return
 	}
@@ -247,16 +247,16 @@ func (c *Controller) recordFleetReplicas(fleetName string, total, allocated, rea
 // Addition to the cache are not handled, otherwise resync would make metrics inaccurate by doubling
 // current gameservers states.
 func (c *Controller) recordGameServerStatusChanges(old, new interface{}) {
-	newGs, ok := new.(*stablev1alpha1.GameServer)
+	newGs, ok := new.(*agonesv1.GameServer)
 	if !ok {
 		return
 	}
-	oldGs, ok := old.(*stablev1alpha1.GameServer)
+	oldGs, ok := old.(*agonesv1.GameServer)
 	if !ok {
 		return
 	}
 	if newGs.Status.State != oldGs.Status.State {
-		fleetName := newGs.Labels[stablev1alpha1.FleetNameLabel]
+		fleetName := newGs.Labels[agonesv1.FleetNameLabel]
 		if fleetName == "" {
 			fleetName = "none"
 		}
@@ -345,10 +345,10 @@ func removeSystemNodes(nodes []*corev1.Node) []*corev1.Node {
 	return result
 }
 
-// isSystemNode determines if a node is a system node, by checking if it has any taints starting with "stable.agones.dev/"
+// isSystemNode determines if a node is a system node, by checking if it has any taints starting with "agones.dev/"
 func isSystemNode(n *corev1.Node) bool {
 	for _, t := range n.Spec.Taints {
-		if strings.HasPrefix(t.Key, "stable.agones.dev/") {
+		if strings.HasPrefix(t.Key, "agones.dev/") {
 			return true
 		}
 	}

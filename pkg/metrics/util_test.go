@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
@@ -106,34 +106,34 @@ func nodeWithName(name string) *v1.Node {
 	}
 }
 
-func gameServerWithNode(nodeName string) *v1alpha1.GameServer {
-	gs := gameServerWithFleetAndState("fleet", v1alpha1.GameServerStateReady)
+func gameServerWithNode(nodeName string) *agonesv1.GameServer {
+	gs := gameServerWithFleetAndState("fleet", agonesv1.GameServerStateReady)
 	gs.Status.NodeName = nodeName
 	return gs
 }
 
-func gameServerWithFleetAndState(fleetName string, state v1alpha1.GameServerState) *v1alpha1.GameServer {
+func gameServerWithFleetAndState(fleetName string, state agonesv1.GameServerState) *agonesv1.GameServer {
 	lbs := map[string]string{}
 	if fleetName != "" {
-		lbs[v1alpha1.FleetNameLabel] = fleetName
+		lbs[agonesv1.FleetNameLabel] = fleetName
 	}
-	gs := &v1alpha1.GameServer{
+	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rand.String(10),
 			Namespace: "default",
 			UID:       uuid.NewUUID(),
 			Labels:    lbs,
 		},
-		Status: v1alpha1.GameServerStatus{
+		Status: agonesv1.GameServerStatus{
 			State: state,
 		},
 	}
 	return gs
 }
 
-func generateGsEvents(count int, state v1alpha1.GameServerState, fleetName string, fakew *watch.FakeWatcher) {
+func generateGsEvents(count int, state agonesv1.GameServerState, fleetName string, fakew *watch.FakeWatcher) {
 	for i := 0; i < count; i++ {
-		gs := gameServerWithFleetAndState(fleetName, v1alpha1.GameServerState(""))
+		gs := gameServerWithFleetAndState(fleetName, agonesv1.GameServerState(""))
 		fakew.Add(gs)
 		gsUpdated := gs.DeepCopy()
 		gsUpdated.Status.State = state
@@ -143,17 +143,17 @@ func generateGsEvents(count int, state v1alpha1.GameServerState, fleetName strin
 	}
 }
 
-func fleet(fleetName string, total, allocated, ready, desired int32) *v1alpha1.Fleet {
-	return &v1alpha1.Fleet{
+func fleet(fleetName string, total, allocated, ready, desired int32) *agonesv1.Fleet {
+	return &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fleetName,
 			Namespace: "default",
 			UID:       uuid.NewUUID(),
 		},
-		Spec: v1alpha1.FleetSpec{
+		Spec: agonesv1.FleetSpec{
 			Replicas: desired,
 		},
-		Status: v1alpha1.FleetStatus{
+		Status: agonesv1.FleetStatus{
 			AllocatedReplicas: allocated,
 			ReadyReplicas:     ready,
 			Replicas:          total,
