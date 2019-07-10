@@ -321,6 +321,14 @@ func (in *GameServerStatus) DeepCopyInto(out *GameServerStatus) {
 		*out = make([]GameServerStatusPort, len(*in))
 		copy(*out, *in)
 	}
+	if in.ReservedUntil != nil {
+		in, out := &in.ReservedUntil, &out.ReservedUntil
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = (*in).DeepCopy()
+		}
+	}
 	return
 }
 
