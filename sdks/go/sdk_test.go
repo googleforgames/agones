@@ -45,6 +45,10 @@ func TestSDK(t *testing.T) {
 	assert.True(t, sm.ready)
 	assert.False(t, sm.shutdown)
 
+	err = s.Reserve(12 * time.Second)
+	assert.NoError(t, err)
+	assert.EqualValues(t, 12, sm.reserved.Seconds)
+
 	err = s.Health()
 	assert.Nil(t, err)
 	assert.True(t, sm.hm.healthy)
