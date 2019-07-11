@@ -17,5 +17,5 @@ variable "machine_type" {
 }
 
 variable "cluster_name" {
-  default="test-cluster"
+  default = "test-cluster"
 }

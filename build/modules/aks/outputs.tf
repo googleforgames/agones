@@ -31,4 +31,3 @@ output "host" {
 output "token" {
   value = "${azurerm_kubernetes_cluster.test.kube_config.0.password}"
 }
-

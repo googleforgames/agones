@@ -17,6 +17,7 @@ resource "kubernetes_service_account" "tiller" {
     name      = "tiller"
     namespace = "kube-system"
   }
+
   automount_service_account_token = true
 }
 
@@ -43,7 +44,7 @@ resource "kubernetes_cluster_role_binding" "tiller" {
 }
 
 provider "kubernetes" {
-  version = "~> 1.5"
+  version                = "~> 1.5"
   load_config_file       = false
   host                   = "${var.host}"
   token                  = "${var.token}"
@@ -51,32 +52,18 @@ provider "kubernetes" {
 }
 
 provider "helm" {
-  version = "~> 0.7"
+  version = "~> 0.9"
 
   debug           = true
   install_tiller  = true
   service_account = "${kubernetes_service_account.tiller.metadata.0.name}"
-  tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.12.3"
+  tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.14.2"
 
   kubernetes {
-    load_config_file = false
+    load_config_file       = false
     host                   = "${var.host}"
     token                  = "${var.token}"
     cluster_ca_certificate = "${var.cluster_ca_certificate}"
-  }
-}
-
-# In Terraform version 0.12 Interpolation would only evaluate one branch of a condition
-# https://github.com/hashicorp/terraform/issues/15605
-# so we can remove this and change values in helm_release to:
-# 
-#  values = [
-#    "${length(var.values_file) == 0 ? ""  : file("${var.values_file}"))}"
-#  ]
-data "null_data_source" "values_file" {
-  count = "${length(var.values_file) == 0 ? 0 : 1}"
-  inputs = {
-    "values" = "${file("${var.values_file}")}"
   }
 }
 
@@ -88,64 +75,66 @@ data "helm_repository" "agones" {
   depends_on = ["kubernetes_cluster_role_binding.tiller"]
 }
 
-
-# TODO: remove - not needed in Terraform 0.12
 locals {
-  values = {
-    params = "${join("", data.null_data_source.values_file.*.outputs.values)}"
-  } 
   # Skip image tag if it is not needed
   # for installing latest image it would use chart value
   tag_name = "${var.agones_version != "" ? "agones.image.tag" : "skip"}"
 }
 
 resource "helm_release" "agones" {
-  name  = "agones"
+  name         = "agones"
   force_update = "true"
-  repository = "${data.helm_repository.agones.metadata.0.name}"
-  chart = "${var.chart}"
-  timeout = 420
+  repository   = "${data.helm_repository.agones.metadata.0.name}"
+  chart        = "${var.chart}"
+  timeout      = 420
 
+  # Use terraform of the latest >=0.12 version
   values = [
-    # Switch in terraform 0.12 to:
-    # "${length(var.values_file) == 0 ? ""  : file("${var.values_file}"))}"
-    "${length(var.values_file) == 0 ? ""  : local.values["params"]}"
+    "${length(var.values_file) == 0 ? "" : file("${var.values_file}")}",
   ]
 
   set {
     name  = "crds.CleanupOnDelete"
     value = "${var.crd_cleanup}"
   }
+
   set {
-    name = "${local.tag_name}"
+    name  = "${local.tag_name}"
     value = "${var.agones_version}"
   }
+
   set {
     name  = "agones.image.registry"
     value = "${var.image_registry}"
   }
+
   set {
     name  = "agones.image.controller.pullPolicy"
     value = "${var.pull_policy}"
   }
+
   set {
     name  = "agones.image.sdk.alwaysPull"
     value = "${var.always_pull_sidecar}"
   }
+
   set {
     name  = "agones.image.controller.pullSecret"
     value = "${var.image_pull_secret}"
   }
+
   set {
     name  = " agones.ping.http.serviceType"
     value = "${var.ping_service_type}"
   }
+
   set {
     name  = "agones.ping.udp.serviceType"
     value = "${var.ping_service_type}"
   }
-  version = "${var.agones_version}"
-  namespace  = "agones-system"
+
+  version   = "${var.agones_version}"
+  namespace = "agones-system"
 
   depends_on = ["null_resource.helm_init", "kubernetes_cluster_role_binding.tiller"]
 }
@@ -159,6 +148,7 @@ resource "null_resource" "helm_init" {
   triggers = {
     always_run = "${timestamp()}"
   }
+
   provisioner "local-exec" {
     command = "helm init --client-only"
   }

@@ -115,7 +115,7 @@ terraform apply -var client_id="<appId>" -var client_secret="<password>"
 
 Once you created all resources on AKS you can get the credentials so that you can use `kubectl` to configure your cluster:
 ```
-az aks get-credentials --resource-group agonesRG --name agones
+az aks get-credentials --resource-group agonesRG --name test-cluster
 ```
 
 Check that you have access to kubernetes cluster:

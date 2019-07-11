@@ -23,7 +23,6 @@ terraform-clean:
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
-gcloud-terraform-cluster: GCP_CLUSTER_LEGACYABAC ?= false
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
@@ -33,18 +32,15 @@ ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
 	$(DOCKER_RUN) bash -c 'export TF_VAR_agones_version=$(AGONES_VERSION) && \
-	    export TF_VAR_password=$(GKE_PASSWORD) && \
 		cd $(mount_path)/build && terraform apply -auto-approve -var values_file="" \
 		-var chart="agones" \
 	 	-var "cluster={name=\"$(GCP_CLUSTER_NAME)\", machineType=\"$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\", \
 		 zone=\"$(GCP_CLUSTER_ZONE)\", project=\"$(GCP_PROJECT)\", \
-		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\", \
-		 legacyABAC=\"$(GCP_CLUSTER_LEGACYABAC)\"}"'
+		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\"}"'
 	$(MAKE) gcloud-auth-cluster
 
 # Creates a cluster and install current version of Agones controller
 # Set all necessary variables as `make install` does
-gcloud-terraform-install: GCP_CLUSTER_LEGACYABAC ?= false
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-install: ALWAYS_PULL_SIDECAR := true
@@ -55,7 +51,7 @@ gcloud-terraform-install:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
-	$(DOCKER_RUN) bash -c 'export TF_VAR_password=$(GKE_PASSWORD) && \
+	$(DOCKER_RUN) bash -c ' \
 		cd $(mount_path)/build && terraform apply -auto-approve -var agones_version="$(VERSION)" -var image_registry="$(REGISTRY)" \
 		-var pull_policy="$(IMAGE_PULL_POLICY)" \
 		-var always_pull_sidecar="$(ALWAYS_PULL_SIDECAR)" \
@@ -64,8 +60,7 @@ endif
 		-var crd_cleanup="$(CRD_CLEANUP)" \
 		-var "cluster={name=\"$(GCP_CLUSTER_NAME)\", machineType=\"$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\", \
 		 zone=\"$(GCP_CLUSTER_ZONE)\", project=\"$(GCP_PROJECT)\", \
-		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\", \
-		 legacyABAC=\"$(GCP_CLUSTER_LEGACYABAC)\"}"'
+		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\"}"'
 	$(MAKE) gcloud-auth-cluster
 
 gcloud-terraform-destroy-cluster:

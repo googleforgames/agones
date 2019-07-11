@@ -32,13 +32,11 @@ variable "node_count" {default = "4"}
 module "agones" {
   source = "git::https://github.com/googleforgames/agones.git//build/?ref=master"
   
-  password     = "${var.password}"
   cluster = {
       "zone"             = "us-west1-c"
       "name"             = "test-cluster"
       "machineType"      = "${var.machine_type}"
       "initialNodeCount" = "${var.node_count}"
-      "legacyAbac"       = false
       "project"          = "${var.project}"
   }
   agones_version = "${var.agones_version}"
