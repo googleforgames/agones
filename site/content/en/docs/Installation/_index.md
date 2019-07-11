@@ -96,6 +96,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
   --tags=game-server \
@@ -104,12 +105,30 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.11 \
   --num-nodes=3 \
   --machine-type=n1-standard-2
 ```
+{{% /feature %}}
+{{% feature publishVersion="0.12.0" %}}
+```bash
+gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
+  --tags=game-server \
+  --scopes=gke-default \
+  --num-nodes=3 \
+  --machine-type=n1-standard-2
+```
+{{% /feature %}}
+
 
 Flag explanations:
 
+{{% feature expiryVersion="0.12.0" %}}
 * cluster-version: Agones requires Kubernetes version 1.11.
+{{% /feature %}}
+{{% feature publishVersion="0.12.0" %}}
+* cluster-version: Agones requires Kubernetes version 1.12.
+{{% /feature %}}
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
+{{% feature expiryVersion="0.12.0" %}}
 * no-enable-basic-auth/password: Disables basic auth scheme for the cluster (this is the default starting with version 1.12).
+{{% /feature %}}
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 3
 * machine-type: The type of machine to use for nodes. Default: n1-standard-2. Depending on the needs of you game, you may wish to [have a bigger machines](https://cloud.google.com/compute/docs/machine-types).
@@ -154,7 +173,9 @@ gcloud compute firewall-rules create game-server-firewall \
   --description "Firewall to allow game server udp traffic"
 ```
 
+{{% feature expiryVersion="0.12.0" %}}
 Continue to [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
+{{% /feature %}}
 
 ## Setting up a Minikube cluster
 
