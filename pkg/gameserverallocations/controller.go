@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"time"
 
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	"agones.dev/agones/pkg/apis/stable"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
@@ -80,7 +80,7 @@ const (
 
 // request is an async request for allocation
 type request struct {
-	gsa      *v1alpha1.GameServerAllocation
+	gsa      *allocationv1.GameServerAllocation
 	response chan response
 }
 
@@ -200,7 +200,7 @@ func (c *Controller) registerAPIResource(api *apiserver.APIServer) {
 		},
 		ShortNames: []string{"gsa"},
 	}
-	api.AddAPIResource(v1alpha1.SchemeGroupVersion.String(), resource, c.allocationHandler)
+	api.AddAPIResource(allocationv1.SchemeGroupVersion.String(), resource, c.allocationHandler)
 }
 
 // Run runs this controller. Will block until stop is closed.
@@ -236,7 +236,7 @@ func (c *Controller) loggerForGameServerAllocationKey(key string) *logrus.Entry 
 	return logfields.AugmentLogEntry(c.baseLogger, logfields.GameServerAllocationKey, key)
 }
 
-func (c *Controller) loggerForGameServerAllocation(gsa *v1alpha1.GameServerAllocation) *logrus.Entry {
+func (c *Controller) loggerForGameServerAllocation(gsa *allocationv1.GameServerAllocation) *logrus.Entry {
 	gsaName := "NilGameServerAllocation"
 	if gsa != nil {
 		gsaName = gsa.Namespace + "/" + gsa.Name
@@ -272,7 +272,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 			Reason:  metav1.StatusReasonInvalid,
 			Details: &metav1.StatusDetails{
 				Kind:   "GameServerAllocation",
-				Group:  v1alpha1.SchemeGroupVersion.Group,
+				Group:  allocationv1.SchemeGroupVersion.Group,
 				Causes: causes,
 			},
 			Code: http.StatusUnprocessableEntity,
@@ -291,7 +291,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	}
 
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
-	var out *v1alpha1.GameServerAllocation
+	var out *allocationv1.GameServerAllocation
 	if gsa.Spec.MultiClusterSetting.Enabled {
 		out, err = c.applyMultiClusterAllocation(gsa)
 	} else {
@@ -306,7 +306,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 }
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
-func (c *Controller) allocateFromLocalCluster(gsa *v1alpha1.GameServerAllocation) (*v1alpha1.GameServerAllocation, error) {
+func (c *Controller) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *stablev1alpha1.GameServer
 	err := Retry(allocationRetry, func() error {
 		var err error
@@ -321,12 +321,12 @@ func (c *Controller) allocateFromLocalCluster(gsa *v1alpha1.GameServerAllocation
 	}
 
 	if err == ErrNoGameServerReady {
-		gsa.Status.State = v1alpha1.GameServerAllocationUnAllocated
+		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
 	} else if err == ErrConflictInGameServerSelection {
-		gsa.Status.State = v1alpha1.GameServerAllocationContention
+		gsa.Status.State = allocationv1.GameServerAllocationContention
 	} else {
 		gsa.ObjectMeta.Name = gs.ObjectMeta.Name
-		gsa.Status.State = v1alpha1.GameServerAllocationAllocated
+		gsa.Status.State = allocationv1.GameServerAllocationAllocated
 		gsa.Status.GameServerName = gs.ObjectMeta.Name
 		gsa.Status.Ports = gs.Status.Ports
 		gsa.Status.Address = gs.Status.Address
@@ -339,7 +339,7 @@ func (c *Controller) allocateFromLocalCluster(gsa *v1alpha1.GameServerAllocation
 
 // applyMultiClusterAllocation retrieves allocation policies and iterate on policies.
 // Then allocate gameservers from local or remote cluster accordingly.
-func (c *Controller) applyMultiClusterAllocation(gsa *v1alpha1.GameServerAllocation) (result *v1alpha1.GameServerAllocation, err error) {
+func (c *Controller) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllocation) (result *allocationv1.GameServerAllocation, err error) {
 
 	selector := labels.Everything()
 	if len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchLabels)+len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchExpressions) != 0 {
@@ -378,8 +378,8 @@ func (c *Controller) applyMultiClusterAllocation(gsa *v1alpha1.GameServerAllocat
 
 // allocateFromRemoteCluster allocates gameservers from a remote cluster by making
 // an http call to allocation service in that cluster.
-func (c *Controller) allocateFromRemoteCluster(gsa v1alpha1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*v1alpha1.GameServerAllocation, error) {
-	var gsaResult v1alpha1.GameServerAllocation
+func (c *Controller) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
+	var gsaResult allocationv1.GameServerAllocation
 
 	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
@@ -483,8 +483,8 @@ func (c *Controller) getClientCertificates(namespace, secretName string) (client
 
 // allocationDeserialization processes the request and namespace, and attempts to deserialise its values
 // into a GameServerAllocation. Returns an error if it fails for whatever reason.
-func (c *Controller) allocationDeserialization(r *http.Request, namespace string) (*v1alpha1.GameServerAllocation, error) {
-	gsa := &v1alpha1.GameServerAllocation{}
+func (c *Controller) allocationDeserialization(r *http.Request, namespace string) (*allocationv1.GameServerAllocation, error) {
+	gsa := &allocationv1.GameServerAllocation{}
 
 	gvks, _, err := scheme.Scheme.ObjectKinds(gsa)
 	if err != nil {
@@ -504,7 +504,7 @@ func (c *Controller) allocationDeserialization(r *http.Request, namespace string
 		return gsa, errors.Wrap(err, "could not read body")
 	}
 
-	gvk := v1alpha1.SchemeGroupVersion.WithKind("GameServerAllocation")
+	gvk := allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation")
 	_, _, err = info.Serializer.Decode(b, &gvk, gsa)
 	if err != nil {
 		c.baseLogger.WithField("body", string(b)).Error("error decoding body")
@@ -532,7 +532,7 @@ func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k
 
 // allocate allocated a GameServer from a given GameServerAllocation
 // this sets up allocation through a batch process.
-func (c *Controller) allocate(gsa *v1alpha1.GameServerAllocation) (*stablev1alpha1.GameServer, error) {
+func (c *Controller) allocate(gsa *allocationv1.GameServerAllocation) (*stablev1alpha1.GameServer, error) {
 	// creates an allocation request. This contains the requested GameServerAllocation, as well as the
 	// channel we expect the return values to come back for this GameServerAllocation
 	req := request{gsa: gsa, response: make(chan response)}
@@ -723,7 +723,7 @@ func (c *Controller) listSortedReadyGameServers() []*stablev1alpha1.GameServer {
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation
-func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam v1alpha1.MetaPatch) {
+func (c *Controller) patchMetadata(gs *stablev1alpha1.GameServer, fam allocationv1.MetaPatch) {
 	// patch ObjectMeta labels
 	if fam.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
@@ -837,7 +837,7 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 }
 
 // getRandomlySelectedGS selects a GS from the set of Gameservers randomly. This will reduce the contentions
-func (c *Controller) getRandomlySelectedGS(gsa *v1alpha1.GameServerAllocation, bestGSList []stablev1alpha1.GameServer) *stablev1alpha1.GameServer {
+func (c *Controller) getRandomlySelectedGS(gsa *allocationv1.GameServerAllocation, bestGSList []stablev1alpha1.GameServer) *stablev1alpha1.GameServer {
 	seed, err := strconv.Atoi(gsa.ObjectMeta.ResourceVersion)
 	if err != nil {
 		seed = 1234567

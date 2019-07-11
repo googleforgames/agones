@@ -55,9 +55,14 @@ resource "google_container_cluster" "primary" {
   project  = "${lookup(var.cluster, "project")}"
   provider = "google-beta"
   # Setting an empty username and password explicitly disables basic auth
+  # TODO(roberthbailey): Remove the entire master_auth block when switching to 1.12.
   master_auth {
     username = "${local.username}"
     password = "${var.password}"
+
+    client_certificate_config {
+      issue_client_certificate = false
+    }
   }
   remove_default_node_pool = true
   enable_legacy_abac = "${lookup(var.cluster, "legacyAbac")}"

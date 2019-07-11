@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	gv       = metav1.GroupVersion{Group: "allocation.agones.dev", Version: "v1alpha1"}
+	gv       = metav1.GroupVersion{Group: "allocation.agones.dev", Version: "v1"}
 	resource = metav1.APIResource{
 		Name:         "gameserverallocations",
 		SingularName: "gameserverallocation",
@@ -58,7 +58,7 @@ func TestAPIServerAddAPIResourceCRDHandler(t *testing.T) {
 	defer ts.Close()
 
 	client := ts.Client()
-	path := ts.URL + "/apis/allocation.agones.dev/v1alpha1/namespaces/default/gameserverallocations"
+	path := ts.URL + "/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations"
 
 	resp, err := client.Get(path)
 	assert.NoError(t, err)
@@ -67,7 +67,7 @@ func TestAPIServerAddAPIResourceCRDHandler(t *testing.T) {
 	defer resp.Body.Close() // nolint: errcheck
 
 	handled = false
-	path = ts.URL + "/apis/allocation.agones.dev/v1alpha1/namespaces/default/gameserverallZZZZions"
+	path = ts.URL + "/apis/allocation.agones.dev/v1/namespaces/default/gameserverallZZZZions"
 	resp, err = client.Get(path)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
@@ -90,7 +90,7 @@ func TestAPIServerAddAPIResourceDiscovery(t *testing.T) {
 	defer ts.Close()
 
 	client := ts.Client()
-	path := ts.URL + "/apis/allocation.agones.dev/v1alpha1"
+	path := ts.URL + "/apis/allocation.agones.dev/v1"
 
 	t.Run("No Accept Header", func(t *testing.T) {
 		resp, err := client.Get(path)
@@ -177,27 +177,27 @@ func TestSplitNameSpaceResource(t *testing.T) {
 		expected expected
 	}{
 		{
-			path: "/apis/allocation.agones.dev/v1alpha1/namespaces/default/gameserverallocations",
+			path: "/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations",
 			expected: expected{
 				namespace: "default",
 				resource:  "gameserverallocations",
 			},
 		},
 		{
-			path: "/apis/allocation.agones.dev/v1alpha1/namespaces/default/gameserverallocations/",
+			path: "/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations/",
 			expected: expected{
 				namespace: "default",
 				resource:  "gameserverallocations",
 			},
 		},
 		{
-			path: "/apis/allocation.agones.dev/v1alpha1/",
+			path: "/apis/allocation.agones.dev/v1/",
 			expected: expected{
 				isError: true,
 			},
 		},
 		{
-			path: "/apis/allocation.agones.dev/v1alpha1/blarg/default/gameserverallocations/",
+			path: "/apis/allocation.agones.dev/v1/blarg/default/gameserverallocations/",
 			expected: expected{
 				isError: true,
 			},

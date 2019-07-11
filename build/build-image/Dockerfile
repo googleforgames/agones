@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# ForceUpdate 9 -- change here if you need to force a rebuild
+# ForceUpdate 10 -- change here if you need to force a rebuild
 
 FROM debian:stretch
 
@@ -45,7 +45,7 @@ RUN go get -u golang.org/x/tools/cmd/goimports
 RUN gcloud components update && gcloud components install app-engine-go
 
 # overwrite kubectl as we want a specific version
-ENV KUBECTL_VER 1.11.5
+ENV KUBECTL_VER 1.12.10
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl

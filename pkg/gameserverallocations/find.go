@@ -18,7 +18,7 @@ import (
 	"math/rand"
 
 	"agones.dev/agones/pkg/apis"
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +31,7 @@ import (
 // Packed: will search list from start to finish
 // Distributed: will search in a random order through the list
 // It is assumed that all gameservers passed in, are Ready and not being deleted, and are sorted in Packed priority order
-func findGameServerForAllocation(gsa *v1alpha1.GameServerAllocation, list []*stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, int, error) {
+func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []*stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, int, error) {
 	type result struct {
 		gs    *stablev1alpha1.GameServer
 		index int

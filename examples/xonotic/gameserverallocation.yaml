@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "allocation.agones.dev/v1alpha1"
+apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
   # GameServer selector from which to choose GameServers from.

@@ -201,7 +201,6 @@ See the table below for available customizations :
 |---------------------------------------|-------------------------------------------------------------------------------|---------------|
 | `GCP_CLUSTER_NAME`                    | The name of the cluster                                                       | `test-cluster`  |
 | `GCP_CLUSTER_ZONE`                    | The name of the Google Compute Engine zone in which the cluster will resides. |  `us-west1-c`   |
-| `GCP_CLUSTER_LEGACYABAC`              | Enables or disables the [ABAC](https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters#LegacyAbac) authorization mechanism on a cluster.            | `false`         |
 | `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`| The number of nodes to create in this cluster.                                |  `3`            |
 | `GCP_CLUSTER_NODEPOOL_MACHINETYPE`    | The name of a Google Compute Engine machine type.                             | `n1-standard-4` |
 

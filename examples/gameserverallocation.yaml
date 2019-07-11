@@ -18,7 +18,7 @@
 # multiple Fleets, or a self managed group of GameServers.
 #
 
-apiVersion: "allocation.agones.dev/v1alpha1"
+apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
   # GameServer selector from which to choose GameServers from.

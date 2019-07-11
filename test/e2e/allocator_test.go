@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/allocation/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
@@ -52,18 +52,18 @@ func TestAllocator(t *testing.T) {
 	}
 
 	port := svc.Spec.Ports[0]
-	requestURL := fmt.Sprintf("https://%s:%d/v1alpha1/gameserverallocation", svc.Status.LoadBalancer.Ingress[0].IP, port.Port)
+	requestURL := fmt.Sprintf("https://%s:%d/v1/gameserverallocation", svc.Status.LoadBalancer.Ingress[0].IP, port.Port)
 
 	flt, err := createFleet()
 	if !assert.Nil(t, err) {
 		return
 	}
 	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	gsa := &v1alpha1.GameServerAllocation{
+	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: defaultNs,
 		},
-		Spec: v1alpha1.GameServerAllocationSpec{
+		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
 		}}
 
@@ -100,12 +100,12 @@ func TestAllocator(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
-	result := v1alpha1.GameServerAllocation{}
+	result := allocationv1.GameServerAllocation{}
 	err = json.Unmarshal(body, &result)
 	if !assert.Nil(t, err) {
 		return
 	}
-	assert.Equal(t, v1alpha1.GameServerAllocationAllocated, result.Status.State)
+	assert.Equal(t, allocationv1.GameServerAllocationAllocated, result.Status.State)
 }
 
 // creatRestClient creates a rest client with proper certs to make a remote call.

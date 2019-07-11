@@ -140,7 +140,7 @@ resource "helm_release" "agones" {
   force_update = "true"
   repository = "${data.helm_repository.agones.metadata.0.name}"
   chart = "${var.chart}"
-  timeout = 180
+  timeout = 420
 
   values = [
     # Switch to in terraform 0.12
