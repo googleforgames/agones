@@ -57,12 +57,13 @@ minikube-push: minikube-agones-profile
 	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
 	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
 	$(MAKE) minikube-transfer-image TAG=$(ping_tag)
+	$(MAKE) minikube-transfer-image TAG=$(allocator_tag)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: minikube-agones-profile
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort
 
 minikube-uninstall: $(ensure-build-image) minikube-agones-profile
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
