@@ -20,8 +20,8 @@ package fake
 
 import (
 	clientset "agones.dev/agones/pkg/client/clientset/versioned"
-	allocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1"
-	fakeallocationv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1alpha1/fake"
+	allocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1"
+	fakeallocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1/fake"
 	autoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
 	fakeautoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1/fake"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
@@ -77,14 +77,14 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// AllocationV1alpha1 retrieves the AllocationV1alpha1Client
-func (c *Clientset) AllocationV1alpha1() allocationv1alpha1.AllocationV1alpha1Interface {
-	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
+// AllocationV1 retrieves the AllocationV1Client
+func (c *Clientset) AllocationV1() allocationv1.AllocationV1Interface {
+	return &fakeallocationv1.FakeAllocationV1{Fake: &c.Fake}
 }
 
-// Allocation retrieves the AllocationV1alpha1Client
-func (c *Clientset) Allocation() allocationv1alpha1.AllocationV1alpha1Interface {
-	return &fakeallocationv1alpha1.FakeAllocationV1alpha1{Fake: &c.Fake}
+// Allocation retrieves the AllocationV1Client
+func (c *Clientset) Allocation() allocationv1.AllocationV1Interface {
+	return &fakeallocationv1.FakeAllocationV1{Fake: &c.Fake}
 }
 
 // AutoscalingV1 retrieves the AutoscalingV1Client

@@ -99,10 +99,10 @@ pub struct GameServerSpecHealth {
 impl GameServerSpecHealth {
     pub fn from_message(msg: sdk::GameServer_Spec_Health) -> GameServerSpecHealth {
         GameServerSpecHealth {
-            disabled: msg.Disabled,
-            period_seconds: msg.PeriodSeconds,
-            failure_threshold: msg.FailureThreshold,
-            initial_delay_seconds: msg.InitialDelaySeconds,
+            disabled: msg.disabled,
+            period_seconds: msg.period_seconds,
+            failure_threshold: msg.failure_threshold,
+            initial_delay_seconds: msg.initial_delay_seconds,
         }
     }
 }

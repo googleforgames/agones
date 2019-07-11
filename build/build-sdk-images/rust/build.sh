@@ -1,4 +1,6 @@
-# Copyright 2018 Google LLC All Rights Reserved.
+#!/usr/bin/env bash
+
+# Copyright 2019 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "allocation.agones.dev/v1"
-kind: GameServerAllocation
-spec:
-  # GameServer selector from which to choose GameServers from.
-  # GameServers still have the hard requirement to be `Ready` to be allocated from
-  # however we can also make available `matchExpressions` for even greater
-  # flexibility.
-  # Below is an example of a GameServer allocated against a given fleet.
-  required:
-    matchLabels:
-      stable.agones.dev/fleet: xonotic
+set -ex
+cd /go/src/agones.dev/agones/test/sdk/rust
+cargo build --release

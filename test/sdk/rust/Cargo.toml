@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "allocation.agones.dev/v1"
-kind: GameServerAllocation
-spec:
-  # GameServer selector from which to choose GameServers from.
-  # GameServers still have the hard requirement to be `Ready` to be allocated from
-  # however we can also make available `matchExpressions` for even greater
-  # flexibility.
-  # Below is an example of a GameServer allocated against a given fleet.
-  required:
-    matchLabels:
-      stable.agones.dev/fleet: xonotic
+[package]
+name = "rust-simple"
+version = "0.1.0"
+
+[dependencies]
+agones = { path = "../../../sdks/rust" }
