@@ -58,6 +58,15 @@ impl Sdk {
         Ok(res)
     }
 
+
+    /// Allocate the Game Server 
+    pub fn allocate(&self) -> Result<()> {
+        let req = sdk::Empty::default_instance();
+        let res = self.client.allocate(req).map(|_| ())?;
+        Ok(res)
+    }
+
+
     /// Marks the Game Server as ready to shutdown
     pub fn shutdown(&self) -> Result<()> {
         let req = sdk::Empty::default_instance();
