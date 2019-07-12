@@ -108,7 +108,7 @@ data:
           "targets": [
             {
               "$$hashKey": "object:818",
-              "expr": "(process_start_time_seconds{app=\"agones\",stable_agones_dev_role=\"controller\"}) * 1000",
+              "expr": "(process_start_time_seconds{app=\"agones\",agones_dev_role=\"controller\"}) * 1000",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,

@@ -12,7 +12,7 @@ server:
       memory: 4Gi
       cpu: 2
   tolerations:
-  - key: "stable.agones.dev/agones-metrics"
+  - key: "agones.dev/agones-metrics"
     operator: "Equal"
     value: "true"
     effect: "NoExecute"
@@ -22,7 +22,7 @@ server:
       - weight: 1
         preference:
           matchExpressions:
-            - key: stable.agones.dev/agones-metrics
+            - key: agones.dev/agones-metrics
               operator: Exists
 serverFiles:
  prometheus.yml:
