@@ -36,7 +36,7 @@ agones:
     resources: {}
     nodeSelector: {}
     tolerations:
-    - key: "stable.agones.dev/agones-system"
+    - key: "agones.dev/agones-system"
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
@@ -46,7 +46,7 @@ agones:
         - weight: 1
           preference:
             matchExpressions:
-              - key: stable.agones.dev/agones-system
+              - key: agones.dev/agones-system
                 operator: Exists
     generateTLS: true
     safeToEvict: false
@@ -67,7 +67,7 @@ agones:
     resources: {}
     nodeSelector: {}
     tolerations:
-    - key: "stable.agones.dev/agones-system"
+    - key: "agones.dev/agones-system"
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
@@ -77,7 +77,7 @@ agones:
         - weight: 1
           preference:
             matchExpressions:
-              - key: stable.agones.dev/agones-system
+              - key: agones.dev/agones-system
                 operator: Exists
     replicas: 2
     http:
@@ -98,7 +98,7 @@ agones:
   allocator:
     install: true
     tolerations:
-    - key: "stable.agones.dev/agones-system"
+    - key: "agones.dev/agones-system"
       operator: "Equal"
       value: "true"
       effect: "NoExecute"

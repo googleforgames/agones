@@ -27,7 +27,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      stable.agones.dev/role: ping
+      agones.dev/role: ping
       app: {{ template "agones.name" . }}
       release: {{ .Release.Name }}
       heritage: {{ .Release.Service }}
@@ -35,7 +35,7 @@ spec:
   template:
     metadata:
       labels:
-        stable.agones.dev/role: ping
+        agones.dev/role: ping
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
@@ -91,7 +91,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   selector:
-    stable.agones.dev/role: ping
+    agones.dev/role: ping
   ports:
     - port: {{ .Values.agones.ping.http.port }}
       name: http
@@ -115,7 +115,7 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   selector:
-    stable.agones.dev/role: ping
+    agones.dev/role: ping
   ports:
     - port: {{ .Values.agones.ping.udp.port }}
       name: udp

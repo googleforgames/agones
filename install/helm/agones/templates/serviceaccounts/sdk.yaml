@@ -40,7 +40,7 @@ rules:
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create"]
-- apiGroups: ["stable.agones.dev"]
+- apiGroups: ["agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
 ---

@@ -44,7 +44,7 @@ metadata:
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": before-hook-creation
 rules:
-- apiGroups: ["stable.agones.dev", "multicluster.agones.dev", "autoscaling.agones.dev"]
+- apiGroups: ["agones.dev", "multicluster.agones.dev", "autoscaling.agones.dev"]
   resources: ["fleets", "fleetautoscalers", "gameservers", "gameserversets", "gameserverallocationpolicies"]
   verbs: ["delete", "list" ]
 - apiGroups: [""]
