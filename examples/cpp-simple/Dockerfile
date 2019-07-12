@@ -16,7 +16,7 @@ FROM gcc:8 as builder
 
 WORKDIR /project
 
-ADD https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh /cmake-3.14.1-Linux-x86_64.sh
+RUN wget -q https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh -O /cmake-3.14.1-Linux-x86_64.sh
 RUN mkdir /opt/cmake
 RUN sh /cmake-3.14.1-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
 RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
