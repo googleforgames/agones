@@ -91,7 +91,6 @@ status = sdk->SetAnnotation("test-annotation", "test value");
 if (!status.ok()) { ... }
 ```
 
-
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
 passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
 
@@ -127,46 +126,60 @@ When running on Agones, the above functions should only fail under exceptional c
 file a bug if it occurs.
 
 ### Building the Libraries from source
-CMake is used to build SDK for all platforms. It is possible to build SDK as a static or dynamic library.
+CMake is used to build SDK for all supported platforms (Linux/Window/MacOS).
 
 ## Prerequisites
 * CMake >= 3.13.0
 * Git
 * C++14 compiler
 
+Agones SDK depends on [gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md). If CMake can't find gRPC with find_package(), it download and build gRPC.
+There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/master/NOTES.WIN):
+* Perl
+* NASM
+
+Note that OpenSSL is not used in Agones SDK, but it required to have full successfull build of gRPC.
+
 ## Options
-Following options are available
-- **AGONES_BUILD_SHARED** (default is OFF) - build sdk as a shared library.
-- **AGONES_CREATE_PACKAGE** (default is ON) - create an "install" step, to create a cmake package.
+Following options are available:
+- **AGONES_THIRDPARTY_INSTALL_PATH** (default is CMAKE_INSTALL_PREFIX) - installation path for Agones prerequisites (used only if gRPC and Protobuf are not found by find_package)
+- **AGONES_ZLIB_STATIC** (default is ON) - use static version of zlib for gRPC
+
+(Windows only):
+- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisities. Option is not used if you already have built gRPC.
+- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
+
+## Linux / MacOS
+```
+mkdir -p .build
+cd .build
+cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --target install
+```
 
 ## Windows
 Building with Visual Studio:
 ```
 md .build
 cd .build
-cmake .. -G "Visual Studio 15 2017 Win64" -Wno-dev
-cmake --build . --config Release
+cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --config Release --target install
 ```
 Building with NMake
 ```
 md .build
 cd .build
-cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -Wno-dev
-cmake --build .
-```
-
-## Linux / MacOS
-```
-mkdir -p .build
-cd .build
-cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev
-cmake --build .
+cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install
+cmake --build . --target install
 ```
 
 ## Remarks
-CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC dependency.
+**CMAKE_INSTALL_PREFIX** may be skipped if it is OK to install Agones SDK to a default location (usually /usr/local or c:/Program Files/Agones).
+
+CMake option `-Wno-dev` is specified to suppress [CMP0048](https://cmake.org/cmake/help/v3.13/policy/CMP0048.html) deprecation warning for gRPC build.
+
+If **AGONES_ZLIB_STATIC** is set to OFF, ensure that you have installed zlib. For Windows it's enough to copy zlib.dll near to gameserver executable. For Linux/Mac usually no actions are needed.
 
 ### Using SDK
 In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
-If **AGONES_CREATE_PACKAGE** option is off, then `CMAKE_PREFIX_PATH` should be set to a path where SDK is built (usually `agones/sdks/cpp/.build`).
 It maybe useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
