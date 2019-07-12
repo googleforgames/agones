@@ -21,7 +21,7 @@ import (
 
 const (
 	// metadataPrefix prefix for labels and annotations
-	metadataPrefix = "stable.agones.dev/sdk-"
+	metadataPrefix = "agones.dev/sdk-"
 )
 
 // convert converts a K8s GameServer object, into a gRPC SDK GameServer object
