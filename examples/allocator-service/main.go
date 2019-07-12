@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/util/runtime" // for the logger
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,7 +128,7 @@ func handleAddress(w http.ResponseWriter, r *http.Request) {
 // Return the number of ready game servers available to this fleet for allocation
 func checkReadyReplicas() int32 {
 	// Get a FleetInterface for this namespace
-	fleetInterface := agonesClient.StableV1alpha1().Fleets(namespace)
+	fleetInterface := agonesClient.AgonesV1().Fleets(namespace)
 	// Get our fleet
 	fleet, err := fleetInterface.Get(fleetname, metav1.GetOptions{})
 	if err != nil {
@@ -160,7 +160,7 @@ func allocate() (allocationv1.GameServerAllocationState, error) {
 	// Define the allocation using the constants set earlier
 	gsa := &allocationv1.GameServerAllocation{
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: fleetname}},
+			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetname}},
 		}}
 
 	// Create a new allocation

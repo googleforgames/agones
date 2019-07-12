@@ -16,7 +16,7 @@
 # it uses artificially low resource requests to be able to put as many
 # pods on a node as possible.
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
   name: simple-udp-distributed

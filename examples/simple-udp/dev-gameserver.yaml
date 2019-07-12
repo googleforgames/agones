@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
   name: local-simple-udp
   generateName: "simple-udp-"
   annotations:
     # Causes Agones to register your local game server at 192.1.1.2, replace with your server's IP address.
-    stable.agones.dev/dev-address: "192.1.1.2"
+    agones.dev/dev-address: "192.1.1.2"
 spec:
   ports:
   - name: default
