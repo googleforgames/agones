@@ -127,6 +127,9 @@ run-sdk-conformance-test: ensure-build-sdk-image
 # Run a conformance test for all SDKs supported
 run-sdk-conformance-tests: ensure-agones-sdk-image
 	$(MAKE) run-sdk-command SDK_FOLDER=node COMMAND=build
+	$(MAKE) run-sdk-command SDK_FOLDER=rust COMMAND=build
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
+	$(MAKE) run-sdk-command SDK_FOLDER=rust COMMAND=clean
 	$(MAKE) run-sdk-command SDK_FOLDER=node COMMAND=clean
