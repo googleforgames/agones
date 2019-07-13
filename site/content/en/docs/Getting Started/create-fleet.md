@@ -76,6 +76,7 @@ Let's wait for the two `GameServers` to become ready.
 watch kubectl describe fleet simple-udp
 ```
 
+{{% feature expiryVersion="0.12.0" %}}
 ```
 Name:         simple-udp
 Namespace:    default
@@ -123,6 +124,56 @@ Events:
   ----    ------                 ----  ----              -------
   Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```
+Name:         simple-udp
+Namespace:    default
+Labels:       <none>
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"agones.dev/v1","kind":"Fleet","metadata":{"annotations":{},"name":"simple-udp","namespace":"default"},"spec":{"replicas":2,...
+API Version:  agones.dev/v1
+Kind:         Fleet
+Metadata:
+  Cluster Name:
+  Creation Timestamp:  2018-07-01T18:55:35Z
+  Generation:          1
+  Resource Version:    24685
+  Self Link:           /apis/agones.dev/v1/namespaces/default/fleets/simple-udp
+  UID:                 56710a91-7d60-11e8-b2dd-08002703ef08
+Spec:
+  Replicas:  2
+  Strategy:
+    Rolling Update:
+      Max Surge:        25%
+      Max Unavailable:  25%
+    Type:               RollingUpdate
+  Template:
+    Metadata:
+      Creation Timestamp:  <nil>
+    Spec:
+      Health:
+      Ports:
+        Container Port:  7654
+        Name:            default
+        Port Policy:     Dynamic
+      Template:
+        Metadata:
+          Creation Timestamp:  <nil>
+        Spec:
+          Containers:
+            Image:  {{< example-image >}}
+            Name:   simple-udp
+            Resources:
+Status:
+  Allocated Replicas:  0
+  Ready Replicas:      2
+  Replicas:            2
+Events:
+  Type    Reason                 Age   From              Message
+  ----    ------                 ----  ----              -------
+  Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
+```
+{{% /feature %}}
 
 If you look towards the bottom, you can see there is a section of `Status > Ready Replicas` which will tell you
 how many `GameServers` are currently in a Ready state. After a short period, there should be 2 `Ready Replicas`.
@@ -211,7 +262,7 @@ spec:
   metadata: {}
   required:
     matchLabels:
-      stable.agones.dev/fleet: simple-udp
+      agones.dev/fleet: simple-udp
   scheduling: Packed
 status:
   address: 192.168.122.152
@@ -273,6 +324,7 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 You should get back a response that looks like the following:
 
+{{% feature expiryVersion="0.12.0" %}}
 ```
 apiVersion: stable.agones.dev/v1alpha1
 kind: FleetAllocation
@@ -345,6 +397,81 @@ status:
         port: 7604
       state: Allocated
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```
+apiVersion: agones.dev/v1
+kind: FleetAllocation
+metadata:
+  clusterName: ""
+  creationTimestamp: 2018-07-01T18:56:31Z
+  generateName: simple-udp-
+  generation: 1
+  name: simple-udp-l7dn9
+  namespace: default
+  ownerReferences:
+  - apiVersion: agones.dev/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: GameServer
+    name: simple-udp-wlqnd-s2xr5
+    uid: 5676a611-7d60-11e8-b2dd-08002703ef08
+  resourceVersion: "24719"
+  selfLink: /apis/agones.dev/v1/namespaces/default/fleetallocations/simple-udp-l7dn9
+  uid: 77c22f17-7d60-11e8-b2dd-08002703ef08
+spec:
+  fleetName: simple-udp
+status:
+  GameServer:
+    metadata:
+      creationTimestamp: 2018-07-01T18:55:35Z
+      finalizers:
+      - agones.dev
+      generateName: simple-udp-wlqnd-
+      generation: 1
+      labels:
+        agones.dev/gameserverset: simple-udp-wlqnd
+      name: simple-udp-wlqnd-s2xr5
+      namespace: default
+      ownerReferences:
+      - apiVersion: agones.dev/v1
+        blockOwnerDeletion: true
+        controller: true
+        kind: GameServerSet
+        name: simple-udp-wlqnd
+        uid: 56731f1a-7d60-11e8-b2dd-08002703ef08
+      resourceVersion: "24716"
+      selfLink: /apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-wlqnd-s2xr5
+      uid: 5676a611-7d60-11e8-b2dd-08002703ef08
+    spec:
+      container: simple-udp
+      health:
+        failureThreshold: 3
+        initialDelaySeconds: 5
+        periodSeconds: 5
+      ports:
+      - containerPort: 7654
+        hostPort: 7604
+        name: default
+        portPolicy: Dynamic
+        protocol: UDP
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - image: {{< example-image >}}
+            name: simple-udp
+            resources: {}
+    status:
+      address: 192.168.99.100
+      nodeName: agones
+      ports:
+      - name: default
+        port: 7604
+      state: Allocated
+```
+{{% /feature %}}
 
 If you see the `status` section, you should see that there is a `GameServer`, and if you look at its
 `status > state` value, you can also see that it has been moved to `Allocated`. This means you have been successfully

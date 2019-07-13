@@ -25,6 +25,7 @@ we can take advantage of both resource limits and requests in our `GameServer` c
 For example, to set a CPU limit on our `GameServer` configuration of 250m/0.25 of a cpu, 
 we could do so as followed:
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: GameServer
@@ -43,6 +44,27 @@ spec:
           limit:
             cpu: "250m" #this is our limit here
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  name: "simple-udp"
+spec:
+  ports:
+  - name: default
+    containerPort: 7654
+  template:
+    spec:
+      containers:
+      - name: simple-udp
+        image: {{% example-image %}}
+        resources:
+          limit:
+            cpu: "250m" #this is our limit here
+```
+{{% /feature %}}
 
 If you do not set a limit or request, the default is set my Kubernetes at a 100m CPU request. 
 

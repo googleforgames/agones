@@ -8,10 +8,18 @@ description: >
 
 In this quickstart, we will create a Kubernetes cluster, and populate it with the resource types that power Agones.
 
+{{% feature expiryVersion="0.12.0" %}}
 > When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
 > are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
 > `stable.agones.dev/agones-system=true` and tolerates the node taint `stable.agones.dev/agones-system=true:NoExecute`.
 > If no dedicated nodes are available, Agones will run on regular nodes.
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+> When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
+> are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
+> `agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
+> If no dedicated nodes are available, Agones will run on regular nodes.
+{{% /feature %}}
 
 ## Usage Requirements
 
@@ -137,6 +145,7 @@ _Optional_: Create a dedicated node pool for the Agones controllers. If you choo
 controllers will share the default node pool with your game servers which is fine for kicking the tires but is not
 recommended for a production deployment.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```bash
 gcloud container node-pools create agones-system \
   --cluster=[CLUSTER_NAME] \
@@ -144,6 +153,16 @@ gcloud container node-pools create agones-system \
   --node-labels stable.agones.dev/agones-system=true \
   --num-nodes=1
 ```
+{{% /feature %}}
+{{% feature publishVersion="0.12.0" %}}
+```bash
+gcloud container node-pools create agones-system \
+  --cluster=[CLUSTER_NAME] \
+  --node-taints agones.dev/agones-system=true:NoExecute \
+  --node-labels agones.dev/agones-system=true \
+  --num-nodes=1
+```
+{{% /feature %}}
 
 Flag explanations:
 

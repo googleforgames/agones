@@ -73,6 +73,7 @@ Let's wait for the GameServer state to become `Ready`:
 watch kubectl describe gameserver
 ```
 
+{{% feature expiryVersion="0.12.0" %}}
 ```
 Name:         simple-udp-7pjrq
 Namespace:    default
@@ -131,6 +132,67 @@ Events:
   Normal  Scheduled       34s   gameserver-controller  Address and port populated
   Normal  Ready           27s   gameserver-controller  SDK.Ready() executed
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```
+Name:         simple-udp-7pjrq
+Namespace:    default
+Labels:       <none>
+Annotations:  agones.dev/sdk-version: 0.9.0-764fa53
+API Version:  agones.dev/v1
+Kind:         GameServer
+Metadata:
+  Creation Timestamp:  2019-02-27T15:06:20Z
+  Finalizers:
+    agones.dev
+  Generate Name:     simple-udp-
+  Generation:        1
+  Resource Version:  30377
+  Self Link:         /apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-7pjrq
+  UID:               3d7ac3e1-3aa1-11e9-a4f5-42010a8a0019
+Spec:
+  Container:  simple-udp
+  Health:
+    Failure Threshold:      3
+    Initial Delay Seconds:  5
+    Period Seconds:         5
+  Ports:
+    Container Port:  7654
+    Host Port:       7190
+    Name:            default
+    Port Policy:     Dynamic
+    Protocol:        UDP
+  Scheduling:        Packed
+  Template:
+    Metadata:
+      Creation Timestamp:  <nil>
+    Spec:
+      Containers:
+        Image:  {{< example-image >}}
+        Name:   simple-udp
+        Resources:
+          Limits:
+            Cpu:     20m
+            Memory:  32Mi
+          Requests:
+            Cpu:     20m
+            Memory:  32Mi
+Status:
+  Address:    35.233.183.43
+  Node Name:  agones
+  Ports:
+    Name:  default
+    Port:  7190
+  State:   Ready
+Events:
+  Type    Reason          Age   From                   Message
+  ----    ------          ----  ----                   -------
+  Normal  PortAllocation  34s   gameserver-controller  Port allocated
+  Normal  Creating        34s   gameserver-controller  Pod simple-udp-7pjrq created
+  Normal  Scheduled       34s   gameserver-controller  Address and port populated
+  Normal  Ready           27s   gameserver-controller  SDK.Ready() executed
+```
+{{% /feature %}}
 
 If you look towards the bottom, you can see there is a `Status > State` value. We are waiting for it to move to `Ready`, which means that the game server is ready to accept connections.
 

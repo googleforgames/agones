@@ -12,6 +12,7 @@ Like any other Kubernetes resource you describe a `Fleet`'s desired state via a 
 
 A full `Fleet` specification is available below and in the {{< ghlink href="examples/fleet.yaml" >}}example folder{{< /ghlink >}} for reference :
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: Fleet
@@ -43,11 +44,53 @@ spec:
           - name: example-server
             image: gcr.io/agones/test-server:0.1
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: fleet-example
+spec:
+  replicas: 2
+  scheduling: Packed
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%  
+  template:
+    metadata:
+      labels:
+        foo: bar
+    spec:
+      ports:
+      - name: default
+        portPolicy: Dynamic
+        containerPort: 26000
+      health:
+        initialDelaySeconds: 30
+        periodSeconds: 60
+      template:
+        spec:
+          containers:
+          - name: example-server
+            image: gcr.io/agones/test-server:0.1
+```
+{{% /feature %}}
 
+{{% feature expiryVersion="0.12.0" %}}
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
 we can define a new resource using the kind `Fleet` with the custom group `stable.agones.dev` and API 
 version `v1alpha1`.
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+Since Agones defines a new 
+[Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
+we can define a new resource using the kind `Fleet` with the custom group `agones.dev` and API 
+version `v1`.
+{{% /feature %}}
 
 You can use the metadata field to target a specific 
 [namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) but also 
@@ -86,6 +129,7 @@ A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet
 A full `FleetAllocation` specification is available below and in the 
 {{< ghlink href="examples/fleetallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: FleetAllocation
@@ -99,6 +143,22 @@ spec:
     annotations:
       map:  garden22
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "agones.dev/v1"
+kind: FleetAllocation
+metadata:
+  generateName: fleet-allocation-example-
+spec:
+  fleetName: fleet-example
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22
+```
+{{% /feature %}}
 
 We recommend using `metadata > generateName`, to declare to Kubernetes that a unique
 name for the `FleetAllocation` is generated when the `FleetAllocation` is created.
@@ -116,12 +176,21 @@ The `spec` field is the actual `FleetAllocation` specification and it is compose
 Scale subresource is defined for a Fleet. Please refer to [Kubernetes docs](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#subresources).
 
 You can use the following command to scale the fleet with name simple-udp:
+{{% feature expiryVersion="0.12.0" %}}
 ```bash
 $ kubectl scale fleet simple-udp --replicas=10
 fleet.stable.agones.dev/simple-udp scaled
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```bash
+$ kubectl scale fleet simple-udp --replicas=10
+fleet.agones.dev/simple-udp scaled
+```
+{{% /feature %}}
 
 You can also use [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}) to get or update the Replicas count:
+{{% feature expiryVersion="0.12.0" %}}
 ```
 curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fleets/simple-udp/scale
 ...
@@ -143,5 +212,29 @@ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fl
     "replicas": 10
   }
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```
+curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/fleets/simple-udp/scale
+...
+{
+  "kind": "Scale",
+  "apiVersion": "autoscaling/v1",
+  "metadata": {
+    "name": "simple-udp",
+    "namespace": "default",
+    "selfLink": "/apis/agones.dev/v1/namespaces/default/fleets/simple-udp/scale",
+    "uid": "4dfaa310-2566-11e9-afd1-42010a8a0058",
+    "resourceVersion": "292652",
+    "creationTimestamp": "2019-01-31T14:41:33Z"
+  },
+  "spec": {
+    "replicas": 10
+  },
+  "status": {
+    "replicas": 10
+  }
+```
+{{% /feature %}}
 
 Also exposing a Scale subresource would allow you to configure HorizontalPodAutoscaler and PodDisruptionBudget for a fleet in the future. However these features have not been tested, and are not currently supported - but if you are looking for these features, please be sure to let us know in the [ticket](https://github.com/googleforgames/agones/issues/553). 
