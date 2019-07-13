@@ -64,6 +64,7 @@ option(AGONES_FORCE_GRPC_VERSION "Build Agones C++ SDK only with supported gRPC 
 option(AGONES_BUILD_ONLY_PREREQUISITIES "Build only prerequisites of Agones" OFF)
 option(AGONES_ZLIB_STATIC "Use static version of ZLIB" ON)
 option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" OFF)
+option(AGONES_CLANG_FORMAT "Apply clang-format (if found) as a pre-build step" OFF)
 set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
 set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
 
@@ -186,3 +187,42 @@ install(
 
 unset(_INCLUDE_DIRS)
 unset(_CMAKE_CONFIG_DESTINATION)
+
+# clang-format
+find_program(
+    CLANG_FORMAT_APP
+    NAMES "clang-format"
+    DOC "Path to clang-format"
+)
+if (NOT CLANG_FORMAT_APP)
+    message(STATUS "clang-format not found.")
+else()
+    message(STATUS "clang-format found: ${CLANG_FORMAT_APP}")
+    
+    set(CLANGFORMAT_INPUT)
+    foreach(relpath ${SDK_FILES})
+        get_filename_component(fullpath "${CMAKE_CURRENT_LIST_DIR}/${relpath}" ABSOLUTE)
+        list(APPEND CLANGFORMAT_INPUT ${fullpath})
+    endforeach()
+ 
+    # format
+    add_custom_target(
+        clang-format-apply
+        COMMAND ${CLANG_FORMAT_APP} -i --style=file --fallback-style=Google ${CLANGFORMAT_INPUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    if (${AGONES_CLANG_FORMAT})
+        add_dependencies(${PROJECT_NAME} "clang-format-apply")
+    endif()
+    
+    # verification
+    set(CLANGFORMAT_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    get_filename_component(AGONES_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+    get_filename_component(AGONES_TEMP "${CMAKE_CURRENT_BINARY_DIR}/clang-format/temp" ABSOLUTE)
+    configure_file("cmake/clang-verify.in" "clang-format/CMakeLists.txt" @ONLY)
+    add_custom_target(
+        clang-format-verify
+        COMMAND ${CMAKE_COMMAND} .
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/clang-format"
+    )    
+endif()
