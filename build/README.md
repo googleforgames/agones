@@ -298,7 +298,7 @@ Running end-to-end tests on minikube is done via the `make minikube-test-e2e` ta
 Because Kind runs on a docker on the host, some of the standard build and development Make targets
 need to be replaced by kind specific targets.
 
-If you have [go](https://golang.org/) and [docker](https://www.docker.com/) installed `go get sigs.k8s.io/kind` is all you need !
+First, [install Kind](https://github.com/kubernetes-sigs/kind#installation-and-usage).
 
 Next we will create the Agones Kind cluster. Run `make kind-test-cluster` to create the `agones` Kubernetes cluster.
 
