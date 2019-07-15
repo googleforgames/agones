@@ -1000,6 +1000,21 @@ spec:
         release: agones-manual
         heritage: Tiller
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
+            weight: 1
+        
+      tolerations:
+        - effect: NoExecute
+          key: stable.agones.dev/agones-system
+          operator: Equal
+          value: "true"
+        
       serviceAccountName: gameserver-allocator
       volumes:
       - name: tls
