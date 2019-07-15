@@ -112,13 +112,14 @@ ensure-build-sdk-image:
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
 SECONDS ?= 30
-run-sdk-conformance-local:
+run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 59357:59357 \
 	 -e "TEST=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch" -e "TIMEOUT=$(SECONDS)" $(sidecar_tag)
 
 # Run SDK conformance test for a specific SDK_FOLDER
 SECONDS ?= 30
 run-sdk-conformance-test: SDK_FOLDER=$(SDK_FOLDER)
+run-sdk-conformance-test: ensure-agones-sdk-image
 run-sdk-conformance-test: ensure-build-sdk-image
 	sleep 2s && DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
 	docker run -p 59357:59357 -e "ADDRESS=" \
