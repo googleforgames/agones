@@ -63,6 +63,14 @@ spec:
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
     spec:
+      {{- if .Values.agones.allocator.affinity }}
+      affinity:
+{{ toYaml .Values.agones.allocator.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.allocator.tolerations }}
+      tolerations:
+{{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
+      {{- end }}
       serviceAccountName: gameserver-allocator
       volumes:
       - name: tls
