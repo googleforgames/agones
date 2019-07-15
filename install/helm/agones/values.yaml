@@ -102,6 +102,14 @@ agones:
       operator: "Equal"
       value: "true"
       effect: "NoExecute"
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: stable.agones.dev/agones-system
+                operator: Exists
     replicas: 3
     http:
       expose: true
