@@ -20,8 +20,6 @@
 
 namespace agones {
 
-class SDKImpl;
-
 // The Agones SDK
 class SDK {
  public:
@@ -68,6 +66,7 @@ class SDK {
           callback);
 
  private:
+  struct SDKImpl;
   std::unique_ptr<SDKImpl> pimpl_;
 };
 
