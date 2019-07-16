@@ -15,22 +15,18 @@
 #include "agones/sdk.h"
 
 #include <grpcpp/grpcpp.h>
-
-namespace {
-const int kPort = 59357;
-}
+#include <utility>
 
 namespace agones {
 
-class SDKImpl final {
- public:
+struct SDK::SDKImpl {
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<stable::agones::dev::sdk::SDK::Stub> stub_;
   std::unique_ptr<grpc::ClientWriter<stable::agones::dev::sdk::Empty>> health_;
 };
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
-  pimpl_->channel_ = grpc::CreateChannel("localhost:" + std::to_string(kPort),
+  pimpl_->channel_ = grpc::CreateChannel("localhost:59357",
                                          grpc::InsecureChannelCredentials());
 }
 
@@ -47,19 +43,20 @@ bool SDK::Connect() {
 
   // make the health connection
   stable::agones::dev::sdk::Empty response;
-  pimpl_->health_ = pimpl_->stub_->Health(new grpc::ClientContext(), &response);
+  grpc::ClientContext context;
+  pimpl_->health_ = pimpl_->stub_->Health(&context, &response);
 
   return true;
 }
 
 grpc::Status SDK::Ready() {
-  grpc::ClientContext *context = new grpc::ClientContext();
-  context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
-                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
   stable::agones::dev::sdk::Empty request;
   stable::agones::dev::sdk::Empty response;
 
-  return pimpl_->stub_->Ready(context, request, &response);
+  return pimpl_->stub_->Ready(&context, request, &response);
 }
 
 bool SDK::Health() {
@@ -67,23 +64,23 @@ bool SDK::Health() {
   return pimpl_->health_->Write(request);
 }
 
-grpc::Status SDK::GameServer(stable::agones::dev::sdk::GameServer *response) {
-  grpc::ClientContext *context = new grpc::ClientContext();
-  context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
-                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
+grpc::Status SDK::GameServer(stable::agones::dev::sdk::GameServer* response) {
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
   stable::agones::dev::sdk::Empty request;
 
-  return pimpl_->stub_->GetGameServer(context, request, response);
+  return pimpl_->stub_->GetGameServer(&context, request, response);
 }
 
 grpc::Status SDK::WatchGameServer(
-    const std::function<void(stable::agones::dev::sdk::GameServer)> &callback) {
-  grpc::ClientContext *context = new grpc::ClientContext();
+    const std::function<void(stable::agones::dev::sdk::GameServer)>& callback) {
+  grpc::ClientContext context;
   stable::agones::dev::sdk::Empty request;
   stable::agones::dev::sdk::GameServer gameServer;
 
   std::unique_ptr<grpc::ClientReader<stable::agones::dev::sdk::GameServer>>
-      reader = pimpl_->stub_->WatchGameServer(context, request);
+      reader = pimpl_->stub_->WatchGameServer(&context, request);
   while (reader->Read(&gameServer)) {
     callback(gameServer);
   }
@@ -91,40 +88,40 @@ grpc::Status SDK::WatchGameServer(
 }
 
 grpc::Status SDK::Shutdown() {
-  grpc::ClientContext *context = new grpc::ClientContext();
-  context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
-                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
   stable::agones::dev::sdk::Empty request;
   stable::agones::dev::sdk::Empty response;
 
-  return pimpl_->stub_->Shutdown(context, request, &response);
+  return pimpl_->stub_->Shutdown(&context, request, &response);
 }
 
 grpc::Status SDK::SetLabel(std::string key, std::string value) {
-  grpc::ClientContext *context = new grpc::ClientContext();
-  context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
-                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
 
   stable::agones::dev::sdk::KeyValue request;
-  request.set_key(key);
-  request.set_value(value);
+  request.set_key(std::move(key));
+  request.set_value(std::move(value));
 
   stable::agones::dev::sdk::Empty response;
 
-  return pimpl_->stub_->SetLabel(context, request, &response);
+  return pimpl_->stub_->SetLabel(&context, request, &response);
 }
 
 grpc::Status SDK::SetAnnotation(std::string key, std::string value) {
-  grpc::ClientContext *context = new grpc::ClientContext();
-  context->set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
-                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
 
   stable::agones::dev::sdk::KeyValue request;
-  request.set_key(key);
-  request.set_value(value);
+  request.set_key(std::move(key));
+  request.set_value(std::move(value));
 
   stable::agones::dev::sdk::Empty response;
 
-  return pimpl_->stub_->SetAnnotation(context, request, &response);
+  return pimpl_->stub_->SetAnnotation(&context, request, &response);
 }
 }  // namespace agones
