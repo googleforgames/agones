@@ -40,7 +40,8 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "iteration": 1561322336031,
+      "id": 10,
+      "iteration": 1563127715245,
       "links": [],
       "panels": [
         {
@@ -529,8 +530,8 @@ data:
           "scopedVars": {
             "healthcheck": {
               "selected": true,
-              "text": "agones-client",
-              "value": "agones-client"
+              "text": "allocator-agones-client",
+              "value": "allocator-agones-client"
             }
           },
           "sparkline": {
@@ -591,7 +592,7 @@ data:
             "x": 6,
             "y": 16
           },
-          "id": 10,
+          "id": 22,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -622,7 +623,105 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
+          "repeatPanelId": 2,
+          "scopedVars": {
+            "healthcheck": {
+              "selected": true,
+              "text": "allocator-https",
+              "value": "allocator-https"
+            }
+          },
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "{{check}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0,1",
+          "title": "health check - $healthcheck",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "OK",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "NOK",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "#299c46",
+            "#d44a3a"
+          ],
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 12,
+            "y": 16
+          },
+          "id": 23,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "repeat": null,
+          "repeatDirection": "h",
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -686,10 +785,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 12,
+            "x": 18,
             "y": 16
           },
-          "id": 11,
+          "id": 24,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -720,7 +819,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -784,10 +883,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 18,
-            "y": 16
+            "x": 0,
+            "y": 25
           },
-          "id": 12,
+          "id": 25,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -818,7 +917,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -882,10 +981,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 0,
+            "x": 6,
             "y": 25
           },
-          "id": 13,
+          "id": 26,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -916,7 +1015,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -980,10 +1079,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 6,
+            "x": 12,
             "y": 25
           },
-          "id": 14,
+          "id": 27,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -1014,7 +1113,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -1078,10 +1177,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 12,
+            "x": 18,
             "y": 25
           },
-          "id": 15,
+          "id": 28,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -1112,7 +1211,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -1176,10 +1275,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 18,
-            "y": 25
+            "x": 0,
+            "y": 34
           },
-          "id": 16,
+          "id": 29,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -1210,7 +1309,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -1274,10 +1373,10 @@ data:
           "gridPos": {
             "h": 9,
             "w": 6,
-            "x": 0,
+            "x": 6,
             "y": 34
           },
-          "id": 17,
+          "id": 30,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -1308,7 +1407,7 @@ data:
           ],
           "repeat": null,
           "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
+          "repeatIteration": 1563127715245,
           "repeatPanelId": 2,
           "scopedVars": {
             "healthcheck": {
@@ -1351,108 +1450,10 @@ data:
             }
           ],
           "valueName": "current"
-        },
-        {
-          "cacheTimeout": null,
-          "colorBackground": true,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "#299c46",
-            "#d44a3a"
-          ],
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
-          "gridPos": {
-            "h": 9,
-            "w": 6,
-            "x": 6,
-            "y": 34
-          },
-          "id": 18,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "options": {},
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "repeat": null,
-          "repeatDirection": "h",
-          "repeatIteration": 1561322336031,
-          "repeatPanelId": 2,
-          "scopedVars": {
-            "healthcheck": {
-              "selected": true,
-              "text": "https",
-              "value": "https"
-            }
-          },
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false
-          },
-          "tableColumn": "",
-          "targets": [
-            {
-              "expr": "sum(agones_healthcheck_status{check=\"$healthcheck\"}) OR on() vector(1)",
-              "format": "time_series",
-              "instant": true,
-              "intervalFactor": 1,
-              "legendFormat": "{{check}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": "0,1",
-          "title": "health check - $healthcheck",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "OK",
-              "value": "0"
-            },
-            {
-              "op": "=",
-              "text": "NOK",
-              "value": "1"
-            }
-          ],
-          "valueName": "current"
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 18,
+      "schemaVersion": 16,
       "style": "dark",
       "tags": [
         "agones",
@@ -1463,9 +1464,10 @@ data:
           {
             "allValue": null,
             "current": {
-              "text": "agones-client + fleet-workerqueue + fleetautoscaler-workerqueue + gameserver-creation-workerqueue + gameserver-deletion-workerqueue + gameserver-health-workerqueue + gameserver-workerqueue + gameserverallocation-gameserver-workerqueue + gameserverset-workerqueue + https",
+              "text": "allocator-agones-client + allocator-https + fleet-workerqueue + fleetautoscaler-workerqueue + gameserver-creation-workerqueue + gameserver-deletion-workerqueue + gameserver-health-workerqueue + gameserver-workerqueue + gameserverallocation-gameserver-workerqueue + gameserverset-workerqueue",
               "value": [
-                "agones-client",
+                "allocator-agones-client",
+                "allocator-https",
                 "fleet-workerqueue",
                 "fleetautoscaler-workerqueue",
                 "gameserver-creation-workerqueue",
@@ -1473,8 +1475,7 @@ data:
                 "gameserver-health-workerqueue",
                 "gameserver-workerqueue",
                 "gameserverallocation-gameserver-workerqueue",
-                "gameserverset-workerqueue",
-                "https"
+                "gameserverset-workerqueue"
               ]
             },
             "datasource": "Prometheus",

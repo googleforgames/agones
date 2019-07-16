@@ -322,8 +322,8 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 		out, err = c.allocateFromLocalCluster(gsa)
 	}
 
-	if err := c.recordAllocationCount(r.Context(), gsa, out, err); err != nil {
-		c.baseLogger.WithError(err).Warn("failed to record allocation count metrics.")
+	if metricErr := c.recordAllocationCount(r.Context(), gsa, out, err); metricErr != nil {
+		c.baseLogger.WithError(metricErr).Warn("failed to record allocation count metrics.")
 	}
 
 	if err != nil {
@@ -333,15 +333,18 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	return c.serialisation(r, w, out, scheme.Codecs)
 }
 
-// we should be able to count per node,fleet,cluster,status : error if not null otherwise state
 func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alpha1.GameServerAllocation, allocErr error) error {
 	tags := []tag.Mutator{
 		tag.Insert(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)),
-		tag.Insert(keyClusterName, in.ClusterName),
+		tag.Insert(keyClusterName, "none"),
 		tag.Insert(keySchedulingStrategy, string(in.Spec.Scheduling)),
 		tag.Insert(keyFleetName, "none"),
 		tag.Insert(keyNodeName, "none"),
 		tag.Insert(keyStatus, "none"),
+	}
+
+	if in.ClusterName != "" {
+		tags = append(tags, tag.Update(keyClusterName, in.ClusterName))
 	}
 
 	if allocErr != nil {
@@ -349,7 +352,9 @@ func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alph
 	}
 	if out != nil {
 		tags = append(tags, tag.Update(keyStatus, string(out.Status.State)))
-		tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
+		if out.Status.NodeName != "" {
+			tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
+		}
 		// sets the fleet name tag if possible
 		if out.Status.State == v1alpha1.GameServerAllocationAllocated {
 			gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
