@@ -56,9 +56,7 @@ const (
 	updateAnnotation Operation = "updateAnnotation"
 )
 
-var (
-	_ sdk.SDKServer = &SDKServer{}
-)
+var _ sdk.SDKServer = &SDKServer{}
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
@@ -200,7 +198,9 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
 
 	if gs.Status.State == stablev1alpha1.GameServerStateReserved && gs.Status.ReservedUntil != nil {
+		s.gsUpdateMutex.Lock()
 		s.resetReserveAfter(context.Background(), time.Until(gs.Status.ReservedUntil.Time))
+		s.gsUpdateMutex.Unlock()
 	}
 
 	// start health checking running
@@ -259,13 +259,13 @@ func (s *SDKServer) updateState() error {
 		return err
 	}
 
-	// if we are currently in shutdown/being deleted, there is no escaping
+	// If we are currently in shutdown/being deleted, there is no escaping.
 	if gs.IsBeingDeleted() {
 		s.logger.Info("GameServerState being shutdown. Skipping update.")
 		return nil
 	}
 
-	// if the state is currently unhealthy, you can't go back to Ready
+	// If the state is currently unhealthy, you can't go back to Ready.
 	if gs.Status.State == stablev1alpha1.GameServerStateUnhealthy {
 		s.logger.Info("GameServerState already unhealthy. Skipping update.")
 		return nil
@@ -274,7 +274,7 @@ func (s *SDKServer) updateState() error {
 	s.gsUpdateMutex.RLock()
 	gs.Status.State = s.gsState
 
-	// if we are setting the Reserved status, check for the duration, and set that too
+	// If we are setting the Reserved status, check for the duration, and set that too.
 	if gs.Status.State == stablev1alpha1.GameServerStateReserved && s.gsReserveDuration != nil {
 		n := metav1.NewTime(time.Now().Add(*s.gsReserveDuration))
 		gs.Status.ReservedUntil = &n
@@ -295,16 +295,12 @@ func (s *SDKServer) updateState() error {
 	case stablev1alpha1.GameServerStateUnhealthy:
 		level = corev1.EventTypeWarning
 	case stablev1alpha1.GameServerStateReserved:
-		s.gsUpdateMutex.RLock()
-		hasDuration := s.gsReserveDuration != nil
-		if hasDuration {
-			message += fmt.Sprintf(", for %v", s.gsReserveDuration.String())
-		}
-		s.gsUpdateMutex.RUnlock()
-		// unfortunate complexity due to mutex locking, resetReserveAfter has it's own mutex
-		if hasDuration {
+		s.gsUpdateMutex.Lock()
+		if s.gsReserveDuration != nil {
+			message += fmt.Sprintf(", for %s", s.gsReserveDuration)
 			s.resetReserveAfter(context.Background(), *s.gsReserveDuration)
 		}
+		s.gsUpdateMutex.Unlock()
 	}
 
 	s.recorder.Event(gs, level, string(gs.Status.State), message)
@@ -474,40 +470,35 @@ func (s *SDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, e
 
 	e := &sdk.Empty{}
 
-	s.logger.Info("Received Reserve request, adding to queue")
-	s.enqueueState(stablev1alpha1.GameServerStateReserved)
-
 	// 0 is forever.
-	if d.Seconds == 0 {
-		return e, nil
+	if d.Seconds > 0 {
+		duration := time.Duration(d.Seconds) * time.Second
+		s.gsUpdateMutex.Lock()
+		s.gsReserveDuration = &duration
+		s.gsUpdateMutex.Unlock()
 	}
 
-	duration := time.Duration(d.Seconds) * time.Second
-	s.gsUpdateMutex.Lock()
-	s.gsReserveDuration = &duration
-	defer s.gsUpdateMutex.Unlock()
+	s.logger.Info("Received Reserve request, adding to queue")
+	s.enqueueState(stablev1alpha1.GameServerStateReserved)
 
 	return e, nil
 }
 
-// resetReserveAfter will run a function after duration to move the GameServer
-// back to being Ready
+// resetReserveAfter will move the GameServer back to being ready after the specified duration.
+// This function should be wrapped in a s.gsUpdateMutex lock when being called.
 func (s *SDKServer) resetReserveAfter(ctx context.Context, duration time.Duration) {
-	s.gsUpdateMutex.Lock()
-	defer s.gsUpdateMutex.Unlock()
 	if s.reserveTimer != nil {
 		s.reserveTimer.Stop()
 	}
 
 	s.reserveTimer = time.AfterFunc(duration, func() {
-		_, err := s.Ready(ctx, &sdk.Empty{})
-		if err != nil {
+		if _, err := s.Ready(ctx, &sdk.Empty{}); err != nil {
 			s.logger.WithError(errors.WithStack(err)).Error("error returning to Ready after reserved")
 		}
 	})
 }
 
-// stopReserveTimer stops the reserve timer, if it is not nil
+// stopReserveTimer stops the reserve timer. This is a no-op and safe to call if the timer is nil
 func (s *SDKServer) stopReserveTimer() {
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()

@@ -79,8 +79,9 @@ func (s *SDK) Shutdown() error {
 	return errors.Wrapf(err, "could not send Shutdown message")
 }
 
-// Reserve marks the Game Server as Reserved, for a given duration
-// of which, the smallest unit is seconds)
+// Reserve marks the Game Server as Reserved for a given duration, at which point
+// it will return the GameServer to a Ready state.
+// Do note, the smallest unit available in the time.Duration argument is a second.
 func (s *SDK) Reserve(d time.Duration) error {
 	_, err := s.client.Reserve(s.ctx, &sdk.Duration{Seconds: int64(d.Seconds())})
 	return errors.Wrap(err, "could not send Reserve message")

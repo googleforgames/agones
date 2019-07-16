@@ -127,17 +127,17 @@ relinquish control to an external service which likely doesn't have as much info
 ### Reserve(seconds)
 
 With some matchmaking scenarios and systems it is important to be able to ensure that a `GameServer` is unable to be deleted,
-but doesn't trigger a FleetAutoscaler scale up. This is where `Reserver()` is useful.
+but doesn't trigger a FleetAutoscaler scale up. This is where `Reserve(seconds)` is useful.
 
 `Reserve(seconds)` will move the `GameServer` into the Reserved state for the specified number of seconds (0 is forever), and then it will be
-moved back to `Ready` state. While in `Reserved` state, the `GameServer` cannot be deleted on scale down or `Fleet` update,
-and also cannot be Allocated. 
+moved back to `Ready` state. While in `Reserved` state, the `GameServer` will not be deleted on scale down or `Fleet` update,
+and also will not be Allocated.
 
-This is often used wherein a game server process must self register itself with an external system, such as a matchmaker,
+This is often used when a game server process must register itself with an external system, such as a matchmaker,
 that requires it to designate itself as available for a game session for a certain period. Once a game session has started,
-it can call `SDK.Allocate` to designate that players are currently active on it.
+it should call `SDK.Allocate()` to designate that players are currently active on it.
 
-Calling other state changing SDK commands such as `Ready` or `Allocate` turn off the timer to reset the `GameServer` back
+Calling other state changing SDK commands such as `Ready` or `Allocate` will turn off the timer to reset the `GameServer` back
 to the `Ready` state.
 
 {{% /feature %}}

@@ -715,7 +715,7 @@ func TestSDKServerReserveTimeoutOnRun(t *testing.T) {
 		return true, gs, nil
 	})
 
-	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	sc, err := defaultSidecar(m)
 	assert.NoError(t, err)
 	stop := make(chan struct{})
 	sc.informerFactory.Start(stop)
@@ -794,73 +794,67 @@ func TestSDKServerReserveTimeout(t *testing.T) {
 			assert.Fail(t, "should have gone to Reserved by now")
 		}
 	}
-	noAdditional := func(status v1alpha1.GameServerStatus) {}
+	assertReservedUntilDuration := func(d time.Duration) func(status v1alpha1.GameServerStatus) {
+		return func(status v1alpha1.GameServerStatus) {
+			assert.Equal(t, time.Now().Add(d).Round(time.Second), status.ReservedUntil.Time.Round(time.Second))
+		}
+	}
+	assertReservedUntilNil := func(status v1alpha1.GameServerStatus) {
+		assert.Nil(t, status.ReservedUntil)
+	}
 
-	// 3 seconds
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, func(status v1alpha1.GameServerStatus) {
-		assert.Equal(t, time.Now().Add(3*time.Second).Round(time.Second), status.ReservedUntil.Time.Round(time.Second))
-	})
-
-	// wait for the game server to go back to being Ready
+	// Wait for the game server to go back to being Ready.
 	assertStateChange(v1alpha1.GameServerStateRequestReady, 4*time.Second, func(status v1alpha1.GameServerStatus) {
 		assert.Nil(t, status.ReservedUntil)
 	})
 
-	// now test for being able to escape the Reserved state when requesting another state
+	// Test that a 0 second input into Reserved, never will go back to Ready
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 0})
+	assert.NoError(t, err)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	// test ready
+	// Test that a negative input into Reserved, is the same as a 0 input
+	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: -100})
+	assert.NoError(t, err)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
+
+	// Test that the timer to move Reserved->Ready is reset when requesting another state.
+
+	// Test the return to a Ready state.
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, noAdditional)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Ready(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateRequestReady, 2*time.Second, func(status v1alpha1.GameServerStatus) {
-		assert.Nil(t, status.ReservedUntil)
-	})
+	assertStateChange(v1alpha1.GameServerStateRequestReady, 2*time.Second, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	select {
-	case current := <-state:
-		assert.Failf(t, "Should not get update:", string(current.State))
-	case <-time.After(4 * time.Second):
-	}
-
-	// test allocated
+	// Test Allocated resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, noAdditional)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Allocate(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateAllocated, 2*time.Second, func(status v1alpha1.GameServerStatus) {
-		assert.Nil(t, status.ReservedUntil)
-	})
+	assertStateChange(v1alpha1.GameServerStateAllocated, 2*time.Second, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
-	select {
-	case <-state:
-		assert.Fail(t, "Should not go back to RequestReady")
-	case <-time.After(4 * time.Second):
-	}
-
-	// test shutdown
+	// Test Shutdown resets the timer on Reserved->Ready
 	_, err = sc.Reserve(context.Background(), &sdk.Duration{Seconds: 3})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, noAdditional)
+	assertStateChange(v1alpha1.GameServerStateReserved, 2*time.Second, assertReservedUntilDuration(3*time.Second))
 
 	_, err = sc.Shutdown(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
-	assertStateChange(v1alpha1.GameServerStateShutdown, 2*time.Second, func(status v1alpha1.GameServerStatus) {
-		assert.Nil(t, status.ReservedUntil)
-	})
-
-	select {
-	case current := <-state:
-		assert.Failf(t, "Should not get update:", string(current.State))
-	case <-time.After(4 * time.Second):
-	}
+	assertStateChange(v1alpha1.GameServerStateShutdown, 2*time.Second, assertReservedUntilNil)
+	assert.False(t, sc.reserveTimer.Stop())
 
 	close(stop)
 	wg.Wait()
