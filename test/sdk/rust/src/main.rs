@@ -77,6 +77,9 @@ fn run() -> Result<(), String> {
         });
     }});
 
+    // Waiting for a thread to spawn
+    thread::sleep(Duration::from_secs(2));
+
     println!("Marking server as ready...");
     sdk.ready()
         .map_err(|e| format!("Could not run Ready(): {}. Exiting!", e))?;
