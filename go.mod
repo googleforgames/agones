@@ -11,13 +11,16 @@ require (
 	github.com/aws/aws-sdk-go v1.16.20 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-openapi/spec v0.19.0
+	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20171101203131-84a468cf14b4 // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c // indirect
+	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/google/uuid v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20181110185634-c63ab54fda8f // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.5.1
+	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
@@ -42,12 +45,14 @@ require (
 	google.golang.org/api v0.0.0-20190117000611-43037ff31f69 // indirect
 	google.golang.org/genproto v0.0.0-20190111180523-db91494dd46c
 	google.golang.org/grpc v1.17.0
+	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0-20170531160350-a96e63847dc3
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20181126191744-95336914c664
-	k8s.io/apiextensions-apiserver v0.0.0-20181126195113-57b8dbfcc51a
-	k8s.io/apimachinery v0.0.0-20181126123124-70adfbae261e
-	k8s.io/client-go v8.0.0+incompatible
+	k8s.io/api v0.0.0-20190708094356-59223ed9f6ce // kubernetes-1.12.10
+	k8s.io/apiextensions-apiserver v0.0.0-20190708094842-2e94e9ac9840 // kubernetes-1.12.10
+	k8s.io/apimachinery v0.0.0-20190221084156-01f179d85dbc // kubernetes-1.12.10
+	k8s.io/client-go v9.0.0+incompatible // kubernetes-1.12.10
+	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058 // indirect; indirect kubernetes-1.12.10
 )
 
 replace k8s.io/apimachinery => ./vendor_fixes/k8s.io/apimachinery
