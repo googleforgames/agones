@@ -22,4 +22,4 @@ spec:
   # Below is an example of a GameServer allocated against a given fleet.
   required:
     matchLabels:
-      stable.agones.dev/fleet: xonotic
+      agones.dev/fleet: xonotic

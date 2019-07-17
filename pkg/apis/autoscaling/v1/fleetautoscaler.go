@@ -18,7 +18,7 @@ import (
 	"crypto/x509"
 	"net/url"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -144,7 +144,7 @@ type FleetAutoscaleRequest struct {
 	// Namespace is the namespace associated with the request (if any).
 	Namespace string `json:"namespace"`
 	// The Fleet's status values
-	Status v1alpha1.FleetStatus `json:"status"`
+	Status agonesv1.FleetStatus `json:"status"`
 }
 
 // FleetAutoscaleResponse defines the response of webhook autoscaler endpoint

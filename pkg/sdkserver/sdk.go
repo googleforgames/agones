@@ -15,17 +15,17 @@
 package sdkserver
 
 import (
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 )
 
 const (
 	// metadataPrefix prefix for labels and annotations
-	metadataPrefix = "stable.agones.dev/sdk-"
+	metadataPrefix = "agones.dev/sdk-"
 )
 
 // convert converts a K8s GameServer object, into a gRPC SDK GameServer object
-func convert(gs *v1alpha1.GameServer) *sdk.GameServer {
+func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 	meta := gs.ObjectMeta
 	status := gs.Status
 	health := gs.Spec.Health

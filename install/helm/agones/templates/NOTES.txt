@@ -8,7 +8,7 @@ Once ready you can create your first GameServer using our examples:
 
 An example GameServer that makes use of the controller:
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
   name: "simple-udp"

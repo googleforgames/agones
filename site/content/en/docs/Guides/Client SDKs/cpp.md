@@ -91,12 +91,14 @@ status = sdk->SetAnnotation("test-annotation", "test value");
 if (!status.ok()) { ... }
 ```
 
+{{% feature expiryVersion="0.12.0" %}}
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
 passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
 
 This function will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```cpp
 stable::agones::dev::sdk::GameServer gameserver;
 grpc::Status status = sdk->GameServer(&gameserver);
@@ -116,6 +118,35 @@ sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
     std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
 });
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
+passing in a `agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
+
+This function will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+{{% feature expiryVersion="0.12.0" %}}
+```cpp
+agones::dev::sdk::GameServer gameserver;
+grpc::Status status = sdk->GameServer(&gameserver);
+if (!status.ok()) {...}
+```
+
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, 
+call `sdk->WatchGameServer([](agones::dev::sdk::GameServer gameserver){...})`.
+
+This will call the passed in `std::function`
+synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer`
+is updated.
+
+```cpp
+sdk->WatchGameServer([](agones::dev::sdk::GameServer gameserver){
+    std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
+    std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
+});
+```
+{{% /feature %}}
 
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
 {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the

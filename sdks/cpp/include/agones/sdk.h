@@ -43,18 +43,17 @@ class SDK {
   AGONES_EXPORT bool Health();
 
   // Retrieve the current GameServer data
-  AGONES_EXPORT grpc::Status GameServer(
-      stable::agones::dev::sdk::GameServer* response);
+  AGONES_EXPORT grpc::Status GameServer(agones::dev::sdk::GameServer* response);
 
   // Marks the Game Server as ready to shutdown
   AGONES_EXPORT grpc::Status Shutdown();
 
   // SetLabel sets a metadata label on the `GameServer` with the prefix
-  // stable.agones.dev/sdk-
+  // agones.dev/sdk-
   AGONES_EXPORT grpc::Status SetLabel(std::string key, std::string value);
 
   // SetAnnotation sets a metadata annotation on the `GameServer` with the
-  // prefix stable.agones.dev/sdk-
+  // prefix agones.dev/sdk-
   AGONES_EXPORT grpc::Status SetAnnotation(std::string key, std::string value);
 
   // Watch the GameServer configuration, and fire the callback
@@ -62,8 +61,7 @@ class SDK {
   // This is a blocking function, and as such you will likely want to run it
   // inside a thread.
   AGONES_EXPORT grpc::Status WatchGameServer(
-      const std::function<void(stable::agones::dev::sdk::GameServer)>&
-          callback);
+      const std::function<void(agones::dev::sdk::GameServer)>& callback);
 
  private:
   struct SDKImpl;

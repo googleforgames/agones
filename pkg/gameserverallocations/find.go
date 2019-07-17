@@ -18,8 +18,8 @@ import (
 	"math/rand"
 
 	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -31,9 +31,9 @@ import (
 // Packed: will search list from start to finish
 // Distributed: will search in a random order through the list
 // It is assumed that all gameservers passed in, are Ready and not being deleted, and are sorted in Packed priority order
-func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []*stablev1alpha1.GameServer) (*stablev1alpha1.GameServer, int, error) {
+func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []*agonesv1.GameServer) (*agonesv1.GameServer, int, error) {
 	type result struct {
-		gs    *stablev1alpha1.GameServer
+		gs    *agonesv1.GameServer
 		index int
 	}
 
@@ -50,12 +50,12 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 	var required *result
 	preferred := make([]*result, len(preferredSelector))
 
-	var loop func(list []*stablev1alpha1.GameServer, f func(i int, gs *stablev1alpha1.GameServer))
+	var loop func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer))
 
 	// packed is forward looping, distributed is random looping
 	switch gsa.Spec.Scheduling {
 	case apis.Packed:
-		loop = func(list []*stablev1alpha1.GameServer, f func(i int, gs *stablev1alpha1.GameServer)) {
+		loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
 			for i, gs := range list {
 				f(i, gs)
 			}
@@ -72,7 +72,7 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 			indices[i], indices[j] = indices[j], indices[i]
 		})
 
-		loop = func(list []*stablev1alpha1.GameServer, f func(i int, gs *stablev1alpha1.GameServer)) {
+		loop = func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer)) {
 			for _, i := range indices {
 				f(i, list[i])
 			}
@@ -81,7 +81,7 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 		return nil, -1, errors.Errorf("scheduling strategy of '%s' is not supported", gsa.Spec.Scheduling)
 	}
 
-	loop(list, func(i int, gs *stablev1alpha1.GameServer) {
+	loop(list, func(i int, gs *agonesv1.GameServer) {
 		// only search the same namespace
 		if gs.ObjectMeta.Namespace != gsa.ObjectMeta.Namespace {
 			return

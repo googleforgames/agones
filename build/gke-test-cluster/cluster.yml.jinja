@@ -48,9 +48,9 @@ resources:
               - https://www.googleapis.com/auth/servicecontrol
               - https://www.googleapis.com/auth/trace.append
             labels:
-              stable.agones.dev/agones-system: "true"
+              agones.dev/agones-system: "true"
             taints:
-              - key: "stable.agones.dev/agones-system"
+              - key: "agones.dev/agones-system"
                 value: "true"
                 effect: "NO_EXECUTE"
         - name: "agones-metrics"
@@ -65,9 +65,9 @@ resources:
               - https://www.googleapis.com/auth/servicecontrol
               - https://www.googleapis.com/auth/trace.append
             labels:
-              stable.agones.dev/agones-metrics: "true"
+              agones.dev/agones-metrics: "true"
             taints:
-              - key: "stable.agones.dev/agones-metrics"
+              - key: "agones.dev/agones-metrics"
                 value: "true"
                 effect: "NO_EXECUTE"
 - name: game-server-firewall

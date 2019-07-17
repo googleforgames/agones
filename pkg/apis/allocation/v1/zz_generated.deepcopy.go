@@ -21,7 +21,7 @@
 package v1
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -118,7 +118,7 @@ func (in *GameServerAllocationStatus) DeepCopyInto(out *GameServerAllocationStat
 	*out = *in
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
-		*out = make([]v1alpha1.GameServerStatusPort, len(*in))
+		*out = make([]agones_v1.GameServerStatusPort, len(*in))
 		copy(*out, *in)
 	}
 	return

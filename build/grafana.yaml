@@ -1,7 +1,7 @@
 service:
   port: 3000
 tolerations:
-- key: "stable.agones.dev/agones-metrics"
+- key: "agones.dev/agones-metrics"
   operator: "Equal"
   value: "true"
   effect: "NoExecute"
@@ -11,7 +11,7 @@ affinity:
     - weight: 1
       preference:
         matchExpressions:
-          - key: stable.agones.dev/agones-metrics
+          - key: agones.dev/agones-metrics
             operator: Exists
 sidecar:
     dashboards:

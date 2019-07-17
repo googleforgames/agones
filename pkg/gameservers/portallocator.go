@@ -18,9 +18,9 @@ import (
 	"sort"
 	"sync"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -48,7 +48,7 @@ type PortAllocator struct {
 	minPort            int32
 	maxPort            int32
 	gameServerSynced   cache.InformerSynced
-	gameServerLister   listerv1alpha1.GameServerLister
+	gameServerLister   listerv1.GameServerLister
 	gameServerInformer cache.SharedIndexInformer
 	nodeSynced         cache.InformerSynced
 	nodeLister         corelisterv1.NodeLister
@@ -64,7 +64,7 @@ func NewPortAllocator(minPort, maxPort int32,
 
 	v1 := kubeInformerFactory.Core().V1()
 	nodes := v1.Nodes()
-	gameServers := agonesInformerFactory.Stable().V1alpha1().GameServers()
+	gameServers := agonesInformerFactory.Agones().V1().GameServers()
 
 	pa := &PortAllocator{
 		mutex:              sync.RWMutex{},
@@ -107,7 +107,7 @@ func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 
 // Allocate assigns a port to the GameServer and returns it.
 // Return ErrPortNotFound if no port is allocatable
-func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
+func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
 
@@ -136,10 +136,10 @@ func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer 
 	}
 
 	// this allows us to do recursion, within the mutex lock
-	var allocate func(gs *v1alpha1.GameServer) *v1alpha1.GameServer
-	allocate = func(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
-		amount := gs.CountPorts(func(policy v1alpha1.PortPolicy) bool {
-			return policy == v1alpha1.Dynamic || policy == v1alpha1.Passthrough
+	var allocate func(gs *agonesv1.GameServer) *agonesv1.GameServer
+	allocate = func(gs *agonesv1.GameServer) *agonesv1.GameServer {
+		amount := gs.CountPorts(func(policy agonesv1.PortPolicy) bool {
+			return policy == agonesv1.Dynamic || policy == agonesv1.Passthrough
 		})
 		allocations := findOpenPorts(amount)
 
@@ -147,14 +147,14 @@ func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer 
 			pa.gameServerRegistry[gs.ObjectMeta.UID] = true
 
 			for i, p := range gs.Spec.Ports {
-				if p.PortPolicy == v1alpha1.Dynamic || p.PortPolicy == v1alpha1.Passthrough {
+				if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
 					// pop off allocation
 					var a pn
 					a, allocations = allocations[0], allocations[1:]
 					a.pa[a.port] = true
 					gs.Spec.Ports[i].HostPort = a.port
 
-					if p.PortPolicy == v1alpha1.Passthrough {
+					if p.PortPolicy == agonesv1.Passthrough {
 						gs.Spec.Ports[i].ContainerPort = a.port
 					}
 				}
@@ -176,7 +176,7 @@ func (pa *PortAllocator) Allocate(gs *v1alpha1.GameServer) *v1alpha1.GameServer 
 }
 
 // DeAllocate marks the given port as no longer allocated
-func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
+func (pa *PortAllocator) DeAllocate(gs *agonesv1.GameServer) {
 	// skip if it wasn't previously allocated
 
 	found := func() bool {
@@ -209,7 +209,7 @@ func (pa *PortAllocator) DeAllocate(gs *v1alpha1.GameServer) {
 // syncDeleteGameServer when a GameServer Pod is deleted
 // make the HostPort available
 func (pa *PortAllocator) syncDeleteGameServer(object interface{}) {
-	if gs, ok := object.(*v1alpha1.GameServer); ok {
+	if gs, ok := object.(*agonesv1.GameServer); ok {
 		pa.logger.WithField("gs", gs).Info("syncing deleted GameServer")
 		pa.DeAllocate(gs)
 	}
@@ -259,7 +259,7 @@ func (pa *PortAllocator) syncAll() error {
 // registerExistingGameServerPorts registers the gameservers against gsRegistry and the ports against nodePorts.
 // and returns an ordered list of portAllocations per cluster nodes, and an array of
 // any GameServers allocated a port, but not yet assigned a Node will returned as an array of port values.
-func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*v1alpha1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
+func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*agonesv1.GameServer, nodes []*corev1.Node, gsRegistry map[types.UID]bool) ([]portAllocation, []int32) {
 	// setup blank port values
 	nodePortAllocation := pa.nodePortAllocation(nodes)
 	nodePortCount := make(map[string]int64, len(nodes))
@@ -271,7 +271,7 @@ func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*v1alpha1
 
 	for _, gs := range gameservers {
 		for _, p := range gs.Spec.Ports {
-			if p.PortPolicy == v1alpha1.Dynamic || p.PortPolicy == v1alpha1.Passthrough {
+			if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
 				gsRegistry[gs.ObjectMeta.UID] = true
 
 				// if the node doesn't exist, it's likely unscheduled

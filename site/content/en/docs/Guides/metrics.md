@@ -21,6 +21,7 @@ If you are running a [Prometheus](https://prometheus.io/) instance you just need
 
 If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, make sure to add a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/api.md#servicemonitorspec) to discover Agones metrics as shown below:
 
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -35,6 +36,23 @@ spec:
   endpoints:
   - port: web
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agones
+  labels:
+    app: agones
+spec:
+  selector:
+    matchLabels:
+        agones.dev/role: controller
+  endpoints:
+  - port: web
+```
+{{% /feature %}}
 
 Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/user-guides/getting-started.md#include-servicemonitors), this is usually done by adding a label to the `ServiceMonitor` above that is matched by the prometheus instance of your choice.
 
@@ -120,16 +138,31 @@ and {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="m
 
 For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers
 are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="master" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
+{{% feature expiryVersion="0.12.0" %}}
 tainted with `stable.agones.dev/agones-metrics=true:NoExecute` and labeled with `stable.agones.dev/agones-metrics=true` if available.
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones.dev/agones-metrics=true` if available.
+{{% /feature %}}
 
 As an example, to set up dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
 
+{{% feature expiryVersion="0.12.0" %}}
 ```
 gcloud container node-pools create agones-metrics --cluster=... --zone=... \
   --node-taints stable.agones.dev/agones-metrics=true:NoExecute \
   --node-labels stable.agones.dev/agones-metrics=true \
   --num-nodes=1
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```
+gcloud container node-pools create agones-metrics --cluster=... --zone=... \
+  --node-taints agones.dev/agones-metrics=true:NoExecute \
+  --node-labels agones.dev/agones-metrics=true \
+  --num-nodes=1
+```
+{{% /feature %}}
 
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.
 

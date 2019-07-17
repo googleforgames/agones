@@ -55,7 +55,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 webhooks:
-  - name: validations.stable.agones.dev
+  - name: validations.agones.dev
     failurePolicy: Fail
     clientConfig:
       service:
@@ -69,22 +69,22 @@ webhooks:
 {{- end }}
     rules:
       - apiGroups:
-          - stable.agones.dev
+          - agones.dev
         resources:
           - "fleets"
           - "gameservers"
           - "gameserversets"
         apiVersions:
-          - "v1alpha1"
+          - "v1"
         operations:
           - CREATE
       - apiGroups:
-          - stable.agones.dev
+          - agones.dev
         resources:
           - "fleets"
           - "gameserversets"
         apiVersions:
-          - "v1alpha1"
+          - "v1"
         operations:
           - UPDATE
       - apiGroups:
@@ -109,7 +109,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 webhooks:
-  - name: mutations.stable.agones.dev
+  - name: mutations.agones.dev
     failurePolicy: Fail
     clientConfig:
       service:
@@ -123,12 +123,12 @@ webhooks:
 {{- end }}
     rules:
       - apiGroups:
-          - stable.agones.dev
+          - agones.dev
         resources:
           - "gameservers"
           - "fleets"
         apiVersions:
-          - "v1alpha1"
+          - "v1"
         operations:
           - CREATE
 {{- end }}

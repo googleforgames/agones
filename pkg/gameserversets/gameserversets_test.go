@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
@@ -36,10 +36,10 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 		"n2": {Ready: 0, Allocated: 2},
 	}
 
-	list := []*v1alpha1.GameServer{
-		{ObjectMeta: metav1.ObjectMeta{Name: "g1"}, Status: v1alpha1.GameServerStatus{NodeName: "n2"}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: v1alpha1.GameServerStatus{NodeName: ""}},
-		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: v1alpha1.GameServerStatus{NodeName: "n1"}},
+	list := []*agonesv1.GameServer{
+		{ObjectMeta: metav1.ObjectMeta{Name: "g1"}, Status: agonesv1.GameServerStatus{NodeName: "n2"}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g2"}, Status: agonesv1.GameServerStatus{NodeName: ""}},
+		{ObjectMeta: metav1.ObjectMeta{Name: "g3"}, Status: agonesv1.GameServerStatus{NodeName: "n1"}},
 	}
 
 	result := sortGameServersByLeastFullNodes(list, nc)
@@ -53,7 +53,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 func TestSortGameServersByNewFirst(t *testing.T) {
 	now := metav1.Now()
 
-	list := []*v1alpha1.GameServer{
+	list := []*agonesv1.GameServer{
 		{ObjectMeta: metav1.ObjectMeta{Name: "g1", CreationTimestamp: metav1.Time{Time: now.Add(10 * time.Second)}}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g2", CreationTimestamp: now}},
 		{ObjectMeta: metav1.ObjectMeta{Name: "g3", CreationTimestamp: metav1.Time{Time: now.Add(30 * time.Second)}}},
@@ -70,11 +70,11 @@ func TestSortGameServersByNewFirst(t *testing.T) {
 func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	t.Parallel()
 
-	gsSet := &v1alpha1.GameServerSet{
+	gsSet := &agonesv1.GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test", UID: "1234"},
-		Spec: v1alpha1.GameServerSetSpec{
+		Spec: agonesv1.GameServerSetSpec{
 			Replicas: 10,
-			Template: v1alpha1.GameServerTemplateSpec{},
+			Template: agonesv1.GameServerTemplateSpec{},
 		},
 	}
 
@@ -84,16 +84,16 @@ func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(gs2, gsSet))
 
 	gs2.ObjectMeta.Name = "test-2"
-	gs3 := v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "not-included"}}
+	gs3 := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "not-included"}}
 	gs4 := gsSet.GameServer()
 	gs4.ObjectMeta.OwnerReferences = nil
 
 	m := agtesting.NewMocks()
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &v1alpha1.GameServerList{Items: []v1alpha1.GameServer{*gs1, *gs2, gs3, *gs4}}, nil
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, gs3, *gs4}}, nil
 	})
 
-	gameServers := m.AgonesInformerFactory.Stable().V1alpha1().GameServers()
+	gameServers := m.AgonesInformerFactory.Agones().V1().GameServers()
 	_, cancel := agtesting.StartInformers(m, gameServers.Informer().HasSynced)
 	defer cancel()
 
@@ -104,5 +104,5 @@ func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	sort.SliceStable(list, func(i, j int) bool {
 		return list[i].ObjectMeta.Name < list[j].ObjectMeta.Name
 	})
-	assert.Equal(t, []*v1alpha1.GameServer{gs1, gs2}, list)
+	assert.Equal(t, []*agonesv1.GameServer{gs1, gs2}, list)
 }

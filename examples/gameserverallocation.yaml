@@ -38,9 +38,9 @@ spec:
   # This also support `matchExpressions`
   preferred:
     - matchLabels:
-        stable.agones.dev/fleet: green-fleet
+        agones.dev/fleet: green-fleet
     - matchLabels:
-        stable.agones.dev/fleet: blue-fleet
+        agones.dev/fleet: blue-fleet
   # defines how GameServers are organised across the cluster.
   # Options include:
   # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack

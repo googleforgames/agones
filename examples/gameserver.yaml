@@ -21,7 +21,7 @@
 # and provides a sidecar for this game server that the SDK will connect with.
 #
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: GameServer
 # GameServer Metadata
 # https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#objectmeta-v1-meta
