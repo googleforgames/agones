@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -83,7 +83,7 @@ func TestLocalSDKWithGameServer(t *testing.T) {
 	ctx := context.Background()
 	e := &sdk.Empty{}
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
 	path, err := gsToTmpFile(fixture.DeepCopy())
 	assert.Nil(t, err)
 
@@ -101,16 +101,16 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	t.Parallel()
 
 	fixtures := map[string]struct {
-		gs *v1alpha1.GameServer
+		gs *agonesv1.GameServer
 	}{
 		"default": {
 			gs: nil,
 		},
 		"no labels": {
-			gs: &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
+			gs: &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
 		},
 		"empty": {
-			gs: &v1alpha1.GameServer{},
+			gs: &agonesv1.GameServer{},
 		},
 	}
 
@@ -171,16 +171,16 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 	t.Parallel()
 
 	fixtures := map[string]struct {
-		gs *v1alpha1.GameServer
+		gs *agonesv1.GameServer
 	}{
 		"default": {
 			gs: nil,
 		},
 		"no annotation": {
-			gs: &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
+			gs: &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "empty"}},
 		},
 		"empty": {
-			gs: &v1alpha1.GameServer{},
+			gs: &agonesv1.GameServer{},
 		},
 	}
 
@@ -240,7 +240,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
-	fixture := &v1alpha1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
 	path, err := gsToTmpFile(fixture)
 	assert.Nil(t, err)
 
@@ -275,7 +275,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	}
 }
 
-func gsToTmpFile(gs *v1alpha1.GameServer) (string, error) {
+func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
 	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
 	if err != nil {
 		return file.Name(), err

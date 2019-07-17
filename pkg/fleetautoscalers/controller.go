@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"time"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/apis/autoscaling"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
+	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	typedautoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
-	typedstablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
+	listeragonesv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	listerautoscalingv1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
-	listerstablev1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
 	"agones.dev/agones/pkg/util/crd"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -54,8 +54,8 @@ import (
 type Controller struct {
 	baseLogger            *logrus.Entry
 	crdGetter             v1beta1.CustomResourceDefinitionInterface
-	fleetGetter           typedstablev1alpha1.FleetsGetter
-	fleetLister           listerstablev1alpha1.FleetLister
+	fleetGetter           typedagonesv1.FleetsGetter
+	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
 	fleetAutoscalerGetter typedautoscalingv1.FleetAutoscalersGetter
 	fleetAutoscalerLister listerautoscalingv1.FleetAutoscalerLister
@@ -74,10 +74,10 @@ func NewController(
 	agonesInformerFactory externalversions.SharedInformerFactory) *Controller {
 
 	autoscaler := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
-	fleetInformer := agonesInformerFactory.Stable().V1alpha1().Fleets()
+	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
 		crdGetter:             extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
-		fleetGetter:           agonesClient.StableV1alpha1(),
+		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
 		fleetAutoscalerGetter: agonesClient.AutoscalingV1(),
@@ -231,7 +231,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 }
 
 // scaleFleet scales the fleet of the autoscaler to a new number of replicas
-func (c *Controller) scaleFleet(fas *autoscalingv1.FleetAutoscaler, f *stablev1alpha1.Fleet, replicas int32) error {
+func (c *Controller) scaleFleet(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet, replicas int32) error {
 	if replicas != f.Spec.Replicas {
 		fCopy := f.DeepCopy()
 		fCopy.Spec.Replicas = replicas

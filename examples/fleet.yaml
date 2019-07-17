@@ -18,7 +18,7 @@
 # To allocate a GameServer from a Fleet, use a GameServerAllocation
 #
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
   # Fleet Metadata

@@ -10,7 +10,7 @@ weight: 30
 A full `GameServerAllocation` specification is available below and in the 
 {{< ghlink href="/examples/gameserverallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
-
+{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: GameServerAllocation
@@ -44,6 +44,42 @@ spec:
     annotations:
       map:  garden22
 ```
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+```yaml
+apiVersion: "agones.dev/v1"
+kind: GameServerAllocation
+metadata:
+  generateName: simple-udp-
+spec:
+  required:
+    matchLabels:
+      game: my-game
+    matchExpressions:
+      - {key: tier, operator: In, values: [cache]}
+  # ordered list of preferred allocations 
+  # This also support `matchExpressions`
+  preferred:
+    - matchLabels:
+        agones.dev/fleet: green-fleet
+    - matchLabels:
+        agones.dev/fleet: blue-fleet
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
+  scheduling: Packed
+  # Optional custom metadata that is added to the game server at allocation
+  # You can use this to tell the server necessary session data
+  metadata:
+    labels:
+      mode: deathmatch
+    annotations:
+      map:  garden22
+```
+{{% /feature %}}
 
 We recommend using `metadata > generateName`, to declare to Kubernetes that a unique
 name for the `GameServerAllocation` is generated when the `GameServerAllocation` is created.

@@ -1,10 +1,24 @@
+// Copyright 2018 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gameserversets
 
 import (
 	"sort"
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -13,19 +27,19 @@ var deletionTime = metav1.Now()
 
 func TestGameServerStateCache(t *testing.T) {
 	var cache gameServerStateCache
-	gsSet1 := &v1alpha1.GameServerSet{
+	gsSet1 := &agonesv1.GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "set-1",
 			Namespace: "ns1",
 		},
 	}
-	gsSet1b := &v1alpha1.GameServerSet{
+	gsSet1b := &agonesv1.GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "set-1",
 			Namespace: "ns2",
 		},
 	}
-	gsSet2 := &v1alpha1.GameServerSet{
+	gsSet2 := &agonesv1.GameServerSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "set-2",
 			Namespace: "ns1",
@@ -58,8 +72,8 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 	cases := []struct {
 		desc                     string
 		setup                    func(c *gameServerSetCacheEntry)
-		list                     []*v1alpha1.GameServer
-		expected                 []*v1alpha1.GameServer
+		list                     []*agonesv1.GameServer
+		expected                 []*agonesv1.GameServer
 		expectedPendingCreations int
 		expectedPendingDeletions int
 	}{
@@ -73,34 +87,34 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 			desc:                     "LocallyAddedGameServerNotInServerResults",
 			setup:                    func(c *gameServerSetCacheEntry) { c.created(gs1) },
 			list:                     nil,
-			expected:                 []*v1alpha1.GameServer{gs1},
+			expected:                 []*agonesv1.GameServer{gs1},
 			expectedPendingCreations: 1,
 		},
 		{
 			desc:                     "LocallyAddedGameServerAnotherOneFoundOnServer",
 			setup:                    func(c *gameServerSetCacheEntry) { c.created(gs1) },
-			list:                     []*v1alpha1.GameServer{gs2},
-			expected:                 []*v1alpha1.GameServer{gs1, gs2},
+			list:                     []*agonesv1.GameServer{gs2},
+			expected:                 []*agonesv1.GameServer{gs1, gs2},
 			expectedPendingCreations: 1,
 		},
 		{
 			desc:     "LocallyAddedGameServerAlsoFoundOnServer",
 			setup:    func(c *gameServerSetCacheEntry) { c.created(gs1) },
-			list:     []*v1alpha1.GameServer{gs1},
-			expected: []*v1alpha1.GameServer{gs1},
+			list:     []*agonesv1.GameServer{gs1},
+			expected: []*agonesv1.GameServer{gs1},
 		},
 		{
 			desc:                     "LocallyDeletedStillFoundOnServer",
 			setup:                    func(c *gameServerSetCacheEntry) { c.deleted(gs1) },
-			list:                     []*v1alpha1.GameServer{gs1},
-			expected:                 []*v1alpha1.GameServer{deleted(gs1)},
+			list:                     []*agonesv1.GameServer{gs1},
+			expected:                 []*agonesv1.GameServer{deleted(gs1)},
 			expectedPendingDeletions: 1,
 		},
 		{
 			desc:     "LocallyDeletedNotFoundOnServer",
 			setup:    func(c *gameServerSetCacheEntry) { c.deleted(gs1) },
-			list:     []*v1alpha1.GameServer{},
-			expected: []*v1alpha1.GameServer{},
+			list:     []*agonesv1.GameServer{},
+			expected: []*agonesv1.GameServer{},
 		},
 		{
 			desc: "LocallyCreatedAndDeletedFoundOnServer",
@@ -108,8 +122,8 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 				c.created(gs1)
 				c.deleted(gs1)
 			},
-			list:                     []*v1alpha1.GameServer{gs1},
-			expected:                 []*v1alpha1.GameServer{deleted(gs1)},
+			list:                     []*agonesv1.GameServer{gs1},
+			expected:                 []*agonesv1.GameServer{deleted(gs1)},
 			expectedPendingDeletions: 1,
 		},
 		{
@@ -118,8 +132,8 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 				c.created(gs1)
 				c.deleted(gs1)
 			},
-			list:     []*v1alpha1.GameServer{deleted(gs1)},
-			expected: []*v1alpha1.GameServer{deleted(gs1)},
+			list:     []*agonesv1.GameServer{deleted(gs1)},
+			expected: []*agonesv1.GameServer{deleted(gs1)},
 		},
 		{
 			desc: "LocallyCreatedAndDeletedNotFoundOnServer",
@@ -127,8 +141,8 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 				c.created(gs1)
 				c.deleted(gs1)
 			},
-			list:     []*v1alpha1.GameServer{},
-			expected: []*v1alpha1.GameServer{},
+			list:     []*agonesv1.GameServer{},
+			expected: []*agonesv1.GameServer{},
 		},
 	}
 
@@ -161,15 +175,15 @@ func TestGameServerSetCacheEntry(t *testing.T) {
 	}
 }
 
-func makeGameServer(s string) *v1alpha1.GameServer {
-	return &v1alpha1.GameServer{
+func makeGameServer(s string) *agonesv1.GameServer {
+	return &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: s,
 		},
 	}
 }
 
-func deleted(gs *v1alpha1.GameServer) *v1alpha1.GameServer {
+func deleted(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	gs2 := gs.DeepCopy()
 	gs2.ObjectMeta.DeletionTimestamp = &deletionTime
 	return gs2
@@ -181,7 +195,7 @@ type gameServerStatusInfo struct {
 	deleted bool
 }
 
-func sortedStatusInfo(list []*v1alpha1.GameServer) []gameServerStatusInfo {
+func sortedStatusInfo(list []*agonesv1.GameServer) []gameServerStatusInfo {
 	var result []gameServerStatusInfo
 	for _, gs := range list {
 		result = append(result, gameServerStatusInfo{

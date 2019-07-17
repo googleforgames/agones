@@ -22,6 +22,8 @@ for ns in $namespaces; do
   gs=$(kubectl -n $ns get gs -o jsonpath='{.items[*].metadata.name}')
 
   for g in $gs; do
+    pod=$(kubectl -n $ns get po -l agones.dev/gameserver=$g -o jsonpath='{.items[*].metadata.name}')
+    # TODO(roberthbailey): Remove this after we cut Agones 0.12.0
     pod=$(kubectl -n $ns get po -l stable.agones.dev/gameserver=$g -o jsonpath='{.items[*].metadata.name}')
     pods="$pods $pod"
   done

@@ -1,6 +1,6 @@
 # Simple Allocator Service
 
-This service provides an example of using the [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1) to allocate a GameServer from a Fleet, and is used in the [Create an Allocator Service (Go)](https://agones.dev/site/docs/tutorials/allocator-service-go/) tutorial.
+This service provides an example of using the [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1) to allocate a GameServer from a Fleet, and is used in the [Create an Allocator Service (Go)](https://agones.dev/site/docs/tutorials/allocator-service-go/) tutorial.
 
 ## Allocator Service
 The service exposes an endpoint which allows client calls to AllocationInterface.Create() over a secure connection.  It also provides examples of how to create a service account with the least necessary privileges, how to create an Ingress, and how services can use secrets specific to their respective accounts.

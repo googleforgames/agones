@@ -17,12 +17,12 @@ package gameservers
 import (
 	"strings"
 
-	"agones.dev/agones/pkg/apis/stable"
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	"agones.dev/agones/pkg/apis/agones"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
-	getterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
+	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
-	listerv1alpha1 "agones.dev/agones/pkg/client/listers/stable/v1alpha1"
+	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -49,8 +49,8 @@ type HealthController struct {
 	podSynced        cache.InformerSynced
 	podLister        corelisterv1.PodLister
 	gameServerSynced cache.InformerSynced
-	gameServerGetter getterv1alpha1.GameServersGetter
-	gameServerLister listerv1alpha1.GameServerLister
+	gameServerGetter getterv1.GameServersGetter
+	gameServerLister listerv1.GameServerLister
 	workerqueue      *workerqueue.WorkerQueue
 	recorder         record.EventRecorder
 }
@@ -63,17 +63,17 @@ func NewHealthController(health healthcheck.Handler,
 	agonesInformerFactory externalversions.SharedInformerFactory) *HealthController {
 
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
-	gameserverInformer := agonesInformerFactory.Stable().V1alpha1().GameServers()
+	gameserverInformer := agonesInformerFactory.Agones().V1().GameServers()
 	hc := &HealthController{
 		podSynced:        podInformer.HasSynced,
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
 		gameServerSynced: gameserverInformer.Informer().HasSynced,
-		gameServerGetter: agonesClient.StableV1alpha1(),
+		gameServerGetter: agonesClient.AgonesV1(),
 		gameServerLister: gameserverInformer.Lister(),
 	}
 
 	hc.baseLogger = runtime.NewLoggerWithType(hc)
-	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.baseLogger, logfields.GameServerKey, stable.GroupName+".HealthController")
+	hc.workerqueue = workerqueue.NewWorkerQueue(hc.syncGameServer, hc.baseLogger, logfields.GameServerKey, agones.GroupName+".HealthController")
 	health.AddLivenessCheck("gameserver-health-workerqueue", healthcheck.Check(hc.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
@@ -123,7 +123,7 @@ func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 // failedContainer checks each container, and determines if there was a failed
 // container
 func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
-	container := pod.Annotations[v1alpha1.GameServerContainerAnnotation]
+	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == container && cs.State.Terminated != nil {
 			return true
@@ -149,7 +149,7 @@ func (hc *HealthController) loggerForGameServerKey(key string) *logrus.Entry {
 	return logfields.AugmentLogEntry(hc.baseLogger, logfields.GameServerKey, key)
 }
 
-func (hc *HealthController) loggerForGameServer(gs *v1alpha1.GameServer) *logrus.Entry {
+func (hc *HealthController) loggerForGameServer(gs *agonesv1.GameServer) *logrus.Entry {
 	gsName := "NilGameServer"
 	if gs != nil {
 		gsName = gs.Namespace + "/" + gs.Name
@@ -179,13 +179,13 @@ func (hc *HealthController) syncGameServer(key string) error {
 	}
 
 	// at this point we don't care, we're already Unhealthy / deleting
-	if gs.IsBeingDeleted() || gs.Status.State == v1alpha1.GameServerStateUnhealthy {
+	if gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy {
 		return nil
 	}
 
 	hc.loggerForGameServer(gs).Info("Issue with GameServer pod, marking as GameServerStateUnhealthy")
 	gsCopy := gs.DeepCopy()
-	gsCopy.Status.State = v1alpha1.GameServerStateUnhealthy
+	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
 
 	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
 		return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)

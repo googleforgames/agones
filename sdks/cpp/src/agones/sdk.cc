@@ -21,8 +21,8 @@ namespace agones {
 
 struct SDK::SDKImpl {
   std::shared_ptr<grpc::Channel> channel_;
-  std::unique_ptr<stable::agones::dev::sdk::SDK::Stub> stub_;
-  std::unique_ptr<grpc::ClientWriter<stable::agones::dev::sdk::Empty>> health_;
+  std::unique_ptr<agones::dev::sdk::SDK::Stub> stub_;
+  std::unique_ptr<grpc::ClientWriter<agones::dev::sdk::Empty>> health_;
 };
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
@@ -39,10 +39,10 @@ bool SDK::Connect() {
     return false;
   }
 
-  pimpl_->stub_ = stable::agones::dev::sdk::SDK::NewStub(pimpl_->channel_);
+  pimpl_->stub_ = agones::dev::sdk::SDK::NewStub(pimpl_->channel_);
 
   // make the health connection
-  stable::agones::dev::sdk::Empty response;
+  agones::dev::sdk::Empty response;
   grpc::ClientContext context;
   pimpl_->health_ = pimpl_->stub_->Health(&context, &response);
 
@@ -53,34 +53,34 @@ grpc::Status SDK::Ready() {
   grpc::ClientContext context;
   context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
-  stable::agones::dev::sdk::Empty request;
-  stable::agones::dev::sdk::Empty response;
+  agones::dev::sdk::Empty request;
+  agones::dev::sdk::Empty response;
 
   return pimpl_->stub_->Ready(&context, request, &response);
 }
 
 bool SDK::Health() {
-  stable::agones::dev::sdk::Empty request;
+  agones::dev::sdk::Empty request;
   return pimpl_->health_->Write(request);
 }
 
-grpc::Status SDK::GameServer(stable::agones::dev::sdk::GameServer* response) {
+grpc::Status SDK::GameServer(agones::dev::sdk::GameServer* response) {
   grpc::ClientContext context;
   context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
-  stable::agones::dev::sdk::Empty request;
+  agones::dev::sdk::Empty request;
 
   return pimpl_->stub_->GetGameServer(&context, request, response);
 }
 
 grpc::Status SDK::WatchGameServer(
-    const std::function<void(stable::agones::dev::sdk::GameServer)>& callback) {
+    const std::function<void(agones::dev::sdk::GameServer)>& callback) {
   grpc::ClientContext context;
-  stable::agones::dev::sdk::Empty request;
-  stable::agones::dev::sdk::GameServer gameServer;
+  agones::dev::sdk::Empty request;
+  agones::dev::sdk::GameServer gameServer;
 
-  std::unique_ptr<grpc::ClientReader<stable::agones::dev::sdk::GameServer>>
-      reader = pimpl_->stub_->WatchGameServer(&context, request);
+  std::unique_ptr<grpc::ClientReader<agones::dev::sdk::GameServer>> reader =
+      pimpl_->stub_->WatchGameServer(&context, request);
   while (reader->Read(&gameServer)) {
     callback(gameServer);
   }
@@ -91,8 +91,8 @@ grpc::Status SDK::Shutdown() {
   grpc::ClientContext context;
   context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
-  stable::agones::dev::sdk::Empty request;
-  stable::agones::dev::sdk::Empty response;
+  agones::dev::sdk::Empty request;
+  agones::dev::sdk::Empty response;
 
   return pimpl_->stub_->Shutdown(&context, request, &response);
 }
@@ -102,11 +102,11 @@ grpc::Status SDK::SetLabel(std::string key, std::string value) {
   context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
 
-  stable::agones::dev::sdk::KeyValue request;
+  agones::dev::sdk::KeyValue request;
   request.set_key(std::move(key));
   request.set_value(std::move(value));
 
-  stable::agones::dev::sdk::Empty response;
+  agones::dev::sdk::Empty response;
 
   return pimpl_->stub_->SetLabel(&context, request, &response);
 }
@@ -116,11 +116,11 @@ grpc::Status SDK::SetAnnotation(std::string key, std::string value) {
   context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                                     gpr_time_from_seconds(30, GPR_TIMESPAN)));
 
-  stable::agones::dev::sdk::KeyValue request;
+  agones::dev::sdk::KeyValue request;
   request.set_key(std::move(key));
   request.set_value(std::move(value));
 
-  stable::agones::dev::sdk::Empty response;
+  agones::dev::sdk::Empty response;
 
   return pimpl_->stub_->SetAnnotation(&context, request, &response);
 }

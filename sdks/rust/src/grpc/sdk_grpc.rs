@@ -35,63 +35,63 @@
 
 const METHOD_SDK_READY: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/Ready",
+    name: "/agones.dev.sdk.SDK/Ready",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_ALLOCATE: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/Allocate",
+    name: "/agones.dev.sdk.SDK/Allocate",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_SHUTDOWN: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/Shutdown",
+    name: "/agones.dev.sdk.SDK/Shutdown",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_HEALTH: ::grpcio::Method<super::sdk::Empty, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::ClientStreaming,
-    name: "/stable.agones.dev.sdk.SDK/Health",
+    name: "/agones.dev.sdk.SDK/Health",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_GET_GAME_SERVER: ::grpcio::Method<super::sdk::Empty, super::sdk::GameServer> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/GetGameServer",
+    name: "/agones.dev.sdk.SDK/GetGameServer",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_WATCH_GAME_SERVER: ::grpcio::Method<super::sdk::Empty, super::sdk::GameServer> = ::grpcio::Method {
     ty: ::grpcio::MethodType::ServerStreaming,
-    name: "/stable.agones.dev.sdk.SDK/WatchGameServer",
+    name: "/agones.dev.sdk.SDK/WatchGameServer",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_SET_LABEL: ::grpcio::Method<super::sdk::KeyValue, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/SetLabel",
+    name: "/agones.dev.sdk.SDK/SetLabel",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_SET_ANNOTATION: ::grpcio::Method<super::sdk::KeyValue, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/SetAnnotation",
+    name: "/agones.dev.sdk.SDK/SetAnnotation",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
 const METHOD_SDK_RESERVE: ::grpcio::Method<super::sdk::Duration, super::sdk::Empty> = ::grpcio::Method {
     ty: ::grpcio::MethodType::Unary,
-    name: "/stable.agones.dev.sdk.SDK/Reserve",
+    name: "/agones.dev.sdk.SDK/Reserve",
     req_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };

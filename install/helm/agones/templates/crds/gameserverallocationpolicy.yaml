@@ -28,6 +28,7 @@ metadata:
   name: gameserverallocationpolicies.multicluster.agones.dev
 spec:
   group: multicluster.agones.dev
+  version: v1alpha1
   names:
     kind: GameServerAllocationPolicy
     plural: gameserverallocationpolicies
@@ -77,7 +78,6 @@ spec:
           - priority
           - weight
           type: object
-  version: v1alpha1
 status:
   acceptedNames:
     kind: ""

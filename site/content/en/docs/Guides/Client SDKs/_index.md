@@ -65,8 +65,14 @@ backing Pod will be deleted, if they have not shut themselves down already.
 
 ### SetLabel(key, value)
 
+{{% feature expiryVersion="0.12.0" %}}
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
 record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
+record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
+{{% /feature %}}
 
 > Note: There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 
@@ -74,8 +80,14 @@ This can be useful if you want to information from your running game server proc
 
 ### SetAnnotation(key, value)
 
+{{% feature expiryVersion="0.12.0" %}}
 This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
 `Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
+{{% /feature %}}
+{{% feature publishversion="0.12.0" %}}
+This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
+`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
+{{% /feature %}}
 
 This can be useful if you want to information from your running game server process to be observable through the Kubernetes API.
 

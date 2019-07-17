@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/apis"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
-	stablev1alpha1 "agones.dev/agones/pkg/apis/stable/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 
 	for _, strategy := range fixtures {
 		t.Run(string(strategy), func(t *testing.T) {
-			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
@@ -51,7 +51,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 				}}
 
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(gsa)
@@ -69,7 +69,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 
 	for _, strategy := range fixtures {
 		t.Run(string(strategy), func(t *testing.T) {
-			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
@@ -146,7 +146,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: true,
 						PolicySelector: metav1.LabelSelector{
@@ -178,7 +178,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 
 	for _, strategy := range fixtures {
 		t.Run(string(strategy), func(t *testing.T) {
-			fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
@@ -191,7 +191,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 				}}
 
 			for i := 0; i < replicasCount; i++ {
@@ -202,7 +202,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			framework.WaitForFleetCondition(t, flt, func(fleet *stablev1alpha1.Fleet) bool {
+			framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
 
@@ -224,7 +224,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "could not create GameServer")
 	}
-	defer framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Delete(gs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(gs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
@@ -248,7 +248,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 		assert.FailNow(t, err.Error())
 	}
 
-	gs, err = framework.AgonesClient.StableV1alpha1().GameServers(defaultNs).Get(gsa.Status.GameServerName, metav1.GetOptions{})
+	gs, err = framework.AgonesClient.AgonesV1().GameServers(defaultNs).Get(gsa.Status.GameServerName, metav1.GetOptions{})
 	if assert.Nil(t, err) {
 		assert.Equal(t, "blue", gs.ObjectMeta.Labels["red"])
 		assert.Equal(t, "good", gs.ObjectMeta.Annotations["dog"])
@@ -258,8 +258,8 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	t.Parallel()
 
-	fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
-	gameServers := framework.AgonesClient.StableV1alpha1().GameServers(defaultNs)
+	fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
+	gameServers := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
 	preferred := defaultFleet()
@@ -291,7 +291,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: label},
 			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: preferred.ObjectMeta.Name}},
+				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}},
 			},
 		}}
 
@@ -300,7 +300,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa1.Status.State)
 		gs, err := gameServers.Get(gsa1.Status.GameServerName, metav1.GetOptions{})
 		assert.Nil(t, err)
-		assert.Equal(t, preferred.ObjectMeta.Name, gs.ObjectMeta.Labels[stablev1alpha1.FleetNameLabel])
+		assert.Equal(t, preferred.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
 	} else {
 		assert.FailNow(t, "could not completed gsa1 allocation")
 	}
@@ -310,7 +310,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.Equal(t, allocationv1.GameServerAllocationAllocated, gs2.Status.State)
 		gs, err := gameServers.Get(gs2.Status.GameServerName, metav1.GetOptions{})
 		assert.Nil(t, err)
-		assert.Equal(t, required.ObjectMeta.Name, gs.ObjectMeta.Labels[stablev1alpha1.FleetNameLabel])
+		assert.Equal(t, required.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
 	} else {
 		assert.FailNow(t, "could not completed gs2 allocation")
 	}
@@ -342,7 +342,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa3.Status.State)
 		gs, err := gameServers.Get(gsa3.Status.GameServerName, metav1.GetOptions{})
 		assert.Nil(t, err)
-		assert.Equal(t, preferred.ObjectMeta.Name, gs.ObjectMeta.Labels[stablev1alpha1.FleetNameLabel])
+		assert.Equal(t, preferred.ObjectMeta.Name, gs.ObjectMeta.Labels[agonesv1.FleetNameLabel])
 	}
 }
 
@@ -365,7 +365,7 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	t.Parallel()
 
-	fleets := framework.AgonesClient.StableV1alpha1().Fleets(defaultNs)
+	fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
 	preferred := defaultFleet()
@@ -388,7 +388,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: label},
 			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{stablev1alpha1.FleetNameLabel: "preferred"}},
+				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}},
 			},
 		}}
 

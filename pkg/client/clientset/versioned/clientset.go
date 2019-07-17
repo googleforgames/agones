@@ -19,10 +19,10 @@
 package versioned
 
 import (
+	agonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1"
 	autoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
-	stablev1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
@@ -30,6 +30,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	AgonesV1() agonesv1.AgonesV1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Agones() agonesv1.AgonesV1Interface
 	AllocationV1() allocationv1.AllocationV1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Allocation() allocationv1.AllocationV1Interface
@@ -39,19 +42,27 @@ type Interface interface {
 	MulticlusterV1alpha1() multiclusterv1alpha1.MulticlusterV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Multicluster() multiclusterv1alpha1.MulticlusterV1alpha1Interface
-	StableV1alpha1() stablev1alpha1.StableV1alpha1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Stable() stablev1alpha1.StableV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	agonesV1             *agonesv1.AgonesV1Client
 	allocationV1         *allocationv1.AllocationV1Client
 	autoscalingV1        *autoscalingv1.AutoscalingV1Client
 	multiclusterV1alpha1 *multiclusterv1alpha1.MulticlusterV1alpha1Client
-	stableV1alpha1       *stablev1alpha1.StableV1alpha1Client
+}
+
+// AgonesV1 retrieves the AgonesV1Client
+func (c *Clientset) AgonesV1() agonesv1.AgonesV1Interface {
+	return c.agonesV1
+}
+
+// Deprecated: Agones retrieves the default version of AgonesClient.
+// Please explicitly pick a version.
+func (c *Clientset) Agones() agonesv1.AgonesV1Interface {
+	return c.agonesV1
 }
 
 // AllocationV1 retrieves the AllocationV1Client
@@ -87,17 +98,6 @@ func (c *Clientset) Multicluster() multiclusterv1alpha1.MulticlusterV1alpha1Inte
 	return c.multiclusterV1alpha1
 }
 
-// StableV1alpha1 retrieves the StableV1alpha1Client
-func (c *Clientset) StableV1alpha1() stablev1alpha1.StableV1alpha1Interface {
-	return c.stableV1alpha1
-}
-
-// Deprecated: Stable retrieves the default version of StableClient.
-// Please explicitly pick a version.
-func (c *Clientset) Stable() stablev1alpha1.StableV1alpha1Interface {
-	return c.stableV1alpha1
-}
-
 // Discovery retrieves the DiscoveryClient
 func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 	if c == nil {
@@ -114,6 +114,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.agonesV1, err = agonesv1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.allocationV1, err = allocationv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -123,10 +127,6 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 		return nil, err
 	}
 	cs.multiclusterV1alpha1, err = multiclusterv1alpha1.NewForConfig(&configShallowCopy)
-	if err != nil {
-		return nil, err
-	}
-	cs.stableV1alpha1, err = stablev1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -142,10 +142,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.agonesV1 = agonesv1.NewForConfigOrDie(c)
 	cs.allocationV1 = allocationv1.NewForConfigOrDie(c)
 	cs.autoscalingV1 = autoscalingv1.NewForConfigOrDie(c)
 	cs.multiclusterV1alpha1 = multiclusterv1alpha1.NewForConfigOrDie(c)
-	cs.stableV1alpha1 = stablev1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -154,10 +154,10 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.agonesV1 = agonesv1.New(c)
 	cs.allocationV1 = allocationv1.New(c)
 	cs.autoscalingV1 = autoscalingv1.New(c)
 	cs.multiclusterV1alpha1 = multiclusterv1alpha1.New(c)
-	cs.stableV1alpha1 = stablev1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

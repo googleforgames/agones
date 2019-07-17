@@ -126,10 +126,10 @@ resource "google_container_cluster" "primary" {
           "https://www.googleapis.com/auth/trace.append",
         ]
         labels = {
-          "stable.agones.dev/agones-system" = "true"
+          "agones.dev/agones-system" = "true"
         }
         taint = {
-            key = "stable.agones.dev/agones-system"
+            key = "agones.dev/agones-system"
             value = "true"
             effect = "NO_EXECUTE"
         }
@@ -152,10 +152,10 @@ resource "google_container_cluster" "primary" {
           "https://www.googleapis.com/auth/trace.append",
         ]
         labels = {
-          "stable.agones.dev/agones-metrics" = "true"
+          "agones.dev/agones-metrics" = "true"
         }
         taint = {
-            key = "stable.agones.dev/agones-metrics"
+            key = "agones.dev/agones-metrics"
             value = "true"
             effect = "NO_EXECUTE"
         }

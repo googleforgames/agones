@@ -17,7 +17,7 @@ package sdkserver
 import (
 	"testing"
 
-	"agones.dev/agones/pkg/apis/stable/v1alpha1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +26,7 @@ import (
 func TestConvert(t *testing.T) {
 	t.Parallel()
 
-	fixture := &v1alpha1.GameServer{
+	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			CreationTimestamp: metav1.Now(),
 			Namespace:         "default",
@@ -35,26 +35,26 @@ func TestConvert(t *testing.T) {
 			Annotations:       map[string]string{"stuff": "things"},
 			UID:               "1234",
 		},
-		Spec: v1alpha1.GameServerSpec{
-			Health: v1alpha1.Health{
+		Spec: agonesv1.GameServerSpec{
+			Health: agonesv1.Health{
 				Disabled:            false,
 				InitialDelaySeconds: 10,
 				FailureThreshold:    15,
 				PeriodSeconds:       20,
 			},
 		},
-		Status: v1alpha1.GameServerStatus{
+		Status: agonesv1.GameServerStatus{
 			NodeName: "george",
 			Address:  "127.0.0.1",
 			State:    "Ready",
-			Ports: []v1alpha1.GameServerStatusPort{
+			Ports: []agonesv1.GameServerStatusPort{
 				{Name: "default", Port: 12345},
 				{Name: "beacon", Port: 123123},
 			},
 		},
 	}
 
-	eq := func(t *testing.T, fixture *v1alpha1.GameServer, sdkGs *sdk.GameServer) {
+	eq := func(t *testing.T, fixture *agonesv1.GameServer, sdkGs *sdk.GameServer) {
 		assert.Equal(t, fixture.ObjectMeta.Name, sdkGs.ObjectMeta.Name)
 		assert.Equal(t, fixture.ObjectMeta.Namespace, sdkGs.ObjectMeta.Namespace)
 		assert.Equal(t, fixture.ObjectMeta.CreationTimestamp.Unix(), sdkGs.ObjectMeta.CreationTimestamp)
