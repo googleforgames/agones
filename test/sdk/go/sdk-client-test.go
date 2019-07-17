@@ -90,8 +90,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not set annotation: %s", err)
 	}
+	if err = sdk.Reserve(5 * time.Second); err != nil {
+		log.Fatalf("Could not send Reserve command: %s", err)
+	}
 	err = sdk.Shutdown()
 	if err != nil {
-		log.Fatalf("Could not shutdown GameServer%s", err)
+		log.Fatalf("Could not shutdown GameServer: %s", err)
 	}
 }
