@@ -16,4 +16,4 @@
 
 set -ex
 
-# Add steps required to build artefacts for you Agones SDK.
+# Add steps required to build artifacts for you Agones SDK.
