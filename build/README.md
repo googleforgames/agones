@@ -240,7 +240,7 @@ created at the beginning of this section. (if you want to see the resulting inst
 
 Finally to run end-to-end tests against your development version previously installed in your test cluster run `make test-e2e`, this will validate the whole application flow (from start to finish). If you're curious about how they work head to [tests/e2e](../test/e2e/)
 
-When your are finished, you can run `make clean-gcloud-e2e-test-cluster` to tear down your cluster.
+When your are finished, you can run `make clean-gcloud-test-cluster` to tear down your cluster.
 
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
