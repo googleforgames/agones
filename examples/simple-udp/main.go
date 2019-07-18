@@ -114,6 +114,9 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 		case "ALLOCATE":
 			allocate(s)
 
+		case "RESERVE":
+			reserve(s)
+
 		case "WATCH":
 			watchGameServerEvents(s)
 
@@ -159,6 +162,13 @@ func allocate(s *sdk.SDK) {
 	err := s.Allocate()
 	if err != nil {
 		log.Fatalf("could not allocate gameserver: %v", err)
+	}
+}
+
+// reserve for 10 seconds
+func reserve(s *sdk.SDK) {
+	if err := s.Reserve(10 * time.Second); err != nil {
+		log.Fatalf("could not reserve gameserver: %v", err)
 	}
 }
 
