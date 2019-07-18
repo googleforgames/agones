@@ -17,8 +17,8 @@ set -e
 
 export SHELL="/bin/bash"
 export KUBECONFIG="/root/.kube/config"
-mkdir -p /go/src/agones.dev/agones/ /root/.kube/
-cp -r /workspace/. /go/src/agones.dev/agones/
+mkdir -p /go/src/agones.dev/ /root/.kube/
+ln -s /workspace /go/src/agones.dev/agones
 cd /go/src/agones.dev/agones/build
 if [ "$1" = 'local' ]
 then
