@@ -392,18 +392,6 @@ gen-crd-client: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-crd-client.sh
 	docker run --rm $(common_mounts) -w $(workdir_path)/pkg $(build_tag) goimports -w .
 
-site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
-
-# generate pngs from dot files
-%.dot.png: %.dot
-	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-	  'dot -Tpng /dev/stdin' < $< > $@.tmp && mv $@.tmp $@
-
-# general pngs from puml files
-%.puml.png: %.puml
-	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		'plantuml -pipe' < $< > $@
-
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
 shell: $(ensure-build-image)

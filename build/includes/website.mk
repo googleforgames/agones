@@ -66,6 +66,19 @@ site-test:
 	docker run --rm -t -e "TERM=xterm-256color" $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"mkdir -p /tmp/website && cp -r $(mount_path)/site/public /tmp/website/site && htmltest -c $(mount_path)/site/htmltest.yaml /tmp/website"
 
+# generate site images, if they don't exist
+site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png $(site_path)/static/diagrams/gameserver-reserved.puml.png
+
+# generate pngs from dot files
+%.dot.png: %.dot
+	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	  'dot -Tpng /dev/stdin' < $< > $@.tmp && mv $@.tmp $@
+
+# general pngs from puml files
+%.puml.png: %.puml
+	docker run -i --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+		'plantuml -pipe' < $< > $@
+
 # Path to a file and docker command
 REL_PATH := content/en/docs/Reference/agones_crd_api_reference.html
 GEN_API_DOCS := docker run -e FILE="$(mount_path)/site/$(REL_PATH)" -e VERSION=${base_version} --rm -i $(common_mounts) $(build_tag) bash -c "/go/src/agones.dev/agones/site/gen-api-docs.sh"

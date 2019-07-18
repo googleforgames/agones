@@ -1,0 +1,74 @@
+@startuml
+participant Matchmaker
+participant Agones
+participant "Game Server\nProcess" as Binary
+participant "GameServer\nResource" as GameServer
+participant SDK
+box "Game Server Pod"
+  participant Binary
+  participant SDK
+end box
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.Health()
+note right
+  <i>Health()</i> is a continuous
+  ping that occurs under
+  the configured threshold.
+end note
+GameServer <-- SDK: Maintains Healthy status
+
+== Match Maker Registration ==
+group loop
+Binary -> SDK: SDK.Reserve(duration)
+GameServer <-- SDK: Set state to <i>Reserved</i> for duration
+note right
+  <i>Duration</i> should be longer
+  than how long the matchmaker
+  requires <i>Register()</i> to be
+  available for, so it will not be
+  scaled down
+end note
+Binary -> Matchmaker: Register()
+note right
+  Register with the Matchmaker as
+  available to host a game session
+end note
+note left
+Matchmaker registration
+could occur on a timed loop
+to give each <i>GameServer</i>
+time to be scaled down
+while <i>Ready</i> if not allocated
+end note
+end
+
+
+== Matchmaker allocates GameServer ==
+Matchmaker -> Binary: StartGameSession()
+Binary -> SDK: Allocate()
+note right
+Disables timer to reset <i>Reserved</i> state
+back to <i>Ready</i>
+end note
+SDK --> GameServer: Set state to <i>Allocated</i>
+
+== Players Finish Game ==
+
+Binary -> GameServer: SDK.Shutdown()
+note left
+Once gameplay is complete, call
+<i>Shutdown()</i> to delete the
+<i>GameServer</i> resource and backing Pod.
+end note
+destroy Binary
+destroy SDK
+destroy GameServer
+
+@enduml
