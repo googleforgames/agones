@@ -203,9 +203,9 @@ players access it (and therefore, it should not be deleted until they are finish
 > In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 
-{{< feature expiryVersion="0.12.0" >}}
+{{% feature expiryVersion="0.12.0" %}}
 #### GameServerAllocation
-{{< /feature >}}
+{{% /feature %}}
 
 We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
@@ -307,11 +307,11 @@ simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 > `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
   them after they have been created - but you can see their effects on `GameServers`
 
-{{< feature expiryVersion="0.12.0" >}}
+{{% feature expiryVersion="0.12.0" %}}
 #### FleetAllocation
 
 > Fleet Allocation is **deprecated** in version 0.10.0, and will be removed in the 0.12.0 release.
-  Migrate to using GameServer Allocation instead.
+  Migrate to using GameServerAllocation instead.
 
 We can do allocation of a GameServer for usage through a `FleetAllocation`, which will both return to us a `GameServer` (assuming one is available)
 and also move it to the `Allocated` state.
@@ -324,7 +324,6 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 You should get back a response that looks like the following:
 
-{{% feature expiryVersion="0.12.0" %}}
 ```
 apiVersion: stable.agones.dev/v1alpha1
 kind: FleetAllocation
@@ -397,86 +396,10 @@ status:
         port: 7604
       state: Allocated
 ```
-{{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
-```
-apiVersion: agones.dev/v1
-kind: FleetAllocation
-metadata:
-  clusterName: ""
-  creationTimestamp: 2018-07-01T18:56:31Z
-  generateName: simple-udp-
-  generation: 1
-  name: simple-udp-l7dn9
-  namespace: default
-  ownerReferences:
-  - apiVersion: agones.dev/v1
-    blockOwnerDeletion: true
-    controller: true
-    kind: GameServer
-    name: simple-udp-wlqnd-s2xr5
-    uid: 5676a611-7d60-11e8-b2dd-08002703ef08
-  resourceVersion: "24719"
-  selfLink: /apis/agones.dev/v1/namespaces/default/fleetallocations/simple-udp-l7dn9
-  uid: 77c22f17-7d60-11e8-b2dd-08002703ef08
-spec:
-  fleetName: simple-udp
-status:
-  GameServer:
-    metadata:
-      creationTimestamp: 2018-07-01T18:55:35Z
-      finalizers:
-      - agones.dev
-      generateName: simple-udp-wlqnd-
-      generation: 1
-      labels:
-        agones.dev/gameserverset: simple-udp-wlqnd
-      name: simple-udp-wlqnd-s2xr5
-      namespace: default
-      ownerReferences:
-      - apiVersion: agones.dev/v1
-        blockOwnerDeletion: true
-        controller: true
-        kind: GameServerSet
-        name: simple-udp-wlqnd
-        uid: 56731f1a-7d60-11e8-b2dd-08002703ef08
-      resourceVersion: "24716"
-      selfLink: /apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-wlqnd-s2xr5
-      uid: 5676a611-7d60-11e8-b2dd-08002703ef08
-    spec:
-      container: simple-udp
-      health:
-        failureThreshold: 3
-        initialDelaySeconds: 5
-        periodSeconds: 5
-      ports:
-      - containerPort: 7654
-        hostPort: 7604
-        name: default
-        portPolicy: Dynamic
-        protocol: UDP
-      template:
-        metadata:
-          creationTimestamp: null
-        spec:
-          containers:
-          - image: {{< example-image >}}
-            name: simple-udp
-            resources: {}
-    status:
-      address: 192.168.99.100
-      nodeName: agones
-      ports:
-      - name: default
-        port: 7604
-      state: Allocated
-```
-{{% /feature %}}
-
 If you see the `status` section, you should see that there is a `GameServer`, and if you look at its
 `status > state` value, you can also see that it has been moved to `Allocated`. This means you have been successfully
 allocated a `GameServer` out of the fleet, and you can now connect your players to it!
-{{< /feature >}}
+{{% /feature %}}
 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
