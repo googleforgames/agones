@@ -112,24 +112,27 @@ ensure-build-sdk-image:
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
 SECONDS ?= 30
-run-sdk-conformance-local:
+run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 59357:59357 \
 	 -e "TEST=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch" -e "TIMEOUT=$(SECONDS)" $(sidecar_tag)
 
-# Run SDK conformance test for a specific SDK_FOLDER
+# Run SDK conformance test, previously built, for a specific SDK_FOLDER
 SECONDS ?= 30
-run-sdk-conformance-test: SDK_FOLDER=$(SDK_FOLDER)
-run-sdk-conformance-test: ensure-build-sdk-image
+run-sdk-conformance-no-build: ensure-agones-sdk-image
+run-sdk-conformance-no-build: ensure-build-sdk-image
 	sleep 2s && DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
 	docker run -p 59357:59357 -e "ADDRESS=" \
 	 -e "TEST=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch" -e "TIMEOUT=$(SECONDS)" --net=host  $(sidecar_tag)
 
+
+# Run SDK conformance test for a specific SDK_FOLDER
+run-sdk-conformance-test:
+	$(MAKE) run-sdk-command COMMAND=build-sdk-test
+	$(MAKE) run-sdk-conformance-no-build
+	$(MAKE) run-sdk-command COMMAND=clean
+
 # Run a conformance test for all SDKs supported
-run-sdk-conformance-tests: ensure-agones-sdk-image
-	$(MAKE) run-sdk-command SDK_FOLDER=node COMMAND=build
-	$(MAKE) run-sdk-command SDK_FOLDER=rust COMMAND=build
+run-sdk-conformance-tests:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
-	$(MAKE) run-sdk-command SDK_FOLDER=rust COMMAND=clean
-	$(MAKE) run-sdk-command SDK_FOLDER=node COMMAND=clean

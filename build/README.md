@@ -416,6 +416,16 @@ Build all the sdks required for Agones
 #### `make build-sdk-cpp`
 Build the cpp sdk static and dynamic libraries (linux libraries only)
 
+#### `make run-sdk-conformance-local`
+Run Agones sidecar which would wait for all requests from the SDK client.
+Note that annotation should contain UID and label should contain CreationTimestamp values to pass the test.
+
+#### `make run-sdk-conformance-no-build`
+Only run a conformance test for a specific Agones SDK.
+
+#### `make run-sdk-conformance-test`
+Build, run and clean conformance test for a specific Agones SDK.
+
 #### `make run-sdk-conformance-tests`
 Run SDK conformance test.
 Run SDK server (sidecar) in test mode (which would record all GRPC requests) versus all SDK test clients which should generate those requests. All methods are verified.
