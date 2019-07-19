@@ -313,6 +313,32 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 }
 
+func TestGameServerReserve(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	reply, err := e2eframework.SendGameServerUDP(readyGs, "RESERVE")
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not message GameServer")
+	}
+	assert.Equal(t, "ACK: RESERVE\n", reply)
+
+	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReserved, time.Minute)
+	assert.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State)
+
+	// it should go back after 10 seconds
+	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReady, 15*time.Second)
+	assert.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+}
+
 func TestGameServerShutdown(t *testing.T) {
 	t.Parallel()
 	gs := defaultGameServer()
