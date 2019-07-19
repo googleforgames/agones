@@ -19,7 +19,7 @@
 package fake
 
 import (
-	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -40,20 +40,20 @@ var gameserversetsResource = schema.GroupVersionResource{Group: "agones.dev", Ve
 var gameserversetsKind = schema.GroupVersionKind{Group: "agones.dev", Version: "v1", Kind: "GameServerSet"}
 
 // Get takes name of the gameServerSet, and returns the corresponding gameServerSet object, and an error if there is any.
-func (c *FakeGameServerSets) Get(name string, options v1.GetOptions) (result *agones_v1.GameServerSet, err error) {
+func (c *FakeGameServerSets) Get(name string, options v1.GetOptions) (result *agonesv1.GameServerSet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserversetsResource, c.ns, name), &agones_v1.GameServerSet{})
+		Invokes(testing.NewGetAction(gameserversetsResource, c.ns, name), &agonesv1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServerSet), err
+	return obj.(*agonesv1.GameServerSet), err
 }
 
 // List takes label and field selectors, and returns the list of GameServerSets that match those selectors.
-func (c *FakeGameServerSets) List(opts v1.ListOptions) (result *agones_v1.GameServerSetList, err error) {
+func (c *FakeGameServerSets) List(opts v1.ListOptions) (result *agonesv1.GameServerSetList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserversetsResource, gameserversetsKind, c.ns, opts), &agones_v1.GameServerSetList{})
+		Invokes(testing.NewListAction(gameserversetsResource, gameserversetsKind, c.ns, opts), &agonesv1.GameServerSetList{})
 
 	if obj == nil {
 		return nil, err
@@ -63,8 +63,8 @@ func (c *FakeGameServerSets) List(opts v1.ListOptions) (result *agones_v1.GameSe
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &agones_v1.GameServerSetList{ListMeta: obj.(*agones_v1.GameServerSetList).ListMeta}
-	for _, item := range obj.(*agones_v1.GameServerSetList).Items {
+	list := &agonesv1.GameServerSetList{ListMeta: obj.(*agonesv1.GameServerSetList).ListMeta}
+	for _, item := range obj.(*agonesv1.GameServerSetList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -80,43 +80,43 @@ func (c *FakeGameServerSets) Watch(opts v1.ListOptions) (watch.Interface, error)
 }
 
 // Create takes the representation of a gameServerSet and creates it.  Returns the server's representation of the gameServerSet, and an error, if there is any.
-func (c *FakeGameServerSets) Create(gameServerSet *agones_v1.GameServerSet) (result *agones_v1.GameServerSet, err error) {
+func (c *FakeGameServerSets) Create(gameServerSet *agonesv1.GameServerSet) (result *agonesv1.GameServerSet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserversetsResource, c.ns, gameServerSet), &agones_v1.GameServerSet{})
+		Invokes(testing.NewCreateAction(gameserversetsResource, c.ns, gameServerSet), &agonesv1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServerSet), err
+	return obj.(*agonesv1.GameServerSet), err
 }
 
 // Update takes the representation of a gameServerSet and updates it. Returns the server's representation of the gameServerSet, and an error, if there is any.
-func (c *FakeGameServerSets) Update(gameServerSet *agones_v1.GameServerSet) (result *agones_v1.GameServerSet, err error) {
+func (c *FakeGameServerSets) Update(gameServerSet *agonesv1.GameServerSet) (result *agonesv1.GameServerSet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserversetsResource, c.ns, gameServerSet), &agones_v1.GameServerSet{})
+		Invokes(testing.NewUpdateAction(gameserversetsResource, c.ns, gameServerSet), &agonesv1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServerSet), err
+	return obj.(*agonesv1.GameServerSet), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGameServerSets) UpdateStatus(gameServerSet *agones_v1.GameServerSet) (*agones_v1.GameServerSet, error) {
+func (c *FakeGameServerSets) UpdateStatus(gameServerSet *agonesv1.GameServerSet) (*agonesv1.GameServerSet, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "status", c.ns, gameServerSet), &agones_v1.GameServerSet{})
+		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "status", c.ns, gameServerSet), &agonesv1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServerSet), err
+	return obj.(*agonesv1.GameServerSet), err
 }
 
 // Delete takes name of the gameServerSet and deletes it. Returns an error if one occurs.
 func (c *FakeGameServerSets) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gameserversetsResource, c.ns, name), &agones_v1.GameServerSet{})
+		Invokes(testing.NewDeleteAction(gameserversetsResource, c.ns, name), &agonesv1.GameServerSet{})
 
 	return err
 }
@@ -125,19 +125,19 @@ func (c *FakeGameServerSets) Delete(name string, options *v1.DeleteOptions) erro
 func (c *FakeGameServerSets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(gameserversetsResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &agones_v1.GameServerSetList{})
+	_, err := c.Fake.Invokes(action, &agonesv1.GameServerSetList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gameServerSet.
-func (c *FakeGameServerSets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agones_v1.GameServerSet, err error) {
+func (c *FakeGameServerSets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agonesv1.GameServerSet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversetsResource, c.ns, name, data, subresources...), &agones_v1.GameServerSet{})
+		Invokes(testing.NewPatchSubresourceAction(gameserversetsResource, c.ns, name, data, subresources...), &agonesv1.GameServerSet{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServerSet), err
+	return obj.(*agonesv1.GameServerSet), err
 }
 
 // GetScale takes name of the gameServerSet, and returns the corresponding scale object, and an error if there is any.

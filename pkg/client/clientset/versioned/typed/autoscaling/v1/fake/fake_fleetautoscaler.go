@@ -19,7 +19,7 @@
 package fake
 
 import (
-	autoscaling_v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,20 +39,20 @@ var fleetautoscalersResource = schema.GroupVersionResource{Group: "autoscaling.a
 var fleetautoscalersKind = schema.GroupVersionKind{Group: "autoscaling.agones.dev", Version: "v1", Kind: "FleetAutoscaler"}
 
 // Get takes name of the fleetAutoscaler, and returns the corresponding fleetAutoscaler object, and an error if there is any.
-func (c *FakeFleetAutoscalers) Get(name string, options v1.GetOptions) (result *autoscaling_v1.FleetAutoscaler, err error) {
+func (c *FakeFleetAutoscalers) Get(name string, options v1.GetOptions) (result *autoscalingv1.FleetAutoscaler, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(fleetautoscalersResource, c.ns, name), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewGetAction(fleetautoscalersResource, c.ns, name), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*autoscaling_v1.FleetAutoscaler), err
+	return obj.(*autoscalingv1.FleetAutoscaler), err
 }
 
 // List takes label and field selectors, and returns the list of FleetAutoscalers that match those selectors.
-func (c *FakeFleetAutoscalers) List(opts v1.ListOptions) (result *autoscaling_v1.FleetAutoscalerList, err error) {
+func (c *FakeFleetAutoscalers) List(opts v1.ListOptions) (result *autoscalingv1.FleetAutoscalerList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(fleetautoscalersResource, fleetautoscalersKind, c.ns, opts), &autoscaling_v1.FleetAutoscalerList{})
+		Invokes(testing.NewListAction(fleetautoscalersResource, fleetautoscalersKind, c.ns, opts), &autoscalingv1.FleetAutoscalerList{})
 
 	if obj == nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *FakeFleetAutoscalers) List(opts v1.ListOptions) (result *autoscaling_v1
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &autoscaling_v1.FleetAutoscalerList{ListMeta: obj.(*autoscaling_v1.FleetAutoscalerList).ListMeta}
-	for _, item := range obj.(*autoscaling_v1.FleetAutoscalerList).Items {
+	list := &autoscalingv1.FleetAutoscalerList{ListMeta: obj.(*autoscalingv1.FleetAutoscalerList).ListMeta}
+	for _, item := range obj.(*autoscalingv1.FleetAutoscalerList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -79,43 +79,43 @@ func (c *FakeFleetAutoscalers) Watch(opts v1.ListOptions) (watch.Interface, erro
 }
 
 // Create takes the representation of a fleetAutoscaler and creates it.  Returns the server's representation of the fleetAutoscaler, and an error, if there is any.
-func (c *FakeFleetAutoscalers) Create(fleetAutoscaler *autoscaling_v1.FleetAutoscaler) (result *autoscaling_v1.FleetAutoscaler, err error) {
+func (c *FakeFleetAutoscalers) Create(fleetAutoscaler *autoscalingv1.FleetAutoscaler) (result *autoscalingv1.FleetAutoscaler, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(fleetautoscalersResource, c.ns, fleetAutoscaler), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewCreateAction(fleetautoscalersResource, c.ns, fleetAutoscaler), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*autoscaling_v1.FleetAutoscaler), err
+	return obj.(*autoscalingv1.FleetAutoscaler), err
 }
 
 // Update takes the representation of a fleetAutoscaler and updates it. Returns the server's representation of the fleetAutoscaler, and an error, if there is any.
-func (c *FakeFleetAutoscalers) Update(fleetAutoscaler *autoscaling_v1.FleetAutoscaler) (result *autoscaling_v1.FleetAutoscaler, err error) {
+func (c *FakeFleetAutoscalers) Update(fleetAutoscaler *autoscalingv1.FleetAutoscaler) (result *autoscalingv1.FleetAutoscaler, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(fleetautoscalersResource, c.ns, fleetAutoscaler), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewUpdateAction(fleetautoscalersResource, c.ns, fleetAutoscaler), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*autoscaling_v1.FleetAutoscaler), err
+	return obj.(*autoscalingv1.FleetAutoscaler), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeFleetAutoscalers) UpdateStatus(fleetAutoscaler *autoscaling_v1.FleetAutoscaler) (*autoscaling_v1.FleetAutoscaler, error) {
+func (c *FakeFleetAutoscalers) UpdateStatus(fleetAutoscaler *autoscalingv1.FleetAutoscaler) (*autoscalingv1.FleetAutoscaler, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(fleetautoscalersResource, "status", c.ns, fleetAutoscaler), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewUpdateSubresourceAction(fleetautoscalersResource, "status", c.ns, fleetAutoscaler), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*autoscaling_v1.FleetAutoscaler), err
+	return obj.(*autoscalingv1.FleetAutoscaler), err
 }
 
 // Delete takes name of the fleetAutoscaler and deletes it. Returns an error if one occurs.
 func (c *FakeFleetAutoscalers) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(fleetautoscalersResource, c.ns, name), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewDeleteAction(fleetautoscalersResource, c.ns, name), &autoscalingv1.FleetAutoscaler{})
 
 	return err
 }
@@ -124,17 +124,17 @@ func (c *FakeFleetAutoscalers) Delete(name string, options *v1.DeleteOptions) er
 func (c *FakeFleetAutoscalers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(fleetautoscalersResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &autoscaling_v1.FleetAutoscalerList{})
+	_, err := c.Fake.Invokes(action, &autoscalingv1.FleetAutoscalerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched fleetAutoscaler.
-func (c *FakeFleetAutoscalers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *autoscaling_v1.FleetAutoscaler, err error) {
+func (c *FakeFleetAutoscalers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *autoscalingv1.FleetAutoscaler, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(fleetautoscalersResource, c.ns, name, data, subresources...), &autoscaling_v1.FleetAutoscaler{})
+		Invokes(testing.NewPatchSubresourceAction(fleetautoscalersResource, c.ns, name, data, subresources...), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*autoscaling_v1.FleetAutoscaler), err
+	return obj.(*autoscalingv1.FleetAutoscaler), err
 }

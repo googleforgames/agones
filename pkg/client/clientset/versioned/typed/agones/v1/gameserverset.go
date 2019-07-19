@@ -22,7 +22,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -39,13 +39,13 @@ type GameServerSetInterface interface {
 	Create(*v1.GameServerSet) (*v1.GameServerSet, error)
 	Update(*v1.GameServerSet) (*v1.GameServerSet, error)
 	UpdateStatus(*v1.GameServerSet) (*v1.GameServerSet, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.GameServerSet, error)
-	List(opts meta_v1.ListOptions) (*v1.GameServerSetList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.GameServerSet, error)
+	List(opts metav1.ListOptions) (*v1.GameServerSetList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.GameServerSet, err error)
-	GetScale(gameServerSetName string, options meta_v1.GetOptions) (*v1beta1.Scale, error)
+	GetScale(gameServerSetName string, options metav1.GetOptions) (*v1beta1.Scale, error)
 	UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (*v1beta1.Scale, error)
 
 	GameServerSetExpansion
@@ -66,7 +66,7 @@ func newGameServerSets(c *AgonesV1Client, namespace string) *gameServerSets {
 }
 
 // Get takes name of the gameServerSet, and returns the corresponding gameServerSet object, and an error if there is any.
-func (c *gameServerSets) Get(name string, options meta_v1.GetOptions) (result *v1.GameServerSet, err error) {
+func (c *gameServerSets) Get(name string, options metav1.GetOptions) (result *v1.GameServerSet, err error) {
 	result = &v1.GameServerSet{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -79,7 +79,7 @@ func (c *gameServerSets) Get(name string, options meta_v1.GetOptions) (result *v
 }
 
 // List takes label and field selectors, and returns the list of GameServerSets that match those selectors.
-func (c *gameServerSets) List(opts meta_v1.ListOptions) (result *v1.GameServerSetList, err error) {
+func (c *gameServerSets) List(opts metav1.ListOptions) (result *v1.GameServerSetList, err error) {
 	result = &v1.GameServerSetList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -91,7 +91,7 @@ func (c *gameServerSets) List(opts meta_v1.ListOptions) (result *v1.GameServerSe
 }
 
 // Watch returns a watch.Interface that watches the requested gameServerSets.
-func (c *gameServerSets) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *gameServerSets) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -142,7 +142,7 @@ func (c *gameServerSets) UpdateStatus(gameServerSet *v1.GameServerSet) (result *
 }
 
 // Delete takes name of the gameServerSet and deletes it. Returns an error if one occurs.
-func (c *gameServerSets) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *gameServerSets) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gameserversets").
@@ -153,7 +153,7 @@ func (c *gameServerSets) Delete(name string, options *meta_v1.DeleteOptions) err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *gameServerSets) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *gameServerSets) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gameserversets").
@@ -178,7 +178,7 @@ func (c *gameServerSets) Patch(name string, pt types.PatchType, data []byte, sub
 }
 
 // GetScale takes name of the gameServerSet, and returns the corresponding v1beta1.Scale object, and an error if there is any.
-func (c *gameServerSets) GetScale(gameServerSetName string, options meta_v1.GetOptions) (result *v1beta1.Scale, err error) {
+func (c *gameServerSets) GetScale(gameServerSetName string, options metav1.GetOptions) (result *v1beta1.Scale, err error) {
 	result = &v1beta1.Scale{}
 	err = c.client.Get().
 		Namespace(c.ns).

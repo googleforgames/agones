@@ -21,11 +21,11 @@ package v1
 import (
 	time "time"
 
-	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "agones.dev/agones/pkg/client/listers/agones/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
@@ -57,20 +57,20 @@ func NewGameServerSetInformer(client versioned.Interface, namespace string, resy
 func NewFilteredGameServerSetInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AgonesV1().GameServerSets(namespace).List(options)
 			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AgonesV1().GameServerSets(namespace).Watch(options)
 			},
 		},
-		&agones_v1.GameServerSet{},
+		&agonesv1.GameServerSet{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *gameServerSetInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *gameServerSetInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&agones_v1.GameServerSet{}, f.defaultInformer)
+	return f.factory.InformerFor(&agonesv1.GameServerSet{}, f.defaultInformer)
 }
 
 func (f *gameServerSetInformer) Lister() v1.GameServerSetLister {

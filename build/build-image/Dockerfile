@@ -44,12 +44,18 @@ RUN go get -u golang.org/x/tools/cmd/goimports
 # RUN gcloud components update
 RUN gcloud components update && gcloud components install app-engine-go
 
+# the kubernetes version for the file
+ENV KUBERNETES_VER 1.12.10
+
 # overwrite kubectl as we want a specific version
-ENV KUBECTL_VER 1.12.10
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VER}/bin/linux/amd64/kubectl && \
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
+
+# install the release branch of the code generator tools
+RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
+    git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
 ENV HELM_VER 2.11.0
@@ -63,10 +69,6 @@ RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
 RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.16.0
-
-# install the release branch of the code generator tools
-RUN mkdir -p /go/src && cd /go/src && mkdir -p k8s.io && cd k8s.io && \
-    git clone -b kubernetes-1.11.5 --depth=3 https://github.com/kubernetes/code-generator.git
 
 #
 #  \ \      / /__| |__  ___(_) |_ ___
