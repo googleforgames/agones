@@ -162,6 +162,8 @@ steps:
 # Site preview
 #
 
+# don't promote, as it can cause failures when two deploys try and promote at the same time.
+
 - name: "make-docker" # build a preview of the website
   id: site-static
   waitFor:
@@ -178,7 +180,7 @@ steps:
   waitFor:
     - site-gopath
   dir: "go/src/site"
-  args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
+  args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
 
