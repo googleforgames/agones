@@ -323,11 +323,7 @@ func (in *GameServerStatus) DeepCopyInto(out *GameServerStatus) {
 	}
 	if in.ReservedUntil != nil {
 		in, out := &in.ReservedUntil, &out.ReservedUntil
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = (*in).DeepCopy()
-		}
+		*out = (*in).DeepCopy()
 	}
 	return
 }

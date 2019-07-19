@@ -21,11 +21,11 @@ package v1
 import (
 	time "time"
 
-	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "agones.dev/agones/pkg/client/listers/agones/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
@@ -57,20 +57,20 @@ func NewGameServerInformer(client versioned.Interface, namespace string, resyncP
 func NewFilteredGameServerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AgonesV1().GameServers(namespace).List(options)
 			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AgonesV1().GameServers(namespace).Watch(options)
 			},
 		},
-		&agones_v1.GameServer{},
+		&agonesv1.GameServer{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *gameServerInformer) defaultInformer(client versioned.Interface, resyncP
 }
 
 func (f *gameServerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&agones_v1.GameServer{}, f.defaultInformer)
+	return f.factory.InformerFor(&agonesv1.GameServer{}, f.defaultInformer)
 }
 
 func (f *gameServerInformer) Lister() v1.GameServerLister {
