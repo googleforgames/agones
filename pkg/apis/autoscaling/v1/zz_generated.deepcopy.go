@@ -80,21 +80,13 @@ func (in *FleetAutoscaleReview) DeepCopyInto(out *FleetAutoscaleReview) {
 	*out = *in
 	if in.Request != nil {
 		in, out := &in.Request, &out.Request
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(FleetAutoscaleRequest)
-			**out = **in
-		}
+		*out = new(FleetAutoscaleRequest)
+		**out = **in
 	}
 	if in.Response != nil {
 		in, out := &in.Response, &out.Response
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(FleetAutoscaleResponse)
-			**out = **in
-		}
+		*out = new(FleetAutoscaleResponse)
+		**out = **in
 	}
 	return
 }
@@ -175,21 +167,13 @@ func (in *FleetAutoscalerPolicy) DeepCopyInto(out *FleetAutoscalerPolicy) {
 	*out = *in
 	if in.Buffer != nil {
 		in, out := &in.Buffer, &out.Buffer
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(BufferPolicy)
-			**out = **in
-		}
+		*out = new(BufferPolicy)
+		**out = **in
 	}
 	if in.Webhook != nil {
 		in, out := &in.Webhook, &out.Webhook
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(WebhookPolicy)
-			(*in).DeepCopyInto(*out)
-		}
+		*out = new(WebhookPolicy)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
@@ -226,11 +210,7 @@ func (in *FleetAutoscalerStatus) DeepCopyInto(out *FleetAutoscalerStatus) {
 	*out = *in
 	if in.LastScaleTime != nil {
 		in, out := &in.LastScaleTime, &out.LastScaleTime
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = (*in).DeepCopy()
-		}
+		*out = (*in).DeepCopy()
 	}
 	return
 }
@@ -250,21 +230,13 @@ func (in *WebhookPolicy) DeepCopyInto(out *WebhookPolicy) {
 	*out = *in
 	if in.URL != nil {
 		in, out := &in.URL, &out.URL
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(string)
-			**out = **in
-		}
+		*out = new(string)
+		**out = **in
 	}
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
-		if *in == nil {
-			*out = nil
-		} else {
-			*out = new(v1beta1.ServiceReference)
-			(*in).DeepCopyInto(*out)
-		}
+		*out = new(v1beta1.ServiceReference)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.CABundle != nil {
 		in, out := &in.CABundle, &out.CABundle
