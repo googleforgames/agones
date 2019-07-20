@@ -21,7 +21,7 @@ package v1
 import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -38,11 +38,11 @@ type GameServerInterface interface {
 	Create(*v1.GameServer) (*v1.GameServer, error)
 	Update(*v1.GameServer) (*v1.GameServer, error)
 	UpdateStatus(*v1.GameServer) (*v1.GameServer, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.GameServer, error)
-	List(opts meta_v1.ListOptions) (*v1.GameServerList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.GameServer, error)
+	List(opts metav1.ListOptions) (*v1.GameServerList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.GameServer, err error)
 	GameServerExpansion
 }
@@ -62,7 +62,7 @@ func newGameServers(c *AgonesV1Client, namespace string) *gameServers {
 }
 
 // Get takes name of the gameServer, and returns the corresponding gameServer object, and an error if there is any.
-func (c *gameServers) Get(name string, options meta_v1.GetOptions) (result *v1.GameServer, err error) {
+func (c *gameServers) Get(name string, options metav1.GetOptions) (result *v1.GameServer, err error) {
 	result = &v1.GameServer{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -75,7 +75,7 @@ func (c *gameServers) Get(name string, options meta_v1.GetOptions) (result *v1.G
 }
 
 // List takes label and field selectors, and returns the list of GameServers that match those selectors.
-func (c *gameServers) List(opts meta_v1.ListOptions) (result *v1.GameServerList, err error) {
+func (c *gameServers) List(opts metav1.ListOptions) (result *v1.GameServerList, err error) {
 	result = &v1.GameServerList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -87,7 +87,7 @@ func (c *gameServers) List(opts meta_v1.ListOptions) (result *v1.GameServerList,
 }
 
 // Watch returns a watch.Interface that watches the requested gameServers.
-func (c *gameServers) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *gameServers) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -138,7 +138,7 @@ func (c *gameServers) UpdateStatus(gameServer *v1.GameServer) (result *v1.GameSe
 }
 
 // Delete takes name of the gameServer and deletes it. Returns an error if one occurs.
-func (c *gameServers) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *gameServers) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gameservers").
@@ -149,7 +149,7 @@ func (c *gameServers) Delete(name string, options *meta_v1.DeleteOptions) error 
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *gameServers) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *gameServers) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gameservers").
