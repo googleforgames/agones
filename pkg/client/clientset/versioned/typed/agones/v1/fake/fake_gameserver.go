@@ -19,7 +19,7 @@
 package fake
 
 import (
-	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,20 +39,20 @@ var gameserversResource = schema.GroupVersionResource{Group: "agones.dev", Versi
 var gameserversKind = schema.GroupVersionKind{Group: "agones.dev", Version: "v1", Kind: "GameServer"}
 
 // Get takes name of the gameServer, and returns the corresponding gameServer object, and an error if there is any.
-func (c *FakeGameServers) Get(name string, options v1.GetOptions) (result *agones_v1.GameServer, err error) {
+func (c *FakeGameServers) Get(name string, options v1.GetOptions) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserversResource, c.ns, name), &agones_v1.GameServer{})
+		Invokes(testing.NewGetAction(gameserversResource, c.ns, name), &agonesv1.GameServer{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServer), err
+	return obj.(*agonesv1.GameServer), err
 }
 
 // List takes label and field selectors, and returns the list of GameServers that match those selectors.
-func (c *FakeGameServers) List(opts v1.ListOptions) (result *agones_v1.GameServerList, err error) {
+func (c *FakeGameServers) List(opts v1.ListOptions) (result *agonesv1.GameServerList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserversResource, gameserversKind, c.ns, opts), &agones_v1.GameServerList{})
+		Invokes(testing.NewListAction(gameserversResource, gameserversKind, c.ns, opts), &agonesv1.GameServerList{})
 
 	if obj == nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *FakeGameServers) List(opts v1.ListOptions) (result *agones_v1.GameServe
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &agones_v1.GameServerList{ListMeta: obj.(*agones_v1.GameServerList).ListMeta}
-	for _, item := range obj.(*agones_v1.GameServerList).Items {
+	list := &agonesv1.GameServerList{ListMeta: obj.(*agonesv1.GameServerList).ListMeta}
+	for _, item := range obj.(*agonesv1.GameServerList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -79,43 +79,43 @@ func (c *FakeGameServers) Watch(opts v1.ListOptions) (watch.Interface, error) {
 }
 
 // Create takes the representation of a gameServer and creates it.  Returns the server's representation of the gameServer, and an error, if there is any.
-func (c *FakeGameServers) Create(gameServer *agones_v1.GameServer) (result *agones_v1.GameServer, err error) {
+func (c *FakeGameServers) Create(gameServer *agonesv1.GameServer) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserversResource, c.ns, gameServer), &agones_v1.GameServer{})
+		Invokes(testing.NewCreateAction(gameserversResource, c.ns, gameServer), &agonesv1.GameServer{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServer), err
+	return obj.(*agonesv1.GameServer), err
 }
 
 // Update takes the representation of a gameServer and updates it. Returns the server's representation of the gameServer, and an error, if there is any.
-func (c *FakeGameServers) Update(gameServer *agones_v1.GameServer) (result *agones_v1.GameServer, err error) {
+func (c *FakeGameServers) Update(gameServer *agonesv1.GameServer) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserversResource, c.ns, gameServer), &agones_v1.GameServer{})
+		Invokes(testing.NewUpdateAction(gameserversResource, c.ns, gameServer), &agonesv1.GameServer{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServer), err
+	return obj.(*agonesv1.GameServer), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGameServers) UpdateStatus(gameServer *agones_v1.GameServer) (*agones_v1.GameServer, error) {
+func (c *FakeGameServers) UpdateStatus(gameServer *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversResource, "status", c.ns, gameServer), &agones_v1.GameServer{})
+		Invokes(testing.NewUpdateSubresourceAction(gameserversResource, "status", c.ns, gameServer), &agonesv1.GameServer{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServer), err
+	return obj.(*agonesv1.GameServer), err
 }
 
 // Delete takes name of the gameServer and deletes it. Returns an error if one occurs.
 func (c *FakeGameServers) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gameserversResource, c.ns, name), &agones_v1.GameServer{})
+		Invokes(testing.NewDeleteAction(gameserversResource, c.ns, name), &agonesv1.GameServer{})
 
 	return err
 }
@@ -124,17 +124,17 @@ func (c *FakeGameServers) Delete(name string, options *v1.DeleteOptions) error {
 func (c *FakeGameServers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(gameserversResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &agones_v1.GameServerList{})
+	_, err := c.Fake.Invokes(action, &agonesv1.GameServerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gameServer.
-func (c *FakeGameServers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agones_v1.GameServer, err error) {
+func (c *FakeGameServers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserversResource, c.ns, name, data, subresources...), &agones_v1.GameServer{})
+		Invokes(testing.NewPatchSubresourceAction(gameserversResource, c.ns, name, data, subresources...), &agonesv1.GameServer{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*agones_v1.GameServer), err
+	return obj.(*agonesv1.GameServer), err
 }

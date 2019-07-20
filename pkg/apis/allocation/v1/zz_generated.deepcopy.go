@@ -21,8 +21,8 @@
 package v1
 
 import (
-	agones_v1 "agones.dev/agones/pkg/apis/agones/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -94,7 +94,7 @@ func (in *GameServerAllocationSpec) DeepCopyInto(out *GameServerAllocationSpec) 
 	in.Required.DeepCopyInto(&out.Required)
 	if in.Preferred != nil {
 		in, out := &in.Preferred, &out.Preferred
-		*out = make([]meta_v1.LabelSelector, len(*in))
+		*out = make([]metav1.LabelSelector, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
@@ -118,7 +118,7 @@ func (in *GameServerAllocationStatus) DeepCopyInto(out *GameServerAllocationStat
 	*out = *in
 	if in.Ports != nil {
 		in, out := &in.Ports, &out.Ports
-		*out = make([]agones_v1.GameServerStatusPort, len(*in))
+		*out = make([]agonesv1.GameServerStatusPort, len(*in))
 		copy(*out, *in)
 	}
 	return
