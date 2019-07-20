@@ -66,3 +66,8 @@ or to hide a section from 0.8.0 onward:
 > Due to [this hugo bug](https://github.com/gohugoio/hugo/issues/4695) headers wrapped in this shortcode will
   not be displayed in the Table of Contents. So we will need to actively remove the `feature` shortcode once
   the release versions have been passed for new content, for content that is affected.
+
+## Regenerate Diagrams
+
+To regenerate the [PlantUML](http://plantuml.com/) or [Dot](https://www.graphviz.org/doc/info/lang.html) diagrams,
+delete the .png version of the file in question from `/site/static/diagrams/`, and run `make site-images`.

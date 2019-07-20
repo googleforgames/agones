@@ -439,6 +439,9 @@ Generate `https://agones.dev` website locally and host on `http://localhost:1313
 #### `make site-test`
 Check the links in website
 
+#### `make site-images`
+Create all the site images from dot and puml diagrams in /site/static/diagrams
+
 #### `make gen-api-docs`
 Generate Agones CRD reference documentation [Agones CRD API reference](../site/content/en/docs/Reference/agones_crd_api_reference.html). Set `feature` shortcode with proper version automatically
 
