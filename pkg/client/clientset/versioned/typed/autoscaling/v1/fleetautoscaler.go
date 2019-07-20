@@ -21,7 +21,7 @@ package v1
 import (
 	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -38,11 +38,11 @@ type FleetAutoscalerInterface interface {
 	Create(*v1.FleetAutoscaler) (*v1.FleetAutoscaler, error)
 	Update(*v1.FleetAutoscaler) (*v1.FleetAutoscaler, error)
 	UpdateStatus(*v1.FleetAutoscaler) (*v1.FleetAutoscaler, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.FleetAutoscaler, error)
-	List(opts meta_v1.ListOptions) (*v1.FleetAutoscalerList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.FleetAutoscaler, error)
+	List(opts metav1.ListOptions) (*v1.FleetAutoscalerList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.FleetAutoscaler, err error)
 	FleetAutoscalerExpansion
 }
@@ -62,7 +62,7 @@ func newFleetAutoscalers(c *AutoscalingV1Client, namespace string) *fleetAutosca
 }
 
 // Get takes name of the fleetAutoscaler, and returns the corresponding fleetAutoscaler object, and an error if there is any.
-func (c *fleetAutoscalers) Get(name string, options meta_v1.GetOptions) (result *v1.FleetAutoscaler, err error) {
+func (c *fleetAutoscalers) Get(name string, options metav1.GetOptions) (result *v1.FleetAutoscaler, err error) {
 	result = &v1.FleetAutoscaler{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -75,7 +75,7 @@ func (c *fleetAutoscalers) Get(name string, options meta_v1.GetOptions) (result 
 }
 
 // List takes label and field selectors, and returns the list of FleetAutoscalers that match those selectors.
-func (c *fleetAutoscalers) List(opts meta_v1.ListOptions) (result *v1.FleetAutoscalerList, err error) {
+func (c *fleetAutoscalers) List(opts metav1.ListOptions) (result *v1.FleetAutoscalerList, err error) {
 	result = &v1.FleetAutoscalerList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -87,7 +87,7 @@ func (c *fleetAutoscalers) List(opts meta_v1.ListOptions) (result *v1.FleetAutos
 }
 
 // Watch returns a watch.Interface that watches the requested fleetAutoscalers.
-func (c *fleetAutoscalers) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *fleetAutoscalers) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -138,7 +138,7 @@ func (c *fleetAutoscalers) UpdateStatus(fleetAutoscaler *v1.FleetAutoscaler) (re
 }
 
 // Delete takes name of the fleetAutoscaler and deletes it. Returns an error if one occurs.
-func (c *fleetAutoscalers) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *fleetAutoscalers) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("fleetautoscalers").
@@ -149,7 +149,7 @@ func (c *fleetAutoscalers) Delete(name string, options *meta_v1.DeleteOptions) e
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *fleetAutoscalers) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *fleetAutoscalers) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("fleetautoscalers").

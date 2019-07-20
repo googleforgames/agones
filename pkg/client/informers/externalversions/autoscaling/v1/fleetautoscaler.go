@@ -21,11 +21,11 @@ package v1
 import (
 	time "time"
 
-	autoscaling_v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "agones.dev/agones/pkg/client/listers/autoscaling/v1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
@@ -57,20 +57,20 @@ func NewFleetAutoscalerInformer(client versioned.Interface, namespace string, re
 func NewFilteredFleetAutoscalerInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
-			ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
+			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AutoscalingV1().FleetAutoscalers(namespace).List(options)
 			},
-			WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
+			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
 				return client.AutoscalingV1().FleetAutoscalers(namespace).Watch(options)
 			},
 		},
-		&autoscaling_v1.FleetAutoscaler{},
+		&autoscalingv1.FleetAutoscaler{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *fleetAutoscalerInformer) defaultInformer(client versioned.Interface, re
 }
 
 func (f *fleetAutoscalerInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&autoscaling_v1.FleetAutoscaler{}, f.defaultInformer)
+	return f.factory.InformerFor(&autoscalingv1.FleetAutoscaler{}, f.defaultInformer)
 }
 
 func (f *fleetAutoscalerInformer) Lister() v1.FleetAutoscalerLister {

@@ -21,7 +21,7 @@ package v1alpha1
 import (
 	time "time"
 
-	multicluster_v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	versioned "agones.dev/agones/pkg/client/clientset/versioned"
 	internalinterfaces "agones.dev/agones/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "agones.dev/agones/pkg/client/listers/multicluster/v1alpha1"
@@ -70,7 +70,7 @@ func NewFilteredGameServerAllocationPolicyInformer(client versioned.Interface, n
 				return client.MulticlusterV1alpha1().GameServerAllocationPolicies(namespace).Watch(options)
 			},
 		},
-		&multicluster_v1alpha1.GameServerAllocationPolicy{},
+		&multiclusterv1alpha1.GameServerAllocationPolicy{},
 		resyncPeriod,
 		indexers,
 	)
@@ -81,7 +81,7 @@ func (f *gameServerAllocationPolicyInformer) defaultInformer(client versioned.In
 }
 
 func (f *gameServerAllocationPolicyInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&multicluster_v1alpha1.GameServerAllocationPolicy{}, f.defaultInformer)
+	return f.factory.InformerFor(&multiclusterv1alpha1.GameServerAllocationPolicy{}, f.defaultInformer)
 }
 
 func (f *gameServerAllocationPolicyInformer) Lister() v1alpha1.GameServerAllocationPolicyLister {

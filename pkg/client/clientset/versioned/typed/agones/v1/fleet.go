@@ -22,7 +22,7 @@ import (
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
-	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
@@ -39,13 +39,13 @@ type FleetInterface interface {
 	Create(*v1.Fleet) (*v1.Fleet, error)
 	Update(*v1.Fleet) (*v1.Fleet, error)
 	UpdateStatus(*v1.Fleet) (*v1.Fleet, error)
-	Delete(name string, options *meta_v1.DeleteOptions) error
-	DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error
-	Get(name string, options meta_v1.GetOptions) (*v1.Fleet, error)
-	List(opts meta_v1.ListOptions) (*v1.FleetList, error)
-	Watch(opts meta_v1.ListOptions) (watch.Interface, error)
+	Delete(name string, options *metav1.DeleteOptions) error
+	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
+	Get(name string, options metav1.GetOptions) (*v1.Fleet, error)
+	List(opts metav1.ListOptions) (*v1.FleetList, error)
+	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.Fleet, err error)
-	GetScale(fleetName string, options meta_v1.GetOptions) (*v1beta1.Scale, error)
+	GetScale(fleetName string, options metav1.GetOptions) (*v1beta1.Scale, error)
 	UpdateScale(fleetName string, scale *v1beta1.Scale) (*v1beta1.Scale, error)
 
 	FleetExpansion
@@ -66,7 +66,7 @@ func newFleets(c *AgonesV1Client, namespace string) *fleets {
 }
 
 // Get takes name of the fleet, and returns the corresponding fleet object, and an error if there is any.
-func (c *fleets) Get(name string, options meta_v1.GetOptions) (result *v1.Fleet, err error) {
+func (c *fleets) Get(name string, options metav1.GetOptions) (result *v1.Fleet, err error) {
 	result = &v1.Fleet{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -79,7 +79,7 @@ func (c *fleets) Get(name string, options meta_v1.GetOptions) (result *v1.Fleet,
 }
 
 // List takes label and field selectors, and returns the list of Fleets that match those selectors.
-func (c *fleets) List(opts meta_v1.ListOptions) (result *v1.FleetList, err error) {
+func (c *fleets) List(opts metav1.ListOptions) (result *v1.FleetList, err error) {
 	result = &v1.FleetList{}
 	err = c.client.Get().
 		Namespace(c.ns).
@@ -91,7 +91,7 @@ func (c *fleets) List(opts meta_v1.ListOptions) (result *v1.FleetList, err error
 }
 
 // Watch returns a watch.Interface that watches the requested fleets.
-func (c *fleets) Watch(opts meta_v1.ListOptions) (watch.Interface, error) {
+func (c *fleets) Watch(opts metav1.ListOptions) (watch.Interface, error) {
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
@@ -142,7 +142,7 @@ func (c *fleets) UpdateStatus(fleet *v1.Fleet) (result *v1.Fleet, err error) {
 }
 
 // Delete takes name of the fleet and deletes it. Returns an error if one occurs.
-func (c *fleets) Delete(name string, options *meta_v1.DeleteOptions) error {
+func (c *fleets) Delete(name string, options *metav1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("fleets").
@@ -153,7 +153,7 @@ func (c *fleets) Delete(name string, options *meta_v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *fleets) DeleteCollection(options *meta_v1.DeleteOptions, listOptions meta_v1.ListOptions) error {
+func (c *fleets) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("fleets").
@@ -178,7 +178,7 @@ func (c *fleets) Patch(name string, pt types.PatchType, data []byte, subresource
 }
 
 // GetScale takes name of the fleet, and returns the corresponding v1beta1.Scale object, and an error if there is any.
-func (c *fleets) GetScale(fleetName string, options meta_v1.GetOptions) (result *v1beta1.Scale, err error) {
+func (c *fleets) GetScale(fleetName string, options metav1.GetOptions) (result *v1beta1.Scale, err error) {
 	result = &v1beta1.Scale{}
 	err = c.client.Get().
 		Namespace(c.ns).
