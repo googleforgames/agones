@@ -27,15 +27,9 @@ The type of service we will be learning about could be used by a game client to 
 
 To install on GKE, follow the install instructions (if you haven't already) at
 [Setting up a Google Kubernetes Engine (GKE) cluster]({{< relref "../Installation/_index.md#setting-up-a-google-kubernetes-engine-gke-cluster" >}}).
-Also complete the
-{{% feature expiryVersion="0.12.0" %}}
- "Enabling creation of RBAC resources" and
-{{% /feature %}}
- "Installing Agones"
-{{% feature expiryVersion="0.12.0" %}}
- sets of
- {{% /feature %}}
- instructions on the same page.
+{{% feature expiryVersion="0.12.0" %}} Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.{{% /feature %}}
+{{% feature publishVersion="0.12.0" %}} Also complete the "Installing Agones" instructions on the same page. {{% /feature %}}
+
 
 While not required, you may wish to review the [Create a Game Server]({{< relref "../Getting Started/create-gameserver.md" >}}),
 [Create a Game Server Fleet]({{< relref "../Getting Started/create-fleet.md" >}}), and/or [Edit a Game Server]({{< relref "../Getting Started/edit-first-gameserver-go.md" >}}) quickstarts.
