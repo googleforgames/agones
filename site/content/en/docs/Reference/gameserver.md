@@ -38,7 +38,7 @@ spec:
         imagePullPolicy: Always
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -71,7 +71,7 @@ spec:
 {{% feature expiryVersion="0.12.0" %}}
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `stable.agones.dev` and API version `v1alpha1`.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
 {{% /feature %}}
 
@@ -95,7 +95,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 {{% feature expiryVersion="0.12.0" %}}
 - `template` the [pod spec template](https://v1-11.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 - `template` the [pod spec template](https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 {{% /feature %}}
 
@@ -109,4 +109,5 @@ Game Servers are created through Kubernetes API (either directly or through a [F
 - Allocation controller, which marks game servers as `Allocated` to handle a game session
 - SDK, which manages health checking and shutdown of a game server session
 
-![GameServer State Diagram](../../../diagrams/gameserver-states.dot.png)
+{{% feature expiryVersion="0.12.0" %}}![GameServer State Diagram](../../../diagrams/gameserver-states.dot-0.11.png){{% /feature %}}
+{{% feature publishVersion="0.12.0" %}}![GameServer State Diagram](../../../diagrams/gameserver-states.dot.png){{% /feature %}}

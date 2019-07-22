@@ -11,6 +11,7 @@ digraph {
     Scheduled
     RequestReady
     Ready
+    Reserved
     Allocated
     Shutdown
     Unhealthy
@@ -23,9 +24,14 @@ digraph {
     PortAllocation -> Creating [ label="allocated unused port", color="blue" ]
     Creating -> Starting [ label="created pod", color="blue" ]
     Starting -> Scheduled [ label="we have a pod, fetch its address", color="blue" ]
+    Scheduled -> Reserved [ label="SDK.reserved(seconds)", color="purple" ]
     Scheduled -> RequestReady [ label="SDK.ready()", color="purple" ]
     RequestReady -> Ready [ label="ready to be allocated", color="blue" ]
+    Reserved -> Ready [label="if seconds > 0  \land failed to call  \lSDK.allocate()  " color="purple"]
+
     Ready -> Allocated [ label="allocated for use", color="orange" ]
+    Ready -> Allocated [ label="SDK.allocate()   ", color="purple" ]
+    Reserved -> Allocated [color="purple"]
 
     Creating -> Error [ label="failed to create pod", color="blue" ]
 
@@ -33,11 +39,14 @@ digraph {
     RequestReady -> Shutdown [ color="purple" ]
     Ready -> Shutdown [ color="purple" ]
     Allocated -> Shutdown [ color="purple" ]
+    Reserved -> Shutdown [ color="purple" ]
 
-    Scheduled -> Unhealthy [ label="failed to call SDK.healthy()\nin a timely manner" ]
+
+    Scheduled -> Unhealthy [ label="failed to call SDK.healthy()\nin a timely manner" color="purple" ]
     RequestReady -> Unhealthy [ color="purple" ]
     Ready -> Unhealthy [ color="purple" ]
     Allocated -> Unhealthy [ color="purple" ]
+    Reserved -> Unhealthy [ color="purple" ]
 
     Unhealthy -> Deleted [ label="delete unhealthy game server", color="blue" ]
     Shutdown -> Deleted [ label="delete finished game server", color="blue" ]
