@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM rust:1.25.0 as builder
+FROM rust:1.36.0 as builder
 RUN useradd -m build
 
 # Rust SDK depends on https://github.com/pingcap/grpc-rs and it requires CMake and Go
@@ -42,12 +42,10 @@ ENV PATH $PATH:/usr/local/go/bin
 # SDK
 COPY sdk/src /home/builder/agones/sdks/rust/src
 COPY sdk/Cargo.toml /home/builder/agones/sdks/rust/
-COPY sdk/Cargo.lock /home/builder/agones/sdks/rust/
 
 # Example
 COPY src /home/builder/agones/examples/rust-simple/src
 COPY Cargo.toml /home/builder/agones/examples/rust-simple/
-COPY Cargo.lock /home/builder/agones/examples/rust-simple/
 COPY Makefile /home/builder/agones/examples/rust-simple/
 
 WORKDIR /home/builder/agones/examples/rust-simple

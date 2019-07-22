@@ -112,9 +112,10 @@ ensure-build-sdk-image:
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
 run-sdk-conformance-local: TIMEOUT ?= 30
+run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
 run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 59357:59357 \
-	 -e "TEST=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
+	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 run-sdk-conformance-no-build: TIMEOUT ?= 30
