@@ -25,7 +25,7 @@
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = rust-simple-server:0.1
+server_tag = rust-simple-server:0.2
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -34,21 +34,40 @@ server_tag = rust-simple-server:0.1
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# build the library
+# Build the example Gameserver
+# alias for 'build-server'
 build: build-server
 
-# Build the server
+# Build the server binary
 build-server:
 	cargo build --release
 
 # Build a docker image for the server, and tag it
 build-image:
-	# Docker does not allow to copy outside files, 
+	# Docker does not allow to copy outside files
 	mkdir -p $(project_path)sdk
 	cp -rf $(project_path)../../sdks/rust/src $(project_path)sdk/src
 	cp -rf $(project_path)../../sdks/rust/Cargo.* $(project_path)sdk
 	docker build $(project_path) --tag=$(server_tag)
 
+# Run Rust Gameserver binary
+# Could be tested with:
+# cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver,shutdown
+run:
+	./target/release/rust-simple
+
+# Run docker image
+# Could be tested with:
+# cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver,shutdown
+run-image:
+	docker run --network=host $(server_tag)
+
+# When you used 'build' or 'build-server' locally without docker
 clean:
 	cargo clean
+	rm -rf $(project_path)sdk
+
+# If you are building with docker clean files in /sdk directory,
+# clean leftover files after building an image with Docker
+clean-docker:
 	rm -rf $(project_path)sdk
