@@ -12,27 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Password for the Kubernetes API.
-# Could be defined using GKE_PASSWORD env variable
-# or by setting `password="somepass"` string in build/terraform.tfvars
-variable "password" {default = ""}
-variable "username" {default = "admin"}
-
 # Ports can be overriden using tfvars file
-variable "ports" {default="7000-8000"}
+variable "ports" {
+  default = "7000-8000"
+}
 
 # Set of GKE cluster parameters which defines its name, zone
 # and primary node pool configuration.
 # It is crucial to set valid ProjectID for "project".
-variable "cluster"  {
+variable "cluster" {
   description = "Set of GKE cluster parameters."
-  type = "map"
+  type        = "map"
+
   default = {
-      "zone"             = "us-west1-c"
-      "name"             = "test-cluster"
-      "machineType"      = "n1-standard-4"
-      "initialNodeCount" = "4"
-      "legacyAbac"       = false
-      "project"          = "agones"
+    "zone"             = "us-west1-c"
+    "name"             = "test-cluster"
+    "machineType"      = "n1-standard-4"
+    "initialNodeCount" = "4"
+    "project"          = "agones"
   }
 }

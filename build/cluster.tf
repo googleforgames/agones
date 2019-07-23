@@ -13,160 +13,138 @@
 # limitations under the License.
 
 provider "google-beta" {
-  version = "~> 2.4"
-  zone      = "${lookup(var.cluster, "zone")}"
+  version = "~> 2.10"
+  zone    = "${var.cluster["zone"]}"
 }
-
 
 provider "google" {
-  version = "~> 2.4"
+  version = "~> 2.10"
 }
-# Password for the Kubernetes API.
-# Could be defined using GKE_PASSWORD env variable
-# or by setting `password="somepass"` string in build/terraform.tfvars
-variable "password" {default = ""}
-variable "username" {default = "admin"}
+
 
 # Ports can be overriden using tfvars file
-variable "ports" {default="7000-8000"}
+variable "ports" {
+  default = "7000-8000"
+}
 
 # Set of GKE cluster parameters which defines its name, zone
 # and primary node pool configuration.
 # It is crucial to set valid ProjectID for "project".
-variable "cluster"  {
+variable "cluster" {
   description = "Set of GKE cluster parameters."
-  type = "map"
-  default = {
-      "zone"             = "us-west1-c"
-      "name"             = "test-cluster"
-      "machineType"      = "n1-standard-4"
-      "initialNodeCount" = "4"
-      "legacyAbac"       = false
-      "project"          = "agones"
-  }
-}   
+  type        = "map"
 
+  default = {
+    "zone"             = "us-west1-c"
+    "name"             = "test-cluster"
+    "machineType"      = "n1-standard-4"
+    "initialNodeCount" = "4"
+    "project"          = "agones"
+  }
+}
 
 # echo command used for debugging purpose
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
-    provisioner "local-exec" {
-      command = "${"${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, zone: %s, legacyAbac: %s",
-      "${lookup(var.cluster, "name")}", "${lookup(var.cluster, "project")}",
-      "${lookup(var.cluster, "machineType")}", "${lookup(var.cluster, "initialNodeCount")}",
-      "${lookup(var.cluster, "zone")}", "${lookup(var.cluster, "legacyAbac")}")}"}"
-    }
-}
-
-
-locals {
-  username = "${var.password != "" ? var.username : ""}"
-}
-
-# assert that password has correct length
-# before creating the cluster to avoid 
-# unfinished configurations
-resource "null_resource" "check-password-length" {
-  count = "${length(var.password) >= 16 || length(var.password) == 0 ? 0 : 1}"
-  "Password must be more than 16 chars in length" = true
+  provisioner "local-exec" {
+    command = "${"${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, zone: %s",
+      "${var.cluster["name"]}", "${var.cluster["project"]}",
+      "${var.cluster["machineType"]}", "${var.cluster["initialNodeCount"]}",
+    "${var.cluster["zone"]}")}"}"
+  }
 }
 
 resource "google_container_cluster" "primary" {
-  name     = "${lookup(var.cluster, "name")}"
-  location     = "${lookup(var.cluster, "zone")}"
-  project  = "${lookup(var.cluster, "project")}"
+  name     = "${var.cluster["name"]}"
+  location = "${var.cluster["zone"]}"
+  project  = "${var.cluster["project"]}"
   provider = "google-beta"
 
-  # Setting an empty username and password explicitly disables basic auth
-  # TODO(roberthbailey): Remove the entire master_auth block when switching to 1.12.
-  master_auth {
-    username = "${local.username}"
-    password = "${var.password}"
+  node_pool {
+    name       = "default"
+    node_count = "${var.cluster["initialNodeCount"]}"
 
-    client_certificate_config {
-      issue_client_certificate = false
+    node_config {
+      machine_type = "${var.cluster["machineType"]}"
+
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append",
+      ]
+
+      tags = ["game-server"]
     }
   }
-  enable_legacy_abac = "${lookup(var.cluster, "legacyAbac")}"
-  node_pool = [
-    {
-      name = "default"
-      node_count = "${lookup(var.cluster, "initialNodeCount")}"
-      node_config = {
-        machine_type = "${lookup(var.cluster, "machineType")}"
-        oauth_scopes = [
-          "https://www.googleapis.com/auth/devstorage.read_only",
-          "https://www.googleapis.com/auth/logging.write",
-          "https://www.googleapis.com/auth/monitoring",
-          "https://www.googleapis.com/auth/service.management.readonly",
-          "https://www.googleapis.com/auth/servicecontrol",
-          "https://www.googleapis.com/auth/trace.append",
-        ]
 
-        tags = ["game-server"]
-        timeouts = {
-          create = "30m"
-          update = "40m"
-        }
+  node_pool {
+    name       = "agones-system"
+    node_count = 1
+
+    node_config {
+      machine_type = "n1-standard-4"
+
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append",
+      ]
+
+      labels = {
+        "agones.dev/agones-system" = "true"
       }
-    },
-    {
-      name       = "agones-system"
-      node_count = 1
-      node_config = {
-        preemptible  = true
-        machine_type = "n1-standard-4"
 
-        oauth_scopes = [
-          "https://www.googleapis.com/auth/devstorage.read_only",
-          "https://www.googleapis.com/auth/logging.write",
-          "https://www.googleapis.com/auth/monitoring",
-          "https://www.googleapis.com/auth/service.management.readonly",
-          "https://www.googleapis.com/auth/servicecontrol",
-          "https://www.googleapis.com/auth/trace.append",
-        ]
-        labels = {
-          "agones.dev/agones-system" = "true"
-        }
-        taint = {
-            key = "agones.dev/agones-system"
-            value = "true"
-            effect = "NO_EXECUTE"
-        }
-      }
-    },
-    {
-      name       = "agones-metrics"
-      node_count = 1
-
-      node_config = {
-        preemptible  = true
-        machine_type = "n1-standard-4"
-
-        oauth_scopes = [
-          "https://www.googleapis.com/auth/devstorage.read_only",
-          "https://www.googleapis.com/auth/logging.write",
-          "https://www.googleapis.com/auth/monitoring",
-          "https://www.googleapis.com/auth/service.management.readonly",
-          "https://www.googleapis.com/auth/servicecontrol",
-          "https://www.googleapis.com/auth/trace.append",
-        ]
-        labels = {
-          "agones.dev/agones-metrics" = "true"
-        }
-        taint = {
-            key = "agones.dev/agones-metrics"
-            value = "true"
-            effect = "NO_EXECUTE"
-        }
+      taint {
+        key    = "agones.dev/agones-system"
+        value  = "true"
+        effect = "NO_EXECUTE"
       }
     }
-  ]
+  }
+
+  node_pool {
+    name       = "agones-metrics"
+    node_count = 1
+
+    node_config {
+      machine_type = "n1-standard-4"
+
+      oauth_scopes = [
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/logging.write",
+        "https://www.googleapis.com/auth/monitoring",
+        "https://www.googleapis.com/auth/service.management.readonly",
+        "https://www.googleapis.com/auth/servicecontrol",
+        "https://www.googleapis.com/auth/trace.append",
+      ]
+
+      labels = {
+        "agones.dev/agones-metrics" = "true"
+      }
+
+      taint {
+        key    = "agones.dev/agones-metrics"
+        value  = "true"
+        effect = "NO_EXECUTE"
+      }
+    }
+  }
+
+  timeouts {
+    create = "30m"
+    update = "40m"
+  }
 }
 
 resource "google_compute_firewall" "default" {
-  name    = "game-server-firewall-firewall-${lookup(var.cluster, "name")}"
-  project = "${lookup(var.cluster, "project")}"
+  name    = "game-server-firewall-firewall-${var.cluster["name"]}"
+  project = "${var.cluster["project"]}"
   network = "${google_compute_network.default.name}"
 
   allow {
@@ -178,8 +156,8 @@ resource "google_compute_firewall" "default" {
 }
 
 resource "google_compute_network" "default" {
-  project = "${lookup(var.cluster, "project")}"
-  name    = "agones-network-${lookup(var.cluster, "name")}"
+  project = "${var.cluster["project"]}"
+  name    = "agones-network-${var.cluster["name"]}"
 }
 
 output "cluster_ca_certificate" {

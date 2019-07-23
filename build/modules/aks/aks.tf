@@ -13,12 +13,12 @@
 # limitations under the License.
 
 provider "azuread" {
-  version = "=0.1.0"
+  version = "=0.4.0"
 }
 
 # Create Service Principal password
 resource "azuread_service_principal_password" "aks" {
-  end_date             = "2299-12-30T23:00:00Z"                        # Forever
+  end_date             = "2299-12-30T23:00:00Z" # Forever
   service_principal_id = "${azuread_service_principal.aks.id}"
   value                = "${random_string.password.result}"
 }
@@ -49,19 +49,16 @@ resource "azurerm_kubernetes_cluster" "test" {
   location            = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
   dns_prefix          = "agones"
-  // Version 1.11.8 has issues with RBAC on AKS
-  // So this parameter is commented out
-  //kubernetes_version  = "1.11.8"
 
+  kubernetes_version = "1.12.8"
 
   agent_pool_profile {
-  name            = "default"
+    name            = "default"
     count           = 2
     vm_size         = "${var.machine_type}"
     os_type         = "Linux"
     os_disk_size_gb = 30
   }
-
   service_principal {
     client_id     = "${azuread_application.aks.application_id}"
     client_secret = "${azuread_service_principal_password.aks.value}"
@@ -70,6 +67,7 @@ resource "azurerm_kubernetes_cluster" "test" {
     Environment = "Production"
   }
 }
+
 resource "azurerm_network_security_group" "test" {
   name                = "agonesSecurityGroup"
   location            = "${azurerm_resource_group.test.location}"
@@ -77,19 +75,18 @@ resource "azurerm_network_security_group" "test" {
 }
 
 resource "azurerm_network_security_rule" "gameserver" {
-    name                        = "gameserver"
-    priority                    = 100
-    direction                   = "Inbound"
-    access                      = "Allow"
-    protocol                    = "UDP"
-    source_port_range           = "*"
-    destination_port_range      = "7000-8000"
-    source_address_prefix       = "*"
-    destination_address_prefix  = "*"
-    resource_group_name         = "${azurerm_resource_group.test.name}"
-    network_security_group_name = "${azurerm_network_security_group.test.name}"
+  name                        = "gameserver"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "UDP"
+  source_port_range           = "*"
+  destination_port_range      = "7000-8000"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = "${azurerm_resource_group.test.name}"
+  network_security_group_name = "${azurerm_network_security_group.test.name}"
 }
-
 
 resource "azurerm_network_security_rule" "outbound" {
   name                        = "outbound"

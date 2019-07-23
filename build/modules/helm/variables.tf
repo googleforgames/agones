@@ -27,6 +27,7 @@ variable "host" {}
 variable "token" {}
 
 variable "cluster_ca_certificate" {}
+
 /*
   host                   = "${azurerm_kubernetes_cluster.test.kube_config.0.host}"
   token                  =  "${azurerm_kubernetes_cluster.test.kube_config.0.password}"
@@ -35,18 +36,23 @@ variable "cluster_ca_certificate" {}
 variable "crd_cleanup" {
   default = "true"
 }
+
 variable "image_registry" {
   default = "gcr.io/agones-images"
 }
+
 variable "pull_policy" {
   default = "Always"
 }
+
 variable "always_pull_sidecar" {
   default = "true"
 }
+
 variable "image_pull_secret" {
   default = ""
 }
+
 variable "ping_service_type" {
   default = "LoadBalancer"
 }
