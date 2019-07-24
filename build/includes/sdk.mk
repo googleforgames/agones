@@ -22,12 +22,16 @@
 
 build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
 build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
+
+# Calculate sha hash of sha hashes of all files in a specified SDK_FOLDER
+build_sdk_version = $(call sha_dir,$(build_path)/build-sdk-images/$(SDK_FOLDER)/*)
 build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
 grpc_release_tag = v1.16.1
 sdk_build_folder = build-sdk-images/
 SDK_FOLDER ?= go
 COMMAND ?= gen
+SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command 
 
@@ -77,7 +81,7 @@ run-sdk-command:
 		cd - ; \
 		$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER) ; \
 		docker run --rm $(common_mounts) -e "VERSION=$(VERSION)" \
-			$(DOCKER_RUN_ARGS) $(build_sdk_prefix)$(SDK_FOLDER):$(build_version) $(COMMAND) ; \
+			$(DOCKER_RUN_ARGS) $(SDK_IMAGE_TAG) $(COMMAND) ; \
 	else \
 		echo "Command $(COMMAND) not found - nothing to execute" ; \
 	fi
@@ -90,7 +94,7 @@ build-build-sdk-image-base:
 # Builds the docker image used by commands for a specific sdk
 build-build-sdk-image: DOCKER_BUILD_ARGS= --build-arg BASE_IMAGE=$(build_sdk_base_tag)
 build-build-sdk-image: ensure-build-sdk-image-base
-		docker build --tag=$(build_sdk_prefix)$(SDK_FOLDER):$(build_version) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
+		docker build --tag=$(SDK_IMAGE_TAG) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
 
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI
@@ -107,7 +111,7 @@ ensure-build-sdk-image-base:
 
 # create the build image sdk if it doesn't exist
 ensure-build-sdk-image:
-	$(MAKE) build-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
+	$(MAKE) ensure-image IMAGE_TAG=$(SDK_IMAGE_TAG) BUILD_TARGET=build-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
 
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
@@ -120,6 +124,7 @@ run-sdk-conformance-local: ensure-agones-sdk-image
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
+run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	sleep 2s && DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
 	docker run -p 59357:59357 -e "ADDRESS=" \
