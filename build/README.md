@@ -70,7 +70,7 @@ Table of Contents
         * [make minikube-setup-grafana](#make-minikube-setup-grafana)
         * [make minikube-prometheus-portforward](#make-minikube-prometheus-portforward)
         * [make minikube-grafana-portforward](#make-minikube-grafana-portforward)
-     * [make minikube-test-e2e](#make-minikube-test-e2e)
+        * [make minikube-test-e2e](#make-minikube-test-e2e)
         * [make minikube-shell](#make-minikube-shell)
         * [make minikube-transfer-image](#make-minikube-transfer-image)
         * [make minikube-controller-portforward](#make-minikube-controller-portforward)
@@ -82,7 +82,7 @@ Table of Contents
         * [make kind-setup-grafana](#make-kind-setup-grafana)
         * [make kind-prometheus-portforward](#make-kind-prometheus-portforward)
         * [make kind-grafana-portforward](#make-kind-grafana-portforward)
-     * [make kind-test-e2e](#make-kind-test-e2e)
+        * [make kind-test-e2e](#make-kind-test-e2e)
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
      * [Custom Environment](#custom-environment)
@@ -638,7 +638,7 @@ port forwarding to the prometheus deployment.
 The minikube version of [`make grafana-portforward`](#make-grafana-portforward) to setup
 port forwarding to the grafana deployment.  
 
-### `make minikube-test-e2e`
+#### `make minikube-test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
 
@@ -695,7 +695,7 @@ The minikube version of [`make grafana-portforward`](#make-grafana-portforward) 
 port forwarding to the grafana deployment.  
 
 
-### `make kind-test-e2e`
+#### `make kind-test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
 These tests validate Agones flow from start to finish.
 
