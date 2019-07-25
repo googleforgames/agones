@@ -34,7 +34,7 @@ void DoHealth(std::shared_ptr<agones::SDK> sdk) {
 // watch GameServer Updates
 void WatchUpdates(std::shared_ptr<agones::SDK> sdk) {
   std::cout << "Starting to watch GameServer updates...\n" << std::flush;
-  sdk->WatchGameServer([](agones::dev::sdk::GameServer gameserver) {
+  sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver) {
     std::cout << "GameServer Update:\n"                                 //
               << "\tname: " << gameserver.object_meta().name() << "\n"  //
               << "\tstate: " << gameserver.status().state() << "\n"

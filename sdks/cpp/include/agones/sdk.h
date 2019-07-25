@@ -68,7 +68,7 @@ class SDK {
   // This is a blocking function, and as such you will likely want to run it
   // inside a thread.
   AGONES_EXPORT grpc::Status WatchGameServer(
-      const std::function<void(agones::dev::sdk::GameServer)>& callback);
+      const std::function<void(const agones::dev::sdk::GameServer&)>& callback);
 
  private:
   struct SDKImpl;
