@@ -449,7 +449,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 	// mark one as reserved
 	gsCopy := gsList[0].DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateReserved
-	_, err = client.GameServers(defaultNs).Update(gsCopy)
+	_, err = client.GameServers(defaultNs).UpdateStatus(gsCopy)
 	assert.NoError(t, err)
 
 	// make sure counts are correct

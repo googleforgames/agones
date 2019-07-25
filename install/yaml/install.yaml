@@ -57,7 +57,7 @@ rules:
   resources: ["fleets"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["agones.dev"]
-  resources: ["fleets/status", "gameserversets/status"]
+  resources: ["gameservers/status", "fleets/status", "gameserversets/status"]
   verbs: ["update"]
 - apiGroups: ["multicluster.agones.dev"]
   resources: ["gameserverallocationpolicies"]
@@ -161,6 +161,9 @@ rules:
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers/status"]
+  verbs: ["update"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -621,6 +624,9 @@ spec:
                   type: integer
                   minimum: 1
                   maximum: 2147483648
+  subresources:
+    # status enables the status subresource.
+    status: {}
 
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml

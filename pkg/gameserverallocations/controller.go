@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"time"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -636,6 +638,7 @@ func (c *Controller) runLocalAllocations(updateWorkerCount int) {
 // Each worker will concurrently attempt to move the GameServer to an Allocated
 // state and then respond to the initial request's response channel with the
 // details of that update
+// TOXO: update the test for this
 func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
 	updateQueue := make(chan response)
 
@@ -645,20 +648,48 @@ func (c *Controller) allocationUpdateWorkers(workerCount int) chan<- response {
 				select {
 				case res := <-updateQueue:
 					gsCopy := res.gs.DeepCopy()
-					c.patchMetadata(gsCopy, res.request.gsa.Spec.MetaPatch)
 					gsCopy.Status.State = agonesv1.GameServerStateAllocated
 
-					gs, err := c.gameServerGetter.GameServers(res.gs.ObjectMeta.Namespace).Update(gsCopy)
+					// start with changing the state, as that locks it for just our use
+					gs, err := c.gameServerGetter.GameServers(res.gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 					if err != nil {
 						key, _ := cache.MetaNamespaceKeyFunc(gs)
 						// since we could not allocate, we should put it back
 						c.readyGameServers.Store(key, gs)
-						res.err = errors.Wrap(err, "error updating allocated gameserver")
-					} else {
-						res.gs = gs
-						c.recorder.Event(res.gs, corev1.EventTypeNormal, string(res.gs.Status.State), "Allocated")
+						res.err = errors.Wrap(err, "error updating marking gameserver as allocated")
+						res.request.response <- res
+						continue
 					}
 
+					// update the metadata at this stage
+					gsCopy = gs.DeepCopy()
+					c.patchMetadata(gsCopy, res.request.gsa.Spec.MetaPatch)
+
+					// TOXO: build patch by hand.
+					b, err := gs.Patch(gsCopy)
+					c.loggerForGameServerAllocation(res.request.gsa).WithField("patch", string(b)).Info("allocation patch")
+					if err != nil {
+						res.err = errors.Wrap(err, "this should not happen, ever")
+						res.request.response <- res
+						continue
+					}
+
+					// TOXO: I'm a little worried about this. We might need a cleanup system for when failures happen, and bad things occur.
+					// ignore if there is nothing to apply
+					if string(b) != "[]" {
+						gs, err = c.gameServerGetter.GameServers(res.gs.ObjectMeta.Namespace).Patch(gs.ObjectMeta.Name, types.JSONPatchType, b)
+						if err != nil {
+							key, _ := cache.MetaNamespaceKeyFunc(gs)
+							// since we could not allocate, we should put it back
+							c.readyGameServers.Store(key, gs)
+							res.err = errors.Wrap(err, "error updating gameserver metadata")
+							res.request.response <- res
+							continue
+						}
+					}
+
+					res.gs = gs
+					c.recorder.Event(res.gs, corev1.EventTypeNormal, string(res.gs.Status.State), "Allocated")
 					res.request.response <- res
 				case <-c.stop:
 					return

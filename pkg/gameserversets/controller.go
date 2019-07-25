@@ -500,7 +500,7 @@ func (c *Controller) deleteGameServers(gsSet *agonesv1.GameServerSet, toDelete [
 		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete
 		gsCopy := gs.DeepCopy()
 		gsCopy.Status.State = agonesv1.GameServerStateShutdown
-		_, err := c.gameServerGetter.GameServers(gs.Namespace).Update(gsCopy)
+		_, err := c.gameServerGetter.GameServers(gs.Namespace).UpdateStatus(gsCopy)
 		if err != nil {
 			return errors.Wrapf(err, "error updating gameserver %s from status %s to Shutdown status.", gs.ObjectMeta.Name, gs.Status.State)
 		}

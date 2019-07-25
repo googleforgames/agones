@@ -102,17 +102,23 @@ func TestControllerSyncGameServer(t *testing.T) {
 			expectedState := agonesv1.GameServerState("notastate")
 			switch updateCount {
 			case 1:
-				expectedState = agonesv1.GameServerStateCreating
+				expectedState = agonesv1.GameServerStatePortAllocation
 			case 2:
-				expectedState = agonesv1.GameServerStateStarting
+				expectedState = agonesv1.GameServerStatePortAllocation
 			case 3:
+				expectedState = agonesv1.GameServerStateCreating
+			case 4:
+				expectedState = agonesv1.GameServerStateStarting
+			case 5:
 				expectedState = agonesv1.GameServerStateScheduled
 			}
 
-			assert.Equal(t, expectedState, gs.Status.State)
+			assert.Equal(t, expectedState, gs.Status.State, "update count: ", updateCount)
 			if expectedState == agonesv1.GameServerStateScheduled {
 				assert.Equal(t, ipFixture, gs.Status.Address)
-				assert.NotEmpty(t, gs.Status.Ports[0].Port)
+				if assert.NotEmpty(t, gs.Status.Ports) {
+					assert.NotEmpty(t, gs.Status.Ports[0].Port)
+				}
 			}
 
 			return true, gs, nil
@@ -126,7 +132,7 @@ func TestControllerSyncGameServer(t *testing.T) {
 
 		err = c.syncGameServer("default/test")
 		assert.Nil(t, err)
-		assert.Equal(t, 3, updateCount, "update reactor should fire thrice")
+		assert.Equal(t, 5, updateCount, "update reactor should fire thrice")
 		assert.True(t, podCreated, "pod should be created")
 	})
 
@@ -180,6 +186,7 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		fixture := templateDevGs.DeepCopy()
 
 		fixture.ApplyDefaults()
+		fixture.ApplyStatusDefaults()
 
 		mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return false, nil, k8serrors.NewMethodNotSupported(schema.GroupResource{}, "list nodes should not be called")

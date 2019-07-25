@@ -59,7 +59,7 @@ rules:
   resources: ["fleets"]
   verbs: ["get", "list", "update", "watch"]
 - apiGroups: ["agones.dev"]
-  resources: ["fleets/status", "gameserversets/status"]
+  resources: ["gameservers/status", "fleets/status", "gameserversets/status"]
   verbs: ["update"]
 - apiGroups: ["multicluster.agones.dev"]
   resources: ["gameserverallocationpolicies"]

@@ -187,7 +187,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
 
-	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
+	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy); err != nil {
 		return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)
 	}
 

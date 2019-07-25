@@ -34,6 +34,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/apiserver"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -164,6 +165,8 @@ func TestControllerAllocate(t *testing.T) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
+	var allocated *agonesv1.GameServer
+
 	updated := false
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
@@ -175,7 +178,28 @@ func TestControllerAllocate(t *testing.T) {
 		assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 		gsWatch.Modify(gs)
 
+		allocated = gs
+
 		return true, gs, nil
+	})
+	m.AgonesClient.AddReactor("patch", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+		pa := action.(k8stesting.PatchAction)
+
+		logrus.WithField("patch", string(pa.GetPatch())).Info("*** I GOT PATCHED ***")
+		// Fake the patch action, if it says what we expect it to say.
+		patch := []jsonpatch.JsonPatchOperation{}
+		err := json.Unmarshal(pa.GetPatch(), &patch)
+		assert.NoError(t, err)
+
+		assert.Len(t, patch, 2)
+		assert.Contains(t, string(pa.GetPatch()), "deathmatch")
+		assert.Contains(t, string(pa.GetPatch()), "searide")
+		assert.Equal(t, allocated.ObjectMeta.Name, pa.GetName())
+
+		allocated.ObjectMeta.Labels["mode"] = "deathmatch"
+		allocated.ObjectMeta.Annotations = map[string]string{"map": "searide"}
+
+		return true, allocated, nil
 	})
 
 	stop, cancel := agtesting.StartInformers(m)

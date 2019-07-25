@@ -199,7 +199,17 @@ func (gs *GameServer) ApplyDefaults() {
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, agones.GroupName)
 
 	gs.Spec.ApplyDefaults()
-	gs.applyStateDefaults()
+}
+
+// ApplyStatusDefaults applies the default values to the Status subresource.
+func (gs *GameServer) ApplyStatusDefaults() {
+	if gs.Status.State == "" {
+		gs.Status.State = GameServerStateCreating
+		// ApplyStatusDefaults() should be called after applyPortDefaults()
+		if gs.HasPortPolicy(Dynamic) || gs.HasPortPolicy(Passthrough) {
+			gs.Status.State = GameServerStatePortAllocation
+		}
+	}
 }
 
 // ApplyDefaults applies default values to the GameServerSpec if they are not already populated
@@ -228,17 +238,6 @@ func (gss *GameServerSpec) applyHealthDefaults() {
 		}
 		if gss.Health.InitialDelaySeconds <= 0 {
 			gss.Health.InitialDelaySeconds = 5
-		}
-	}
-}
-
-// applyStateDefaults applies state defaults
-func (gs *GameServer) applyStateDefaults() {
-	if gs.Status.State == "" {
-		gs.Status.State = GameServerStateCreating
-		// applyStateDefaults() should be called after applyPortDefaults()
-		if gs.HasPortPolicy(Dynamic) || gs.HasPortPolicy(Passthrough) {
-			gs.Status.State = GameServerStatePortAllocation
 		}
 	}
 }

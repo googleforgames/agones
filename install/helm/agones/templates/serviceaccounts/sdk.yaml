@@ -43,6 +43,9 @@ rules:
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers/status"]
+  verbs: ["update"]
 ---
   {{- range .Values.gameservers.namespaces }}
 apiVersion: rbac.authorization.k8s.io/v1

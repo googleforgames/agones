@@ -203,7 +203,6 @@ func fastRateLimiter() workqueue.RateLimiter {
 // creationMutationHandler is the handler for the mutating webhook that sets the
 // the default values on the GameServer
 // Should only be called on gameserver create operations.
-// nolint:dupl
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
 	obj := review.Request.Object
 	gs := &agonesv1.GameServer{}
@@ -360,6 +359,9 @@ func (c *Controller) syncGameServer(key string) error {
 	if gs, err = c.syncGameServerDeletionTimestamp(gs); err != nil {
 		return err
 	}
+	if gs, err = c.syncDefaultGameServerStatus(gs); err != nil {
+		return err
+	}
 	if gs, err = c.syncGameServerPortAllocationState(gs); err != nil {
 		return err
 	}
@@ -427,25 +429,53 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *agonesv1.GameServer) (*
 	return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
 }
 
+// syncDefaultGameServerStatus sets the default status state for the GameServer, if it is blank
+// This is required, as we cannot set a default value for a status subresource through a mutating webhook
+// TODO: move this to Validation Schema defaulting, when it is available (https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#defaulting)
+func (c *Controller) syncDefaultGameServerStatus(gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	if !(gs.Status.State == "" && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
+		return gs, nil
+	}
+	gsCopy := gs.DeepCopy()
+
+	gsCopy.ApplyStatusDefaults()
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error updating GameServer, %s to default status values", gs.ObjectMeta.Name)
+	}
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Default status set")
+
+	return gs, nil
+}
+
 // syncGameServerPortAllocationState gives a port to a dynamically allocating GameServer
+// TOXO: update the test for this.
 func (c *Controller) syncGameServerPortAllocationState(gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	if !(gs.Status.State == agonesv1.GameServerStatePortAllocation && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
 	gsCopy := c.portAllocator.Allocate(gs.DeepCopy())
-
-	gsCopy.Status.State = agonesv1.GameServerStateCreating
-	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
-
 	c.loggerForGameServer(gsCopy).Info("Syncing Port Allocation GameServerState")
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
 		// back in the pool, as it will get retried on the next pass
 		c.portAllocator.DeAllocate(gsCopy)
-		return gs, errors.Wrapf(err, "error updating GameServer %s to default values", gs.Name)
+		return gs, errors.Wrapf(err, "error updating GameServer %s port details", gs.ObjectMeta.Name)
 	}
+
+	gsCopy = gs.DeepCopy()
+	gsCopy.Status.State = agonesv1.GameServerStateCreating
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
+	if err != nil {
+		// if the GameServer doesn't get updated with the status data, then put the port
+		// back in the pool, as it will get retried on the next pass
+		c.portAllocator.DeAllocate(gsCopy)
+		return gs, errors.Wrapf(err, "error updating GameServer %s to %s", gs.ObjectMeta.Name, agonesv1.GameServerStateCreating)
+	}
+
+	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
 	return gs, nil
 }
@@ -477,7 +507,7 @@ func (c *Controller) syncGameServerCreatingState(gs *agonesv1.GameServer) (*agon
 
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateStarting
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Starting state", gs.Name)
 	}
@@ -505,12 +535,11 @@ func (c *Controller) syncDevelopmentGameServer(gs *agonesv1.GameServer) (*agones
 	for _, p := range gs.Spec.Ports {
 		ports = append(ports, p.Status())
 	}
-	// TODO: Use UpdateStatus() when it's available.
 	gsCopy.Status.State = agonesv1.GameServerStateReady
 	gsCopy.Status.Ports = ports
 	gsCopy.Status.Address = devIPAddress
 	gsCopy.Status.NodeName = devIPAddress
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to %v status", gs.Name, gs.Status)
 	}
@@ -658,7 +687,7 @@ func (c *Controller) syncGameServerStartingState(gs *agonesv1.GameServer) (*agon
 	}
 
 	gsCopy.Status.State = agonesv1.GameServerStateScheduled
-	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
 	}
@@ -722,7 +751,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	}
 
 	gsCopy.Status.State = agonesv1.GameServerStateReady
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 	}
@@ -756,7 +785,7 @@ func (c *Controller) moveToErrorState(gs *agonesv1.GameServer, msg string) (*ago
 	copy := gs.DeepCopy()
 	copy.Status.State = agonesv1.GameServerStateError
 
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).UpdateStatus(copy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
 	}

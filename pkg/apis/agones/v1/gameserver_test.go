@@ -62,7 +62,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 
 	type expected struct {
 		protocol   corev1.Protocol
-		state      GameServerState
 		policy     PortPolicy
 		health     Health
 		scheduling apis.SchedulingStrategy
@@ -84,7 +83,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
 				scheduling: apis.Packed,
 				health: Health{
@@ -107,7 +105,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
 				policy:     Passthrough,
 				scheduling: apis.Packed,
 				health: Health{
@@ -143,7 +140,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing2",
 			expected: expected{
 				protocol:   "TCP",
-				state:      "TestState",
 				policy:     Static,
 				scheduling: apis.Packed,
 				health: Health{
@@ -164,7 +160,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      GameServerStateCreating,
 				policy:     Static,
 				scheduling: apis.Packed,
 				health: Health{
@@ -186,7 +181,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   "UDP",
-				state:      GameServerStatePortAllocation,
 				policy:     Dynamic,
 				scheduling: apis.Packed,
 				health: Health{
@@ -212,7 +206,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			container: "testing",
 			expected: expected{
 				protocol:   corev1.ProtocolTCP,
-				state:      GameServerStateCreating,
 				policy:     Static,
 				scheduling: apis.Packed,
 				health:     Health{Disabled: true},
@@ -230,9 +223,42 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Contains(t, test.gameServer.ObjectMeta.Finalizers, agones.GroupName)
 			assert.Equal(t, test.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
-			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
+		})
+	}
+}
+
+func TestGameServerApplyStatusDefaults(t *testing.T) {
+	t.Parallel()
+
+	fixtures := map[string]struct {
+		gameServer *GameServer
+		expected   GameServerState
+	}{
+		"not dynamic or passthrough": {gameServer: &GameServer{}, expected: GameServerStateCreating},
+		"dynamic": {
+			gameServer: &GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{PortPolicy: Dynamic, ContainerPort: 7777}},
+				},
+			},
+			expected: GameServerStatePortAllocation,
+		},
+		"passthrough": {
+			gameServer: &GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{PortPolicy: Passthrough, ContainerPort: 7777}},
+				},
+			},
+			expected: GameServerStatePortAllocation,
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			v.gameServer.ApplyStatusDefaults()
+			assert.Equal(t, v.expected, v.gameServer.Status.State)
 		})
 	}
 }
