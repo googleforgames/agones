@@ -39,6 +39,13 @@ class SDK {
   // Marks the Game Server as ready to receive connections
   AGONES_EXPORT grpc::Status Ready();
 
+  // Self marks this gameserver as Allocated.
+  AGONES_EXPORT grpc::Status Allocate();
+
+  // Marks the Game Server as Reserved for a given number of seconds, at which
+  // point it will return the GameServer to a Ready state.
+  AGONES_EXPORT grpc::Status Reserve(std::chrono::seconds seconds);
+
   // Send Health ping. This is a synchronous request.
   AGONES_EXPORT bool Health();
 

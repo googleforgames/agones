@@ -21,7 +21,7 @@ appropriate for their system.
 
 We may consider these types of features in the future, depending on demand. 
 
-To begin working with the SDK, create an instance of it.
+To begin working with the SDK, create an instance of it:
 ```cpp
 agones::SDK *sdk = new agones::SDK();
 ```
@@ -34,7 +34,7 @@ and will return `false` if there was an issue connecting.
 bool ok = sdk->Connect();
 ```
 
-To send a [health check]({{< relref "_index.md#health" >}}) ping call `sdk->Health()`. This is a synchronous request that will
+To send a [health check]({{< relref "_index.md#health" >}}) call `sdk->Health()`. This is a synchronous request that will
 return `false` if it has failed in any way. Read [GameServer Health Checking]({{< relref "../health-checking.md" >}}) for more
 details on the game server health checking strategy.
 
@@ -46,19 +46,43 @@ To mark the game server as [ready to receive player connections]({{< relref "_in
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
-For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
 
 ```cpp
 grpc::Status status = sdk->Ready();
 if (!status.ok()) { ... }
 ```
 
-To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk->Shutdown()`. 
-
+{{% feature publishVersion="0.12.0" %}}
+To mark the game server as [allocated]({{< relref "_index.md#allocate" >}}), call `sdk->Allocate()`.
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
-For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
+
+```cpp
+grpc::Status status = sdk->Allocate();
+if (!status.ok()) { ... }
+```
+
+<!--TODO: Change the link to a relref once 0.12.0 has been published so that this passes link checking -->
+To mark the game server as <a href="../#reserve-seconds" data-proofer-ignore>reserved</a>, call
+`sdk->Reserve(seconds)`. This will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
+
+```cpp
+grpc::Status status = sdk->Reserve(std::chrono::seconds(N));
+if (!status.ok()) { ... }
+```
+{{% /feature %}}
+
+To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk->Shutdown()`.
+This will return a grpc::Status object, from which we can call `status.ok()` to determine
+if the function completed successfully.
+
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
 
 ```cpp
 grpc::Status status = sdk->Shutdown();
@@ -67,11 +91,10 @@ if (!status.ok()) { ... }
 
 To [set a Label]({{< relref "_index.md#setlabel-key-value" >}}) on the backing `GameServer` call
 `sdk->SetLabel(key, value)`.
-
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
-For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
 
 ```cpp
 grpc::Status status = sdk->SetLabel("test-label", "test-value");
@@ -80,11 +103,10 @@ if (!status.ok()) { ... }
 
 To [set an Annotation]({{< relref "_index.md#setannotation-key-value" >}}) on the backing `GameServer` call
 `sdk->SetAnnotation(key, value)`.
-
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
-For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html)
+For more information you can also look at the [gRPC Status reference](https://grpc.io/grpc/cpp/classgrpc_1_1_status.html).
 
 ```cpp
 status = sdk->SetAnnotation("test-annotation", "test value");
@@ -94,7 +116,6 @@ if (!status.ok()) { ... }
 {{% feature expiryVersion="0.12.0" %}}
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
 passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
-
 This function will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
