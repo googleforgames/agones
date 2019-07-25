@@ -23,6 +23,7 @@ struct SDK::SDKImpl {
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<agones::dev::sdk::SDK::Stub> stub_;
   std::unique_ptr<grpc::ClientWriter<agones::dev::sdk::Empty>> health_;
+  std::unique_ptr<grpc::ClientContext> health_context_;
 };
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
@@ -41,10 +42,11 @@ bool SDK::Connect() {
 
   pimpl_->stub_ = agones::dev::sdk::SDK::NewStub(pimpl_->channel_);
 
-  // make the health connection
+  // Make the health connection.
   agones::dev::sdk::Empty response;
-  grpc::ClientContext context;
-  pimpl_->health_ = pimpl_->stub_->Health(&context, &response);
+  pimpl_->health_context_ =
+      std::unique_ptr<grpc::ClientContext>(new grpc::ClientContext);
+  pimpl_->health_ = pimpl_->stub_->Health(&*pimpl_->health_context_, &response);
 
   return true;
 }
