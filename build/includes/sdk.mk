@@ -122,14 +122,16 @@ run-sdk-conformance-local: ensure-agones-sdk-image
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
+# Sleeps the start of the sidecar to test that the SDK blocks on connection correctly
 run-sdk-conformance-no-build: TIMEOUT ?= 30
+run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
+run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]s")
 run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
-	sleep 2s && DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
-	docker run -p 59357:59357 -e "ADDRESS=" \
+	DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
+	sleep $(DELAY) && docker run -p 59357:59357 -e "ADDRESS=" \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" --net=host  $(sidecar_tag)
-
 
 # Run SDK conformance test for a specific SDK_FOLDER
 run-sdk-conformance-test:

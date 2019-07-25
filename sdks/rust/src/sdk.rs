@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::{Arc, Mutex};
+use std::thread::sleep;
+use std::time::Duration;
+
 use futures::{Future, Sink, Stream};
 use grpcio;
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use grpcio::CallOption;
+use protobuf::Message;
 
 use errors::*;
 use grpc::sdk;
 use grpc::sdk_grpc;
-use protobuf::Message;
 use types::*;
 
 const PORT: i32 = 59357;
@@ -34,7 +37,7 @@ pub struct Sdk {
 impl Sdk {
     /// Starts a new SDK instance, and connects to localhost on port 59357.
     /// Blocks until connection and handshake are made.
-    /// Times out after 30 seconds.
+    /// Times out after ~30 seconds.
     pub fn new() -> Result<Sdk> {
         let addr = format!("localhost:{}", PORT);
         let env = Arc::new(grpcio::EnvBuilder::new().build());
@@ -43,7 +46,24 @@ impl Sdk {
             .connect(&addr);
         let cli = sdk_grpc::SdkClient::new(ch);
         let req = sdk::Empty::new();
-        let _ = cli.ready(&req).map(Box::new)?;
+
+        // Unfortunately there isn't a native way to block until connected
+        // so we had to roll our own.
+        let mut counter = 0;
+        loop {
+            counter += 1;
+            match cli.get_game_server(&req) {
+                Ok(_) => break,
+                Err(e) => {
+                    if counter > 30 {
+                        return Err(ErrorKind::Grpc(e).into());
+                    }
+                    sleep(Duration::from_secs(1));
+                    continue;
+                }
+            }
+        }
+
         let (sender, _) = cli.health()?;
         Ok(Sdk {
             client: Arc::new(cli),
@@ -58,14 +78,12 @@ impl Sdk {
         Ok(res)
     }
 
-
-    /// Allocate the Game Server 
+    /// Allocate the Game Server
     pub fn allocate(&self) -> Result<()> {
         let req = sdk::Empty::default_instance();
         let res = self.client.allocate(req).map(|_| ())?;
         Ok(res)
     }
-
 
     /// Marks the Game Server as ready to shutdown
     pub fn shutdown(&self) -> Result<()> {

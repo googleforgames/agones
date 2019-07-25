@@ -46,6 +46,15 @@ if sdk.health().is_ok() {
 }
 ```
 
+{{% feature publishVersion="0.12.0" %}}
+
+To mark the [game session as ready]({{< relref "_index.md#ready" >}}) call `sdk.ready()`.
+
+```rust
+sdk.ready()?;
+```
+{{% /feature %}}
+
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk.shutdown()`. 
 
 ```rust

@@ -111,7 +111,7 @@ fn run() -> Result<(), String> {
         thread::sleep(Duration::from_secs(5));
     }
 
-    println!("Shutting down after 20 seconds...");
+    println!("Shutting down...");
     sdk.shutdown()
         .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))?;
     println!("...marked for Shutdown");
