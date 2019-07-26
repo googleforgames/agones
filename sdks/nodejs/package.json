@@ -5,7 +5,8 @@
   },
   "dependencies": {
     "google-protobuf": "3.7.0-rc.2",
-    "grpc": "1.18.0"
+    "grpc": "1.18.0",
+    "js-yaml": ">=3.13.1"
   },
   "description": "SDK for Agones",
   "devDependencies": {

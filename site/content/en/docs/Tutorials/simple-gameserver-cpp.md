@@ -43,7 +43,7 @@ is going to exit.
 You can follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} cpp-simple
+$ kubectl logs ${GAMESERVER_NAME} cpp-simple -f
 ```
 
 which should produce output similar to
@@ -195,7 +195,7 @@ $ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{
 Again, follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} cpp-simple
+$ kubectl logs ${GAMESERVER_NAME} cpp-simple -f
 ```
 
 which should produce output similar to

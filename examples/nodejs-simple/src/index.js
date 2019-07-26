@@ -18,26 +18,41 @@ const  agonesSDK = new AgonesSDK();
 
 const connect = async function() {
 	agonesSDK.watchGameServer((result) => {
-		console.log('watch', result);
+		console.log("GameServer Update:\n\tname:", result.objectMeta.name, "\n\tstate:", result.status.state);
 	});
+	setInterval(() => {
+		agonesSDK.health();
+		console.log('Health ping sent');
+	}, 20000);
 
 	try {
+		console.log('node.js Game Server has started!');
+
+		console.log('Setting a label');
+		await agonesSDK.setLabel("test-label", "test-value");
+		console.log('Setting an annotation');
+		await agonesSDK.setAnnotation("test-annotation", "test value");
+
+		console.log('Marking server as ready...');
 		await agonesSDK.ready();
-		await agonesSDK.setLabel("label", "labelValue");
-		await agonesSDK.setAnnotation("annotation", "annotationValue");
-		const result = await agonesSDK.getGameServer();
-		console.log('gameServer', result);
+		console.log('...marked Ready');
+
+		var count = 0;
+		setInterval(() => {
+			count = count + 10;
+			console.log('Running for', count, 'seconds!');
+		}, 10000);
 		setTimeout(() => {
-			console.log('send health ping');
-			agonesSDK.health();
-		}, 2000);
-		setTimeout(() => {
-			console.log('send shutdown request');
+			console.log('Shutting down after 60 seconds...');
 			agonesSDK.shutdown();
-		}, 4000);
+			console.log('...marked for Shutdown');
+		}, 60000);
 		setTimeout(() => {
 			agonesSDK.close();
-		}, 6000);
+		}, 90000);
+		setTimeout(() => {
+			process.exit(0);
+		}, 100000);
 	} catch (error) {
 		console.error(error);
 	}

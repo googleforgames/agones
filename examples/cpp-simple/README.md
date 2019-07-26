@@ -5,7 +5,7 @@ This is a very simple "server" that doesn't do much other than show how the SDK 
 It will
 - Setup the Agones SDK
 - Call `SDK::Ready()` to register that it is ready with Agones.
-- Every 10 seconds, write a log saying "Hi! I'm a Game Server"
+- Every 10 seconds, write a log showing how long it has been running for
 - After 60 seconds, call `SDK::Shutdown()` to shut the server down.
 
 To learn how to deploy this example service to GKE, please see the tutorial [Build and Run a Simple Gameserver (C++)](https://agones.dev/site/docs/tutorials/simple-gameserver-cpp/).
