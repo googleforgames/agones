@@ -61,6 +61,29 @@ grpc::Status SDK::Ready() {
   return pimpl_->stub_->Ready(&context, request, &response);
 }
 
+grpc::Status SDK::Allocate() {
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
+  agones::dev::sdk::Empty request;
+  agones::dev::sdk::Empty response;
+
+  return pimpl_->stub_->Allocate(&context, request, &response);
+}
+
+grpc::Status SDK::Reserve(std::chrono::seconds seconds) {
+  grpc::ClientContext context;
+  context.set_deadline(gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
+                                    gpr_time_from_seconds(30, GPR_TIMESPAN)));
+
+  agones::dev::sdk::Duration request;
+  request.set_seconds(seconds.count());
+
+  agones::dev::sdk::Empty response;
+
+  return pimpl_->stub_->Reserve(&context, request, &response);
+}
+
 bool SDK::Health() {
   agones::dev::sdk::Empty request;
   return pimpl_->health_->Write(request);
