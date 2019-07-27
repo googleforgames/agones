@@ -14,6 +14,8 @@
 
 const EventEmitter = require('events');
 
+const grpc = require('grpc');
+
 const messages = require('../lib/sdk_pb');
 const AgonesSDK = require('../src/agonesSDK');
 
@@ -203,6 +205,32 @@ describe('agones', () => {
 			expect(result.status).toBeDefined();
 			expect(result.status.state).toEqual('up');
 		});
+		it('captures CANCELLED errors only', async() => {
+			let serverEmitter = new EventEmitter();
+			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
+				return serverEmitter;
+			});
+
+			let callback = jasmine.createSpy('callback');
+			agonesSDK.watchGameServer(callback);
+
+			try {
+				serverEmitter.emit('error', {
+					code: grpc.status.CANCELLED
+				});
+			} catch (error) {
+				fail();
+			}
+
+			try {
+				serverEmitter.emit('error', {
+					code: grpc.status.ABORTED
+				});
+				fail();
+			} catch (error) {
+				expect(error.code).toEqual(grpc.status.ABORTED);
+			}
+		});
 	});
 
 	describe('setLabel', () => {
@@ -282,11 +310,36 @@ describe('agones', () => {
 			}
 		});
 	});
+
 	describe('close', () => {
 		it('closes the client connection when called', async () => {
-			spyOn(agonesSDK.client, 'close').and.callFake(()=>{});
+			spyOn(agonesSDK.client, 'close');
 			await agonesSDK.close();
 			expect(agonesSDK.client.close).toHaveBeenCalled();
+		});
+		it('destroys the health stream if set', async () => {
+			let stream = jasmine.createSpyObj('stream', ['destroy', 'write']);
+			spyOn(agonesSDK.client, 'health').and.callFake(() => {
+				return stream;
+			});
+			agonesSDK.health();
+			spyOn(agonesSDK.client, 'close').and.callFake(() => {});
+			await agonesSDK.close();
+			expect(stream.destroy).toHaveBeenCalled();
+		});
+		it('cancels any watchers', async () => {
+			let serverEmitter = new EventEmitter();
+			serverEmitter.call = jasmine.createSpyObj('call', ['cancel']);
+			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
+				return serverEmitter;
+			});
+
+			let callback = jasmine.createSpy('callback');
+			agonesSDK.watchGameServer(callback);
+
+			spyOn(agonesSDK.client, 'close');
+			await agonesSDK.close();
+			expect(serverEmitter.call.cancel).toHaveBeenCalled();
 		});
 	});
 });
