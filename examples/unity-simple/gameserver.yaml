@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "stable.agones.dev/v1alpha1"
+apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
   generateName: "unity-simple-server-"
@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: unity-simple-server
-        image: gcr.io/agones-images/unity-simple-server:0.1
+        image: gcr.io/agones-images/unity-simple-server:0.2
       resources:
         requests:
           memory: "128Mi"
