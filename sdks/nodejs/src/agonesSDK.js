@@ -130,6 +130,20 @@ class AgonesSDK {
 			});
 		});
 	}
+
+	async reserve(duration) {
+		const request = new messages.Duration();
+		request.setSeconds(duration);
+		return new Promise((resolve, reject) => {
+			this.client.reserve(request, (error, response) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve(response.toObject());
+				}
+			});
+		});
+	}
 }
 
 module.exports = AgonesSDK;

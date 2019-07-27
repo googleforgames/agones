@@ -289,4 +289,33 @@ describe('agones', () => {
 			expect(agonesSDK.client.close).toHaveBeenCalled();
 		});
 	});
+
+	describe('reserve', () => {
+		it('calls the server with duration parameter and handles success', async () => {
+			spyOn(agonesSDK.client, 'reserve').and.callFake((request, callback) => {
+				let result = new messages.Empty();
+				callback(undefined, result);
+			});
+
+			let result = await agonesSDK.reserve(10);
+			expect(agonesSDK.client.reserve).toHaveBeenCalled();
+			expect(result).toEqual({});
+
+			let request = agonesSDK.client.reserve.calls.argsFor(0)[0];
+			expect(request.getSeconds()).toEqual(10);
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(agonesSDK.client, 'reserve').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await agonesSDK.reserve(10);
+				fail();
+			} catch (error) {
+				expect(agonesSDK.client.reserve).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
 });
