@@ -99,7 +99,7 @@ grpc::Status SDK::GameServer(agones::dev::sdk::GameServer* response) {
 }
 
 grpc::Status SDK::WatchGameServer(
-    const std::function<void(agones::dev::sdk::GameServer)>& callback) {
+    const std::function<void(const agones::dev::sdk::GameServer&)>& callback) {
   grpc::ClientContext context;
   agones::dev::sdk::Empty request;
   agones::dev::sdk::GameServer gameServer;
