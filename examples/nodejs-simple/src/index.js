@@ -14,11 +14,11 @@
 
 const AgonesSDK = require('agones');
 
-const  agonesSDK = new AgonesSDK();
+const agonesSDK = new AgonesSDK();
 
 const connect = async function() {
 	agonesSDK.watchGameServer((result) => {
-		console.log("GameServer Update:\n\tname:", result.objectMeta.name, "\n\tstate:", result.status.state);
+		console.log('GameServer Update:\n\tname:', result.objectMeta.name, '\n\tstate:', result.status.state);
 	});
 	setInterval(() => {
 		agonesSDK.health();
@@ -29,9 +29,9 @@ const connect = async function() {
 		console.log('node.js Game Server has started!');
 
 		console.log('Setting a label');
-		await agonesSDK.setLabel("test-label", "test-value");
+		await agonesSDK.setLabel('test-label', 'test-value');
 		console.log('Setting an annotation');
-		await agonesSDK.setAnnotation("test-annotation", "test value");
+		await agonesSDK.setAnnotation('test-annotation', 'test value');
 
 		console.log('Marking server as ready...');
 		await agonesSDK.ready();
@@ -42,6 +42,14 @@ const connect = async function() {
 			count = count + 10;
 			console.log('Running for', count, 'seconds!');
 		}, 10000);
+		setTimeout(async () => {
+			console.log('Allocating');
+			await agonesSDK.allocate();
+		}, 15000);
+		setTimeout(async () => {
+			console.log('Reserving for 20 seconds');
+			await agonesSDK.reserve(20);
+		}, 25000);
 		setTimeout(() => {
 			console.log('Shutting down after 60 seconds...');
 			agonesSDK.shutdown();

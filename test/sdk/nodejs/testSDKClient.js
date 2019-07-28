@@ -12,44 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const AgonesSDK = require("agones");
+const AgonesSDK = require('agones');
 const agonesSDK = new AgonesSDK();
 
-const connect = async function() {
-  var UID = ""
-  try {
-    var once = true;
-    agonesSDK.watchGameServer((result) => {
-        console.log("watch", result);
-        UID = result.objectMeta.uid.toString();
-        if (once) {
-          console.log("Setting annotation ", UID)
-          agonesSDK.setAnnotation("annotation", UID);
-          once = false;
-        }
-      });
-    await agonesSDK.ready();
-    setTimeout(() => {
-      console.log("send allocate request");
-      agonesSDK.allocate();
-    }, 1000);
+const connect = async () => {
+	let UID = '';
+	try {
+		let once = true;
+		agonesSDK.watchGameServer((result) => {
+			console.log('watch', result);
+			UID = result.objectMeta.uid.toString();
+			if (once) {
+				console.log('Setting annotation ', UID);
+				agonesSDK.setAnnotation('annotation', UID);
+				once = false;
+			}
+		});
+		await agonesSDK.ready();
+		setTimeout(() => {
+			console.log('send allocate request');
+			agonesSDK.allocate();
+		}, 1000);
 
+		let result = await agonesSDK.getGameServer();
+		await agonesSDK.setLabel('label', result.objectMeta.creationTimestamp.toString());
+		console.log('gameServer', result);
+		console.log('creation Timestamp', result.objectMeta.creationTimestamp);
+		result = await agonesSDK.health();
+		console.log('health', result);
 
-    let result = await agonesSDK.getGameServer();
-    await agonesSDK.setLabel("label", 
-      result.objectMeta.creationTimestamp.toString());
-    console.log("gameServer", result);
-    console.log("creation Timestamp", result.objectMeta.creationTimestamp)
-    result = await agonesSDK.health();
-    console.log("health", result);
+		await agonesSDK.reserve(1);
+		result = await agonesSDK.getGameServer();
+		console.log('gameServer', result);
 
-    setTimeout(() => {
-      console.log("send shutdown request");
-      agonesSDK.shutdown();
-    }, 1000);
-  } catch (error) {
-    console.error(error);
-  }
+		setTimeout(() => {
+			console.log('send shutdown request');
+			agonesSDK.shutdown();
+		}, 1000);
+	} catch (error) {
+		console.error(error);
+	}
 };
 
 connect();
