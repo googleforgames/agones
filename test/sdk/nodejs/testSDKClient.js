@@ -41,9 +41,7 @@ const connect = async () => {
 		result = await agonesSDK.health();
 		console.log('health', result);
 
-		await agonesSDK.reserve(1);
-		result = await agonesSDK.getGameServer();
-		console.log('gameServer', result);
+		await agonesSDK.reserve(5);
 
 		setTimeout(() => {
 			console.log('send shutdown request');
