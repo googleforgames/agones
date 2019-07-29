@@ -23,9 +23,10 @@ class AgonesSDK {
 		this.healthStream = undefined;
 		this.emitters = [];
 	}
-	async close(){
-		if (this.healthStream !== undefined){
-			this.healthStream.destroy()
+
+	async close() {
+		if (this.healthStream !== undefined) {
+			this.healthStream.destroy();
 		}
 		this.emitters.forEach(emitter => emitter.call.cancel());
 		this.client.close();
@@ -56,6 +57,7 @@ class AgonesSDK {
 			});
 		});
 	}
+
 	async shutdown() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
@@ -68,15 +70,17 @@ class AgonesSDK {
 			});
 		});
 	}
+
 	health() {
 		if (this.healthStream === undefined) {
-			this.healthStream = this.client.health((error) => {
+			this.healthStream = this.client.health(() => {
 				// Ignore error as this can't be caught
 			});
 		}
 		const request = new messages.Empty();
 		this.healthStream.write(request);
 	}
+
 	async getGameServer() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
@@ -89,6 +93,7 @@ class AgonesSDK {
 			});
 		});
 	}
+
 	watchGameServer(callback) {
 		const request = new messages.Empty();
 		const emitter = this.client.watchGameServer(request);
@@ -96,12 +101,15 @@ class AgonesSDK {
 			callback(data.toObject());
 		});
 		emitter.on('error', (error) => {
-     		if (error.code === grpc.status.CANCELLED) {  // this happens when call is cancelled
-     			return; 
-     		}
-  		})
+			if (error.code === grpc.status.CANCELLED) {
+				// Capture error when call is cancelled
+				return;
+			}
+			throw error;
+		});
 		this.emitters.push(emitter);
 	}
+
 	async setLabel(key, value) {
 		const request = new messages.KeyValue();
 		request.setKey(key);
@@ -116,6 +124,7 @@ class AgonesSDK {
 			});
 		});
 	}
+
 	async setAnnotation(key, value) {
 		const request = new messages.KeyValue();
 		request.setKey(key);
