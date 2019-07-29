@@ -45,7 +45,7 @@ spec:
       map:  garden22
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServerAllocation

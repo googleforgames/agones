@@ -37,7 +37,7 @@ spec:
   - port: web
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -141,7 +141,7 @@ are scheduled. If you use the above command, with our {{< ghlink href="/build/pr
 {{% feature expiryVersion="0.12.0" %}}
 tainted with `stable.agones.dev/agones-metrics=true:NoExecute` and labeled with `stable.agones.dev/agones-metrics=true` if available.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones.dev/agones-metrics=true` if available.
 {{% /feature %}}
 
@@ -155,7 +155,7 @@ gcloud container node-pools create agones-metrics --cluster=... --zone=... \
   --num-nodes=1
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```
 gcloud container node-pools create agones-metrics --cluster=... --zone=... \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
