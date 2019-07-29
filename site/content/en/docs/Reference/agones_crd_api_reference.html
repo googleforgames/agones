@@ -2497,7 +2497,11 @@ FleetStatus
 <h3 id="GameServer">GameServer
 </h3>
 <p>
-<p>GameServer is the data structure for a GameServer resource</p>
+<p>GameServer is the data structure for a GameServer resource.
+It is worth noting that while there is a <code>GameServerStatus</code> Status entry for the <code>GameServer</code>, it is not
+defined as a subresource - unlike <code>Fleet</code> and other Agones resources.
+This is so that we can retain the ability to change multiple aspects of a <code>GameServer</code> in a single atomic operation,
+which is particularly useful for operations such as allocation.</p>
 </p>
 <table>
 <thead>

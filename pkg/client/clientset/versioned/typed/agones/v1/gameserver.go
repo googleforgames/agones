@@ -37,7 +37,6 @@ type GameServersGetter interface {
 type GameServerInterface interface {
 	Create(*v1.GameServer) (*v1.GameServer, error)
 	Update(*v1.GameServer) (*v1.GameServer, error)
-	UpdateStatus(*v1.GameServer) (*v1.GameServer, error)
 	Delete(name string, options *metav1.DeleteOptions) error
 	DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error
 	Get(name string, options metav1.GetOptions) (*v1.GameServer, error)
@@ -115,22 +114,6 @@ func (c *gameServers) Update(gameServer *v1.GameServer) (result *v1.GameServer, 
 		Namespace(c.ns).
 		Resource("gameservers").
 		Name(gameServer.Name).
-		Body(gameServer).
-		Do().
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-
-func (c *gameServers) UpdateStatus(gameServer *v1.GameServer) (result *v1.GameServer, err error) {
-	result = &v1.GameServer{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("gameservers").
-		Name(gameServer.Name).
-		SubResource("status").
 		Body(gameServer).
 		Do().
 		Into(result)

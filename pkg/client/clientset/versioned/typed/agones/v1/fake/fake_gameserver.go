@@ -100,18 +100,6 @@ func (c *FakeGameServers) Update(gameServer *agonesv1.GameServer) (result *agone
 	return obj.(*agonesv1.GameServer), err
 }
 
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGameServers) UpdateStatus(gameServer *agonesv1.GameServer) (*agonesv1.GameServer, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversResource, "status", c.ns, gameServer), &agonesv1.GameServer{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*agonesv1.GameServer), err
-}
-
 // Delete takes name of the gameServer and deletes it. Returns an error if one occurs.
 func (c *FakeGameServers) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
