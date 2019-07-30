@@ -92,9 +92,14 @@ var (
 )
 
 // +genclient
+// +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// GameServer is the data structure for a GameServer resource
+// GameServer is the data structure for a GameServer resource.
+// It is worth noting that while there is a `GameServerStatus` Status entry for the `GameServer`, it is not
+// defined as a subresource - unlike `Fleet` and other Agones resources.
+// This is so that we can retain the ability to change multiple aspects of a `GameServer` in a single atomic operation,
+// which is particularly useful for operations such as allocation.
 type GameServer struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
