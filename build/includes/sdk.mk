@@ -139,6 +139,6 @@ run-sdk-conformance-test:
 
 # Run a conformance test for all SDKs supported
 run-sdk-conformance-tests:
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust

@@ -48,7 +48,7 @@ To mark the game server as [ready to receive player connections]({{< relref "_in
 let result = await agonesSDK.ready();
 ```
 
-Similarly `shutdown()`, `setAnnotation(key, value)` and `setLabel(key, value)` are async methods that perform an action and return an empty result.
+Similarly `shutdown()`, `allocate()`, `setAnnotation(key, value)` and `setLabel(key, value)` are async methods that perform an action and return an empty result.
 
 To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method `getGameServer()`. The result will be an object representing `GameServer` defined in {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
 
@@ -63,5 +63,12 @@ agonesSDK.watchGameServer((result) => {
 	console.log('watch', result);
 });
 ```
+
+{{% feature publishVersion="0.12.0" %}}
+
+<!--TODO: Change the link to a relref once 0.12.0 has been published so that this passes link checking -->
+To mark the game server as <a href="../#reserve-seconds" data-proofer-ignore>reserved</a> for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
+
+{{% /feature %}}
 
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.
