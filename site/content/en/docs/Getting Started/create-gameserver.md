@@ -133,7 +133,7 @@ Events:
   Normal  Ready           27s   gameserver-controller  SDK.Ready() executed
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```
 Name:         simple-udp-7pjrq
 Namespace:    default

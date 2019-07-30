@@ -105,7 +105,7 @@ func main() {
 }
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```go
 package main
 
@@ -436,7 +436,7 @@ $ curl -d '{"apiVersion":"stable.agones.dev/v1alpha1","kind":"FleetAllocation","
 }
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```bash
 $ kubectl proxy &
 Starting to serve on 127.0.0.1:8001

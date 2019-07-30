@@ -16,11 +16,11 @@ const AgonesSDK = require('agones');
 
 const agonesSDK = new AgonesSDK();
 
-const connect = async function() {
+const connect = async () => {
 	agonesSDK.watchGameServer((result) => {
 		console.log('GameServer Update:\n\tname:', result.objectMeta.name, '\n\tstate:', result.status.state);
 	});
-	setInterval(() => {
+	let healthInterval = setInterval(() => {
 		agonesSDK.health();
 		console.log('Health ping sent');
 	}, 20000);
@@ -37,7 +37,7 @@ const connect = async function() {
 		await agonesSDK.ready();
 		console.log('...marked Ready');
 
-		var count = 0;
+		let count = 0;
 		setInterval(() => {
 			count = count + 10;
 			console.log('Running for', count, 'seconds!');
@@ -63,6 +63,7 @@ const connect = async function() {
 		}, 100000);
 	} catch (error) {
 		console.error(error);
+		clearInterval(healthInterval);
 	}
 };
 

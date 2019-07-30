@@ -25,7 +25,7 @@ spec:
       maxReplicas: 20
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -61,7 +61,7 @@ spec:
       caBundle: "<base64 encoded string>"
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -168,7 +168,7 @@ type FleetStatus struct {
 }
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```go
 // FleetAutoscaleReview is passed to the webhook with a populated Request value,
 // and then returned with a populated Response.

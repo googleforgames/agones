@@ -45,7 +45,7 @@ spec:
             image: gcr.io/agones/test-server:0.1
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
@@ -85,7 +85,7 @@ Since Agones defines a new
 we can define a new resource using the kind `Fleet` with the custom group `stable.agones.dev` and API 
 version `v1alpha1`.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 Since Agones defines a new 
 [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) 
 we can define a new resource using the kind `Fleet` with the custom group `agones.dev` and API 
@@ -144,7 +144,7 @@ spec:
       map:  garden22
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: FleetAllocation
@@ -182,7 +182,7 @@ $ kubectl scale fleet simple-udp --replicas=10
 fleet.stable.agones.dev/simple-udp scaled
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```bash
 $ kubectl scale fleet simple-udp --replicas=10
 fleet.agones.dev/simple-udp scaled
@@ -213,7 +213,7 @@ curl http://localhost:8001/apis/stable.agones.dev/v1alpha1/namespaces/default/fl
   }
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```
 curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/fleets/simple-udp/scale
 ...

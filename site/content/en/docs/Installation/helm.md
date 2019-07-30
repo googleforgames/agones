@@ -33,7 +33,7 @@ When running in production, Agones should be scheduled on a dedicated pool of no
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 

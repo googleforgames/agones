@@ -86,7 +86,7 @@ Status:
 Events:              <none>
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```
 Name:         simple-udp-autoscaler
 Namespace:    default

@@ -41,7 +41,7 @@ These are all examples of simple game server implementations, that integrate the
   [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1) to allocate a GameServer from a Fleet, 
   and is used in the [Create an Allocator Service (Go)]({{< ref "/docs/Tutorials/allocator-service-go.md" >}}) tutorial.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 - {{< ghlink href="examples/allocator-service" >}}Allocator Service{{< /ghlink >}} (Go) - 
   This service provides an example of using the 
   <a href="https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1" data-proofer-ignore>Agones API</a>

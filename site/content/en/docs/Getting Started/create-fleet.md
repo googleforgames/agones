@@ -125,7 +125,7 @@ Events:
   Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```
 Name:         simple-udp
 Namespace:    default
@@ -250,7 +250,7 @@ status:
   state: Allocated
 ```
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: allocation.agones.dev/v1
 kind: GameServerAllocation
