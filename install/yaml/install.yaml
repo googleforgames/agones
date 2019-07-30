@@ -1005,7 +1005,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution:
           - preference:
               matchExpressions:
-              - key: stable.agones.dev/agones-system
+              - key: agones.dev/agones-system
                 operator: Exists
             weight: 1
         
