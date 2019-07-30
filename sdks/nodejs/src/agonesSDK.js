@@ -24,6 +24,18 @@ class AgonesSDK {
 		this.emitters = [];
 	}
 
+	async connect() {
+		return new Promise((resolve, reject) => {
+			this.client.waitForReady(Date.now() + 30000, (error) => {
+				if (error) {
+					reject(error);
+				} else {
+					resolve();
+				}
+			})
+		});
+	}
+
 	async close() {
 		if (this.healthStream !== undefined) {
 			this.healthStream.destroy();

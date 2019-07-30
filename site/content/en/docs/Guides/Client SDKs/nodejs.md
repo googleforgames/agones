@@ -28,13 +28,23 @@ Add the agones dependency to `package.json`, replacing with the download locatio
 }
 ```
 
-To begin working with the SDK, create an instance of it. This will open a connection to the SDK server.
+To begin working with the SDK, create an instance of it. {{< feature expiryVersion="0.12.0" >}}This will open a connection to the SDK server.{{< /feature >}}
 
 ```javascript
 const AgonesSDK = require('agones');
 
 let agonesSDK = new AgonesSDK();
 ```
+
+{{% feature publishVersion="0.12.0" %}}
+
+To connect to the SDK server, either local or when running on Agones, run the `async` method `sdk.connect()`, which will
+`resolve` once connected or `reject` on error or if no connection can be made after 30 seconds.
+
+```javascript
+await agonesSDK.connect();
+```
+{{% /feature %}}
 
 To send a [health check]({{< relref "_index.md#health" >}}) ping call `health()`.
 

@@ -18,6 +18,9 @@ const agonesSDK = new AgonesSDK();
 const connect = async () => {
 	let UID = '';
 	try {
+		console.log("attempting to connect");
+		await agonesSDK.connect();
+		console.log("connected!");
 		let once = true;
 		agonesSDK.watchGameServer((result) => {
 			console.log('watch', result);
