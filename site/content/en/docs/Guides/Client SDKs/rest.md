@@ -72,7 +72,7 @@ $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:5935
 {{% feature expiryVersion="0.12.0" %}}
 Apply a Label with the prefix "stable.agones.dev/sdk-" to the backing `GameServer` metadata. 
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata. 
 {{% /feature %}}
 
@@ -89,7 +89,7 @@ $ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -
 {{% feature expiryVersion="0.12.0" %}}
 Apply a Annotation with the prefix "stable.agones.dev/sdk-" to the backing `GameServer` metadata
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 Apply a Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata
 {{% /feature %}}
 

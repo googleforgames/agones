@@ -14,7 +14,7 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
 > `stable.agones.dev/agones-system=true` and tolerates the node taint `stable.agones.dev/agones-system=true:NoExecute`.
 > If no dedicated nodes are available, Agones will run on regular nodes.
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 > When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
 > are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
 > `agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
@@ -229,7 +229,7 @@ minikube start --kubernetes-version v1.11.0 --vm-driver virtualbox \
 
 Continue to [Enabling creation of RBAC resources](#enabling-creation-of-rbac-resources)
 {{% /feature %}}
-{{% feature publishversion="0.12.0" %}}
+{{% feature publishVersion="0.12.0" %}}
 ```bash
 minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
 ```
