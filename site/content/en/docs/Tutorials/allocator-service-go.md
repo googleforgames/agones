@@ -4,7 +4,7 @@ linkTitle: "Create an Allocator Service (Go)"
 date: 2019-01-03T03:15:34Z
 description: >
   This tutorial describes how to interact programmatically with the 
-  [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1).
+  [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1).
 ---
 
 To do this, we will implement a [Service](https://kubernetes.io/docs/concepts/services-networking/service/) which allocates a
