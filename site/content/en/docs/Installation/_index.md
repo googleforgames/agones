@@ -24,7 +24,7 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
 ## Usage Requirements
 
 - Kubernetes cluster version 1.11
-    - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/), 
+    - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
     [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
@@ -243,7 +243,7 @@ Create your EKS instance using the [Getting Started Guide](https://docs.aws.amaz
 
 ### Ensure VPC CNI 1.2 is Running
 
-EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects). 
+EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
 
 In a console, run this command to get your current cni version
 
@@ -272,7 +272,7 @@ You can use either [Azure Cloud Shell](https://docs.microsoft.com/azure/cloud-sh
 
 If you are using Azure CLI from your local shell, you need to login to your Azure account by executing the `az login` command and following the login procedure.
 
-Here are the steps you need to follow to create a new AKS cluster (additional instructions and clarifications are listed [here](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough)): 
+Here are the steps you need to follow to create a new AKS cluster (additional instructions and clarifications are listed [here](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough)):
 
 ```bash
 # Declare necessary variables, modify them according to your needs
@@ -378,14 +378,28 @@ To confirm Agones is up and running, run the following command:
 kubectl describe --namespace agones-system pods
 ```
 
-It should describe the single pod created in the `agones-system` namespace, with no error messages or status. The `Conditions` section should look like this:
+It should describe six pods created in the `agones-system` namespace, with no error messages or status. All `Conditions` sections should look like this:
 
 ```
 Conditions:
-  Type           Status
-  Initialized    True
-  Ready          True
-  PodScheduled   True
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+```
+
+All this pods should be in a `RUNNING` state:
+```bash
+kubectl get pods --namespace agones-system
+
+NAME                                    READY   STATUS    RESTARTS   AGE
+agones-controller-79f6c59bdb-9swzz      1/1     Running   0          2m47s
+agones-ping-8598d64bbd-gd6cg            1/1     Running   0          2m47s
+agones-ping-8598d64bbd-tjpcx            1/1     Running   0          2m47s
+gameserver-allocator-6bd4d456f9-bbj76   1/1     Running   0          2m48s
+gameserver-allocator-6bd4d456f9-vlkhk   1/1     Running   0          2m48s
+gameserver-allocator-6bd4d456f9-x7t9h   1/1     Running   0          2m48s
 ```
 
 That's it! This creates the [Custom Resource Definitions][crds] that power Agones and allows us to define resources of type `GameServer`.
