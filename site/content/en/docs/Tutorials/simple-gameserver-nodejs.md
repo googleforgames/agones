@@ -37,7 +37,7 @@ $ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{
 ```
 
 The game server sets up the Agones SDK, calls `sdk.ready()` to inform Agones that it is ready to serve traffic,
-prints a message every 10 seconds, and then calls `sdk.shutdown()` after a minute indicate that the gameserver
+prints a message every 10 seconds, and then calls `sdk.shutdown()` after a minute to indicate that the gameserver
 is going to exit.
 
 You can follow along with the lifecycle of the gameserver by running
