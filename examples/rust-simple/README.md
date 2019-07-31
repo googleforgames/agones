@@ -8,62 +8,36 @@ It will
 - Every 10 seconds, write a log saying "Hi! I'm a Game Server"
 - After 60 seconds, call `SDK::Shutdown()` to shut the server down.
 
-## Running locally (without Docker)
+To learn how to deploy this example service to GKE, please see the tutorial [Build and Run a Simple Gameserver (Rust)](https://agones.dev/site/docs/tutorials/simple-gameserver-rust/).
 
-This will build example server which will run for 100 seconds:
-```
-make build
-```
+## Building
 
-In a separate terminal run next command:
-```
-cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver
-```
-This will start an SDK-server in a docker, which will be running for 120 seconds.
+If you have a local rust developer environment installed locally, you can run `make build` to compile the code and
+`make run` to execute the resulting binary.
 
-Run the Rust Simple Gameserver binary:
-```
-make run
-```
+If you want to build an updated container image or want to build the source code without installing the rust developer
+tools locally, run `make build-image` to run the `docker build` command with the correct context.
 
-You will see the following output:
-```
-Rust Game Server has started!
-Creating SDK instance
-Setting a label
-Starting to watch GameServer updates...
-Health ping sent
-Setting an annotation
-...
+This example uses the [Docker builder pattern](https://docs.docker.com/develop/develop-images/multistage-build/) to
+build the SDK, example and host it inside a container.
+
+## Testing locally with Docker
+
+If you want to run the example locally, you need to start an instance of the SDK-server. To run an SDK-server for
+120 seconds, run
+```bash
+$ cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver
 ```
 
-Clean the resulting `sdk` directory and `target` folder:
-```
-make clean
-```
-
-
-## Running locally with Docker
-
-Build the container locally:
-```
-make build-image
-```
-
-In a separate terminal run next command:
-```
-cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver
-```
-This will start an SDK-server in a docker, which will be running for 120 seconds.
-
-Run next make targets:
-```
-make run-image
+In a separate terminal, while the SDK-server is still running, build and start a container with the example gameserver:
+```bash
+$ make build-image
+$ make run-image
 ```
 
 You will see the following output:
 ```
-docker run --network=host rust-simple-server:0.2
+docker run --network=host gcr.io/agones-images/rust-simple-server:0.4
 Rust Game Server has started!
 Creating SDK instance
 Setting a label
@@ -83,32 +57,38 @@ Health ping sent
 Health ping sent
 Running for 10 seconds
 ```
-Clean the resulting `sdk` directory:
+
+When you are finished, clean up the `sdk` directory:
 ```
 make clean-docker
 ```
 
-## Running by minikube
+## Testing locally (without Docker)
 
-First of all, you have to configure Agones on minikube. Check out [these instructions](https://agones.dev/site/docs/installation/#setting-up-a-minikube-cluster).
-
-```
-$ eval $(minikube docker-env)
-$ make build-image
-$ kubectl create -f gameserver.yaml
+If you want to run the example locally, you need to start an instance of the SDK-server. To run an SDK-server for
+120 seconds, run
+```bash
+$ cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver
 ```
 
-You can see output of the example by the following.
-
+In a separate terminal, while the SDK-server is still running, build and execute the example gameserver:
+```bash
+$ make build
+$ make run
 ```
-$ POD_NAME=`kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}'`
-$ kubectl logs $POD_NAME -c rust-simple
+
+You will see the following output:
+```
 Rust Game Server has started!
 Creating SDK instance
-Marking server as ready...
-Running for 0 seconds
+Setting a label
+Starting to watch GameServer updates...
 Health ping sent
-Health ping sent
-Health ping sent
-Health ping sent
+Setting an annotation
+...
+```
+
+When you are finished, clean up the `sdk` directory and `target` folder:
+```
+make clean
 ```

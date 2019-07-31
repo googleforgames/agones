@@ -23,9 +23,11 @@
 #     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
 #
 
+REPOSITORY ?= gcr.io/agones-images
+
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = rust-simple-server:0.2
+server_tag = $(REPOSITORY)/rust-simple-server:0.4
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

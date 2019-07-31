@@ -237,10 +237,11 @@ minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
 
 ## Setting up an Amazon Web Services EKS cluster
 
-### Create EKS Instance
+### Create EKS Cluster
 
-Create your EKS instance using the [Getting Started Guide](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html).
+Create your EKS Cluster using the [Getting Started Guide](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html).
 
+{{% feature expiryVersion="0.12.0" %}}
 ### Ensure VPC CNI 1.2 is Running
 
 EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
@@ -255,6 +256,27 @@ Output should be `amazon-k8s-cni:1.2.0` or newer. To upgrade to version 1.2, run
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/aws/amazon-vpc-cni-k8s/master/config/v1.2/aws-k8s-cni.yaml
 ```
+{{% /feature %}}
+
+{{% feature publishVersion="0.12.0" %}}
+Possible steps are the following:
+1. Create new IAM role for cluster management.
+1. Run `aws configure` to authorize your `awscli` with proper `AWS Access Key ID` and `AWS Secret Access Key`.
+1. Create an example cluster:
+```
+eksctl create cluster \
+--name prod \
+--version 1.12 \
+--nodegroup-name standard-workers \
+--node-type t3.medium \
+--nodes 3 \
+--nodes-min 3 \
+--nodes-max 4 \
+--node-ami auto
+```
+
+> Note: EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
+{{% /feature %}}
 
 ### Follow Normal Instructions to Install
 
