@@ -42,28 +42,55 @@ spec:
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
+# GameServer Metadata
+# https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#objectmeta-v1-meta
 metadata:
-  name: "gds-example"
+  # generateName: "gds-example" # generate a unique name, with the given prefix
+  name: "gds-example" # set a fixed name
 spec:
+  # if there is more than one container, specify which one is the game server
+  container: example-server
+  # Array of ports that can be exposed as direct connections to the game server container
   ports:
+    # name is a descriptive name for the port
   - name: default
+    # portPolicy has two options:
+    # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
+    # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+    # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+    #      This will mean that users will need to lookup what port has been opened through the server side SDK.
+    # port is available. When static is the policy specified, `hostPort` is required to be populated
     portPolicy: Static
+    # the port that is being opened on the game server process
     containerPort: 7654
+    # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
+    # protocol being used. Defaults to UDP. TCP is the only other option
     protocol: UDP
+  # Health checking for the running game server
   health:
+    # Disable health checking. defaults to false, but can be set to true
     disabled: false
+    # Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
     initialDelaySeconds: 5
+    # If the `Health()` function doesn't get called at least once every period (seconds), then
+    # the game server is not healthy. Defaults to 5
     periodSeconds: 5
+    # Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+    # Defaults to 3. Minimum value is 1
     failureThreshold: 3
+  # Pod template configuration
+  # https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#podtemplate-v1-core
   template:
+    # pod metadata. Name & Namespace is overwritten
     metadata:
       labels:
         myspeciallabel: myspecialvalue
+    # Pod Specification
     spec:
       containers:
-      - name: example-server
-        image: gcr.io/agones/test-server:0.1
+      - name: simple-udp
+        image:  gcr.io/agones-images/udp-server:0.14
         imagePullPolicy: Always
 ```
 {{% /feature %}}

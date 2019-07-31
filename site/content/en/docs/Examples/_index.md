@@ -9,7 +9,9 @@ weight: 120
 
 These are full examples for each of the resource types of Agones
 
+{{% feature expiryVersion="0.12.0" %}}
 > These examples are for reference only. They are not backed by working images.
+{{% /feature %}}
 
 - {{< ghlink href="examples/gameserver.yaml" >}}Full GameServer Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleet.yaml" >}}Full Fleet Configuration{{< /ghlink >}}
