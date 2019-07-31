@@ -70,6 +70,6 @@ spec:
     # Pod Specification
     spec:
       containers:
-      - name: example-server
+      - name: simple-udp
         image:  gcr.io/agones-images/udp-server:0.14
         imagePullPolicy: Always

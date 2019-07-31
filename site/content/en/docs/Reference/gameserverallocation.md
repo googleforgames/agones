@@ -47,17 +47,23 @@ spec:
 {{% /feature %}}
 {{% feature publishVersion="0.12.0" %}}
 ```yaml
-apiVersion: "agones.dev/v1"
+apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
-metadata:
-  generateName: simple-udp-
 spec:
+  # GameServer selector from which to choose GameServers from.
+  # GameServers still have the hard requirement to be `Ready` to be allocated from
+  # however we can also make available `matchExpressions` for even greater
+  # flexibility.
+  # Below is an example of a GameServer allocated against a given fleet.
+  # See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ for more details
   required:
     matchLabels:
       game: my-game
     matchExpressions:
       - {key: tier, operator: In, values: [cache]}
-  # ordered list of preferred allocations 
+  # ordered list of preferred allocations out of the `required` set.
+  # If the first selector is not matched, the selection attempts the second selector, and so on.
+  # This is useful for things like smoke testing of new game servers.
   # This also support `matchExpressions`
   preferred:
     - matchLabels:

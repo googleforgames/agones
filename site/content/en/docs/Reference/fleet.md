@@ -50,19 +50,39 @@ spec:
 apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
+  # Fleet Metadata
+  # https://v1-9.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.9/#objectmeta-v1-meta
   name: fleet-example
 spec:
+  # the number of GameServers to keep Ready or Allocated in this Fleet
   replicas: 2
+  # defines how GameServers are organised across the cluster.
+  # Options include:
+  # "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack
+  # resources
+  # "Distributed" is aimed at static Kubernetes clusters, wherein we want to distribute resources across the entire
+  # cluster
   scheduling: Packed
+  # a GameServer template - see:
+  # https://agones.dev/site/docs/reference/gameserver/ for all the options
   strategy:
+    # The replacement strategy for when the GameServer template is changed. Default option is "RollingUpdate",
+    # "RollingUpdate" will increment by maxSurge value on each iteration, while decrementing by maxUnavailable on each
+    # iteration, until all GameServers have been switched from one version to another.
+    # "Recreate" terminates all non-allocated GameServers, and starts up a new set with the new details to replace them.
     type: RollingUpdate
+    # Only relevant when `type: RollingUpdate`
     rollingUpdate:
+      # the amount to increment the new GameServers by. Defaults to 25%
       maxSurge: 25%
-      maxUnavailable: 25%  
+      # the amount to decrements GameServers by. Defaults to 25%
+      maxUnavailable: 25%
   template:
+    # GameServer metadata
     metadata:
       labels:
         foo: bar
+    # GameServer specification
     spec:
       ports:
       - name: default
@@ -71,11 +91,12 @@ spec:
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
+      # The GameServer's Pod template
       template:
         spec:
           containers:
-          - name: example-server
-            image: gcr.io/agones/test-server:0.1
+          - name: simple-udp
+            image: gcr.io/agones-images/udp-server:0.14
 ```
 {{% /feature %}}
 
@@ -129,7 +150,6 @@ A `FleetAllocation` is used to allocate a `GameServer` out of an existing `Fleet
 A full `FleetAllocation` specification is available below and in the 
 {{< ghlink href="examples/fleetallocation.yaml" >}}example folder{{< /ghlink >}} for reference:
 
-{{% feature expiryVersion="0.12.0" %}}
 ```yaml
 apiVersion: "stable.agones.dev/v1alpha1"
 kind: FleetAllocation
@@ -143,22 +163,6 @@ spec:
     annotations:
       map:  garden22
 ```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
-```yaml
-apiVersion: "agones.dev/v1"
-kind: FleetAllocation
-metadata:
-  generateName: fleet-allocation-example-
-spec:
-  fleetName: fleet-example
-  metadata:
-    labels:
-      mode: deathmatch
-    annotations:
-      map:  garden22
-```
-{{% /feature %}}
 
 We recommend using `metadata > generateName`, to declare to Kubernetes that a unique
 name for the `FleetAllocation` is generated when the `FleetAllocation` is created.
