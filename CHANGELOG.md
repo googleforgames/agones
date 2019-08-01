@@ -1,8 +1,8 @@
 # Changelog
 
-## [v0.12-rc](https://github.com/googleforgames/agones/tree/v0.12-rc) (2019-08-01)
+## [v0.12.0-rc](https://github.com/googleforgames/agones/tree/v0.12.0-rc) (2019-08-01)
 
-[Full Changelog](https://github.com/googleforgames/agones/compare/v0.11.0...v0.12-rc)
+[Full Changelog](https://github.com/googleforgames/agones/compare/v0.11.0...v0.12.0-rc)
 
 **Breaking changes:**
 
