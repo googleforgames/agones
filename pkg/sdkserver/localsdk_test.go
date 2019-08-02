@@ -284,3 +284,42 @@ func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
 	err = json.NewEncoder(file).Encode(gs)
 	return file.Name(), err
 }
+
+// TestLocalSDKServerStateUpdates verify that SDK functions changes the state of the
+// GameServer object
+func TestLocalSDKServerStateUpdates(t *testing.T) {
+	t.Parallel()
+	l, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
+
+	ctx := context.Background()
+	e := &sdk.Empty{}
+	_, err = l.Ready(ctx, e)
+	assert.Nil(t, err)
+
+	gs, err := l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateReady))
+
+	seconds := &sdk.Duration{Seconds: 2}
+	_, err = l.Reserve(ctx, seconds)
+	assert.Nil(t, err)
+
+	gs, err = l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateReserved))
+
+	_, err = l.Allocate(ctx, e)
+	assert.Nil(t, err)
+
+	gs, err = l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateAllocated))
+
+	_, err = l.Shutdown(ctx, e)
+	assert.Nil(t, err)
+
+	gs, err = l.GetGameServer(ctx, e)
+	assert.Nil(t, err)
+	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateShutdown))
+}
