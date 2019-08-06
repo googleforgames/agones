@@ -25,25 +25,6 @@ If needed, you can provide your own service account on the `Pod` specification i
 
 For example:
 
-{{% feature expiryVersion="0.12.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: GameServer
-metadata:
-  generateName: "simple-udp-"
-spec:
-  ports:
-  - name: default
-    containerPort: 7654
-  template:
-    spec:
-      serviceAccountName: my-special-service-account # a custom service account
-      containers:
-      - name: simple-udp
-        image: {{% example-image %}}
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -60,7 +41,6 @@ spec:
       - name: simple-udp
         image: {{% example-image %}}
 ```
-{{% /feature %}}
 
 If a service account is configured, the mounted key is not overwritten, as it assumed that you want to have full control
 of the service account and underlying RBAC permissions.

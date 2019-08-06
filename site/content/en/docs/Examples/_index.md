@@ -9,15 +9,8 @@ weight: 120
 
 These are full examples for each of the resource types of Agones
 
-{{% feature expiryVersion="0.12.0" %}}
-> These examples are for reference only. They are not backed by working images.
-{{% /feature %}}
-
 - {{< ghlink href="examples/gameserver.yaml" >}}Full GameServer Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleet.yaml" >}}Full Fleet Configuration{{< /ghlink >}}
-{{< feature expiryVersion="0.12.0" >}}
-- {{< ghlink href="examples/fleetallocation.yaml" >}}Full Fleet Allocation Configuration (deprecated) {{< /ghlink >}}
-{{< /feature >}}
 - {{< ghlink href="examples/gameserverallocation.yaml" >}}Full GameServer Allocation Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleetautoscaler.yaml" >}}Full Autoscaler Configuration with Buffer Strategy{{< /ghlink >}}
 - {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}Full Autoscaler Configuration with Webhook Strategy{{< /ghlink >}}
@@ -37,16 +30,7 @@ These are all examples of simple game server implementations, that integrate the
 
 ## Building on top of Agones
 
-{{% feature expiryVersion="0.12.0" %}}
 - {{< ghlink href="examples/allocator-service" >}}Allocator Service{{< /ghlink >}} (Go) - 
-  This service provides an example of using the 
-  [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/stable/v1alpha1) to allocate a GameServer from a Fleet, 
-  and is used in the [Create an Allocator Service (Go)]({{< ref "/docs/Tutorials/allocator-service-go.md" >}}) tutorial.
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
-- {{< ghlink href="examples/allocator-service" >}}Allocator Service{{< /ghlink >}} (Go) - 
-  This service provides an example of using the 
-  <a href="https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1" data-proofer-ignore>Agones API</a>
+  This service provides an example of using the [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1)
   to allocate a GameServer from a Fleet,
   and is used in the [Create an Allocator Service (Go)]({{< ref "/docs/Tutorials/allocator-service-go.md" >}}) tutorial.
-{{% /feature %}}

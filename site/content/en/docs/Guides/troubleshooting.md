@@ -46,16 +46,6 @@ Once this is done, you can `kubectl delete gs --all` and clean everything up (if
 
 ## I'm getting Forbidden errors when trying to install Agones
 
-{{% feature expiryVersion="0.12.0" %}}
-Some troubleshooting steps:
-
-1. Run `kubectl describe clusterrolebinding | grep cluster-admin-binding- -A10` and make sure your email is in there. This may be
-_case sensitive_ so you may need to compare it to the case you used.
-1. In the [GKE tutorial]({{< ref "/docs/Installation#enabling-creation-of-rbac-resources" >}}) `gcloud config get-value accounts` 
-will return a lowercase email address, so if you are using a CamelCase email, you may want to type that in manually.
-{{% /feature %}}
-
-{{% feature publishVersion="0.12.0" %}}
 Ensure that you are running Kubernetes 1.12 or later, which does not require any special
 clusterrolebindings to install Agones.
 
@@ -73,4 +63,3 @@ kubectl create clusterrolebinding cluster-admin-binding \
 
 On GKE, `gcloud config get-value accounts` will return a lowercase email address, so if
 you are using a CamelCase email, you may need to type it in manually.
-{{% /feature %}}

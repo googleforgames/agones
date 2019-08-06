@@ -15,8 +15,6 @@ This is the preferred workflow for a GameServer, in which an external matchmaker
 
 ![Allocated Lifecyle Sequence Diagram](../../../diagrams/gameserver-lifecycle.puml.png)
 
-{{% feature publishVersion="0.12.0" %}}
-
 ## Matchmaker requires game server process registration
 
 Scenarios in which a Matchmaker requires a game server process to register themselves with the matchmaker, and the
@@ -26,9 +24,6 @@ matchmaker decides which `GameServer` players are sent to, this flow is common:
 
 > This does relinquish control over how `GameServers` are packed across the cluster to the external matchmaker. It is likely
   it will not do as good a job at packing and scaling as Agones. 
-
-
-{{% /feature %}}
 
 ## Next Steps:
 

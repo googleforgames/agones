@@ -53,7 +53,6 @@ grpc::Status status = sdk->Ready();
 if (!status.ok()) { ... }
 ```
 
-{{% feature publishVersion="0.12.0" %}}
 To mark the game server as [allocated]({{< relref "_index.md#allocate" >}}), call `sdk->Allocate()`.
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
@@ -65,8 +64,7 @@ grpc::Status status = sdk->Allocate();
 if (!status.ok()) { ... }
 ```
 
-<!--TODO: Change the link to a relref once 0.12.0 has been published so that this passes link checking -->
-To mark the game server as <a href="../#reserve-seconds" data-proofer-ignore>reserved</a>, call
+To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}}), call
 `sdk->Reserve(seconds)`. This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
@@ -76,7 +74,6 @@ For more information you can also look at the [gRPC Status reference](https://gr
 grpc::Status status = sdk->Reserve(std::chrono::seconds(N));
 if (!status.ok()) { ... }
 ```
-{{% /feature %}}
 
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk->Shutdown()`.
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
@@ -113,33 +110,6 @@ status = sdk->SetAnnotation("test-annotation", "test value");
 if (!status.ok()) { ... }
 ```
 
-{{% feature expiryVersion="0.12.0" %}}
-To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
-passing in a `stable::agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
-This function will return a grpc::Status object, from which we can call `status.ok()` to determine
-if the function completed successfully.
-
-```cpp
-stable::agones::dev::sdk::GameServer gameserver;
-grpc::Status status = sdk->GameServer(&gameserver);
-if (!status.ok()) {...}
-```
-
-To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, 
-call `sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){...})`.
-
-This will call the passed in `std::function`
-synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer`
-is updated.
-
-```cpp
-sdk->WatchGameServer([](stable::agones::dev::sdk::GameServer gameserver){
-    std::cout << "GameServer Update, name: " << gameserver.object_meta().name() << std::endl;
-    std::cout << "GameServer Update, state: " << gameserver.status().state() << std::endl;
-});
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `sdk->GameServer(&gameserver)`,
 passing in a `agones::dev::sdk::GameServer*` to push the results of the `GameServer` configuration into.
 
@@ -167,7 +137,6 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
             << std::flush;
 });
 ```
-{{% /feature %}}
 
 For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
 {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
