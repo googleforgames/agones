@@ -28,7 +28,7 @@ Add the agones dependency to `package.json`, replacing with the download locatio
 }
 ```
 
-To begin working with the SDK, create an instance of it. {{< feature expiryVersion="0.12.0" >}}This will open a connection to the SDK server.{{< /feature >}}
+To begin working with the SDK, create an instance of it.
 
 ```javascript
 const AgonesSDK = require('agones');
@@ -36,15 +36,12 @@ const AgonesSDK = require('agones');
 let agonesSDK = new AgonesSDK();
 ```
 
-{{% feature publishVersion="0.12.0" %}}
-
 To connect to the SDK server, either local or when running on Agones, run the `async` method `sdk.connect()`, which will
 `resolve` once connected or `reject` on error or if no connection can be made after 30 seconds.
 
 ```javascript
 await agonesSDK.connect();
 ```
-{{% /feature %}}
 
 To send a [health check]({{< relref "_index.md#health" >}}) ping call `health()`.
 
@@ -74,11 +71,6 @@ agonesSDK.watchGameServer((result) => {
 });
 ```
 
-{{% feature publishVersion="0.12.0" %}}
-
-<!--TODO: Change the link to a relref once 0.12.0 has been published so that this passes link checking -->
-To mark the game server as <a href="../#reserve-seconds" data-proofer-ignore>reserved</a> for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
-
-{{% /feature %}}
+To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}} for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
 
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.

@@ -28,16 +28,9 @@ $ helm install --name my-release --namespace agones-system agones/agones
 _We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
 you can use the helm `--namespace` parameter to specify a different namespace._
 
-{{% feature expiryVersion="0.12.0" %}}
-When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `stable.agones.dev/agones-system=true` and tolerates node taint `stable.agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
-run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
-pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 
-{{% /feature %}}
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
@@ -168,7 +161,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="0.12.0" %}}
+{{% feature publishVersion="0.13.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |

@@ -27,8 +27,7 @@ The type of service we will be learning about could be used by a game client to 
 
 To install on GKE, follow the install instructions (if you haven't already) at
 [Setting up a Google Kubernetes Engine (GKE) cluster]({{< relref "../Installation/_index.md#setting-up-a-google-kubernetes-engine-gke-cluster" >}}).
-{{% feature expiryVersion="0.12.0" %}} Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}} Also complete the "Installing Agones" instructions on the same page. {{% /feature %}}
+Also complete the "Installing Agones" instructions on the same page.
 
 
 While not required, you may wish to review the [Create a Game Server]({{< relref "../Getting Started/create-gameserver.md" >}}),
@@ -133,17 +132,9 @@ Create the [secret](https://kubernetes.io/docs/concepts/configuration/secret/) b
 kubectl create secret tls allocatorsecret --cert=/tmp/allocsvc.crt --key=/tmp/allocsvc.key
 ```
 
-{{% feature expiryVersion="0.12.0" %}}
-The output should be something like:
-```
-secret "allocatorsecret" created
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 secret/allocatorsecret created
 ```
-{{% /feature %}}
 
 The allocatorw3secret will let data be served by the webserver over https.
 
@@ -153,16 +144,9 @@ kubectl create secret tls allocatorw3secret --cert=/tmp/tls.crt --key=/tmp/tls.k
 ```
 
 The output should be something like:
-{{% feature expiryVersion="0.12.0" %}}
-```
-secret "allocatorw3secret" created
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 secret/allocatorw3secret created
 ```
-{{% /feature %}}
 
 See that the secrets exist by running:
 ```
@@ -188,20 +172,11 @@ kubectl create -f service-account.yaml
 ```
 
 The output should look like this:
-{{% feature expiryVersion="0.12.0" %}}
-```
-role "fleet-allocator" created
-serviceaccount "fleet-allocator" created
-rolebinding "fleet-allocator" created
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 role.rbac.authorization.k8s.io/fleet-allocator created
 serviceaccount/fleet-allocator created
 rolebinding.rbac.authorization.k8s.io/fleet-allocator created
 ```
-{{% /feature %}}
 
 ### 6. Define and Deploy the Service
 The service definition defines a [nodePort](https://kubernetes.io/docs/concepts/services-networking/service/#nodeport) service which uses https, and sets up ports and names.  The deployment describes the number of replicas we would like, which account to use, which image to use, and defines a health check.
@@ -212,20 +187,10 @@ kubectl create -f allocator-service.yaml
 ```
 
 The output should look like this:
-{{% feature expiryVersion="0.12.0" %}}
-```
-service "fleet-allocator-backend" created
-deployment "fleet-allocator" created
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 service/fleet-allocator-backend created
 deployment.apps/fleet-allocator created
 ```
-{{% /feature %}}
-
-
 
 ### 7. Deploy the Ingress Resource
 This [Ingress](https://kubernetes.io/docs/concepts/services-networking/ingress/) directs traffic to the allocator service using an ephemeral IP address.  The allocator service pod needs to exist and the readiness probe should be passing health checks before the ingress is created.
@@ -236,16 +201,9 @@ kubectl apply -f allocator-ingress.yaml
 ```
 
 The output should look like this:
-{{% feature expiryVersion="0.12.0" %}}
-```
-ingress "fleet-allocator-ingress" created
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 ingress.extensions/fleet-allocator-ingress created
 ```
-{{% /feature %}}
 
 
 ### 8. Retrieve the Ephemeral Public IP Address
@@ -328,16 +286,9 @@ curl -k -u v1GameClientKey:EAEC945C371B2EC361DE399C2F11E https://[the.ip.address
 ```
 
 The output should show the JSON of the GameServerStatus, similar to this:
-{{% feature expiryVersion="0.12.0" %}}
-```
-{"status":{"state":"Allocated","ports":[{"name":"default","port":7260}],"address":"35.231.204.26","nodeName":"gke-agones-simple-udp-cluste-default-pool-e03a9bde-000f"}}
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```
 {"status":"Allocated"}
 ```
-{{% /feature %}}
 
 You may need to wait a few moments longer if the output has ssl errors like this:
 ```

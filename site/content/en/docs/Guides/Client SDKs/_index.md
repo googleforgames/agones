@@ -65,14 +65,8 @@ backing Pod will be deleted, if they have not shut themselves down already.
 
 ### SetLabel(key, value)
 
-{{% feature expiryVersion="0.12.0" %}}
-This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
-record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
 record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
-{{% /feature %}}
 
 > Note: There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 
@@ -80,14 +74,8 @@ This can be useful if you want to information from your running game server proc
 
 ### SetAnnotation(key, value)
 
-{{% feature expiryVersion="0.12.0" %}}
-This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
-`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "stable.agones.dev/sdk-"
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
 `Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
-{{% /feature %}}
 
 This can be useful if you want to information from your running game server process to be observable through the Kubernetes API.
 
@@ -135,7 +123,6 @@ For those scenarios, this SDK functionality exists.
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
 
-{{% feature publishVersion="0.12.0" %}}
 ### Reserve(seconds)
 
 With some matchmaking scenarios and systems it is important to be able to ensure that a `GameServer` is unable to be deleted,
@@ -151,8 +138,6 @@ it should call `SDK.Allocate()` to designate that players are currently active o
 
 Calling other state changing SDK commands such as `Ready` or `Allocate` will turn off the timer to reset the `GameServer` back
 to the `Ready` state.
-
-{{% /feature %}}
 
 ## Writing your own SDK
 

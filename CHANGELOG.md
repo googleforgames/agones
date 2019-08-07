@@ -1,5 +1,19 @@
 # Changelog
 
+## [v0.12.0](https://github.com/googleforgames/agones/tree/v0.12.0) (2019-08-06)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v0.12.0-rc...v0.12.0)
+
+**Closed issues:**
+
+- Release 0.12.0-rc [\#972](https://github.com/googleforgames/agones/issues/972)
+
+**Merged pull requests:**
+
+- Minor Fix 0.8.1 release on agones.dev Blog [\#978](https://github.com/googleforgames/agones/pull/978) ([aLekSer](https://github.com/aLekSer))
+- Minor - Fix helm repo command in the governance template [\#977](https://github.com/googleforgames/agones/pull/977) ([aLekSer](https://github.com/aLekSer))
+- Documentation updates to apply just prior to cutting the 0.12.0 release. [\#911](https://github.com/googleforgames/agones/pull/911) ([roberthbailey](https://github.com/roberthbailey))
+
 ## [v0.12.0-rc](https://github.com/googleforgames/agones/tree/v0.12.0-rc) (2019-08-01)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v0.11.0...v0.12.0-rc)
@@ -14,7 +28,6 @@
 - C++ SDK: Update the function signature of WatchGameServer to use a const-reference [\#951](https://github.com/googleforgames/agones/pull/951) ([roberthbailey](https://github.com/roberthbailey))
 - Update GKE documentation to 1.12 [\#897](https://github.com/googleforgames/agones/pull/897) ([roberthbailey](https://github.com/roberthbailey))
 - Move the stable api group and promote it to v1 [\#894](https://github.com/googleforgames/agones/pull/894) ([roberthbailey](https://github.com/roberthbailey))
-- Reserve\(\) SDK implementation [\#891](https://github.com/googleforgames/agones/pull/891) ([markmandel](https://github.com/markmandel))
 - Promote allocation to v1 [\#881](https://github.com/googleforgames/agones/pull/881) ([roberthbailey](https://github.com/roberthbailey))
 - Promote autoscaling to v1 [\#874](https://github.com/googleforgames/agones/pull/874) ([roberthbailey](https://github.com/roberthbailey))
 - Remove / Expire FleetAllocation from documentation. [\#867](https://github.com/googleforgames/agones/pull/867) ([markmandel](https://github.com/markmandel))
@@ -37,6 +50,7 @@
 - E2E tests for SDK.Reserve\(seconds\) [\#925](https://github.com/googleforgames/agones/pull/925) ([markmandel](https://github.com/markmandel))
 - Add new GameServer lifecycle diagrams for Reserved [\#922](https://github.com/googleforgames/agones/pull/922) ([markmandel](https://github.com/markmandel))
 - Compliance tests for Reserve\(seconds\). [\#920](https://github.com/googleforgames/agones/pull/920) ([markmandel](https://github.com/markmandel))
+- Reserve\(\) SDK implementation [\#891](https://github.com/googleforgames/agones/pull/891) ([markmandel](https://github.com/markmandel))
 - Update GKE development tooling to 1.12 [\#887](https://github.com/googleforgames/agones/pull/887) ([markmandel](https://github.com/markmandel))
 - Fix Rust SDK, add allocate, add conformance test [\#879](https://github.com/googleforgames/agones/pull/879) ([aLekSer](https://github.com/aLekSer))
 - Add instructions about taints and tolerations to the install instructions [\#870](https://github.com/googleforgames/agones/pull/870) ([roberthbailey](https://github.com/roberthbailey))
@@ -76,6 +90,8 @@
 
 **Merged pull requests:**
 
+- Typo in the changelog. [\#974](https://github.com/googleforgames/agones/pull/974) ([markmandel](https://github.com/markmandel))
+- Release 0.12.0-rc [\#973](https://github.com/googleforgames/agones/pull/973) ([markmandel](https://github.com/markmandel))
 - Fix Reference docs and sync it with Examples dir [\#970](https://github.com/googleforgames/agones/pull/970) ([aLekSer](https://github.com/aLekSer))
 - Fix AWS EKS cluster creating docs [\#965](https://github.com/googleforgames/agones/pull/965) ([aLekSer](https://github.com/aLekSer))
 - Fix Installation Docs and example GS configuration [\#962](https://github.com/googleforgames/agones/pull/962) ([aLekSer](https://github.com/aLekSer))

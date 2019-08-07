@@ -64,27 +64,6 @@ There are two scheduling strategies for Fleets - each designed for different typ
 
 ### Packed
 
-{{% feature expiryVersion="0.12.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: Fleet
-metadata:
-  name: simple-udp
-spec:
-  replicas: 100
-  scheduling: Packed
-  template:
-    spec:
-      ports:
-      - containerPort: 7654
-      template:
-        spec:
-          containers:
-          - name: simple-udp
-            image: {{% example-image %}}
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
@@ -103,8 +82,6 @@ spec:
           - name: simple-udp
             image: {{% example-image %}}
 ```
-{{% /feature %}}
-
 
 This is the *default* Fleet scheduling strategy. It is designed for dynamic Kubernetes environments, wherein you wish 
 to scale up and down as load increases or decreases, such as in a Cloud environment where you are paying
@@ -142,27 +119,6 @@ With the "Packed" strategy, Fleets will remove `Ready` `GameServers` from Nodes 
 
 ### Distributed
 
-{{% feature expiryVersion="0.12.0" %}}
-```yaml
-apiVersion: "stable.agones.dev/v1alpha1"
-kind: Fleet
-metadata:
-  name: simple-udp
-spec:
-  replicas: 100
-  scheduling: Distributed
-  template:
-    spec:
-      ports:
-      - containerPort: 7654
-      template:
-        spec:
-          containers:
-          - name: simple-udp
-            image: {{% example-image %}}
-```
-{{% /feature %}}
-{{% feature publishVersion="0.12.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
@@ -181,7 +137,6 @@ spec:
           - name: simple-udp
             image: {{% example-image %}}
 ```
-{{% /feature %}}
 
 This Fleet scheduling strategy is designed for static Kubernetes environments, such as when you are running Kubernetes
 on bare metal, and the cluster size rarely changes, if at all.
