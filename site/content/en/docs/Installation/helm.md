@@ -161,7 +161,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="0.13.0" %}}
+{{% feature publishVersion="1.0.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
