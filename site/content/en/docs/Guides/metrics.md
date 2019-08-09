@@ -7,7 +7,7 @@ weight: 50
 Agones controller exposes metrics via [OpenCensus](https://opencensus.io/). OpenCensus is a single distribution of libraries that collect metrics and distributed traces from your services, we only use it for metrics but it will allow us to support multiple exporters in the future.
 
 We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Stackdriver.
-If you need another exporter, check the [list of supported](https://opencensus.io/exporters/supported-exporters/go/) exporters. It should be pretty straightforward to register a new one.(Github PR are more than welcomed)
+If you need another exporter, check the [list of supported](https://opencensus.io/exporters/supported-exporters/go/) exporters. It should be pretty straightforward to register a new one. (GitHub PRs are more than welcome.)
 
 We plan to support multiple exporters in the future via environement variables and helm flags.
 
@@ -40,7 +40,7 @@ Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://
 
 ### Stackdriver
 
-We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/). 
+We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/).
 In order to use it you should enable [Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in Google Cloud Console.
 Follow the [Stackdriver Installation steps](#stackdriver-installation) to see your metrics on Stackdriver Monitoring website.
 
@@ -144,7 +144,7 @@ kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
 ```
 
 > Again you can use our Makefile {{< ghlink href="/build/README.md#prometheus-portforward" branch="master" >}}`make prometheus-portforward`{{< /ghlink >}}.
-  (For {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}} and 
+  (For {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}} and
   {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="master" >}}Minikube{{< /ghlink >}} use their specific targets `make kind-prometheus-portforward` and `make minikube-prometheus-portforward`)
 
 Now you can access the prometheus dashboard [http://localhost:9090](http://localhost:9090).

@@ -10,7 +10,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Download
 
-Download the source {{< ghlink href="sdks/rust" >}}directly from Github{{< /ghlink >}}.
+Download the source {{< ghlink href="sdks/rust" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ To mark the [game session as ready]({{< relref "_index.md#ready" >}}) call `sdk.
 sdk.ready()?;
 ```
 
-To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk.shutdown()`. 
+To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk.shutdown()`.
 
 ```rust
 if sdk.shutdown().is_err() {

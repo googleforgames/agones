@@ -10,16 +10,16 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Download
 
-Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases) 
-or {{< ghlink href="sdks/cpp" >}}directly from Github{{< /ghlink >}}.
+Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
+or {{< ghlink href="sdks/cpp" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Usage
 
 The C++ SDK is specifically designed to be as simple as possible, and deliberately doesn't include any kind
 of singleton management, or threading/asynchronous processing to allow developers to manage these aspects as they deem
-appropriate for their system.  
+appropriate for their system.
 
-We may consider these types of features in the future, depending on demand. 
+We may consider these types of features in the future, depending on demand.
 
 To begin working with the SDK, create an instance of it:
 ```cpp
@@ -122,7 +122,7 @@ grpc::Status status = sdk->GameServer(&gameserver);
 if (!status.ok()) {...}
 ```
 
-To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, 
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen,
 call `sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){...})`.
 
 This will call the passed in `std::function`
@@ -138,12 +138,12 @@ sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){
 });
 ```
 
-For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out 
+For more information, you can also read the [SDK Overview]({{< relref "_index.md" >}}), check out
 {{< ghlink href="sdks/cpp/include/agones/sdk.h" >}}sdk.h{{< /ghlink >}} and also look at the
 {{< ghlink href="examples/cpp-simple" >}}C++ example{{< / >}}.
 
 ### Failure
-When running on Agones, the above functions should only fail under exceptional circumstances, so please 
+When running on Agones, the above functions should only fail under exceptional circumstances, so please
 file a bug if it occurs.
 
 ### Building the Libraries from source
