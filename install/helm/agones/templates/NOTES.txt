@@ -1,29 +1,13 @@
-The Agones controller has been installed in the namespace {{ .Release.Namespace }}.
+The Agones components have been installed in the namespace {{ .Release.Namespace }}.
 
-You can watch the status by running 'kubectl --namespace {{ .Release.Namespace }} get pods -o wide -w {{ .Values.agones.serviceaccount.controller }}'
+You can get their status by running:
+kubectl --namespace {{ .Release.Namespace }} get pods -o wide
 
-Once ready you can create your first GameServer using our examples:
+Once ready you can create your first GameServer using our examples https://agones.dev/site/docs/getting-started/create-gameserver/ .
 
-'kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/master/examples/simple-udp/gameserver.yaml'
+Finally don't forget to explore our documentation and usage guides on how to develop and host dedicated game servers on top of Agones:
 
-An example GameServer that makes use of the controller:
-
-apiVersion: "agones.dev/v1"
-kind: GameServer
-metadata:
-  name: "simple-udp"
-spec:
-  portPolicy: "dynamic"
-  containerPort: 7654
-  template:
-    spec:
-      containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.14
-
-Finally don't forget to explore our documentation and usage guides on how to develop and host dedicated game servers on top of Agones. :
-
- - [Create a Game Server](https://github.com/googleforgames/agones/blob/master/docs/create_gameserver.md)
- - [Integrating the Game Server SDK](https://github.com/googleforgames/agones/tree/master/sdks)
- - [GameServer Health Checking](https://github.com/googleforgames/agones/blob/master/docs/health_checking.md)
- - [Accessing Agones via the Kubernetes API](https://github.com/googleforgames/agones/blob/master/docs/access_api.md)
+ - Create a Game Server (https://agones.dev/site/docs/getting-started/create-gameserver/)
+ - Integrating the Game Server SDK (https://agones.dev/site/docs/guides/client-sdks/)
+ - GameServer Health Checking (https://agones.dev/site/docs/guides/health-checking/)
+ - Accessing Agones via the Kubernetes API (https://agones.dev/site/docs/guides/access-api/)
