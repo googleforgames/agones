@@ -37,7 +37,7 @@ func TestAllocator(t *testing.T) {
 	t.Parallel()
 
 	kubeCore := framework.KubeClient.CoreV1()
-	svc, err := kubeCore.Services("agones-system").Get("gameserver-allocator", metav1.GetOptions{})
+	svc, err := kubeCore.Services("agones-system").Get("agones-allocator", metav1.GetOptions{})
 	if !assert.Nil(t, err) {
 		return
 	}

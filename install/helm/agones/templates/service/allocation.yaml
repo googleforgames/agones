@@ -13,11 +13,11 @@
 # limitations under the License.
 
 {{- if .Values.agones.allocator.install }}
-# Define a Service for the gameserver-allocator
+# Define a Service for the agones-allocator
 apiVersion: v1
 kind: Service
 metadata:
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
   labels:
     component: allocator
@@ -36,11 +36,11 @@ spec:
   type: {{ .Values.agones.allocator.http.serviceType }}
 
 ---
-# Deploy a pod to run the gameserver-allocator code
+# Deploy a pod to run the agones-allocator code
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
   labels:
     multicluster.agones.dev/role: allocator
@@ -75,7 +75,7 @@ spec:
       tolerations:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
       {{- end }}
-      serviceAccountName: gameserver-allocator
+      serviceAccountName: agones-allocator
       volumes:
       - name: tls
         secret:
@@ -103,7 +103,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
@@ -120,7 +120,7 @@ rules:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
@@ -129,11 +129,11 @@ metadata:
     heritage: {{ $.Release.Service }}
 
 ---
-# Bind the gameserver-allocator ServiceAccount to the gameserver-allocator ClusterRole
+# Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.name" $ }}
@@ -142,12 +142,12 @@ metadata:
     heritage: {{ $.Release.Service }}
 subjects:
 - kind: ServiceAccount
-  name: gameserver-allocator
+  name: agones-allocator
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: gameserver-allocator
+  name: agones-allocator
  
 {{- end }}
 
