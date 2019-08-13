@@ -37,7 +37,10 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
+		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
+			t.Parallel()
+
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
@@ -68,7 +71,10 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
+		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
+			t.Parallel()
+
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
@@ -177,7 +183,11 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
 
 	for _, strategy := range fixtures {
+		strategy := strategy
+
 		t.Run(string(strategy), func(t *testing.T) {
+			t.Parallel()
+
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 			fleet := defaultFleet()
 			fleet.Spec.Scheduling = strategy
