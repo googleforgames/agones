@@ -474,7 +474,7 @@ Install Prometheus server using [stable/prometheus](https://github.com/helm/char
 
 By default all exporters and alertmanager is disabled.
 
-You can use this to collect Agones [Metrics](../docs/metrics.md).
+You can use this to collect Agones [Metrics](../site/content/en/docs/Guides/metrics.md).
 
 See [`make minikube-setup-prometheus`](#make-minikube-setup-prometheus) and [`make kind-setup-prometheus`](#make-kind-setup-prometheus) to run the installation on Minikube or Kind.
 

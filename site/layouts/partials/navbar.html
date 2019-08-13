@@ -1,10 +1,10 @@
 {{ $cover := .HasShortcode "blocks/cover" }}
 <nav class="js-navbar-scroll navbar navbar-expand navbar-light {{ if not $cover }} nav-shadow {{ end }}flex-column flex-md-row td-navbar">
-	
+
 	<a id="agones-top" {{ if $cover }} style="display: none;" {{end}} class="navbar-brand" href="{{ .Site.Home.RelPermalink }}">
 		{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }} {{ end }}<span class="text-uppercase font-weight-bold">{{ .Site.Title }}</span>
 	</a>
-	
+
 	<div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
 		<ul class="navbar-nav mt-2 mt-lg-0">
 			{{ $p := . }}
@@ -18,7 +18,7 @@
 			</li>
 			{{ end }}
 			<li class="nav-item mr-4 mb-2 mb-lg-0">
-				<a class="nav-link" href="{{ .Site.Params.github_repo }}">Github</a>
+				<a class="nav-link" href="{{ .Site.Params.github_repo }}">GitHub</a>
 			</li>
 			<li class="nav-item dropdown d-none d-lg-block">
 				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
