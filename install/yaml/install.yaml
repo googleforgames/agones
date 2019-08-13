@@ -994,6 +994,7 @@ spec:
       heritage: Tiller
   template:
     metadata:
+      annotations:
       labels:
         multicluster.agones.dev/role: allocator
         app: agones

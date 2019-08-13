@@ -57,6 +57,10 @@ spec:
       heritage: {{ .Release.Service }}
   template:
     metadata:
+      annotations:
+{{- if .Values.agones.allocator.generateTLS }}
+        revision/tls-cert: {{ .Release.Revision | quote }}
+{{- end }}
       labels:
         multicluster.agones.dev/role: allocator
         app: {{ template "agones.name" . }}
