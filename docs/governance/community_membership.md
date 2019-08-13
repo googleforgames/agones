@@ -41,7 +41,7 @@ correctness issues, interactions with other parts of the system, etc.
 - Enabled [two-factor authentication](https://help.github.com/articles/about-two-factor-authentication)
   on their GitHub account
 - Have made multiple contributions to Agones.  Contribution must include:
-    - Authored at least 3 PRs on Github
+    - Authored at least 3 PRs on GitHub
     - Provided reviews on at least 4 PRs they did not author
     - Filing or commenting on issues on GitHub
 - Have read the [contributor guide](../../CONTRIBUTING.md)

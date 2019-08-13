@@ -10,7 +10,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Download
 
-Download the source {{< ghlink href="sdks/unity" >}}directly from Github{{< /ghlink >}}.
+Download the source {{< ghlink href="sdks/unity" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ async void SomeMethod()
 }
 ```
 
-To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `Shutdown()`. 
+To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `Shutdown()`.
 
 ```csharp
 bool ok = await agones.Shutdown();
