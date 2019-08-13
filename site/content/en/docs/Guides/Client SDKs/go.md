@@ -10,7 +10,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Installation
 
-`go get` the source, {{< ghlink href="sdks/go" >}}directly from Github{{< /ghlink >}}
+`go get` the source, {{< ghlink href="sdks/go" >}}directly from GitHub{{< /ghlink >}}
 
 ## Usage
 

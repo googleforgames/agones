@@ -11,7 +11,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Download
 
-Download the source {{< ghlink href="sdks/nodejs" >}}directly from Github{{< /ghlink >}}.
+Download the source {{< ghlink href="sdks/nodejs" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Prerequisites
 
