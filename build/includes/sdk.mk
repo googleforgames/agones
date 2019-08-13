@@ -137,7 +137,6 @@ run-sdk-conformance-no-build: ensure-build-sdk-image
 run-sdk-conformance-test:
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
 	$(MAKE) run-sdk-conformance-no-build
-	$(MAKE) run-sdk-command COMMAND=clean
 
 # Run a conformance test for all SDKs supported
 run-sdk-conformance-tests:
