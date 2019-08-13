@@ -29,6 +29,13 @@ steps:
     - '--key=$_HTMLTEST_CACHE_KEY'
   waitFor: ['-']
 
+- name: gcr.io/$PROJECT_ID/restore_cache
+  id: cpp-sdk-build-restore-cache
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_BUILD_CACHE_KEY'
+  waitFor: ['-']
+
 #
 # Creates the initial make + docker build platform
 #
@@ -119,18 +126,43 @@ steps:
 #
 
 - name: "make-docker"
-  id: build
+  id: build-images
   waitFor:
     - lint
-    - ensure-build-sdk-image-base
   dir: "build"
-  args: [ "-j", "4", "build"]
+  args: [ "-j", "4", "build-images"]
 - name: "make-docker"
   id: push-images
   waitFor:
-    - build
+    - build-images
   dir: "build"
-  args: [ "-j", "3", "push"]
+  args: [ "-j", "4", "push"]
+
+#
+# Build all the SDKs
+#
+
+- name: "make-docker"
+  id: build-sdks
+  waitFor:
+    - lint
+    - cpp-sdk-build-restore-cache
+    - ensure-build-sdk-image-base
+  dir: "build"
+  args: [ "-j", "4", "--output-sync=target", "build-sdks"]
+
+#
+# Cache the cpp sdk build directory, to speed up subsequent builds (considerably)
+#
+
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_BUILD_CACHE_KEY'
+    - '--path=sdks/cpp/.build'
+  id: cpp-sdk-build-save-cache
+  waitFor:
+    - build-sdks
 
 #
 # Run the all the automated tests (except e2e) in parallel
@@ -142,7 +174,6 @@ steps:
     - lint
     - ensure-build-sdk-image-base
     - htmltest-restore-cache
-    - build
   dir: "build"
   args: [ "-j", "5", "--output-sync=target", "test" ]
 
@@ -202,8 +233,7 @@ steps:
   dir: "build"
   args: [ "run-sdk-conformance-tests"]
   waitFor:
-    - build
-    - tests
+    - build-images
 
 #
 # Zip up artifacts and push to storage
@@ -211,13 +241,13 @@ steps:
 
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
-    - build
+    - build-sdks
     - tests
   dir: "sdks/cpp/.build"
   args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
-    - build
+    - build-images
     - tests
   dir: "cmd/sdk-server/bin"
   args: ['cp', '*.zip', 'gs://agones-artifacts/sdk-server']
@@ -225,6 +255,7 @@ steps:
 substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
+  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
 
 tags: ['ci']
 timeout: "1h"
