@@ -207,7 +207,7 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, time.Minute)
+	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
 }
 
