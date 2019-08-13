@@ -509,7 +509,7 @@
 - Node Affinity, Tolerations and Node selector support for helm chart [\#407](https://github.com/googleforgames/agones/issues/407)
 - As game server, I want to get the Agones sidecar version [\#310](https://github.com/googleforgames/agones/issues/310)
 - fix setAnnotation for simple-udp to use customized key & value [\#576](https://github.com/googleforgames/agones/pull/576) ([Yingxin-Jiang](https://github.com/Yingxin-Jiang))
-- Adding Github link and version dropdown to the navigation bar [\#566](https://github.com/googleforgames/agones/pull/566) ([markmandel](https://github.com/markmandel))
+- Adding GitHub link and version dropdown to the navigation bar [\#566](https://github.com/googleforgames/agones/pull/566) ([markmandel](https://github.com/markmandel))
 - simple-udp: added support for customizing labels and annotations by the caller [\#564](https://github.com/googleforgames/agones/pull/564) ([jkowalski](https://github.com/jkowalski))
 - Monitoring improvements [\#559](https://github.com/googleforgames/agones/pull/559) ([jkowalski](https://github.com/jkowalski))
 - Add support to create a development gameserver. [\#558](https://github.com/googleforgames/agones/pull/558) ([jeremyje](https://github.com/jeremyje))

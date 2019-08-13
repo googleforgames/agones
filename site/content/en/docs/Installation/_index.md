@@ -100,8 +100,8 @@ A [cluster][cluster] consists of at least one *cluster master* machine and multi
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
   --tags=game-server \
   --scopes=gke-default \
-  --num-nodes=3 \
-  --machine-type=n1-standard-2
+  --num-nodes=4 \
+  --machine-type=n1-standard-4
 ```
 
 Flag explanations:
@@ -109,8 +109,8 @@ Flag explanations:
 * cluster-version: Agones requires Kubernetes version 1.12.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
-* num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 3
-* machine-type: The type of machine to use for nodes. Default: n1-standard-2. Depending on the needs of you game, you may wish to [have a bigger machines](https://cloud.google.com/compute/docs/machine-types).
+* num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
+* machine-type: The type of machine to use for nodes. Default: n1-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 _Optional_: Create a dedicated node pool for the Agones controllers. If you choose to skip this step, the Agones
 controllers will share the default node pool with your game servers which is fine for kicking the tires but is not
@@ -121,6 +121,15 @@ gcloud container node-pools create agones-system \
   --cluster=[CLUSTER_NAME] \
   --node-taints agones.dev/agones-system=true:NoExecute \
   --node-labels agones.dev/agones-system=true \
+  --num-nodes=1
+```
+
+_Optional_: Create a node pool for [Metrics]({{< relref "../Guides/metrics.md" >}}) if you want to monitor the Agones system using Prometheus with Grafana or Stackdriver.
+```bash
+gcloud container node-pools create agones-metrics \
+  --cluster=[CLUSTER_NAME] \
+  --node-taints agones.dev/agones-metrics=true:NoExecute \
+  --node-labels agones.dev/agones-metrics=true \
   --num-nodes=1
 ```
 

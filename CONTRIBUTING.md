@@ -21,7 +21,7 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 
 ## Submitting code via Pull Requests
 
-- We follow the [Github Pull Request Model](https://help.github.com/articles/about-pull-requests/) for
+- We follow the [GitHub Pull Request Model](https://help.github.com/articles/about-pull-requests/) for
   all contributions.
 - For large bodies of work, we recommend creating an issue and labelling it
   "[kind/design](https://github.com/googleprivate/agones/issues?q=is%3Aissue+is%3Aopen+label%3Akind%2Fdesign)"
@@ -85,7 +85,7 @@ repository, we have a [community membership guide](./docs/governance/community_m
   A great intro video into coding for Controllers, and explaining Informers and Listers.
 - [@markmandel](https://github.com/markmandel) regularly streams his development of Agones on [Twitch](https://www.twitch.tv/markmandel).
   You can find the full archive on [YouTube](https://www.youtube.com/playlist?list=PLqqp1QEhKwa5aNivDIE4SS21ehE9Zt0VZ)
-  
+
 
 #### Coding and Development
 
