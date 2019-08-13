@@ -59,12 +59,15 @@ site-static-preview:
 site-deploy-preview: site-static-preview
 	$(MAKE) site-deploy SERVICE=preview
 
-site-test:
-	# generate actual html and run test against - provides a more accurate tests
-	$(MAKE) test-gen-api-docs
+hugo-test:
 	$(MAKE) site-static-preview
 	docker run --rm -t -e "TERM=xterm-256color" $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"mkdir -p /tmp/website && cp -r $(mount_path)/site/public /tmp/website/site && htmltest -c $(mount_path)/site/htmltest.yaml /tmp/website"
+
+site-test:
+	# generate actual html and run test against - provides a more accurate tests
+	$(MAKE) test-gen-api-docs
+	$(MAKE) hugo-test
 
 # generate site images, if they don't exist
 site-images: $(site_path)/static/diagrams/gameserver-states.dot.png $(site_path)/static/diagrams/gameserver-lifecycle.puml.png $(site_path)/static/diagrams/gameserver-reserved.puml.png

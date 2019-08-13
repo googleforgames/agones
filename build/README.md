@@ -436,8 +436,11 @@ Run the linter and tests
 #### `make site-server`
 Generate `https://agones.dev` website locally and host on `http://localhost:1313`
 
+#### `make hugo-test`
+Check the links in a website
+
 #### `make site-test`
-Check the links in website
+Check the links in a website, includes `test-gen-api-docs` target
 
 #### `make site-images`
 Create all the site images from dot and puml diagrams in /site/static/diagrams
