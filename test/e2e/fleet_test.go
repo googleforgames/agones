@@ -56,7 +56,10 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	fixtures := []bool{true, false}
 
 	for _, usePatch := range fixtures {
+		usePatch := usePatch
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
+			t.Parallel()
+
 			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet()
@@ -150,7 +153,11 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 	for _, usePatch := range fixtures {
 		for _, maxSurgeParam := range maxSurge {
+			usePatch := usePatch
+			maxSurgeParam := maxSurgeParam
 			t.Run(fmt.Sprintf("Use fleet Patch %t %s", usePatch, maxSurgeParam), func(t *testing.T) {
+				t.Parallel()
+
 				client := framework.AgonesClient.AgonesV1()
 
 				flt := defaultFleet()
@@ -255,7 +262,10 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 	fixtures := []bool{false, true}
 
 	for _, usePatch := range fixtures {
+		usePatch := usePatch
 		t.Run("Use fleet Patch "+fmt.Sprint(usePatch), func(t *testing.T) {
+			t.Parallel()
+
 			client := framework.AgonesClient.AgonesV1()
 
 			flt := defaultFleet()
@@ -333,7 +343,10 @@ func TestFleetUpdates(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
+		k := k
+		v := v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()
 
 			flt := v()
@@ -430,6 +443,8 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 }
 
 func TestReservedGameServerInFleet(t *testing.T) {
+	t.Parallel()
+
 	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet()
@@ -703,6 +718,8 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 // test scale subresource usage and its ability to change Fleet Replica size.
 // Both scaling up and down.
 func TestCreateFleetAndUpdateScaleSubresource(t *testing.T) {
+	t.Parallel()
+
 	client := framework.AgonesClient.AgonesV1()
 
 	flt := defaultFleet()
@@ -898,7 +915,10 @@ func TestFleetRecreateGameServers(t *testing.T) {
 	}
 
 	for k, v := range tests {
+		k := k
+		v := v
 		t.Run(k, func(t *testing.T) {
+			t.Parallel()
 			client := framework.AgonesClient.AgonesV1()
 			flt := defaultFleet()
 			// add more game servers, to hunt for race conditions
