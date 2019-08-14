@@ -35,6 +35,7 @@ Table of Contents
         * [make build-sdks](#make-build-sdks)
         * [make build-sdk-cpp](#make-build-sdk-cpp)
         * [make run-sdk-conformance-tests](#make-run-sdk-conformance-tests)
+        * [make clean-sdk-conformance-tests](#make-clean-sdk-conformance-tests)
         * [make test](#make-test)
         * [make push](#make-push)
         * [make install](#make-install)
@@ -429,6 +430,9 @@ Build, run and clean conformance test for a specific Agones SDK.
 #### `make run-sdk-conformance-tests`
 Run SDK conformance test.
 Run SDK server (sidecar) in test mode (which would record all GRPC requests) versus all SDK test clients which should generate those requests. All methods are verified.
+
+#### `make clean-sdk-conformance-tests`
+Clean leftover binary and package files after running SDK conformance tests.
 
 #### `make test`
 Run the linter and tests

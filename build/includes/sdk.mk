@@ -143,3 +143,8 @@ run-sdk-conformance-tests:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
+
+# Clean package directories and binary files left
+# after building conformance tests for all SDKs supported
+clean-sdk-conformance-tests:
+	$(MAKE) run-all-sdk-command COMMAND=clean

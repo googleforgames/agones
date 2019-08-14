@@ -17,5 +17,5 @@
 set -ex
 cd /go/src/agones.dev/agones/test/sdk/rust
 cargo clean
-rm /go/src/agones.dev/agones/test/sdk/rust/Cargo.lock
+rm -f /go/src/agones.dev/agones/test/sdk/rust/Cargo.lock
 rm -rf /go/src/agones.dev/agones/test/sdk/rust/target

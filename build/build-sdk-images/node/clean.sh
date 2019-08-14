@@ -14,5 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ex
 rm -rf /go/src/agones.dev/agones/test/sdk/nodejs/node_modules
-rm /go/src/agones.dev/agones/test/sdk/nodejs/package-lock.json
+rm -f /go/src/agones.dev/agones/test/sdk/nodejs/package-lock.json
