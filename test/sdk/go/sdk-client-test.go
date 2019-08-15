@@ -23,24 +23,11 @@ import (
 	goSdk "agones.dev/agones/sdks/go"
 )
 
-const attempts = 10
-
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.Println("Client is starting")
 	time.Sleep(100 * time.Millisecond)
-	var sdk *goSdk.SDK
-	var err error
-	for i := 0; i < attempts; i++ {
-		sdk, err = goSdk.NewSDK()
-		if err != nil {
-			log.Printf("Could not connect to sdk: %v\n", err)
-		} else {
-			log.Println("SDK initialised")
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
+	sdk, err := goSdk.NewSDK()
 	if err != nil {
 		log.Fatalf("Could not connect to sdk: %v\n", err)
 	}
