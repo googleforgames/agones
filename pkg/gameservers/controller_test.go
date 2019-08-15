@@ -909,7 +909,7 @@ func TestControllerApplyGameServerAddressAndPort(t *testing.T) {
 		return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
 	})
 
-	_, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	_, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.nodeSynced)
 	defer cancel()
 
 	gs, err := c.applyGameServerAddressAndPort(gsFixture, pod)
