@@ -51,6 +51,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not send ready message %s", err)
 	}
+	if err = sdk.Reserve(5 * time.Second); err != nil {
+		log.Fatalf("Could not send Reserve command: %s", err)
+	}
 	err = sdk.Allocate()
 	if err != nil {
 		log.Fatalf("Err sending allocate request %s", err)
@@ -76,9 +79,6 @@ func main() {
 	err = sdk.SetAnnotation("UID", uid)
 	if err != nil {
 		log.Fatalf("Could not set annotation: %s", err)
-	}
-	if err = sdk.Reserve(5 * time.Second); err != nil {
-		log.Fatalf("Could not send Reserve command: %s", err)
 	}
 	err = sdk.Shutdown()
 	if err != nil {

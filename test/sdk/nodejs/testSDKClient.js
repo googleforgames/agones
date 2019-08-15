@@ -32,10 +32,6 @@ const connect = async () => {
 			}
 		});
 		await agonesSDK.ready();
-		setTimeout(() => {
-			console.log('send allocate request');
-			agonesSDK.allocate();
-		}, 1000);
 
 		let result = await agonesSDK.getGameServer();
 		await agonesSDK.setLabel('label', result.objectMeta.creationTimestamp.toString());
@@ -45,6 +41,11 @@ const connect = async () => {
 		console.log('health', result);
 
 		await agonesSDK.reserve(5);
+
+		setTimeout(() => {
+			console.log('send allocate request');
+			agonesSDK.allocate();
+		}, 1000);
 
 		setTimeout(() => {
 			console.log('send shutdown request');
