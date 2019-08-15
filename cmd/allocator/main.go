@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// TODO: add liveness probe
-	http.HandleFunc("/v1/gameserverallocation", h.postOnly(h.allocateHandler))
+	http.HandleFunc("/v1alpha1/gameserverallocation", h.postOnly(h.allocateHandler))
 
 	caCertPool, err := getCACertPool(certDir)
 	if err != nil {

@@ -52,7 +52,7 @@ func TestAllocator(t *testing.T) {
 	}
 
 	port := svc.Spec.Ports[0]
-	requestURL := fmt.Sprintf("https://%s:%d/v1/gameserverallocation", svc.Status.LoadBalancer.Ingress[0].IP, port.Port)
+	requestURL := fmt.Sprintf("https://%s:%d/v1alpha1/gameserverallocation", svc.Status.LoadBalancer.Ingress[0].IP, port.Port)
 
 	flt, err := createFleet()
 	if !assert.Nil(t, err) {

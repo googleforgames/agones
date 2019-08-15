@@ -58,13 +58,16 @@ var (
 // is being run for local development, and doesn't connect to the
 // Kubernetes cluster
 type LocalSDKServer struct {
-	gsMutex          sync.RWMutex
-	gs               *sdk.GameServer
-	update           chan struct{}
-	updateObservers  sync.Map
-	requestSequence  []string
-	expectedSequence []string
-	testMode         bool
+	gsMutex           sync.RWMutex
+	gs                *sdk.GameServer
+	update            chan struct{}
+	updateObservers   sync.Map
+	requestSequence   []string
+	expectedSequence  []string
+	gsState           agonesv1.GameServerState
+	gsReserveDuration *time.Duration
+	reserveTimer      *time.Timer
+	testMode          bool
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
@@ -76,6 +79,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		updateObservers: sync.Map{},
 		requestSequence: make([]string, 0),
 		testMode:        false,
+		gsState:         agonesv1.GameServerStateScheduled,
 	}
 
 	if filePath != "" {
@@ -171,10 +175,22 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 	}
 }
 
+func (l *LocalSDKServer) updateState(newState agonesv1.GameServerState) {
+	l.gsState = newState
+	l.gs.Status.State = string(l.gsState)
+}
+
 // Ready logs that the Ready request has been received
 func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Ready request has been received!")
 	l.recordRequest("ready")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	// Follow the GameServer state diagram
+	l.updateState(agonesv1.GameServerStateReady)
+	l.stopReserveTimer()
+	l.update <- struct{}{}
 	return &sdk.Empty{}, nil
 }
 
@@ -182,6 +198,12 @@ func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) 
 func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Allocate request has been received!")
 	l.recordRequest("allocate")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+	l.updateState(agonesv1.GameServerStateAllocated)
+	l.stopReserveTimer()
+	l.update <- struct{}{}
+
 	return &sdk.Empty{}, nil
 }
 
@@ -189,6 +211,11 @@ func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, erro
 func (l *LocalSDKServer) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
 	logrus.Info("Shutdown request has been received!")
 	l.recordRequest("shutdown")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+	l.updateState(agonesv1.GameServerStateShutdown)
+	l.stopReserveTimer()
+	l.update <- struct{}{}
 	return &sdk.Empty{}, nil
 }
 
@@ -246,7 +273,7 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 	return &sdk.Empty{}, nil
 }
 
-// GetGameServer returns a dummy game server.
+// GetGameServer returns current GameServer configuration.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
 	logrus.Info("getting GameServer details")
 	l.recordRequest("gameserver")
@@ -255,7 +282,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 	return l.gs, nil
 }
 
-// WatchGameServer will return a dummy GameServer (with no changes), 3 times, every 5 seconds
+// WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	logrus.Info("connected to watch GameServer...")
 	observer := make(chan struct{})
@@ -281,10 +308,40 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 }
 
 // Reserve moves this GameServer to the Reserved state for the Duration specified
-func (l *LocalSDKServer) Reserve(_ context.Context, d *sdk.Duration) (*sdk.Empty, error) {
+func (l *LocalSDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, error) {
 	logrus.WithField("duration", d).Info("Reserve request has been received!")
 	l.recordRequest("reserve")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+	if d.Seconds > 0 {
+		duration := time.Duration(d.Seconds) * time.Second
+		l.gsReserveDuration = &duration
+		l.resetReserveAfter(ctx, *l.gsReserveDuration)
+	}
+
+	l.updateState(agonesv1.GameServerStateReserved)
+	l.update <- struct{}{}
+
 	return &sdk.Empty{}, nil
+}
+
+func (l *LocalSDKServer) resetReserveAfter(ctx context.Context, duration time.Duration) {
+	if l.reserveTimer != nil {
+		l.reserveTimer.Stop()
+	}
+
+	l.reserveTimer = time.AfterFunc(duration, func() {
+		if _, err := l.Ready(ctx, &sdk.Empty{}); err != nil {
+			logrus.WithError(err).Error("error returning to Ready after reserved ")
+		}
+	})
+}
+
+func (l *LocalSDKServer) stopReserveTimer() {
+	if l.reserveTimer != nil {
+		l.reserveTimer.Stop()
+	}
+	l.gsReserveDuration = nil
 }
 
 // Close tears down all the things
