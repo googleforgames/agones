@@ -12,6 +12,9 @@ The REST API can be accessed from `http://localhost:59358/` from the game server
 
 Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
 
+> Note: The SDK Server sidecar process may startup after your game server binary. So your REST SDK API calls should
+> contain some retry logic to take this into account. 
+
 ## Generating clients
 
 While you can hand write REST integrations, we also have a {{< ghlink href="sdk.swagger.json" >}}generated OpenAPI/Swagger definition{{< /ghlink >}}
