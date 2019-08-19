@@ -23,6 +23,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/admission/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -91,7 +92,20 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 
 			review, err = oh.handler(review)
 			if err != nil {
-				return errors.Wrapf(err, "error with webhook handler for path %v", path)
+				causes := make([]metav1.StatusCause, 0)
+				review.Response.Allowed = false
+				details := metav1.StatusDetails{
+					Name:   review.Request.Name,
+					Group:  review.Request.Kind.Group,
+					Kind:   review.Request.Kind.Kind,
+					Causes: causes,
+				}
+				review.Response.Result = &metav1.Status{
+					Status:  metav1.StatusFailure,
+					Message: err.Error(),
+					Reason:  metav1.StatusReasonInvalid,
+					Details: &details,
+				}
 			}
 		}
 	}
