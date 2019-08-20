@@ -9,7 +9,7 @@ description: >
 
 ## Prerequisites
 
-- Terraform v0.11.13
+- Terraform v0.12.3
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
 - Access to the the Kubernetes hosting provider you are using (e.g. `gcloud` or `az` utility installed)
 - Git
