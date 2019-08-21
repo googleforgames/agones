@@ -92,6 +92,21 @@ properties:
               type: integer
               minimum: 1
               maximum: 65535
+      logging:
+        type: object
+        title: Define logging levels for agones system components
+        properties:
+          sdkServer:
+            type: string 
+            description: |
+              sdkServer logging parameter has three options:
+              - "Info" (default) The SDK server will output all messages except for debug messages
+              - "Debug" The SDK server will output all messages including debug messages
+              - "Error" The SDK server will only output error messages
+            enum:
+            - Error
+            - Info
+            - Debug
       scheduling:
         type: string
         enum:

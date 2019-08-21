@@ -165,7 +165,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		logfields.GameServerKey,
 		strings.Join([]string{agones.GroupName, s.namespace, s.gameServerName}, "."))
 
-	s.logger.Info("created GameServer sidecar")
+	s.logger.Info("Created GameServer sidecar")
 
 	return s, nil
 }
@@ -191,9 +191,22 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 		return err
 	}
 
+	logLevel := "info"
 	// grab configuration details
+	if gs.Spec.Logging.SdkServer != "" {
+		logLevel = strings.ToLower(gs.Spec.Logging.SdkServer)
+	}
+	s.logger.WithField("logLevel", logLevel).Info("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(logLevel)
+	if err == nil {
+		s.logger.Logger.SetLevel(level)
+	} else {
+		s.logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		s.logger.Logger.SetLevel(logrus.InfoLevel)
+	}
+
 	s.health = gs.Spec.Health
-	s.logger.WithField("health", s.health).Info("setting health configuration")
+	s.logger.WithField("health", s.health).Info("Setting health configuration")
 	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
 	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
 
@@ -214,7 +227,7 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				s.logger.WithError(err).Info("health check: http server closed")
+				s.logger.WithError(err).Info("Health check: http server closed")
 			} else {
 				err = errors.Wrap(err, "Could not listen on :8080")
 				runtime.HandleError(s.logger.WithError(err), err)
@@ -319,7 +332,7 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsLabels, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateLabels() error {
-	s.logger.WithField("labels", s.gsLabels).Info("updating label")
+	s.logger.WithField("labels", s.gsLabels).Info("Updating label")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -534,7 +547,7 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
-		s.logger.WithField("gameServerName", s.gameServerName).Info("has failed health check")
+		s.logger.WithField("gameServerName", s.gameServerName).Info("GameServer has failed health check")
 		s.enqueueState(agonesv1.GameServerStateUnhealthy)
 	}
 }
