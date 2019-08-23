@@ -40,6 +40,7 @@ func recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Mea
 	}
 }
 
+// MustTagKey creates a new `tag.Key` from a string, panic if the key is not a valid.
 func MustTagKey(key string) tag.Key {
 	t, err := tag.NewKey(key)
 	if err != nil {

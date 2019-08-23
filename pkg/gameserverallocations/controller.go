@@ -333,7 +333,7 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	return c.serialisation(r, w, out, scheme.Codecs)
 }
 
-func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alpha1.GameServerAllocation, allocErr error) error {
+func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *allocationv1.GameServerAllocation, allocErr error) error {
 	tags := []tag.Mutator{
 		tag.Insert(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)),
 		tag.Insert(keyClusterName, "none"),
@@ -356,12 +356,12 @@ func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *v1alph
 			tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
 		}
 		// sets the fleet name tag if possible
-		if out.Status.State == v1alpha1.GameServerAllocationAllocated {
+		if out.Status.State == allocationv1.GameServerAllocationAllocated {
 			gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
 			if err != nil {
 				return err
 			}
-			fleetName := gs.Labels[stablev1alpha1.FleetNameLabel]
+			fleetName := gs.Labels[agonesv1.FleetNameLabel]
 			if fleetName != "" {
 				tags = append(tags, tag.Update(keyFleetName, fleetName))
 			}

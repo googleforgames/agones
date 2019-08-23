@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -63,31 +63,8 @@ type handler func(w http.ResponseWriter, r *http.Request)
 func main() {
 	conf := parseEnvFlags()
 
-	// Stackdriver metrics
-	if conf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register stackdriver exporter")
-		}
-		// It is imperative to invoke flush before your main function exits
-		defer sd.Flush()
-	}
-
-	var health healthcheck.Handler
-
-	// Prometheus metrics
-	if conf.PrometheusMetrics {
-		registry := prom.NewRegistry()
-		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register prometheus exporter")
-		}
-		http.Handle("/metrics", metricHandler)
-		health = healthcheck.NewMetricsHandler(registry, "agones")
-	} else {
-		health = healthcheck.NewHandler()
-	}
-	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
+	health, closer := setupMetricsRecorder(conf)
+	defer closer()
 
 	// http.DefaultServerMux is used for http connection, not for https
 	http.Handle("/", health)
@@ -108,7 +85,7 @@ func main() {
 		agonesClient: agonesClient,
 	}
 
-	// mux for https server
+	// mux for https server to serve gameserver allocations
 	httpsMux := http.NewServeMux()
 	httpsMux.HandleFunc("/v1alpha1/gameserverallocation", h.postOnly(h.allocateHandler))
 
@@ -130,21 +107,15 @@ func main() {
 		},
 	}
 
+	// listen on https to serve allocations
 	go func() {
-		var err error
-		lock := sync.Mutex{}
-		// force a pod restart if the https server exits.
-		health.AddLivenessCheck("allocator-https", func() error {
-			lock.Lock()
-			defer lock.Unlock()
-			return err
-		})
-		exitErr := srv.ListenAndServeTLS(tlsDir+"tls.crt", tlsDir+"tls.key")
-		lock.Lock()
-		err = exitErr
-		lock.Unlock()
+		err := srv.ListenAndServeTLS(tlsDir+"tls.crt", tlsDir+"tls.key")
 		logger.WithError(err).Fatal("allocation service crashed")
+		os.Exit(1)
 	}()
+
+	// Finally listen on 8080 (http) and block the main goroutine
+	// this is used to serve /live and /ready handlers for Kubernetes probes.
 	err = http.ListenAndServe(":8080", http.DefaultServeMux)
 	logger.WithError(err).Fatal("allocation service crashed")
 }
@@ -272,4 +243,33 @@ func registerMetricViews() {
 	if err := view.Register(ochttp.DefaultServerViews...); err != nil {
 		logger.WithError(err).Error("could not register view")
 	}
+}
+
+func setupMetricsRecorder(conf config) (health healthcheck.Handler, closer func()) {
+	health = healthcheck.NewHandler()
+	closer = func() {}
+
+	// Stackdriver metrics
+	if conf.Stackdriver {
+		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register stackdriver exporter")
+		}
+		// It is imperative to invoke flush before your main function exits
+		closer = func() { sd.Flush() }
+	}
+
+	// Prometheus metrics
+	if conf.PrometheusMetrics {
+		registry := prom.NewRegistry()
+		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
+		if err != nil {
+			logger.WithError(err).Fatal("Could not register prometheus exporter")
+		}
+		http.Handle("/metrics", metricHandler)
+		health = healthcheck.NewMetricsHandler(registry, "agones")
+	}
+
+	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
+	return
 }
