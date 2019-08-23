@@ -13,7 +13,7 @@ A full GameServer specification is available below and in the {{< ghlink href="e
 apiVersion: "agones.dev/v1"
 kind: GameServer
 # GameServer Metadata
-# https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#objectmeta-v1-meta
+# https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#objectmeta-v1-meta
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -50,7 +50,7 @@ spec:
     # Defaults to 3. Minimum value is 1
     failureThreshold: 3
   # Pod template configuration
-  # https://v1-8.docs.kubernetes.io/docs/api-reference/v1.8/#podtemplate-v1-core
+  # https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplate-v1-core
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:

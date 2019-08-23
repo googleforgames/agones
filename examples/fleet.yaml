@@ -20,9 +20,9 @@
 
 apiVersion: "agones.dev/v1"
 kind: Fleet
+# Fleet Metadata
+# https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#objectmeta-v1-meta
 metadata:
-  # Fleet Metadata
-  # https://v1-9.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.9/#objectmeta-v1-meta
   name: fleet-example
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
