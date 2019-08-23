@@ -214,6 +214,16 @@ eksctl create cluster \
 
 > Note: EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
 
+#### Allowing UDP Traffic
+
+For Agones to work correctly, we need to allow UDP traffic to pass through to our EKS cluster worker nodes. To achieve this, we must update the workers' nodepool SG (Security Group) with the proper rule. A simple way to do that is:
+
+* Login to the AWS Management Console
+* Go to the VPC Dashboard and select **Security Groups**
+* Find the Security Group for the workers nodepool, which will be named something like `eksctl-[cluster-name]-nodegroup-[cluster-name]-workers/SG`
+* Select **Inbound Rules**
+* **Edit Rules** to add a new **Custom UDP Rule** with a 7000-8000 port range and an appropriate **Source** CIDR range (`0.0.0.0/0` allows all traffic)
+
 ### Follow Normal Instructions to Install
 
 Continue to [Installing Agones](#installing-agones).
