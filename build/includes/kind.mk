@@ -49,16 +49,10 @@ kind-install:
 
 # pushses the current dev version of agones to the kind single node cluster.
 kind-push:
-	BUNDLE_FILE=$$(mktemp -d)/agones.tar.gz; \
-	docker save \
-		$(sidecar_tag) \
-		$(controller_tag) \
-		$(ping_tag) \
-		$(allocator_tag) \
-		-o $$BUNDLE_FILE; \
-	docker cp $$BUNDLE_FILE $(KIND_CONTAINER_NAME):/agones.tar.gz; \
-	docker exec $(KIND_CONTAINER_NAME) docker load -i /agones.tar.gz; \
-	rm -f $$BUNDLE_FILE
+	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image $(ping_tag) --name="$(KIND_PROFILE)"
+	kind load docker-image $(allocator_tag) --name="$(KIND_PROFILE)"
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:
