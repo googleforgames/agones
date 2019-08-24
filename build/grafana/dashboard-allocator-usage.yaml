@@ -103,7 +103,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(process_open_fds{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"})",
+              "expr": "sum(process_open_fds{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -184,7 +184,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "max(go_memstats_last_gc_time_seconds{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"} * 1000)",
+              "expr": "max(go_memstats_last_gc_time_seconds{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"} * 1000)",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -245,21 +245,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(process_resident_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"}) by (kubernetes_pod_name)",
+              "expr": "sum(process_resident_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}) by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "resident - {{kubernetes_pod_name}}",
               "refId": "A"
             },
             {
-              "expr": "sum(process_virtual_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"})by (kubernetes_pod_name)",
+              "expr": "sum(process_virtual_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "virtual - {{kubernetes_pod_name}}",
               "refId": "B"
             },
             {
-              "expr": "sum(go_memstats_alloc_bytes{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"})by (kubernetes_pod_name)",
+              "expr": "sum(go_memstats_alloc_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "go alloc - {{kubernetes_pod_name}}",
@@ -345,14 +345,14 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
+              "expr": "go_goroutines{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "go routines",
               "refId": "A"
             },
             {
-              "expr": "go_threads{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
+              "expr": "go_threads{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "threads",
@@ -440,7 +440,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum (irate (process_cpu_seconds_total{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"}[1m])) by (kubernetes_pod_name)",
+              "expr": "sum (irate (process_cpu_seconds_total{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[1m])) by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{kubernetes_pod_name}}",
@@ -526,7 +526,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": " avg(rate(go_gc_duration_seconds_sum{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"}[5m]) / rate(go_gc_duration_seconds_count{app=\"agones\",kubernetes_pod_name=~\"gameserver-allocator-.*\"}[5m]))",
+              "expr": " avg(rate(go_gc_duration_seconds_sum{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[5m]) / rate(go_gc_duration_seconds_count{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[5m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "duration",

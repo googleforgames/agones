@@ -97,6 +97,10 @@ spec:
           httpGet:
             path: /live
             port: 8080
+          initialDelaySeconds: {{ .Values.agones.allocator.healthCheck.initialDelaySeconds }}
+          periodSeconds: {{ .Values.agones.allocator.healthCheck.periodSeconds }}
+          failureThreshold: {{ .Values.agones.allocator.healthCheck.failureThreshold }}
+          timeoutSeconds: {{ .Values.agones.allocator.healthCheck.timeoutSeconds }}
         readinessProbe:
           httpGet:
             path: /ready
