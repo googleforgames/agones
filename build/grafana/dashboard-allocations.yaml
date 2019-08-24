@@ -40,21 +40,294 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "id": 8,
-      "iteration": 1549050426140,
+      "iteration": 1564432641328,
       "links": [],
       "panels": [
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorPostfix": false,
+          "colorPrefix": false,
+          "colorValue": true,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "format": "s",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 0,
+            "y": 0
+          },
+          "hideTimeOverride": false,
+          "id": 16,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": true,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_sum[$interval]))\n/\nsum(rate(agones_gameserver_allocations_duration_seconds_count[$interval]))",
+              "format": "time_series",
+              "instant": false,
+              "intervalFactor": 1,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "0.5,3,10",
+          "timeFrom": "30m",
+          "timeShift": null,
+          "title": "Average latency",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "format": "reqps",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 14,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "pluginVersion": "6.2.4",
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{status!=\"Allocated\"}[$interval]))",
+              "format": "time_series",
+              "hide": false,
+              "instant": true,
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A"
+            }
+          ],
+          "thresholds": "",
+          "timeFrom": "30m",
+          "timeShift": null,
+          "title": "Allocation Errors rate",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "current"
+        },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
+          "fill": 4,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 0
+          },
+          "id": 12,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": true,
+            "min": true,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.5,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "50%",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.9,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "90%",
+              "refId": "B"
+            },
+            {
+              "expr": "histogram_quantile(0.99,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "99%",
+              "refId": "C"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "GameServer Allocations Latency",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "description": "",
           "fill": 1,
           "gridPos": {
             "h": 9,
             "w": 12,
             "x": 0,
-            "y": 0
+            "y": 8
           },
           "id": 8,
           "legend": {
@@ -74,27 +347,28 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "agones_fleet_allocations_count{fleet_name=~\"$fleet\"}",
+              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{fleet_name=~\"$fleet\"}[$interval])) by (status)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "used {{fleet_name}}",
+              "legendFormat": "{{status}}",
               "refId": "A"
             },
             {
-              "expr": "agones_gameservers_count{fleet_name=~\"$fleet\",type=\"Ready\"}",
+              "expr": "",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "free {{fleet_name}}",
+              "legendFormat": "",
               "refId": "B"
             },
             {
@@ -109,7 +383,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "GameServer allocations count by fleet",
+          "title": "GameServer allocations rate by status",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -156,7 +430,7 @@ data:
             "h": 9,
             "w": 12,
             "x": 12,
-            "y": 0
+            "y": 8
           },
           "id": 10,
           "legend": {
@@ -176,17 +450,18 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(agones_fleet_allocations_count{fleet_name=~\"$fleet\"}[$interval])",
+              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{fleet_name=~\"$fleet\",}[$interval])) by (fleet_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{fleet_name}}",
@@ -233,10 +508,98 @@ data:
             "align": false,
             "alignLevel": null
           }
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "cacheTimeout": null,
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 2,
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 17
+          },
+          "id": 18,
+          "legend": {
+            "alignAsTable": true,
+            "avg": false,
+            "current": true,
+            "max": false,
+            "min": false,
+            "rightSide": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{status=\"Allocated\"}[$interval])) by (node_name)",
+              "format": "heatmap",
+              "intervalFactor": 1,
+              "legendFormat": "{{node_name}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Allocations rate per node",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         }
       ],
       "refresh": "10s",
-      "schemaVersion": 16,
+      "schemaVersion": 18,
       "style": "dark",
       "tags": [
         "agones",
@@ -346,7 +709,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-30m",
+        "from": "now-5m",
         "to": "now"
       },
       "timepicker": {
@@ -377,5 +740,5 @@ data:
       "timezone": "",
       "title": "Agones  Allocations",
       "uid": "TfUv6ylmk",
-      "version": 13
+      "version": 1
     }
