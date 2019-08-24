@@ -80,15 +80,15 @@ var (
 	keyStatus             = metrics.MustTagKey("status")
 	keySchedulingStrategy = metrics.MustTagKey("scheduling_strategy")
 
-	gameServerAllocationsTotalStats = stats.Int64("gameserver_allocations/total", "The total of gameserver allocations", "1")
+	gameServerAllocationsLatency = stats.Float64("gameserver_allocations/latency", "The duration of gameserver allocations", "s")
 )
 
 func init() {
 	runtime.Must(view.Register(&view.View{
-		Name:        "gameserver_allocations_total",
-		Measure:     gameServerAllocationsTotalStats,
-		Description: "The total of gameserver allocations created.",
-		Aggregation: view.Count(),
+		Name:        "gameserver_allocations_duration_seconds",
+		Measure:     gameServerAllocationsLatency,
+		Description: "The distribution of gameserver allocation requests latencies.",
+		Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
 		TagKeys:     []tag.Key{keyFleetName, keyNodeName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 	}))
 }
@@ -270,7 +270,15 @@ func (c *Controller) loggerForGameServerAllocation(gsa *allocationv1.GameServerA
 
 // allocationHandler CRDHandler for allocating a gameserver. Only accepts POST
 // commands
-func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, namespace string) error {
+func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, namespace string) (err error) {
+	latency := c.newLatencyRecorder(r.Context())
+	defer func() {
+		if err != nil {
+			latency.setError()
+		}
+		latency.record()
+	}()
+
 	if r.Body != nil {
 		defer r.Body.Close() // nolint: errcheck
 	}
@@ -280,10 +288,11 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 	if r.Method != http.MethodPost {
 		log.Warn("allocation handler only supports POST")
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
-		return nil
+		latency.setError()
+		return
 	}
-
-	gsa, err := c.allocationDeserialization(r, namespace)
+	var gsa *allocationv1.GameServerAllocation
+	gsa, err = c.allocationDeserialization(r, namespace)
 	if err != nil {
 		return err
 	}
@@ -305,15 +314,16 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 		var gvks []schema.GroupVersionKind
 		gvks, _, err = apiserver.Scheme.ObjectKinds(status)
 		if err != nil {
-			return errors.Wrap(err, "could not find objectkinds for status")
+			err = errors.Wrap(err, "could not find objectkinds for status")
 		}
 
 		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
 
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		return c.serialisation(r, w, status, apiserver.Codecs)
+		err = c.serialisation(r, w, status, apiserver.Codecs)
+		return
 	}
-
+	latency.setRequest(gsa)
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
 	var out *allocationv1.GameServerAllocation
 	if gsa.Spec.MultiClusterSetting.Enabled {
@@ -322,57 +332,103 @@ func (c *Controller) allocationHandler(w http.ResponseWriter, r *http.Request, n
 		out, err = c.allocateFromLocalCluster(gsa)
 	}
 
-	if metricErr := c.recordAllocationCount(r.Context(), gsa, out, err); metricErr != nil {
-		c.baseLogger.WithError(metricErr).Warn("failed to record allocation count metrics.")
-	}
-
 	if err != nil {
 		return err
 	}
-
-	return c.serialisation(r, w, out, scheme.Codecs)
+	latency.setResponse(out)
+	err = c.serialisation(r, w, out, scheme.Codecs)
+	return err
 }
 
-func (c *Controller) recordAllocationCount(rCtx context.Context, in, out *allocationv1.GameServerAllocation, allocErr error) error {
-	tags := []tag.Mutator{
-		tag.Insert(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)),
-		tag.Insert(keyClusterName, "none"),
-		tag.Insert(keySchedulingStrategy, string(in.Spec.Scheduling)),
-		tag.Insert(keyFleetName, "none"),
-		tag.Insert(keyNodeName, "none"),
-		tag.Insert(keyStatus, "none"),
-	}
+// default set of tags for latency metric
+var latencyTags = []tag.Mutator{
+	tag.Insert(keyMultiCluster, "none"),
+	tag.Insert(keyClusterName, "none"),
+	tag.Insert(keySchedulingStrategy, "none"),
+	tag.Insert(keyFleetName, "none"),
+	tag.Insert(keyNodeName, "none"),
+	tag.Insert(keyStatus, "none"),
+}
 
+type latencyRecorder struct {
+	ctx              context.Context
+	gameServerLister listerv1.GameServerLister
+	logger           *logrus.Entry
+	start            time.Time
+}
+
+// newLatencyRecorder creates a new gsa latency recorder.
+func (c *Controller) newLatencyRecorder(ctx context.Context) *latencyRecorder {
+	ctx, err := tag.New(ctx, latencyTags...)
+	if err != nil {
+		c.baseLogger.WithError(err).Warn("failed to tag latency recorder.")
+	}
+	return &latencyRecorder{
+		ctx:              ctx,
+		gameServerLister: c.gameServerLister,
+		logger:           c.baseLogger,
+		start:            time.Now(),
+	}
+}
+
+// mutate the current set of metric tags
+func (r *latencyRecorder) mutate(m ...tag.Mutator) {
+	var err error
+	r.ctx, err = tag.New(r.ctx, m...)
+	if err != nil {
+		r.logger.WithError(err).Warn("failed to mutate request context.")
+	}
+}
+
+// setStatus set the latency status tag.
+func (r *latencyRecorder) setStatus(status string) {
+	r.mutate(tag.Update(keyStatus, status))
+}
+
+// setError set the latency status tag as error.
+func (r *latencyRecorder) setError() {
+	r.mutate(tag.Update(keyStatus, "error"))
+}
+
+// setRequest set request metric tags.
+func (r *latencyRecorder) setRequest(in *allocationv1.GameServerAllocation) {
+	tags := []tag.Mutator{
+		tag.Update(keySchedulingStrategy, string(in.Spec.Scheduling)),
+	}
 	if in.ClusterName != "" {
 		tags = append(tags, tag.Update(keyClusterName, in.ClusterName))
 	}
+	tags = append(tags, tag.Update(keyMultiCluster, strconv.FormatBool(in.Spec.MultiClusterSetting.Enabled)))
+	r.mutate(tags...)
+}
 
-	if allocErr != nil {
-		tags = append(tags, tag.Update(keyStatus, "error"))
+// setResponse set response metric tags.
+func (r *latencyRecorder) setResponse(out *allocationv1.GameServerAllocation) {
+	if out == nil {
+		return
 	}
-	if out != nil {
-		tags = append(tags, tag.Update(keyStatus, string(out.Status.State)))
-		if out.Status.NodeName != "" {
-			tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
+	r.setStatus(string(out.Status.State))
+	var tags []tag.Mutator
+	if out.Status.NodeName != "" {
+		tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
+	}
+	// sets the fleet name tag if possible
+	if out.Status.State == allocationv1.GameServerAllocationAllocated {
+		gs, err := r.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
+		if err != nil {
+			r.logger.WithError(err).Warnf("failed to get gameserver:%s namespace:%s", out.Status.GameServerName, out.Namespace)
 		}
-		// sets the fleet name tag if possible
-		if out.Status.State == allocationv1.GameServerAllocationAllocated {
-			gs, err := c.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
-			if err != nil {
-				return err
-			}
-			fleetName := gs.Labels[agonesv1.FleetNameLabel]
-			if fleetName != "" {
-				tags = append(tags, tag.Update(keyFleetName, fleetName))
-			}
+		fleetName := gs.Labels[agonesv1.FleetNameLabel]
+		if fleetName != "" {
+			tags = append(tags, tag.Update(keyFleetName, fleetName))
 		}
 	}
-	ctx, err := tag.New(rCtx, tags...)
-	if err != nil {
-		return err
-	}
-	stats.Record(ctx, gameServerAllocationsTotalStats.M(1))
-	return nil
+	r.mutate(tags...)
+}
+
+// record the current allocation latency.
+func (r *latencyRecorder) record() {
+	stats.Record(r.ctx, gameServerAllocationsLatency.M(time.Since(r.start).Seconds()))
 }
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
