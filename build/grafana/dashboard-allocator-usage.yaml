@@ -16,12 +16,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: agones-allocations
+  name: agones-allocator-usage
   namespace: metrics
   labels:
      grafana_dashboard: "1"
 data:
-  dashboard-agones-allocations.json: |
+  dashboard-agones-allocator-usage.json: |
     {
       "annotations": {
         "list": [
@@ -36,25 +36,22 @@ data:
           }
         ]
       },
-      "description": "Agones gameserver allocations",
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "iteration": 1564432641328,
+      "id": 10,
       "links": [],
       "panels": [
         {
           "cacheTimeout": null,
           "colorBackground": false,
-          "colorPostfix": false,
-          "colorPrefix": false,
-          "colorValue": true,
+          "colorValue": false,
           "colors": [
             "#299c46",
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "format": "s",
+          "format": "none",
           "gauge": {
             "maxValue": 100,
             "minValue": 0,
@@ -63,13 +60,12 @@ data:
             "thresholdMarkers": true
           },
           "gridPos": {
-            "h": 8,
+            "h": 5,
             "w": 6,
             "x": 0,
             "y": 0
           },
-          "hideTimeOverride": false,
-          "id": 16,
+          "id": 12,
           "interval": null,
           "links": [],
           "mappingType": 1,
@@ -87,90 +83,6 @@ data:
           "nullPointMode": "connected",
           "nullText": null,
           "options": {},
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": true,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": true
-          },
-          "tableColumn": "",
-          "targets": [
-            {
-              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_sum[$interval]))\n/\nsum(rate(agones_gameserver_allocations_duration_seconds_count[$interval]))",
-              "format": "time_series",
-              "instant": false,
-              "intervalFactor": 1,
-              "refId": "A"
-            }
-          ],
-          "thresholds": "0.5,3,10",
-          "timeFrom": "30m",
-          "timeShift": null,
-          "title": "Average latency",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
-            }
-          ],
-          "valueName": "current"
-        },
-        {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": true,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
-          ],
-          "format": "reqps",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 6,
-            "x": 6,
-            "y": 0
-          },
-          "id": 14,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "options": {},
-          "pluginVersion": "6.2.4",
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -191,19 +103,15 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{status!=\"Allocated\"}[$interval]))",
+              "expr": "sum(process_open_fds{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})",
               "format": "time_series",
-              "hide": false,
               "instant": true,
               "intervalFactor": 1,
-              "legendFormat": "",
               "refId": "A"
             }
           ],
           "thresholds": "",
-          "timeFrom": "30m",
-          "timeShift": null,
-          "title": "Allocation Errors rate",
+          "title": "Allocators Open File Descriptor Count",
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
@@ -213,39 +121,122 @@ data:
               "value": "null"
             }
           ],
-          "valueName": "current"
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "format": "dateTimeFromNow",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 6,
+            "x": 6,
+            "y": 0
+          },
+          "id": 10,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "max(go_memstats_last_gc_time_seconds{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"} * 1000)",
+              "format": "time_series",
+              "instant": true,
+              "intervalFactor": 1,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "",
+          "title": "Last Go GC",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
         },
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "fill": 4,
+          "fill": 1,
           "gridPos": {
-            "h": 8,
+            "h": 9,
             "w": 12,
             "x": 12,
             "y": 0
           },
-          "id": 12,
+          "id": 4,
           "legend": {
             "alignAsTable": true,
-            "avg": false,
+            "avg": true,
             "current": true,
+            "hideEmpty": true,
+            "hideZero": true,
             "max": true,
             "min": true,
-            "rightSide": true,
+            "rightSide": false,
             "show": true,
             "total": false,
             "values": true
           },
           "lines": true,
-          "linewidth": 2,
+          "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
           "options": {},
           "percentage": false,
-          "pointradius": 2,
+          "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
@@ -254,24 +245,24 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "expr": "sum(process_resident_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}) by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "50%",
+              "legendFormat": "resident - {{kubernetes_pod_name}}",
               "refId": "A"
             },
             {
-              "expr": "histogram_quantile(0.9,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "expr": "sum(process_virtual_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "90%",
+              "legendFormat": "virtual - {{kubernetes_pod_name}}",
               "refId": "B"
             },
             {
-              "expr": "histogram_quantile(0.99,sum(rate(agones_gameserver_allocations_duration_seconds_bucket{fleet_name=~\"$fleet\"}[$interval])) by (le))",
+              "expr": "sum(go_memstats_alloc_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"})by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
-              "legendFormat": "99%",
+              "legendFormat": "go alloc - {{kubernetes_pod_name}}",
               "refId": "C"
             }
           ],
@@ -279,7 +270,274 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "GameServer Allocations Latency",
+          "title": "Allocators Memory Used",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "decbytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": true,
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 1,
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 5
+          },
+          "id": 6,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": false,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "go_goroutines{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "go routines",
+              "refId": "A"
+            },
+            {
+              "expr": "go_threads{app=\"agones\",kubernetes_pod_name=~\"agones-allocator.*\"}",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "threads",
+              "refId": "B"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Allocators Go Routines & Threads Count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "decimals": null,
+          "fill": 1,
+          "gridPos": {
+            "h": 9,
+            "w": 12,
+            "x": 12,
+            "y": 9
+          },
+          "id": 2,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum (irate (process_cpu_seconds_total{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[1m])) by (kubernetes_pod_name)",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "{{kubernetes_pod_name}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Allocators CPU Used (% of core)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "percentunit",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "fill": 1,
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 12
+          },
+          "id": 8,
+          "legend": {
+            "alignAsTable": true,
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": true,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "options": {},
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": " avg(rate(go_gc_duration_seconds_sum{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[5m]) / rate(go_gc_duration_seconds_count{app=\"agones\",kubernetes_pod_name=~\"agones-allocator-.*\"}[5m]))",
+              "format": "time_series",
+              "intervalFactor": 1,
+              "legendFormat": "duration",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Average Go GC Duration",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -315,401 +573,17 @@ data:
             "align": false,
             "alignLevel": null
           }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "description": "",
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 0,
-            "y": 8
-          },
-          "id": 8,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": true,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {},
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{fleet_name=~\"$fleet\"}[$interval])) by (status)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{status}}",
-              "refId": "A"
-            },
-            {
-              "expr": "",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "",
-              "refId": "B"
-            },
-            {
-              "expr": "",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "",
-              "refId": "C"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "GameServer allocations rate by status",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "fill": 1,
-          "gridPos": {
-            "h": 9,
-            "w": 12,
-            "x": 12,
-            "y": 8
-          },
-          "id": 10,
-          "legend": {
-            "alignAsTable": true,
-            "avg": true,
-            "current": true,
-            "hideEmpty": true,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {},
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{fleet_name=~\"$fleet\",}[$interval])) by (fleet_name)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{fleet_name}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "GameServer allocations rate by fleet",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": true,
-          "cacheTimeout": null,
-          "dashLength": 10,
-          "dashes": false,
-          "fill": 2,
-          "gridPos": {
-            "h": 8,
-            "w": 24,
-            "x": 0,
-            "y": 17
-          },
-          "id": 18,
-          "legend": {
-            "alignAsTable": true,
-            "avg": false,
-            "current": true,
-            "max": false,
-            "min": false,
-            "rightSide": true,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {},
-          "percentage": false,
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "sum(rate(agones_gameserver_allocations_duration_seconds_count{status=\"Allocated\"}[$interval])) by (node_name)",
-              "format": "heatmap",
-              "intervalFactor": 1,
-              "legendFormat": "{{node_name}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "Allocations rate per node",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
         }
       ],
-      "refresh": "10s",
+      "refresh": "5s",
       "schemaVersion": 18,
       "style": "dark",
-      "tags": [
-        "agones",
-        "nodes",
-        "controller",
-        "gameservers",
-        "allocations",
-        "fleets"
-      ],
+      "tags": [],
       "templating": {
-        "list": [
-          {
-            "allValue": ".*",
-            "current": {
-              "text": "All",
-              "value": [
-                "$__all"
-              ]
-            },
-            "datasource": "Prometheus",
-            "definition": "label_values(agones_gameservers_count, fleet_name)",
-            "hide": 0,
-            "includeAll": true,
-            "label": null,
-            "multi": true,
-            "name": "fleet",
-            "options": [],
-            "query": "label_values(agones_gameservers_count, fleet_name)",
-            "refresh": 2,
-            "regex": "",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          },
-          {
-            "auto": false,
-            "auto_count": 30,
-            "auto_min": "10s",
-            "current": {
-              "text": "1m",
-              "value": "1m"
-            },
-            "hide": 0,
-            "label": null,
-            "name": "interval",
-            "options": [
-              {
-                "selected": true,
-                "text": "1m",
-                "value": "1m"
-              },
-              {
-                "selected": false,
-                "text": "10m",
-                "value": "10m"
-              },
-              {
-                "selected": false,
-                "text": "30m",
-                "value": "30m"
-              },
-              {
-                "selected": false,
-                "text": "1h",
-                "value": "1h"
-              },
-              {
-                "selected": false,
-                "text": "6h",
-                "value": "6h"
-              },
-              {
-                "selected": false,
-                "text": "12h",
-                "value": "12h"
-              },
-              {
-                "selected": false,
-                "text": "1d",
-                "value": "1d"
-              },
-              {
-                "selected": false,
-                "text": "7d",
-                "value": "7d"
-              },
-              {
-                "selected": false,
-                "text": "14d",
-                "value": "14d"
-              },
-              {
-                "selected": false,
-                "text": "30d",
-                "value": "30d"
-              }
-            ],
-            "query": "1m,10m,30m,1h,6h,12h,1d,7d,14d,30d",
-            "refresh": 2,
-            "skipUrlSync": false,
-            "type": "interval"
-          }
-        ]
+        "list": []
       },
       "time": {
-        "from": "now-5m",
+        "from": "now-30m",
         "to": "now"
       },
       "timepicker": {
@@ -738,7 +612,7 @@ data:
         ]
       },
       "timezone": "",
-      "title": "Agones  Allocations",
-      "uid": "TfUv6ylmk",
-      "version": 1
+      "title": "Agones Allocator Resource",
+      "uid": "GpQUU7VZk",
+      "version": 3
     }

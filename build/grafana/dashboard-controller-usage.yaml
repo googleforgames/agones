@@ -50,7 +50,6 @@ data:
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -82,6 +81,7 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -102,8 +102,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:10113",
-              "expr": "process_open_fds{app=\"agones\"}",
+              "expr": "process_open_fds{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -132,7 +131,6 @@ data:
             "rgba(237, 129, 40, 0.89)",
             "#d44a3a"
           ],
-          "datasource": null,
           "format": "dateTimeFromNow",
           "gauge": {
             "maxValue": 100,
@@ -164,6 +162,7 @@ data:
           "maxDataPoints": 100,
           "nullPointMode": "connected",
           "nullText": null,
+          "options": {},
           "postfix": "",
           "postfixFontSize": "50%",
           "prefix": "",
@@ -184,8 +183,7 @@ data:
           "tableColumn": "",
           "targets": [
             {
-              "$$hashKey": "object:10065",
-              "expr": "go_memstats_last_gc_time_seconds{app=\"agones\"} * 1000",
+              "expr": "go_memstats_last_gc_time_seconds{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"} * 1000",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 1,
@@ -210,7 +208,6 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
             "h": 9,
@@ -223,6 +220,8 @@ data:
             "alignAsTable": true,
             "avg": true,
             "current": true,
+            "hideEmpty": true,
+            "hideZero": true,
             "max": true,
             "min": true,
             "rightSide": false,
@@ -234,6 +233,7 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -244,21 +244,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "process_resident_memory_bytes{app=\"agones\"}",
+              "expr": "process_resident_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "resident",
               "refId": "A"
             },
             {
-              "expr": "process_virtual_memory_bytes{app=\"agones\"}",
+              "expr": "process_virtual_memory_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "virtual",
               "refId": "B"
             },
             {
-              "expr": "go_memstats_alloc_bytes{app=\"agones\"}",
+              "expr": "go_memstats_alloc_bytes{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "go alloc",
@@ -267,6 +267,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "Controller Memory Used",
           "tooltip": {
@@ -310,7 +311,6 @@ data:
           "bars": true,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
             "h": 7,
@@ -333,6 +333,7 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -343,14 +344,14 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{app=\"agones\"}",
+              "expr": "go_goroutines{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "go routines",
               "refId": "A"
             },
             {
-              "expr": "go_threads{app=\"agones\"}",
+              "expr": "go_threads{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "threads",
@@ -359,6 +360,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "Controller Go Routines & Threads Count",
           "tooltip": {
@@ -402,7 +404,6 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "decimals": null,
           "fill": 1,
           "gridPos": {
@@ -427,6 +428,7 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -437,7 +439,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum (irate (process_cpu_seconds_total{app=\"agones\"}[1m])) by (kubernetes_pod_name)",
+              "expr": "sum (irate (process_cpu_seconds_total{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}[1m])) by (kubernetes_pod_name)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{kubernetes_pod_name}}",
@@ -446,6 +448,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "Controller CPU Used (% of core)",
           "tooltip": {
@@ -489,7 +492,6 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": null,
           "fill": 1,
           "gridPos": {
             "h": 6,
@@ -512,6 +514,7 @@ data:
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {},
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -522,7 +525,7 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": " rate(go_gc_duration_seconds_sum{app=\"agones\"}[5m]) / rate(go_gc_duration_seconds_count{app=\"agones\"}[5m])",
+              "expr": " rate(go_gc_duration_seconds_sum{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}[5m]) / rate(go_gc_duration_seconds_count{app=\"agones\",kubernetes_pod_name=~\"agones-controller.*\"}[5m])",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "duration",
@@ -531,6 +534,7 @@ data:
           ],
           "thresholds": [],
           "timeFrom": null,
+          "timeRegions": [],
           "timeShift": null,
           "title": "Average Go GC Duration",
           "tooltip": {
@@ -571,7 +575,7 @@ data:
         }
       ],
       "refresh": "5s",
-      "schemaVersion": 16,
+      "schemaVersion": 18,
       "style": "dark",
       "tags": [
         "controller",
@@ -612,5 +616,5 @@ data:
       "timezone": "",
       "title": "Agones Controller Resource Usage",
       "uid": "ktm3s0Umk",
-      "version": 10
+      "version": 1
     }
