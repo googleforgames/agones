@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	keyQueueName = mustTagKey("queue_name")
+	keyQueueName = MustTagKey("queue_name")
 
 	httpRequestTotalStats   = stats.Int64("http/request_total", "The total of HTTP requests.", "1")
 	httpRequestLatencyStats = stats.Float64("http/latency", "The duration of HTTP requests.", "s")

@@ -25,13 +25,13 @@ import (
 var (
 	logger = runtime.NewLoggerWithSource("metrics")
 
-	keyName       = mustTagKey("name")
-	keyFleetName  = mustTagKey("fleet_name")
-	keyType       = mustTagKey("type")
-	keyStatusCode = mustTagKey("status_code")
-	keyVerb       = mustTagKey("verb")
-	keyEndpoint   = mustTagKey("endpoint")
-	keyEmpty      = mustTagKey("empty")
+	keyName       = MustTagKey("name")
+	keyFleetName  = MustTagKey("fleet_name")
+	keyType       = MustTagKey("type")
+	keyStatusCode = MustTagKey("status_code")
+	keyVerb       = MustTagKey("verb")
+	keyEndpoint   = MustTagKey("endpoint")
+	keyEmpty      = MustTagKey("empty")
 )
 
 func recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Measurement) {
@@ -40,7 +40,8 @@ func recordWithTags(ctx context.Context, mutators []tag.Mutator, ms ...stats.Mea
 	}
 }
 
-func mustTagKey(key string) tag.Key {
+// MustTagKey creates a new `tag.Key` from a string, panic if the key is not a valid.
+func MustTagKey(key string) tag.Key {
 	t, err := tag.NewKey(key)
 	if err != nil {
 		panic(err)

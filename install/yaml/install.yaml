@@ -1000,6 +1000,10 @@ spec:
         app: agones
         release: agones-manual
         heritage: Tiller
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       affinity:
         nodeAffinity:
@@ -1028,6 +1032,25 @@ spec:
       - name: agones-allocator
         image: "gcr.io/agones-images/agones-allocator:1.0.0"
         imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+        env:
+        - name: PROMETHEUS_EXPORTER
+          value: "true"
+        - name: STACKDRIVER_EXPORTER
+          value: "false"
+        - name: GCP_PROJECT_ID
+          value: ""
         ports:
         - name: https
           containerPort: 8443
