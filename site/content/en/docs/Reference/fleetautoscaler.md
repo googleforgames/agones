@@ -12,9 +12,9 @@ A full `FleetAutoscaler` specification is available below and in the
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
+# FleetAutoscaler Metadata
+# https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#objectmeta-v1-meta
 metadata:
-  # FleetAutoscaler Metadata
-  # https://v1-9.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.9/#objectmeta-v1-meta
   name: fleet-autoscaler-example
 spec:
   # The name of the fleet to attach to and control. Must be an existing Fleet in the same namespace
