@@ -355,7 +355,7 @@ func TestGameServerShutdown(t *testing.T) {
 
 	assert.Equal(t, "ACK: EXIT\n", reply)
 
-	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, 3*time.Minute, func() (bool, error) {
 		gs, err = framework.AgonesClient.AgonesV1().GameServers(defaultNs).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if k8serrors.IsNotFound(err) {
