@@ -22,8 +22,8 @@ COPY examples/xonotic/main.go .
 COPY . /go/src/agones.dev/agones
 RUN go build -o wrapper .
 
-RUN curl -o xonotic.zip http://dl.xonotic.org/xonotic-0.8.2.zip && \
-    unzip xonotic.zip && rm xonotic.zip
+RUN curl -o xonotic.zip https://dl.xonotic.org/xonotic-0.8.2.zip && \
+    unzip -qq xonotic.zip && rm xonotic.zip
 
 # final image
 FROM debian:stretch

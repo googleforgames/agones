@@ -437,6 +437,9 @@ Clean leftover binary and package files after running SDK conformance tests.
 #### `make test`
 Run the linter and tests
 
+#### `make build-examples`
+Run `make build` for all `examples` subdirectories
+
 #### `make site-server`
 Generate `https://agones.dev` website locally and host on `http://localhost:1313`
 
