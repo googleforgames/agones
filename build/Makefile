@@ -30,7 +30,7 @@ base_version = 1.0.0
 release_registry = gcr.io/agones-images
 
 #
-# All of the following can be overwritten with environemt variables
+# All of the following can be overwritten with environment variables
 # or passed through directly when invoking the relevent Make targets
 #
 
