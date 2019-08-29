@@ -1,0 +1,13 @@
+# See the OWNERS docs at https://go.k8s.io/owners
+
+approvers:
+  - cyriltovena
+  - dzlier-gcp
+  - EricFortin
+  - ilkercelikyilmaz
+  - jkowalski
+  - joeholley
+  - markmandel
+  - pooneh-m
+  - roberthbailey
+
