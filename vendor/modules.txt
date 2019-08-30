@@ -71,7 +71,7 @@ github.com/gogo/protobuf/sortkeys
 github.com/golang/glog
 # github.com/golang/groupcache v0.0.0-20171101203131-84a468cf14b4
 github.com/golang/groupcache/lru
-# github.com/golang/protobuf v1.2.0
+# github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/protoc-gen-go
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/protoc-gen-go/generator
@@ -159,7 +159,7 @@ github.com/modern-go/concurrent
 github.com/modern-go/reflect2
 # github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
 github.com/munnerz/goautoneg
-# github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
+# github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
@@ -205,19 +205,19 @@ github.com/spf13/viper
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 # go.opencensus.io v0.18.0
-go.opencensus.io/exporter/prometheus
-go.opencensus.io/stats
-go.opencensus.io/stats/view
-go.opencensus.io/tag
-go.opencensus.io
 go.opencensus.io/plugin/ochttp
-go.opencensus.io/trace
-go.opencensus.io/internal
-go.opencensus.io/exemplar
-go.opencensus.io/stats/internal
-go.opencensus.io/internal/tagencoding
+go.opencensus.io/stats/view
+go.opencensus.io/stats
+go.opencensus.io/tag
+go.opencensus.io/exporter/prometheus
 go.opencensus.io/plugin/ochttp/propagation/b3
+go.opencensus.io/trace
 go.opencensus.io/trace/propagation
+go.opencensus.io/exemplar
+go.opencensus.io/internal/tagencoding
+go.opencensus.io/stats/internal
+go.opencensus.io
+go.opencensus.io/internal
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
 go.opencensus.io/plugin/ocgrpc
@@ -336,9 +336,9 @@ gopkg.in/natefinch/lumberjack.v2
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
 # k8s.io/api v0.0.0-20190708094356-59223ed9f6ce
-k8s.io/api/admissionregistration/v1beta1
 k8s.io/api/apps/v1
 k8s.io/api/core/v1
+k8s.io/api/admissionregistration/v1beta1
 k8s.io/api/extensions/v1beta1
 k8s.io/api/admission/v1beta1
 k8s.io/api/admissionregistration/v1alpha1
@@ -385,17 +385,17 @@ k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/labels
 k8s.io/apimachinery/pkg/runtime
 k8s.io/apimachinery/pkg/runtime/schema
-k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/util/intstr
 k8s.io/apimachinery/pkg/util/validation
+k8s.io/apimachinery/pkg/types
 k8s.io/apimachinery/pkg/runtime/serializer
+k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/util/uuid
 k8s.io/apimachinery/pkg/util/errors
 k8s.io/apimachinery/pkg/fields
 k8s.io/apimachinery/pkg/util/yaml
-k8s.io/apimachinery/pkg/util/runtime
 k8s.io/apimachinery/pkg/util/validation/field
 k8s.io/apimachinery/pkg/runtime/serializer/streaming
 k8s.io/apimachinery/pkg/util/net
@@ -435,6 +435,7 @@ k8s.io/client-go/testing
 k8s.io/client-go/tools/cache
 k8s.io/client-go/kubernetes/typed/core/v1
 k8s.io/client-go/tools/record
+k8s.io/client-go/informers/core/v1
 k8s.io/client-go/listers/core/v1
 k8s.io/client-go/util/workqueue
 k8s.io/client-go/tools/metrics
@@ -549,7 +550,6 @@ k8s.io/client-go/informers/batch/v1beta1
 k8s.io/client-go/informers/batch/v2alpha1
 k8s.io/client-go/informers/certificates/v1beta1
 k8s.io/client-go/informers/coordination/v1beta1
-k8s.io/client-go/informers/core/v1
 k8s.io/client-go/informers/events/v1beta1
 k8s.io/client-go/informers/extensions/v1beta1
 k8s.io/client-go/informers/networking/v1
@@ -594,7 +594,7 @@ k8s.io/client-go/listers/storage/v1beta1
 # k8s.io/gengo v0.0.0-20190128074634-0689ccc1d7d6
 k8s.io/gengo/parser
 k8s.io/gengo/types
-# k8s.io/klog v0.3.0
+# k8s.io/klog v0.2.0
 k8s.io/klog
 # k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058
 k8s.io/kube-openapi/pkg/util/proto
