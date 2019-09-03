@@ -27,7 +27,7 @@ include(ProcessorCount)
 ProcessorCount(CPU_COUNT)
 if (CPU_COUNT GREATER 0 AND NOT DEFINED CMAKE_BUILD_PARALLEL_LEVEL)
     set($ENV{CMAKE_BUILD_PARALLEL_LEVEL} ${CPU_COUNT})
-endif(CPU_COUNT)
+endif()
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
@@ -130,6 +130,9 @@ if (NOT ${OpenSSL_FOUND} AND NOT ${gRPC_FOUND})
     set(OPENSSL_ROOT_DIR "${AGONES_THIRDPARTY_INSTALL_PATH}/OpenSSL" CACHE PATH "OpenSSL root directory" FORCE)
     find_package(OpenSSL QUIET)
     if (NOT ${OpenSSL_FOUND})
+        if (${WIN32} AND ${MINGW})
+            message(FATAL_ERROR "MinGW build for OpenSSL is not supported, please set OPENSSL_ROOT_DIR variable to OpenSSL path")
+        endif()
         download_git_repo(openssl ${OPENSSL_GIT_REPO} ${OPENSSL_GIT_TAG})
         message(STATUS "Building OpenSSL... ${AGONES_OPENSSL_CONFIG_STRING}")
         if (WIN32)
@@ -156,11 +159,11 @@ if (NOT ${gRPC_FOUND})
     set(ZLIB_ROOT "${zlib_DIR}" CACHE PATH "ZLIB_ROOT" FORCE)
     set(ZLIB_PARAM)
     if (AGONES_ZLIB_STATIC)
-        set(ZLIB_NAME "libz${CMAKE_STATIC_LIBRARY_SUFFIX}")
-        if (WIN32)
-            set(ZLIB_NAME "zlibstatic${CMAKE_STATIC_LIBRARY_SUFFIX}")
+        find_library(ZLIB_PATH zlibstatic NAMES libzlibstatic PATHS ${ZLIB_ROOT}/lib)
+        set(ZLIB_LIBRARY ${ZLIB_PATH} CACHE PATH "ZLIB path" FORCE)
+        if (ZLIB_PATH-NOTFOUND)
+            message(FATAL_ERROR "Could not locate static zlib path")
         endif()
-        set(ZLIB_LIBRARY "${ZLIB_ROOT}/lib/${ZLIB_NAME}" CACHE PATH "ZLIB path" FORCE)
         set(ZLIB_PARAM "-DZLIB_LIBRARY=${ZLIB_LIBRARY}")
     endif()
     
@@ -180,6 +183,16 @@ if (NOT ${gRPC_FOUND})
     if (DEFINED OPENSSL_ROOT_DIR)
         set(OPENSSL_PARAM "-DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}")
     endif()
+
+    set(GRPC_EXTRA_FLAGS)
+    if (MINGW)
+        set(GRPC_WINVER 0x0600)
+        set(GRPC_EXTRA_FLAGS
+            "-DCMAKE_C_FLAGS=-D_WIN32_WINNT=${GRPC_WINVER}"
+            "-DCMAKE_CXX_FLAGS=-D_WIN32_WINNT=${GRPC_WINVER}"
+        )
+    endif()
+    
     invoke_cmake_build(gRPC ${gRPC_SOURCE_DIR}
         "${OPENSSL_PARAM}"
         "-DZLIB_ROOT=${zlib_DIR}"
@@ -192,6 +205,7 @@ if (NOT ${gRPC_FOUND})
         "-DgRPC_ZLIB_PROVIDER=package"
         "-DgRPC_CARES_PROVIDER=package"
         "-DgRPC_SSL_PROVIDER=package"
+        ${GRPC_EXTRA_FLAGS}
     )
     set(AGONES_OWN_GRPC TRUE CACHE BOOL "Third party is built by Agones" FORCE)
 endif()
