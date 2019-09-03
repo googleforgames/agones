@@ -37,6 +37,7 @@ func main() {
 
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
+	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
@@ -44,6 +45,10 @@ func main() {
 	if epass := os.Getenv("PASSTHROUGH"); epass != "" {
 		p := strings.ToUpper(epass) == "TRUE"
 		passthrough = &p
+	}
+	if eready := os.Getenv("READY"); eready != "" {
+		r := strings.ToUpper(eready) == "TRUE"
+		readyOnStart = &r
 	}
 
 	log.Print("Creating SDK instance")
@@ -74,8 +79,10 @@ func main() {
 	}
 	defer conn.Close() // nolint: errcheck
 
-	log.Print("Marking this server as ready")
-	ready(s)
+	if *readyOnStart {
+		log.Print("Marking this server as ready")
+		ready(s)
+	}
 
 	readWriteLoop(conn, stop, s)
 }
@@ -131,6 +138,10 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 				respond(conn, sender, "ERROR: Invalid LABEL command, must use zero or 2 arguments")
 				continue
 			}
+
+		case "CRASH":
+			log.Print("Crashing.")
+			os.Exit(1)
 
 		case "ANNOTATION":
 			switch len(parts) {
