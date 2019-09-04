@@ -58,6 +58,17 @@ clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 		helm delete --purge consul && kubectl delete pvc -l component=consul-consul
 	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=e2e-test-cluster
 
+# Creates a gcloud cluster for prow
+gcloud-prow-build-cluster: $(ensure-build-image)
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
+		deployment-manager deployments create prow-build-cluster \
+		--config=$(mount_path)/build/gke-test-cluster/cluster-prow.yml
+	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=prow-build-cluster GCP_CLUSTER_ZONE=us-west1-c
+
+# Deletes the gcloud prow build cluster
+clean-gcloud-prow-build-cluster: $(ensure-build-image)
+	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=prow-build-cluster
+
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')
 gcloud-auth-cluster: $(ensure-build-image)

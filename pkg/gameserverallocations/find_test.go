@@ -160,7 +160,8 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
-			c, m := newFakeController()
+			controller, m := newFakeController()
+			c := controller.allocator.readyGameServerCache
 
 			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: v.list}, nil
@@ -176,7 +177,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			err = c.counter.Run(0, stop)
 			assert.Nil(t, err)
 
-			list := c.listSortedReadyGameServers()
+			list := c.ListSortedReadyGameServers()
 			v.test(t, list)
 		})
 	}
@@ -185,7 +186,8 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	t.Parallel()
 
-	c, m := newFakeController()
+	controller, m := newFakeController()
+	c := controller.allocator.readyGameServerCache
 	labels := map[string]string{"role": "gameserver"}
 
 	gsa := &allocationv1.GameServerAllocation{
@@ -229,7 +231,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	err = c.counter.Run(0, stop)
 	assert.Nil(t, err)
 
-	list := c.listSortedReadyGameServers()
+	list := c.ListSortedReadyGameServers()
 	assert.Len(t, list, 6)
 
 	gs, index, err := findGameServerForAllocation(gsa, list)

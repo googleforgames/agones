@@ -33,6 +33,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/apiserver"
+	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -52,8 +53,9 @@ const (
 	n2        = "node2"
 )
 
-func TestControllerAllocationHandler(t *testing.T) {
+func TestControllerAllocator(t *testing.T) {
 	t.Parallel()
+	stop := signals.NewStopChannel()
 
 	t.Run("successful allocation", func(t *testing.T) {
 		f, _, gsList := defaultFixtures(3)
@@ -79,10 +81,12 @@ func TestControllerAllocationHandler(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		go c.Run(1, stop) // nolint: errcheck
+		if err := c.Run(1, stop); err != nil {
+			assert.FailNow(t, err.Error())
+		}
 		// wait for it to be up and running
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-			return c.workerqueue.RunCount() == 1, nil
+			return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
 
@@ -94,7 +98,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 			r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
 			assert.NoError(t, err)
 			rec := httptest.NewRecorder()
-			err = c.allocationHandler(rec, r, "default")
+			err = c.processAllocationRequest(rec, r, "default", stop)
 			assert.NoError(t, err)
 			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
@@ -116,7 +120,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 		rec := httptest.NewRecorder()
 		assert.NoError(t, err)
 
-		err = c.allocationHandler(rec, r, "default")
+		err = c.processAllocationRequest(rec, r, "default", stop)
 		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
@@ -135,7 +139,7 @@ func TestControllerAllocationHandler(t *testing.T) {
 		r.Header.Set("Content-Type", k8sruntime.ContentTypeJSON)
 		assert.NoError(t, err)
 		rec := httptest.NewRecorder()
-		err = c.allocationHandler(rec, r, "default")
+		err = c.processAllocationRequest(rec, r, "default", stop)
 		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusUnprocessableEntity, rec.Code)
@@ -181,10 +185,12 @@ func TestControllerAllocate(t *testing.T) {
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	go c.Run(1, stop) // nolint: errcheck
+	if err := c.Run(1, stop); err != nil {
+		assert.FailNow(t, err.Error())
+	}
 	// wait for it to be up and running
 	err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-		return c.workerqueue.RunCount() == 1, nil
+		return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
 	})
 	assert.NoError(t, err)
 
@@ -195,7 +201,7 @@ func TestControllerAllocate(t *testing.T) {
 		}}
 	gsa.ApplyDefaults()
 
-	gs, err := c.allocate(&gsa)
+	gs, err := c.allocator.allocate(&gsa, stop)
 	assert.Nil(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
@@ -211,19 +217,19 @@ func TestControllerAllocate(t *testing.T) {
 	}
 
 	updated = false
-	gs, err = c.allocate(&gsa)
+	gs, err = c.allocator.allocate(&gsa, stop)
 	assert.Nil(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
-	gs, err = c.allocate(&gsa)
+	gs, err = c.allocator.allocate(&gsa, stop)
 	assert.Nil(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.True(t, updated)
 
 	updated = false
-	_, err = c.allocate(&gsa)
+	_, err = c.allocator.allocate(&gsa, stop)
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrNoGameServerReady, err)
 	assert.False(t, updated)
@@ -231,6 +237,7 @@ func TestControllerAllocate(t *testing.T) {
 
 func TestControllerAllocatePriority(t *testing.T) {
 	t.Parallel()
+	stop := signals.NewStopChannel()
 
 	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation)) {
 		f, _, gsList := defaultFixtures(4)
@@ -258,10 +265,12 @@ func TestControllerAllocatePriority(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		go c.Run(1, stop) // nolint: errcheck
+		if err := c.Run(1, stop); err != nil {
+			assert.FailNow(t, err.Error())
+		}
 		// wait for it to be up and running
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-			return c.workerqueue.RunCount() == 1, nil
+			return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
 
@@ -278,27 +287,27 @@ func TestControllerAllocatePriority(t *testing.T) {
 
 	run(t, "packed", func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation) {
 		// priority should be node1, then node2
-		gs1, err := c.allocate(gas)
+		gs1, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.Equal(t, n1, gs1.Status.NodeName)
 
-		gs2, err := c.allocate(gas)
+		gs2, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.Equal(t, n1, gs2.Status.NodeName)
 		assert.NotEqual(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
 
-		gs3, err := c.allocate(gas)
+		gs3, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.Equal(t, n1, gs3.Status.NodeName)
 		assert.NotContains(t, []string{gs1.ObjectMeta.Name, gs2.ObjectMeta.Name}, gs3.ObjectMeta.Name)
 
-		gs4, err := c.allocate(gas)
+		gs4, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.Equal(t, n2, gs4.Status.NodeName)
 		assert.NotContains(t, []string{gs1.ObjectMeta.Name, gs2.ObjectMeta.Name, gs3.ObjectMeta.Name}, gs4.ObjectMeta.Name)
 
 		// should have none left
-		_, err = c.allocate(gas)
+		_, err = c.allocator.allocate(gas, stop)
 		assert.Equal(t, err, ErrNoGameServerReady)
 	})
 
@@ -309,23 +318,23 @@ func TestControllerAllocatePriority(t *testing.T) {
 
 		// distributed is randomised, so no set pattern
 
-		gs1, err := c.allocate(gas)
+		gs1, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 
-		gs2, err := c.allocate(gas)
+		gs2, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.NotEqual(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
 
-		gs3, err := c.allocate(gas)
+		gs3, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.NotContains(t, []string{gs1.ObjectMeta.Name, gs2.ObjectMeta.Name}, gs3.ObjectMeta.Name)
 
-		gs4, err := c.allocate(gas)
+		gs4, err := c.allocator.allocate(gas, stop)
 		assert.NoError(t, err)
 		assert.NotContains(t, []string{gs1.ObjectMeta.Name, gs2.ObjectMeta.Name, gs3.ObjectMeta.Name}, gs4.ObjectMeta.Name)
 
 		// should have none left
-		_, err = c.allocate(gas)
+		_, err = c.allocator.allocate(gas, stop)
 		assert.Equal(t, err, ErrNoGameServerReady)
 	})
 }
@@ -351,14 +360,14 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 			return true, gs, nil
 		})
 
-		stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		stop, cancel := agtesting.StartInformers(m, c.allocator.readyGameServerCache.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
-		err := c.syncReadyGSServerCache()
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(0, stop)
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{
@@ -372,13 +381,13 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 
 		// line up 3 in a batch
 		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
-		c.pendingRequests <- j1
+		c.allocator.pendingRequests <- j1
 		j2 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
-		c.pendingRequests <- j2
+		c.allocator.pendingRequests <- j2
 		j3 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
-		c.pendingRequests <- j3
+		c.allocator.pendingRequests <- j3
 
-		go c.runLocalAllocations(3)
+		go c.allocator.ListenAndAllocate(3, stop)
 
 		res1 := <-j1.response
 		assert.NoError(t, res1.err)
@@ -406,15 +415,14 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 
 	t.Run("no gameservers", func(t *testing.T) {
 		c, m := newFakeController()
-		stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		stop, cancel := agtesting.StartInformers(m, c.allocator.readyGameServerCache.gameServerSynced)
 		defer cancel()
-		c.stop = stop
 
 		// This call initializes the cache
-		err := c.syncReadyGSServerCache()
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(0, stop)
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{
@@ -427,9 +435,9 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 		gsa.ApplyDefaults()
 
 		j1 := request{gsa: gsa.DeepCopy(), response: make(chan response)}
-		c.pendingRequests <- j1
+		c.allocator.pendingRequests <- j1
 
-		go c.runLocalAllocations(3)
+		go c.allocator.ListenAndAllocate(3, stop)
 
 		res1 := <-j1.response
 		assert.Nil(t, res1.gs)
@@ -441,7 +449,10 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 func TestAllocationApiResource(t *testing.T) {
 	t.Parallel()
 
-	_, m := newFakeController()
+	c, m := newFakeController()
+	stop := signals.NewStopChannel()
+	c.registerAPIResource(stop)
+
 	ts := httptest.NewServer(m.Mux)
 	defer ts.Close()
 
@@ -457,8 +468,9 @@ func TestAllocationApiResource(t *testing.T) {
 	err = json.NewDecoder(resp.Body).Decode(list)
 	assert.Nil(t, err)
 
-	assert.Len(t, list.APIResources, 1)
-	assert.Equal(t, "gameserverallocation", list.APIResources[0].SingularName)
+	if assert.Len(t, list.APIResources, 1) {
+		assert.Equal(t, "gameserverallocation", list.APIResources[0].SingularName)
+	}
 }
 
 func TestControllerRunCacheSync(t *testing.T) {
@@ -467,14 +479,14 @@ func TestControllerRunCacheSync(t *testing.T) {
 
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	stop, cancel := agtesting.StartInformers(m, c.allocator.readyGameServerCache.gameServerSynced)
 	defer cancel()
 
 	assertCacheEntries := func(expected int) {
 		count := 0
 		err := wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
 			count = 0
-			c.readyGameServers.Range(func(key string, gs *agonesv1.GameServer) bool {
+			c.allocator.readyGameServerCache.readyGameServers.Range(func(key string, gs *agonesv1.GameServer) bool {
 				count++
 				return true
 			})
@@ -547,7 +559,7 @@ func TestControllerRunCacheSync(t *testing.T) {
 
 func TestGetRandomlySelectedGS(t *testing.T) {
 	c, _ := newFakeController()
-	c.topNGameServerCount = 5
+	c.allocator.topNGameServerCount = 5
 	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: defaultNs,
@@ -560,7 +572,7 @@ func TestGetRandomlySelectedGS(t *testing.T) {
 
 	_, _, gsList := defaultFixtures(10)
 
-	selectedGS := c.getRandomlySelectedGS(gsa, gsList)
+	selectedGS := c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
 	for i := 1; i <= 5; i++ {
 		expectedName := "gs" + strconv.Itoa(i)
@@ -569,17 +581,18 @@ func TestGetRandomlySelectedGS(t *testing.T) {
 
 	_, _, gsList = defaultFixtures(5)
 
-	selectedGS = c.getRandomlySelectedGS(gsa, gsList)
+	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
 
 	_, _, gsList = defaultFixtures(1)
 
-	selectedGS = c.getRandomlySelectedGS(gsa, gsList)
+	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
 	assert.Equal(t, "gs1", selectedGS.ObjectMeta.Name)
 }
 
 func TestControllerAllocationUpdateWorkers(t *testing.T) {
+	stop := signals.NewStopChannel()
 	t.Run("no error", func(t *testing.T) {
 		c, m := newFakeController()
 
@@ -607,7 +620,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			return true, gs, nil
 		})
 
-		updateQueue := c.allocationUpdateWorkers(1)
+		updateQueue := c.allocator.allocationUpdateWorkers(1, stop)
 
 		go func() {
 			updateQueue <- r
@@ -658,7 +671,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		key, err := cache.MetaNamespaceKeyFunc(gs1)
 		assert.NoError(t, err)
 
-		_, ok := c.readyGameServers.Load(key)
+		_, ok := c.allocator.readyGameServerCache.readyGameServers.Load(key)
 		assert.False(t, ok)
 
 		r := response{
@@ -680,7 +693,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 			return true, gs, errors.New("something went wrong")
 		})
 
-		updateQueue := c.allocationUpdateWorkers(1)
+		updateQueue := c.allocator.allocationUpdateWorkers(1, stop)
 
 		go func() {
 			updateQueue <- r
@@ -694,7 +707,7 @@ func TestControllerAllocationUpdateWorkers(t *testing.T) {
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 
 		var cached *agonesv1.GameServer
-		cached, ok = c.readyGameServers.Load(key)
+		cached, ok = c.allocator.readyGameServerCache.readyGameServers.Load(key)
 		assert.True(t, ok)
 		assert.Equal(t, gs1.ObjectMeta.Name, cached.ObjectMeta.Name)
 	})
@@ -757,17 +770,17 @@ func TestControllerListSortedReadyGameServers(t *testing.T) {
 				return true, &agonesv1.GameServerList{Items: gsList}, nil
 			})
 
-			stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+			stop, cancel := agtesting.StartInformers(m, c.allocator.readyGameServerCache.gameServerSynced)
 			defer cancel()
 
 			// This call initializes the cache
-			err := c.syncReadyGSServerCache()
+			err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 			assert.Nil(t, err)
 
-			err = c.counter.Run(0, stop)
+			err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 			assert.Nil(t, err)
 
-			list := c.listSortedReadyGameServers()
+			list := c.allocator.readyGameServerCache.ListSortedReadyGameServers()
 
 			v.test(t, list)
 		})
@@ -805,10 +818,12 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		go c.Run(1, stop) // nolint: errcheck
+		if err := c.Run(1, stop); err != nil {
+			assert.FailNow(t, err.Error())
+		}
 		// wait for it to be up and running
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-			return c.workerqueue.RunCount() == 1, nil
+			return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
 
@@ -851,10 +866,12 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		stop, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		go c.Run(1, stop) // nolint: errcheck
+		if err := c.Run(1, stop); err != nil {
+			assert.FailNow(t, err.Error())
+		}
 		// wait for it to be up and running
 		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
-			return c.workerqueue.RunCount() == 1, nil
+			return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
 		})
 		assert.NoError(t, err)
 
@@ -936,14 +953,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
 			})
 
-		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
-		err := c.syncReadyGSServerCache()
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(0, stop)
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{
@@ -1010,14 +1027,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
 			})
 
-		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
-		err := c.syncReadyGSServerCache()
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(0, stop)
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{
@@ -1097,14 +1114,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				return true, getTestSecret(secretName, unhealthyServer.TLS.Certificates[0].Certificate[0]), nil
 			})
 
-		stop, cancel := agtesting.StartInformers(m, c.allocationPolicySynced, c.secretSynced, c.gameServerSynced)
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
 		defer cancel()
 
 		// This call initializes the cache
-		err := c.syncReadyGSServerCache()
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
 		assert.Nil(t, err)
 
-		err = c.counter.Run(0, stop)
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
 		assert.Nil(t, err)
 
 		gsa := &allocationv1.GameServerAllocation{
@@ -1132,7 +1149,7 @@ func TestCreateRestClientError(t *testing.T) {
 	t.Parallel()
 	t.Run("Missing secret", func(t *testing.T) {
 		c, _ := newFakeController()
-		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "secret-name")
 	})
@@ -1153,10 +1170,10 @@ func TestCreateRestClientError(t *testing.T) {
 					}}}, nil
 			})
 
-		_, cancel := agtesting.StartInformers(m, c.secretSynced)
+		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "missing client certificate key pair in secret secret-name")
 	})
@@ -1178,10 +1195,10 @@ func TestCreateRestClientError(t *testing.T) {
 					}}}, nil
 			})
 
-		_, cancel := agtesting.StartInformers(m, c.secretSynced)
+		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to find any PEM data in certificate input")
 	})
@@ -1193,22 +1210,23 @@ func TestCreateRestClientError(t *testing.T) {
 				return true, getTestSecret("secret-name", []byte("XXX")), nil
 			})
 
-		_, cancel := agtesting.StartInformers(m, c.secretSynced)
+		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "certificate")
 	})
 }
 
 func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*allocationv1.GameServerAllocation, error) {
+	stop := signals.NewStopChannel()
 	r, err := createRequest(gsa)
 	if err != nil {
 		return nil, err
 	}
 	rec := httptest.NewRecorder()
-	if err = c.allocationHandler(rec, r, defaultNs); err != nil {
+	if err = c.processAllocationRequest(rec, r, defaultNs, stop); err != nil {
 		return nil, err
 	}
 
@@ -1279,8 +1297,10 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, 1, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory)
+	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
+	c.allocator.recorder = m.FakeRecorder
 	return c, m
 }
 

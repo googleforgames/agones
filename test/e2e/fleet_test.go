@@ -99,7 +99,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 			assert.Nil(t, err)
 
 			// Wait for one more GSSet to be created and ReadyReplicas created in new GSS
-			err = wait.PollImmediate(1*time.Second, 15*time.Second, func() (bool, error) {
+			err = wait.PollImmediate(1*time.Second, time.Minute, func() (bool, error) {
 				selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 				list, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
 					metav1.ListOptions{LabelSelector: selector.String()})
