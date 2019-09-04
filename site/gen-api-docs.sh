@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export GOPROXY=http://proxy.golang.org
+echo "using go proxy as a workaround for git.agache.org being down: $GOPROXY"
+
 cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
