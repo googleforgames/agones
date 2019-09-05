@@ -131,8 +131,9 @@ func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
 func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name == container && cs.State.Terminated != nil {
-			return true
+		if cs.Name == container {
+			// sometimes on a restart, the cs.State can be running and the last state will be merged
+			return cs.State.Terminated != nil || cs.LastTerminationState.Terminated != nil
 		}
 	}
 	return false
