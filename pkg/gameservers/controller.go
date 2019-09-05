@@ -761,6 +761,27 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	c.loggerForGameServer(gs).Info("Syncing RequestReady State")
 
 	gsCopy := gs.DeepCopy()
+	pod, err := c.gameServerPod(gs)
+	// The most likely reason this fails is if the master has gone down, as it's very unlikely
+	// the Pod got deleted between sending `RequestReady` and now,
+	// so go into backoff until whatever the error is resolves itself.
+	if err != nil {
+		return nil, err
+	}
+
+	// track the ready gameserver container, so we can determine that after this point, we should move to Unhealthy if
+	// there is a container crash/restart after we move to Ready
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name == gs.Spec.Container {
+			if _, ok := pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
+				pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = cs.ContainerID
+				if _, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Update(pod); err != nil {
+					return nil, errors.Wrapf(err, "error adding ready containerid to pod %s", pod.ObjectMeta.Name)
+				}
+			}
+			break
+		}
+	}
 
 	// if the address hasn't been populated, and the Ready request comes
 	// before the controller has had a chance to do it, then
@@ -768,12 +789,6 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	addressPopulated := false
 	if gs.Status.NodeName == "" {
 		addressPopulated = true
-		pod, err := c.gameServerPod(gs)
-		// NotFound should never happen, and if it does -- something bad happened,
-		// so go into workerqueue backoff.
-		if err != nil {
-			return nil, err
-		}
 		gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
 		if err != nil {
 			return gs, err
@@ -781,7 +796,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	}
 
 	gsCopy.Status.State = agonesv1.GameServerStateReady
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error setting Ready, Port and address on GameServer %s Status", gs.ObjectMeta.Name)
 	}

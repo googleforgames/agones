@@ -30,7 +30,7 @@ import (
 	k8stesting "k8s.io/client-go/testing"
 )
 
-func TestHealthControllerFailedContainer(t *testing.T) {
+func TestHealthControllerFailedContainerAfterReady(t *testing.T) {
 	t.Parallel()
 
 	m := agtesting.NewMocks()
@@ -42,19 +42,36 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	pod, err := gs.Pod()
 	assert.Nil(t, err)
 	pod.Status = corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{{Name: gs.Spec.Container,
-		State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}}
+		State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{ContainerID: "first"}}}}}
 
-	assert.True(t, hc.failedContainer(pod))
+	// no annotation
+	assert.False(t, hc.failedContainerAfterReady(pod))
+
+	// add annotation, but doesn't match any gameserver
+	pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "nothing"
+	assert.True(t, hc.failedContainerAfterReady(pod))
+
 	pod2 := pod.DeepCopy()
+	pod2.Status.ContainerStatuses[0].Name = "Not a matching name"
+	assert.False(t, hc.failedContainerAfterReady(pod2))
 
 	pod.Status.ContainerStatuses[0].State.Terminated = nil
-	assert.False(t, hc.failedContainer(pod))
+	assert.False(t, hc.failedContainerAfterReady(pod))
 
-	pod.Status.ContainerStatuses[0].LastTerminationState.Terminated = &corev1.ContainerStateTerminated{}
-	assert.True(t, hc.failedContainer(pod))
+	pod.Status.ContainerStatuses[0].LastTerminationState.Terminated = &corev1.ContainerStateTerminated{ContainerID: "second"}
+	assert.True(t, hc.failedContainerAfterReady(pod))
 
-	pod2.Status.ContainerStatuses[0].Name = "Not a matching name"
-	assert.False(t, hc.failedContainer(pod2))
+	// the first one failed, that will be after ready
+	pod.Status.ContainerStatuses[0].ContainerID = "first"
+	assert.True(t, hc.failedContainerAfterReady(pod))
+
+	// the current pod is the ready container, and it's running
+	pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "first"
+	assert.False(t, hc.failedContainerAfterReady(pod))
+
+	// the current pod is the ready container, and it's crashed
+	pod.Status.ContainerStatuses[0].State = pod2.Status.ContainerStatuses[0].State
+	assert.True(t, hc.failedContainerAfterReady(pod))
 }
 
 func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
@@ -198,9 +215,24 @@ func TestHealthControllerRun(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
+	// This is before it is Ready
 	pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gs.Spec.Container, State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}
+
 	// gate
-	assert.True(t, hc.failedContainer(pod))
+	assert.False(t, hc.failedContainerAfterReady(pod))
+	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
+
+	podWatch.Modify(pod.DeepCopy())
+
+	select {
+	case <-updated:
+		assert.FailNow(t, "Gameserver should not update")
+	case <-time.After(3 * time.Second):
+	}
+
+	pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "ready"
+	// gate
+	assert.True(t, hc.failedContainerAfterReady(pod))
 	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 
 	podWatch.Modify(pod.DeepCopy())
@@ -220,7 +252,7 @@ func TestHealthControllerRun(t *testing.T) {
 	}
 	// gate
 	assert.True(t, hc.unschedulableWithNoFreePorts(pod))
-	assert.False(t, hc.failedContainer(pod))
+	assert.False(t, hc.failedContainerAfterReady(pod))
 
 	podWatch.Modify(pod.DeepCopy())
 

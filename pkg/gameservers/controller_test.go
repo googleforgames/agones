@@ -929,8 +929,13 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture.Status.NodeName = "node"
 		pod, err := gsFixture.Pod()
 		assert.Nil(t, err)
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: "container", ContainerID: "xyz"}}
+		podUpdated := false
 		gsUpdated := false
 
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
 		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 		})
@@ -941,12 +946,20 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			return true, gs, nil
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			p := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, p.Annotations[agonesv1.GameServerReadyContainerIDAnnotation], "xyz")
+			return true, p, nil
+		})
 
 		_, cancel := agtesting.StartInformers(m, c.podSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerRequestReadyState(gsFixture)
 		assert.Nil(t, err, "should not error")
+		assert.True(t, podUpdated, "Pod wasn't updated")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
@@ -961,6 +974,8 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		pod, err := gsFixture.Pod()
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: "container", ContainerID: "xyz"}}
+		podUpdated := false
 		gsUpdated := false
 
 		ipFixture := "12.12.12.12"
@@ -980,12 +995,20 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			return true, gs, nil
 		})
+		m.KubeClient.AddReactor("update", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			p := ua.GetObject().(*corev1.Pod)
+			assert.Equal(t, p.Annotations[agonesv1.GameServerReadyContainerIDAnnotation], "xyz")
+			return true, p, nil
+		})
 
 		_, cancel := agtesting.StartInformers(m, c.podSynced, c.nodeSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerRequestReadyState(gsFixture)
 		assert.Nil(t, err, "should not error")
+		assert.True(t, podUpdated, "Pod wasn't updated")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 

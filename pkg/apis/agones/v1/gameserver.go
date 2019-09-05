@@ -91,6 +91,10 @@ const (
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
 	DevAddressAnnotation = "agones.dev/dev-address"
+	// GameServerReadyContainerIDAnnotation is an annotation that is set on a backing pod when a GameServer
+	// becomes ready, so we can track when restarts should occur and when a GameServer
+	// should be moved to Unhealthy.
+	GameServerReadyContainerIDAnnotation = agones.GroupName + "/ready-container-id"
 )
 
 var (

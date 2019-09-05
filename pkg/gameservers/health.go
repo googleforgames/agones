@@ -104,7 +104,7 @@ func NewHealthController(health healthcheck.Handler,
 // isUnhealthy returns if the Pod event is going
 // to cause the GameServer to become Unhealthy
 func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
-	return hc.evictedPod(pod) || hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod)
+	return hc.evictedPod(pod) || hc.unschedulableWithNoFreePorts(pod) || hc.failedContainerAfterReady(pod)
 }
 
 // unschedulableWithNoFreePorts checks if the reason the Pod couldn't be scheduled
@@ -126,12 +126,26 @@ func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
 	return pod.Status.Reason == "Evicted"
 }
 
-// failedContainer checks each container, and determines if there was a failed
-// container
-func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
+// failedContainerAfterReady checks each container, and determines if there was a failed
+// container after the Gameserver pod has been marked as Ready
+// Since we want restarts to occur pre-Ready state, we only care about post-Ready
+func (hc *HealthController) failedContainerAfterReady(pod *corev1.Pod) bool {
+	containerID, ok := pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]
+	// this annotation only exists once the GameServer pod is ready, so if we don't have
+	// it, then it's not after Ready.
+	if !ok {
+		return false
+	}
+
 	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == container {
+			// if the current container is the Ready container instance, and is running, then the LastTerminationState
+			// was from before the GameServer was ready, so we can ignore it.
+			if cs.State.Terminated == nil && cs.ContainerID == containerID && cs.LastTerminationState.Terminated != nil {
+				return false
+			}
+
 			// sometimes on a restart, the cs.State can be running and the last state will be merged
 			return cs.State.Terminated != nil || cs.LastTerminationState.Terminated != nil
 		}
