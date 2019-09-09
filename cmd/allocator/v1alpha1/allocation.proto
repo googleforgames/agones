@@ -40,7 +40,7 @@ message AllocationRequest {
 
   // The ordered list of preferred allocations out of the `required` set.
   // If the first selector is not matched, the selection attempts the second selector, and so on.
-  repeated k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector preferredGameServerSelector = 4;
+  repeated k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector preferredGameServerSelectors = 4;
 
   // Scheduling strategy. Defaults to "Packed".
   SchedulingStrategy scheduling = 5;
