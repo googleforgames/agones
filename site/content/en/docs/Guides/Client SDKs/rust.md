@@ -52,6 +52,15 @@ To mark the [game session as ready]({{< relref "_index.md#ready" >}}) call `sdk.
 sdk.ready()?;
 ```
 
+
+{{% feature publishVersion-="1.0.0" %}}
+To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}}) for a period of time, call `sdk.reserve(duration)`.
+
+```rust
+sdk.reserve(Duration::new(5, 0))?;
+```
+{{% /feature %}}
+
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `sdk.shutdown()`.
 
 ```rust

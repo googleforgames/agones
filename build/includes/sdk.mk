@@ -126,7 +126,7 @@ run-sdk-conformance-local: ensure-agones-sdk-image
 run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]s")
-run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
+run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
@@ -140,8 +140,8 @@ run-sdk-conformance-test:
 
 # Run a conformance test for all SDKs supported
 run-sdk-conformance-tests:
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go TESTS=ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
 
 # Clean package directories and binary files left
