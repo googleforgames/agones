@@ -84,6 +84,12 @@ fn run() -> Result<(), String> {
 
     println!("...marked Ready");
 
+    println!("Setting as Reserved for 5 seconds");
+    sdk.reserve(Duration::new(5, 0)).map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))?;
+    println!("...Reserved");
+
+    thread::sleep(Duration::new(6, 0));
+
     println!("Getting GameServer details...");
     let gameserver = sdk
         .get_gameserver()

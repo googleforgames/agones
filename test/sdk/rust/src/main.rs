@@ -86,6 +86,11 @@ fn run() -> Result<(), String> {
 
     println!("...marked Ready");
 
+    println!("Reserving for 5 seconds");
+    sdk.reserve(Duration::new(5, 0))
+        .map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))?;
+    println!("...Reserved");
+
     println!("Allocate game server ...");
     sdk.allocate()
         .map_err(|e| format!("Could not run Allocate(): {}. Exiting!", e))?;
@@ -97,7 +102,10 @@ fn run() -> Result<(), String> {
         .get_gameserver()
         .map_err(|e| format!("Could not run GameServer(): {}. Exiting!", e))?;
 
-    println!("GameServer name: {}", gameserver.object_meta.clone().unwrap().name);
+    println!(
+        "GameServer name: {}",
+        gameserver.object_meta.clone().unwrap().name
+    );
 
     println!("Setting a label");
     let creation_ts = gameserver.object_meta.clone().unwrap().creation_timestamp;

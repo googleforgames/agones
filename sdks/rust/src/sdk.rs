@@ -18,7 +18,6 @@ use std::time::Duration;
 
 use futures::{Future, Sink, Stream};
 use grpcio;
-use grpcio::CallOption;
 use protobuf::Message;
 
 use errors::*;
@@ -148,6 +147,17 @@ impl Sdk {
             .client
             .get_game_server(&req)
             .map(|e| GameServer::from_message(e))?;
+        Ok(res)
+    }
+
+    /// Reserve marks the Game Server as Reserved for a given duration, at which point
+    /// it will return the GameServer to a Ready state.
+    /// Do note, the smallest unit available in the time.Duration argument is a second.
+    pub fn reserve(&self, duration: Duration) -> Result<()> {
+        let mut d = sdk::Duration::new();
+        d.set_seconds(duration.as_secs() as i64);
+
+        let res = self.client.reserve(&d).map(|_| ())?;
         Ok(res)
     }
 
