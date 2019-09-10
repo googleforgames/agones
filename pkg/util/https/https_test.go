@@ -35,5 +35,6 @@ func TestFourZeroFour(t *testing.T) {
 	FourZeroFour(l, w, r)
 
 	resp := w.Result()
+	defer resp.Body.Close() // nolint: errcheck
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
