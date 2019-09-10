@@ -295,6 +295,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 	// and disable multicluster settings to avoid the target cluster
 	// forward the allocation request again.
 	gsa.Spec.MultiClusterSetting.Enabled = false
+	gsa.Namespace = connectionInfo.Namespace
 	body, err := json.Marshal(gsa)
 	if err != nil {
 		return nil, err
@@ -312,6 +313,8 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 		if err != nil {
 			return nil, err
 		}
+		// If there are multiple enpoints for the allocator connection and the current one is
+		// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
 		if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
 			// If there is a server error try a different endpoint
 			c.baseLogger.WithError(err).WithField("endpoint", endpoint).Warn("The request sent failed, trying next endpoint")
