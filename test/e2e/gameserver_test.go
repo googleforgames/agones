@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -366,6 +367,24 @@ func TestGameServerShutdown(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+// TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
+// Ephemeral Storage limit set to 0Mi
+func TestGameServerEvicted(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
+	newGs, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
+
+	assert.Nil(t, err, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
+
+	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
+
+	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
+
+	assert.Nil(t, err, fmt.Sprintf("waiting for %v GameServer Unhealthy state timed out (%v): %v",
+		gs.Spec, gs.Name, err))
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {
