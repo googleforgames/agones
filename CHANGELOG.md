@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.0.0](https://github.com/googleforgames/agones/tree/v1.0.0) (2019-09-17)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.0.0-rc...v1.0.0)
+
+**Closed issues:**
+
+- Release 1.0.0-rc [\#1053](https://github.com/googleforgames/agones/issues/1053)
+- Top Level Plan: 1.0 Release! [\#732](https://github.com/googleforgames/agones/issues/732)
+
 ## [v1.0.0-rc](https://github.com/googleforgames/agones/tree/v1.0.0-rc) (2019-09-10)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v0.12.0...v1.0.0-rc)
@@ -31,6 +40,7 @@
 
 **Merged pull requests:**
 
+- Release 1.0.0 Release Candidate [\#1054](https://github.com/googleforgames/agones/pull/1054) ([markmandel](https://github.com/markmandel))
 - Change allocator's preferredGameServerSelector field name to plural [\#1047](https://github.com/googleforgames/agones/pull/1047) ([pooneh-m](https://github.com/pooneh-m))
 - Fix a broken link in the node js client sdk docs. [\#1045](https://github.com/googleforgames/agones/pull/1045) ([roberthbailey](https://github.com/roberthbailey))
 - Fix for git.apache.org being down. [\#1031](https://github.com/googleforgames/agones/pull/1031) ([markmandel](https://github.com/markmandel))
