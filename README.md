@@ -10,9 +10,6 @@ Agones is a library for hosting, running and scaling [dedicated game servers](ht
 _Agones, is derived from the Greek word agōn which roughly translates to “contest”, “competition at games” and “gathering”.
 ([source](https://www.merriam-webster.com/dictionary/agones))_
 
-## Disclaimer
-This software is currently alpha, and subject to change. Not to be used in production systems.
-
 ## Why does this project exist?
 Agones replaces usual bespoke or proprietary cluster management and game server scaling solutions with a [Kubernetes](https://kubernetes.io/) cluster
 that includes the Agones custom _[Kubernetes Controller](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#custom-controllers)_ and matching [Custom Resource Definitions](https://kubernetes.io/docs/concepts/api-extension/custom-resources/#customresourcedefinitions) for _GameServers_, _Fleets_ and more.

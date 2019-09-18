@@ -344,20 +344,6 @@ Conditions:
 
 All this pods should be in a `RUNNING` state:
 
-{{% feature expiryVersion="1.0.0" %}}
-```bash
-kubectl get pods --namespace agones-system
-
-NAME                                    READY   STATUS    RESTARTS   AGE
-agones-controller-79f6c59bdb-9swzz      1/1     Running   0          2m47s
-agones-ping-8598d64bbd-gd6cg            1/1     Running   0          2m47s
-agones-ping-8598d64bbd-tjpcx            1/1     Running   0          2m47s
-gameserver-allocator-6bd4d456f9-bbj76   1/1     Running   0          2m48s
-gameserver-allocator-6bd4d456f9-vlkhk   1/1     Running   0          2m48s
-gameserver-allocator-6bd4d456f9-x7t9h   1/1     Running   0          2m48s
-```
-{{% /feature %}}
-{{% feature publishVersion="1.0.0" %}}
 
 ```bash
 kubectl get pods --namespace agones-system
@@ -370,7 +356,6 @@ agones-controller-7db45966db-56l66   1/1     Running   0          8m44s
 agones-ping-84c64f6c9d-bdlzh         1/1     Running   0          8m37s
 agones-ping-84c64f6c9d-sjgzz         1/1     Running   0          8m47s
 ```
-{{% /feature %}}
 
 That's it! This creates the [Custom Resource Definitions][crds] that power Agones and allows us to define resources of type `GameServer`.
 
