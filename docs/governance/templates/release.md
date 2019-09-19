@@ -14,8 +14,6 @@ Documentation: https://development.agones.dev/site/
 
 See [CHANGELOG](https://github.com/googleforgames/agones/blob/release-{version}/CHANGELOG.md) for more details on changes.
 
-This software is currently alpha, and subject to change. Not to be used in production systems.
-
 Images available with this release:
 
 - [gcr.io/agones-images/agones-controller:{version}](https://gcr.io/agones-images/agones-controller:{version})

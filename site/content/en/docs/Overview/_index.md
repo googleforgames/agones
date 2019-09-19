@@ -9,9 +9,6 @@ description: >
 _Agones, is derived from the Greek word agōn which roughly translates to “contest”, “competition at games” and “gathering”
 ([source](https://www.merriam-webster.com/dictionary/agones))._
 
-## Disclaimer
-This software is currently alpha, and subject to change. Not to be used in production systems.
-
 ## What is Agones?
 
 Agones is an open source platform, for deploying, hosting, scaling, and orchestrating dedicated game servers for

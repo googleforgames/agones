@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"agones.dev/agones/pkg"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/metrics"
@@ -62,6 +63,10 @@ type handler func(w http.ResponseWriter, r *http.Request)
 
 func main() {
 	conf := parseEnvFlags()
+
+	logger.WithField("version", pkg.Version).
+		WithField("sslPort", sslPort).
+		Info("Starting agones-allocator")
 
 	health, closer := setupMetricsRecorder(conf)
 	defer closer()
