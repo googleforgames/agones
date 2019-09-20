@@ -35,7 +35,7 @@ For example:
 
 ```console
 $ ./sidecar.linux.amd64 --local
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":""},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T18:01:58-07:00","version":"0.4.0-b44960a8"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":""},"grpcPort":9357,"httpPort":9358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T18:01:58-07:00","version":"0.4.0-b44960a8"}
 {"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T18:01:58-07:00"}
 {"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T18:01:58-07:00"}
 {"level":"info","msg":"Ready request has been received!","time":"2017-12-22T16:09:19-08:00"}
@@ -61,7 +61,7 @@ For example:
 
 ```console
 $ ./sdk-server.linux.amd64 --local -f ../../../examples/simple-udp/gameserver.yaml
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"../../../examples/simple-udp/gameserver.yaml"},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T17:56:39-07:00","version":"0.4.0-b44960a8"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"../../../examples/simple-udp/gameserver.yaml"},"grpcPort":9357,"httpPort":9358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T17:56:39-07:00","version":"0.4.0-b44960a8"}
 {"level":"info","msg":"Reading GameServer configuration","path":"/home/user/workspace/agones/src/agones.dev/agones/examples/simple-udp/gameserver.yaml","source":"main","time":"2018-08-25T17:56:39-07:00"}
 {"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
 {"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}

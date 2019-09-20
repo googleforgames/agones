@@ -118,7 +118,7 @@ ensure-build-sdk-image:
 run-sdk-conformance-local: TIMEOUT ?= 30
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
 run-sdk-conformance-local: ensure-agones-sdk-image
-	docker run -e "ADDRESS=" -p 59357:59357 \
+	docker run -e "ADDRESS=" -p 9357:9357 \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
@@ -130,7 +130,7 @@ run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gam
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
-	sleep $(DELAY) && docker run -p 59357:59357 -e "ADDRESS=" \
+	sleep $(DELAY) && docker run -p 9357:9357 -e "ADDRESS=" \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" --net=host  $(sidecar_tag)
 
 # Run SDK conformance test for a specific SDK_FOLDER

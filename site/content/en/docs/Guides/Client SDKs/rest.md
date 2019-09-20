@@ -8,7 +8,7 @@ description: "This is the REST version of the Agones Game Server Client SDK. "
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
-The REST API can be accessed from `http://localhost:59358/` from the game server process.
+The REST API can be accessed from `http://localhost:9358/` from the game server process.
 
 Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
 
@@ -40,7 +40,7 @@ Call when the GameServer is ready to accept connections
 #### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/ready
+$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:9358/ready
 ```
 
 ### Health
@@ -53,7 +53,7 @@ Send a Empty every d Duration to declare that this GameSever is healthy
 #### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/health
+$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:9358/health
 ```
 
 ### Shutdown
@@ -67,7 +67,7 @@ Call when the GameServer session is over and it's time to shut down
 #### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/shutdown
+$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:9358/shutdown
 ```
 
 ### Set Label
@@ -79,7 +79,7 @@ See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-
 #### Example
 
 ```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:59358/metadata/label
+$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:9358/metadata/label
 ```
 
 ### Set Annotation
@@ -89,7 +89,7 @@ Apply a Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer`
 #### Example
 
 ```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:59358/metadata/annotation
+$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:9358/metadata/annotation
 ```
 
 ### GameServer
@@ -100,7 +100,7 @@ Call when you want to retrieve the backing `GameServer` configuration details
 - Method: `GET`
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:59358/gameserver
+$ curl -H "Content-Type: application/json" -X GET http://localhost:9358/gameserver
 ```
 
 Response:
@@ -142,7 +142,7 @@ want to keep the http connection open, and read lines from the result stream and
 come in.
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:59358/watch/gameserver
+$ curl -H "Content-Type: application/json" -X GET http://localhost:9358/watch/gameserver
 ```
 
 Response:
@@ -164,5 +164,5 @@ relinquish control to an external service which likely doesn't have as much info
 #### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/allocate
+$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:9358/allocate
 ```

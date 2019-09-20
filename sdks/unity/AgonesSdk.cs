@@ -44,7 +44,7 @@ namespace Agones
         /// </summary>
         public bool logEnabled = false;
 
-        private const string sidecarAddress = "http://localhost:59358";
+        private const string sidecarAddress = "http://localhost:9358";
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         private struct KeyValueMessage

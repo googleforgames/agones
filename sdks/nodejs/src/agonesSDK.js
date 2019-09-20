@@ -19,7 +19,7 @@ const services = require('../lib/sdk_grpc_pb');
 
 class AgonesSDK {
 	constructor() {
-		this.client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
+		this.client = new services.SDKClient('localhost:9357', grpc.credentials.createInsecure());
 		this.healthStream = undefined;
 		this.emitters = [];
 	}

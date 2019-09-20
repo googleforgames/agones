@@ -27,7 +27,7 @@ struct SDK::SDKImpl {
 };
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
-  pimpl_->channel_ = grpc::CreateChannel("localhost:59357",
+  pimpl_->channel_ = grpc::CreateChannel("localhost:9357",
                                          grpc::InsecureChannelCredentials());
 }
 

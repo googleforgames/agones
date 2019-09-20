@@ -16,7 +16,7 @@
 
 UAgonesSettings::UAgonesSettings()
 	: Super()
-	, AgonesSidecarAddress("http://localhost:59358")
+	, AgonesSidecarAddress("http://localhost:9358")
 	, bHealthPingEnabled(true)
 	, HealthPingSeconds(5.0f)
 	, bDebugLogEnabled(false)

@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const port = 59357
+const port = 9357
 
 // GameServerCallback is a function definition to be called
 // when a GameServer CRD has been changed
@@ -40,7 +40,7 @@ type SDK struct {
 }
 
 // NewSDK starts a new SDK instance, and connects to
-// localhost on port 59357. Blocks until connection and handshake are made.
+// localhost on port 9357. Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
 	addr := fmt.Sprintf("localhost:%d", port)

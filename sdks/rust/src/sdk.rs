@@ -25,7 +25,7 @@ use grpc::sdk;
 use grpc::sdk_grpc;
 use types::*;
 
-const PORT: i32 = 59357;
+const PORT: i32 = 9357;
 
 /// SDK is an instance of the Agones SDK
 pub struct Sdk {
@@ -34,7 +34,7 @@ pub struct Sdk {
 }
 
 impl Sdk {
-    /// Starts a new SDK instance, and connects to localhost on port 59357.
+    /// Starts a new SDK instance, and connects to localhost on port 9357.
     /// Blocks until connection and handshake are made.
     /// Times out after ~30 seconds.
     pub fn new() -> Result<Sdk> {
