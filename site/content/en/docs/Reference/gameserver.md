@@ -24,7 +24,7 @@ spec:
   ports:
     # name is a descriptive name for the port
   - name: default
-    # portPolicy has two options:
+    # portPolicy has three options:
     # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
     # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
@@ -49,6 +49,15 @@ spec:
     # Minimum consecutive failures for the health probe to be considered failed after having succeeded.
     # Defaults to 3. Minimum value is 1
     failureThreshold: 3
+{{% feature publishVersion="1.1.0" %}}
+  # logging parameters for game server sidecar
+  logging:
+    # sdkServer logging parameter has three options:
+    #  - "Info" (default) The SDK server will output all messages except for debug messages
+    #  - "Debug" The SDK server will output all messages including debug messages
+    #  - "Error" The SDK server will only output error messages
+    sdkServer: Info
+{{% /feature %}}
   # Pod template configuration
   # https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplate-v1-core
   template:
@@ -83,6 +92,13 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
+{{% feature publishVersion="1.1.0" %}}
+-`logging` define log level for sidecars
+  - `sdkServer` field defines log level for SDK server. Defaults to "Info". It has three options:
+    - "Info" (default) The SDK server will output all messages except for debug messages
+    - "Debug" The SDK server will output all messages including debug messages
+    - "Error" The SDK server will only output error messages
+{{% /feature %}}
 - `template` the [pod spec template](https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram

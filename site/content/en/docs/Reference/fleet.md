@@ -57,6 +57,11 @@ spec:
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
+{{% feature publishVersion="1.1.0" %}}
+      # logging parameters for game server sidecar
+      logging:
+        sdkServer: Info
+{{% /feature %}}
       # The GameServer's Pod template
       template:
         spec:
