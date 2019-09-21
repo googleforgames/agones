@@ -41,8 +41,12 @@ import (
 )
 
 const (
-	grpcPort = 59357
-	httpPort = 59358
+	grpcPort = 9357
+	httpPort = 9358
+
+	// TODO(roberthbailey): Remove the legacy ports once we are ready to drop support for older SDK releases.
+	legacyGrpcPort = 59357
+	legacyHttpPort = 59358
 
 	// specifically env vars
 	gameServerNameEnv = "GAMESERVER_NAME"
@@ -63,37 +67,43 @@ var (
 func main() {
 	ctlConf := parseEnvFlags()
 	logger.WithField("version", pkg.Version).
+		WithField("legacyGrpcPort", legacyGrpcPort).WithField("legacyHttpPort", legacyHttpPort).
 		WithField("grpcPort", grpcPort).WithField("httpPort", httpPort).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
 
-	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, grpcPort)
-	lis, err := net.Listen("tcp", grpcEndpoint)
-	if err != nil {
-		logger.WithField("grpcPort", grpcPort).WithField("Address", ctlConf.Address).Fatalf("Could not listen on grpcPort")
-	}
 	stop := signals.NewStopChannel()
 	timedStop := make(chan struct{})
 	grpcServer := grpc.NewServer()
+	legacyGrpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a kill signal
 	// then the gameserver is being shut down, and we no longer
 	// care about running RPC calls.
 	defer grpcServer.Stop()
+	defer legacyGrpcServer.Stop()
 
 	mux := gwruntime.NewServeMux()
+	legacyMux := gwruntime.NewServeMux()
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, httpPort),
 		Handler: mux,
 	}
-	defer httpServer.Close() // nolint: errcheck
+	legacyHttpServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, legacyHttpPort),
+		Handler: legacyMux,
+	}
+	defer httpServer.Close()       // nolint: errcheck
+	defer legacyHttpServer.Close() // nolint: errcheck
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	if ctlConf.IsLocal {
-		localSDK, err := registerLocal(grpcServer, ctlConf)
+		localSDK, err := newLocalSDKServer(ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start local sdk server")
 		}
 		defer localSDK.Close()
+		sdk.RegisterSDKServer(grpcServer, localSDK)
+		sdk.RegisterSDKServer(legacyGrpcServer, localSDK)
 
 		if ctlConf.Timeout != 0 {
 			go func() {
@@ -102,11 +112,13 @@ func main() {
 			}()
 		}
 	} else if ctlConf.Test != "" {
-		localSDK, err := registerTestSdkServer(grpcServer, ctlConf)
+		localSDK, err := newTestSdkServer(ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start test sdk server")
 		}
 		defer localSDK.Close()
+		sdk.RegisterSDKServer(grpcServer, localSDK)
+		sdk.RegisterSDKServer(legacyGrpcServer, localSDK)
 
 		if ctlConf.Timeout != 0 {
 			go func() {
@@ -116,7 +128,7 @@ func main() {
 		}
 	} else {
 		var config *rest.Config
-		config, err = rest.InClusterConfig()
+		config, err := rest.InClusterConfig()
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
@@ -147,10 +159,16 @@ func main() {
 			}
 		}()
 		sdk.RegisterSDKServer(grpcServer, s)
+		sdk.RegisterSDKServer(legacyGrpcServer, s)
 	}
 
-	go runGrpc(grpcServer, lis)
-	go runGateway(ctx, grpcEndpoint, mux, httpServer)
+	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, grpcPort)
+	legacyGrpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, legacyGrpcPort)
+
+	go runGrpc(grpcServer, grpcEndpoint, true)
+	go runGrpc(legacyGrpcServer, legacyGrpcEndpoint, false)
+	go runGateway(ctx, grpcEndpoint, mux, httpServer, true)
+	go runGateway(ctx, legacyGrpcEndpoint, legacyMux, legacyHttpServer, false)
 
 	select {
 	case <-stop:
@@ -160,7 +178,7 @@ func main() {
 	logger.Info("shutting down sdk server")
 }
 
-func registerLocal(grpcServer *grpc.Server, ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
+func newLocalSDKServer(ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
 	filePath := ""
 	if ctlConf.LocalFile != "" {
 		filePath, err = filepath.Abs(ctlConf.LocalFile)
@@ -178,11 +196,10 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (localSDK *sdkserver
 	if err != nil {
 		return
 	}
-	sdk.RegisterSDKServer(grpcServer, localSDK)
 	return
 }
 
-func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
+func newTestSdkServer(ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
 	localSDK, err = sdkserver.NewLocalSDKServer("")
 	if err != nil {
 		return
@@ -191,36 +208,50 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (localSDK *s
 	localSDK.GenerateUID()
 	expectedFuncs := strings.Split(ctlConf.Test, ",")
 	localSDK.SetExpectedSequence(expectedFuncs)
-	sdk.RegisterSDKServer(grpcServer, localSDK)
 	return
 }
 
 // runGrpc runs the grpc service
-func runGrpc(grpcServer *grpc.Server, lis net.Listener) {
-	logger.Info("Starting SDKServer grpc service...")
-	if err := grpcServer.Serve(lis); err != nil {
-		logger.WithError(err).Fatal("Could not serve grpc server")
+func runGrpc(grpcServer *grpc.Server, grpcEndpoint string, isFatal bool) {
+	logger.WithField("grpcEndpoint", grpcEndpoint).Info("Starting SDKServer grpc service...")
+	lis, err := net.Listen("tcp", grpcEndpoint)
+	if err != nil {
+		if isFatal {
+			logger.WithError(err).WithField("grpcEndpoint", grpcEndpoint).Fatal("Could not listen on grpcEndpoint")
+		}
+		logger.WithError(err).WithField("grpcEndpoint", grpcEndpoint).Warn("Could not listen on grpcEndpoint")
+		return
+	}
+	for err := grpcServer.Serve(lis); err != nil; {
+		if isFatal {
+			logger.WithError(err).Fatal("Could not serve grpc server")
+		}
+		logger.WithError(err).Warn("Could not serve grpc server")
+		time.Sleep(30 * time.Second)
 	}
 }
 
 // runGateway runs the grpc-gateway
-func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server) {
+func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMux, httpServer *http.Server, isFatal bool) {
 	conn, err := grpc.DialContext(ctx, grpcEndpoint, grpc.WithBlock(), grpc.WithInsecure())
 	if err != nil {
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}
 
-	if err = sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
+	if err := sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
 		logger.WithError(err).Fatal("Could not register grpc-gateway")
 	}
 
 	logger.Info("Starting SDKServer grpc-gateway...")
-	if err := httpServer.ListenAndServe(); err != nil {
+	for err := httpServer.ListenAndServe(); err != nil; {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
-		} else {
+		} else if isFatal {
 			logger.WithError(err).Fatal("Could not serve http server")
+		} else {
+			logger.WithError(err).Warn("Could not serve http server")
 		}
+		time.Sleep(30 * time.Second)
 	}
 }
 
