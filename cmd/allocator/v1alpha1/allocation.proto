@@ -29,7 +29,7 @@ service AllocationService {
 }
 
 message AllocationRequest {
-  // The k8s namespace that is hosting the targetted fleet of gameservers to be allocated
+  // The k8s namespace that is hosting the targeted fleet of gameservers to be allocated
   string namespace = 1;
 
   // If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally.
