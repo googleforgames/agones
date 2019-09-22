@@ -113,7 +113,7 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 			close(stop)
 
 		case "GAMESERVER":
-			writeGameServerName(s, conn, sender)
+			respond(conn, sender, gameServerName(s))
 
 		case "READY":
 			ready(s)
@@ -212,8 +212,8 @@ func exit(s *sdk.SDK) {
 	os.Exit(0)
 }
 
-// writes the GameServer name to the connection UDP stream
-func writeGameServerName(s *sdk.SDK, conn net.PacketConn, sender net.Addr) {
+// gameServerName returns the GameServer name
+func gameServerName(s *sdk.SDK) string {
 	var gs *coresdk.GameServer
 	gs, err := s.GameServer()
 	if err != nil {
@@ -225,10 +225,7 @@ func writeGameServerName(s *sdk.SDK, conn net.PacketConn, sender net.Addr) {
 		log.Fatalf("error mashalling GameServer to JSON: %v", err)
 	}
 	log.Printf("GameServer: %s \n", string(j))
-	msg := "NAME: " + gs.ObjectMeta.Name + "\n"
-	if _, err = conn.WriteTo([]byte(msg), sender); err != nil {
-		log.Fatalf("Could not write to udp stream: %v", err)
-	}
+	return "NAME: " + gs.ObjectMeta.Name + "\n"
 }
 
 // watchGameServerEvents creates a callback to log when
