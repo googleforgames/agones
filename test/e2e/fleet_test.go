@@ -562,6 +562,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 
 // TestFleetNameValidation is built to test Fleet Name length validation,
 // Fleet Name should have at most 63 chars.
+// nolint:dupl
 func TestFleetNameValidation(t *testing.T) {
 	t.Parallel()
 	client := framework.AgonesClient.AgonesV1()

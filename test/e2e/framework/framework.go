@@ -270,6 +270,11 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
+	err = agonesv1.GameServerSets(ns).DeleteCollection(deleteOptions, listOptions)
+	if err != nil {
+		return err
+	}
+
 	return agonesv1.GameServers(ns).
 		DeleteCollection(deleteOptions, listOptions)
 }
