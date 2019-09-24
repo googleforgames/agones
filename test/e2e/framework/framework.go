@@ -132,9 +132,18 @@ func (f *Framework) WaitForGameServerState(gs *agonesv1.GameServer, state agones
 		state, gs.Namespace, gs.Name)
 }
 
-// WaitForFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
-// nolint: dupl
-func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) {
+// AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
+func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) {
+	t.Helper()
+	err := f.WaitForFleetCondition(t, flt, condition)
+	if err != nil {
+		// Do not call Fatalf() from go routine other than main test go routine, because it could cause a race
+		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
+	}
+}
+
+// WaitForFleetCondition waits for the Fleet to be in a specific condition or returns an error if the condition can't be met in 5 minutes.
+func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) error {
 	t.Helper()
 	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
@@ -147,8 +156,9 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 	})
 	if err != nil {
 		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
-		t.Fatalf("error waiting for fleet condition on fleet %v", flt.Name)
+		return err
 	}
+	return nil
 }
 
 // WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.

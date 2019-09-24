@@ -52,7 +52,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt))
@@ -66,36 +66,36 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// the fleet autoscaler should scale the fleet up now up to BufferSize
 	bufferSize := int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// patch the autoscaler to increase MinReplicas and watch the fleet scale up
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), bufferSize+2, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	// min replicas is now higher than buffer size, will scale to that level
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(fas.Spec.Policy.Buffer.MinReplicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(fas.Spec.Policy.Buffer.MinReplicas))
 
 	// patch the autoscaler to remove MinReplicas and watch the fleet scale down to bufferSize
 	fas, err = patchFleetAutoscaler(fas, intstr.FromInt(int(bufferSize)), 0, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	bufferSize = int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// do an allocation and watch the fleet scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 
 	// patch autoscaler to switch to relative buffer size and check if the fleet adjusts
 	_, err = patchFleetAutoscaler(fas, intstr.FromString("10%"), 1, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	//10% with only one allocated GS means only one ready server
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(1))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
 	// get the Status of the fleetautoscaler
 	fas, err = framework.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.Name, metav1.GetOptions{})
@@ -120,7 +120,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	gp := int64(1)
 	err = stable.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
@@ -140,7 +140,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	r := rand.New(rand.NewSource(1783))
 
@@ -180,7 +180,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 					expectedReplicas = fas.Spec.Policy.Buffer.MaxReplicas
 				}
 				// the fleet autoscaler should scale the fleet now to expectedReplicas
-				framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
+				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
 			} else {
 				assert.False(t, valid,
 					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
@@ -270,7 +270,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
@@ -292,11 +292,11 @@ func TestAutoscalerWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
@@ -484,7 +484,7 @@ func TestTlsWebhook(t *testing.T) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
 	fas := defaultFleetAutoscaler(flt)
@@ -508,11 +508,11 @@ func TestTlsWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.WaitForFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 }
