@@ -66,7 +66,7 @@ import (
 )
 
 var (
-	logger = runtime.NewLoggerWithSource("main")
+    logger = runtime.NewLoggerWithSource("main")
 )
 
 func main() {
