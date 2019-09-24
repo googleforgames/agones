@@ -53,6 +53,7 @@ const (
 	fileFlag    = "file"
 	testFlag    = "test"
 	addressFlag = "address"
+	delayFlag   = "delay"
 	timeoutFlag = "timeout"
 )
 
@@ -71,6 +72,12 @@ func main() {
 	if err != nil {
 		logger.WithField("grpcPort", grpcPort).WithField("Address", ctlConf.Address).Fatalf("Could not listen on grpcPort")
 	}
+
+	if ctlConf.Delay > 0 {
+		logger.Infof("Waiting %d seconds before starting", ctlConf.Delay)
+		time.Sleep(time.Duration(ctlConf.Delay) * time.Second)
+	}
+
 	stop := signals.NewStopChannel()
 	timedStop := make(chan struct{})
 	grpcServer := grpc.NewServer()
@@ -232,12 +239,14 @@ func parseEnvFlags() config {
 	viper.SetDefault(fileFlag, "")
 	viper.SetDefault(testFlag, "")
 	viper.SetDefault(addressFlag, "localhost")
+	viper.SetDefault(delayFlag, 0)
 	viper.SetDefault(timeoutFlag, 0)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost'")
-	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution before close. Useful for tests")
+	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
+	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which shoud be called during the SDK Conformance test run.")
 	pflag.Parse()
 
@@ -247,6 +256,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(testFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
+	runtime.Must(viper.BindEnv(delayFlag))
 	runtime.Must(viper.BindEnv(timeoutFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
@@ -254,6 +264,7 @@ func parseEnvFlags() config {
 		IsLocal:   viper.GetBool(localFlag),
 		Address:   viper.GetString(addressFlag),
 		LocalFile: viper.GetString(fileFlag),
+		Delay:     viper.GetInt(delayFlag),
 		Timeout:   viper.GetInt(timeoutFlag),
 		Test:      viper.GetString(testFlag),
 	}
@@ -264,6 +275,7 @@ type config struct {
 	Address   string
 	IsLocal   bool
 	LocalFile string
+	Delay     int
 	Timeout   int
 	Test      string
 }
