@@ -39,7 +39,7 @@ func TestMain(m *testing.M) {
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
-	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directrory")
+	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directory")
 
 	flag.Parse()
 
