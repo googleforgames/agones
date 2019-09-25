@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 
@@ -207,6 +208,34 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 
 	err = podClient.Delete(pod.ObjectMeta.Name, nil)
 	assert.NoError(t, err)
+
+	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
+	assert.NoError(t, err)
+}
+
+func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
+	t.Parallel()
+
+	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
+
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	l.WithField("gs", readyGs.ObjectMeta.Name).Info("GameServer created")
+
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
+	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+
+	address := fmt.Sprintf("%s:%d", readyGs.Status.Address, readyGs.Status.Ports[0].Port)
+	conn, err := net.Dial("udp", address)
+	assert.NoError(t, err)
+	defer conn.Close() // nolint: errcheck
+	_, err = conn.Write([]byte("CRASH"))
+	assert.NoError(t, err)
+	l.WithField("address", address).Info("sent UDP packet")
 
 	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
