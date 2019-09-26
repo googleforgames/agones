@@ -41,20 +41,22 @@ import (
 )
 
 const (
-	grpcPort = 59357
-	httpPort = 59358
+	defaultGRPCPort = 59357
+	defaultHTTPPort = 59358
 
 	// specifically env vars
 	gameServerNameEnv = "GAMESERVER_NAME"
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag   = "local"
-	fileFlag    = "file"
-	testFlag    = "test"
-	addressFlag = "address"
-	delayFlag   = "delay"
-	timeoutFlag = "timeout"
+	localFlag    = "local"
+	fileFlag     = "file"
+	testFlag     = "test"
+	addressFlag  = "address"
+	delayFlag    = "delay"
+	timeoutFlag  = "timeout"
+	grpcPortFlag = "grpc-port"
+	httpPortFlag = "http-port"
 )
 
 var (
@@ -64,14 +66,7 @@ var (
 func main() {
 	ctlConf := parseEnvFlags()
 	logger.WithField("version", pkg.Version).
-		WithField("grpcPort", grpcPort).WithField("httpPort", httpPort).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
-
-	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, grpcPort)
-	lis, err := net.Listen("tcp", grpcEndpoint)
-	if err != nil {
-		logger.WithField("grpcPort", grpcPort).WithField("Address", ctlConf.Address).Fatalf("Could not listen on grpcPort")
-	}
 
 	if ctlConf.Delay > 0 {
 		logger.Infof("Waiting %d seconds before starting", ctlConf.Delay)
@@ -88,7 +83,7 @@ func main() {
 
 	mux := gwruntime.NewServeMux()
 	httpServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, httpPort),
+		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.HTTPPort),
 		Handler: mux,
 	}
 	defer httpServer.Close() // nolint: errcheck
@@ -123,7 +118,7 @@ func main() {
 		}
 	} else {
 		var config *rest.Config
-		config, err = rest.InClusterConfig()
+		config, err := rest.InClusterConfig()
 		if err != nil {
 			logger.WithError(err).Fatal("Could not create in cluster config")
 		}
@@ -156,7 +151,8 @@ func main() {
 		sdk.RegisterSDKServer(grpcServer, s)
 	}
 
-	go runGrpc(grpcServer, lis)
+	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.GRPCPort)
+	go runGrpc(grpcServer, grpcEndpoint)
 	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
 	select {
@@ -203,8 +199,13 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (localSDK *s
 }
 
 // runGrpc runs the grpc service
-func runGrpc(grpcServer *grpc.Server, lis net.Listener) {
-	logger.Info("Starting SDKServer grpc service...")
+func runGrpc(grpcServer *grpc.Server, grpcEndpoint string) {
+	lis, err := net.Listen("tcp", grpcEndpoint)
+	if err != nil {
+		logger.WithField("grpcEndpoint", grpcEndpoint).Fatal("Could not listen on grpc endpoint")
+	}
+
+	logger.WithField("grpcEndpoint", grpcEndpoint).Info("Starting SDKServer grpc service...")
 	if err := grpcServer.Serve(lis); err != nil {
 		logger.WithError(err).Fatal("Could not serve grpc server")
 	}
@@ -221,7 +222,7 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 		logger.WithError(err).Fatal("Could not register grpc-gateway")
 	}
 
-	logger.Info("Starting SDKServer grpc-gateway...")
+	logger.WithField("grpcEndpoint", grpcEndpoint).Info("Starting SDKServer grpc-gateway...")
 	if err := httpServer.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
@@ -241,10 +242,14 @@ func parseEnvFlags() config {
 	viper.SetDefault(addressFlag, "localhost")
 	viper.SetDefault(delayFlag, 0)
 	viper.SetDefault(timeoutFlag, 0)
+	viper.SetDefault(grpcPortFlag, defaultGRPCPort)
+	viper.SetDefault(httpPortFlag, defaultHTTPPort)
 	pflag.Bool(localFlag, viper.GetBool(localFlag),
 		"Set this, or LOCAL env, to 'true' to run this binary in local development mode. Defaults to 'false'")
 	pflag.StringP(fileFlag, "f", viper.GetString(fileFlag), "Set this, or FILE env var to the path of a local yaml or json file that contains your GameServer resoure configuration")
 	pflag.String(addressFlag, viper.GetString(addressFlag), "The Address to bind the server grpcPort to. Defaults to 'localhost'")
+	pflag.Int(grpcPortFlag, viper.GetInt(grpcPortFlag), fmt.Sprintf("Port on which to bind the gRPC server. Defaults to %d", defaultGRPCPort))
+	pflag.Int(httpPortFlag, viper.GetInt(httpPortFlag), fmt.Sprintf("Port on which to bind the HTTP server. Defaults to %d", defaultHTTPPort))
 	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which shoud be called during the SDK Conformance test run.")
@@ -258,6 +263,8 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
 	runtime.Must(viper.BindEnv(delayFlag))
 	runtime.Must(viper.BindEnv(timeoutFlag))
+	runtime.Must(viper.BindEnv(grpcPortFlag))
+	runtime.Must(viper.BindEnv(httpPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
@@ -267,6 +274,8 @@ func parseEnvFlags() config {
 		Delay:     viper.GetInt(delayFlag),
 		Timeout:   viper.GetInt(timeoutFlag),
 		Test:      viper.GetString(testFlag),
+		GRPCPort:  viper.GetInt(grpcPortFlag),
+		HTTPPort:  viper.GetInt(httpPortFlag),
 	}
 }
 
@@ -278,4 +287,6 @@ type config struct {
 	Delay     int
 	Timeout   int
 	Test      string
+	GRPCPort  int
+	HTTPPort  int
 }

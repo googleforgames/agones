@@ -61,12 +61,12 @@ func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		protocol          corev1.Protocol
-		state             GameServerState
-		policy            PortPolicy
-		health            Health
-		scheduling        apis.SchedulingStrategy
-		sdkServerLogLevel string
+		protocol   corev1.Protocol
+		state      GameServerState
+		policy     PortPolicy
+		health     Health
+		scheduling apis.SchedulingStrategy
+		sdkServer  SdkServer
 	}
 	data := map[string]struct {
 		gameServer GameServer
@@ -94,7 +94,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					InitialDelaySeconds: 5,
 					PeriodSeconds:       5,
 				},
-				sdkServerLogLevel: "Info",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"defaults on passthrough": {
@@ -118,7 +122,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					InitialDelaySeconds: 5,
 					PeriodSeconds:       5,
 				},
-				sdkServerLogLevel: "Info",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"defaults are already set": {
@@ -141,7 +149,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 								{Name: "testing", Image: "testing/image"},
 								{Name: "testing2", Image: "testing/image2"}}},
 					},
-					Logging: Logging{SdkServer: "Info"},
+					SdkServer: SdkServer{
+						LogLevel: SdkServerLogLevelInfo,
+						GRPCPort: 59357,
+						HTTPPort: 59358,
+					},
 				},
 				Status: GameServerStatus{State: "TestState"}},
 			container: "testing2",
@@ -156,7 +168,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					InitialDelaySeconds: 11,
 					PeriodSeconds:       12,
 				},
-				sdkServerLogLevel: "Info",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"set basic defaults on static gameserver": {
@@ -178,7 +194,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					InitialDelaySeconds: 5,
 					PeriodSeconds:       5,
 				},
-				sdkServerLogLevel: "Info",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"health is disabled": {
@@ -198,7 +218,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				health: Health{
 					Disabled: true,
 				},
-				sdkServerLogLevel: "Info",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"convert from legacy single port to multiple": {
@@ -218,19 +242,23 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			},
 			container: "testing",
 			expected: expected{
-				protocol:          corev1.ProtocolTCP,
-				state:             GameServerStateCreating,
-				policy:            Static,
-				scheduling:        apis.Packed,
-				health:            Health{Disabled: true},
-				sdkServerLogLevel: "Info",
+				protocol:   corev1.ProtocolTCP,
+				state:      GameServerStateCreating,
+				policy:     Static,
+				scheduling: apis.Packed,
+				health:     Health{Disabled: true},
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelInfo,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
 			},
 		},
 		"set Debug logging level": {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					Ports:   []GameServerPort{{ContainerPort: 999}},
-					Logging: Logging{SdkServer: "Debug"},
+					Ports:     []GameServerPort{{ContainerPort: 999}},
+					SdkServer: SdkServer{LogLevel: SdkServerLogLevelDebug},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
@@ -248,7 +276,44 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					InitialDelaySeconds: 5,
 					PeriodSeconds:       5,
 				},
-				sdkServerLogLevel: "Debug",
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelDebug,
+					GRPCPort: 59357,
+					HTTPPort: 59358,
+				},
+			},
+		},
+		"set gRPC and HTTP ports on SDK Server": {
+			gameServer: GameServer{
+				Spec: GameServerSpec{
+					Ports: []GameServerPort{{ContainerPort: 999}},
+					SdkServer: SdkServer{
+						LogLevel: SdkServerLogLevelError,
+						GRPCPort: 9357,
+						HTTPPort: 9358,
+					},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{
+							{Name: "testing", Image: "testing/image"},
+						}}}},
+			},
+			container: "testing",
+			expected: expected{
+				protocol:   "UDP",
+				state:      GameServerStatePortAllocation,
+				policy:     Dynamic,
+				scheduling: apis.Packed,
+				health: Health{
+					Disabled:            false,
+					FailureThreshold:    3,
+					InitialDelaySeconds: 5,
+					PeriodSeconds:       5,
+				},
+				sdkServer: SdkServer{
+					LogLevel: SdkServerLogLevelError,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
+				},
 			},
 		},
 	}
@@ -264,9 +329,9 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, test.container, spec.Container)
 			assert.Equal(t, test.expected.protocol, spec.Ports[0].Protocol)
 			assert.Equal(t, test.expected.state, test.gameServer.Status.State)
-			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
-			assert.Equal(t, test.expected.sdkServerLogLevel, test.gameServer.Spec.Logging.SdkServer)
+			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
+			assert.Equal(t, test.expected.sdkServer, test.gameServer.Spec.SdkServer)
 		})
 	}
 }
