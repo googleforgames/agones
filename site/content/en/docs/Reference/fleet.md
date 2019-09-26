@@ -112,9 +112,11 @@ spec:
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
-      # logging parameters for game server sidecar
-      logging:
-        sdkServer: Info
+      # Parameters for game server sidecar
+      sdkServer:
+        logLevel: Info
+        grpcPort: 9357
+        httpPort: 9358
       # The GameServer's Pod template
       template:
         spec:
