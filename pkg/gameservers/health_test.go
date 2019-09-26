@@ -50,6 +50,9 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	pod.Status.ContainerStatuses[0].State.Terminated = nil
 	assert.False(t, hc.failedContainer(pod))
 
+	pod.Status.ContainerStatuses[0].LastTerminationState.Terminated = &corev1.ContainerStateTerminated{}
+	assert.True(t, hc.failedContainer(pod))
+
 	pod2.Status.ContainerStatuses[0].Name = "Not a matching name"
 	assert.False(t, hc.failedContainer(pod2))
 }
