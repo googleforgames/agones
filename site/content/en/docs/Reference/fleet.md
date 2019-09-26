@@ -57,12 +57,17 @@ spec:
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
+{{% feature publishVersion="1.1.0" %}}
+      # logging parameters for game server sidecar
+      logging:
+        sdkServer: Info
+{{% /feature %}}
       # The GameServer's Pod template
       template:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.14
+            image: gcr.io/agones-images/udp-server:0.15
 ```
 
 Since Agones defines a new 

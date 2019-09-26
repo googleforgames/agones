@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -31,7 +31,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -76,7 +76,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -140,7 +140,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -151,7 +151,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -169,7 +169,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -205,7 +205,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -339,6 +339,21 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
+                    logging:
+                      type: object
+                      title: Define logging levels for agones system components
+                      properties:
+                        sdkServer:
+                          type: string 
+                          description: |
+                            sdkServer logging parameter has three options:
+                            - "Info" (default) The SDK server will output all messages except for debug messages
+                            - "Debug" The SDK server will output all messages including debug messages
+                            - "Error" The SDK server will only output error messages
+                          enum:
+                          - Error
+                          - Info
+                          - Debug
                     scheduling:
                       type: string
                       enum:
@@ -401,7 +416,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -485,7 +500,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -594,6 +609,21 @@ spec:
                     type: integer
                     minimum: 1
                     maximum: 65535
+            logging:
+              type: object
+              title: Define logging levels for agones system components
+              properties:
+                sdkServer:
+                  type: string 
+                  description: |
+                    sdkServer logging parameter has three options:
+                    - "Info" (default) The SDK server will output all messages except for debug messages
+                    - "Debug" The SDK server will output all messages including debug messages
+                    - "Error" The SDK server will only output error messages
+                  enum:
+                  - Error
+                  - Info
+                  - Debug
             scheduling:
               type: string
               enum:
@@ -646,7 +676,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
     component: crd
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -685,10 +715,13 @@ spec:
                   minItems: 1
                 clusterName:
                   type: string
+                namespace:
+                  type: string
               required:
               - clusterName
               - allocationEndpoints
               - secretName
+              - namespace
               type: object
             priority:
               format: int64
@@ -732,7 +765,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -860,6 +893,21 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
+                    logging:
+                      type: object
+                      title: Define logging levels for agones system components
+                      properties:
+                        sdkServer:
+                          type: string 
+                          description: |
+                            sdkServer logging parameter has three options:
+                            - "Info" (default) The SDK server will output all messages except for debug messages
+                            - "Debug" The SDK server will output all messages including debug messages
+                            - "Error" The SDK server will only output error messages
+                          enum:
+                          - Error
+                          - Info
+                          - Debug
                     scheduling:
                       type: string
                       enum:
@@ -923,7 +971,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -959,7 +1007,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1030,7 +1078,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:1.0.0-rc"
+        image: "gcr.io/agones-images/agones-allocator:1.1.0"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -1071,7 +1119,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -1088,7 +1136,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 
@@ -1101,7 +1149,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -1122,7 +1170,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.0.0-rc"
+    chart: "agones-1.1.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1139,7 +1187,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.0.0-rc"
+    chart: "agones-1.1.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1155,7 +1203,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.0.0-rc"
+    chart: "agones-1.1.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1185,7 +1233,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1230,7 +1278,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:1.0.0-rc"
+        image: "gcr.io/agones-images/agones-controller:1.1.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -1240,7 +1288,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:1.0.0-rc"
+          value: "gcr.io/agones-images/agones-sdk:1.1.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -1310,7 +1358,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1347,7 +1395,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:1.0.0-rc"
+          image: "gcr.io/agones-images/agones-ping:1.1.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1371,7 +1419,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1392,7 +1440,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1427,7 +1475,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1447,7 +1495,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1497,7 +1545,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.0.0-rc
+    chart: agones-1.1.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1527,7 +1575,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.0.0-rc"
+    chart: "agones-1.1.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

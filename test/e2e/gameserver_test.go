@@ -15,6 +15,8 @@
 package e2e
 
 import (
+	"fmt"
+	"net"
 	"testing"
 	"time"
 
@@ -211,6 +213,34 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
+	t.Parallel()
+
+	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
+
+	gs := defaultGameServer()
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+
+	l.WithField("gs", readyGs.ObjectMeta.Name).Info("GameServer created")
+
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
+	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+
+	address := fmt.Sprintf("%s:%d", readyGs.Status.Address, readyGs.Status.Ports[0].Port)
+	conn, err := net.Dial("udp", address)
+	assert.NoError(t, err)
+	defer conn.Close() // nolint: errcheck
+	_, err = conn.Write([]byte("CRASH"))
+	assert.NoError(t, err)
+	l.WithField("address", address).Info("sent UDP packet")
+
+	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
+	assert.NoError(t, err)
+}
+
 func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	t.Parallel()
 	gs := &agonesv1.GameServer{
@@ -366,6 +396,24 @@ func TestGameServerShutdown(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+// TestGameServerEvicted test that if Gameserver would be evicted than it becomes Unhealthy
+// Ephemeral Storage limit set to 0Mi
+func TestGameServerEvicted(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer()
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
+	newGs, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
+
+	assert.Nil(t, err, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
+
+	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for being Evicted and Unhealthy")
+
+	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
+
+	assert.Nil(t, err, fmt.Sprintf("waiting for %v GameServer Unhealthy state timed out (%v): %v",
+		gs.Spec, gs.Name, err))
 }
 
 func TestGameServerPassthroughPort(t *testing.T) {

@@ -804,6 +804,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 								AllocationEndpoints: []string{"localhost"},
 								ClusterName:         "multicluster",
 								SecretName:          "localhostsecret",
+								Namespace:           "ns1",
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -927,6 +928,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
+		targetedNamespace := "tns"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
 				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
@@ -938,6 +940,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 								AllocationEndpoints: []string{server.URL, "non-existing"},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
+								Namespace:           targetedNamespace,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{

@@ -104,7 +104,7 @@ func NewHealthController(health healthcheck.Handler,
 // isUnhealthy returns if the Pod event is going
 // to cause the GameServer to become Unhealthy
 func (hc *HealthController) isUnhealthy(pod *corev1.Pod) bool {
-	return hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod)
+	return hc.evictedPod(pod) || hc.unschedulableWithNoFreePorts(pod) || hc.failedContainer(pod)
 }
 
 // unschedulableWithNoFreePorts checks if the reason the Pod couldn't be scheduled
@@ -120,13 +120,20 @@ func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 	return false
 }
 
+// evictedPod checks if the Pod was Evicted
+// could be caused by reaching limit on Ephemeral storage
+func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
+	return pod.Status.Reason == "Evicted"
+}
+
 // failedContainer checks each container, and determines if there was a failed
 // container
 func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
-		if cs.Name == container && cs.State.Terminated != nil {
-			return true
+		if cs.Name == container {
+			// sometimes on a restart, the cs.State can be running and the last state will be merged
+			return cs.State.Terminated != nil || cs.LastTerminationState.Terminated != nil
 		}
 	}
 	return false

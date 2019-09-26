@@ -133,10 +133,18 @@ type GameServerSpec struct {
 	Ports []GameServerPort `json:"ports"`
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
-	// Scheduling strategy. Defaults to "Packed".
+	// Scheduling strategy. Defaults to "Packed"
 	Scheduling apis.SchedulingStrategy `json:"scheduling,omitempty"`
+	// Logging specifies log levels for Agones system containers
+	Logging Logging `json:"logging,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
+}
+
+// Logging specifies log levels for Agones system containers
+type Logging struct {
+	// SdkServer is a log level for SDK server (sidecar) logs. Defaults to "Info"
+	SdkServer string `json:"sdkServer,omitempty"`
 }
 
 // GameServerState is the state for the GameServer
@@ -213,9 +221,17 @@ func (gss *GameServerSpec) ApplyDefaults() {
 	gss.applyPortDefaults()
 	gss.applyHealthDefaults()
 	gss.applySchedulingDefaults()
+	gss.applyLogLevelDefaults()
 }
 
-// applyContainerDefaults applues the container defaults
+// applyLogLevelDefaults applies the log level default - "Info"
+func (gss *GameServerSpec) applyLogLevelDefaults() {
+	if gss.Logging.SdkServer == "" {
+		gss.Logging.SdkServer = "Info"
+	}
+}
+
+// applyContainerDefaults applies the container defaults
 func (gss *GameServerSpec) applyContainerDefaults() {
 	if len(gss.Template.Spec.Containers) == 1 {
 		gss.Container = gss.Template.Spec.Containers[0].Name

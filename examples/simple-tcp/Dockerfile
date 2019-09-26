@@ -12,23 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "agones.dev/v1"
-kind: GameServer
-metadata:
-  name: local-simple-udp
-  generateName: "simple-udp-"
-  annotations:
-    # Causes Agones to register your local game server at 192.1.1.2, replace with your server's IP address.
-    agones.dev/dev-address: "192.1.1.2"
-spec:
-  ports:
-  - name: default
-    portPolicy: Static
-    hostPort: 17654
-    containerPort: 17654
-  # The following is ignored but required due to validation.
-  template:
-    spec:
-      containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.15
+# build
+FROM golang:1.11.5 as builder
+WORKDIR /go/src/simple-tcp
+
+COPY examples/simple-tcp/main.go .
+COPY . /go/src/agones.dev/agones
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
+
+# final image
+FROM alpine:3.9
+
+RUN adduser -D server
+COPY --from=builder /go/src/simple-tcp/server /home/server/server
+RUN chown -R server /home/server && \
+    chmod o+x /home/server/server
+
+USER server
+ENTRYPOINT ["/home/server/server"]

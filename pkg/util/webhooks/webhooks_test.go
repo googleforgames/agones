@@ -120,6 +120,7 @@ func TestWebHookAddHandler(t *testing.T) {
 
 			resp, err := client.Do(r)
 			assert.Nil(t, err)
+			defer resp.Body.Close() // nolint: errcheck
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 			assert.Equal(t, handles.expected.count, callCount, "[%v] /test should have been called for %#v", k, handles)
@@ -163,7 +164,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "gcr.io/agones-images/udp-server:0.14",
+										"image": "gcr.io/agones-images/udp-server:0.15",
 										"name": false
 									}]
 								}
@@ -215,6 +216,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 
 			resp, err := client.Do(r)
 			assert.Nil(t, err)
+			defer resp.Body.Close() // nolint: errcheck
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			body, err := ioutil.ReadAll(resp.Body)
 			assert.Nil(t, err)

@@ -73,7 +73,6 @@ func TestAllocator(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
-	var response *http.Response
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the rest client each time, as we may end up looking at an old cert
 		var client *http.Client
@@ -82,9 +81,15 @@ func TestAllocator(t *testing.T) {
 			return true, err
 		}
 
-		response, err = client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			logrus.WithError(err).Infof("failing http request")
+			return false, nil
+		}
+		defer response.Body.Close() // nolint: errcheck
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		body, err = ioutil.ReadAll(response.Body)
+		if !assert.Nil(t, err) {
 			return false, nil
 		}
 		return true, nil
@@ -93,13 +98,7 @@ func TestAllocator(t *testing.T) {
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "Http test failed")
 	}
-	defer response.Body.Close() // nolint: errcheck
 
-	assert.Equal(t, http.StatusOK, response.StatusCode)
-	body, err = ioutil.ReadAll(response.Body)
-	if !assert.Nil(t, err) {
-		return
-	}
 	result := allocationv1.GameServerAllocation{}
 	err = json.Unmarshal(body, &result)
 	if !assert.Nil(t, err) {

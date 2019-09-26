@@ -62,9 +62,12 @@ spec:
       health:
         initialDelaySeconds: 30
         periodSeconds: 60
+      # logging parameters for game server sidecar
+      logging:
+        sdkServer: Info
       # The GameServer's Pod template
       template:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.14
+            image: gcr.io/agones-images/udp-server:0.15

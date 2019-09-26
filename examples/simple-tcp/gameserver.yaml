@@ -15,20 +15,22 @@
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  name: local-simple-udp
-  generateName: "simple-udp-"
-  annotations:
-    # Causes Agones to register your local game server at 192.1.1.2, replace with your server's IP address.
-    agones.dev/dev-address: "192.1.1.2"
+  generateName: "simple-tcp-"
 spec:
   ports:
   - name: default
-    portPolicy: Static
-    hostPort: 17654
-    containerPort: 17654
-  # The following is ignored but required due to validation.
+    portPolicy: Dynamic
+    containerPort: 7654
+    protocol: TCP
   template:
     spec:
       containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.15
+      - name: simple-tcp
+        image: gcr.io/agones-images/tcp-server:0.1
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "20m"
+          limits:
+            memory: "32Mi"
+            cpu: "20m"
