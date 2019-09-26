@@ -19,6 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -953,7 +954,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
+				return true, getTestSecret(secretName, getPEMFromDER(server.TLS.Certificates[0].Certificate[0])), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1027,7 +1028,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, server.TLS.Certificates[0].Certificate[0]), nil
+				return true, getTestSecret(secretName, getPEMFromDER(server.TLS.Certificates[0].Certificate[0])), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1114,7 +1115,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, unhealthyServer.TLS.Certificates[0].Certificate[0]), nil
+				return true, getTestSecret(secretName, getPEMFromDER(unhealthyServer.TLS.Certificates[0].Certificate[0])), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1218,7 +1219,7 @@ func TestCreateRestClientError(t *testing.T) {
 
 		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "certificate")
+		assert.Contains(t, err.Error(), "PEM format")
 	})
 }
 
@@ -1323,6 +1324,10 @@ func getTestSecret(secretName string, serverCert []byte) *corev1.SecretList {
 			},
 		},
 	}
+}
+
+func getPEMFromDER(der []byte) []byte {
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
 }
 
 var clientCert = []byte(`-----BEGIN CERTIFICATE-----

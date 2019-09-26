@@ -355,11 +355,9 @@ func (c *Allocator) createRemoteClusterRestClient(namespace, secretName string) 
 		// Load CA cert, if provided and trust the server certificate.
 		// This is required for self-signed certs.
 		tlsConfig.RootCAs = x509.NewCertPool()
-		ca, err := x509.ParseCertificate(caCert)
-		if err != nil {
-			return nil, err
+		if !tlsConfig.RootCAs.AppendCertsFromPEM(caCert) {
+			return nil, errors.New("only PEM format is accepted for server CA")
 		}
-		tlsConfig.RootCAs.AddCert(ca)
 	}
 
 	// Setup HTTPS client
