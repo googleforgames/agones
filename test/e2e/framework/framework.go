@@ -30,6 +30,8 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -327,4 +329,82 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 		Spec: allocationv1.GameServerAllocationSpec{
 			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}},
 		}}
+}
+
+// CreateNamespace creates a namespace in the test cluster
+func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
+	t.Helper()
+
+	kubeCore := f.KubeClient.CoreV1()
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
+	if _, err := kubeCore.Namespaces().Create(ns); err != nil {
+		t.Fatalf("creating namespace %s failed: %s", namespace, err)
+	}
+	t.Logf("Namespace %s is created", namespace)
+
+	saName := "agones-sdk"
+	if _, err := kubeCore.ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      saName,
+			Namespace: namespace,
+			Labels:    map[string]string{"app": "agones"},
+		},
+	}); err != nil {
+		t.Fatalf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err)
+	}
+	t.Logf("ServiceAccount %s/%s is created", namespace, saName)
+
+	rb := &rbacv1.RoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "agones-sdk-access",
+			Namespace: namespace,
+			Labels:    map[string]string{"app": "agones"},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "agones-sdk",
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      saName,
+				Namespace: namespace,
+			},
+		},
+	}
+	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(rb); err != nil {
+		t.Fatalf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err)
+	}
+	t.Logf("RoleBinding %s/%s is created", namespace, rb.Name)
+}
+
+// DeleteNamespace deletes a namespace from the test cluster
+func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
+	t.Helper()
+
+	kubeCore := f.KubeClient.CoreV1()
+
+	// Remove finalizers
+	pods, err := kubeCore.Pods(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		t.Fatalf("listing pods in namespace %s failed: %s", namespace, err)
+	}
+	for _, pod := range pods.Items {
+		if len(pod.Finalizers) > 0 {
+			pod.Finalizers = nil
+			if _, err := kubeCore.Pods(namespace).Update(&pod); err != nil {
+				t.Errorf("updating pod %s failed: %s", pod.GetName(), err)
+			}
+		}
+	}
+
+	if err := kubeCore.Namespaces().Delete(namespace, &metav1.DeleteOptions{}); err != nil {
+		t.Fatalf("deleting namespace %s failed: %s", namespace, err)
+	}
+	t.Logf("Namespace %s is deleted", namespace)
 }

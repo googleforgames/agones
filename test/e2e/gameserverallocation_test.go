@@ -42,7 +42,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			t.Parallel()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			fleet := defaultFleet(defaultNs)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -76,7 +76,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			t.Parallel()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			fleet := defaultFleet(defaultNs)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -189,7 +189,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			t.Parallel()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			fleet := defaultFleet(defaultNs)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -227,7 +227,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
@@ -272,7 +272,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
-	preferred := defaultFleet()
+	preferred := defaultFleet(defaultNs)
 	preferred.ObjectMeta.GenerateName = "preferred-"
 	preferred.Spec.Replicas = 1
 	preferred.Spec.Template.ObjectMeta.Labels = label
@@ -283,7 +283,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.FailNow(t, "could not create first fleet")
 	}
 
-	required := defaultFleet()
+	required := defaultFleet(defaultNs)
 	required.ObjectMeta.GenerateName = "required-"
 	required.Spec.Replicas = 2
 	required.Spec.Template.ObjectMeta.Labels = label
@@ -378,7 +378,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
-	preferred := defaultFleet()
+	preferred := defaultFleet(defaultNs)
 	preferred.ObjectMeta.GenerateName = "preferred-"
 	preferred.Spec.Replicas = 150
 	preferred.Spec.Template.ObjectMeta.Labels = label

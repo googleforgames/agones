@@ -37,7 +37,7 @@ const (
 
 func TestCreateConnect(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 
 	if err != nil {
@@ -61,7 +61,7 @@ func TestCreateConnect(t *testing.T) {
 // nolint:dupl
 func TestSDKSetLabel(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -91,7 +91,7 @@ func TestSDKSetLabel(t *testing.T) {
 
 func TestHealthCheckDisable(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.Spec.Health = agonesv1.Health{
 		Disabled:            true,
 		FailureThreshold:    1,
@@ -123,7 +123,7 @@ func TestHealthCheckDisable(t *testing.T) {
 // nolint:dupl
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	annotation := "agones.dev/sdk-timestamp"
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
@@ -168,7 +168,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	// gate
 	assert.True(t, len(nodes.Items) > 0)
 
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.Spec.Ports[0].HostPort = 7515
 	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
 
@@ -188,7 +188,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -218,7 +218,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
 
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -294,7 +294,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 
 func TestGameServerSelfAllocate(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -316,7 +316,7 @@ func TestGameServerSelfAllocate(t *testing.T) {
 
 func TestGameServerReadyAllocateReady(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -345,7 +345,7 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -371,7 +371,7 @@ func TestGameServerReserve(t *testing.T) {
 
 func TestGameServerShutdown(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -402,7 +402,7 @@ func TestGameServerShutdown(t *testing.T) {
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
 	newGs, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
 
@@ -418,7 +418,7 @@ func TestGameServerEvicted(t *testing.T) {
 
 func TestGameServerPassthroughPort(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Passthrough}
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "PASSTHROUGH", Value: "TRUE"}}
 	// gate
@@ -443,8 +443,8 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
-func defaultGameServer() *agonesv1.GameServer {
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
+func defaultGameServer(namespace string) *agonesv1.GameServer {
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: namespace},
 		Spec: agonesv1.GameServerSpec{
 			Container: "udp-server",
 			Ports: []agonesv1.GameServerPort{{
