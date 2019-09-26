@@ -12,7 +12,7 @@ Bootstrap doesn't include an icon library by default, but we have a handful of r
 We've tested and used these icon sets ourselves.
 
 - [Font Awesome](https://fontawesome.com/)
-- [Iconic](https://github.com/iconic/open-iconic)
+- [Iconic](https://useiconic.com/open/)
 - [Octicons](https://octicons.github.com/)
 
 ## More options
