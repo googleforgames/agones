@@ -23,4 +23,4 @@ Big thanks to [Hugo](https://gohugo.io) for being the static site generator, and
 
 Please let us know if you have feedback, either by [filing an issue](https://github.com/GoogleCloudPlatform/agones/issues)
 , or [submitting a pull request](https://github.com/GoogleCloudPlatform/agones/pulls) or come chat with us
-on [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWQ2ZmY1Mjc4ZDQ4NDJhOGYxYTY2NTY0NjUwNjliYzVhMWFjYjMxM2RlMjg3NGU0M2E0YTYzNDIxNDMyZGNjMjU)! 
+on [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWU3ODAyZjdjMjNlYWIxZTAwODkxMGY3YWEyZjNjMjc4YWM1Zjk0OThlMGU2ZmUyMzRlMDljNDJiNmZlMGQ1M2U)! 
