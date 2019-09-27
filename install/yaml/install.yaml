@@ -715,10 +715,13 @@ spec:
                   minItems: 1
                 clusterName:
                   type: string
+                namespace:
+                  type: string
               required:
               - clusterName
               - allocationEndpoints
               - secretName
+              - namespace
               type: object
             priority:
               format: int64

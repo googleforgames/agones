@@ -57,11 +57,16 @@ import (
 	"fmt"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime" // for the logger
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/kubernetes"
+)
+
+var (
+	logger = runtime.NewLoggerWithSource("main")
 )
 
 func main() {
