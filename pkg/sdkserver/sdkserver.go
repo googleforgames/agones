@@ -191,13 +191,13 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 		return err
 	}
 
-	logLevel := "info"
+	logLevel := agonesv1.SdkServerLogLevelInfo
 	// grab configuration details
-	if gs.Spec.Logging.SdkServer != "" {
-		logLevel = strings.ToLower(gs.Spec.Logging.SdkServer)
+	if gs.Spec.SdkServer.LogLevel != "" {
+		logLevel = gs.Spec.SdkServer.LogLevel
 	}
 	s.logger.WithField("logLevel", logLevel).Info("Setting LogLevel configuration")
-	level, err := logrus.ParseLevel(logLevel)
+	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
 	if err == nil {
 		s.logger.Logger.SetLevel(level)
 	} else {

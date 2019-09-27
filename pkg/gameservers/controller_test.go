@@ -198,10 +198,8 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 			expectedState := agonesv1.GameServerStateReady
 
 			assert.Equal(t, expectedState, gs.Status.State)
-			if expectedState == agonesv1.GameServerStateReady {
-				assert.Equal(t, ipFixture, gs.Status.Address)
-				assert.NotEmpty(t, gs.Status.Ports[0].Port)
-			}
+			assert.Equal(t, ipFixture, gs.Status.Address)
+			assert.NotEmpty(t, gs.Status.Ports[0].Port)
 
 			return true, gs, nil
 		})
@@ -674,8 +672,8 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(fixture)
-		assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
 		assert.Nil(t, err)
+		assert.Equal(t, agonesv1.GameServerStateStarting, gs.Status.State)
 		assert.False(t, podCreated, "Pod should not have been created")
 		assert.True(t, gsUpdated, "GameServer should have been updated")
 	})
@@ -739,8 +737,8 @@ func TestControllerSyncGameServerStartingState(t *testing.T) {
 		gsFixture := newFixture()
 		gsFixture.ApplyDefaults()
 		pod, err := gsFixture.Pod()
-		pod.Spec.NodeName = nodeFixtureName
 		assert.Nil(t, err)
+		pod.Spec.NodeName = nodeFixtureName
 		gsUpdated := false
 
 		m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -961,8 +959,8 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
 		pod, err := gsFixture.Pod()
-		pod.Spec.NodeName = nodeFixtureName
 		assert.Nil(t, err)
+		pod.Spec.NodeName = nodeFixtureName
 		gsUpdated := false
 
 		ipFixture := "12.12.12.12"

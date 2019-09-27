@@ -106,13 +106,20 @@ spec:
     # Minimum consecutive failures for the health probe to be considered failed after having succeeded.
     # Defaults to 3. Minimum value is 1
     failureThreshold: 3
-  # logging parameters for game server sidecar
-  logging:
-    # sdkServer logging parameter has three options:
+  # Parameters for game server sidecar
+  sdkServer:
+    # sdkServer log level parameter has three options:
     #  - "Info" (default) The SDK server will output all messages except for debug messages
     #  - "Debug" The SDK server will output all messages including debug messages
     #  - "Error" The SDK server will only output error messages
-    sdkServer: Info
+    logLevel: Info
+    # grpcPort and httpPort control what ports the sdkserver listens on.
+    # The defaults in Agones 1.0 used high port numbers (in the ephemeral port
+    # range on most systems) which can conflict with other TCP connections
+    # within the pod. It is recommended to set these to a non-ephemeral port
+    # and the default port will be changed in a future release of Agones.
+    grpcPort: 9357
+    httpPort: 9358
   # Pod template configuration
   # https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplate-v1-core
   template:
@@ -149,11 +156,13 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
 {{% feature publishVersion="1.1.0" %}}
--`logging` define log level for sidecars
-  - `sdkServer` field defines log level for SDK server. Defaults to "Info". It has three options:
+-`sdkServer` defines parameters for the game server sidecar
+  - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
     - "Info" (default) The SDK server will output all messages except for debug messages
     - "Debug" The SDK server will output all messages including debug messages
     - "Error" The SDK server will only output error messages
+  - `grpcPort` the port that the SDK Server binds to for gRPC connections
+  - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 {{% /feature %}}
 - `template` the [pod spec template](https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
