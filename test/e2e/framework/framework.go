@@ -17,6 +17,7 @@
 package framework
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"testing"
@@ -34,6 +35,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 
@@ -338,7 +340,8 @@ func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
 	kubeCore := f.KubeClient.CoreV1()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: namespace,
+			Name:   namespace,
+			Labels: map[string]string{"owner": "e2e-test"},
 		},
 	}
 	if _, err := kubeCore.Namespaces().Create(ns); err != nil {
@@ -397,7 +400,12 @@ func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
 	for _, pod := range pods.Items {
 		if len(pod.Finalizers) > 0 {
 			pod.Finalizers = nil
-			if _, err := kubeCore.Pods(namespace).Update(&pod); err != nil {
+			payload := []patchRemoveNoValue{{
+				Op:   "remove",
+				Path: "/metadata/finalizers",
+			}}
+			payloadBytes, _ := json.Marshal(payload)
+			if _, err := kubeCore.Pods(namespace).Patch(pod.Name, types.JSONPatchType, payloadBytes); err != nil {
 				t.Errorf("updating pod %s failed: %s", pod.GetName(), err)
 			}
 		}
@@ -407,4 +415,9 @@ func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
 		t.Fatalf("deleting namespace %s failed: %s", namespace, err)
 	}
 	t.Logf("Namespace %s is deleted", namespace)
+}
+
+type patchRemoveNoValue struct {
+	Op   string `json:"op"`
+	Path string `json:"path"`
 }

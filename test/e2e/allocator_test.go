@@ -34,6 +34,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -52,15 +53,13 @@ const (
 	tlsCrtTag             = "tls.crt"
 	tlsKeyTag             = "tls.key"
 	serverCATag           = "ca.crt"
+	allocatorReqURLFmt    = "https://%s:%d/v1alpha1/gameserverallocation"
 )
 
 func TestAllocator(t *testing.T) {
-	t.Parallel()
-
 	ip, port := getAllocatorEndpoint(t)
-	requestURL := fmt.Sprintf("https://%s:%d/v1alpha1/gameserverallocation", ip, port)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
-	t.Logf("Allocator TLS is refreshed with public CA: %s for endpoint %s", string(tlsCA), ip)
 
 	namespace := fmt.Sprintf("allocator-%s", uuid.NewUUID())
 	framework.CreateNamespace(t, namespace)
@@ -107,6 +106,7 @@ func TestAllocator(t *testing.T) {
 		assert.Equal(t, http.StatusOK, response.StatusCode)
 		body, err = ioutil.ReadAll(response.Body)
 		if !assert.Nil(t, err) {
+			t.Logf("reading response body failed: %s", err)
 			return false, nil
 		}
 		return true, nil
@@ -119,9 +119,117 @@ func TestAllocator(t *testing.T) {
 	result := allocationv1.GameServerAllocation{}
 	err = json.Unmarshal(body, &result)
 	if !assert.Nil(t, err) {
-		return
+		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
 	}
 	assert.Equal(t, allocationv1.GameServerAllocationAllocated, result.Status.State)
+}
+
+// Tests multi-cluster allocation by reusing the same cluster but across namespace.
+// Multi-cluster is represented as two namespaces A and B in the same cluster.
+// Namespace A received the allocation request, but because namespace B has the highest priority, A will forward the request to B.
+func TestAllocatorCrossNamespace(t *testing.T) {
+	ip, port := getAllocatorEndpoint(t)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := refreshAllocatorTLSCerts(t, ip)
+
+	// Create namespaces A and B
+	namespaceA := fmt.Sprintf("allocator-a-%s", uuid.NewUUID())
+	framework.CreateNamespace(t, namespaceA)
+	defer framework.DeleteNamespace(t, namespaceA)
+	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
+	framework.CreateNamespace(t, namespaceB)
+	defer framework.DeleteNamespace(t, namespaceB)
+
+	// Create client secret A, B is receiver of the request and does not need client secret
+	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
+	genClientSecret(t, tlsCA, namespaceA, clientSecretNameA)
+
+	restartAllocator(t)
+
+	policyName := fmt.Sprintf("a-to-b-%s", uuid.NewUUID())
+	p := &multiclusterv1alpha1.GameServerAllocationPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      policyName,
+			Namespace: namespaceA,
+		},
+		Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+			Priority: 1,
+			Weight:   1,
+			ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+				SecretName:          clientSecretNameA,
+				Namespace:           namespaceB,
+				AllocationEndpoints: []string{ip},
+			},
+		},
+	}
+	createAllocationPolicy(t, p)
+
+	// Create a fleet in namespace B. Allocation should not happen in A according to policy
+	flt, err := createFleet(namespaceB)
+	if !assert.Nil(t, err) {
+		return
+	}
+	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	gsa := &allocationv1.GameServerAllocation{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespaceA,
+		},
+		Spec: allocationv1.GameServerAllocationSpec{
+			// Enable multi-cluster setting
+			MultiClusterSetting: allocationv1.MultiClusterSetting{Enabled: true},
+			Required:            metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		}}
+
+	body, err := json.Marshal(gsa)
+	if !assert.Nil(t, err) {
+		return
+	}
+
+	// wait for the allocation system to come online
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		// create the rest client each time, as we may end up looking at an old cert
+		var client *http.Client
+		client, err = creatRestClient(namespaceA, clientSecretNameA)
+		if err != nil {
+			return false, err
+		}
+
+		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+		if err != nil {
+			logrus.WithError(err).Info("failing http request")
+			return false, nil
+		}
+		defer response.Body.Close() // nolint: errcheck
+		assert.Equal(t, http.StatusOK, response.StatusCode)
+		body, err = ioutil.ReadAll(response.Body)
+		if !assert.Nil(t, err) {
+			t.Logf("reading response body failed: %s", err)
+			return false, nil
+		}
+		return true, nil
+	})
+
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Http test failed")
+	}
+
+	result := allocationv1.GameServerAllocation{}
+	err = json.Unmarshal(body, &result)
+	if !assert.Nil(t, err) {
+		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
+	}
+	assert.Equal(t, allocationv1.GameServerAllocationAllocated, result.Status.State)
+}
+
+func createAllocationPolicy(t *testing.T, p *multiclusterv1alpha1.GameServerAllocationPolicy) {
+	t.Helper()
+
+	mc := framework.AgonesClient.MulticlusterV1alpha1()
+	policy, err := mc.GameServerAllocationPolicies(p.Namespace).Create(p)
+	if err != nil {
+		t.Fatalf("creating allocation policy failed: %s", err)
+	}
+	t.Logf("created allocation policy %v", policy)
 }
 
 func getAllocatorEndpoint(t *testing.T) (string, int32) {
@@ -263,6 +371,8 @@ func refreshAllocatorTLSCerts(t *testing.T, host string) []byte {
 	if _, err := kubeCore.Secrets(agonesSystemNamespace).Update(s); err != nil {
 		t.Fatalf("updating secrets failed: %s", err)
 	}
+
+	t.Logf("Allocator TLS is refreshed with public CA: %s for endpoint %s", string(pub), host)
 	return pub
 }
 

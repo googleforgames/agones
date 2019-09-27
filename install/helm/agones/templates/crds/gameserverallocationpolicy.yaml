@@ -65,7 +65,6 @@ spec:
                   type: string
               required:
               - clusterName
-              - allocationEndpoints
               - secretName
               - namespace
               type: object

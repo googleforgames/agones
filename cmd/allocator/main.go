@@ -186,14 +186,16 @@ func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
 	gsa := allocationv1.GameServerAllocation{}
 	if err := json.NewDecoder(r.Body).Decode(&gsa); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
+		logger.WithError(err).Info("bad request")
 		return
 	}
+	logger.WithField("gsa", gsa).Infof("allocation request received")
 
 	allocation := h.agonesClient.AllocationV1().GameServerAllocations(gsa.ObjectMeta.Namespace)
 	allocatedGsa, err := allocation.Create(&gsa)
 	if err != nil {
 		http.Error(w, err.Error(), httpCode(err))
-		logger.Debug(err)
+		logger.WithField("gsa", gsa).WithError(err).Info("calling allocation extension API failed")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")

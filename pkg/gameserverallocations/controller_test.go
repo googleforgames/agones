@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -802,10 +803,9 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{"localhost"},
-								ClusterName:         "multicluster",
-								SecretName:          "localhostsecret",
-								Namespace:           "ns1",
+								ClusterName: "multicluster",
+								SecretName:  "localhostsecret",
+								Namespace:   defaultNs,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -831,9 +831,8 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{
 			ObjectMeta: metav1.ObjectMeta{
-				Namespace:   defaultNs,
-				Name:        "alloc1",
-				ClusterName: "multicluster",
+				Namespace: defaultNs,
+				Name:      "alloc1",
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
@@ -851,6 +850,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		ret, err := executeAllocation(gsa, c)
 		assert.NoError(t, err)
 		assert.Equal(t, gsa.Spec.Required, ret.Spec.Required)
+		assert.Equal(t, gsa.Namespace, ret.Namespace)
 		expectedState := allocationv1.GameServerAllocationAllocated
 		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
 	})
@@ -920,6 +920,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			_, _ = w.Write(response)
 		}))
 		defer server.Close()
+		serverURL := parseURL(t, server.URL)
 
 		// Set client CA for server
 		certpool := x509.NewCertPool()
@@ -938,7 +939,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{server.URL, "non-existing"},
+								AllocationEndpoints: []string{serverURL.Host, "non-existing"},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 								Namespace:           targetedNamespace,
@@ -996,6 +997,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			http.Error(w, "test error message", 500)
 		}))
 		defer server.Close()
+		serverURL := parseURL(t, server.URL)
 
 		// Set client CA for server
 		certpool := x509.NewCertPool()
@@ -1013,7 +1015,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{server.URL},
+								AllocationEndpoints: []string{serverURL.Host},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 							},
@@ -1069,6 +1071,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			http.Error(w, "test error message", 500)
 		}))
 		defer unhealthyServer.Close()
+		unhealthyServerURL := parseURL(t, unhealthyServer.URL)
 
 		// Set client CA for unhealthy server
 		certpool := x509.NewCertPool()
@@ -1088,6 +1091,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			_, _ = w.Write(response)
 		}))
 		defer healthyServer.Close()
+		healthyServerURL := parseURL(t, healthyServer.URL)
 		healthyServer.TLS = unhealthyServer.TLS
 
 		// Allocation policy reactor
@@ -1100,7 +1104,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{unhealthyServer.URL, healthyServer.URL},
+								AllocationEndpoints: []string{unhealthyServerURL.Host, healthyServerURL.Host},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 							},
@@ -1230,7 +1234,7 @@ func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*
 		return nil, err
 	}
 	rec := httptest.NewRecorder()
-	if err = c.processAllocationRequest(rec, r, defaultNs, stop); err != nil {
+	if err = c.processAllocationRequest(rec, r, gsa.Namespace, stop); err != nil {
 		return nil, err
 	}
 
@@ -1328,6 +1332,14 @@ func getTestSecret(secretName string, serverCert []byte) *corev1.SecretList {
 
 func getPEMFromDER(der []byte) []byte {
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+}
+
+func parseURL(t *testing.T, rawURL string) *url.URL {
+	serverURL, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("failed to parse URL %s: %s", rawURL, err)
+	}
+	return serverURL
 }
 
 var clientCert = []byte(`-----BEGIN CERTIFICATE-----
