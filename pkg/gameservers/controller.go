@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -53,6 +54,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
+)
+
+const (
+	sdkserverSidecarName = "agones-gameserver-sidecar"
+	grpcPortEnvVar       = "AGONES_SDK_GRPC_PORT"
+	httpPortEnvVar       = "AGONES_SDK_HTTP_PORT"
 )
 
 // Controller is a the main GameServer crd controller
@@ -520,11 +527,9 @@ func (c *Controller) syncDevelopmentGameServer(gs *agonesv1.GameServer) (*agones
 // createGameServerPod creates the backing Pod for a given GameServer
 func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	sidecar := c.sidecar(gs)
-	var pod *corev1.Pod
 	pod, err := gs.Pod(sidecar)
-
-	// this shouldn't happen, but if it does.
 	if err != nil {
+		// this shouldn't happen, but if it does.
 		c.loggerForGameServer(gs).WithError(err).Error("error creating pod from Game Server")
 		gs, err = c.moveToErrorState(gs, err.Error())
 		return gs, err
@@ -539,6 +544,7 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 	}
 
 	c.addGameServerHealthCheck(gs, pod)
+	c.addSDKServerEnvVars(gs, pod)
 
 	c.loggerForGameServer(gs).WithField("pod", pod).Info("creating Pod for GameServer")
 	pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
@@ -563,7 +569,7 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 // sidecar creates the sidecar container for a given GameServer
 func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 	sidecar := corev1.Container{
-		Name:  "agones-gameserver-sidecar",
+		Name:  sdkserverSidecarName,
 		Image: c.sidecarImage,
 		Env: []corev1.EnvVar{
 			{
@@ -637,6 +643,51 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 
 		return c
 	})
+}
+
+func (c *Controller) addSDKServerEnvVars(gs *agonesv1.GameServer, pod *corev1.Pod) {
+	for i, c := range pod.Spec.Containers {
+		if c.Name != sdkserverSidecarName {
+			sdkEnvVars := sdkEnvironmentVariables(gs)
+			if sdkEnvVars == nil {
+				// If a gameserver was created before 1.1 when we started defaulting the grpc and http ports,
+				// don't change the container spec.
+				continue
+			}
+
+			// Filter out environment variables that have reserved names.
+			// From https://github.com/golang/go/wiki/SliceTricks#filtering-without-allocating
+			env := c.Env[:0]
+			for _, e := range c.Env {
+				if !reservedEnvironmentVariableName(e.Name) {
+					env = append(env, e)
+				}
+			}
+			c.Env = append(env, sdkEnvVars...)
+			pod.Spec.Containers[i] = c
+		}
+	}
+}
+
+func reservedEnvironmentVariableName(name string) bool {
+	return name == grpcPortEnvVar || name == httpPortEnvVar
+}
+
+func sdkEnvironmentVariables(gs *agonesv1.GameServer) []corev1.EnvVar {
+	var env []corev1.EnvVar
+	if gs.Spec.SdkServer.GRPCPort != 0 {
+		env = append(env, corev1.EnvVar{
+			Name:  grpcPortEnvVar,
+			Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort)),
+		})
+	}
+	if gs.Spec.SdkServer.HTTPPort != 0 {
+		env = append(env, corev1.EnvVar{
+			Name:  httpPortEnvVar,
+			Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort)),
+		})
+	}
+	return env
 }
 
 // syncGameServerStartingState looks for a pod that has been scheduled for this GameServer

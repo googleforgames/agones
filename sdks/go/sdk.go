@@ -18,6 +18,8 @@ package sdk
 import (
 	"fmt"
 	"io"
+	"os"
+	"strconv"
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
@@ -26,7 +28,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const port = 59357
+const defaultPort = 59357
 
 // GameServerCallback is a function definition to be called
 // when a GameServer CRD has been changed
@@ -39,11 +41,32 @@ type SDK struct {
 	health sdk.SDK_HealthClient
 }
 
+func port() int {
+	portStr := os.Getenv("AGONES_SDK_GRPC_PORT")
+	if portStr == "" {
+		// Environment variable is not set; use the default port.
+		_, _ = fmt.Fprintf(os.Stderr, "Environment variable AGONES_SDK_GRPC_PORT not defined, using default port %d\n", defaultPort)
+		return defaultPort
+	}
+	p, err := strconv.Atoi(portStr)
+	if err != nil {
+		// Environment variable cannot be parsed; use the default port.
+		_, _ = fmt.Fprintf(os.Stderr, "Unable to parse %q defined in AGONES_SDK_GRPC_PORT into an integer\n", portStr)
+		return defaultPort
+	}
+	if p < 1 || p > 65535 {
+		// Environment variable is not a valid port; use the default port.
+		_, _ = fmt.Fprintf(os.Stderr, "Invalid port %d defined in AGONES_SDK_GRPC_PORT. It must be between 1 and 65535\n", p)
+		return defaultPort
+	}
+	return p
+}
+
 // NewSDK starts a new SDK instance, and connects to
 // localhost on port 59357. Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
-	addr := fmt.Sprintf("localhost:%d", port)
+	addr := fmt.Sprintf("localhost:%d", port())
 	s := &SDK{
 		ctx: context.Background(),
 	}
@@ -130,10 +153,10 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 			gs, err = stream.Recv()
 			if err != nil {
 				if err == io.EOF {
-					fmt.Println("gameserver event stream EOF received")
+					_, _ = fmt.Fprintln(os.Stderr, "gameserver event stream EOF received")
 					return
 				}
-				fmt.Printf("error watching GameServer: %s\n", err.Error())
+				_, _ = fmt.Fprintf(os.Stderr, "error watching GameServer: %s\n", err.Error())
 				// This is to wait for the reconnection, and not peg the CPU at 100%
 				time.Sleep(time.Second)
 				continue
