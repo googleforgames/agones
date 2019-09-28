@@ -592,6 +592,14 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 		},
 	}
 
+	if gs.Spec.SdkServer.GRPCPort != 0 {
+		sidecar.Args = append(sidecar.Args, fmt.Sprintf("--grpc-port=%d", gs.Spec.SdkServer.GRPCPort))
+	}
+
+	if gs.Spec.SdkServer.HTTPPort != 0 {
+		sidecar.Args = append(sidecar.Args, fmt.Sprintf("--http-port=%d", gs.Spec.SdkServer.HTTPPort))
+	}
+
 	if !c.sidecarCPURequest.IsZero() {
 		sidecar.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: c.sidecarCPURequest}
 	}
