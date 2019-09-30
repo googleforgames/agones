@@ -7,6 +7,4 @@ description: >
   Content created by our community
 ---
 
-{{< pagelist >}}
-
 

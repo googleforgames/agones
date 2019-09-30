@@ -6,5 +6,11 @@
 		<time datetime="{{  $.Date.Format "2006-01-02" }}" class="text-muted">{{ $.Date.Format $.Site.Params.time_format_blog  }}</time>
 	</div>
 	{{ .Content }}
+	{{ if (.Site.DisqusShortname) }}
+		<br />
+		{{ partial "disqus-comment.html" . }}
+		<br />
+	{{ end }}
+
 	{{ partial "pager.html" . }}
 </div>

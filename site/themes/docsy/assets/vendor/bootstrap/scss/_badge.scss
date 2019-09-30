@@ -14,12 +14,6 @@
   vertical-align: baseline;
   @include border-radius($badge-border-radius);
 
-  &[href] {
-    @include hover-focus {
-      text-decoration: none;
-    }
-  }
-
   // Empty badges collapse automatically
   &:empty {
     display: none;

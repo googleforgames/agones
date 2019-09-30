@@ -10,6 +10,8 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
+'use strict'
+
 const fs = require('fs')
 const path = require('path')
 const sriToolbox = require('sri-toolbox')
