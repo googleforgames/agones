@@ -13,7 +13,7 @@ $enable-shadows: true;
 
 // Theme flags.
 
-$td-enable-google-fonts: true;
+$td-enable-google-fonts: true !default;
 
 // Theme colors
 
@@ -54,15 +54,15 @@ $td-sidebar-border-color: $border-color !default;
 // These colors are all part of the theme palette, but the mix is fairly random to create variation. This can be overridden by the project if needed.
 $td-box-colors: $dark, $primary, $secondary, $info, $primary-light, $gray-600, $success, $warning, $dark, $danger, $primary, $secondary, $primary-light, $info;
 
-$link-color: $blue !default;
+$link-color: darken($blue, 15%) !default;
 $link-decoration: none !default;
 $link-hover-color: darken($link-color, 15%) !default;
 $link-hover-decoration: none !default;
 
 // Fonts
 
-$google_font_name: "Open Sans";
-$google_font_family: "Open+Sans:300,300i,400,400i,700,700i";
+$google_font_name: "Open Sans" !default;
+$google_font_family: "Open+Sans:300,300i,400,400i,700,700i" !default;
 $web-font-path: "https://fonts.googleapis.com/css?family=#{$google_font_family}";
 
 $td-fonts-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";

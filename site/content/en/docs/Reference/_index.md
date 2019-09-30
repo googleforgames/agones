@@ -6,5 +6,3 @@ description: >
   Reference documentation for Agones Custom Resource Definitions
 ---
 
-{{< pagelist >}}
-

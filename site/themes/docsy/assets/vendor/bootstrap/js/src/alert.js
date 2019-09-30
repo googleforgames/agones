@@ -172,7 +172,7 @@ const Alert = (($) => {
 
   $.fn[NAME]             = Alert._jQueryInterface
   $.fn[NAME].Constructor = Alert
-  $.fn[NAME].noConflict  = () => {
+  $.fn[NAME].noConflict  = function () {
     $.fn[NAME] = JQUERY_NO_CONFLICT
     return Alert._jQueryInterface
   }

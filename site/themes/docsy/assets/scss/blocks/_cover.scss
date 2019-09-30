@@ -2,6 +2,10 @@
 
 @include td-box-height-modifiers(".td-cover-block");
 
+.td-cover-logo {
+    margin-right: 0.5em;
+}
+
 .td-cover-block {
     position: relative;
     padding-top: 5rem;

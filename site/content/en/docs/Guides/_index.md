@@ -7,5 +7,3 @@ date: 2019-01-02
 description: >
   Guides for deeper integrations with Agones
 ---
-
-{{< pagelist >}}
