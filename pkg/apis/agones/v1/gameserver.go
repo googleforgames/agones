@@ -70,6 +70,13 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
+	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
+	// SdkServerLogLevelDebug will cause the SDK server to output all messages including debug messages.
+	SdkServerLogLevelDebug SdkServerLogLevel = "Debug"
+	// SdkServerLogLevelError will cause the SDK server to only output error messages.
+	SdkServerLogLevelError SdkServerLogLevel = "Error"
+
 	// RoleLabel is the label in which the Agones role is specified.
 	// Pods from a GameServer will have the value "gameserver"
 	RoleLabel = agones.GroupName + "/role"
@@ -135,16 +142,10 @@ type GameServerSpec struct {
 	Health Health `json:"health,omitempty"`
 	// Scheduling strategy. Defaults to "Packed"
 	Scheduling apis.SchedulingStrategy `json:"scheduling,omitempty"`
-	// Logging specifies log levels for Agones system containers
-	Logging Logging `json:"logging,omitempty"`
+	// SdkServer specifies parameters for the Agones SDK Server sidecar container
+	SdkServer SdkServer `json:"sdkServer,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
-}
-
-// Logging specifies log levels for Agones system containers
-type Logging struct {
-	// SdkServer is a log level for SDK server (sidecar) logs. Defaults to "Info"
-	SdkServer string `json:"sdkServer,omitempty"`
 }
 
 // GameServerState is the state for the GameServer
@@ -184,6 +185,19 @@ type GameServerPort struct {
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 }
 
+// SdkServerLogLevel is the log level for SDK server (sidecar) logs
+type SdkServerLogLevel string
+
+// SdkServer specifies parameters for the Agones SDK Server sidecar container
+type SdkServer struct {
+	// LogLevel for SDK server (sidecar) logs. Defaults to "Info"
+	LogLevel SdkServerLogLevel `json:"logLevel,omitempty"`
+	// GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections
+	GRPCPort int32 `json:"grpcPort,omitempty"`
+	// HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections
+	HTTPPort int32 `json:"httpPort,omitempty"`
+}
+
 // GameServerStatus is the status for a GameServer resource
 type GameServerStatus struct {
 	// GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc
@@ -221,13 +235,21 @@ func (gss *GameServerSpec) ApplyDefaults() {
 	gss.applyPortDefaults()
 	gss.applyHealthDefaults()
 	gss.applySchedulingDefaults()
-	gss.applyLogLevelDefaults()
+	gss.applySdkServerDefaults()
 }
 
-// applyLogLevelDefaults applies the log level default - "Info"
-func (gss *GameServerSpec) applyLogLevelDefaults() {
-	if gss.Logging.SdkServer == "" {
-		gss.Logging.SdkServer = "Info"
+// applySdkServerDefaults applies the default log level ("Info") for the sidecar
+func (gss *GameServerSpec) applySdkServerDefaults() {
+	if gss.SdkServer.LogLevel == "" {
+		gss.SdkServer.LogLevel = SdkServerLogLevelInfo
+	}
+	if gss.SdkServer.GRPCPort == 0 {
+		// TODO(roberthbailey): Change to 9357 in the 1.2.0 release
+		gss.SdkServer.GRPCPort = 59357
+	}
+	if gss.SdkServer.HTTPPort == 0 {
+		// TODO(roberthbailey): Change to 9358 in the 1.2.0 release
+		gss.SdkServer.HTTPPort = 59358
 	}
 }
 
