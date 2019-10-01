@@ -128,21 +128,23 @@ run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]")
 run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+run-sdk-conformance-no-build: PORT ?= 59357
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
-	DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
-	docker run -p 59357:59357 -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
-	 --net=host  $(sidecar_tag)
+	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
+	docker run -p $(PORT):$(PORT) -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
+	--net=host $(sidecar_tag) --grpc-port $(PORT)
 
 # Run SDK conformance test for a specific SDK_FOLDER
-run-sdk-conformance-test:
+run-sdk-conformance-test: ensure-agones-sdk-image
+run-sdk-conformance-test: ensure-build-sdk-image
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
 	$(MAKE) run-sdk-conformance-no-build
 
 # Run a conformance test for all SDKs supported
 run-sdk-conformance-tests:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go   PORT=9001
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
 
 # Clean package directories and binary files left
