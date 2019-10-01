@@ -47,7 +47,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	stable := framework.AgonesClient.AgonesV1()
 	fleets := stable.Fleets(defaultNs)
-	flt, err := fleets.Create(defaultFleet())
+	flt, err := fleets.Create(defaultFleet(defaultNs))
 	if assert.Nil(t, err) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
@@ -135,7 +135,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 
 	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
-	flt, err := fleets.Create(defaultFleet())
+	flt, err := fleets.Create(defaultFleet(defaultNs))
 	if assert.Nil(t, err) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
@@ -262,7 +262,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
-	flt := defaultFleet()
+	flt := defaultFleet(defaultNs)
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(flt)
@@ -476,7 +476,7 @@ func TestTlsWebhook(t *testing.T) {
 
 	alpha1 := framework.AgonesClient.AgonesV1()
 	fleets := alpha1.Fleets(defaultNs)
-	flt := defaultFleet()
+	flt := defaultFleet(defaultNs)
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(flt.DeepCopy())

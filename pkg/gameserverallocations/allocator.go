@@ -68,6 +68,7 @@ const (
 	// from the topNGameServerCount of Ready gameservers
 	// to reduce the contention while allocating gameservers.
 	topNGameServerDefaultCount = 100
+	allocatorRequestURLFmt     = "https://%s/v1alpha1/gameserverallocation"
 )
 
 const (
@@ -177,6 +178,7 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find objectkinds for status")
 		}
+		c.loggerForGameServerAllocation(gsa).Info("GameServerAllocation is invalid")
 
 		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
 		return status, nil
@@ -192,6 +194,7 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 	}
 
 	if err != nil {
+		c.loggerForGameServerAllocation(gsa).WithError(err).Error("allocation failed")
 		return nil, err
 	}
 
@@ -216,6 +219,9 @@ func (c *Allocator) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocat
 	err := Retry(allocationRetry, func() error {
 		var err error
 		gs, err = c.allocate(gsa, stop)
+		if err != nil {
+			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying... ")
+		}
 		return err
 	})
 
@@ -265,12 +271,22 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 		if connectionInfo == nil {
 			break
 		}
-		if connectionInfo.ClusterName == gsa.ObjectMeta.ClusterName {
-			result, err = c.allocateFromLocalCluster(gsa, stop)
-			c.baseLogger.Error(err)
+		if len(connectionInfo.AllocationEndpoints) == 0 {
+			// Change the naemspace to the policy namespace and allocate locally
+			gsaCopy := gsa
+			if gsa.Namespace != connectionInfo.Namespace {
+				gsaCopy = gsa.DeepCopy()
+				gsaCopy.Namespace = connectionInfo.Namespace
+			}
+			result, err = c.allocateFromLocalCluster(gsaCopy, stop)
+			if err != nil {
+				c.loggerForGameServerAllocation(gsaCopy).WithError(err).Error("self-allocation failed")
+			}
 		} else {
 			result, err = c.allocateFromRemoteCluster(*gsa, connectionInfo, gsa.ObjectMeta.Namespace)
-			c.baseLogger.Error(err)
+			if err != nil {
+				c.loggerForGameServerAllocation(gsa).WithField("allocConnInfo", connectionInfo).WithError(err).Error("remote-allocation failed")
+			}
 		}
 		if result != nil {
 			return result, nil
@@ -303,7 +319,9 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 
 	// TODO: Retry on transient error --> response.StatusCode >= 500
 	for i, endpoint := range connectionInfo.AllocationEndpoints {
-		response, err := client.Post(endpoint, "application/json", bytes.NewBuffer(body))
+		c.loggerForGameServerAllocation(&gsa).WithField("endpoint", endpoint).Info("forwarding allocation request")
+		requestURL := fmt.Sprintf(allocatorRequestURLFmt, endpoint)
+		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
 			return nil, err
 		}
@@ -317,7 +335,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 		// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
 		if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
 			// If there is a server error try a different endpoint
-			c.baseLogger.WithError(err).WithField("endpoint", endpoint).Warn("The request sent failed, trying next endpoint")
+			c.loggerForGameServerAllocation(&gsa).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
 			continue
 		}
 		if response.StatusCode >= 400 {

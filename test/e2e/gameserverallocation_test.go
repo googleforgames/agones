@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -28,6 +29,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -42,7 +44,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			t.Parallel()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			fleet := defaultFleet(defaultNs)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -69,14 +71,17 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 	t.Parallel()
 
 	fixtures := []apis.SchedulingStrategy{apis.Packed, apis.Distributed}
-
 	for _, strategy := range fixtures {
 		strategy := strategy
 		t.Run(string(strategy), func(t *testing.T) {
 			t.Parallel()
 
-			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			namespace := fmt.Sprintf("gsa-multicluster-local-%s", uuid.NewUUID())
+			framework.CreateNamespace(t, namespace)
+			defer framework.DeleteNamespace(t, namespace)
+
+			fleets := framework.AgonesClient.AgonesV1().Fleets(namespace)
+			fleet := defaultFleet(namespace)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -85,15 +90,16 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 
 			framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-			// Allocation Policy #1: local cluster with desired label
+			// Allocation Policy #1: local cluster with desired label.
+			// This policy allocates locally on the cluster due to matching namespace with gsa and not setting AllocationEndpoints.
 			mca := &multiclusterv1alpha1.GameServerAllocationPolicy{
 				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
 					Priority: 1,
 					Weight:   100,
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-						AllocationEndpoints: []string{"localhost"},
-						ClusterName:         "multicluster1",
-						SecretName:          "sec1",
+						ClusterName: "multicluster1",
+						SecretName:  "sec1",
+						Namespace:   namespace,
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -106,7 +112,8 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				assert.Equal(t, mca.Spec, resp.Spec)
 			}
 
-			// Allocation Policy #2: another cluster with desired label, but lower priority
+			// Allocation Policy #2: another cluster with desired label, but lower priority.
+			// If the policy is selected due to a bug the request fails as it cannot find the secret.
 			mca = &multiclusterv1alpha1.GameServerAllocationPolicy{
 				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
 					Priority: 2,
@@ -114,7 +121,8 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
 						AllocationEndpoints: []string{"another-endpoint"},
 						ClusterName:         "multicluster2",
-						SecretName:          "sec1",
+						SecretName:          "sec2",
+						Namespace:           namespace,
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -136,7 +144,8 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
 						AllocationEndpoints: []string{"another-endpoint"},
 						ClusterName:         "multicluster3",
-						SecretName:          "sec1",
+						SecretName:          "sec3",
+						Namespace:           namespace,
 					},
 				},
 				ObjectMeta: metav1.ObjectMeta{
@@ -165,6 +174,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{
 					ClusterName:  "multicluster1",
 					GenerateName: "allocation-",
+					Namespace:    namespace,
 				},
 			}
 
@@ -189,7 +199,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			t.Parallel()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
-			fleet := defaultFleet()
+			fleet := defaultFleet(defaultNs)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(fleet)
 			if assert.Nil(t, err) {
@@ -227,7 +237,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 
-	gs := defaultGameServer()
+	gs := defaultGameServer(defaultNs)
 	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
@@ -272,7 +282,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
-	preferred := defaultFleet()
+	preferred := defaultFleet(defaultNs)
 	preferred.ObjectMeta.GenerateName = "preferred-"
 	preferred.Spec.Replicas = 1
 	preferred.Spec.Template.ObjectMeta.Labels = label
@@ -283,7 +293,7 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 		assert.FailNow(t, "could not create first fleet")
 	}
 
-	required := defaultFleet()
+	required := defaultFleet(defaultNs)
 	required.ObjectMeta.GenerateName = "required-"
 	required.Spec.Replicas = 2
 	required.Spec.Template.ObjectMeta.Labels = label
@@ -378,7 +388,7 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 	fleets := framework.AgonesClient.AgonesV1().Fleets(defaultNs)
 	label := map[string]string{"role": t.Name()}
 
-	preferred := defaultFleet()
+	preferred := defaultFleet(defaultNs)
 	preferred.ObjectMeta.GenerateName = "preferred-"
 	preferred.Spec.Replicas = 150
 	preferred.Spec.Template.ObjectMeta.Labels = label
