@@ -74,7 +74,7 @@ func TestAllocator(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -169,7 +169,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespaceA,
