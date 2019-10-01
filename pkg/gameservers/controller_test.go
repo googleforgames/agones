@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -48,9 +49,7 @@ const (
 	nodeFixtureName = "node1"
 )
 
-var (
-	GameServerKind = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServer"))
-)
+var GameServerKind = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("GameServer"))
 
 func TestControllerSyncGameServer(t *testing.T) {
 	t.Parallel()
@@ -159,6 +158,7 @@ func runReconcileDeleteGameServer(t *testing.T, fixture *agonesv1.GameServer) {
 	assert.Nil(t, err, fmt.Sprintf("Shouldn't be an error from syncGameServer: %+v", err))
 	assert.False(t, podAction, "Nothing should happen to a Pod")
 }
+
 func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 	t.Parallel()
 
@@ -1206,6 +1206,182 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	assert.Equal(t, fixture.Spec.Health.FailureThreshold, probe.FailureThreshold)
 	assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, probe.InitialDelaySeconds)
 	assert.Equal(t, fixture.Spec.Health.PeriodSeconds, probe.PeriodSeconds)
+}
+
+func TestControllerAddSDKServerEnvVars(t *testing.T) {
+
+	t.Run("legacy game server without ports set", func(t *testing.T) {
+		// For backwards compatibility, verify that no variables are set if the ports
+		// are not set on the game server.
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"},
+			Spec:       newSingleContainerSpec(),
+		}
+		gs.ApplyDefaults()
+		gs.Spec.SdkServer = agonesv1.SdkServer{}
+		pod, err := gs.Pod()
+		assert.Nil(t, err, "Error: %v", err)
+		before := pod.DeepCopy()
+		c.addSDKServerEnvVars(gs, pod)
+		assert.Equal(t, before, pod, "Error: pod unexpectedly modified. before = %v, after = %v", before, pod)
+	})
+
+	t.Run("game server without any environment", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "2345"},
+			Spec:       newSingleContainerSpec(),
+		}
+		gs.ApplyDefaults()
+		pod, err := gs.Pod()
+		assert.Nil(t, err, "Error: %v", err)
+		c.addSDKServerEnvVars(gs, pod)
+		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+	})
+
+	t.Run("game server without any conflicting env vars", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "3456"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "container",
+								Image: "container/image",
+								Env:   []corev1.EnvVar{{Name: "one", Value: "value"}, {Name: "two", Value: "value"}},
+							},
+						},
+					},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		pod, err := gs.Pod()
+		assert.Nil(t, err, "Error: %v", err)
+		c.addSDKServerEnvVars(gs, pod)
+		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+	})
+
+	t.Run("game server with conflicting env vars", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "4567"},
+			Spec: agonesv1.GameServerSpec{
+				Ports: []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "container",
+								Image: "container/image",
+								Env:   []corev1.EnvVar{{Name: grpcPortEnvVar, Value: "value"}, {Name: httpPortEnvVar, Value: "value"}},
+							},
+						},
+					},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		pod, err := gs.Pod()
+		assert.Nil(t, err, "Error: %v", err)
+		c.addSDKServerEnvVars(gs, pod)
+		assert.Len(t, pod.Spec.Containers, 1, "Expected 1 container, found %d", len(pod.Spec.Containers))
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+		assert.Contains(t, pod.Spec.Containers[0].Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+	})
+
+	t.Run("game server with multiple containers", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "5678"},
+			Spec: agonesv1.GameServerSpec{
+				Container: "container1",
+				Ports:     []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "container1",
+								Image: "container/gameserver",
+							},
+							{
+								Name:  "container2",
+								Image: "container/image2",
+								Env:   []corev1.EnvVar{{Name: "one", Value: "value"}, {Name: "two", Value: "value"}},
+							},
+							{
+								Name:  "container3",
+								Image: "container/image2",
+								Env:   []corev1.EnvVar{{Name: grpcPortEnvVar, Value: "value"}, {Name: httpPortEnvVar, Value: "value"}},
+							},
+						},
+					},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		pod, err := gs.Pod()
+		assert.Nil(t, err, "Error: %v", err)
+		c.addSDKServerEnvVars(gs, pod)
+		for _, c := range pod.Spec.Containers {
+			assert.Contains(t, c.Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+			assert.Contains(t, c.Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+		}
+	})
+
+	t.Run("environment variables not applied to the sdkserver container", func(t *testing.T) {
+		c, _ := newFakeController()
+		gs := &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "5678"},
+			Spec: agonesv1.GameServerSpec{
+				Container: "container1",
+				Ports:     []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "container1",
+								Image: "container/gameserver",
+							},
+							{
+								Name:  "container2",
+								Image: "container/image2",
+								Env:   []corev1.EnvVar{{Name: "one", Value: "value"}, {Name: "two", Value: "value"}},
+							},
+							{
+								Name:  "container3",
+								Image: "container/image2",
+								Env:   []corev1.EnvVar{{Name: grpcPortEnvVar, Value: "value"}, {Name: httpPortEnvVar, Value: "value"}},
+							},
+						},
+					},
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		sidecar := c.sidecar(gs)
+		pod, err := gs.Pod(sidecar)
+		assert.Nil(t, err, "Error: %v", err)
+		c.addSDKServerEnvVars(gs, pod)
+		for _, c := range pod.Spec.Containers {
+			if c.Name == sdkserverSidecarName {
+				assert.NotContains(t, c.Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+				assert.NotContains(t, c.Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+			} else {
+				assert.Contains(t, c.Env, corev1.EnvVar{Name: grpcPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.GRPCPort))})
+				assert.Contains(t, c.Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
+			}
+		}
+	})
+
 }
 
 func TestIsGameServerPod(t *testing.T) {
