@@ -25,7 +25,7 @@ RUN cmake --version
 COPY ./sdks/cpp sdk
 RUN cd sdk && mkdir -p .build && \
     cd .build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -Wno-dev && \
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DAGONES_SILENT_OUTPUT=ON -G "Unix Makefiles" -Wno-dev && \
     cmake --build . --target install
 
 COPY ./examples/cpp-simple cpp-simple

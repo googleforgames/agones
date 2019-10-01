@@ -29,11 +29,12 @@ build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
 grpc_release_tag = v1.16.1
 sdk_build_folder = build-sdk-images/
+examples_folder = ../examples/
 SDK_FOLDER ?= go
 COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 
-.PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command 
+.PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
 # Tests all the sdks
 test-sdks: COMMAND := test
@@ -148,3 +149,33 @@ run-sdk-conformance-tests:
 # after building conformance tests for all SDKs supported
 clean-sdk-conformance-tests:
 	$(MAKE) run-all-sdk-command COMMAND=clean
+
+# Perform make build for all examples
+build-examples: build-example-xonotic build-example-cpp-simple build-example-simple-udp build-example-autoscaler-webhook build-example-nodejs-simple
+
+# Run "make build" command for one example directory
+build-example:
+	cd  $(examples_folder)/$(EXAMPLE); \
+	if [ -f Makefile ] ; then \
+		make build; \
+	else \
+		echo "Makefile was not found in "/examples/$(EXAMPLE)" directory - nothing to execute" ; \
+	fi
+
+build-example-xonotic:
+	$(MAKE) build-example EXAMPLE=xonotic
+
+build-example-cpp-simple:
+	$(MAKE) build-example EXAMPLE=cpp-simple
+
+build-example-simple-udp:
+	$(MAKE) build-example EXAMPLE=simple-udp
+
+build-example-rust-simple:
+	$(MAKE) build-example EXAMPLE=rust-simple
+
+build-example-autoscaler-webhook:
+	$(MAKE) build-example EXAMPLE=autoscaler-webhook
+
+build-example-nodejs-simple:
+	$(MAKE) build-example EXAMPLE=nodejs-simple
