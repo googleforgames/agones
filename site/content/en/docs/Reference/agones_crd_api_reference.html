@@ -2405,15 +2405,15 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </tr>
 <tr>
 <td>
-<code>logging</code></br>
+<code>sdkServer</code></br>
 <em>
-<a href="#Logging">
-Logging
+<a href="#SdkServer">
+SdkServer
 </a>
 </em>
 </td>
 <td>
-<p>Logging specifies log levels for Agones system containers</p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -2969,15 +2969,15 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </tr>
 <tr>
 <td>
-<code>logging</code></br>
+<code>sdkServer</code></br>
 <em>
-<a href="#Logging">
-Logging
+<a href="#SdkServer">
+SdkServer
 </a>
 </em>
 </td>
 <td>
-<p>Logging specifies log levels for Agones system containers</p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -3217,15 +3217,15 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </tr>
 <tr>
 <td>
-<code>logging</code></br>
+<code>sdkServer</code></br>
 <em>
-<a href="#Logging">
-Logging
+<a href="#SdkServer">
+SdkServer
 </a>
 </em>
 </td>
 <td>
-<p>Logging specifies log levels for Agones system containers</p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -3309,14 +3309,23 @@ int32
 </tr>
 </tbody>
 </table>
-<h3 id="Logging">Logging
+<h3 id="PortPolicy">PortPolicy
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerPort">GameServerPort</a>)
+</p>
+<p>
+<p>PortPolicy is the port policy for the GameServer</p>
+</p>
+<h3 id="SdkServer">SdkServer
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#GameServerSpec">GameServerSpec</a>)
 </p>
 <p>
-<p>Logging specifies log levels for Agones system containers</p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </p>
 <table>
 <thead>
@@ -3328,25 +3337,49 @@ int32
 <tbody>
 <tr>
 <td>
-<code>sdkServer</code></br>
+<code>logLevel</code></br>
 <em>
-string
+<a href="#SdkServerLogLevel">
+SdkServerLogLevel
+</a>
 </em>
 </td>
 <td>
-<p>SdkServer is a log level for SDK server (sidecar) logs. Defaults to &ldquo;Info&rdquo;</p>
+<p>LogLevel for SDK server (sidecar) logs. Defaults to &ldquo;Info&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>grpcPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections</p>
 </td>
 </tr>
 </tbody>
 </table>
-<h3 id="PortPolicy">PortPolicy
+<h3 id="SdkServerLogLevel">SdkServerLogLevel
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
-<a href="#GameServerPort">GameServerPort</a>)
+<a href="#SdkServer">SdkServer</a>)
 </p>
 <p>
-<p>PortPolicy is the port policy for the GameServer</p>
+<p>SdkServerLogLevel is the log level for SDK server (sidecar) logs</p>
 </p>
 <hr/>
 <h2 id="allocation.agones.dev">allocation.agones.dev</h2>

@@ -339,14 +339,14 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
-                    logging:
+                    sdkServer:
                       type: object
-                      title: Define logging levels for agones system components
+                      title: Parameters for the SDK Server (sidecar)
                       properties:
-                        sdkServer:
+                        logLevel:
                           type: string 
                           description: |
-                            sdkServer logging parameter has three options:
+                            sdkServer log level parameter has three options:
                             - "Info" (default) The SDK server will output all messages except for debug messages
                             - "Debug" The SDK server will output all messages including debug messages
                             - "Error" The SDK server will only output error messages
@@ -354,6 +354,24 @@ spec:
                           - Error
                           - Info
                           - Debug
+                      grpcPort:
+                        title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                        description: |
+                          The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
+                          encounter conflicts in rare cases. The default will be changed to 9357 in a future release
+                          of Agones.
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
+                      httpPort:
+                        title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                        description: |
+                          The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
+                          encounter conflicts in rare cases. The default will be changed to 9358 in a future release
+                          of Agones.
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
                     scheduling:
                       type: string
                       enum:
@@ -609,14 +627,14 @@ spec:
                     type: integer
                     minimum: 1
                     maximum: 65535
-            logging:
+            sdkServer:
               type: object
-              title: Define logging levels for agones system components
+              title: Parameters for the SDK Server (sidecar)
               properties:
-                sdkServer:
+                logLevel:
                   type: string 
                   description: |
-                    sdkServer logging parameter has three options:
+                    sdkServer log level parameter has three options:
                     - "Info" (default) The SDK server will output all messages except for debug messages
                     - "Debug" The SDK server will output all messages including debug messages
                     - "Error" The SDK server will only output error messages
@@ -624,6 +642,24 @@ spec:
                   - Error
                   - Info
                   - Debug
+              grpcPort:
+                title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                description: |
+                  The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
+                  encounter conflicts in rare cases. The default will be changed to 9357 in a future release
+                  of Agones.
+                type: integer
+                minimum: 1
+                maximum: 65535
+              httpPort:
+                title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                description: |
+                  The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
+                  encounter conflicts in rare cases. The default will be changed to 9358 in a future release
+                  of Agones.
+                type: integer
+                minimum: 1
+                maximum: 65535
             scheduling:
               type: string
               enum:
@@ -892,14 +928,14 @@ spec:
                             type: integer
                             minimum: 1
                             maximum: 65535
-                    logging:
+                    sdkServer:
                       type: object
-                      title: Define logging levels for agones system components
+                      title: Parameters for the SDK Server (sidecar)
                       properties:
-                        sdkServer:
+                        logLevel:
                           type: string 
                           description: |
-                            sdkServer logging parameter has three options:
+                            sdkServer log level parameter has three options:
                             - "Info" (default) The SDK server will output all messages except for debug messages
                             - "Debug" The SDK server will output all messages including debug messages
                             - "Error" The SDK server will only output error messages
@@ -907,6 +943,24 @@ spec:
                           - Error
                           - Info
                           - Debug
+                      grpcPort:
+                        title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                        description: |
+                          The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
+                          encounter conflicts in rare cases. The default will be changed to 9357 in a future release
+                          of Agones.
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
+                      httpPort:
+                        title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                        description: |
+                          The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
+                          encounter conflicts in rare cases. The default will be changed to 9358 in a future release
+                          of Agones.
+                        type: integer
+                        minimum: 1
+                        maximum: 65535
                     scheduling:
                       type: string
                       enum:

@@ -5,6 +5,8 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 
+'use strict'
+
 const rollup  = require('rollup')
 const path    = require('path')
 const babel   = require('rollup-plugin-babel')
@@ -73,7 +75,7 @@ Object.keys(bsPlugins)
         globals,
         file: path.resolve(__dirname, `${rootPath}${pluginKey.toLowerCase()}.js`)
       })
-        .then(() => console.log(`Building ${pluginKey} plugin... Done!`))
+        .then(() => console.log(`Building ${pluginKey} plugin... Done !`))
         .catch((err) => console.error(`${pluginKey}: ${err}`))
     })
   })
