@@ -19,9 +19,28 @@ const services = require('../lib/sdk_grpc_pb');
 
 class AgonesSDK {
 	constructor() {
-		this.client = new services.SDKClient('localhost:59357', grpc.credentials.createInsecure());
+		this.client = new services.SDKClient('localhost:'+this.port, grpc.credentials.createInsecure());
 		this.healthStream = undefined;
 		this.emitters = [];
+	}
+
+	get port() {
+		const defaultPort = '59357';
+		const port = process.env.AGONES_SDK_GRPC_PORT;
+		if (port === undefined) {
+			console.log(`Environment variable AGONES_SDK_GRPC_PORT not defined, using default port ${defaultPort}`);
+			return defaultPort;
+		}
+		const portNum = parseInt(port, 10);
+		if (isNaN(portNum)) {
+			console.log(`Unable to parse '${port}' defined in AGONES_SDK_GRPC_PORT into an integer`);
+			return defaultPort;
+		}
+		if (portNum < 1 || portNum > 65535) {
+			console.log(`Invalid port ${portNum} defined in AGONES_SDK_GRPC_PORT. It must be between 1 and 65535`);
+			return defaultPort;
+		}
+		return port;
 	}
 
 	async connect() {
@@ -32,7 +51,7 @@ class AgonesSDK {
 				} else {
 					resolve();
 				}
-			})
+			});
 		});
 	}
 
