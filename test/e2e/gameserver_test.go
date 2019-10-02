@@ -233,8 +233,13 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	newGs, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateScheduled, time.Minute)
 	assert.NoError(t, err)
 
+	logger.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created")
+
 	// crash the pod
-	conn, err := net.Dial("udp", fmt.Sprintf("%s:%d", newGs.Status.Address, newGs.Status.Ports[0].Port))
+	address := fmt.Sprintf("%s:%d", newGs.Status.Address, newGs.Status.Ports[0].Port)
+	logger.WithField("address", address).Info("Dialing UDP message to address")
+
+	conn, err := net.Dial("udp", address)
 	assert.NoError(t, err)
 	defer conn.Close() // nolint: errcheck
 
