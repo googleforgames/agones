@@ -44,7 +44,7 @@ namespace Agones
         /// </summary>
         public bool logEnabled = false;
 
-        private const string sidecarAddress = "http://localhost:59358";
+        private string sidecarAddress;
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
         private struct KeyValueMessage
@@ -58,6 +58,8 @@ namespace Agones
         // Use this for initialization.
         private void Start()
         {
+            String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
+            sidecarAddress = "http://localhost:" + (port ?? "59358");
             HealthCheckAsync();
         }
 
