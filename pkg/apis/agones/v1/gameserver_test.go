@@ -629,6 +629,33 @@ func TestGameServerIsDeletable(t *testing.T) {
 	assert.True(t, gs.IsDeletable())
 }
 
+func TestGameServerIsBeforeReady(t *testing.T) {
+	fixtures := []struct {
+		state    GameServerState
+		expected bool
+	}{
+		{GameServerStatePortAllocation, true},
+		{GameServerStateCreating, true},
+		{GameServerStateStarting, true},
+		{GameServerStateScheduled, true},
+		{GameServerStateRequestReady, true},
+		{GameServerStateReady, false},
+		{GameServerStateShutdown, false},
+		{GameServerStateError, false},
+		{GameServerStateUnhealthy, false},
+		{GameServerStateReserved, false},
+		{GameServerStateAllocated, false},
+	}
+
+	for _, test := range fixtures {
+		t.Run(string(test.state), func(t *testing.T) {
+			gs := &GameServer{Status: GameServerStatus{State: test.state}}
+			assert.Equal(t, test.expected, gs.IsBeforeReady())
+		})
+	}
+
+}
+
 func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 	t.Parallel()
 
