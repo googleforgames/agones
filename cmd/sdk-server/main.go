@@ -222,7 +222,7 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 		logger.WithError(err).Fatal("Could not register grpc-gateway")
 	}
 
-	logger.WithField("grpcEndpoint", grpcEndpoint).Info("Starting SDKServer grpc-gateway...")
+	logger.WithField("httpEndpoint", httpServer.Addr).Info("Starting SDKServer grpc-gateway...")
 	if err := httpServer.ListenAndServe(); err != nil {
 		if err == http.ErrServerClosed {
 			logger.WithError(err).Info("http server closed")
