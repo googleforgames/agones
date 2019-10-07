@@ -116,6 +116,7 @@ func (r *metrics) setResponse(o k8sruntime.Object) {
 		gs, err := r.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
 		if err != nil {
 			r.logger.WithError(err).Warnf("failed to get gameserver:%s namespace:%s", out.Status.GameServerName, out.Namespace)
+			return
 		}
 		fleetName := gs.Labels[agonesv1.FleetNameLabel]
 		if fleetName != "" {
