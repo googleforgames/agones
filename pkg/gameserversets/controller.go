@@ -17,6 +17,7 @@ package gameserversets
 import (
 	"encoding/json"
 	"sync"
+	"time"
 
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
@@ -109,7 +110,7 @@ func NewController(
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncGameServerSet, c.baseLogger, logfields.GameServerSetKey, agones.GroupName+".GameServerSetController")
+	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncGameServerSet, c.baseLogger, logfields.GameServerSetKey, agones.GroupName+".GameServerSetController", workerqueue.FastRateLimiter(3*time.Second))
 	health.AddLivenessCheck("gameserverset-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()

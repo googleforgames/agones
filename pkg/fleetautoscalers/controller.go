@@ -85,7 +85,7 @@ func NewController(
 		fleetAutoscalerSynced: autoscaler.Informer().HasSynced,
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, autoscaling.GroupName+".FleetAutoscalerController")
+	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncFleetAutoscaler, c.baseLogger, logfields.FleetAutoscalerKey, autoscaling.GroupName+".FleetAutoscalerController", workerqueue.FastRateLimiter(3*time.Second))
 	health.AddLivenessCheck("fleetautoscaler-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()

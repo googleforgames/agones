@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -89,7 +90,7 @@ func NewController(
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.syncFleet, c.baseLogger, logfields.FleetKey, agones.GroupName+".FleetController")
+	c.workerqueue = workerqueue.NewWorkerQueueWithRateLimiter(c.syncFleet, c.baseLogger, logfields.FleetKey, agones.GroupName+".FleetController", workerqueue.FastRateLimiter(3*time.Second))
 	health.AddLivenessCheck("fleet-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
