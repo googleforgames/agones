@@ -64,8 +64,6 @@ spec:
                 namespace:
                   type: string
               required:
-              - clusterName
-              - secretName
               - namespace
               type: object
             priority:
