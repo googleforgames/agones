@@ -54,6 +54,14 @@ type WorkerQueue struct {
 	running int
 }
 
+// FastRateLimiter returns a rate limiter without exponential back-off, with specified maximum per-item retry delay.
+func FastRateLimiter(maxDelay time.Duration) workqueue.RateLimiter {
+	const numFastRetries = 5
+	const fastDelay = 200 * time.Millisecond // first few retries up to 'numFastRetries' are fast
+
+	return workqueue.NewItemFastSlowRateLimiter(fastDelay, maxDelay, numFastRetries)
+}
+
 // NewWorkerQueue returns a new worker queue for a given name
 func NewWorkerQueue(handler Handler, logger *logrus.Entry, keyName logfields.ResourceType, queueName string) *WorkerQueue {
 	return NewWorkerQueueWithRateLimiter(handler, logger, keyName, queueName, workqueue.DefaultControllerRateLimiter())
