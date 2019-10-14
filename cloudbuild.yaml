@@ -231,7 +231,7 @@ steps:
 - name: "make-docker"
   id: sdk-conformance
   dir: "build"
-  args: [ "run-sdk-conformance-tests"]
+  args: [ "-j", "3", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
 
@@ -244,13 +244,13 @@ steps:
     - build-sdks
     - tests
   dir: "sdks/cpp/.build"
-  args: ['cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
+  args: [ '-m', 'cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
     - build-images
     - tests
   dir: "cmd/sdk-server/bin"
-  args: ['cp', '*.zip', 'gs://agones-artifacts/sdk-server']
+  args: [ '-m', 'cp', '*.zip', 'gs://agones-artifacts/sdk-server']
 
 substitutions:
   _CACHE_BUCKET: agones-build-cache

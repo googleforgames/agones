@@ -15,4 +15,4 @@
 # limitations under the License.
 
 set -ex
-/go/src/agones.dev/agones/test/sdk/rust/target/release/rust-simple
+/go/src/agones.dev/agones/test/sdk/rust/target/debug/rust-simple
