@@ -4,10 +4,11 @@ approvers:
   - cyriltovena
   - dzlier-gcp
   - EricFortin
-  - ilkercelikyilmaz
-  - jkowalski
-  - joeholley
   - markmandel
   - pooneh-m
   - roberthbailey
 
+emeritus_approvers:
+  - joeholley
+  - jkowalski
+  - ilkercelikyilmaz
