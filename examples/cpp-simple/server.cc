@@ -50,7 +50,7 @@ int main() {
 
   std::cout << "Attempting to connect...\n" << std::flush;
   if (!sdk->Connect()) {
-    std::cerr << "Could not connect to the sidecar. Exiting!\n";
+    std::cerr << "Exiting!\n";
     return -1;
   }
   std::cout << "...handshake complete.\n" << std::flush;

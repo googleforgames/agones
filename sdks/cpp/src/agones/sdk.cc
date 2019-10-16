@@ -20,6 +20,7 @@
 namespace agones {
 
 struct SDK::SDKImpl {
+  std::string host_;
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<agones::dev::sdk::SDK::Stub> stub_;
   std::unique_ptr<grpc::ClientWriter<agones::dev::sdk::Empty>> health_;
@@ -27,8 +28,10 @@ struct SDK::SDKImpl {
 };
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
-  pimpl_->channel_ = grpc::CreateChannel("localhost:59357",
-                                         grpc::InsecureChannelCredentials());
+  const char* port = std::getenv("AGONES_SDK_GRPC_PORT");
+  pimpl_->host_ = std::string("localhost:") + (port ? port : "59357");
+  pimpl_->channel_ =
+      grpc::CreateChannel(pimpl_->host_, grpc::InsecureChannelCredentials());
 }
 
 SDK::~SDK() {}
@@ -37,6 +40,8 @@ bool SDK::Connect() {
   if (!pimpl_->channel_->WaitForConnected(
           gpr_time_add(gpr_now(GPR_CLOCK_REALTIME),
                        gpr_time_from_seconds(30, GPR_TIMESPAN)))) {
+    std::cerr << "Could not connect to the sidecar at " << pimpl_->host_
+              << ".\n";
     return false;
   }
 
