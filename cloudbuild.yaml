@@ -36,6 +36,13 @@ steps:
     - '--key=$_CPP_SDK_BUILD_CACHE_KEY'
   waitFor: ['-']
 
+- name: gcr.io/$PROJECT_ID/restore_cache
+  id: rust-sdk-build-restore-cache
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
+  waitFor: ['-']
+
 #
 # Creates the initial make + docker build platform
 #
@@ -236,6 +243,21 @@ steps:
     - build-images
 
 #
+# Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
+#
+
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
+    - '--path=test/sdk/rust/.cargo'
+    - '--path=test/sdk/rust/.cargo-targets'
+    - '--no-clobber'
+  id: rust-build-save-cache
+  waitFor:
+    - sdk-conformance
+
+#
 # Zip up artifacts and push to storage
 #
 
@@ -256,6 +278,7 @@ substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
+  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 
 tags: ['ci']
 timeout: "1h"

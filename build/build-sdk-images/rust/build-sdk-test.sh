@@ -15,5 +15,10 @@
 # limitations under the License.
 
 set -ex
+mkdir -p /go/src/agones.dev/agones/test/sdk/rust/.cargo
+mkdir -p /go/src/agones.dev/agones/test/sdk/rust/.cargo-targets
 cd /go/src/agones.dev/agones/test/sdk/rust
+export CARGO_HOME=/go/src/agones.dev/agones/test/sdk/rust/.cargo
+export CARGO_TARGET_DIR=/go/src/agones.dev/agones/test/sdk/rust/.cargo-targets
+cargo fetch
 cargo build
