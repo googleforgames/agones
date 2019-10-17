@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -909,12 +910,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		fleetName := addReactorForGameServer(&m)
 
 		// Mock server
-		expectedGSAName := "mocked"
+		expectedGSName := "mocked"
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serverResponse := allocationv1.GameServerAllocation{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: expectedGSAName,
-				},
+			serverResponse := pb.AllocationResponse{
+				GameServerName: expectedGSName,
 			}
 			response, _ := json.Marshal(serverResponse)
 			_, _ = w.Write(response)
@@ -984,7 +983,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		result, err := executeAllocation(gsa, c)
 		if assert.NoError(t, err) {
-			assert.Equal(t, expectedGSAName, result.ObjectMeta.Name)
+			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
 	})
 
@@ -1080,12 +1079,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		unhealthyServer.TLS.ClientAuth = tls.RequireAndVerifyClientCert
 
 		// Mock healthyServer
-		expectedGSAName := "mocked"
+		expectedGSName := "mocked"
 		healthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serverResponse := allocationv1.GameServerAllocation{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: expectedGSAName,
-				},
+			serverResponse := pb.AllocationResponse{
+				GameServerName: expectedGSName,
 			}
 			response, _ := json.Marshal(serverResponse)
 			_, _ = w.Write(response)
@@ -1148,7 +1145,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		result, err := executeAllocation(gsa, c)
 		if assert.NoError(t, err) {
-			assert.Equal(t, expectedGSAName, result.ObjectMeta.Name)
+			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
 	})
 }

@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"time"
 
+	"agones.dev/agones/pkg/allocation/converters"
+	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
@@ -283,7 +285,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 				c.loggerForGameServerAllocation(gsaCopy).WithError(err).Error("self-allocation failed")
 			}
 		} else {
-			result, err = c.allocateFromRemoteCluster(*gsa, connectionInfo, gsa.ObjectMeta.Namespace)
+			result, err = c.allocateFromRemoteCluster(gsa, connectionInfo, gsa.ObjectMeta.Namespace)
 			if err != nil {
 				c.loggerForGameServerAllocation(gsa).WithField("allocConnInfo", connectionInfo).WithError(err).Error("remote-allocation failed")
 			}
@@ -297,8 +299,8 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 
 // allocateFromRemoteCluster allocates gameservers from a remote cluster by making
 // an http call to allocation service in that cluster.
-func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
-	var gsaResult allocationv1.GameServerAllocation
+func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
+	var allocationResponse pb.AllocationResponse
 
 	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
@@ -310,16 +312,17 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 	// Forward the game server allocation request to another cluster,
 	// and disable multicluster settings to avoid the target cluster
 	// forward the allocation request again.
-	gsa.Spec.MultiClusterSetting.Enabled = false
-	gsa.Namespace = connectionInfo.Namespace
-	body, err := json.Marshal(gsa)
+	request := converters.ConvertGSAV1ToAllocationRequestV1Alpha1(gsa)
+	request.MultiClusterSetting.Enabled = false
+	request.Namespace = connectionInfo.Namespace
+	body, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO: Retry on transient error --> response.StatusCode >= 500
 	for i, endpoint := range connectionInfo.AllocationEndpoints {
-		c.loggerForGameServerAllocation(&gsa).WithField("endpoint", endpoint).Info("forwarding allocation request")
+		c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Info("forwarding allocation request")
 		requestURL := fmt.Sprintf(allocatorRequestURLFmt, endpoint)
 		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
 		if err != nil {
@@ -335,7 +338,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 		// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
 		if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
 			// If there is a server error try a different endpoint
-			c.loggerForGameServerAllocation(&gsa).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
+			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
 			continue
 		}
 		if response.StatusCode >= 400 {
@@ -343,13 +346,13 @@ func (c *Allocator) allocateFromRemoteCluster(gsa allocationv1.GameServerAllocat
 			return nil, errors.New(string(data))
 		}
 
-		err = json.Unmarshal(data, &gsaResult)
+		err = json.Unmarshal(data, &allocationResponse)
 		if err != nil {
 			return nil, err
 		}
 		break
 	}
-	return &gsaResult, nil
+	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(&allocationResponse), nil
 }
 
 // createRemoteClusterRestClient creates a rest client with proper certs to make a remote call.
