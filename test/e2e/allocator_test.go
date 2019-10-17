@@ -32,8 +32,8 @@ import (
 	"testing"
 	"time"
 
+	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
@@ -75,15 +75,12 @@ func TestAllocator(t *testing.T) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	gsa := &allocationv1.GameServerAllocation{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-		},
-		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-		}}
+	request := &pb.AllocationRequest{
+		Namespace:                  namespace,
+		RequiredGameServerSelector: &metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+	}
 
-	body, err := json.Marshal(gsa)
+	body, err := json.Marshal(request)
 	if !assert.Nil(t, err) {
 		return
 	}
@@ -116,12 +113,12 @@ func TestAllocator(t *testing.T) {
 		assert.FailNow(t, "Http test failed")
 	}
 
-	result := allocationv1.GameServerAllocation{}
+	result := pb.AllocationResponse{}
 	err = json.Unmarshal(body, &result)
 	if !assert.Nil(t, err) {
 		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
 	}
-	assert.Equal(t, allocationv1.GameServerAllocationAllocated, result.Status.State)
+	assert.Equal(t, pb.AllocationResponse_Allocated, result.State)
 }
 
 // Tests multi-cluster allocation by reusing the same cluster but across namespace.
@@ -170,17 +167,14 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-	gsa := &allocationv1.GameServerAllocation{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespaceA,
-		},
-		Spec: allocationv1.GameServerAllocationSpec{
-			// Enable multi-cluster setting
-			MultiClusterSetting: allocationv1.MultiClusterSetting{Enabled: true},
-			Required:            metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-		}}
+	request := &pb.AllocationRequest{
+		Namespace: namespaceA,
+		// Enable multi-cluster setting
+		MultiClusterSetting:        &pb.MultiClusterSetting{Enabled: true},
+		RequiredGameServerSelector: &metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+	}
 
-	body, err := json.Marshal(gsa)
+	body, err := json.Marshal(request)
 	if !assert.Nil(t, err) {
 		return
 	}
@@ -213,12 +207,12 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		assert.FailNow(t, "Http test failed")
 	}
 
-	result := allocationv1.GameServerAllocation{}
+	result := pb.AllocationResponse{}
 	err = json.Unmarshal(body, &result)
 	if !assert.Nil(t, err) {
 		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
 	}
-	assert.Equal(t, allocationv1.GameServerAllocationAllocated, result.Status.State)
+	assert.Equal(t, pb.AllocationResponse_Allocated, result.State)
 }
 
 func createAllocationPolicy(t *testing.T, p *multiclusterv1alpha1.GameServerAllocationPolicy) {
