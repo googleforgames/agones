@@ -86,6 +86,12 @@ var allocationRetry = wait.Backoff{
 	Jitter:   0.1,
 }
 
+var remoteAllocationRetry = wait.Backoff{
+	Steps:    7,
+	Duration: 100 * time.Millisecond,
+	Factor:   2.0,
+}
+
 // Allocator handles game server allocation
 type Allocator struct {
 	baseLogger             *logrus.Entry
@@ -274,7 +280,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 			break
 		}
 		if len(connectionInfo.AllocationEndpoints) == 0 {
-			// Change the naemspace to the policy namespace and allocate locally
+			// Change the namespace to the policy namespace and allocate locally
 			gsaCopy := gsa
 			if gsa.Namespace != connectionInfo.Namespace {
 				gsaCopy = gsa.DeepCopy()
@@ -290,7 +296,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 				c.loggerForGameServerAllocation(gsa).WithField("allocConnInfo", connectionInfo).WithError(err).Error("remote-allocation failed")
 			}
 		}
-		if result != nil {
+		if result != nil && result.Status.State == allocationv1.GameServerAllocationAllocated {
 			return result, nil
 		}
 	}
@@ -320,39 +326,46 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		return nil, err
 	}
 
-	// TODO: Retry on transient error --> response.StatusCode >= 500
-	for i, endpoint := range connectionInfo.AllocationEndpoints {
-		c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Info("forwarding allocation request")
-		requestURL := fmt.Sprintf(allocatorRequestURLFmt, endpoint)
-		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
-		if err != nil {
-			return nil, err
-		}
-		defer response.Body.Close() // nolint: errcheck
+	// Retry on http status 500+.
+	err = Retry(remoteAllocationRetry, func() error {
+		for i, endpoint := range connectionInfo.AllocationEndpoints {
+			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Info("forwarding allocation request")
+			requestURL := fmt.Sprintf(allocatorRequestURLFmt, endpoint)
+			response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+			if err != nil {
+				c.baseLogger.Errorf("remote allocation failed with: %v", err)
+				return err
+			}
+			defer response.Body.Close() // nolint: errcheck
 
-		data, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return nil, err
-		}
-		// If there are multiple enpoints for the allocator connection and the current one is
-		// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
-		if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
-			// If there is a server error try a different endpoint
-			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
-			continue
-		}
-		if response.StatusCode >= 400 {
-			// For error responses return the body without deserializing to an object.
-			return nil, errors.New(string(data))
-		}
+			data, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
+			// If there are multiple enpoints for the allocator connection and the current one is
+			// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
+			if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
+				// If there is a server error try a different endpoint
+				c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
+				continue
+			}
+			if response.StatusCode >= 400 {
+				c.baseLogger.Errorf("remote allocation failed with: %v", string(data))
 
-		err = json.Unmarshal(data, &allocationResponse)
-		if err != nil {
-			return nil, err
+				// For error responses return the body without deserializing to an object.
+				return errors.New(string(data))
+			}
+
+			err = json.Unmarshal(data, &allocationResponse)
+			if err != nil {
+				c.baseLogger.Errorf("Unexpected input: %v deserialization err: %v", string(data), err)
+				return err
+			}
+			break
 		}
-		break
-	}
-	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(&allocationResponse), nil
+		return nil
+	})
+	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(&allocationResponse), err
 }
 
 // createRemoteClusterRestClient creates a rest client with proper certs to make a remote call.

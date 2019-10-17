@@ -914,6 +914,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
+				State:          pb.AllocationResponse_Allocated,
 			}
 			response, _ := json.Marshal(serverResponse)
 			_, _ = w.Write(response)
@@ -987,13 +988,23 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		}
 	})
 
-	t.Run("Remote server returns error", func(t *testing.T) {
+	t.Run("Remote server returns unallocated and then error", func(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		// Mock server to return error
+		// Mock server to return unallocated and then error
+		count := 0
+		retry := 0
 		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "test error message", 500)
+			if count == 0 {
+				serverResponse := pb.AllocationResponse{}
+				response, _ := json.Marshal(serverResponse)
+				_, _ = w.Write(response)
+				count++
+			} else {
+				http.Error(w, "test error message", 500)
+				retry++
+			}
 		}))
 		defer server.Close()
 		serverURL := parseURL(t, server.URL)
@@ -1020,6 +1031,22 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
+							Name:      "name1",
+							Namespace: defaultNs,
+						},
+					},
+					{
+						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+							Priority: 2,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+								AllocationEndpoints: []string{serverURL.Host},
+								ClusterName:         "remotecluster2",
+								SecretName:          secretName,
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Name:      "name2",
 							Namespace: defaultNs,
 						},
 					},
@@ -1057,8 +1084,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		}
 
 		_, err = executeAllocation(gsa, c)
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "test error message")
+		if assert.Error(t, err) {
+			assert.Contains(t, err.Error(), "test error message")
+		}
+		assert.Truef(t, retry > 1, "Retry count %v. Expecting to retry on error.", retry)
 	})
 
 	t.Run("First server fails and second server succeeds", func(t *testing.T) {
@@ -1083,6 +1112,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		healthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
+				State:          pb.AllocationResponse_Allocated,
 			}
 			response, _ := json.Marshal(serverResponse)
 			_, _ = w.Write(response)
