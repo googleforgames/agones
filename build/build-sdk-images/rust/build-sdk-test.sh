@@ -16,4 +16,4 @@
 
 set -ex
 cd /go/src/agones.dev/agones/test/sdk/rust
-cargo build --release
+cargo build

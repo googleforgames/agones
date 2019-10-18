@@ -51,6 +51,14 @@ const connect = async () => {
 			console.log('send shutdown request');
 			agonesSDK.shutdown();
 		}, 1000);
+		setTimeout( () => {
+			console.log('closing agones SDK');
+			// Closing Agones SDK and all event emitters
+			agonesSDK.close()
+		}, 2000);
+		setTimeout(() => {
+			process.exit(0);
+		}, 2000);
 	} catch (error) {
 		console.error(error);
 	}
