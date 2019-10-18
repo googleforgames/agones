@@ -22,6 +22,7 @@ import (
 	"os"
 	"testing"
 
+	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	agonesfake "agones.dev/agones/pkg/client/clientset/versioned/fake"
 	"github.com/stretchr/testify/assert"
@@ -50,8 +51,13 @@ func TestAllocateHandler(t *testing.T) {
 		}, nil
 	})
 
-	gsa := &allocationv1.GameServerAllocation{}
-	body, _ := json.Marshal(gsa)
+	request := &pb.AllocationRequest{
+		Namespace: "ns",
+		MultiClusterSetting: &pb.MultiClusterSetting{
+			Enabled: true,
+		},
+	}
+	body, _ := json.Marshal(request)
 	buf := bytes.NewBuffer(body)
 	req, err := http.NewRequest(http.MethodPost, "/", buf)
 	if !assert.Nil(t, err) {
@@ -61,12 +67,12 @@ func TestAllocateHandler(t *testing.T) {
 	rec := httptest.NewRecorder()
 	h.allocateHandler(rec, req)
 
-	ret := &allocationv1.GameServerAllocation{}
+	response := &pb.AllocationResponse{}
 	assert.Equal(t, rec.Code, 200)
 	assert.Equal(t, "application/json", rec.Header()["Content-Type"][0])
-	err = json.Unmarshal(rec.Body.Bytes(), ret)
+	err = json.Unmarshal(rec.Body.Bytes(), response)
 	assert.NoError(t, err)
-	assert.Equal(t, allocationv1.GameServerAllocationContention, ret.Status.State)
+	assert.Equal(t, pb.AllocationResponse_Contention, response.State)
 }
 
 func TestAllocateHandlerReturnsError(t *testing.T) {
@@ -81,8 +87,8 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 		return true, nil, k8serror.NewBadRequest("error")
 	})
 
-	gsa := &allocationv1.GameServerAllocation{}
-	body, _ := json.Marshal(gsa)
+	request := &pb.AllocationRequest{}
+	body, _ := json.Marshal(request)
 	buf := bytes.NewBuffer(body)
 	req, err := http.NewRequest(http.MethodPost, "/", buf)
 	if !assert.Nil(t, err) {

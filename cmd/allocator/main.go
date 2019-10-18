@@ -26,7 +26,8 @@ import (
 	"strings"
 
 	"agones.dev/agones/pkg"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/allocation/converters"
+	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
@@ -183,23 +184,28 @@ type httpHandler struct {
 }
 
 func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
-	gsa := allocationv1.GameServerAllocation{}
-	if err := json.NewDecoder(r.Body).Decode(&gsa); err != nil {
+	request := pb.AllocationRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		logger.WithError(err).Info("bad request")
 		return
 	}
-	logger.WithField("gsa", gsa).Infof("allocation request received")
+	logger.WithField("request", request).Infof("allocation request received")
 
+	gsa := converters.ConvertAllocationRequestV1Alpha1ToGSAV1(&request)
 	allocation := h.agonesClient.AllocationV1().GameServerAllocations(gsa.ObjectMeta.Namespace)
-	allocatedGsa, err := allocation.Create(&gsa)
+	allocatedGsa, err := allocation.Create(gsa)
 	if err != nil {
 		http.Error(w, err.Error(), httpCode(err))
 		logger.WithField("gsa", gsa).WithError(err).Info("calling allocation extension API failed")
 		return
 	}
+
+	response := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
+	logger.WithField("response", response).Infof("allocation response is being sent")
+
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(allocatedGsa)
+	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		logger.Error(err)
