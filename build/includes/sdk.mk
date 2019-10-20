@@ -61,7 +61,7 @@ gen-sdk-grpc: COMMAND := gen
 gen-sdk-grpc: run-sdk-command
 
 # Runs a command on all supported languages, use COMMAND variable to select which command.
-run-all-sdk-command: run-sdk-command-go run-sdk-command-rust run-sdk-command-cpp run-sdk-command-node
+run-all-sdk-command: run-sdk-command-go run-sdk-command-rust run-sdk-command-cpp run-sdk-command-node run-sdk-command-restapi
 
 run-sdk-command-node:
 	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=node
@@ -74,6 +74,10 @@ run-sdk-command-rust:
 
 run-sdk-command-go:
 	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=go
+
+run-sdk-command-restapi:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=restapi
+
 
 # Runs a command for a specific SDK if it exists.
 run-sdk-command:
@@ -117,9 +121,9 @@ ensure-build-sdk-image:
 # Run SDK conformance Sidecar server in docker in order to run
 # SDK client test against it. Useful for test development
 run-sdk-conformance-local: TIMEOUT ?= 30
-run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch
+run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 run-sdk-conformance-local: ensure-agones-sdk-image
-	docker run -e "ADDRESS=" -p 59357:59357 \
+	docker run -e "ADDRESS=" -p 59357:59357 -p 59358:59358 \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
@@ -132,8 +136,8 @@ run-sdk-conformance-no-build: GRPC_PORT ?= 59357
 run-sdk-conformance-no-build: HTTP_PORT ?= 59358
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
-	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
-	docker run -p $(GRPC_PORT):$(GRPC_PORT) -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
+	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
+	docker run -p $(GRPC_PORT):$(GRPC_PORT) -p $(HTTP_PORT):$(HTTP_PORT) -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
 	--net=host $(sidecar_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
 
 # Run SDK conformance test for a specific SDK_FOLDER
@@ -151,8 +155,12 @@ run-sdk-conformance-test-go:
 run-sdk-conformance-test-rust:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
 
+run-sdk-conformance-test-rest:
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi HTTP_PORT=9050
+	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
+
 # Run a conformance test for all SDKs supported
-run-sdk-conformance-tests: run-sdk-conformance-test-node run-sdk-conformance-test-go run-sdk-conformance-test-rust
+run-sdk-conformance-tests: run-sdk-conformance-test-node run-sdk-conformance-test-go run-sdk-conformance-test-rust run-sdk-conformance-test-rest
 
 # Clean package directories and binary files left
 # after building conformance tests for all SDKs supported
