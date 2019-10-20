@@ -1174,9 +1174,24 @@ metadata:
     release: agones-manual
     heritage: Tiller
 rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
 - apiGroups: ["allocation.agones.dev"]
   resources: ["gameserverallocations"]
   verbs: ["create"]
+- apiGroups: [""]
+  resources: ["nodes", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers", "gameserversets"]
+  verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["patch"]
+- apiGroups: ["multicluster.agones.dev"]
+  resources: ["gameserverallocationpolicies"]
+  verbs: ["get", "list", "watch"]
 
 ---
 # Create a ServiceAccount that will be bound to the above role

@@ -24,13 +24,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/allocation/converters"
 	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameserverallocations"
+	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/pflag"
@@ -38,6 +44,10 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
@@ -75,10 +85,11 @@ func main() {
 	// http.DefaultServerMux is used for http connection, not for https
 	http.Handle("/", health)
 
-	agonesClient, err := getAgonesClient()
+	kubeClient, agonesClient, err := getClients()
 	if err != nil {
-		logger.WithError(err).Fatal("could not create agones client")
+		logger.WithError(err).Fatal("could not create clients")
 	}
+
 	// This will test the connection to agones on each readiness probe
 	// so if one of the allocator pod can't reach Kubernetes it will be removed
 	// from the Kubernetes service.
@@ -87,9 +98,7 @@ func main() {
 		return err
 	})
 
-	h := httpHandler{
-		agonesClient: agonesClient,
-	}
+	h := newServiceHandler(kubeClient, agonesClient, health)
 
 	// mux for https server to serve gameserver allocations
 	httpsMux := http.NewServeMux()
@@ -126,20 +135,54 @@ func main() {
 	logger.WithError(err).Fatal("allocation service crashed")
 }
 
+func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler) *httpHandler {
+	defaultResync := 30 * time.Second
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
+	gsCounter := gameservers.NewPerNodeCounter(kubeInformerFactory, agonesInformerFactory)
+
+	allocator := gameserverallocations.NewAllocator(
+		agonesInformerFactory.Multicluster().V1alpha1().GameServerAllocationPolicies(),
+		kubeInformerFactory.Core().V1().Secrets(),
+		kubeClient,
+		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
+
+	stop := signals.NewStopChannel()
+	h := httpHandler{
+		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
+			return allocator.Allocate(gsa, stop)
+		},
+	}
+
+	kubeInformerFactory.Start(stop)
+	agonesInformerFactory.Start(stop)
+	if err := allocator.Start(stop); err != nil {
+		logger.WithError(err).Fatal("starting allocator failed.")
+	}
+
+	return &h
+}
+
 // Set up our client which we will use to call the API
-func getAgonesClient() (*versioned.Clientset, error) {
+func getClients() (*kubernetes.Clientset, *versioned.Clientset, error) {
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, errors.New("Could not create in cluster config")
+		return nil, nil, errors.New("Could not create in cluster config")
+	}
+
+	// Access to the Agones resources through the Agones Clientset
+	kubeClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, nil, errors.New("Could not create the kubernetes api clientset")
 	}
 
 	// Access to the Agones resources through the Agones Clientset
 	agonesClient, err := versioned.NewForConfig(config)
 	if err != nil {
-		return nil, errors.New("Could not create the agones api clientset")
+		return nil, nil, errors.New("Could not create the agones api clientset")
 	}
-	return agonesClient, nil
+	return kubeClient, agonesClient, nil
 }
 
 func getCACertPool(path string) (*x509.CertPool, error) {
@@ -180,7 +223,7 @@ func (h *httpHandler) postOnly(in handler) handler {
 }
 
 type httpHandler struct {
-	agonesClient versioned.Interface
+	allocationCallback func(*allocationv1.GameServerAllocation) (k8sruntime.Object, error)
 }
 
 func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
@@ -193,22 +236,36 @@ func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
 	logger.WithField("request", request).Infof("allocation request received")
 
 	gsa := converters.ConvertAllocationRequestV1Alpha1ToGSAV1(&request)
-	allocation := h.agonesClient.AllocationV1().GameServerAllocations(gsa.ObjectMeta.Namespace)
-	allocatedGsa, err := allocation.Create(gsa)
+	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		http.Error(w, err.Error(), httpCode(err))
-		logger.WithField("gsa", gsa).WithError(err).Info("calling allocation extension API failed")
+		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	if status, ok := resultObj.(*metav1.Status); ok {
+		w.WriteHeader(int(status.Code))
+		err = json.NewEncoder(w).Encode(status)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			logger.WithError(err).Error("Unable to encode status in json")
+			return
+		}
+	}
+	allocatedGsa, ok := resultObj.(*allocationv1.GameServerAllocation)
+	if !ok {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		logger.Errorf("internal server error - Bad GSA format %v", resultObj)
+		return
+	}
 	response := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
 	logger.WithField("response", response).Infof("allocation response is being sent")
 
-	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
-		logger.Error(err)
+		logger.WithError(err).Error("Unable to encode status in json")
 		return
 	}
 }
