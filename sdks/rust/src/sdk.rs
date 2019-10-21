@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::env;
 use std::sync::{Arc, Mutex};
 use std::thread::sleep;
 use std::time::Duration;
@@ -25,8 +26,6 @@ use grpc::sdk;
 use grpc::sdk_grpc;
 use types::*;
 
-const PORT: i32 = 59357;
-
 /// SDK is an instance of the Agones SDK
 pub struct Sdk {
     client: Arc<sdk_grpc::SdkClient>,
@@ -38,7 +37,8 @@ impl Sdk {
     /// Blocks until connection and handshake are made.
     /// Times out after ~30 seconds.
     pub fn new() -> Result<Sdk> {
-        let addr = format!("localhost:{}", PORT);
+        let port = env::var("AGONES_SDK_GRPC_PORT").unwrap_or("59357".to_string());
+        let addr = format!("localhost:{}", port);
         let env = Arc::new(grpcio::EnvBuilder::new().build());
         let ch = grpcio::ChannelBuilder::new(env)
             .keepalive_timeout(Duration::new(30, 0))
