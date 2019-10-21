@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
@@ -27,8 +26,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
-
-const defaultPort = 59357
 
 // GameServerCallback is a function definition to be called
 // when a GameServer CRD has been changed
@@ -41,32 +38,15 @@ type SDK struct {
 	health sdk.SDK_HealthClient
 }
 
-func port() int {
-	portStr := os.Getenv("AGONES_SDK_GRPC_PORT")
-	if portStr == "" {
-		// Environment variable is not set; use the default port.
-		_, _ = fmt.Fprintf(os.Stderr, "Environment variable AGONES_SDK_GRPC_PORT not defined, using default port %d\n", defaultPort)
-		return defaultPort
-	}
-	p, err := strconv.Atoi(portStr)
-	if err != nil {
-		// Environment variable cannot be parsed; use the default port.
-		_, _ = fmt.Fprintf(os.Stderr, "Unable to parse %q defined in AGONES_SDK_GRPC_PORT into an integer\n", portStr)
-		return defaultPort
-	}
-	if p < 1 || p > 65535 {
-		// Environment variable is not a valid port; use the default port.
-		_, _ = fmt.Fprintf(os.Stderr, "Invalid port %d defined in AGONES_SDK_GRPC_PORT. It must be between 1 and 65535\n", p)
-		return defaultPort
-	}
-	return p
-}
-
 // NewSDK starts a new SDK instance, and connects to
 // localhost on port 59357. Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
-	addr := fmt.Sprintf("localhost:%d", port())
+	p := os.Getenv("AGONES_SDK_GRPC_PORT")
+	if p == "" {
+		p = "59357"
+	}
+	addr := fmt.Sprintf("localhost:%s", p)
 	s := &SDK{
 		ctx: context.Background(),
 	}
