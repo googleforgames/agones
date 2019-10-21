@@ -32,28 +32,16 @@ describe('agones', () => {
 			expect(port).toEqual('59357');
 		});
 
-		it('returns the default port if $AGONES_SDK_GRPC_PORT is not an integer', async () => {
-			process.env.AGONES_SDK_GRPC_PORT = "random string";
-			let port = agonesSDK.port;
-			expect(port).toEqual('59357');
-		});
-
-		it('returns the default port if $AGONES_SDK_GRPC_PORT is to large of an integer', async () => {
-			process.env.AGONES_SDK_GRPC_PORT = '4455667788';
-			let port = agonesSDK.port;
-			expect(port).toEqual('59357');
-		});
-
-		it('returns the default port if $AGONES_SDK_GRPC_PORT is to small of an integer', async () => {
-			process.env.AGONES_SDK_GRPC_PORT = '0';
-			let port = agonesSDK.port;
-			expect(port).toEqual('59357');
-		});
-
-		it('returns the port set in $AGONES_SDK_GRPC_PORT', async () => {
+		it('returns a valid port set in $AGONES_SDK_GRPC_PORT', async () => {
 			process.env.AGONES_SDK_GRPC_PORT = '6789';
 			let port = agonesSDK.port;
 			expect(port).toEqual('6789');
+		});
+
+		it('returns an invalid port set in $AGONES_SDK_GRPC_PORT', async () => {
+			process.env.AGONES_SDK_GRPC_PORT = 'foo';
+			let port = agonesSDK.port;
+			expect(port).toEqual('foo');
 		});
 	});
 
