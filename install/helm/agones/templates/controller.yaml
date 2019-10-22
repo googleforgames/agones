@@ -108,6 +108,16 @@ spec:
         - name: LOG_SIZE_LIMIT_MB
           value: {{ .Values.agones.controller.persistentLogsSizeLimitMB | quote }}
 {{- end }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-controller"
         livenessProbe:
           httpGet:
             path: /live

@@ -1137,6 +1137,16 @@ spec:
           value: "false"
         - name: GCP_PROJECT_ID
           value: ""
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-allocator"
         ports:
         - name: https
           containerPort: 8443
@@ -1368,6 +1378,16 @@ spec:
           value: "/home/agones/logs"
         - name: LOG_SIZE_LIMIT_MB
           value: "10000"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-controller"
         livenessProbe:
           httpGet:
             path: /live

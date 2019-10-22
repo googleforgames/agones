@@ -112,6 +112,16 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-allocator"
         ports:
         - name: https
           containerPort: 8443
@@ -192,7 +202,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: agones-allocator
- 
+
 {{- end }}
 
 ---
