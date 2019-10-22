@@ -25,8 +25,7 @@ class AgonesSDK {
 	}
 
 	get port() {
-		const port = process.env.AGONES_SDK_GRPC_PORT;
-		return port === undefined ? '59357' : port;
+		return process.env.AGONES_SDK_GRPC_PORT || '59357';
 	}
 
 	async connect() {
