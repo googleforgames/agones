@@ -34,9 +34,6 @@ Available settings:
 {{% feature expiryVersion="1.1.0" %}}
 - Agones Sidecar IP. (default: `http://localhost:59358`)
 {{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
-- Agones Sidecar IP. (default: `http://localhost:${AGONES_SDK_HTTP_PORT}`)
-{{% /feature %}}
 - Health Ping Enabled. Whether the server sends a health ping to the Agones sidecar. (default: `true`)
 - Health Ping Seconds. Interval of the server sending a health ping to the Agones sidecar. (default: `5`)
 - Debug Logging Enabled. Debug logging for development of this Plugin. (default: `false`)
