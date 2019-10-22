@@ -14,15 +14,23 @@
 
 #include "AgonesHook.h"
 #include "AgonesSettings.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 
 #define LOCTEXT_NAMESPACE "AgonesHook"
 DEFINE_LOG_CATEGORY(LogAgonesHook);
 
+static FString GetSidecarAddress()
+{
+	FString port = FPlatformMisc::GetEnvironmentVariable(TEXT("AGONES_SDK_HTTP_PORT"));
+	return FString(TEXT("http://localhost:")) + (!port.IsEmpty() ? port : FString(TEXT("59358")));
+}
+
 FAgonesHook::FAgonesHook()
 	: FTickableGameObject()
 	, CurrentHealthTime(0.0f)
 	, Settings(nullptr)
+	, SidecarAddress(GetSidecarAddress())
 	, ReadySuffix(FString(TEXT("/ready")))
 	, HealthSuffix(FString(TEXT("/health")))
 	, ShutdownSuffix(FString(TEXT("/shutdown")))
@@ -31,7 +39,7 @@ FAgonesHook::FAgonesHook()
 	check(Settings != nullptr);
 
 	UE_LOG(LogAgonesHook, Log, TEXT("Initialized Agones Hook, Sidecar address: %s, Health Enabled: %s, Health Ping: %f, Debug: %s")
-		, *Settings->AgonesSidecarAddress
+		, *SidecarAddress
 		, (Settings->bHealthPingEnabled ? TEXT("True") : TEXT("False"))
 		, Settings->HealthPingSeconds
 		, (Settings->bDebugLogEnabled ? TEXT("True") : TEXT("False")));
@@ -80,19 +88,18 @@ static TSharedRef<IHttpRequest> MakeRequest(const FString& URL)
 
 void FAgonesHook::Ready()
 {
-	SendRequest(Settings->AgonesSidecarAddress + ReadySuffix);
+	SendRequest(SidecarAddress + ReadySuffix);
 }
 
 void FAgonesHook::Health()
 {
-	SendRequest(Settings->AgonesSidecarAddress + HealthSuffix);
+	SendRequest(SidecarAddress + HealthSuffix);
 }
 
 void FAgonesHook::Shutdown()
 {
-	SendRequest(Settings->AgonesSidecarAddress + ShutdownSuffix);
+	SendRequest(SidecarAddress + ShutdownSuffix);
 }
-
 
 bool FAgonesHook::SendRequest(const FString& URL)
 {

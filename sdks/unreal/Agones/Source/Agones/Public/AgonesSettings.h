@@ -32,9 +32,6 @@ public:
 	/** Default constructor */
 	UAgonesSettings();
 
-	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Agones Sidecar IP Address"))
-	FString AgonesSidecarAddress;
-
 	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Health Ping Enabled"))
 	bool bHealthPingEnabled;
 

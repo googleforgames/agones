@@ -57,6 +57,7 @@ private:
 	/** Agones settings */
 	const class UAgonesSettings* Settings;
 
+	const FString SidecarAddress;
 	const FString ReadySuffix;
 	const FString HealthSuffix;
 	const FString ShutdownSuffix;
