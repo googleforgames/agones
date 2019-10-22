@@ -24,6 +24,7 @@ Images available with this release:
 - [gcr.io/agones-images/rust-simple-server:{example-version}](https://gcr.io/agones-images/rust-simple-server:{example-version})
 - [gcr.io/agones-images/unity-simple-server:{example-version}](https://gcr.io/agones-images/unity-simple-server:{example-version})
 - [gcr.io/agones-images/udp-server:{example-version}](https://gcr.io/agones-images/udp-server:{example-version})
+- [gcr.io/agones-images/tcp-server:{example-version}](https://gcr.io/agones-images/tcp-server:{example-version})
 - [gcr.io/agones-images/xonotic-example:{example-version}](https://gcr.io/agones-images/xonotic-example:{example-version})
 
 Helm chart available with this release:
