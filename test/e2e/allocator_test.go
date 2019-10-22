@@ -68,8 +68,6 @@ func TestAllocator(t *testing.T) {
 	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
 	genClientSecret(t, tlsCA, namespace, clientSecretName)
 
-	restartAllocator(t)
-
 	flt, err := createFleet(namespace)
 	if !assert.Nil(t, err) {
 		return
@@ -128,6 +126,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	ip, port := getAllocatorEndpoint(t)
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
+	restartAllocator(t)
 
 	// Create namespaces A and B
 	namespaceA := fmt.Sprintf("allocator-a-%s", uuid.NewUUID())
@@ -140,8 +139,6 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	// Create client secret A, B is receiver of the request and does not need client secret
 	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
 	genClientSecret(t, tlsCA, namespaceA, clientSecretNameA)
-
-	restartAllocator(t)
 
 	policyName := fmt.Sprintf("a-to-b-%s", uuid.NewUUID())
 	p := &multiclusterv1alpha1.GameServerAllocationPolicy{
@@ -365,6 +362,8 @@ func refreshAllocatorTLSCerts(t *testing.T, host string) []byte {
 	if _, err := kubeCore.Secrets(agonesSystemNamespace).Update(s); err != nil {
 		t.Fatalf("updating secrets failed: %s", err)
 	}
+
+	restartAllocator(t)
 
 	t.Logf("Allocator TLS is refreshed with public CA: %s for endpoint %s", string(pub), host)
 	return pub
