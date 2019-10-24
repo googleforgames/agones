@@ -17,6 +17,7 @@
 /build
 /cmd
 /sdks/cpp/.build
+/sdks/cpp/.archives
 .idea
 *.zip
 /release
