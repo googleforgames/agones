@@ -101,6 +101,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
+  --no-enable-autoupgrade \
   --machine-type=n1-standard-4
 ```
 
@@ -110,6 +111,7 @@ Flag explanations:
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
+* no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: n1-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
 _Optional_: Create a dedicated node pool for the Agones controllers. If you choose to skip this step, the Agones
@@ -119,15 +121,18 @@ recommended for a production deployment.
 ```bash
 gcloud container node-pools create agones-system \
   --cluster=[CLUSTER_NAME] \
+  --no-enable-autoupgrade \
   --node-taints agones.dev/agones-system=true:NoExecute \
   --node-labels agones.dev/agones-system=true \
   --num-nodes=1
 ```
 
 _Optional_: Create a node pool for [Metrics]({{< relref "../Guides/metrics.md" >}}) if you want to monitor the Agones system using Prometheus with Grafana or Stackdriver.
+
 ```bash
 gcloud container node-pools create agones-metrics \
   --cluster=[CLUSTER_NAME] \
+  --no-enable-autoupgrade \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
   --node-labels agones.dev/agones-metrics=true \
   --num-nodes=1
@@ -136,6 +141,7 @@ gcloud container node-pools create agones-metrics \
 Flag explanations:
 
 * cluster: The name of the cluster in which the node pool is created.
+* no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * node-taints: The Kubernetes taints to automatically apply to nodes in this node pool.
 * node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
 * num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
