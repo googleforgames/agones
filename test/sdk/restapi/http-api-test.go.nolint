@@ -54,8 +54,8 @@ func main() {
 				log.Printf("Error in WatchGameServer: %v\n", err)
 				return
 			} else {
-				if gs.ObjectMeta != nil {
-					uid := gs.ObjectMeta.Uid
+				if gs.Result.ObjectMeta != nil {
+					uid := gs.Result.ObjectMeta.Uid
 					if once {
 						c <- uid
 						once = false
