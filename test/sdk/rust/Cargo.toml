@@ -17,7 +17,7 @@
 # when Rust SDK or Rust test would be updated
 [package]
 name = "rust-simple"
-version = "0.1.0"
+version = "0.2.0"
 
 [dependencies]
 agones = { path = "../../../sdks/rust" }

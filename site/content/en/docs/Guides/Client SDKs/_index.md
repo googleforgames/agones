@@ -182,7 +182,7 @@ There is a tool `SDK server Conformance` checker which will run Local SDK server
 
 In order to check that SDK is working properly you should write simple SDK test client which would use all methods of your SDK.
 
-Also to test that SDK cliet is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
+Also to test that SDK client is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
 
 Complete list of endpoints which should be called by your test client is the following:
 ```
@@ -196,12 +196,12 @@ SECONDS=30 make run-sdk-conformance-local
 
 Docker container would timeout in 30 seconds and give your the comparison of received requests and expected requests
 
-For instance you could run go sdk conformance test and see how the process goes: 
+For instance you could run Go SDK conformance test and see how the process goes: 
 ```
 SDK_FOLDER=go make run-sdk-conformance-test
 ```
 
-In order to add test client for your SDK, write `jstest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go/Dockerfile" >}}Golang SDK testing directory structure{{< /ghlink >}}.
+In order to add test client for your SDK, write `sdktest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go" >}}Golang SDK Conformance testing directory structure{{< /ghlink >}}.
 
 ## Building the Tools
 
