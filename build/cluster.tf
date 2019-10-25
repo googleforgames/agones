@@ -64,6 +64,10 @@ resource "google_container_cluster" "primary" {
     name       = "default"
     node_count = "${var.cluster["initialNodeCount"]}"
 
+    management {
+      auto_upgrade = false
+    }
+
     node_config {
       machine_type = "${var.cluster["machineType"]}"
 
@@ -83,6 +87,10 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-system"
     node_count = 1
+
+    management {
+      auto_upgrade = false
+    }
 
     node_config {
       machine_type = "n1-standard-4"
@@ -111,6 +119,10 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-metrics"
     node_count = 1
+
+    management {
+      auto_upgrade = false
+    }
 
     node_config {
       machine_type = "n1-standard-4"
