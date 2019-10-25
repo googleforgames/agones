@@ -14,27 +14,37 @@
 
 
 // Run:
-//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="0.9.0"]
-variable "password" {
-   default= ""
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.1.0"]
+
+variable "project" {
+  default = ""
+}
+
+variable "name" {
+  default = "agones-terraform-example"
 }
 
 // Install latest version of agones
 variable "agones_version" {
   default=""
 }
-variable "project" {default = "agones"}
 
-variable "machine_type" {default = "n1-standard-4"}
+variable "machine_type" {
+  default = "n1-standard-4"
+}
 
-//Additional 2 node pools would be created with 1 node each for "agones-system" and "agones-metrics"
-variable "node_count" {default = "4"}
+// Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
+// two node pools with 1 node each for "agones-system" and "agones-metrics".
+variable "node_count" {
+  default = "4"
+}
+
 module "agones" {
   source = "git::https://github.com/googleforgames/agones.git//build/?ref=master"
   
   cluster = {
       "zone"             = "us-west1-c"
-      "name"             = "test-cluster"
+      "name"             = "${var.name}"
       "machineType"      = "${var.machine_type}"
       "initialNodeCount" = "${var.node_count}"
       "project"          = "${var.project}"
