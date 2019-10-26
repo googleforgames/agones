@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/cpp-simple-server:0.10
+server_tag = $(REPOSITORY)/cpp-simple-server:0.11
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
