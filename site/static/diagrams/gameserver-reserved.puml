@@ -26,8 +26,17 @@ GameServer <-- SDK: Maintains Healthy status
 
 == Match Maker Registration ==
 group loop
+Binary -> SDK: SDK.GameServer()
+note left
+Matchmaker registration
+could occur on a timed loop
+to give each <i>GameServer</i>
+time to be scaled down
+while <i>Ready</i> if not allocated
+end note
+Binary <-- SDK: GameServer details
 Binary -> SDK: SDK.Reserve(duration)
-GameServer <-- SDK: Set state to <i>Reserved</i> for duration
+GameServer <-- SDK: Set state to <i>Reserved</i> for <i>duration</i>
 note right
   <i>Duration</i> should be longer
   than how long the matchmaker
@@ -36,19 +45,12 @@ note right
   scaled down
 end note
 Binary -> Matchmaker: Register()
-note right
+note left
   Register with the Matchmaker as
   available to host a game session
-end note
-note left
-Matchmaker registration
-could occur on a timed loop
-to give each <i>GameServer</i>
-time to be scaled down
-while <i>Ready</i> if not allocated
+  with details from SDK.GameServer()
 end note
 end
-
 
 == Matchmaker allocates GameServer ==
 Matchmaker -> Binary: StartGameSession()

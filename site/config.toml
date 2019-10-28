@@ -91,7 +91,7 @@ release_branch = "release-1.0.0"
 release_version = "1.0.0"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/udp-server:0.15"
+example_image_tag = "gcr.io/agones-images/udp-server:0.17"
 
 # User interface configuration
 [params.ui]
