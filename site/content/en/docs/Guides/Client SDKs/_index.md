@@ -87,7 +87,9 @@ backing Pod will be deleted, if they have not shut themselves down already.
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
 record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
 
-> Note: There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+{{< alert title="Warning" color="warning">}}
+There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+{{< /alert >}}
 
 This can be useful if you want to information from your running game server process to be observable or searchable through the Kubernetes API.  
 
@@ -138,9 +140,11 @@ and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
 For those scenarios, this SDK functionality exists. 
 
-> Note: Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
+{{< alert title="Note" color="info">}}
+Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
 as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
 relinquish control to an external service which likely doesn't have as much information as Agones.
+{{< /alert >}}
 
 ### Reserve(seconds)
 
@@ -182,7 +186,7 @@ There is a tool `SDK server Conformance` checker which will run Local SDK server
 
 In order to check that SDK is working properly you should write simple SDK test client which would use all methods of your SDK.
 
-Also to test that SDK cliet is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
+Also to test that SDK client is receiving valid Gameserver data, your binary should set the same `Label` value as creation timestamp which you will receive as a result of GameServer() call and `Annotation` value same as gameserver UID received by Watch gameserver callback.
 
 Complete list of endpoints which should be called by your test client is the following:
 ```
@@ -196,12 +200,12 @@ SECONDS=30 make run-sdk-conformance-local
 
 Docker container would timeout in 30 seconds and give your the comparison of received requests and expected requests
 
-For instance you could run go sdk conformance test and see how the process goes: 
+For instance you could run Go SDK conformance test and see how the process goes: 
 ```
 SDK_FOLDER=go make run-sdk-conformance-test
 ```
 
-In order to add test client for your SDK, write `jstest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go/Dockerfile" >}}Golang SDK testing directory structure{{< /ghlink >}}.
+In order to add test client for your SDK, write `sdktest.sh` and `Dockerfile`. Refer to {{< ghlink href="build/build-sdk-images/go" >}}Golang SDK Conformance testing directory structure{{< /ghlink >}}.
 
 ## Building the Tools
 

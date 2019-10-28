@@ -45,7 +45,8 @@ Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, st
 
 And there is no need to call `Health()`, it is automatically called.
 
-> Note: The following code causes deadlock. Do not use a `Wait` method with the returned Task.
+{{% alert title="Warning" color="warning"%}}
+The following code causes deadlock. Do not use a `Wait` method with the returned Task.
 ```csharp
 void Deadlock()
 {
@@ -53,6 +54,7 @@ void Deadlock()
     t.Wait(); // deadlock!!!
 }
 ```
+{{% /alert %}}
 
 ## Settings
 

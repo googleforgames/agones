@@ -3,7 +3,7 @@ title: "Deploy GKE/AKS cluster and install Agones using Terraform"
 linkTitle: "Install with Terraform"
 weight: 4
 description: >
-  This chart install the Agones application and defines deployment on a [Kubernetes](http://kubernetes.io) cluster using the Terraform.
+  Install a [Kubernetes](http://kubernetes.io) cluster and Agones declaratively using Terraform.
 
 ---
 
@@ -14,80 +14,82 @@ description: >
 - Access to the the Kubernetes hosting provider you are using (e.g. `gcloud` or `az` utility installed)
 - Git
 
-# Installing the Agones as Terraform submodule on Google Kubernetes Engine
+## Installing Agones on Google Kubernetes Engine using a Terraform submodule
 
-You can use Terraform to provision your GKE cluster and install agones on it using Helm Terraform provider.
+You can use Terraform to provision a GKE cluster and install Agones on it.
 
-First step would be to enable `Kubernetes Engine API`. From the Cloud Console, navigate to APIs & Services > Dashboard, then click `Enable APIs and Services`. Type `kubernetes` in the search box, and you should find the Kubernetes Engine API. Click Enable.
+The first step is to enable the `Kubernetes Engine API`. From the Cloud Console, navigate to APIs & Services > Dashboard, then click `Enable APIs and Services`. Type `kubernetes` in the search box to find the Kubernetes Engine API. Click Enable.
 
 Install `gcloud` utility by following [these instructions](https://cloud.google.com/sdk/install).
 
-GKE cluster would contain 3 Node Pools:
-- Primary Node Pool with `"game-server"` tag, containing 4 nodes.
+### Example configuration
+
+An example configuration can be found here:
+ {{< ghlink href="examples/terraform-submodules/gke/module.tf" >}}Terraform configuration with Agones submodule{{< /ghlink >}}. Copy the file into a local directory where you will execute the terraform commands.
+
+The GKE cluster created from the example configuration will contain 3 Node Pools:
+
+- `"default"` node pool with `"game-server"` tag, containing 4 nodes.
 - `"agones-system"` node pool for Agones Controller.
 - `"agones-metrics"` for monitoring and metrics collecting purpose.
 
-Additionally `"tiller"` service account would be created with ClusterRole.
+Additionally, a `"tiller"` service account will be created with ClusterRole.
 
-By default you will receive the latest version from [Helm repository](https://agones.dev/chart/stable), but you can configure version using `-var agones-version=<DesiredVersion>`.
+Configurable parameters:
 
-## Example and parameters which is configurable
+- project - your Google Cloud Project ID (required)
+- name - the name of the GKE cluster (default is "agones-terraform-example")
+- agones_version - the version of agones to install (default is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- machine_type - machine type for hosting game servers (default is "n1-standard-4")
+- node_count - count of game server nodes for the default node pool (default is "4")
 
-The example of submodule configuration could be found here:
- {{< ghlink href="examples/terraform-submodules/gke/module.tf" >}}Terraform configuration with Agones submodule{{< /ghlink >}}
+### Creating the cluster
 
-Configurable parameters and their meaning:
-- password - if not specified basic Auth would be disabled in GKE cluster
-- agones_version - which version of agones to install
-- project - your Google Cloud Project ID
-- machine_type - primary cluster machine type ( default is "n1-standard-4")
-- node_count - count of nodes in primary Node Pool. Defaults to "4".
-
-## Applying Agones terraform configuration
-
-First you should run:
+In the directory where you created `module.tf`, run:
 ```
 terraform init
 ```
 
-It would use git to clone the current master of Agones, and use `./build` folder as starting point of Agones submodule, which contains all necessary Terraform configuration files.
+This will cause terraform to clone the Agones repository and use the `./build` folder as starting point of Agones submodule, which contains all necessary Terraform configuration files.
 
-Next step you should make sure that you authenticate using gcloud:
+Next make sure that you can authenticate using gcloud:
 ```
 gcloud auth application-default login
 ```
 
-Now you are able to deploy properly configured GKE cluster and specify release version of Agones you want to use:
+Now you can create your GKE cluster (optionally specifying the version of Agones you want to use):
 ```
-terraform apply -var project="<YOUR_GCP_ProjectID>" -var agones_version="0.9.0"
-```
-
-Run next command to setup your kubectl:
-```
-gcloud container clusters get-credentials --zone us-west1-c  test-cluster
+terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.0.0"]
 ```
 
-You would see:
+To verify that the cluster was created successfully, set up your kubectl credentials:
 ```
-Fetching cluster endpoint and auth data.
-kubeconfig entry generated for test-cluster.
+gcloud container clusters get-credentials --zone us-west1-c agones-terraform-example
 ```
 
-Check that you have access to kubernetes cluster:
+Then check that you have access to kubernetes cluster:
 ```
 kubectl get nodes
 ```
 
-Make sure you have 6 nodes in `Ready` state.
+You should have 6 nodes in `Ready` state.
 
-## Uninstall the Agones and delete GKE cluster
+To verify that Agones was installed sucessfully, check for any gameservers:
+```
+kubectl get gameservers
+```
 
-Run next command to delete all Terraform provisioned resources:
+You should see none (but no errors).
+
+
+### Uninstall the Agones and delete GKE cluster
+
+To delete all resources provisioned by Terraform:
 ```
 terraform destroy
 ```
 
-# Installing the Agones as Terraform submodule on Azure Kubernetes Service
+## Installing the Agones as Terraform submodule on Azure Kubernetes Service
 
 You can deploy Kubernetes cluster on Azure Kubernetes Service and install Agones using terraform.
 
@@ -123,12 +125,12 @@ Check that you have access to kubernetes cluster:
 kubectl get nodes
 ```
 
-## Uninstall the Agones and delete AKS cluster
+### Uninstall the Agones and delete AKS cluster
 
 Run next command to delete all Terraform provisioned resources:
 ```
 terraform destroy
 ```
 
-## Reference 
+### Reference
 Details on how you can authenticate your AKS terraform provider using official [instructions](https://www.terraform.io/docs/providers/azurerm/auth/service_principal_client_secret.html)

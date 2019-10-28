@@ -16,7 +16,9 @@ description: >
 
 ## Installing the Chart
 
-> If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
+{{< alert title="Note" color="info">}}
+If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
+{{< /alert >}}
 
 To install the chart with the release name `my-release` using our stable helm repository:
 
@@ -34,10 +36,13 @@ pool for Agones, see the [Agones installation instructions]({{< relref "../_inde
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
 
-> **Tip**: List all releases using `helm list`
+{{< alert title="Tip" color="info">}}
+List all releases using `helm list`
+{{< /alert >}}
 
-
-> If you are installing a development build of Agones (i.e. not the {{< release-version >}} release), you will need to install Agones the following way:
+{{< alert title="Note" color="info">}}
+If you are installing a development build of Agones (i.e. not the {{< release-version >}} release), you will need to install Agones the following way:
+{{< /alert >}}
 
 ```bash
 $ cd install/helm/
@@ -59,7 +64,9 @@ $ kubectl create namespace xbox
 $ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-system --name my-release agones/agones
 ```
 
-> You need to create your namespaces before installing Agones.
+{{< alert title="Note" color="info">}}
+You need to create your namespaces before installing Agones.
+{{< /alert >}}
 
 If you want to add a new namespace afterward simply upgrade your release:
 
@@ -191,14 +198,18 @@ Alternatively, a YAML file that specifies the values for the parameters can be p
 $ helm install --name my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
-> **Tip**: You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
+{{< alert title="Tip" color="info">}}
+You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
+{{< /alert >}}
 
 ## TLS Certificates
 
 By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
 For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
-> **Tip**: You can use our script located at `cert/cert.sh` to generates them.
+{{< alert title="Tip" color="info">}}
+You can use our script located at `cert/cert.sh` to generates them.
+{{< /alert >}}
 
 ## Confirm Agones is running
 
