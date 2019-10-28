@@ -164,7 +164,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "gcr.io/agones-images/udp-server:0.15",
+										"image": "gcr.io/agones-images/udp-server:0.17",
 										"name": false
 									}]
 								}

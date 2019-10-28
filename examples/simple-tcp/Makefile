@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/tcp-server:0.1
+server_tag = $(REPOSITORY)/tcp-server:0.3
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
