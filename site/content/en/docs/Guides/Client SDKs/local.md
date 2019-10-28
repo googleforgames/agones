@@ -53,9 +53,11 @@ this will be picked up by the local server, and will change the current active c
 events for `WatchGameServer()`. This is a useful way of testing functionality, such as changes of state from `Ready` to
 `Allocated` in your game server code.
 
-> File modification events can fire more than one for each save (for a variety of reasons), 
+{{< alert title="Note" color="info">}}
+File modification events can fire more than one for each save (for a variety of reasons), 
 but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
 happen when live as well.
+{{< /alert >}}
 
 For example:
 

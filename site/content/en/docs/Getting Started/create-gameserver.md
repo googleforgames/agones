@@ -150,24 +150,30 @@ NAME               STATE   ADDRESS         PORT   NODE     AGE
 simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
 
-> Note: if you have Agones installed on minikube the address printed will not be
+{{< alert title="Note" color="info">}}
+ If you have Agones installed on minikube the address printed will not be
   reachable from the host machine. Instead, use the output of `minikube ip` for
   the following section.
+{{< /alert >}}
 
 ### 3. Connect to the GameServer
 
-> NOTE: if you have Agones installed on Google Kubernetes Engine, and are using
+{{< alert title="Note" color="info">}}
+If you have Agones installed on Google Kubernetes Engine, and are using
   Cloud Shell for your terminal, UDP is blocked. For this step, we recommend
   SSH'ing into a running VM in your project, such as a Kubernetes node.
   You can click the 'SSH' button on the [Google Compute Engine Instances](https://console.cloud.google.com/compute/instances)
   page to do this.
   Run `toolbox` on GKE Node to run docker container with tools and then `nc` command would be available.
+{{< /alert >}}
 
 You can now communicate with the Game Server :
 
-> NOTE: if you do not have netcat installed
+{{< alert title="Note" color="info">}}
+If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
+{{< /alert >}}
 
 ```
 nc -u {IP} {PORT}

@@ -8,10 +8,12 @@ description: >
 
 In this quickstart, we will create a Kubernetes cluster, and populate it with the resource types that power Agones.
 
-> When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
-> are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
-> `agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
-> If no dedicated nodes are available, Agones will run on regular nodes.
+{{< alert title="Note" color="info">}}
+When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
+are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with
+`agones.dev/agones-system=true` and tolerates the node taint `agones.dev/agones-system=true:NoExecute`.
+If no dedicated nodes are available, Agones will run on regular nodes.
+{{< /alert >}}
 
 ## Usage Requirements
 
@@ -27,8 +29,10 @@ In this quickstart, we will create a Kubernetes cluster, and populate it with th
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
-> Later versions of Kubernetes may work, but this project is tested against 1.12, and is therefore the supported version.
-> Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
+{{< alert title="Warning" color="warning">}}
+Later versions of Kubernetes may work, but this project is tested against 1.12, and is therefore the supported version.
+Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
+{{< /alert >}}
 
 ## Setting up a Google Kubernetes Engine (GKE) cluster
 
@@ -218,7 +222,9 @@ eksctl create cluster \
 --node-ami auto
 ```
 
-> Note: EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
+{{< alert title="Note" color="info">}}
+EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
+{{< /alert >}}
 
 #### Allowing UDP Traffic
 
@@ -317,9 +323,11 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/googleforgames/agones/releases) archive.
 
-> Note: Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
-> kubernetes webhooks communication. If you want to generate new certificates or use your own,
-> we recommend using the helm installation.
+{{< alert title="Warning" color="warning">}}
+Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
+kubernetes webhooks communication. If you want to generate new certificates or use your own,
+we recommend using the helm installation.
+{{< /alert >}}
 
 ### Install using Helm
 

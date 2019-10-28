@@ -94,7 +94,6 @@ Apply the latest settings to kubernetes container.
 >> kubectl apply -f gameserver.yaml
 ```
 
-
 ### Check the GameServer Status
 ```bash
 >> kubectl describe gameserver
@@ -109,9 +108,11 @@ kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.ports[0].port}
 
 You can now communicate with the Game Server :
 
-> NOTE: if you do not have netcat installed
+{{< alert title="Note" color="info">}}
+If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
+{{< /alert >}}
 
 ```
 nc -u {IP} {PORT}

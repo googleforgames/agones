@@ -22,8 +22,10 @@ matchmaker decides which `GameServer` players are sent to, this flow is common:
 
 ![Reserved Lifecyle Sequence Diagram](../../../diagrams/gameserver-reserved.puml.png)
 
-> This does relinquish control over how `GameServers` are packed across the cluster to the external matchmaker. It is likely
+{{< alert title="Warning" color="warning">}}
+This does relinquish control over how `GameServers` are packed across the cluster to the external matchmaker. It is likely
   it will not do as good a job at packing and scaling as Agones. 
+{{< /alert >}}
 
 ## Next Steps:
 

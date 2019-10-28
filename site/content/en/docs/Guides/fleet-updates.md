@@ -62,8 +62,10 @@ up and the older `Fleet` down as required by your specific rollout strategy.
 This also allows you to rollback if issues arise with the newer version, as you can delete the newer `Fleet`
 and scale up the old Fleet to its previous levels, resulting in minimal impact to the players. 
 
-> For GameServerAllocation, you will need to have at least a single shared label between the `GameServers` in each
-> Fleet.
+{{< alert title="Note" color="info">}}
+For GameServerAllocation, you will need to have at least a single shared label between the `GameServers` in each
+Fleet.
+{{< /alert >}}
 
 ### GameServerAllocation Across Fleets
 
