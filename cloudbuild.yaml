@@ -238,7 +238,7 @@ steps:
 - name: "make-docker"
   id: sdk-conformance
   dir: "build"
-  args: [ "-j", "4", "run-sdk-conformance-tests"]
+  args: [ "-j", "4", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
 
