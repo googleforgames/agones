@@ -122,7 +122,7 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.15
+            image: gcr.io/agones-images/udp-server:0.17
 ```
 {{% /feature %}}
 
