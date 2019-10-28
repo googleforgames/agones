@@ -63,9 +63,12 @@ or to hide a section from 0.8.0 onward:
 {{%/* /feature */%}}
 ```
 
-> Due to [this hugo bug](https://github.com/gohugoio/hugo/issues/4695) headers wrapped in this shortcode will
+
+{{< alert title="Warning" color="warning">}}
+ Due to [this hugo bug](https://github.com/gohugoio/hugo/issues/4695) headers wrapped in this shortcode will
   not be displayed in the Table of Contents. So we will need to actively remove the `feature` shortcode once
   the release versions have been passed for new content, for content that is affected.
+{{< /alert >}}
 
 ## Regenerate Diagrams
 

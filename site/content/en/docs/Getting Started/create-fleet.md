@@ -149,8 +149,10 @@ simple-udp-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   52m
 Since we have a fleet of warm gameservers, we need a way to request one of them for usage, and mark that it has
 players access it (and therefore, it should not be deleted until they are finished with it).
 
-> In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
+{{< alert title="Note" color="info">}}
+ In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
+{{< /alert >}}
 
 We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
@@ -223,8 +225,10 @@ simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
 simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
 
-> `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
+{{< alert title="Note" color="info">}}
+ `GameServerAllocations` are create only and not stored for performance reasons, so you won't be able to list
   them after they have been created - but you can see their effects on `GameServers`
+{{< /alert >}}
 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
@@ -335,7 +339,9 @@ Run `kubectl edit fleet simple-udp`, and make the necessary changes, and then sa
 This will start the deployment of a new set of `GameServers` running
 with a Container Port of `6000`.
 
-> NOTE: This will make it such that you can no longer connect to the simple-udp game server.  
+{{< alert title="Warning" color="warning">}}
+This will make it such that you can no longer connect to the simple-udp game server.  
+{{< /alert >}}
 
 Run `watch kubectl get gs`
 until you can see that there is
