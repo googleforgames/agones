@@ -9,63 +9,6 @@ description: >
 
 A full GameServer specification is available below and in the {{< ghlink href="examples/gameserver.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{% feature expiryVersion="1.1.0" %}}
-```yaml
-apiVersion: "agones.dev/v1"
-kind: GameServer
-# GameServer Metadata
-# https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#objectmeta-v1-meta
-metadata:
-  # generateName: "gds-example" # generate a unique name, with the given prefix
-  name: "gds-example" # set a fixed name
-spec:
-  # if there is more than one container, specify which one is the game server
-  container: example-server
-  # Array of ports that can be exposed as direct connections to the game server container
-  ports:
-    # name is a descriptive name for the port
-  - name: default
-    # portPolicy has three options:
-    # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
-    # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-    # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
-    #      This will mean that users will need to lookup what port has been opened through the server side SDK.
-    # port is available. When static is the policy specified, `hostPort` is required to be populated
-    portPolicy: Static
-    # the port that is being opened on the game server process
-    containerPort: 7654
-    # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
-    hostPort: 7777
-    # protocol being used. Defaults to UDP. TCP is the only other option
-    protocol: UDP
-  # Health checking for the running game server
-  health:
-    # Disable health checking. defaults to false, but can be set to true
-    disabled: false
-    # Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
-    initialDelaySeconds: 5
-    # If the `Health()` function doesn't get called at least once every period (seconds), then
-    # the game server is not healthy. Defaults to 5
-    periodSeconds: 5
-    # Minimum consecutive failures for the health probe to be considered failed after having succeeded.
-    # Defaults to 3. Minimum value is 1
-    failureThreshold: 3
-  # Pod template configuration
-  # https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplate-v1-core
-  template:
-    # pod metadata. Name & Namespace is overwritten
-    metadata:
-      labels:
-        myspeciallabel: myspecialvalue
-    # Pod Specification
-    spec:
-      containers:
-      - name: simple-udp
-        image:  gcr.io/agones-images/udp-server:0.15
-        imagePullPolicy: Always
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -134,7 +77,6 @@ spec:
         image:  gcr.io/agones-images/udp-server:0.17
         imagePullPolicy: Always
 ```
-{{% /feature %}}
 
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
 
@@ -155,7 +97,6 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
-{{% feature publishVersion="1.1.0" %}}
 -`sdkServer` defines parameters for the game server sidecar
   - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
     - "Info" (default) The SDK server will output all messages except for debug messages
@@ -163,7 +104,6 @@ The `spec` field is the actual GameServer specification and it is composed as fo
     - "Error" The SDK server will only output error messages
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
-{{% /feature %}}
 - `template` the [pod spec template](https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram
