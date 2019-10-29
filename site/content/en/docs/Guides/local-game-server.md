@@ -13,30 +13,6 @@ You can register a local game server with Agones. This means you can run an expe
 
 To register your local game server you'll need to know the IP address of the machine running it and the port. With that you'll create a game server config like the one below.
 
-{{% feature expiryVersion="1.1.0" %}}
-```yaml
-apiVersion: "agones.dev/v1"
-kind: GameServer
-metadata:
-  name: my-local-server
-  annotations:
-    # Causes Agones to register your local game server at 192.1.1.2, replace with your server's IP address.
-    agones.dev/dev-address: "192.1.1.2"
-spec:
-  ports:
-  - name: default
-    portPolicy: Static
-    hostPort: 17654
-    containerPort: 17654
-  # The following is ignored but required due to validation.
-  template:
-    spec:
-      containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.15
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -58,7 +34,6 @@ spec:
       - name: simple-udp
         image: gcr.io/agones-images/udp-server:0.17
 ```
-{{% /feature %}}
 
 Once you save this to a file make sure you have `kubectl` configured to point to your Agones cluster and then run `kubectl apply -f dev-gameserver.yaml`. This will register your server with Agones.
 
