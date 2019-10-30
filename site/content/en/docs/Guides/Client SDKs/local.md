@@ -10,36 +10,37 @@ description: >
 ## Local Development
 
 When the game server is running on Agones, the SDK communicates over TCP to a small
-gRPC server that Agones coordinated to run in a container in the same network 
+gRPC server that Agones coordinated to run in a container in the same network
 namespace as it - usually referred to in Kubernetes terms as a "sidecar".
 
 Therefore, when developing locally, we also need a process for the SDK to connect to!
 
 To do this, we can run the same binary that runs inside Agones, but pass in a flag
 to run it in "local mode". Local mode means that the sidecar binary
-will not try to connect to anything, and will just send log messages to stdout and persist local state in memory so 
+will not try to connect to anything, and will just send log messages to stdout and persist local state in memory so
 that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
-To do this you will need to download the latest agonessdk-server-{VERSION}.zip from 
-[releases](https://github.com/googleforgames/agones/releases), and unzip it.
+To do this you will need to download  {{% ghrelease file_prefix="agonessdk-server" link_test="false" %}}, and unzip it.
 You will find the executables for the SDK server, one for each type of operating system.
 
 - `sdk-server.windows.amd64.exe` - Windows
-- `sdk-server.darwin.amd64` - macOS  
--  `sdk-server.linux.amd64` - Linux
+- `sdk-server.darwin.amd64` - macOS
+- `sdk-server.linux.amd64` - Linux
 
 To run in local mode, pass the flag `--local` to the executable.
 
 For example:
 
 ```console
-$ ./sidecar.linux.amd64 --local
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":""},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T18:01:58-07:00","version":"0.4.0-b44960a8"}
-{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T18:01:58-07:00"}
-{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T18:01:58-07:00"}
-{"level":"info","msg":"Ready request has been received!","time":"2017-12-22T16:09:19-08:00"}
-{"level":"info","msg":"Shutdown request has been received!","time":"2017-12-22T16:10:19-08:00"}
+$ ./sdk-server.linux.amd64 --local
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":59357,"HTTPPort":59358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
+{"grpcEndpoint":"localhost:59357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
+{"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:44:37.975086+03:00"}
+{"message":"Ready request has been received!","severity":"info","time":"2019-10-30T21:45:47.031989+03:00"}
+{"message":"gameserver update received","severity":"info","time":"2019-10-30T21:45:47.03225+03:00"}
+{"message":"Shutdown request has been received!","severity":"info","time":"2019-10-30T21:46:18.179341+03:00"}
+{"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 
 ### Providing your own `GameServer` configuration for local development
@@ -54,7 +55,7 @@ events for `WatchGameServer()`. This is a useful way of testing functionality, s
 `Allocated` in your game server code.
 
 {{< alert title="Note" color="info">}}
-File modification events can fire more than one for each save (for a variety of reasons), 
+File modification events can fire more than one for each save (for a variety of reasons),
 but it's best practice to ensure handlers that implement `WatchGameServer()` be idempotent regardless, as repeats can
 happen when live as well.
 {{< /alert >}}
@@ -62,12 +63,12 @@ happen when live as well.
 For example:
 
 ```console
-$ export AGONES_PATH=/home/go/src/agones.dev/agones
-$ ./sdk-server.linux.amd64 --local -f ${AGONES_PATH}/examples/simple-udp/gameserver.yaml
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"/home/go/src/agones.dev/agones/examples/simple-udp/gameserver.yaml"},"grpcPort":59357,"httpPort":59358,"level":"info","msg":"Starting sdk sidecar","source":"main","time":"2018-08-25T17:56:39-07:00","version":"0.4.0-b44960a8"}
-{"level":"info","msg":"Reading GameServer configuration","path":"/home/user/workspace/agones/src/agones.dev/agones/examples/simple-udp/gameserver.yaml","source":"main","time":"2018-08-25T17:56:39-07:00"}
-{"level":"info","msg":"Starting SDKServer grpc service...","source":"main","time":"2018-08-25T17:56:39-07:00"}
-{"level":"info","msg":"Starting SDKServer grpc-gateway...","source":"main","time":"2018-08-25T17:56:39-07:00"}
+$ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
+$ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"./gameserver.yaml","Delay":0,"Timeout":0,"Test":"","GRPCPort":59357,"HTTPPort":59358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:47:45.742776+03:00","version":"1.1.0"}
+{"filePath":"/Users/alexander.apalikov/Downloads/agonessdk-server-1.1.0/gameserver.yaml","message":"Reading GameServer configuration","severity":"info","time":"2019-10-30T21:47:45.743369+03:00"}
+{"grpcEndpoint":"localhost:59357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
+{"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
 ```
 
 ### Changing State of a Local GameServer
@@ -85,6 +86,7 @@ All state transitions are supported for local SDK server, however not all of the
 All changes to the GameServer state could be observed and retrieved using Watch() or GameServer() methods using GameServer SDK.
 
 Example of using HTTP gateway locally:
+
 ```console
 $ curl -X POST "http://localhost:59358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
 {}
