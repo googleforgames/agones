@@ -8,17 +8,11 @@ description: "This is the REST version of the Agones Game Server Client SDK. "
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
-{{% feature expiryVersion="1.1.0" %}}
-The REST API can be accessed from `http://localhost:59358/` from the game server process.
-{{% /feature %}}
-
-{{% feature publishVersion="1.1.0" %}}
 The REST API can be accessed from `http://localhost:${AGONES_SDK_HTTP_PORT}/` from the game server process.
 `AGONES_SDK_HTTP_PORT` is an environment variable automatically set for the game server process by Agones to
 support binding the REST API to a dynamic port. It is advised to use the environment variable rather than a
 hard coded port; otherwise your game server will not be able to contact the SDK server if it is configured to
 use a non-default port.
-{{% /feature %}}
 
 Generally the REST interface gets used if gRPC isn't well supported for a given language or platform.
 
@@ -51,16 +45,9 @@ Call when the GameServer is ready to accept connections
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/ready
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/ready
 ```
-{{% /feature %}}
 
 ### Health
 Send a Empty every d Duration to declare that this GameSever is healthy
@@ -71,16 +58,9 @@ Send a Empty every d Duration to declare that this GameSever is healthy
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/health
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/health
 ```
-{{% /feature %}}
 
 ### Shutdown
 
@@ -92,16 +72,9 @@ Call when the GameServer session is over and it's time to shut down
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/shutdown
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/shutdown
 ```
-{{% /feature %}}
 
 ### Set Label
 
@@ -111,16 +84,9 @@ See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:59358/metadata/label
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/label
 ```
-{{% /feature %}}
 
 ### Set Annotation
 
@@ -128,16 +94,9 @@ Apply a Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer`
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:59358/metadata/annotation
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
-{{% /feature %}}
 
 ### GameServer
 
@@ -146,16 +105,9 @@ Call when you want to retrieve the backing `GameServer` configuration details
 - Path: `/gameserver`
 - Method: `GET`
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:59358/gameserver
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/gameserver
 ```
-{{% /feature %}}
 
 Response:
 ```json
@@ -195,16 +147,9 @@ These updates will come as newline delimited JSON, send on each update. To that 
 want to keep the http connection open, and read lines from the result stream and and process as they
 come in.
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:59358/watch/gameserver
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/watch/gameserver
 ```
-{{% /feature %}}
 
 Response:
 ```json
@@ -223,16 +168,9 @@ Move Gameserver into a Reserved state for a certain amount of seconds for the fu
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:59358/reserve
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/reserve
 ```
-{{% /feature %}}
 
 ### Allocate
 
@@ -247,13 +185,6 @@ relinquish control to an external service which likely doesn't have as much info
 
 #### Example
 
-{{% feature expiryVersion="1.1.0" %}}
-```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:59358/allocate
-```
-{{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/allocate
 ```
-{{% /feature %}}

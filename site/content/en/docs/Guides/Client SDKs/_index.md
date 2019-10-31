@@ -32,7 +32,6 @@ This means that more languages can be supported in the future with minimal effor
 There is also [local development tooling]({{< relref "local.md" >}}) for working against the SDK locally,
 without having to spin up an entire Kubernetes infrastructure.
 
-{{% feature publishVersion="1.1.0" %}}
 ## Connecting to the SDK Server
 
 Starting with Agones 1.1.0, the port that the SDK Server listens on for incoming gRPC or HTTP requests is
@@ -48,8 +47,6 @@ The SDKs will automatically discover and connect to the gRPC port specified in t
 
 If your game server requires using a REST client, it is advised to use the port from the environment variable,
 otherwise your game server will not be able to contact the SDK server if it is configured to use a non-default port.
-
-{{% /feature %}}
 
 ## Function Reference
 

@@ -1,5 +1,41 @@
 # Changelog
 
+## [v1.1.0](https://github.com/googleforgames/agones/tree/v1.1.0) (2019-10-29)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.1.0-rc...v1.1.0)
+
+**Implemented enhancements:**
+
+- Document agones-allocator and multi-cluster allocation [\#1155](https://github.com/googleforgames/agones/pull/1155) ([pooneh-m](https://github.com/pooneh-m))
+- Add SDK.GameServer\(\) to Matchmaking Registration Diagram [\#1149](https://github.com/googleforgames/agones/pull/1149) ([markmandel](https://github.com/markmandel))
+- Update the instructions for installing a GKE cluster with terraform to disable automatic node upgrades [\#1141](https://github.com/googleforgames/agones/pull/1141) ([roberthbailey](https://github.com/roberthbailey))
+
+**Fixed bugs:**
+
+- TestMultiClusterAllocationOnLocalCluster is flakey [\#1114](https://github.com/googleforgames/agones/issues/1114)
+- TestFleetRollingUpdate/Use\_fleet\_Patch\_false\_10% test is flaky [\#1049](https://github.com/googleforgames/agones/issues/1049)
+- Broke Allocator Status in Grafana Dashboard [\#1158](https://github.com/googleforgames/agones/pull/1158) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 1.1.0-rc [\#1133](https://github.com/googleforgames/agones/issues/1133)
+- Rebuild example images for the 1.1 release [\#1126](https://github.com/googleforgames/agones/issues/1126)
+- Allow issues to be assigned to collaborators [\#1120](https://github.com/googleforgames/agones/issues/1120)
+
+**Merged pull requests:**
+
+- Update "Local Development" documents [\#1159](https://github.com/googleforgames/agones/pull/1159) ([aLekSer](https://github.com/aLekSer))
+- Cloud Build: Add --output-sync=target to run-sdk-conformance-tests [\#1157](https://github.com/googleforgames/agones/pull/1157) ([markmandel](https://github.com/markmandel))
+- Update the images for all examples to use the 1.1 SDKs [\#1153](https://github.com/googleforgames/agones/pull/1153) ([roberthbailey](https://github.com/roberthbailey))
+- Replace `\>` quoted text with alert shortcodes [\#1152](https://github.com/googleforgames/agones/pull/1152) ([markmandel](https://github.com/markmandel))
+- Fixed a typo [\#1147](https://github.com/googleforgames/agones/pull/1147) ([pooneh-m](https://github.com/pooneh-m))
+- Disable Auto Upgrade for Deployment Manager [\#1143](https://github.com/googleforgames/agones/pull/1143) ([aLekSer](https://github.com/aLekSer))
+- Update the instructions for manually creating a GKE cluster to disable automatic node upgrades [\#1140](https://github.com/googleforgames/agones/pull/1140) ([roberthbailey](https://github.com/roberthbailey))
+- Replace tabs with spaces in the svg file so that it renders more nicely. [\#1139](https://github.com/googleforgames/agones/pull/1139) ([roberthbailey](https://github.com/roberthbailey))
+- Remove the svg version of the old logo. [\#1138](https://github.com/googleforgames/agones/pull/1138) ([roberthbailey](https://github.com/roberthbailey))
+- CI: Update Rust SDK conformance test cache version [\#1135](https://github.com/googleforgames/agones/pull/1135) ([aLekSer](https://github.com/aLekSer))
+- Add owners files for the nodejs code [\#1119](https://github.com/googleforgames/agones/pull/1119) ([roberthbailey](https://github.com/roberthbailey))
+
 ## [v1.1.0-rc](https://github.com/googleforgames/agones/tree/v1.1.0-rc) (2019-10-22)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.0.0...v1.1.0-rc)
@@ -31,6 +67,7 @@
 - Fixes, more e2e tests and logging for multi-cluster allocation [\#1077](https://github.com/googleforgames/agones/pull/1077) ([pooneh-m](https://github.com/pooneh-m))
 - Longer blog post for Agones 1.0.0 announcement [\#1076](https://github.com/googleforgames/agones/pull/1076) ([markmandel](https://github.com/markmandel))
 - Add a delay flag to the sdkserver [\#1070](https://github.com/googleforgames/agones/pull/1070) ([roberthbailey](https://github.com/roberthbailey))
+- Add Yager Logo to companies using Agones [\#1057](https://github.com/googleforgames/agones/pull/1057) ([topochan](https://github.com/topochan))
 - Adding namespace for multi-cluster allocation policy [\#1052](https://github.com/googleforgames/agones/pull/1052) ([pooneh-m](https://github.com/pooneh-m))
 - Logging Agones version and port on the startup. [\#1048](https://github.com/googleforgames/agones/pull/1048) ([pooneh-m](https://github.com/pooneh-m))
 - Adding make file to generate allocation go from proto [\#1041](https://github.com/googleforgames/agones/pull/1041) ([pooneh-m](https://github.com/pooneh-m))
@@ -64,6 +101,7 @@
 
 **Merged pull requests:**
 
+- Release 1.1.0-rc [\#1134](https://github.com/googleforgames/agones/pull/1134) ([markmandel](https://github.com/markmandel))
 - Style fixes. [\#1129](https://github.com/googleforgames/agones/pull/1129) ([roberthbailey](https://github.com/roberthbailey))
 - Drop the Extension API Server reference from agones-allocator [\#1124](https://github.com/googleforgames/agones/pull/1124) ([pooneh-m](https://github.com/pooneh-m))
 - Faster subsequent Rust SDK conformance builds [\#1122](https://github.com/googleforgames/agones/pull/1122) ([aLekSer](https://github.com/aLekSer))
@@ -83,7 +121,6 @@
 - Add func to wait for fleet condition without Fatalf [\#1065](https://github.com/googleforgames/agones/pull/1065) ([aLekSer](https://github.com/aLekSer))
 - Small refactoring of the simple udp server. [\#1062](https://github.com/googleforgames/agones/pull/1062) ([roberthbailey](https://github.com/roberthbailey))
 - Preparation for 1.1.0 [\#1060](https://github.com/googleforgames/agones/pull/1060) ([markmandel](https://github.com/markmandel))
-- Add Yager Logo to companies using Agones [\#1057](https://github.com/googleforgames/agones/pull/1057) ([topochan](https://github.com/topochan))
 - Update golangci-lint to 1.18, add bodyclose check [\#1051](https://github.com/googleforgames/agones/pull/1051) ([aLekSer](https://github.com/aLekSer))
 - E2E test for Unhealthy GameServer on process crash [\#1038](https://github.com/googleforgames/agones/pull/1038) ([markmandel](https://github.com/markmandel))
 - Build examples make target [\#1019](https://github.com/googleforgames/agones/pull/1019) ([aLekSer](https://github.com/aLekSer))

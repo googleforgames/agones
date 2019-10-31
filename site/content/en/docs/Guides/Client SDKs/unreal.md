@@ -7,6 +7,11 @@ weight: 10
 description: "This is the Unreal Engine 4 Agones Game Server Client Plugin. "
 ---
 
+{{< alert title="Note" color="info" >}}
+The Unreal SDK is functional, but not yet feature complete.
+[Pull requests](https://github.com/googleforgames/agones/pulls) to finish the functionality are appreciated.
+{{< /alert >}}
+
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
 ## Download
@@ -31,9 +36,6 @@ At this moment we do not provide binaries for the plugin. This requires you to c
 The settings for the Agones Plugin can be found in the Unreal Engine editor `Edit > Project Settings > Plugins >  Agones`
 
 Available settings:
-{{% feature expiryVersion="1.1.0" %}}
-- Agones Sidecar IP. (default: `http://localhost:59358`)
-{{% /feature %}}
 - Health Ping Enabled. Whether the server sends a health ping to the Agones sidecar. (default: `true`)
 - Health Ping Seconds. Interval of the server sending a health ping to the Agones sidecar. (default: `5`)
 - Debug Logging Enabled. Debug logging for development of this Plugin. (default: `false`)
