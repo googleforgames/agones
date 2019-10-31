@@ -7,6 +7,11 @@ weight: 10
 description: "This is the Unreal Engine 4 Agones Game Server Client Plugin. "
 ---
 
+{{< alert title="Note" color="info" >}}
+The Unreal SDK is functional, but not yet feature complete.
+[Pull requests](https://github.com/googleforgames/agones/pulls) to finish the functionality are appreciated.
+{{< /alert >}}
+
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
 ## Download
