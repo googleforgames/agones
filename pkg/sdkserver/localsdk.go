@@ -46,6 +46,14 @@ var (
 			Labels:            map[string]string{"islocal": "true"},
 			Annotations:       map[string]string{"annotation": "true"},
 		},
+		Spec: &sdk.GameServer_Spec{
+			Health: &sdk.GameServer_Spec_Health{
+				Disabled:            false,
+				PeriodSeconds:       3,
+				FailureThreshold:    5,
+				InitialDelaySeconds: 10,
+			},
+		},
 		Status: &sdk.GameServer_Status{
 			State:   "Ready",
 			Address: "127.0.0.1",
