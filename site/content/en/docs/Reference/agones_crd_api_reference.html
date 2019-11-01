@@ -3,7 +3,7 @@ title="Agones Kubernetes API"
 description="Detailed list of Agones Custom Resource Definitions available"
 +++
 
-{{% feature expiryVersion="1.1.0" %}}
+{{% feature expiryVersion="1.2.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -257,7 +257,20 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -808,7 +821,20 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -1043,7 +1069,20 @@ agones.dev/agones/pkg/apis.SchedulingStrategy
 </em>
 </td>
 <td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
 </td>
 </tr>
 <tr>
@@ -1135,6 +1174,69 @@ int32
 </p>
 <p>
 <p>PortPolicy is the port policy for the GameServer</p>
+</p>
+<h3 id="SdkServer">SdkServer
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>logLevel</code></br>
+<em>
+<a href="#SdkServerLogLevel">
+SdkServerLogLevel
+</a>
+</em>
+</td>
+<td>
+<p>LogLevel for SDK server (sidecar) logs. Defaults to &ldquo;Info&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>grpcPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="SdkServerLogLevel">SdkServerLogLevel
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#SdkServer">SdkServer</a>)
+</p>
+<p>
+<p>SdkServerLogLevel is the log level for SDK server (sidecar) logs</p>
 </p>
 <hr/>
 <h2 id="allocation.agones.dev">allocation.agones.dev</h2>
@@ -2146,7 +2248,7 @@ Required.</p>
 Generated with <code>gen-crd-api-reference-docs</code>.
 </em></p>
 {{% /feature %}}
-{{% feature publishVersion="1.1.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -2236,7 +2338,7 @@ int32
 </em>
 </td>
 <td>
-<p>Replicas are the number of GameServers that should be in this set</p>
+<p>Replicas are the number of GameServers that should be in this set. Defaults to 1</p>
 </td>
 </tr>
 <tr>
@@ -2582,7 +2684,7 @@ int32
 </em>
 </td>
 <td>
-<p>Replicas are the number of GameServers that should be in this set</p>
+<p>Replicas are the number of GameServers that should be in this set. Defaults to 1</p>
 </td>
 </tr>
 <tr>
