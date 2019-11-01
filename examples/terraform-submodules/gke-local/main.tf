@@ -27,7 +27,7 @@ variable "project" {
 }
 module "gke_cluster" {
 
-  source = "../../../build/modules/gke"
+  source = "../../../install/terraform/modules/gke"
 
   cluster = {
     "project"          = "${var.project}"
@@ -40,7 +40,7 @@ module "gke_cluster" {
 
 module "helm_agones" {
 
-  source = "../../../build/modules/helm"
+  source = "../../../install/terraform/modules/helm"
 
   agones_version         = "${var.agones_version}"
   values_file            = ""
