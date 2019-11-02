@@ -213,6 +213,110 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
+	t.Parallel()
+	logger := logrus.WithField("test", t.Name())
+
+	gs := defaultGameServer(defaultNs)
+	// give some buffer with gameservers crashing and coming back
+	gs.Spec.Health.PeriodSeconds = 60 * 60
+	gs.Spec.Template.Spec.Containers[0].Env = append(gs.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "READY", Value: "FALSE"})
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
+	newGs, err := gsClient.Create(gs)
+	if !assert.NoError(t, err) {
+		assert.Fail(t, "could not create the gameserver")
+	}
+	defer gsClient.Delete(newGs.ObjectMeta.Name, nil) // nolint: errcheck
+
+	logger.Info("Waiting for us to have an address to send things to")
+	newGs, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateScheduled, time.Minute)
+	assert.NoError(t, err)
+
+	logger.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created")
+
+	address := fmt.Sprintf("%s:%d", newGs.Status.Address, newGs.Status.Ports[0].Port)
+	logger.WithField("address", address).Info("Dialing UDP message to address")
+
+	messageAndWait := func(gs *agonesv1.GameServer, msg string, check func(gs *agonesv1.GameServer, pod *corev1.Pod) bool) error {
+		return wait.PollImmediate(3*time.Second, 3*time.Minute, func() (bool, error) {
+			gs, err := gsClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+			if err != nil {
+				logger.WithError(err).Warn("could not get gameserver")
+				return true, err
+			}
+			pod, err := framework.KubeClient.CoreV1().Pods(defaultNs).Get(newGs.ObjectMeta.Name, metav1.GetOptions{})
+			if err != nil {
+				logger.WithError(err).Warn("could not get pod for gameserver")
+				return true, err
+			}
+
+			if check(gs, pod) {
+				return true, nil
+			}
+
+			// create a connection each time, as weird stuff happens if the receiver isn't up and running.
+			conn, err := net.Dial("udp", address)
+			assert.NoError(t, err)
+			defer conn.Close() // nolint: errcheck
+			// doing this last, so that there is a short delay between the msg being sent, and the check.
+			logger.WithField("gs", gs.ObjectMeta.Name).WithField("msg", msg).Info("sending message")
+			if _, err = conn.Write([]byte(msg)); err != nil {
+				logger.WithError(err).WithField("gs", gs.ObjectMeta.Name).
+					WithField("state", gs.Status.State).Info("error sending packet")
+			}
+			return false, nil
+		})
+	}
+
+	logger.Info("crashing, and waiting to see restart")
+	err = messageAndWait(newGs, "CRASH", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+		for _, c := range pod.Status.ContainerStatuses {
+			if c.Name == newGs.Spec.Container && c.RestartCount > 0 {
+				logger.Info("successfully crashed. Moving on!")
+				return true
+			}
+		}
+		return false
+	})
+	assert.NoError(t, err)
+
+	// check that the GameServer is not in an unhealthy state. If it does happen, it should happen pretty quick
+	newGs, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, 5*time.Second)
+	// should be an error, as the state should not occur
+	if !assert.Error(t, err) {
+		assert.FailNow(t, "GameServer should not be Unhealthy")
+	}
+	assert.Contains(t, err.Error(), "waiting for GameServer")
+
+	// ping READY until it doesn't fail anymore - since it may take a while
+	// for this to come back up -- or we could get a delayed CRASH, so we have to
+	// wait for the process to restart again to fire the SDK.Ready()
+	logger.Info("marking GameServer as ready")
+	err = messageAndWait(newGs, "READY", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+		if gs.Status.State == agonesv1.GameServerStateReady {
+			logger.Info("ready! Moving On!")
+			return true
+		}
+		return false
+	})
+	if err != nil {
+		assert.Failf(t, "Could not make GameServer Ready: %v", err.Error())
+	}
+	// now crash, should be unhealthy, since it's after being Ready
+	logger.Info("crashing again, should be unhealthy")
+	// retry on crash, as with the restarts, sometimes Go takes a moment to send this through.
+	err = messageAndWait(newGs, "CRASH", func(gs *agonesv1.GameServer, pod *corev1.Pod) bool {
+		logger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).
+			Info("checking final crash state")
+		if gs.Status.State == agonesv1.GameServerStateUnhealthy {
+			logger.Info("Unhealthy! We are done!")
+			return true
+		}
+		return false
+	})
+	assert.NoError(t, err)
+}
+
 func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	t.Parallel()
 

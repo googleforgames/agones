@@ -919,6 +919,7 @@ func TestControllerApplyGameServerAddressAndPort(t *testing.T) {
 
 func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 	t.Parallel()
+	containerID := "1234"
 
 	t.Run("GameServer with ReadyRequest State", func(t *testing.T) {
 		c, m := newFakeController()
@@ -928,6 +929,9 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture.ApplyDefaults()
 		gsFixture.Status.NodeName = "node"
 		pod, err := gsFixture.Pod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+		}
 		assert.Nil(t, err)
 		gsUpdated := false
 
@@ -939,6 +943,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
 			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, nil
 		})
 
@@ -946,7 +951,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		defer cancel()
 
 		gs, err := c.syncGameServerRequestReadyState(gsFixture)
-		assert.Nil(t, err, "should not error")
+		assert.NoError(t, err, "should not error")
 		assert.True(t, gsUpdated, "GameServer wasn't updated")
 		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
@@ -961,6 +966,9 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		pod, err := gsFixture.Pod()
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+		}
 		gsUpdated := false
 
 		ipFixture := "12.12.12.12"
@@ -978,6 +986,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			ua := action.(k8stesting.UpdateAction)
 			gs := ua.GetObject().(*agonesv1.GameServer)
 			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+			assert.Equal(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
 			return true, gs, nil
 		})
 
@@ -993,6 +1002,44 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Equal(t, gs.Status.Address, ipFixture)
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Address and port populated")
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
+	})
+
+	t.Run("GameServer with a GameServerReadyContainerIDAnnotation already", func(t *testing.T) {
+		c, m := newFakeController()
+
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.NodeName = "node"
+		gsFixture.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
+		pod, err := gsFixture.Pod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
+			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+		}
+		assert.Nil(t, err)
+		gsUpdated := false
+
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+			assert.NotEqual(t, containerID, gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation])
+
+			return true, gs, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.podSynced)
+		defer cancel()
+
+		gs, err := c.syncGameServerRequestReadyState(gsFixture)
+		assert.NoError(t, err, "should not error")
+		assert.True(t, gsUpdated, "GameServer wasn't updated")
+		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SDK.Ready() complete")
 	})
 

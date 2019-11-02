@@ -190,6 +190,10 @@ func (hc *HealthController) syncGameServer(key string) error {
 		return nil
 	}
 
+	if skip, err := hc.skipUnhealthy(gs); err != nil || skip {
+		return err
+	}
+
 	hc.loggerForGameServer(gs).Info("Issue with GameServer pod, marking as GameServerStateUnhealthy")
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
@@ -201,4 +205,48 @@ func (hc *HealthController) syncGameServer(key string) error {
 	hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), "Issue with Gameserver pod")
 
 	return nil
+}
+
+// skipUnhealthy determines if it's appropriate to not move to Unhealthy when a Pod's
+// gameserver container has crashed, or let it restart as per usual K8s operations.
+// It does this by checking a combination of the current GameServer state and annotation data that stores
+// which container instance was live if the GameServer has been marked as Ready.
+// The logic is as follows:
+//   - If the GameServer is not yet Ready, allow to restart (return true)
+//   - If the GameServer is in a state past Ready, move to Unhealthy
+func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error) {
+	pod, err := hc.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
+	if err != nil {
+		// Pod doesn't exist, so the GameServer is definitely not healthy
+		if k8serrors.IsNotFound(err) {
+			return false, nil
+		}
+		// if it's something else, go back into the queue
+		return false, errors.Wrapf(err, "error retrieving Pod %s for GameServer to check status", gs.ObjectMeta.Name)
+	}
+	if !metav1.IsControlledBy(pod, gs) {
+		// This is not the Pod we are looking for 🤖
+		return false, nil
+	}
+	if gs.IsBeforeReady() {
+		return hc.failedContainer(pod), nil
+	}
+
+	// finally, we need to check if there a failed container happened after the gameserver was ready or before.
+	for _, cs := range pod.Status.ContainerStatuses {
+		if cs.Name == gs.Spec.Container {
+			if cs.State.Terminated != nil {
+				return false, nil
+			}
+			if cs.LastTerminationState.Terminated != nil {
+				// if the current container is running, and is the ready container, then we know this is some
+				// other pod update, and we previously had a restart before we got to being Ready, and therefore
+				// shouldn't move to Unhealthy.
+				return cs.ContainerID == gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation], nil
+			}
+			break
+		}
+	}
+
+	return false, nil
 }

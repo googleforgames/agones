@@ -91,6 +91,10 @@ const (
 	// DevAddressAnnotation is an annotation to indicate that a GameServer hosted outside of Agones.
 	// A locally hosted GameServer is not managed by Agones it is just simply registered.
 	DevAddressAnnotation = "agones.dev/dev-address"
+	// GameServerReadyContainerIDAnnotation is an annotation that is set on the GameServer
+	// becomes ready, so we can track when restarts should occur and when a GameServer
+	// should be moved to Unhealthy.
+	GameServerReadyContainerIDAnnotation = agones.GroupName + "/ready-container-id"
 )
 
 var (
@@ -423,6 +427,25 @@ func (gs *GameServer) IsDeletable() bool {
 // IsBeingDeleted returns true if the server is in the process of being deleted.
 func (gs *GameServer) IsBeingDeleted() bool {
 	return !gs.ObjectMeta.DeletionTimestamp.IsZero() || gs.Status.State == GameServerStateShutdown
+}
+
+// IsBeforeReady returns true if the GameServer Status has yet to move to or past the Ready
+// state in its lifecycle, such as Allocated or Reserved, or any of the Error/Unhealthy states
+func (gs *GameServer) IsBeforeReady() bool {
+	switch gs.Status.State {
+	case GameServerStatePortAllocation:
+		return true
+	case GameServerStateCreating:
+		return true
+	case GameServerStateStarting:
+		return true
+	case GameServerStateScheduled:
+		return true
+	case GameServerStateRequestReady:
+		return true
+	}
+
+	return false
 }
 
 // FindGameServerContainer returns the container that is specified in
