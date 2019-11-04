@@ -259,7 +259,8 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 			assert.NoError(t, err)
 			defer conn.Close() // nolint: errcheck
 			// doing this last, so that there is a short delay between the msg being sent, and the check.
-			logger.WithField("gs", gs.ObjectMeta.Name).WithField("msg", msg).Info("sending message")
+			logger.WithField("gs", gs.ObjectMeta.Name).WithField("msg", msg).
+				WithField("state", gs.Status.State).Info("sending message")
 			if _, err = conn.Write([]byte(msg)); err != nil {
 				logger.WithError(err).WithField("gs", gs.ObjectMeta.Name).
 					WithField("state", gs.Status.State).Info("error sending packet")
@@ -300,7 +301,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 		return false
 	})
 	if err != nil {
-		assert.Failf(t, "Could not make GameServer Ready: %v", err.Error())
+		assert.FailNowf(t, "Could not make GameServer Ready: %v", err.Error())
 	}
 	// now crash, should be unhealthy, since it's after being Ready
 	logger.Info("crashing again, should be unhealthy")
