@@ -27,9 +27,9 @@ spec:
     # portPolicy has three options:
     # - "Dynamic" (default) the system allocates a free hostPort for the gameserver, for game clients to connect to
     # - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+    # port is available. When static is the policy specified, `hostPort` is required to be populated
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
-    # port is available. When static is the policy specified, `hostPort` is required to be populated
     portPolicy: Static
     # the port that is being opened on the game server process
     containerPort: 7654

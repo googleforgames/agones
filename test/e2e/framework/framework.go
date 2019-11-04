@@ -300,8 +300,12 @@ func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) 
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
-// assumes the first port is the port to send the message to
+// assumes the first port is the port to send the message to,
+// returns error if no Ports were allocated
 func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
 	address := fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port)
 	return SendUDP(address, msg)
 }
