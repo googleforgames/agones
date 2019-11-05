@@ -329,9 +329,10 @@ You need to put Base64-encoded string into caBundle field in your fleetautoscale
 base64 -i ./rootCA.pem
 ```
 
-Copy the output of the command above and replace the caBundle field in your text editor:
+Copy the output of the command above and replace the caBundle field in your text editor (say vim) with the new value:
 ```
-vim $GOPATH/src/agones.dev/agones/examples/webhookfleetautoscalertls.yaml
+wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscalertls.yaml
+vim ./webhookfleetautoscalertls.yaml
 ```
 
 #### 3. Deploy a Webhook service for autoscaling
@@ -356,10 +357,10 @@ Status:         Running
 
 #### 4. Create a Fleet Autoscaler
 
-Let's create a Fleet Autoscaler using the following command:
+Let's create a Fleet Autoscaler using the following command (caBundle should be set properly on Step 2):
 
 ```
-kubectl apply -f $GOPATH/src/agones.dev/agones/examples/webhookfleetautoscalertls.yaml
+kubectl apply -f ./webhookfleetautoscalertls.yaml
 ```
 
 #### 5. See the fleet and autoscaler status.
@@ -437,7 +438,7 @@ Removing the fleet:
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
 ```
 
-### Comments 
+### Comments
 
 Note that secure communication has been established and we can trust that communication between the fleetautoscaler and
 the autoscaling webhook. If you need to run the autoscaling webhook outside of the Kubernetes cluster, you can use

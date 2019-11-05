@@ -1,0 +1,3 @@
+{{- $version := .Get "version" | default (getenv "RELEASE_VERSION") | default $.Page.Site.Params.release_version }}
+{{- $test := eq (.Get "link_test") "true" | default true }}
+<a href="{{$.Page.Site.Params.github_repo}}/releases/download/v{{ $version }}/{{ .Get "file_prefix" }}-{{ $version }}.zip"  {{if not $test}}data-proofer-ignore{{end}}>{{ .Get "file_prefix" }}-{{ $version }}.zip</a>
