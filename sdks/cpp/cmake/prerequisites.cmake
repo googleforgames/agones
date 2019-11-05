@@ -31,7 +31,7 @@ endif()
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
-set(gRPC_GIT_TAG "v1.16.1")
+set(gRPC_GIT_TAG $ENV{GRPC_RELEASE_TAG})
 
 # OpenSSL required only for successful build gRPC
 set(OPENSSL_GIT_REPO "https://github.com/openssl/openssl.git")
