@@ -232,7 +232,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 		return hc.failedContainer(pod), nil
 	}
 
-	// finally, we need to check if there a failed container happened after the gameserver was ready or before.
+	// finally, we need to check if the failed container happened after the gameserver was ready or before.
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if cs.State.Terminated != nil {

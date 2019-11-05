@@ -301,7 +301,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 		return false
 	})
 	if err != nil {
-		assert.FailNowf(t, "Could not make GameServer Ready: %v", err.Error())
+		assert.FailNowf(t, "Could not make GameServer Ready", "reason: %v", err.Error())
 	}
 	// now crash, should be unhealthy, since it's after being Ready
 	logger.Info("crashing again, should be unhealthy")
