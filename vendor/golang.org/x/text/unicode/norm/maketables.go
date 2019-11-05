@@ -12,6 +12,10 @@ package main
 
 import (
 	"bytes"
+<<<<<<< HEAD
+=======
+	"encoding/binary"
+>>>>>>> go mod vendor
 	"flag"
 	"fmt"
 	"io"
@@ -261,7 +265,11 @@ func compactCCC() {
 
 // CompositionExclusions.txt has form:
 // 0958    # ...
+<<<<<<< HEAD
 // See http://unicode.org/reports/tr44/ for full explanation
+=======
+// See https://unicode.org/reports/tr44/ for full explanation
+>>>>>>> go mod vendor
 func loadCompositionExclusions() {
 	f := gen.OpenUCDFile("CompositionExclusions.txt")
 	defer f.Close()
@@ -735,6 +743,11 @@ func makeTables() {
 			max = n
 		}
 	}
+<<<<<<< HEAD
+=======
+	fmt.Fprintln(w, `import "sync"`)
+	fmt.Fprintln(w)
+>>>>>>> go mod vendor
 
 	fmt.Fprintln(w, "const (")
 	fmt.Fprintln(w, "\t// Version is the Unicode edition from which the tables are derived.")
@@ -782,16 +795,34 @@ func makeTables() {
 		sz := nrentries * 8
 		size += sz
 		fmt.Fprintf(w, "// recompMap: %d bytes (entries only)\n", sz)
+<<<<<<< HEAD
 		fmt.Fprintln(w, "var recompMap = map[uint32]rune{")
+=======
+		fmt.Fprintln(w, "var recompMap map[uint32]rune")
+		fmt.Fprintln(w, "var recompMapOnce sync.Once\n")
+		fmt.Fprintln(w, `const recompMapPacked = "" +`)
+		var buf [8]byte
+>>>>>>> go mod vendor
 		for i, c := range chars {
 			f := c.forms[FCanonical]
 			d := f.decomp
 			if !f.isOneWay && len(d) > 0 {
 				key := uint32(uint16(d[0]))<<16 + uint32(uint16(d[1]))
+<<<<<<< HEAD
 				fmt.Fprintf(w, "0x%.8X: 0x%.4X,\n", key, i)
 			}
 		}
 		fmt.Fprintf(w, "}\n\n")
+=======
+				binary.BigEndian.PutUint32(buf[:4], key)
+				binary.BigEndian.PutUint32(buf[4:], uint32(i))
+				fmt.Fprintf(w, "\t\t%q + // 0x%.8X: 0x%.8X\n", string(buf[:]), key, uint32(i))
+			}
+		}
+		// hack so we don't have to special case the trailing plus sign
+		fmt.Fprintf(w, `	""`)
+		fmt.Fprintln(w)
+>>>>>>> go mod vendor
 	}
 
 	fmt.Fprintf(w, "// Total size of tables: %dKB (%d bytes)\n", (size+512)/1024, size)
@@ -857,7 +888,11 @@ func verifyComputed() {
 // DerivedNormalizationProps.txt has form:
 // 00C0..00C5    ; NFD_QC; N # ...
 // 0374          ; NFD_QC; N # ...
+<<<<<<< HEAD
 // See http://unicode.org/reports/tr44/ for full explanation
+=======
+// See https://unicode.org/reports/tr44/ for full explanation
+>>>>>>> go mod vendor
 func testDerived() {
 	f := gen.OpenUCDFile("DerivedNormalizationProps.txt")
 	defer f.Close()

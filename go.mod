@@ -43,6 +43,7 @@ require (
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
 	google.golang.org/api v0.0.0-20190117000611-43037ff31f69 // indirect
+	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
 	google.golang.org/grpc v1.20.1
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect

@@ -15,7 +15,11 @@ import (
 )
 
 // These tables are hand-extracted from:
+<<<<<<< HEAD
 // http://www.unicode.org/Public/8.0.0/ucd/extracted/DerivedBidiClass.txt
+=======
+// https://www.unicode.org/Public/8.0.0/ucd/extracted/DerivedBidiClass.txt
+>>>>>>> go mod vendor
 func visitDefaults(fn func(r rune, c Class)) {
 	// first write default values for ranges listed above.
 	visitRunes(fn, AL, []rune{

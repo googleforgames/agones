@@ -26,7 +26,11 @@ func main() {
 }
 
 // bidiClass names and codes taken from class "bc" in
+<<<<<<< HEAD
 // http://www.unicode.org/Public/8.0.0/ucd/PropertyValueAliases.txt
+=======
+// https://www.unicode.org/Public/8.0.0/ucd/PropertyValueAliases.txt
+>>>>>>> go mod vendor
 var bidiClass = map[string]Class{
 	"AL":  AL,  // ArabicLetter
 	"AN":  AN,  // ArabicNumber
