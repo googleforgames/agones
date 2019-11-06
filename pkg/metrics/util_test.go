@@ -16,11 +16,13 @@ package metrics
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -291,3 +293,57 @@ agones_gameservers_node_count_count 3
 agones_nodes_count{empty="false"} 2
 agones_nodes_count{empty="true"} 1
 `
+
+func Test_parseLabels(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    *stackdriver.Labels
+		wantErr bool
+	}{
+		{
+			"",
+			labelsFromMap(nil),
+			false,
+		},
+		{
+			"a=b",
+			labelsFromMap(map[string]string{"a": "b"}),
+			false,
+		},
+		{
+			"a=b,",
+			nil,
+			true,
+		},
+		{
+			"a=b,c",
+			nil,
+			true,
+		},
+		{
+			"a=b,c=d",
+			labelsFromMap(map[string]string{"a": "b", "c": "d"}),
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := parseLabels(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseLabels() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parseLabels() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func labelsFromMap(m map[string]string) *stackdriver.Labels {
+	res := &stackdriver.Labels{}
+	for k, v := range m {
+		res.Set(k, v, "")
+	}
+	return res
+}
