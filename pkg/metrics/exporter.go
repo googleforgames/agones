@@ -53,7 +53,7 @@ func RegisterPrometheusExporter(registry *prom.Registry) (http.Handler, error) {
 
 // RegisterStackdriverExporter register a Stackdriver exporter to OpenCensus.
 // It will add Agones metrics into Stackdriver on Google Cloud.
-func RegisterStackdriverExporter(projectID string) (*stackdriver.Exporter, error) {
+func RegisterStackdriverExporter(projectID string, defaultLabels string) (*stackdriver.Exporter, error) {
 	instanceID, err := metadata.InstanceID()
 	if err != nil {
 		logger.WithError(err).Warn("error getting instance ID")
@@ -68,6 +68,11 @@ func RegisterStackdriverExporter(projectID string) (*stackdriver.Exporter, error
 	if err != nil {
 		logger.WithError(err).Warn("error getting cluster-name")
 		clusterName = unknown
+	}
+
+	labels, err := parseLabels(defaultLabels)
+	if err != nil {
+		return nil, err
 	}
 
 	sd, err := stackdriver.NewExporter(stackdriver.Options{
@@ -88,6 +93,7 @@ func RegisterStackdriverExporter(projectID string) (*stackdriver.Exporter, error
 				"container_name": os.Getenv("CONTAINER_NAME"),
 			},
 		},
+		DefaultMonitoringLabels: labels,
 	})
 	if err != nil {
 		return nil, err

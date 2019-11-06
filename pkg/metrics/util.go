@@ -16,8 +16,11 @@ package metrics
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"agones.dev/agones/pkg/util/runtime"
+	"contrib.go.opencensus.io/exporter/stackdriver"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 )
@@ -47,4 +50,23 @@ func MustTagKey(key string) tag.Key {
 		panic(err)
 	}
 	return t
+}
+
+func parseLabels(s string) (*stackdriver.Labels, error) {
+	res := &stackdriver.Labels{}
+	if s == "" {
+		return res, nil
+	}
+	pairs := strings.Split(s, ",")
+	if len(pairs) == 0 {
+		return res, nil
+	}
+	for _, p := range pairs {
+		keyValue := strings.Split(p, "=")
+		if len(keyValue) != 2 {
+			return nil, fmt.Errorf("invalid labels format: %s, expect key=value,key2=value2", s)
+		}
+		res.Set(keyValue[0], keyValue[1], "")
+	}
+	return res, nil
 }
