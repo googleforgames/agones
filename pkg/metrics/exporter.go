@@ -80,7 +80,7 @@ func RegisterStackdriverExporter(projectID string, defaultLabels string) (*stack
 		// MetricPrefix helps uniquely identify your metrics.
 		MetricPrefix: "agones",
 		Resource: &monitoredres.MonitoredResource{
-			Type: "container",
+			Type: "k8s_container",
 			Labels: map[string]string{
 				"project_id":   projectID,
 				"instance_id":  instanceID,
