@@ -65,6 +65,7 @@ const (
 	enableStackdriverMetricsFlag = "stackdriver-exporter"
 	enablePrometheusMetricsFlag  = "prometheus-exporter"
 	projectIDFlag                = "gcp-project-id"
+	stackdriverLabels            = "stackdriver-labels"
 )
 
 func init() {
@@ -333,6 +334,7 @@ type config struct {
 	PrometheusMetrics bool
 	Stackdriver       bool
 	GCPProjectID      string
+	StackdriverLabels string
 }
 
 func parseEnvFlags() config {
@@ -340,22 +342,26 @@ func parseEnvFlags() config {
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(projectIDFlag, "")
+	viper.SetDefault(stackdriverLabels, "")
 
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
+	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
 	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
 	runtime.Must(viper.BindEnv(projectIDFlag))
+	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	return config{
 		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),
 		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
 		GCPProjectID:      viper.GetString(projectIDFlag),
+		StackdriverLabels: viper.GetString(stackdriverLabels),
 	}
 }
 
@@ -371,7 +377,7 @@ func setupMetricsRecorder(conf config) (health healthcheck.Handler, closer func(
 
 	// Stackdriver metrics
 	if conf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID)
+		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not register stackdriver exporter")
 		}

@@ -20,6 +20,7 @@ agones:
     prometheusServiceDiscovery: true
     stackdriverEnabled: false
     stackdriverProjectID: ""
+    stackdriverLabels: ""
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true

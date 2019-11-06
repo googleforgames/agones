@@ -53,6 +53,7 @@ import (
 
 const (
 	enableStackdriverMetricsFlag = "stackdriver-exporter"
+	stackdriverLabels            = "stackdriver-labels"
 	enablePrometheusMetricsFlag  = "prometheus-exporter"
 	projectIDFlag                = "gcp-project-id"
 	sidecarImageFlag             = "sidecar-image"
@@ -158,7 +159,7 @@ func main() {
 
 	// Stackdriver metrics
 	if ctlConf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID)
+		sd, err := metrics.RegisterStackdriverExporter(ctlConf.GCPProjectID, ctlConf.StackdriverLabels)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not register stackdriver exporter")
 		}
@@ -240,6 +241,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(keyFileFlag, filepath.Join(base, "certs/server.key"))
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
+	viper.SetDefault(stackdriverLabels, "")
+
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
 	viper.SetDefault(apiServerSustainedQPSFlag, 100)
@@ -260,6 +263,7 @@ func parseEnvFlags() config {
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "Optional. kubeconfig to run the controller out of the cluster. Only use it for debugging as webhook won't works.")
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
+	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.Int32(numWorkersFlag, 64, "Number of controller workers per resource type")
 	pflag.Int32(apiServerSustainedQPSFlag, 100, "Maximum sustained queries per second to send to the API server")
@@ -282,6 +286,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
 	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
+	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(projectIDFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(viper.BindEnv(numWorkersFlag))
@@ -321,6 +326,7 @@ func parseEnvFlags() config {
 		LogDir:                viper.GetString(logDirFlag),
 		LogLevel:              viper.GetString(logLevelFlag),
 		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
+		StackdriverLabels:     viper.GetString(stackdriverLabels),
 	}
 }
 
@@ -335,6 +341,7 @@ type config struct {
 	AlwaysPullSidecar     bool
 	PrometheusMetrics     bool
 	Stackdriver           bool
+	StackdriverLabels     string
 	KeyFile               string
 	CertFile              string
 	KubeConfig            string
