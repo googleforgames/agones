@@ -17,11 +17,9 @@ provider "google-beta" {
   zone    = "${var.cluster["zone"]}"
 }
 
-/*
 provider "google" {
   version = "~> 2.10"
 }
-*/
 
 data "google_client_config" "default" {}
 
@@ -40,6 +38,8 @@ resource "google_container_cluster" "primary" {
   location = "${var.cluster["zone"]}"
   project  = "${var.cluster["project"]}"
   provider = "google-beta"
+
+  min_master_version = "1.13"
 
   node_pool {
     name       = "default"

@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="0.9.0"]
+//  terraform apply [-var agones_version="1.1.0"]
 
 // Install latest version of agones
 variable "agones_version" {
