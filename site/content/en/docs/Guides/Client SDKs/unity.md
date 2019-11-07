@@ -40,6 +40,17 @@ async void SomeMethod()
 }
 ```
 
+{{% feature publishVersion="1.2.0" %}}
+
+To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `GameServer()`.
+
+Will return `null` if there is an error in retrieving the `GameServer` record.
+
+```csharp
+var gameserver = await agones.GameServer();
+```
+{{% /feature %}}
+
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `Shutdown()`.
 
 ```csharp
