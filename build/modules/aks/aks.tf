@@ -50,7 +50,7 @@ resource "azurerm_kubernetes_cluster" "test" {
   resource_group_name = "${azurerm_resource_group.test.name}"
   dns_prefix          = "agones"
 
-  kubernetes_version = "1.12.8"
+  kubernetes_version = "1.13.12"
 
   agent_pool_profile {
     name            = "default"
