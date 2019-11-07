@@ -23,7 +23,7 @@ DEFINE_LOG_CATEGORY(LogAgonesHook);
 static FString GetSidecarAddress()
 {
 	FString port = FPlatformMisc::GetEnvironmentVariable(TEXT("AGONES_SDK_HTTP_PORT"));
-	return FString(TEXT("http://localhost:")) + (!port.IsEmpty() ? port : FString(TEXT("59358")));
+	return FString(TEXT("http://localhost:")) + (!port.IsEmpty() ? port : FString(TEXT("9358")));
 }
 
 FAgonesHook::FAgonesHook()

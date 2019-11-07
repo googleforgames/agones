@@ -248,12 +248,10 @@ func (gss *GameServerSpec) applySdkServerDefaults() {
 		gss.SdkServer.LogLevel = SdkServerLogLevelInfo
 	}
 	if gss.SdkServer.GRPCPort == 0 {
-		// TODO(roberthbailey): Change to 9357 in the 1.2.0 release
-		gss.SdkServer.GRPCPort = 59357
+		gss.SdkServer.GRPCPort = 9357
 	}
 	if gss.SdkServer.HTTPPort == 0 {
-		// TODO(roberthbailey): Change to 9358 in the 1.2.0 release
-		gss.SdkServer.HTTPPort = 59358
+		gss.SdkServer.HTTPPort = 9358
 	}
 }
 

@@ -32,6 +32,7 @@ To run in local mode, pass the flag `--local` to the executable.
 
 For example:
 
+{{% feature expiryVersion="1.2.0" %}}
 ```console
 $ ./sdk-server.linux.amd64 --local
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":59357,"HTTPPort":59358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
@@ -42,6 +43,19 @@ $ ./sdk-server.linux.amd64 --local
 {"message":"Shutdown request has been received!","severity":"info","time":"2019-10-30T21:46:18.179341+03:00"}
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
+{{% /feature %}}
+{{% feature publishversion="1.2.0" %}}
+```console
+$ ./sdk-server.linux.amd64 --local
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
+{"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
+{"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:44:37.975086+03:00"}
+{"message":"Ready request has been received!","severity":"info","time":"2019-10-30T21:45:47.031989+03:00"}
+{"message":"gameserver update received","severity":"info","time":"2019-10-30T21:45:47.03225+03:00"}
+{"message":"Shutdown request has been received!","severity":"info","time":"2019-10-30T21:46:18.179341+03:00"}
+{"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
+```
+{{% /feature %}}
 
 ### Providing your own `GameServer` configuration for local development
 
@@ -62,6 +76,7 @@ happen when live as well.
 
 For example:
 
+{{% feature expiryVersion="1.2.0" %}}
 ```console
 $ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 $ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
@@ -70,6 +85,17 @@ $ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
 {"grpcEndpoint":"localhost:59357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
 {"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
 ```
+{{% /feature %}}
+{{% feature publishversion="1.2.0" %}}
+```console
+$ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
+$ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"./gameserver.yaml","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:47:45.742776+03:00","version":"1.1.0"}
+{"filePath":"/Users/alexander.apalikov/Downloads/agonessdk-server-1.1.0/gameserver.yaml","message":"Reading GameServer configuration","severity":"info","time":"2019-10-30T21:47:45.743369+03:00"}
+{"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
+{"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
+```
+{{% /feature %}}
 
 ### Changing State of a Local GameServer
 
@@ -87,6 +113,7 @@ All changes to the GameServer state could be observed and retrieved using Watch(
 
 Example of using HTTP gateway locally:
 
+{{% feature expiryVersion="1.2.0" %}}
 ```console
 $ curl -X POST "http://localhost:59358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
 {}
@@ -96,3 +123,15 @@ $ curl -X PUT "http://localhost:59358/metadata/label" -H "accept: application/js
 $ curl -GET "http://localhost:59358/gameserver" -H "accept: application/json"}"
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
 ```
+{{% /feature %}}
+{{% feature publishversion="1.2.0" %}}
+```console
+$ curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
+{}
+$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
+{"object_meta":{"creation_timestamp":"-62135596800"},"spec":{"health":{}},"status":{"state":"Ready"}}
+$ curl -X PUT "http://localhost:9358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
+$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"}"
+{"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
+```
+{{% /feature %}}

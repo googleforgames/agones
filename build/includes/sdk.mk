@@ -123,7 +123,7 @@ ensure-build-sdk-image:
 run-sdk-conformance-local: TIMEOUT ?= 30
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 run-sdk-conformance-local: ensure-agones-sdk-image
-	docker run -e "ADDRESS=" -p 59357:59357 -p 59358:59358 \
+	docker run -e "ADDRESS=" -p 9357:9357 -p 9358:9358 \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
@@ -132,8 +132,8 @@ run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]")
 run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
-run-sdk-conformance-no-build: GRPC_PORT ?= 59357
-run-sdk-conformance-no-build: HTTP_PORT ?= 59358
+run-sdk-conformance-no-build: GRPC_PORT ?= 9357
+run-sdk-conformance-no-build: HTTP_PORT ?= 9358
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
