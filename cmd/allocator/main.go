@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"agones.dev/agones/pkg"
@@ -43,6 +44,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
+	"gopkg.in/fsnotify.v1"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -104,15 +106,51 @@ func main() {
 	httpsMux := http.NewServeMux()
 	httpsMux.HandleFunc("/v1alpha1/gameserverallocation", h.postOnly(h.allocateHandler))
 
-	caCertPool, err := getCACertPool(certDir)
-	if err != nil {
-		logger.WithError(err).Fatal("could not get CA certs")
+	// creates a new file watcher for client certificate folder
+	watcher, _ := fsnotify.NewWatcher()
+	defer watcher.Close() // nolint: errcheck
+	if err := watcher.Add(certDir); err != nil {
+		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
 	}
 
-	cfg := &tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		ClientCAs:  caCertPool,
+	tlsCer, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
+	if err != nil {
+		logger.WithError(err).Fatal("server TLS could not be loaded")
 	}
+	caCertPool := loadCACertPool()
+
+	// Watching for the events in certificate directory for updating certificates, when there is a change
+	go func() {
+		for {
+			select {
+			// watch for events
+			case event := <-watcher.Events:
+				h.certMutex.Lock()
+				caCertPool = loadCACertPool()
+				logger.Infof("Certificate directory change event %v", event)
+				h.certMutex.Unlock()
+
+				// watch for errors
+			case err := <-watcher.Errors:
+				logger.WithError(err).Error("error watching for certificate directory")
+			}
+		}
+	}()
+
+	cfg := &tls.Config{
+		Certificates: []tls.Certificate{tlsCer},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
+			h.certMutex.RLock()
+			defer h.certMutex.RUnlock()
+			return &tls.Config{
+				Certificates: []tls.Certificate{tlsCer},
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+				ClientCAs:    caCertPool,
+			}, nil
+		},
+	}
+
 	srv := &http.Server{
 		Addr:      ":" + sslPort,
 		TLSConfig: cfg,
@@ -124,7 +162,8 @@ func main() {
 
 	// listen on https to serve allocations
 	go func() {
-		err := srv.ListenAndServeTLS(tlsDir+"tls.crt", tlsDir+"tls.key")
+		// The certs are set on the config so passing empty as the cert path
+		err := srv.ListenAndServeTLS("", "")
 		logger.WithError(err).Fatal("allocation service crashed")
 		os.Exit(1)
 	}()
@@ -133,6 +172,14 @@ func main() {
 	// this is used to serve /live and /ready handlers for Kubernetes probes.
 	err = http.ListenAndServe(":8080", http.DefaultServeMux)
 	logger.WithError(err).Fatal("allocation service crashed")
+}
+
+func loadCACertPool() *x509.CertPool {
+	caCertPool, err := getCACertPool(certDir)
+	if err != nil {
+		logger.WithError(err).Fatal("could not get CA certs")
+	}
+	return caCertPool
 }
 
 func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler) *httpHandler {
@@ -199,10 +246,12 @@ func getCACertPool(path string) (*x509.CertPool, error) {
 			certFile := filepath.Join(path, file.Name())
 			caCert, err := ioutil.ReadFile(certFile)
 			if err != nil {
-				return nil, fmt.Errorf("ca cert is not readable or missing: %s", err.Error())
+				logger.Errorf("ca cert is not readable or missing: %s", err.Error())
+				continue
 			}
 			if !caCertPool.AppendCertsFromPEM(caCert) {
-				return nil, fmt.Errorf("client cert %s cannot be installed", certFile)
+				logger.Errorf("client cert %s cannot be installed", certFile)
+				continue
 			}
 			logger.Infof("client cert %s is installed", certFile)
 		}
@@ -224,6 +273,7 @@ func (h *httpHandler) postOnly(in handler) handler {
 
 type httpHandler struct {
 	allocationCallback func(*allocationv1.GameServerAllocation) (k8sruntime.Object, error)
+	certMutex          sync.RWMutex
 }
 
 func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
