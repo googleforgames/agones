@@ -919,6 +919,7 @@ func TestControllerApplyGameServerAddressAndPort(t *testing.T) {
 
 func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 	t.Parallel()
+	nodeName := "node"
 	containerID := "1234"
 
 	t.Run("GameServer with ReadyRequest State", func(t *testing.T) {
@@ -927,10 +928,14 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
-		gsFixture.Status.NodeName = "node"
+		gsFixture.Status.NodeName = nodeName
 		pod, err := gsFixture.Pod()
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
-			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+			{
+				Name:        gsFixture.Spec.Container,
+				State:       corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+				ContainerID: containerID,
+			},
 		}
 		assert.Nil(t, err)
 		gsUpdated := false
@@ -967,7 +972,11 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		assert.Nil(t, err)
 		pod.Spec.NodeName = nodeFixtureName
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
-			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+			{
+				Name:        gsFixture.Spec.Container,
+				State:       corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+				ContainerID: containerID,
+			},
 		}
 		gsUpdated := false
 
@@ -1011,11 +1020,15 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
 		gsFixture.ApplyDefaults()
-		gsFixture.Status.NodeName = "node"
+		gsFixture.Status.NodeName = nodeName
 		gsFixture.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
 		pod, err := gsFixture.Pod()
 		pod.Status.ContainerStatuses = []corev1.ContainerStatus{
-			{Name: gsFixture.Spec.Container, ContainerID: containerID},
+			{
+				Name:        gsFixture.Spec.Container,
+				State:       corev1.ContainerState{Running: &corev1.ContainerStateRunning{}},
+				ContainerID: containerID,
+			},
 		}
 		assert.Nil(t, err)
 		gsUpdated := false
@@ -1051,6 +1064,34 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 			})
 		})
 	}
+
+	t.Run("GameServer whose pod is currently not in a running state, so should retry and not update", func(t *testing.T) {
+		c, m := newFakeController()
+
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		gsFixture.Status.NodeName = nodeName
+		pod, err := gsFixture.Pod()
+		pod.Status.ContainerStatuses = []corev1.ContainerStatus{{Name: gsFixture.Spec.Container}}
+		assert.Nil(t, err)
+		gsUpdated := false
+
+		m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			return true, nil, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.podSynced)
+		defer cancel()
+
+		_, err = c.syncGameServerRequestReadyState(gsFixture)
+		assert.EqualError(t, err, "game server container is not currently running, try again")
+		assert.False(t, gsUpdated, "GameServer was updated")
+	})
 
 	t.Run("GameServer with non zero deletion datetime", func(t *testing.T) {
 		testWithNonZeroDeletionTimestamp(t, func(c *Controller, fixture *agonesv1.GameServer) (*agonesv1.GameServer, error) {
