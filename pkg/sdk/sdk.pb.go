@@ -19,10 +19,10 @@
 package sdk
 
 import (
-	fmt "fmt"
-	math "math"
+	"fmt"
+	"math"
 
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	context "golang.org/x/net/context"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"

@@ -786,6 +786,11 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if _, ok := gs.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
+				// check to make sure this container is actually running. If there was a recent crash, the cache may
+				// not yet have the newer, running container.
+				if cs.State.Running == nil {
+					return nil, errors.New("game server container is not currently running, try again")
+				}
 				gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = cs.ContainerID
 			}
 			break

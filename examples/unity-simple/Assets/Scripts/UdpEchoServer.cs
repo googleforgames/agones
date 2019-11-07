@@ -73,6 +73,14 @@ namespace AgonesExample
 
                         echoBytes = Encoding.UTF8.GetBytes($"Allocate {ok}");
                         break;
+                    
+                    case "GameServer":
+                        var gameserver = await agones.GameServer();
+                        Debug.Log($"Server - GameServer {gameserver}");
+
+                        ok = gameserver != null;
+                        echoBytes = Encoding.UTF8.GetBytes(ok ? $"GameServer() Name: {gameserver.ObjectMeta.Name} {ok}" : $"GameServer(): {ok}");
+                        break;
 
                     case "Label":
                         if (recvTexts.Length == 3)
