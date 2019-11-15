@@ -62,7 +62,7 @@ namespace Agones
         private void Start()
         {
             String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
-            sidecarAddress = "http://localhost:" + (port ?? "59358");
+            sidecarAddress = "http://localhost:" + (port ?? "9358");
             HealthCheckAsync();
         }
 

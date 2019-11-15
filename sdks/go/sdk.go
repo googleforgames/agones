@@ -39,12 +39,12 @@ type SDK struct {
 }
 
 // NewSDK starts a new SDK instance, and connects to
-// localhost on port 59357. Blocks until connection and handshake are made.
+// localhost on port 9357. Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
 	p := os.Getenv("AGONES_SDK_GRPC_PORT")
 	if p == "" {
-		p = "59357"
+		p = "9357"
 	}
 	addr := fmt.Sprintf("localhost:%s", p)
 	s := &SDK{

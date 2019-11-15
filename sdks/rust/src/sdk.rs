@@ -33,11 +33,11 @@ pub struct Sdk {
 }
 
 impl Sdk {
-    /// Starts a new SDK instance, and connects to localhost on port 59357.
+    /// Starts a new SDK instance, and connects to localhost on port 9357.
     /// Blocks until connection and handshake are made.
     /// Times out after ~30 seconds.
     pub fn new() -> Result<Sdk> {
-        let port = env::var("AGONES_SDK_GRPC_PORT").unwrap_or("59357".to_string());
+        let port = env::var("AGONES_SDK_GRPC_PORT").unwrap_or("9357".to_string());
         let addr = format!("localhost:{}", port);
         let env = Arc::new(grpcio::EnvBuilder::new().build());
         let ch = grpcio::ChannelBuilder::new(env)

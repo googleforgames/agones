@@ -68,10 +68,10 @@ spec:
     #  - "Error" The SDK server will only output error messages
     logLevel: Info
     # grpcPort and httpPort control what ports the sdkserver listens on.
-    # The defaults in Agones 1.0 used high port numbers (in the ephemeral port
-    # range on most systems) which can conflict with other TCP connections
-    # within the pod. It is recommended to set these to a non-ephemeral port
-    # and the default port will be changed in a future release of Agones.
+    # Starting with Agones 1.2 the default grpcPort is 9357 and the default
+    # httpPort is 9358. In earlier releases, the defaults were 59357 and 59358
+    # respectively but as these were in the ephemeral port range they could
+    # conflict with other TCP connections.
     grpcPort: 9357
     httpPort: 9358
   # Pod template configuration

@@ -29,7 +29,7 @@ describe('agones', () => {
 	describe('port', () => {
 		it('returns the default port if $AGONES_SDK_GRPC_PORT is not defined', async () => {
 			let port = agonesSDK.port;
-			expect(port).toEqual('59357');
+			expect(port).toEqual('9357');
 		});
 
 		it('returns a valid port set in $AGONES_SDK_GRPC_PORT', async () => {

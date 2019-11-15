@@ -96,8 +96,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -124,8 +124,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -151,8 +151,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					},
 					SdkServer: SdkServer{
 						LogLevel: SdkServerLogLevelInfo,
-						GRPCPort: 59357,
-						HTTPPort: 59358,
+						GRPCPort: 9357,
+						HTTPPort: 9358,
 					},
 				},
 				Status: GameServerStatus{State: "TestState"}},
@@ -170,8 +170,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -196,8 +196,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -220,8 +220,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -249,8 +249,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				health:     Health{Disabled: true},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelInfo,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -278,8 +278,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelDebug,
-					GRPCPort: 59357,
-					HTTPPort: 59358,
+					GRPCPort: 9357,
+					HTTPPort: 9358,
 				},
 			},
 		},
@@ -289,8 +289,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					Ports: []GameServerPort{{ContainerPort: 999}},
 					SdkServer: SdkServer{
 						LogLevel: SdkServerLogLevelError,
-						GRPCPort: 9357,
-						HTTPPort: 9358,
+						GRPCPort: 19357,
+						HTTPPort: 19358,
 					},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
@@ -311,8 +311,8 @@ func TestGameServerApplyDefaults(t *testing.T) {
 				},
 				sdkServer: SdkServer{
 					LogLevel: SdkServerLogLevelError,
-					GRPCPort: 9357,
-					HTTPPort: 9358,
+					GRPCPort: 19357,
+					HTTPPort: 19358,
 				},
 			},
 		},
