@@ -73,6 +73,38 @@ namespace Agones
         #endregion
 
         #region AgonesRestClient Public Methods
+
+        /// <summary>
+        /// Async method that waits to connect to the SDK Server. Will timeout
+        /// and return false after 30 seconds.
+        /// </summary>
+        /// <returns>A task that indicated whether it was successful or not</returns>
+        public async Task<bool> Connect()
+        {
+            for (var i = 0; i < 30; i++)
+            {
+                Log($"Attempting to connect...{i + 1}");
+                try
+                {
+                    var gameServer = await GameServer();
+                    if (gameServer != null)
+                    {
+                        Log("Connected!");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Connection exception: {ex.Message}");    
+                }
+                
+                Log("Connection failed, retrying.");
+                await Task.Delay(1000);
+            }
+
+            return false;
+        }
+        
         /// <summary>
         /// Marks this Game Server as ready to receive connections.
         /// </summary>

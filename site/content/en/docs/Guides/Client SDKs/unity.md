@@ -31,6 +31,17 @@ To begin working with the SDK, get an instance of it.
 var agones = agonesGameObject.GetComponent<Agones.AgonesSdk>();
 ```
 
+{{% feature publishVersion="1.2.0" %}}
+
+To connect to the SDK server, either local or when running on Agones, run the async `Connect()` method.
+This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
+and will return `false` if there was an issue connecting.
+
+```csharp
+bool ok = await agones.Connect();
+```
+{{% /feature %}}
+
 To mark the game server as [ready to receive player connections]({{< relref "_index.md#ready" >}}), call the async method `Ready()`.
 
 ```csharp
