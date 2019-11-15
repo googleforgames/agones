@@ -63,7 +63,7 @@ the new version.
 Helm features capabilities for upgrading to newer versions of Agones without having to delete the older version or your
 existing Fleets.
 
-For details on how to use Helm for upgrades, see the [helm upgrade](https://helm.sh/docs/helm/#helm-upgrade) documentation.
+For details on how to use Helm for upgrades, see the [helm upgrade](https://v2.helm.sh/docs/helm/#helm-upgrade) documentation.
 
 Given the above, the steps for upgrade are simpler:
 
