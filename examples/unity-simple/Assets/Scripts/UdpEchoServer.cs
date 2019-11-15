@@ -33,7 +33,18 @@ namespace AgonesExample
             client = new UdpClient(Port);
 
             agones = GetComponent<AgonesSdk>();
-            bool ok = await agones.Ready();
+            bool ok = await agones.Connect();
+            if (ok)
+            {
+                Debug.Log(("Server - Connected"));
+            }
+            else
+            {
+                Debug.Log(("Server - Failed to connect, exiting"));
+                Application.Quit(1);
+            }
+            
+            ok = await agones.Ready();
             if (ok)
             {
                 Debug.Log($"Server - Ready");
