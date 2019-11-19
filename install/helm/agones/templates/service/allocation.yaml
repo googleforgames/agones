@@ -122,6 +122,10 @@ spec:
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
+{{- if .Values.agones.image.controller.pullSecret }}
+      imagePullSecrets:
+        - name: {{.Values.agones.image.controller.pullSecret}}
+{{- end }}
 
 ---
 # Create a ClusterRole in that grants access to the agones allocation api
