@@ -117,7 +117,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
-| `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
+| `agones.image.controller.pullSecret`                | Image pull secret for the controller, allocator, sdk and ping image. Should be created both in `agones-system` and `default` namespaces | ``                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
 | `agones.image.sdk.cpuRequest`                       | The [cpu request][constraints] for sdk server container                                         | `30m`                  |
 | `agones.image.sdk.cpuLimit`                         | The [cpu limit][constraints] for the sdk server container                                       | `0` (none)             |
