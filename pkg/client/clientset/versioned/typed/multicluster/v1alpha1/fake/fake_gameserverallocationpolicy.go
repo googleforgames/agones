@@ -119,7 +119,7 @@ func (c *FakeGameServerAllocationPolicies) DeleteCollection(options *v1.DeleteOp
 // Patch applies the patch and returns the patched gameServerAllocationPolicy.
 func (c *FakeGameServerAllocationPolicies) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameServerAllocationPolicy, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, name, data, subresources...), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GameServerAllocationPolicy{})
 
 	if obj == nil {
 		return nil, err
