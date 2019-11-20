@@ -9,7 +9,7 @@ description: >
 ---
 
 To make latency testing easier, Agones installs with a simple ping service with both HTTP and UDP services that can be called
-  for the purpose of timing how long the rountrip takes for information to be returned from either of these services.
+  for the purpose of timing how long the roundtrip takes for information to be returned from either of these services.
 
 ## Installing
 

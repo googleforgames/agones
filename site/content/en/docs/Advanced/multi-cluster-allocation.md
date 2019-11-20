@@ -67,7 +67,7 @@ The certificates are base 64 string of the certificate file e.g. `cat ${CERT_FIL
 
 `ca.crt` is the server TLS public certificate if it is self-signed. For simplicity, it is recommended to use one client secret per cluster and make `ca.crt` bundle of server certificates.
 
-2. Add client CA to the list of authorized client certificates by agones-allocator in the targetted cluster.
+2. Add client CA to the list of authorized client certificates by agones-allocator in the targeted cluster.
 
 ```bash
 cat <<EOF | kubectl apply -f -

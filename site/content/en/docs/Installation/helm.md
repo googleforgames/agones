@@ -31,7 +31,7 @@ _We recommend to install Agones in its own namespaces (like `agones-system` as s
 you can use the helm `--namespace` parameter to specify a different namespace._
 
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
-run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
+run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -110,7 +110,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
-| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
+| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with Stackdriver                              | ``                     |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -204,7 +204,7 @@ You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}val
 
 ## TLS Certificates
 
-By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
+By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
 For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
