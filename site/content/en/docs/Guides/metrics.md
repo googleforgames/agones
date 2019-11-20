@@ -9,7 +9,7 @@ Agones controller exposes metrics via [OpenCensus](https://opencensus.io/). Open
 We choose to start with [Prometheus](https://prometheus.io/) as this is the most popular with Kubernetes but it is also compatible with Stackdriver.
 If you need another exporter, check the [list of supported](https://opencensus.io/exporters/supported-exporters/go/) exporters. It should be pretty straightforward to register a new one. (GitHub PRs are more than welcome.)
 
-We plan to support multiple exporters in the future via environement variables and helm flags.
+We plan to support multiple exporters in the future via environment variables and helm flags.
 
 ## Backend integrations
 

@@ -15,10 +15,10 @@ description: >
 The following are strategies for safely upgrading Agones from one version to another. They may require adjustment to 
 your particular game architecture but should provide a solid foundation for updating Agones safely.
 
-The recommended approach is to use [multiple clusters](#multiple-clusters), such that the upgrade can be tested
+The recommended approach is to use [multiple clusters](#upgrading-agones-multiple-clusters), such that the upgrade can be tested
 gradually with production load and easily rolled back if need arises.
 
-### Multiple Clusters
+### Upgrading Agones: Multiple Clusters
 
 We essentially want to transition our GameServer allocations from a cluster with the old version of Agones,
 to a cluster with the upgraded version of Agones while ensuring nothing surprising 
@@ -37,7 +37,7 @@ The following are steps to implement this:
 6. Once you are comfortable with the stability of the new cluster with the new Agones version, shut down the old cluster.
 7. Congratulations - you have now upgraded to a new version of Agones! 👍
 
-### Single Cluster
+### Upgrading Agones: Single Cluster
 
 If you are upgrading a single cluster, we recommend creating a maintenance window, in which your game goes offline
 for the period of your upgrade, as there will be a short period in which Agones will be non-responsive during the upgrade.
@@ -78,7 +78,7 @@ Given the above, the steps for upgrade are simpler:
 The following are strategies for safely upgrading the underlying Kubernetes cluster from one version to another.
 They may require adjustment to your particular game architecture but should provide a solid foundation for updating your cluster safely.
 
-The recommended approach is to use [multiple clusters](#multiple-clusters-1), such that the upgrade can be tested
+The recommended approach is to use [multiple clusters](#multiple-clusters), such that the upgrade can be tested
 gradually with production load and easily rolled back if need arises.
 
 Agones currently has only a [single supported Kubernetes version]({{< relref "_index.md#usage-requirements" >}}) for each version,
@@ -88,7 +88,7 @@ Patch upgrades (e.g. 1.12.1 ➡ 1.12.3) within the same minor version of Kuberne
 
 ### Multiple Clusters
 
-This process is very similar to the [Agones: Multiple Cluster](#multiple-clusters) approach above.
+This process is very similar to the [Upgrading Agones: Multiple Clusters](#upgrading-agones-multiple-clusters) approach above.
 
 We essentially want to transition our GameServer allocations from a cluster with the old version of Kubernetes,
 to a cluster with the upgraded version of Kubernetes while ensuring nothing surprising 

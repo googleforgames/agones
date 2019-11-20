@@ -74,7 +74,7 @@ kubectl get nodes
 
 You should have 6 nodes in `Ready` state.
 
-To verify that Agones was installed sucessfully, check for any gameservers:
+To verify that Agones was installed successfully, check for any gameservers:
 ```
 kubectl get gameservers
 ```
