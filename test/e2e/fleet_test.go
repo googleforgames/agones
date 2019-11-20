@@ -223,7 +223,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 					assert.Nil(t, err)
 					target := float64(targetScale)
 					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
-						err = errors.New("New replicas should be less then target + maxSurge + maxUnavailable")
+						err = errors.New("New replicas should be less than target + maxSurge + maxUnavailable")
 					}
 					if err != nil {
 						return false, err
@@ -751,6 +751,7 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 	client := framework.AgonesClient.AgonesV1()
 	fleetCount := 2
 	fleetSize := int32(10)
+	defaultReplicas := int32(1)
 	repeatCount := 3
 	deadline := time.Now().Add(1 * time.Minute)
 
@@ -782,8 +783,8 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 			// even-numbered fleets starts at fleetSize and are scaled down to zero and back.
 			flt.Spec.Replicas = fleetSize
 		} else {
-			// odd-numbered fleets starts at zero and are scaled up to fleetSize and back.
-			flt.Spec.Replicas = 0
+			// odd-numbered fleets starts at default 1 replica and are scaled up to fleetSize and back.
+			flt.Spec.Replicas = defaultReplicas
 		}
 
 		flt, err := client.Fleets(defaultNs).Create(flt)
@@ -798,7 +799,7 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 		if fleetNumber%2 == 0 {
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(fleetSize))
 		} else {
-			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
+			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(defaultReplicas))
 		}
 	}
 	errors := make(chan error)
