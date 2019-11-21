@@ -33,6 +33,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1betaext "k8s.io/api/extensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -48,6 +49,33 @@ const (
 	green         = "green"
 	replicasCount = 3
 )
+
+// TestFleetRequestsLimits reproduces an issue when 1000m and 1 CPU is not equal, but should be equal
+// Every fleet should create no more than 2 GameServerSet at once on a simple fleet patch
+func TestFleetRequestsLimits(t *testing.T) {
+	t.Parallel()
+
+	flt := defaultFleet(defaultNs)
+	flt.Spec.Template.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = *resource.NewScaledQuantity(1000, -3)
+
+	client := framework.AgonesClient.AgonesV1()
+	flt, err := client.Fleets(defaultNs).Create(flt)
+	if assert.Nil(t, err) {
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	newReplicas := int32(5)
+	patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/template/spec/template/spec/containers/0/resources/requests/cpu", "value": "1000m"},
+				{ "op": "replace", "path": "/spec/replicas", "value": %d}]`, newReplicas)
+
+	_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Patch(flt.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	assert.Nil(t, err)
+
+	// In bug scenario fleet was infinitely creating new GSSets (5 at a time), because 1000m CPU was changed to 1 CPU
+	// internally - thought as new wrong GSSet in a Fleet Controller
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(newReplicas))
+}
 
 func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	t.Parallel()
