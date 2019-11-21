@@ -95,16 +95,16 @@ namespace Agones
                 }
                 catch (Exception ex)
                 {
-                    Log($"Connection exception: {ex.Message}");    
+                    Log($"Connection exception: {ex.Message}");
                 }
-                
+
                 Log("Connection failed, retrying.");
                 await Task.Delay(1000);
             }
 
             return false;
         }
-        
+
         /// <summary>
         /// Marks this Game Server as ready to receive connections.
         /// </summary>
@@ -183,9 +183,34 @@ namespace Agones
             return await SendRequestAsync("/metadata/annotation", json, UnityWebRequest.kHttpVerbPUT)
                 .ContinueWith(task => task.Result.ok);
         }
+
+        private struct Duration
+        {
+            public int seconds;
+
+            public Duration(int seconds)
+            {
+                this.seconds = seconds;
+            }
+        }
+
+        /// <summary>
+        /// Move the GameServer into the Reserved state for the specified Timespan (0 seconds is forever)
+        /// Smallest unit is seconds.
+        /// </summary>
+        /// <param name="duration">The time span to reserve for</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation and returns true if the request was successful
+        /// </returns>
+        public async Task<bool> Reserve(TimeSpan duration)
+        {
+            string json = JsonUtility.ToJson(new Duration(seconds: duration.Seconds));
+            return await SendRequestAsync("/reserve", json).ContinueWith(task => task.Result.ok);
+        }
         #endregion
 
         #region AgonesRestClient Private Methods
+
         private async void HealthCheckAsync()
         {
             while (healthEnabled)

@@ -60,6 +60,14 @@ Will return `null` if there is an error in retrieving the `GameServer` record.
 ```csharp
 var gameserver = await agones.GameServer();
 ```
+
+To mark the GameServer as [Reserved]({{< relref "_index.md#reserve-seconds" >}}) for a duration call 
+`Reserve(TimeSpan duration)`.
+
+```csharp
+ok = await agones.Reserve(duration);
+```
+
 {{% /feature %}}
 
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `Shutdown()`.

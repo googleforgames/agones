@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Agones;
 using System.Net;
 using System.Net.Sockets;
@@ -120,6 +121,20 @@ namespace AgonesExample
                         else
                         {
                             echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Annotation command, must use 2 arguments");
+                        }
+                        break;
+                    case "Reserve":
+                        if (recvTexts.Length == 2)
+                        {
+                            TimeSpan duration = new TimeSpan(0, 0, Int32.Parse(recvTexts[1]));
+                            ok = await agones.Reserve(duration);
+                            Debug.Log($"Server - Reserve({recvTexts[1]} {ok}");
+                            
+                            echoBytes = Encoding.UTF8.GetBytes($"Reserve({recvTexts[1]}) {ok}");
+                        }
+                        else
+                        {
+                            echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Reserve command, must use 1 argument");
                         }
                         break;
                     default:
