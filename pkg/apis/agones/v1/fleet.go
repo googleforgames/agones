@@ -55,8 +55,8 @@ type FleetList struct {
 
 // FleetSpec is the spec for a Fleet
 type FleetSpec struct {
-	// Replicas are the number of GameServers that should be in this set
-	Replicas int32 `json:"replicas"`
+	// Replicas are the number of GameServers that should be in this set. Defaults to 1
+	Replicas int32 `json:"replicas,omitempty"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
@@ -110,6 +110,9 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 
 // ApplyDefaults applies default values to the Fleet
 func (f *Fleet) ApplyDefaults() {
+	if f.Spec.Replicas == 0 {
+		f.Spec.Replicas = 1
+	}
 	if f.Spec.Strategy.Type == "" {
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 	}

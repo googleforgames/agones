@@ -20,7 +20,7 @@ kind: Fleet
 metadata:
   name: fleet-example
 spec:
-  # the number of GameServers to keep Ready or Allocated in this Fleet
+  # the number of GameServers to keep Ready or Allocated in this Fleet. {{% feature publishVersion="1.2.0" %}}Defaults to 1{{% /feature %}}
   replicas: 2
   # defines how GameServers are organised across the cluster.
   # Options include:

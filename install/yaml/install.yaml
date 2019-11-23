@@ -242,7 +242,6 @@ spec:
       properties:
         spec:
           required:
-            - replicas
             - template
           properties:
             replicas:
