@@ -9,6 +9,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.1
 	github.com/aws/aws-sdk-go v1.16.20 // indirect
+	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-openapi/spec v0.19.0
 	github.com/gogo/protobuf v1.2.1 // indirect
@@ -29,6 +30,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
+	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2
@@ -49,11 +51,12 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0-20170531160350-a96e63847dc3
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20190708094356-59223ed9f6ce // kubernetes-1.12.10
-	k8s.io/apiextensions-apiserver v0.0.0-20190708094842-2e94e9ac9840 // kubernetes-1.12.10
-	k8s.io/apimachinery v0.0.0-20190221084156-01f179d85dbc // kubernetes-1.12.10
-	k8s.io/client-go v9.0.0+incompatible // kubernetes-1.12.10
-	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058 // indirect; indirect kubernetes-1.12.10
+	k8s.io/api v0.0.0-20191004102255-dacd7df5a50b // kubernetes-1.13.12
+	k8s.io/apiextensions-apiserver v0.0.0-20191004105443-a7d558db75c6 // kubernetes-1.13.12
+	k8s.io/apimachinery v0.0.0-20191004074956-01f8b7d1121a // kubernetes-1.13.12
+	k8s.io/client-go v0.0.0-20191004102537-eb5b9a8cfde7 // kubernetes-1.13.12
+	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058 // indirect
+	sigs.k8s.io/yaml v1.1.0 // indirect
 )
 
 replace k8s.io/apimachinery => ./vendor_fixes/k8s.io/apimachinery

@@ -43,11 +43,13 @@ var (
 	cacheItemsInWatchesCountStats = stats.Float64("cache/watch_events", "Number of items in watches on the Kubernetes API.", "1")
 	cacheLastResourceVersionStats = stats.Float64("cache/last_resource_version", "Last resource version from the Kubernetes API.", "1")
 
-	workQueueDepthStats        = stats.Float64("workqueue/depth", "Current depth of the work queue.", "1")
-	workQueueItemsTotalStats   = stats.Float64("workqueue/items_total", "Total number of items added to the work queue.", "1")
-	workQueueLatencyStats      = stats.Float64("workqueue/latency", "How long an item stays in the work queue.", "s")
-	workQueueWorkDurationStats = stats.Float64("workqueue/work_duration", "How long processing an item from the work queue takes.", "s")
-	workQueueRetriesTotalStats = stats.Float64("workqueue/retries_total", "Total number of items retried to the work queue.", "1")
+	workQueueDepthStats                   = stats.Float64("workqueue/depth", "Current depth of the work queue.", "1")
+	workQueueItemsTotalStats              = stats.Float64("workqueue/items_total", "Total number of items added to the work queue.", "1")
+	workQueueLatencyStats                 = stats.Float64("workqueue/latency", "How long an item stays in the work queue.", "s")
+	workQueueWorkDurationStats            = stats.Float64("workqueue/work_duration", "How long processing an item from the work queue takes.", "s")
+	workQueueRetriesTotalStats            = stats.Float64("workqueue/retries_total", "Total number of items retried to the work queue.", "1")
+	workQueueLongestRunningProcessorStats = stats.Float64("workqueue/longest_running_processor", "How long the longest workqueue processors been running in microseconds.", "1")
+	workQueueUnfinishedWorkStats          = stats.Float64("workqueue/unfinished_work", "How long has unfinished work been in the workqueue.", "1")
 )
 
 func init() {
@@ -161,6 +163,22 @@ func init() {
 		Measure:     workQueueRetriesTotalStats,
 		Description: "Total number of items retried to the work queue.",
 		Aggregation: view.Count(),
+		TagKeys:     []tag.Key{keyQueueName},
+	}))
+
+	runtime.Must(view.Register(&view.View{
+		Name:        "k8s_client_workqueue_longest_running_processor",
+		Measure:     workQueueLongestRunningProcessorStats,
+		Description: "How long the longest running workqueue processor has been running in microseconds.",
+		Aggregation: view.LastValue(),
+		TagKeys:     []tag.Key{keyQueueName},
+	}))
+
+	runtime.Must(view.Register(&view.View{
+		Name:        "k8s_client_workqueue_unfinished_work_seconds",
+		Measure:     workQueueUnfinishedWorkStats,
+		Description: "How long unfinished work has been sitting in the workqueue in seconds.",
+		Aggregation: view.LastValue(),
 		TagKeys:     []tag.Key{keyQueueName},
 	}))
 
@@ -292,4 +310,12 @@ func (clientGoMetricAdapter) NewWorkDurationMetric(name string) workqueue.Summar
 
 func (clientGoMetricAdapter) NewRetriesMetric(name string) workqueue.CounterMetric {
 	return newOcMetric(workQueueRetriesTotalStats).withTag(keyQueueName, name)
+}
+
+func (clientGoMetricAdapter) NewLongestRunningProcessorMicrosecondsMetric(string) workqueue.SettableGaugeMetric {
+	return newOcMetric(workQueueLongestRunningProcessorStats)
+}
+
+func (clientGoMetricAdapter) NewUnfinishedWorkSecondsMetric(string) workqueue.SettableGaugeMetric {
+	return newOcMetric(workQueueUnfinishedWorkStats)
 }

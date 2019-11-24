@@ -4435,7 +4435,7 @@ string
 <td>
 <em>(Optional)</em>
 <p><code>url</code> gives the location of the webhook, in standard URL form
-(<code>[scheme://]host:port/path</code>). Exactly one of <code>url</code> or <code>service</code>
+(<code>scheme://host:port/path</code>). Exactly one of <code>url</code> or <code>service</code>
 must be specified.</p>
 <p>The <code>host</code> should not refer to a service running in the cluster; use
 the <code>service</code> field instead. The host might be resolved via external
@@ -4481,9 +4481,9 @@ Kubernetes admissionregistration/v1beta1.ServiceReference
 </em>
 </td>
 <td>
-<p><code>caBundle</code> is a PEM encoded CA bundle which will be used to validate
-the webhook&rsquo;s server certificate.
-Required.</p>
+<em>(Optional)</em>
+<p><code>caBundle</code> is a PEM encoded CA bundle which will be used to validate the webhook&rsquo;s server certificate.
+If unspecified, system trust roots on the apiserver are used.</p>
 </td>
 </tr>
 </tbody>
