@@ -22,14 +22,15 @@ spec:
   fleetName: fleet-example
   # The autoscaling policy
   policy:
-    # type of the policy. for now, only Buffer is available
+    # type of the policy. Buffer or Webhook types are available
     type: Buffer
     # parameters of the buffer policy
     buffer:
-      # Size of a buffer of "ready" game server instances
+      # Size of a buffer of "ready" and "reserved" game server instances.
       # The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
-      # as instances are being allocated or terminated
-      # it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+      # as instances are being allocated or terminated.
+      # Note that "reserved" game servers could not be scaled down.
+      # It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
       bufferSize: 5
       # minimum fleet size to be set by this FleetAutoscaler. 
       # if not specified, the actual minimum fleet size will be bufferSize
@@ -75,10 +76,11 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
 - `policy` is the autoscaling policy
   - `type` is type of the policy. "Buffer" and "Webhook" are available
   - `buffer` parameters of the buffer policy type
-    - `bufferSize`  is the size of a buffer of "ready" game server instances
+    - `bufferSize`  is the size of a buffer of "ready" and "reserved" game server instances.
                     The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
-                    as instances are being allocated or terminated
-                    it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+                    as instances are being allocated or terminated.
+                    Note that "reserved" game servers could not be scaled down.
+                    It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
     - `minReplicas` is the minimum fleet size to be set by this FleetAutoscaler. 
                     if not specified, the minimum fleet size will be bufferSize if absolute value is used.
                     When `bufferSize` in percentage format is used, `minReplicas` should be more than 0.
