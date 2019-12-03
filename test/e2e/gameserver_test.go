@@ -335,13 +335,23 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 
 	address := fmt.Sprintf("%s:%d", readyGs.Status.Address, readyGs.Status.Ports[0].Port)
-	conn, err := net.Dial("udp", address)
-	assert.NoError(t, err)
-	defer conn.Close() // nolint: errcheck
-	_, err = conn.Write([]byte("CRASH"))
-	assert.NoError(t, err)
-	l.WithField("address", address).Info("sent UDP packet")
 
+	// keep crashing, until we move to Unhealthy. Solves potential issues with controller Informer cache
+	// race conditions in which it has yet to see a GameServer is Ready before the crash.
+	go func() {
+		for {
+			conn, err := net.Dial("udp", address)
+			assert.NoError(t, err)
+			defer conn.Close() // nolint: errcheck
+			_, err = conn.Write([]byte("CRASH"))
+			if err != nil {
+				l.WithError(err).Warn("error sending udp packet. Stopping.")
+				return
+			}
+			l.WithField("address", address).Info("sent UDP packet")
+			time.Sleep(5 * time.Second)
+		}
+	}()
 	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
 }
