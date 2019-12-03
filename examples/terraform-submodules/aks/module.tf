@@ -27,14 +27,14 @@ variable "cluster_name" {
 variable "machine_type" {default = "Standard_D2_v2"}
 
 module "aks_cluster" {
-  source = "git::https://github.com/googleforgames/agones.git//build/modules/aks/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=master"
   
   machine_type = "${var.machine_type}"
   cluster_name = "${var.cluster_name}"
 }
 
 module "helm_agones" {
-  source = "git::https://github.com/googleforgames/agones.git//build/modules/helm/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
   
   agones_version = "${var.agones_version}"
   values_file=""

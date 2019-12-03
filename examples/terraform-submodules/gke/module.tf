@@ -40,7 +40,7 @@ variable "node_count" {
 }
 
 module "agones" {
-  source = "git::https://github.com/googleforgames/agones.git//build/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/?ref=master"
   
   cluster = {
       "zone"             = "us-west1-c"

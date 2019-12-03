@@ -15,7 +15,7 @@
 #Helm variables
 
 variable "chart" {
-  default = "../../../install/helm/agones/"
+  default = "../../../helm/agones/"
 }
 
 variable "agones_version" {
@@ -58,5 +58,5 @@ variable "ping_service_type" {
 }
 
 variable "values_file" {
-  default = "../../../install/helm/agones/values.yaml"
+  default = "../../../helm/agones/values.yaml"
 }
