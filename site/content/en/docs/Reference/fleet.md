@@ -71,7 +71,7 @@ spec:
             image: gcr.io/agones-images/udp-server:0.17
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
