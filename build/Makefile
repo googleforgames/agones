@@ -344,7 +344,7 @@ build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-lice
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build sidecar image only
-build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux
+build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the ping service
