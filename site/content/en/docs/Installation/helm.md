@@ -13,7 +13,7 @@ description: >
 {{% feature expiryVersion="1.2.0" %}}
 - Kubernetes 1.11+
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 - Kubernetes 1.13
 {{% /feature %}}
 - Role-based access controls (RBAC) activated

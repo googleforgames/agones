@@ -44,7 +44,7 @@ $ ./sdk-server.linux.amd64 --local
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:46:18.179459+03:00"}
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```console
 $ ./sdk-server.linux.amd64 --local
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
@@ -86,7 +86,7 @@ $ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
 {"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```console
 $ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 $ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
@@ -124,7 +124,7 @@ $ curl -GET "http://localhost:59358/gameserver" -H "accept: application/json"}"
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```console
 $ curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
 {}
