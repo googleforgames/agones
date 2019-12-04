@@ -31,7 +31,7 @@ If no dedicated nodes are available, Agones will run on regular nodes.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 {{% /feature %}}
 
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 - Kubernetes cluster version 1.13
     - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
@@ -52,7 +52,7 @@ Agones will update its support to n-1 version of what is available across all ma
 {{< /alert >}}
 {{% /feature %}}
 
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 {{< alert title="Warning" color="warning">}}
 Later versions of Kubernetes may work, but this project is tested against 1.13, and is therefore the supported version.
 Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
@@ -135,7 +135,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
   --machine-type=n1-standard-4
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.13 \
   --tags=game-server \
@@ -151,7 +151,7 @@ Flag explanations:
 {{% feature expiryVersion="1.2.0" %}}
 * cluster-version: Agones requires Kubernetes version 1.12.
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 * cluster-version: Agones requires Kubernetes version 1.13.
 {{% /feature %}}
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
@@ -247,7 +247,7 @@ replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) o
 minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```bash
 minikube start --kubernetes-version v1.13.12 --vm-driver virtualbox
 ```
@@ -280,7 +280,7 @@ eksctl create cluster \
 --node-ami auto
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```
 eksctl create cluster \
 --name prod \
@@ -347,7 +347,7 @@ sudo az aks install-cli
 az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
 ```
 {{% /feature %}}
-{{% feature publishversion="1.2.0" %}}
+{{% feature publishVersion="1.2.0" %}}
 ```bash
 # Declare necessary variables, modify them according to your needs
 AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
