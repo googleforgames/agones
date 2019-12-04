@@ -1,4 +1,9 @@
 {{- $version := getenv "RELEASE_VERSION" | default $.Page.Site.Params.release_version }}
+
+{{- with or (.Get "publishVersion") (.Get "expiryVersion")}}
+{{- else }}
+    {{ errorf "missing value for either publishVersion or expiryVersion: %s" .Position}}
+{{- end}}
 {{- $publishVersion := (.Get "publishVersion" ) | default "0.0.0" }}
 {{- $expiryVersion := (.Get "expiryVersion") | default "9999.0.0"}}
 {{- $publDigits := split $publishVersion "." }}
