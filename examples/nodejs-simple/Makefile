@@ -44,3 +44,7 @@ build:
 
 run:
 	docker run --network=host $(server_tag)
+
+# check if hosted on Google Cloud Registry
+gcr-check:
+	gcloud container images describe $(server_tag)

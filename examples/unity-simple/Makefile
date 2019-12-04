@@ -39,3 +39,7 @@ server_tag = $(REPOSITORY)/unity-simple-server:0.3
 
 build-image:
 	docker build $(project_path) --tag=$(server_tag)
+
+# check if hosted on Google Cloud Registry
+gcr-check:
+	gcloud container images describe $(server_tag)

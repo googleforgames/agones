@@ -13,22 +13,8 @@
 # limitations under the License.
 
 #
-# Makefile for building a simple tcp server
+# Include for managing the examples
 #
-
-#  __     __         _       _     _
-#  \ \   / /_ _ _ __(_) __ _| |__ | | ___ ___
-#   \ \ / / _` | '__| |/ _` | '_ \| |/ _ \ __|
-#    \ V / (_| | |  | | (_| | |_) | |  __\__ \
-#     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
-#
-
-REPOSITORY = gcr.io/agones-images
-
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/tcp-server:0.3
-root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -37,10 +23,11 @@ root_path = $(realpath $(project_path)/../..)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# Build a docker image for the server, and tag it
-build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
+# test all example images exist on Google Cloud Registry
+test-examples-on-gcr: example-image-test.autoscaler-webhook example-image-test.cpp-simple
+test-examples-on-gcr: example-image-test.nodejs-simple example-image-test.rust-simple example-image-test.simple-tcp
+test-examples-on-gcr: example-image-test.simple-udp example-image-test.unity-simple example-image-test.xonotic
 
-# check if hosted on Google Cloud Registry
-gcr-check:
-	gcloud container images describe $(server_tag)
+# Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
+example-image-test.%:
+	$(DOCKER_RUN) bash -c "cd examples/$* && make gcr-check"
