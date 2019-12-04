@@ -1,5 +1,74 @@
 # Changelog
 
+## [v1.2.0-rc](https://github.com/googleforgames/agones/tree/v1.2.0-rc) (2019-12-04)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.1.0...v1.2.0-rc)
+
+**Breaking changes:**
+
+- Update client-go to kubernetes-1.13.12 [\#1189](https://github.com/googleforgames/agones/pull/1189) ([heartrobotninja](https://github.com/heartrobotninja))
+- Update the default gRPC and HTTP ports for the sdkserver for the 1.2.0 release [\#1180](https://github.com/googleforgames/agones/pull/1180) ([roberthbailey](https://github.com/roberthbailey))
+- Update terraform configs to use Kubernetes 1.13 [\#1179](https://github.com/googleforgames/agones/pull/1179) ([roberthbailey](https://github.com/roberthbailey))
+- Update documentation for the 1.2 release to use Kubernetes 1.13. [\#1178](https://github.com/googleforgames/agones/pull/1178) ([roberthbailey](https://github.com/roberthbailey))
+- Update minikube and KIND developer tooling to Kubernetes 1.13 [\#1177](https://github.com/googleforgames/agones/pull/1177) ([roberthbailey](https://github.com/roberthbailey))
+- Update the prow cluster to use Kubernetes 1.13 [\#1176](https://github.com/googleforgames/agones/pull/1176) ([roberthbailey](https://github.com/roberthbailey))
+- Update GKE development tooling to Kubernetes 1.13 [\#1175](https://github.com/googleforgames/agones/pull/1175) ([roberthbailey](https://github.com/roberthbailey))
+
+**Implemented enhancements:**
+
+- Upgrade to Kubernetes 1.13 [\#1044](https://github.com/googleforgames/agones/issues/1044)
+- Local SDK Server should update internal GameServer on Ready\(\), Allocate\(\) etc. [\#958](https://github.com/googleforgames/agones/issues/958)
+- Error checking of attributes on feature shortcode [\#1205](https://github.com/googleforgames/agones/pull/1205) ([markmandel](https://github.com/markmandel))
+- Implement Reserve for Unity [\#1193](https://github.com/googleforgames/agones/pull/1193) ([markmandel](https://github.com/markmandel))
+- Add ImagePullSecrets for Allocator and Ping \(helm\) [\#1190](https://github.com/googleforgames/agones/pull/1190) ([aLekSer](https://github.com/aLekSer))
+- Implementation of Unity SDK.Connect\(\) [\#1181](https://github.com/googleforgames/agones/pull/1181) ([markmandel](https://github.com/markmandel))
+- Implementation of GameServer\(\) for Unity [\#1169](https://github.com/googleforgames/agones/pull/1169) ([markmandel](https://github.com/markmandel))
+- Add Spec and Health data to default local sdk GameServer [\#1166](https://github.com/googleforgames/agones/pull/1166) ([markmandel](https://github.com/markmandel))
+- Refresh client CA certificate if changed [\#1145](https://github.com/googleforgames/agones/pull/1145) ([pooneh-m](https://github.com/pooneh-m))
+
+**Fixed bugs:**
+
+- Undocumented dependencies for make run-sdk-conformance-local [\#1199](https://github.com/googleforgames/agones/issues/1199)
+- Documentation: FleetAutoScaler BufferSize could contain both Ready and Reserved GameServers [\#1195](https://github.com/googleforgames/agones/issues/1195)
+- \[helm\] Missing imagePullSecrets Option in agones-ping Deployment [\#1185](https://github.com/googleforgames/agones/issues/1185)
+- Agones fails to start the pod after update cpu limits to 1000m [\#1184](https://github.com/googleforgames/agones/issues/1184)
+- RollingUpdate shuts down all servers at once [\#1156](https://github.com/googleforgames/agones/issues/1156)
+- CI: Build cache cpp-sdk-build contains unnecessary archives [\#1136](https://github.com/googleforgames/agones/issues/1136)
+- Segfault with C++ SDK [\#999](https://github.com/googleforgames/agones/issues/999)
+- Game server container crash before Ready, should restart, not move to Unhealthy [\#956](https://github.com/googleforgames/agones/issues/956)
+- Sidecar occasionally fails to start up [\#851](https://github.com/googleforgames/agones/issues/851)
+- Fleet Autoscaler spawn extra gs [\#443](https://github.com/googleforgames/agones/issues/443)
+- Whoops - spelling mistake in feature tag. [\#1204](https://github.com/googleforgames/agones/pull/1204) ([markmandel](https://github.com/markmandel))
+- Fix infinite creation of GameServerSets when 1000m CPU limit was used [\#1188](https://github.com/googleforgames/agones/pull/1188) ([aLekSer](https://github.com/aLekSer))
+- Flaky: TestGameServerRestartBeforeReadyCrash [\#1174](https://github.com/googleforgames/agones/pull/1174) ([markmandel](https://github.com/markmandel))
+- Allow fleet with empty Replicas [\#1168](https://github.com/googleforgames/agones/pull/1168) ([aLekSer](https://github.com/aLekSer))
+- GameServer container restart before Ready, move to Unhealthy state After \(v2\) [\#1099](https://github.com/googleforgames/agones/pull/1099) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Flaky: TestGameServerRestartBeforeReadyCrash [\#1173](https://github.com/googleforgames/agones/issues/1173)
+- Release 1.1.0 [\#1160](https://github.com/googleforgames/agones/issues/1160)
+- Quickstart: Create a Fleet Autoscaler with Webhook Policy [\#1151](https://github.com/googleforgames/agones/issues/1151)
+- Move terraform modules from ./build to ./install [\#1150](https://github.com/googleforgames/agones/issues/1150)
+- Speed up e2e tests [\#511](https://github.com/googleforgames/agones/issues/511)
+
+**Merged pull requests:**
+
+- Fix sdk-server image make target [\#1200](https://github.com/googleforgames/agones/pull/1200) ([aLekSer](https://github.com/aLekSer))
+- FleetAutoScaler add reserved into consideration [\#1198](https://github.com/googleforgames/agones/pull/1198) ([aLekSer](https://github.com/aLekSer))
+- Flaky: TestGameServerUnhealthyAfterReadyCrash [\#1192](https://github.com/googleforgames/agones/pull/1192) ([markmandel](https://github.com/markmandel))
+- Fix MD files in the repo [\#1191](https://github.com/googleforgames/agones/pull/1191) ([aLekSer](https://github.com/aLekSer))
+- Point Helm Upgrade link to v2 documentation [\#1187](https://github.com/googleforgames/agones/pull/1187) ([markmandel](https://github.com/markmandel))
+- Change the "Read more ..." links to better text on the home page. [\#1186](https://github.com/googleforgames/agones/pull/1186) ([roberthbailey](https://github.com/roberthbailey))
+- Extra debugging for TestGameServerRestartBeforeReadyCrash [\#1172](https://github.com/googleforgames/agones/pull/1172) ([markmandel](https://github.com/markmandel))
+- Mitigate panic when no ports allocated in E2E tests [\#1171](https://github.com/googleforgames/agones/pull/1171) ([aLekSer](https://github.com/aLekSer))
+- Move terraform modules from ./build to ./install [\#1167](https://github.com/googleforgames/agones/pull/1167) ([amitlevy21](https://github.com/amitlevy21))
+- Docs: Fix using GOPATH in the guides, added shortcode ghrelease [\#1165](https://github.com/googleforgames/agones/pull/1165) ([aLekSer](https://github.com/aLekSer))
+- Add top level notes on functionalitity on Unity & Unreal docs [\#1164](https://github.com/googleforgames/agones/pull/1164) ([markmandel](https://github.com/markmandel))
+- Preperation for 1.2.0 sprint [\#1162](https://github.com/googleforgames/agones/pull/1162) ([markmandel](https://github.com/markmandel))
+- Fix CPP SDK archive path - created separate one [\#1142](https://github.com/googleforgames/agones/pull/1142) ([aLekSer](https://github.com/aLekSer))
+- Move Googlers no longer actively reviewing code to emeritus owners [\#1116](https://github.com/googleforgames/agones/pull/1116) ([roberthbailey](https://github.com/roberthbailey))
+
 ## [v1.1.0](https://github.com/googleforgames/agones/tree/v1.1.0) (2019-10-29)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.1.0-rc...v1.1.0)
@@ -24,6 +93,7 @@
 
 **Merged pull requests:**
 
+- Release 1.1.0 [\#1161](https://github.com/googleforgames/agones/pull/1161) ([markmandel](https://github.com/markmandel))
 - Update "Local Development" documents [\#1159](https://github.com/googleforgames/agones/pull/1159) ([aLekSer](https://github.com/aLekSer))
 - Cloud Build: Add --output-sync=target to run-sdk-conformance-tests [\#1157](https://github.com/googleforgames/agones/pull/1157) ([markmandel](https://github.com/markmandel))
 - Update the images for all examples to use the 1.1 SDKs [\#1153](https://github.com/googleforgames/agones/pull/1153) ([roberthbailey](https://github.com/roberthbailey))
