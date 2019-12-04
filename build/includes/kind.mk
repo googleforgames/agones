@@ -47,7 +47,7 @@ kind-install:
 		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort\
 		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")"
 
-# pushses the current dev version of agones to the kind single node cluster.
+# pushes the current dev version of agones to the kind single node cluster.
 kind-push:
 	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"
