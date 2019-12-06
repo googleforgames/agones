@@ -51,7 +51,7 @@ If you do not set a limit or request, the default is set my Kubernetes at a 100m
 You may also want to tweak the CPU request or limits on the SDK `GameServer` sidecar process that spins up alongside
 each game server container.
 
-You can do this through the [Helm configuration]({{< relref "../Installation/helm.md" >}}) when installing Agones.
+You can do this through the [Helm configuration]({{< ref "/docs/Installation/Install Agones/helm.md" >}}) when installing Agones.
 
 By default, this is set to having a CPU request value of 30m, with no hard CPU limit. This ensures that the sidecar always has enough CPU
 to function, but it is configurable in case a lower, or higher value is required on your clusters, or if you desire 

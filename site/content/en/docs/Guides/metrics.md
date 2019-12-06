@@ -203,7 +203,7 @@ In order to use [Stackdriver monitoring](https://app.google.stackdriver.com) you
 
 Note that Stackdriver monitoring is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/monitoring#enabling_stackdriver_monitoring) if it was disabled on your GKE cluster.
 
-Default metrics exporter is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
+Default metrics exporter is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
 ```
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones
 ```

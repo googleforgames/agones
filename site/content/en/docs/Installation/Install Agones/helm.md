@@ -1,18 +1,16 @@
 ---
 title: "Install Agones using Helm"
-linkTitle: "Install with Helm"
-weight: 4
+linkTitle: "Helm"
+weight: 20
 description: >
-  This chart install the Agones application and defines deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+  Install Agones on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ---
 
 ## Prerequisites
 
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
-- Kubernetes 1.13
-- Role-based access controls (RBAC) activated
-- MutatingAdmissionWebhook and ValidatingAdmissionWebhook admission controllers activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
+- [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
 
 ## Installing the Chart
 
@@ -214,6 +212,6 @@ For most used cases the controller would have required a restart anyway (eg: con
 You can use our script located at `cert/cert.sh` to generates them.
 {{< /alert >}}
 
-## Confirm Agones is running
+## Next Steps
 
-To confirm Agones is up and running, [go to the next section]({{< relref "_index.md#confirming-agones-started-successfully" >}})
+- [Confirm Agones is up and running]({{< relref "../confirm.md" >}})
