@@ -277,8 +277,8 @@ steps:
 substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
-  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
-  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
+  _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build-1
+  _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build-1
 
 tags: ['ci']
 timeout: "1h"
