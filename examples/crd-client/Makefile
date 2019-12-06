@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,19 @@
 # limitations under the License.
 
 #
-# Include for managing the examples
+# Makefile for building a simple udp client and server
 #
+
+#  __     __         _       _     _
+#  \ \   / /_ _ _ __(_) __ _| |__ | | ___ ___
+#   \ \ / / _` | '__| |/ _` | '_ \| |/ _ \ __|
+#    \ V / (_| | |  | | (_| | |_) | |  __\__ \
+#     \_/ \__,_|_|  |_|\__,_|_.__/|_|\___|___/
+#
+
+REPOSITORY ?= gcr.io/agones-images
+
+server_tag = $(REPOSITORY)/crd-client:0.1
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -23,12 +34,13 @@
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# test all example images exist on Google Cloud Registry
-test-examples-on-gcr: example-image-test.autoscaler-webhook example-image-test.cpp-simple
-test-examples-on-gcr: example-image-test.nodejs-simple example-image-test.rust-simple example-image-test.simple-tcp
-test-examples-on-gcr: example-image-test.simple-udp example-image-test.unity-simple example-image-test.xonotic
-test-examples-on-gcr: example-image-test.crd-client
+# Build a docker image for the server, and tag it
+build:
+	docker build --tag=$(server_tag) .
 
-# Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
-example-image-test.%:
-	$(DOCKER_RUN) bash -c "cd examples/$* && make gcr-check"
+push:
+	docker push $(server_tag)
+
+# check if hosted on Google Cloud Registry
+gcr-check:
+	gcloud container images describe $(server_tag)

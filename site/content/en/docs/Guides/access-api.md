@@ -50,6 +50,8 @@ example from the Kubernetes client.
 The following is an example of a in-cluster configuration, that creates a `Clientset` for Agones
 and then creates a `GameServer`.
 
+A full example code is available in the {{< ghlink href="examples/crd-client/main.go" >}} example folder{{< /ghlink >}}.
+
 ```go
 package main
 
@@ -57,20 +59,17 @@ import (
 	"fmt"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"agones.dev/agones/pkg/util/runtime" // for the logger
 	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/util/runtime"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/kubernetes"
-)
-
-var (
-	logger = runtime.NewLoggerWithSource("main")
+	"k8s.io/client-go/rest"
 )
 
 func main() {
 	config, err := rest.InClusterConfig()
+	logger := runtime.NewLoggerWithSource("main")
 	if err != nil {
 		logger.WithError(err).Fatal("Could not create in cluster config")
 	}
@@ -93,6 +92,14 @@ func main() {
 	// Create a GameServer
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: "default"},
 		Spec: agonesv1.GameServerSpec{
+			Container: "udp-server",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				HostPort:      7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Static,
+				Protocol:      corev1.ProtocolUDP,
+			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{Name: "udp-server", Image: "{{% example-image %}}"}},
@@ -108,6 +115,18 @@ func main() {
 	fmt.Printf("New game servers' name is: %s", newGS.ObjectMeta.Name)
 }
 ```
+{{% feature publishVersion="1.3.0" %}}
+In order to create GS using provided example, you can run it as a Kubernetes Job:
+```
+$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/crd-client/create-gs.yaml --namespace agones-system
+$ kubectl get pods --namespace agones-system
+NAME                                 READY   STATUS      RESTARTS   AGE
+pi-with-timeout-8qvfj                0/1     Completed   0          6s
+$ kubectl logs pi-with-timeout-8qvfj  --namespace agones-syste
+{"message":"\u0026{0xc000243e00 default}","severity":"info","source":"main","time":"2019-12-06T14:36:54.265857671Z"}
+```
+You have just created a GameServer using Kubernetes Go Client.
+{{% /feature %}}
 
 ## Direct Access to the REST API via Kubectl
 
