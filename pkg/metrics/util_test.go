@@ -300,31 +300,23 @@ func Test_parseLabels(t *testing.T) {
 		want    *stackdriver.Labels
 		wantErr bool
 	}{
-		{
-			"",
-			labelsFromMap(nil),
-			false,
-		},
-		{
-			"a=b",
-			labelsFromMap(map[string]string{"a": "b"}),
-			false,
-		},
-		{
-			"a=b,",
-			nil,
-			true,
-		},
-		{
-			"a=b,c",
-			nil,
-			true,
-		},
-		{
-			"a=b,c=d",
-			labelsFromMap(map[string]string{"a": "b", "c": "d"}),
-			false,
-		},
+		// valids
+		{"", labelsFromMap(nil), false},
+		{"a=b", labelsFromMap(map[string]string{"a": "b"}), false},
+		{"a=b,c=d", labelsFromMap(map[string]string{"a": "b", "c": "d"}), false},
+		{"a=b, c=d", labelsFromMap(map[string]string{"a": "b", "c": "d"}), false},
+		{"a=b , c = d ", labelsFromMap(map[string]string{"a": "b", "c": "d"}), false},
+		{" a = b , c = d ", labelsFromMap(map[string]string{"a": "b", "c": "d"}), false},
+		{" a = b , c = d,c=f ", labelsFromMap(map[string]string{"a": "b", "c": "f"}), false},
+
+		// errors
+		{"e", nil, true},
+		{"a=b,", nil, true},
+		{"a= =,", nil, true},
+		{"a=b,c", nil, true},
+		{"a=b,c =", nil, true},
+		{"a=b , c ==", nil, true},
+		{"a=b , c =\xc3\x28", nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {

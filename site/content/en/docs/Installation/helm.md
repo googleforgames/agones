@@ -31,7 +31,11 @@ _We recommend to install Agones in its own namespaces (like `agones-system` as s
 you can use the helm `--namespace` parameter to specify a different namespace._
 
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
+<<<<<<< HEAD
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
+=======
+run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
+>>>>>>> Review feedback.
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment.
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -110,7 +114,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
-| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with Stackdriver                              | ``                     |
+| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
+{{% feature publishVersion="1.3.0" %}}
+| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
+{{% /feature %}}
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |

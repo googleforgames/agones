@@ -16,8 +16,10 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"agones.dev/agones/pkg/util/runtime"
 	"contrib.go.opencensus.io/exporter/stackdriver"
@@ -58,15 +60,20 @@ func parseLabels(s string) (*stackdriver.Labels, error) {
 		return res, nil
 	}
 	pairs := strings.Split(s, ",")
-	if len(pairs) == 0 {
-		return res, nil
-	}
 	for _, p := range pairs {
 		keyValue := strings.Split(p, "=")
 		if len(keyValue) != 2 {
-			return nil, fmt.Errorf("invalid labels format: %s, expect key=value,key2=value2", s)
+			return nil, fmt.Errorf("invalid labels: %s, expect key=value,key2=value2", s)
 		}
-		res.Set(keyValue[0], keyValue[1], "")
+		key := strings.TrimSpace(keyValue[0])
+		value := strings.TrimSpace(keyValue[1])
+		if !utf8.ValidString(key) || !utf8.ValidString(value) {
+			return nil, errors.New("invalid labels: must be a valid utf-8 string")
+		}
+		if key == "" || value == "" {
+			return nil, errors.New("invalid labels: must not be empty string")
+		}
+		res.Set(key, value, "")
 	}
 	return res, nil
 }
