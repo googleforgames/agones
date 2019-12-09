@@ -164,8 +164,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
 | `agones.allocator.install`                          | Whether to install the [allocator service][allocator]                                           | `true`                 |
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
-| `agones.allocator.http.expose`                      | Expose the http allocator service via a Service                                                 | `true`                 |
-| `agones.allocator.http.response`                    | The string response returned from the http service                                              | `ok`                   |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
 | `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
@@ -187,6 +185,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
+[allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
