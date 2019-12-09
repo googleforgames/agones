@@ -117,7 +117,6 @@ agones:
                 operator: Exists
     replicas: 3
     http:
-      expose: true
       response: ok
       port: 443
       serviceType: LoadBalancer
