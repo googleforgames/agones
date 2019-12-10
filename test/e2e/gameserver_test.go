@@ -160,6 +160,22 @@ func TestSDKSetAnnotation(t *testing.T) {
 	assert.NotEmpty(t, gs.ObjectMeta.Annotations[agonesv1.VersionAnnotation])
 }
 
+func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
+	t.Parallel()
+	gs := defaultGameServer(defaultNs)
+	gs.Spec.Health.FailureThreshold = 1
+
+	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	assert.NoError(t, err)
+
+	reply, err := e2eframework.SendGameServerUDP(gs, "UNHEALTHY")
+	assert.NoError(t, err)
+	assert.Equal(t, "ACK: UNHEALTHY\n", reply)
+
+	_, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateUnhealthy, time.Minute)
+	assert.NoError(t, err)
+}
+
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	t.Parallel()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
