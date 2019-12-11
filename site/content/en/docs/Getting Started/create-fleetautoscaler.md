@@ -256,8 +256,14 @@ simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    7745    minikube     5m
 ```
 
 {{< alert title="Note" color="info">}}
-If you want to update a `Fleet`, which has `RollingUpdate` replacement strategy and is controlled by a `FleetAutoscaler`, you could omit `Replicas` parameter in a `Fleet` Spec.
-Otherwise fleet would be scaled according to Fleet `Replicas` parameter first and only after certain amount of time it would be rescaled to fit `FleetAutoscaler` `BufferSize` parameter.
+If you want to update a `Fleet` which has `RollingUpdate` replacement strategy and is controlled by a `FleetAutoscaler`:
+1. With `kubectl apply`: you should omit `replicas` parameter in a `Fleet` Spec before re-applying the `Fleet` configuration.
+1. With `kubectl edit`: you should not change the `replicas` parameter in the `Fleet` Spec when updating other field parameters.
+
+If you follow the rules above, then `maxSurge` and `maxUnavaiable` parameters will be used as the RollingUpdate strategy updates your Fleet.
+Otherwise the Fleet would be scaled according to Fleet `replicas` parameter first and only after certain amount of time it would be rescaled to fit `FleetAutoscaler` `BufferSize` parameter.
+
+You could also check the behaviour of the Fleet with Fleetautoscaler on a test `Fleet` to preview what would occur on your production environment.
 {{< /alert >}}
 
 ## Next Steps

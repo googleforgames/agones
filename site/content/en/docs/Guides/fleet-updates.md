@@ -26,11 +26,22 @@ much of the `Fleet` is  incremented and decremented at one time:
       maxUnavailable: 25%
 ```
 
-So when a Fleet is edited, either through `kubectl` `edit`/`apply` or via the Kubernetes API, this performs the following operations:
+So when a Fleet is edited (any field other than `replicas`, see note below), either through `kubectl` `edit`/`apply` or via the Kubernetes API, this performs the following operations:
 
 1. Adds the `maxSurge` number of `GameServers` to the Fleet.
 1. Shutdown the `maxUnavailable` number of `GameServers` in the Fleet, skipping `Allocated` `GameServers`.
 1. Repeat above steps until all the previous `GameServer` configurations have been `Shutdown` and deleted.
+
+{{< alert title="Note" color="info">}}
+When `Fleet` update contains only changes to the `replicas` parameter, then new GameServers will be created/deleted straight away,
+which means in that case `maxSurge` and `maxUnavailable` parameters for a RollingUpdate will not be used.
+The RollingUpdate strategy takes place when you update `spec` parameters other than `replicas`.
+
+If you are using a Fleet which is scaled by a FleetAutoscaler, [read the Fleetautoscaler guide]({{< relref "../Getting Started/create-fleetautoscaler.md#7-change-autoscaling-parameters" >}}) for more details on how RollingUpdates with FleetAutoscalers need to be implemented.
+
+You could also check the behaviour of the Fleet with a RollingUpdate strategy on a test `Fleet` to preview your upcoming updates.
+Use `kubectl describe fleet` to track scaling events in a Fleet.
+{{< /alert >}}
 
 ## Recreate Strategy
 
@@ -74,8 +85,8 @@ give preference to particular sets of `GameServers` over others. You can see det
 the `GameServerAllocation` [reference]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
 
 In a scenario where a new `v2` version of a `Fleet` is being slowly scaled up in a separate Fleet from the previous `v1`
-Fleet, we can specify that we `prefer` allocation to occur from the `v2` fleet, and if none are available, fallback to
-the `v1` fleet, like so:
+Fleet, we can specify that we `prefer` allocation to occur from the `v2` Fleet, and if none are available, fallback to
+the `v1` Fleet, like so:
 
 ```yaml
 apiVersion: "allocation.agones.dev/v1"
