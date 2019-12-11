@@ -10,12 +10,7 @@ description: >
 ## Prerequisites
 
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
-{{% feature expiryVersion="1.2.0" %}}
-- Kubernetes 1.11+
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 - Kubernetes 1.13
-{{% /feature %}}
 - Role-based access controls (RBAC) activated
 - MutatingAdmissionWebhook and ValidatingAdmissionWebhook admission controllers activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
 
@@ -171,7 +166,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="1.2.0" %}}
+{{% feature publishVersion="1.3.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |

@@ -17,21 +17,6 @@ If no dedicated nodes are available, Agones will run on regular nodes.
 
 ## Usage Requirements
 
-{{% feature expiryVersion="1.2.0" %}}
-- Kubernetes cluster version 1.12
-    - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
-      [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
-    - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
-    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
-    admission controllers are required.
-    We also recommend following the
-    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
-- Firewall access for the range of ports that Game Servers can be connected to in the cluster.
-- Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
-{{% /feature %}}
-
-{{% feature publishVersion="1.2.0" %}}
 - Kubernetes cluster version 1.13
     - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
@@ -43,21 +28,11 @@ If no dedicated nodes are available, Agones will run on regular nodes.
     [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
-{{% /feature %}}
 
-{{% feature expiryVersion="1.2.0" %}}
-{{< alert title="Warning" color="warning">}}
-Later versions of Kubernetes may work, but this project is tested against 1.12, and is therefore the supported version.
-Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
-{{< /alert >}}
-{{% /feature %}}
-
-{{% feature publishVersion="1.2.0" %}}
 {{< alert title="Warning" color="warning">}}
 Later versions of Kubernetes may work, but this project is tested against 1.13, and is therefore the supported version.
 Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
 {{< /alert >}}
-{{% /feature %}}
 
 ## Setting up a Google Kubernetes Engine (GKE) cluster
 
@@ -125,17 +100,6 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
-{{% feature expiryVersion="1.2.0" %}}
-```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
-  --tags=game-server \
-  --scopes=gke-default \
-  --num-nodes=4 \
-  --no-enable-autoupgrade \
-  --machine-type=n1-standard-4
-```
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.13 \
   --tags=game-server \
@@ -144,16 +108,10 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.13 \
   --no-enable-autoupgrade \
   --machine-type=n1-standard-4
 ```
-{{% /feature %}}
 
 Flag explanations:
 
-{{% feature expiryVersion="1.2.0" %}}
-* cluster-version: Agones requires Kubernetes version 1.12.
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 * cluster-version: Agones requires Kubernetes version 1.13.
-{{% /feature %}}
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
@@ -242,16 +200,9 @@ minikube profile agones
 The following command starts a local minikube cluster via virtualbox - but this can be
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
-{{% feature expiryVersion="1.2.0" %}}
-```bash
-minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
-```
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 ```bash
 minikube start --kubernetes-version v1.13.12 --vm-driver virtualbox
 ```
-{{% /feature %}}
 
 ### Follow Normal Instructions to Install
 
@@ -267,20 +218,7 @@ Possible steps are the following:
 1. Create new IAM role for cluster management.
 1. Run `aws configure` to authorize your `awscli` with proper `AWS Access Key ID` and `AWS Secret Access Key`.
 1. Create an example cluster:
-{{% feature expiryVersion="1.2.0" %}}
-```
-eksctl create cluster \
---name prod \
---version 1.12 \
---nodegroup-name standard-workers \
---node-type t3.medium \
---nodes 3 \
---nodes-min 3 \
---nodes-max 4 \
---node-ami auto
-```
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
+
 ```
 eksctl create cluster \
 --name prod \
@@ -292,7 +230,6 @@ eksctl create cluster \
 --nodes-max 4 \
 --node-ami auto
 ```
-{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
@@ -326,28 +263,6 @@ If you are using Azure CLI from your local shell, you need to login to your Azur
 
 Here are the steps you need to follow to create a new AKS cluster (additional instructions and clarifications are listed [here](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough)):
 
-{{% feature expiryVersion="1.2.0" %}}
-```bash
-# Declare necessary variables, modify them according to your needs
-AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
-AKS_NAME=akstest     # Name of your AKS cluster
-AKS_LOCATION=westeurope     # Azure region in which you'll deploy your AKS cluster
-
-# Create the Resource Group where your AKS resource will be installed
-az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
-
-# Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
-# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.11.8. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.11.8
-
-# Install kubectl
-sudo az aks install-cli
-
-# Get credentials for your new AKS cluster
-az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
-```
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 ```bash
 # Declare necessary variables, modify them according to your needs
 AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
@@ -367,7 +282,6 @@ sudo az aks install-cli
 # Get credentials for your new AKS cluster
 az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
 ```
-{{% /feature %}}
 
 Alternatively, you can use the [Azure Portal](https://portal.azure.com) to create a new AKS cluster [(instructions)](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-portal).
 
