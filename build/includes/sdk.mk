@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-#         ____  ____   ____   _____           _ _	
-#    __ _|  _ \|  _ \ / ___| |_   _|__   ___ | (_)_ __   __ _	
-#   / _` | |_) | |_) | |       | |/ _ \ / _ \| | | '_ \ / _` |	
-#  | (_| |  _ <|  __/| |___    | | (_) | (_) | | | | | | (_| |	
-#   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |	
-#   |___/                                               |___/ 
+#         ____  ____   ____   _____           _ _
+#    __ _|  _ \|  _ \ / ___| |_   _|__   ___ | (_)_ __   __ _
+#   / _` | |_) | |_) | |       | |/ _ \ / _ \| | | '_ \ / _` |
+#  | (_| |  _ <|  __/| |___    | | (_) | (_) | | | | | | (_| |
+#   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |
+#   |___/                                               |___/
 
 build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
 build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
@@ -27,7 +27,7 @@ build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
 build_sdk_version = $(call sha_dir,$(build_path)/build-sdk-images/$(SDK_FOLDER)/*)
 build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
-grpc_release_tag = v1.16.1
+grpc_release_tag = v1.20.1
 sdk_build_folder = build-sdk-images/
 examples_folder = ../examples/
 SDK_FOLDER ?= go
@@ -42,7 +42,7 @@ test-sdks: run-all-sdk-command
 
 # Tests a single sdk, use SDK_FOLDER variable to specify the sdk folder.
 test-sdk: COMMAND := test
-test-sdk: run-sdk-command 
+test-sdk: run-sdk-command
 
 # Builds all the sdks
 build-sdks: COMMAND := build
@@ -93,7 +93,7 @@ run-sdk-command:
 
 # Builds the base GRPC docker image.
 build-build-sdk-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
-build-build-sdk-image-base: 
+build-build-sdk-image-base:
 	docker build --tag=$(build_sdk_base_tag) $(build_path)build-sdk-images/tool/base $(DOCKER_BUILD_ARGS)
 
 # Builds the docker image used by commands for a specific sdk

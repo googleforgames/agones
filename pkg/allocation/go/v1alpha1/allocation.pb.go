@@ -65,7 +65,7 @@ func (x AllocationRequest_SchedulingStrategy) String() string {
 	return proto.EnumName(AllocationRequest_SchedulingStrategy_name, int32(x))
 }
 func (AllocationRequest_SchedulingStrategy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{0, 0}
+	return fileDescriptor_allocation_89112023cf55f959, []int{0, 0}
 }
 
 // The allocation state
@@ -98,7 +98,7 @@ func (x AllocationResponse_GameServerAllocationState) String() string {
 	return proto.EnumName(AllocationResponse_GameServerAllocationState_name, int32(x))
 }
 func (AllocationResponse_GameServerAllocationState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{1, 0}
+	return fileDescriptor_allocation_89112023cf55f959, []int{1, 0}
 }
 
 type AllocationRequest struct {
@@ -125,7 +125,7 @@ func (m *AllocationRequest) Reset()         { *m = AllocationRequest{} }
 func (m *AllocationRequest) String() string { return proto.CompactTextString(m) }
 func (*AllocationRequest) ProtoMessage()    {}
 func (*AllocationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{0}
+	return fileDescriptor_allocation_89112023cf55f959, []int{0}
 }
 func (m *AllocationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationRequest.Unmarshal(m, b)
@@ -202,7 +202,7 @@ func (m *AllocationResponse) Reset()         { *m = AllocationResponse{} }
 func (m *AllocationResponse) String() string { return proto.CompactTextString(m) }
 func (*AllocationResponse) ProtoMessage()    {}
 func (*AllocationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{1}
+	return fileDescriptor_allocation_89112023cf55f959, []int{1}
 }
 func (m *AllocationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationResponse.Unmarshal(m, b)
@@ -272,7 +272,7 @@ func (m *AllocationResponse_GameServerStatusPort) Reset() {
 func (m *AllocationResponse_GameServerStatusPort) String() string { return proto.CompactTextString(m) }
 func (*AllocationResponse_GameServerStatusPort) ProtoMessage()    {}
 func (*AllocationResponse_GameServerStatusPort) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{1, 0}
+	return fileDescriptor_allocation_89112023cf55f959, []int{1, 0}
 }
 func (m *AllocationResponse_GameServerStatusPort) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationResponse_GameServerStatusPort.Unmarshal(m, b)
@@ -321,7 +321,7 @@ func (m *MultiClusterSetting) Reset()         { *m = MultiClusterSetting{} }
 func (m *MultiClusterSetting) String() string { return proto.CompactTextString(m) }
 func (*MultiClusterSetting) ProtoMessage()    {}
 func (*MultiClusterSetting) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{2}
+	return fileDescriptor_allocation_89112023cf55f959, []int{2}
 }
 func (m *MultiClusterSetting) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MultiClusterSetting.Unmarshal(m, b)
@@ -368,7 +368,7 @@ func (m *MetaPatch) Reset()         { *m = MetaPatch{} }
 func (m *MetaPatch) String() string { return proto.CompactTextString(m) }
 func (*MetaPatch) ProtoMessage()    {}
 func (*MetaPatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_b032d245a7ea77b4, []int{3}
+	return fileDescriptor_allocation_89112023cf55f959, []int{3}
 }
 func (m *MetaPatch) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MetaPatch.Unmarshal(m, b)
@@ -487,10 +487,10 @@ var _AllocationService_serviceDesc = grpc.ServiceDesc{
 }
 
 func init() {
-	proto.RegisterFile("proto/allocation/v1alpha1/allocation.proto", fileDescriptor_allocation_b032d245a7ea77b4)
+	proto.RegisterFile("proto/allocation/v1alpha1/allocation.proto", fileDescriptor_allocation_89112023cf55f959)
 }
 
-var fileDescriptor_allocation_b032d245a7ea77b4 = []byte{
+var fileDescriptor_allocation_89112023cf55f959 = []byte{
 	// 719 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0xc1, 0x6e, 0xdb, 0x46,
 	0x10, 0x35, 0x25, 0x4b, 0xb6, 0x46, 0xad, 0xaa, 0xae, 0x7d, 0x60, 0x59, 0xb5, 0x15, 0xd8, 0xa2,

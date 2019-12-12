@@ -33,7 +33,7 @@ steps:
   id: cpp-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
-    - '--key=$_CPP_SDK_BUILD_CACHE_KEY'
+    - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
 - name: gcr.io/$PROJECT_ID/restore_cache
@@ -165,7 +165,7 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/save_cache'
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
-    - '--key=$_CPP_SDK_BUILD_CACHE_KEY'
+    - '--key=$_CPP_SDK_BUILD_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
     - '--path=sdks/cpp/.build'
   id: cpp-sdk-build-save-cache
   waitFor:
