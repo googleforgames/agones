@@ -926,6 +926,25 @@ func TestUpdateFleetScheduling(t *testing.T) {
 		})
 }
 
+// TestFleetWithZeroReplicas ensures that we can always create 0 replica
+// fleets, which is useful!
+func TestFleetWithZeroReplicas(t *testing.T) {
+	t.Parallel()
+	client := framework.AgonesClient.AgonesV1()
+
+	flt := defaultFleet(defaultNs)
+	flt.Spec.Replicas = 0
+	flt, err := client.Fleets(defaultNs).Create(flt)
+	assert.NoError(t, err)
+
+	// can't think of a better way to wait for a bit before checking.
+	time.Sleep(time.Second)
+
+	list, err := framework.ListGameServersFromFleet(flt)
+	assert.NoError(t, err)
+	assert.Empty(t, list)
+}
+
 // TestFleetRecreateGameServers tests various gameserver shutdown scenarios to ensure
 // that recreation happens as expected
 func TestFleetRecreateGameServers(t *testing.T) {
