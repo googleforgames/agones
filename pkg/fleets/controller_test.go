@@ -31,6 +31,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -71,7 +73,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
 	})
 
-	t.Run("gamserverset with the same number of replicas", func(t *testing.T) {
+	t.Run("gameserverset with the same number of replicas", func(t *testing.T) {
 		t.Parallel()
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
@@ -617,6 +619,36 @@ func TestControllerUpsertGameServerSet(t *testing.T) {
 	})
 }
 
+func TestResourcesRequestsAndLimits(t *testing.T) {
+	t.Parallel()
+
+	gsSpec := *defaultGSSpec()
+	c, _ := newFakeController()
+	f := defaultFixture()
+	f.Spec.Template = gsSpec
+	f.Spec.Template.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("1000m")
+
+	// Semantically equal definition, 1 == 1000m CPU
+	gsSet1 := f.GameServerSet()
+	gsSet1.Spec.Template = gsSpec
+	gsSet1.Spec.Template.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("1")
+
+	// Absolutely different GameServer Spec, 1.1 CPU
+	gsSet3 := f.GameServerSet()
+	gsSet3.Spec.Template = *gsSpec.DeepCopy()
+	gsSet3.Spec.Template.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("1.1")
+	active, rest := c.filterGameServerSetByActive(f, []*agonesv1.GameServerSet{gsSet1, gsSet3})
+	assert.Equal(t, gsSet1, active)
+	assert.Equal(t, []*agonesv1.GameServerSet{gsSet3}, rest)
+
+	gsSet2 := f.GameServerSet()
+	gsSet2.Spec.Template = *gsSpec.DeepCopy()
+	gsSet2.Spec.Template.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("1000m")
+	active, rest = c.filterGameServerSetByActive(f, []*agonesv1.GameServerSet{gsSet2, gsSet3})
+	assert.Equal(t, gsSet2, active)
+	assert.Equal(t, []*agonesv1.GameServerSet{gsSet3}, rest)
+}
+
 func TestControllerDeleteEmptyGameServerSets(t *testing.T) {
 	t.Parallel()
 
@@ -804,4 +836,37 @@ func defaultFixture() *agonesv1.Fleet {
 	}
 	f.ApplyDefaults()
 	return f
+}
+
+func defaultGSSpec() *agonesv1.GameServerTemplateSpec {
+	return &agonesv1.GameServerTemplateSpec{
+		Spec: agonesv1.GameServerSpec{
+			Container: "udp-server",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:            "udp-server",
+						Image:           "gcr.io/images/new:0.2",
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
 }

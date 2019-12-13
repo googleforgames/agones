@@ -40,8 +40,8 @@ by the game server.
 
 Agones will automatically set the following environment variables on all game server containers:
 
-* `AGONES_SDK_GRPC_PORT`: The port where the gRPC server is listening
-* `AGONES_SDK_HTTP_PORT`: The port where the grpc-gateway is listening
+* `AGONES_SDK_GRPC_PORT`: The port where the gRPC server is listening (defaults to 9357)
+* `AGONES_SDK_HTTP_PORT`: The port where the grpc-gateway is listening (defaults to 9358)
 
 The SDKs will automatically discover and connect to the gRPC port specified in the environment variable.
 
@@ -150,14 +150,14 @@ but doesn't trigger a FleetAutoscaler scale up. This is where `Reserve(seconds)`
 
 `Reserve(seconds)` will move the `GameServer` into the Reserved state for the specified number of seconds (0 is forever), and then it will be
 moved back to `Ready` state. While in `Reserved` state, the `GameServer` will not be deleted on scale down or `Fleet` update,
-and also will not be Allocated.
+and also it could not be Allocated using [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
 
 This is often used when a game server process must register itself with an external system, such as a matchmaker,
 that requires it to designate itself as available for a game session for a certain period. Once a game session has started,
 it should call `SDK.Allocate()` to designate that players are currently active on it.
 
 Calling other state changing SDK commands such as `Ready` or `Allocate` will turn off the timer to reset the `GameServer` back
-to the `Ready` state.
+to the `Ready` state or to promote it to an `Allocated` state accordingly.
 
 ## Writing your own SDK
 

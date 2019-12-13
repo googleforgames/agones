@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-#         ____  ____   ____   _____           _ _	
-#    __ _|  _ \|  _ \ / ___| |_   _|__   ___ | (_)_ __   __ _	
-#   / _` | |_) | |_) | |       | |/ _ \ / _ \| | | '_ \ / _` |	
-#  | (_| |  _ <|  __/| |___    | | (_) | (_) | | | | | | (_| |	
-#   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |	
-#   |___/                                               |___/ 
+#         ____  ____   ____   _____           _ _
+#    __ _|  _ \|  _ \ / ___| |_   _|__   ___ | (_)_ __   __ _
+#   / _` | |_) | |_) | |       | |/ _ \ / _ \| | | '_ \ / _` |
+#  | (_| |  _ <|  __/| |___    | | (_) | (_) | | | | | | (_| |
+#   \__, |_| \_\_|    \____|   |_|\___/ \___/|_|_|_| |_|\__, |
+#   |___/                                               |___/
 
 build_sdk_base_version = $(call sha,$(build_path)/build-sdk-images/tool/base/Dockerfile)
 build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
@@ -27,7 +27,7 @@ build_sdk_base_tag = agones-build-sdk-base:$(build_sdk_base_version)
 build_sdk_version = $(call sha_dir,$(build_path)/build-sdk-images/$(SDK_FOLDER)/*)
 build_sdk_base_remote_tag = $(REGISTRY)/$(build_sdk_base_tag)
 build_sdk_prefix = agones-build-sdk-
-grpc_release_tag = v1.16.1
+grpc_release_tag = v1.20.1
 sdk_build_folder = build-sdk-images/
 examples_folder = ../examples/
 SDK_FOLDER ?= go
@@ -42,7 +42,7 @@ test-sdks: run-all-sdk-command
 
 # Tests a single sdk, use SDK_FOLDER variable to specify the sdk folder.
 test-sdk: COMMAND := test
-test-sdk: run-sdk-command 
+test-sdk: run-sdk-command
 
 # Builds all the sdks
 build-sdks: COMMAND := build
@@ -93,7 +93,7 @@ run-sdk-command:
 
 # Builds the base GRPC docker image.
 build-build-sdk-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
-build-build-sdk-image-base: 
+build-build-sdk-image-base:
 	docker build --tag=$(build_sdk_base_tag) $(build_path)build-sdk-images/tool/base $(DOCKER_BUILD_ARGS)
 
 # Builds the docker image used by commands for a specific sdk
@@ -123,7 +123,7 @@ ensure-build-sdk-image:
 run-sdk-conformance-local: TIMEOUT ?= 30
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 run-sdk-conformance-local: ensure-agones-sdk-image
-	docker run -e "ADDRESS=" -p 59357:59357 -p 59358:59358 \
+	docker run -e "ADDRESS=" -p 9357:9357 -p 9358:9358 \
 	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
@@ -132,8 +132,8 @@ run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]")
 run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
-run-sdk-conformance-no-build: GRPC_PORT ?= 59357
-run-sdk-conformance-no-build: HTTP_PORT ?= 59358
+run-sdk-conformance-no-build: GRPC_PORT ?= 9357
+run-sdk-conformance-no-build: HTTP_PORT ?= 9358
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \

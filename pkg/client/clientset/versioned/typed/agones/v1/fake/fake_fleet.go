@@ -132,7 +132,7 @@ func (c *FakeFleets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.
 // Patch applies the patch and returns the patched fleet.
 func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agonesv1.Fleet, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(fleetsResource, c.ns, name, data, subresources...), &agonesv1.Fleet{})
+		Invokes(testing.NewPatchSubresourceAction(fleetsResource, c.ns, name, pt, data, subresources...), &agonesv1.Fleet{})
 
 	if obj == nil {
 		return nil, err

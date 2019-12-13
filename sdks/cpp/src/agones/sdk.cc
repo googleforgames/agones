@@ -29,7 +29,7 @@ struct SDK::SDKImpl {
 
 SDK::SDK() : pimpl_{std::make_unique<SDKImpl>()} {
   const char* port = std::getenv("AGONES_SDK_GRPC_PORT");
-  pimpl_->host_ = std::string("localhost:") + (port ? port : "59357");
+  pimpl_->host_ = std::string("localhost:") + (port ? port : "9357");
   pimpl_->channel_ =
       grpc::CreateChannel(pimpl_->host_, grpc::InsecureChannelCredentials());
 }

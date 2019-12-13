@@ -31,7 +31,7 @@ endif()
 
 # gRPC repo and version
 set(gRPC_GIT_REPO "https://github.com/gRPC/gRPC.git")
-set(gRPC_GIT_TAG "v1.16.1")
+set(gRPC_GIT_TAG "v1.20.1")
 
 # OpenSSL required only for successful build gRPC
 set(OPENSSL_GIT_REPO "https://github.com/openssl/openssl.git")
@@ -100,7 +100,7 @@ function(invoke_cmake_build NAME CMAKELISTS_PATH)
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/${NAME}/.bin)
     set(INSTALL_DIR ${AGONES_THIRDPARTY_INSTALL_PATH}/${NAME})
     file(MAKE_DIRECTORY ${BUILD_DIR})
-    
+
     # Makefile generation
     set(ARG_BUILD_TYPE "")
     set(ARG_CONFIG_DEBUG "--config" "Debug")
@@ -117,7 +117,7 @@ function(invoke_cmake_build NAME CMAKELISTS_PATH)
     if (${AGONES_BUILD_THIRDPARTY_DEBUG})
         execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} --build . ${ARG_CONFIG_DEBUG} --target install)
     endif()
-    
+
     execute_and_check(${BUILD_DIR} ${CMAKE_COMMAND} --build . ${ARG_CONFIG_RELEASE} --target install)
     set(${NAME}_DIR "${INSTALL_DIR}" CACHE PATH "CMake package directory for ${NAME}" FORCE)
 endfunction(invoke_cmake_build)
@@ -166,7 +166,7 @@ if (NOT ${gRPC_FOUND})
         endif()
         set(ZLIB_PARAM "-DZLIB_LIBRARY=${ZLIB_LIBRARY}")
     endif()
-    
+
     invoke_cmake_build(c-ares ${gRPC_SOURCE_DIR}/third_party/cares/cares
         "-DCARES_STATIC=ON"
         "-DCARES_SHARED=OFF"
@@ -177,7 +177,7 @@ if (NOT ${gRPC_FOUND})
         "-Dprotobuf_MSVC_STATIC_RUNTIME=OFF"
         "-Dprotobuf_BUILD_TESTS=OFF"
     )
-    
+
     # Build gRPC as cmake package
     set(OPENSSL_PARAM "")
     if (DEFINED OPENSSL_ROOT_DIR)
@@ -192,7 +192,7 @@ if (NOT ${gRPC_FOUND})
             "-DCMAKE_CXX_FLAGS=-D_WIN32_WINNT=${GRPC_WINVER}"
         )
     endif()
-    
+
     invoke_cmake_build(gRPC ${gRPC_SOURCE_DIR}
         "${OPENSSL_PARAM}"
         "-DZLIB_ROOT=${zlib_DIR}"

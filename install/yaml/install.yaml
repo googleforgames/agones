@@ -20,7 +20,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -31,7 +31,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -76,7 +76,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -140,7 +140,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 ---
@@ -151,7 +151,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -169,7 +169,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -205,7 +205,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -242,7 +242,6 @@ spec:
       properties:
         spec:
           required:
-            - replicas
             - template
           properties:
             replicas:
@@ -357,18 +356,14 @@ spec:
                         grpcPort:
                           title: The port on which the SDK server binds the gRPC server to accept incoming connections
                           description: |
-                            The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
-                            encounter conflicts in rare cases. The default will be changed to 9357 in a future release
-                            of Agones.
+                            Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
                           type: integer
                           minimum: 1
                           maximum: 65535
                         httpPort:
                           title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
                           description: |
-                            The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
-                            encounter conflicts in rare cases. The default will be changed to 9358 in a future release
-                            of Agones.
+                            Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
                           type: integer
                           minimum: 1
                           maximum: 65535
@@ -434,7 +429,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -518,7 +513,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -645,18 +640,14 @@ spec:
                 grpcPort:
                   title: The port on which the SDK server binds the gRPC server to accept incoming connections
                   description: |
-                    The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
-                    encounter conflicts in rare cases. The default will be changed to 9357 in a future release
-                    of Agones.
+                    Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
                   type: integer
                   minimum: 1
                   maximum: 65535
                 httpPort:
                   title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
                   description: |
-                    The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
-                    encounter conflicts in rare cases. The default will be changed to 9358 in a future release
-                    of Agones.
+                    Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
                   type: integer
                   minimum: 1
                   maximum: 65535
@@ -712,7 +703,7 @@ metadata:
     controller-tools.k8s.io: "1.0"
     component: crd
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -798,7 +789,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -944,18 +935,14 @@ spec:
                         grpcPort:
                           title: The port on which the SDK server binds the gRPC server to accept incoming connections
                           description: |
-                            The default gRPC port in Agones 1.0 was 59357 which is in the ephemeral port range and can
-                            encounter conflicts in rare cases. The default will be changed to 9357 in a future release
-                            of Agones.
+                            Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
                           type: integer
                           minimum: 1
                           maximum: 65535
                         httpPort:
                           title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
                           description: |
-                            The default HTTP port in Agones 1.0 was 59358 which is in the ephemeral port range and can
-                            encounter conflicts in rare cases. The default will be changed to 9358 in a future release
-                            of Agones.
+                            Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
                           type: integer
                           minimum: 1
                           maximum: 65535
@@ -1022,7 +1009,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1058,7 +1045,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1129,7 +1116,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:1.2.0"
+        image: "gcr.io/agones-images/agones-allocator:1.3.0"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -1170,7 +1157,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 rules:
@@ -1202,7 +1189,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 
@@ -1215,7 +1202,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 subjects:
@@ -1236,7 +1223,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.2.0"
+    chart: "agones-1.3.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1253,7 +1240,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.2.0"
+    chart: "agones-1.3.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1269,7 +1256,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.2.0"
+    chart: "agones-1.3.0"
     release: "agones-manual"
     heritage: "Tiller"
 data:
@@ -1299,7 +1286,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1344,7 +1331,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:1.2.0"
+        image: "gcr.io/agones-images/agones-controller:1.3.0"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -1354,7 +1341,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:1.2.0"
+          value: "gcr.io/agones-images/agones-sdk:1.3.0"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -1424,7 +1411,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1461,7 +1448,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:1.2.0"
+          image: "gcr.io/agones-images/agones-ping:1.3.0"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -1485,7 +1472,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1506,7 +1493,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1541,7 +1528,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 spec:
@@ -1561,7 +1548,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1611,7 +1598,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.2.0
+    chart: agones-1.3.0
     release: agones-manual
     heritage: Tiller
 webhooks:
@@ -1641,7 +1628,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones-manual
-    chart: "agones-1.2.0"
+    chart: "agones-1.3.0"
     release: "agones-manual"
     heritage: "Tiller"
 type: Opaque

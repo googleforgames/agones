@@ -131,7 +131,7 @@ func (c *FakeFleetAutoscalers) DeleteCollection(options *v1.DeleteOptions, listO
 // Patch applies the patch and returns the patched fleetAutoscaler.
 func (c *FakeFleetAutoscalers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *autoscalingv1.FleetAutoscaler, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(fleetautoscalersResource, c.ns, name, data, subresources...), &autoscalingv1.FleetAutoscaler{})
+		Invokes(testing.NewPatchSubresourceAction(fleetautoscalersResource, c.ns, name, pt, data, subresources...), &autoscalingv1.FleetAutoscaler{})
 
 	if obj == nil {
 		return nil, err

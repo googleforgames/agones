@@ -66,7 +66,7 @@ openssl x509 -req -days 365 -in tls.csr \
 After having the TLS certificates ready, run the following command to store the certificate as a Kubernetes TLS secret.
 
 ```bash
-kubectl create secret tls allocator-tls -n agones-system --key=${TLS_KEY_FILE} --cert=${TLS_CERT_FILE} --dry-run -o yaml | kubectl apply -f -
+kubectl create secret --save-config=true tls allocator-tls -n agones-system --key=${TLS_KEY_FILE} --cert=${TLS_CERT_FILE} --dry-run -o yaml | kubectl apply -f -
 ```
 
 ## Client Certificate
@@ -82,6 +82,9 @@ CERT_FILE=client.crt
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ${KEY_FILE} -out ${CERT_FILE}
 
 CERT_FILE_VALUE=`cat ${CERT_FILE} | base64 -w 0`
+
+# In case of MacOS
+# CERT_FILE_VALUE=`cat ${CERT_FILE} | base64`
 ```
 
 ### White-list client certificate

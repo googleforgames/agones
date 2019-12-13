@@ -25,7 +25,7 @@ class AgonesSDK {
 	}
 
 	get port() {
-		return process.env.AGONES_SDK_GRPC_PORT || '59357';
+		return process.env.AGONES_SDK_GRPC_PORT || '9357';
 	}
 
 	async connect() {

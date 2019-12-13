@@ -21,7 +21,7 @@ will not try to connect to anything, and will just send log messages to stdout a
 that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
-To do this you will need to download  {{% ghrelease file_prefix="agonessdk-server" link_test="false" %}}, and unzip it.
+To do this you will need to download {{% ghrelease file_prefix="agonessdk-server" link_test="false" %}}, and unzip it.
 You will find the executables for the SDK server, one for each type of operating system.
 
 - `sdk-server.windows.amd64.exe` - Windows
@@ -34,9 +34,9 @@ For example:
 
 ```console
 $ ./sdk-server.linux.amd64 --local
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":59357,"HTTPPort":59358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
-{"grpcEndpoint":"localhost:59357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
-{"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:44:37.975086+03:00"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
+{"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
+{"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:44:37.975086+03:00"}
 {"message":"Ready request has been received!","severity":"info","time":"2019-10-30T21:45:47.031989+03:00"}
 {"message":"gameserver update received","severity":"info","time":"2019-10-30T21:45:47.03225+03:00"}
 {"message":"Shutdown request has been received!","severity":"info","time":"2019-10-30T21:46:18.179341+03:00"}
@@ -65,10 +65,10 @@ For example:
 ```console
 $ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
 $ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
-{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"./gameserver.yaml","Delay":0,"Timeout":0,"Test":"","GRPCPort":59357,"HTTPPort":59358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:47:45.742776+03:00","version":"1.1.0"}
+{"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"./gameserver.yaml","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:47:45.742776+03:00","version":"1.1.0"}
 {"filePath":"/Users/alexander.apalikov/Downloads/agonessdk-server-1.1.0/gameserver.yaml","message":"Reading GameServer configuration","severity":"info","time":"2019-10-30T21:47:45.743369+03:00"}
-{"grpcEndpoint":"localhost:59357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
-{"httpEndpoint":"localhost:59358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
+{"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
+{"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:47:45.760312+03:00"}
 ```
 
 ### Changing State of a Local GameServer
@@ -88,11 +88,11 @@ All changes to the GameServer state could be observed and retrieved using Watch(
 Example of using HTTP gateway locally:
 
 ```console
-$ curl -X POST "http://localhost:59358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
+$ curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
 {}
-$ curl -GET "http://localhost:59358/gameserver" -H "accept: application/json"
+$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
 {"object_meta":{"creation_timestamp":"-62135596800"},"spec":{"health":{}},"status":{"state":"Ready"}}
-$ curl -X PUT "http://localhost:59358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
-$ curl -GET "http://localhost:59358/gameserver" -H "accept: application/json"}"
+$ curl -X PUT "http://localhost:9358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
+$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"}"
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
 ```

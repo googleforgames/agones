@@ -15,10 +15,9 @@
 package v1
 
 import (
-	"reflect"
-
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,7 +81,7 @@ type GameServerSetStatus struct {
 // is the new GameServerSet, being passed into the old GameServerSet
 func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusCause, bool) {
 	causes := validateName(new)
-	if !reflect.DeepEqual(gsSet.Spec.Template, new.Spec.Template) {
+	if !apiequality.Semantic.DeepEqual(gsSet.Spec.Template, new.Spec.Template) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   "template",

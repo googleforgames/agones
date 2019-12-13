@@ -33,7 +33,7 @@ Table of Contents
         * [make build](#make-build)
         * [make build-images](#make-build-images)
         * [make build-sdks](#make-build-sdks)
-        * [make build-sdk-cpp](#make-build-sdk-cpp)
+        * [make build-sdk](#make-build-sdk)
         * [make run-sdk-conformance-tests](#make-run-sdk-conformance-tests)
         * [make clean-sdk-conformance-tests](#make-clean-sdk-conformance-tests)
         * [make test](#make-test)
@@ -49,7 +49,7 @@ Table of Contents
         * [make pprof-web](#make-pprof-web)
         * [make shell](#make-shell)
         * [make godoc](#make-godoc)
-        * [make build-agones-controller-image](#make-build-agones-controller-image)
+        * [make build-controller-image](#make-build-controller-image)
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
         * [make gen-crd-client](#make-gen-crd-client)
@@ -87,8 +87,8 @@ Table of Contents
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
      * [Custom Environment](#custom-environment)
-        * [make setup-custom-test-cluster](#make-setup-custom-test-cluster)
-        * [make clean-custom-test-cluster](#make-clean-custom-test-cluster)
+        * [make setup-test-cluster](#make-setup-test-cluster)
+        * [make clean-test-cluster](#make-clean-test-cluster)
   * [Dependencies](#dependencies)
   * [Troubleshooting](#troubleshooting)
       * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
@@ -202,7 +202,7 @@ See the table below for available customizations :
 |---------------------------------------|-------------------------------------------------------------------------------|---------------|
 | `GCP_CLUSTER_NAME`                    | The name of the cluster                                                       | `test-cluster`  |
 | `GCP_CLUSTER_ZONE`                    | The name of the Google Compute Engine zone in which the cluster will resides. |  `us-west1-c`   |
-| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`| The number of nodes to create in this cluster.                                |  `3`            |
+| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`| The number of nodes to create in this cluster.                                |  `4`            |
 | `GCP_CLUSTER_NODEPOOL_MACHINETYPE`    | The name of a Google Compute Engine machine type.                             | `n1-standard-4` |
 
 If you would like to change more settings, feel free to edit the [`cluster.yml.jinja`](./gke-test-cluster/cluster.yml.jinja) file before running this command.  
@@ -291,7 +291,7 @@ For example:
 $ make minikube-transfer-image TAG=myimage:0.1
 ```
 
-Running end-to-end tests on minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a minikube cluster.
+Running end-to-end tests on Minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Minikube cluster.
 
 ### Running a Test Kind cluster
  This will setup a [Kubernetes IN Docker](https://github.com/kubernetes-sigs/kind) cluster named agones by default.
@@ -349,7 +349,7 @@ To begin, you need to set up the following environment variables:
    if set, `make install` will install this secret in both the `agones-system` (for pulling the controller image)
    and `default` (for pulling the sdk image) repositories
    
-The second step is to prepare your cluster for the Agones deployments. Run `make setup-custom-test-cluster` to install helm in it.
+The second step is to prepare your cluster for the Agones deployments. Run `make setup-test-cluster` to install helm in it.
 
 Now you're ready to begin the development/test cycle:
 - `make build` will build Agones
@@ -414,8 +414,9 @@ Build all the images required for Agones
 #### `make build-sdks`
 Build all the sdks required for Agones
 
-#### `make build-sdk-cpp`
-Build the cpp sdk static and dynamic libraries (linux libraries only)
+#### `make build-sdk`
+Next command `make build-sdk SDK_FOLDER=[SDK_TYPE]` will build SDK of `SDK_TYPE`. 
+For instance, in order to build the cpp sdk static and dynamic libraries (linux libraries only) use `SDK_FOLDER=cpp`
 
 #### `make run-sdk-conformance-local`
 Run Agones sidecar which would wait for all requests from the SDK client.
@@ -473,7 +474,7 @@ These tests validate Agones flow from start to finish.
 
 It uses the KUBECONFIG to target a Kubernetes cluster.
 
-See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on minikube.
+See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on Minikube.
 
 #### `make setup-prometheus`
 
@@ -489,7 +490,7 @@ See [`make minikube-setup-prometheus`](#make-minikube-setup-prometheus) and [`ma
 
 Install Gafrana server using [stable/grafana](https://github.com/helm/charts/tree/master/stable/grafana) chart into the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).
 
-You can set your own password using the `PASSWORD` environement variable.
+You can set your own password using the `PASSWORD` environment variable.
 
 See [`make minikube-setup-grafana`](#make-minikube-setup-grafana) and [`make kind-setup-grafana`](#make-kind-setup-grafana) to run the installation on Minikube or Kind.
 
@@ -719,11 +720,11 @@ port forwarding to the controller deployment.
 
 ### Custom Environment
 
-#### `make setup-custom-test-cluster`
+#### `make setup-test-cluster`
 Initializes your custom cluster for working with Agones, by installing Helm/Tiller.
 
-#### `make clean-custom-test-cluster`
-Cleans up your custom cluster by reseting Helm.
+#### `make clean-test-cluster`
+Cleans up your custom cluster by resetting Helm.
 
 ## Dependencies
 

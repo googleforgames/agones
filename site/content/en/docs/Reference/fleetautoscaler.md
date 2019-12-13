@@ -13,7 +13,7 @@ A full `FleetAutoscaler` specification is available below and in the
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
 # FleetAutoscaler Metadata
-# https://v1-12.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.12/#objectmeta-v1-meta
+# https://v1-13.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#objectmeta-v1-meta
 metadata:
   name: fleet-autoscaler-example
 spec:
@@ -75,10 +75,11 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
 - `policy` is the autoscaling policy
   - `type` is type of the policy. "Buffer" and "Webhook" are available
   - `buffer` parameters of the buffer policy type
-    - `bufferSize`  is the size of a buffer of "ready" game server instances
+    - `bufferSize`  is the size of a buffer of "ready" and "reserved" game server instances.
                     The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
-                    as instances are being allocated or terminated
-                    it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+                    as instances are being allocated or terminated.
+                    Note that "reserved" game servers could not be scaled down.
+                    It can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
     - `minReplicas` is the minimum fleet size to be set by this FleetAutoscaler. 
                     if not specified, the minimum fleet size will be bufferSize if absolute value is used.
                     When `bufferSize` in percentage format is used, `minReplicas` should be more than 0.

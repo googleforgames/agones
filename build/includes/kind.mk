@@ -26,7 +26,7 @@ kind-test-cluster: DOCKER_RUN_ARGS+=--network=host
 kind-test-cluster: $(ensure-build-image)
 	@if [ -z $$(kind get clusters | grep $(KIND_PROFILE)) ]; then\
 		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
-		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.12.9 --wait 5m;\
+		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.13.10 --wait 5m;\
 	fi
 	$(MAKE) setup-test-cluster KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 
@@ -47,7 +47,7 @@ kind-install:
 		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort\
 		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")"
 
-# pushses the current dev version of agones to the kind single node cluster.
+# pushes the current dev version of agones to the kind single node cluster.
 kind-push:
 	kind load docker-image $(sidecar_tag) --name="$(KIND_PROFILE)"
 	kind load docker-image $(controller_tag) --name="$(KIND_PROFILE)"

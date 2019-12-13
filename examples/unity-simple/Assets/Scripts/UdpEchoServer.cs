@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Agones;
 using System.Net;
 using System.Net.Sockets;
@@ -33,7 +34,18 @@ namespace AgonesExample
             client = new UdpClient(Port);
 
             agones = GetComponent<AgonesSdk>();
-            bool ok = await agones.Ready();
+            bool ok = await agones.Connect();
+            if (ok)
+            {
+                Debug.Log(("Server - Connected"));
+            }
+            else
+            {
+                Debug.Log(("Server - Failed to connect, exiting"));
+                Application.Quit(1);
+            }
+            
+            ok = await agones.Ready();
             if (ok)
             {
                 Debug.Log($"Server - Ready");
@@ -73,6 +85,14 @@ namespace AgonesExample
 
                         echoBytes = Encoding.UTF8.GetBytes($"Allocate {ok}");
                         break;
+                    
+                    case "GameServer":
+                        var gameserver = await agones.GameServer();
+                        Debug.Log($"Server - GameServer {gameserver}");
+
+                        ok = gameserver != null;
+                        echoBytes = Encoding.UTF8.GetBytes(ok ? $"GameServer() Name: {gameserver.ObjectMeta.Name} {ok}" : $"GameServer(): {ok}");
+                        break;
 
                     case "Label":
                         if (recvTexts.Length == 3)
@@ -101,6 +121,20 @@ namespace AgonesExample
                         else
                         {
                             echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Annotation command, must use 2 arguments");
+                        }
+                        break;
+                    case "Reserve":
+                        if (recvTexts.Length == 2)
+                        {
+                            TimeSpan duration = new TimeSpan(0, 0, Int32.Parse(recvTexts[1]));
+                            ok = await agones.Reserve(duration);
+                            Debug.Log($"Server - Reserve({recvTexts[1]} {ok}");
+                            
+                            echoBytes = Encoding.UTF8.GetBytes($"Reserve({recvTexts[1]}) {ok}");
+                        }
+                        else
+                        {
+                            echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Reserve command, must use 1 argument");
                         }
                         break;
                     default:

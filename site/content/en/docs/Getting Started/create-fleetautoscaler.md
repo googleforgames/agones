@@ -255,6 +255,11 @@ simple-udp-mzhrl-qspb6   Ready     10.30.64.99    7859    minikube     5m
 simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    7745    minikube     5m
 ```
 
+{{< alert title="Note" color="info">}}
+If you want to update a `Fleet`, which has `RollingUpdate` replacement strategy and is controlled by a `FleetAutoscaler`, you could omit `Replicas` parameter in a `Fleet` Spec.
+Otherwise fleet would be scaled according to Fleet `Replicas` parameter first and only after certain amount of time it would be rescaled to fit `FleetAutoscaler` `BufferSize` parameter.
+{{< /alert >}}
+
 ## Next Steps
 
 Read the advanced [Scheduling and Autoscaling]({{< relref "../Advanced/scheduling-and-autoscaling.md" >}}) guide, for more details on autoscaling. 

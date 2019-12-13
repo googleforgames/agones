@@ -14,10 +14,14 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Agones.Model;
+using MiniJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -31,8 +35,7 @@ namespace Agones
         /// <summary>
         /// Interval of the server sending a health ping to the Agones sidecar.
         /// </summary>
-        [Range(0.01f, 5)]
-        public float healthIntervalSecond = 5.0f;
+        [Range(0.01f, 5)] public float healthIntervalSecond = 5.0f;
 
         /// <summary>
         /// Whether the server sends a health ping to the Agones sidecar.
@@ -59,7 +62,7 @@ namespace Agones
         private void Start()
         {
             String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
-            sidecarAddress = "http://localhost:" + (port ?? "59358");
+            sidecarAddress = "http://localhost:" + (port ?? "9358");
             HealthCheckAsync();
         }
 
@@ -70,6 +73,38 @@ namespace Agones
         #endregion
 
         #region AgonesRestClient Public Methods
+
+        /// <summary>
+        /// Async method that waits to connect to the SDK Server. Will timeout
+        /// and return false after 30 seconds.
+        /// </summary>
+        /// <returns>A task that indicated whether it was successful or not</returns>
+        public async Task<bool> Connect()
+        {
+            for (var i = 0; i < 30; i++)
+            {
+                Log($"Attempting to connect...{i + 1}");
+                try
+                {
+                    var gameServer = await GameServer();
+                    if (gameServer != null)
+                    {
+                        Log("Connected!");
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Connection exception: {ex.Message}");
+                }
+
+                Log("Connection failed, retrying.");
+                await Task.Delay(1000);
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Marks this Game Server as ready to receive connections.
         /// </summary>
@@ -78,7 +113,23 @@ namespace Agones
         /// </returns>
         public async Task<bool> Ready()
         {
-            return await SendRequestAsync("/ready", "{}");
+            return await SendRequestAsync("/ready", "{}").ContinueWith(task => task.Result.ok);
+        }
+
+        /// <summary>
+        /// Retrieve the GameServer details
+        /// </summary>
+        /// <returns>The current GameServer configuration</returns>
+        public async Task<GameServer> GameServer()
+        {
+            var result = await SendRequestAsync("/gameserver", "{}", UnityWebRequest.kHttpVerbGET);
+            if (!result.ok)
+            {
+                return null;
+            }
+
+            var data = Json.Deserialize(result.json) as Dictionary<string, object>;
+            return new GameServer(data);
         }
 
         /// <summary>
@@ -89,7 +140,7 @@ namespace Agones
         /// </returns>
         public async Task<bool> Shutdown()
         {
-            return await SendRequestAsync("/shutdown", "{}");
+            return await SendRequestAsync("/shutdown", "{}").ContinueWith(task => task.Result.ok);
         }
 
         /// <summary>
@@ -100,7 +151,7 @@ namespace Agones
         /// </returns>
         public async Task<bool> Allocate()
         {
-            return await SendRequestAsync("/allocate", "{}");
+            return await SendRequestAsync("/allocate", "{}").ContinueWith(task => task.Result.ok);
         }
 
         /// <summary>
@@ -114,7 +165,8 @@ namespace Agones
         public async Task<bool> SetLabel(string key, string value)
         {
             string json = JsonUtility.ToJson(new KeyValueMessage(key, value));
-            return await SendRequestAsync("/metadata/label", json, UnityWebRequest.kHttpVerbPUT);
+            return await SendRequestAsync("/metadata/label", json, UnityWebRequest.kHttpVerbPUT)
+                .ContinueWith(task => task.Result.ok);
         }
 
         /// <summary>
@@ -128,11 +180,37 @@ namespace Agones
         public async Task<bool> SetAnnotation(string key, string value)
         {
             string json = JsonUtility.ToJson(new KeyValueMessage(key, value));
-            return await SendRequestAsync("/metadata/annotation", json, UnityWebRequest.kHttpVerbPUT);
+            return await SendRequestAsync("/metadata/annotation", json, UnityWebRequest.kHttpVerbPUT)
+                .ContinueWith(task => task.Result.ok);
+        }
+
+        private struct Duration
+        {
+            public int seconds;
+
+            public Duration(int seconds)
+            {
+                this.seconds = seconds;
+            }
+        }
+
+        /// <summary>
+        /// Move the GameServer into the Reserved state for the specified Timespan (0 seconds is forever)
+        /// Smallest unit is seconds.
+        /// </summary>
+        /// <param name="duration">The time span to reserve for</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation and returns true if the request was successful
+        /// </returns>
+        public async Task<bool> Reserve(TimeSpan duration)
+        {
+            string json = JsonUtility.ToJson(new Duration(seconds: duration.Seconds));
+            return await SendRequestAsync("/reserve", json).ContinueWith(task => task.Result.ok);
         }
         #endregion
 
         #region AgonesRestClient Private Methods
+
         private async void HealthCheckAsync()
         {
             while (healthEnabled)
@@ -150,7 +228,17 @@ namespace Agones
             }
         }
 
-        private async Task<bool> SendRequestAsync(string api, string json, string method = UnityWebRequest.kHttpVerbPOST)
+        /// <summary>
+        /// Result of a Async HTTP request
+        /// </summary>
+        private struct AsyncResult
+        {
+            public bool ok;
+            public string json;
+        }
+
+        private async Task<AsyncResult> SendRequestAsync(string api, string json,
+            string method = UnityWebRequest.kHttpVerbPOST)
         {
             // To prevent that an async method leaks after destroying this gameObject.
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
@@ -164,10 +252,13 @@ namespace Agones
 
             await new AgonesAsyncOperationWrapper(req.SendWebRequest());
 
-            bool ok = req.responseCode == (long)System.Net.HttpStatusCode.OK;
+            var result = new AsyncResult();
 
-            if (ok)
+            result.ok = req.responseCode == (long) HttpStatusCode.OK;
+
+            if (result.ok)
             {
+                result.json = req.downloadHandler.text;
                 Log($"Agones SendRequest ok: {api} {req.downloadHandler.text}");
             }
             else
@@ -175,7 +266,7 @@ namespace Agones
                 Log($"Agones SendRequest failed: {api} {req.error}");
             }
 
-            return ok;
+            return result;
         }
 
         private void Log(object message)

@@ -41,8 +41,8 @@ import (
 )
 
 const (
-	defaultGRPCPort = 59357
-	defaultHTTPPort = 59358
+	defaultGRPCPort = 9357
+	defaultHTTPPort = 9358
 
 	// specifically env vars
 	gameServerNameEnv = "GAMESERVER_NAME"

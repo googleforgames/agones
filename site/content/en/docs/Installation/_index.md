@@ -17,7 +17,7 @@ If no dedicated nodes are available, Agones will run on regular nodes.
 
 ## Usage Requirements
 
-- Kubernetes cluster version 1.12
+- Kubernetes cluster version 1.13
     - [Minikube](https://github.com/kubernetes/minikube), [Kind](https://github.com/kubernetes-sigs/kind), [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/) and [Amazon EKS](https://aws.amazon.com/eks/) have been tested
     - If you are creating and managing your own Kubernetes cluster, the
@@ -30,7 +30,7 @@ If no dedicated nodes are available, Agones will run on regular nodes.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
 {{< alert title="Warning" color="warning">}}
-Later versions of Kubernetes may work, but this project is tested against 1.12, and is therefore the supported version.
+Later versions of Kubernetes may work, but this project is tested against 1.13, and is therefore the supported version.
 Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
 {{< /alert >}}
 
@@ -101,7 +101,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
+gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.13 \
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
@@ -111,7 +111,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.12 \
 
 Flag explanations:
 
-* cluster-version: Agones requires Kubernetes version 1.12.
+* cluster-version: Agones requires Kubernetes version 1.13.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
@@ -171,6 +171,10 @@ gcloud compute firewall-rules create game-server-firewall \
   --description "Firewall to allow game server udp traffic"
 ```
 
+### Follow Normal Instructions to Install
+
+Continue to [Installing Agones](#installing-agones).
+
 ## Setting up a Minikube cluster
 
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile.
@@ -197,8 +201,12 @@ The following command starts a local minikube cluster via virtualbox - but this 
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
 ```bash
-minikube start --kubernetes-version v1.12.10 --vm-driver virtualbox
+minikube start --kubernetes-version v1.13.12 --vm-driver virtualbox
 ```
+
+### Follow Normal Instructions to Install
+
+Continue to [Installing Agones](#installing-agones).
 
 ## Setting up an Amazon Web Services EKS cluster
 
@@ -210,10 +218,11 @@ Possible steps are the following:
 1. Create new IAM role for cluster management.
 1. Run `aws configure` to authorize your `awscli` with proper `AWS Access Key ID` and `AWS Secret Access Key`.
 1. Create an example cluster:
+
 ```
 eksctl create cluster \
 --name prod \
---version 1.12 \
+--version 1.13 \
 --nodegroup-name standard-workers \
 --node-type t3.medium \
 --nodes 3 \
@@ -264,8 +273,8 @@ AKS_LOCATION=westeurope     # Azure region in which you'll deploy your AKS clust
 az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
 
 # Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
-# The following command will create a single Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.11.8. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 1 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.11.8
+# The following command will create a four Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.13.12. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.13.12
 
 # Install kubectl
 sudo az aks install-cli
@@ -304,6 +313,8 @@ az network nsg rule create \
 #### Creating and assigning Public IPs to Nodes
 
 Nodes in AKS don't get a Public IP by default. To assign a Public IP to a Node, find the Resource Group where the AKS resources are installed on the [portal](https://portal.azure.com) (it should have a name like `MC_resourceGroupName_AKSName_westeurope`). Then, you can follow the instructions [here](https://docs.microsoft.com/en-us/azure/site-recovery/concepts-public-ip-address-with-site-recovery) to create a new Public IP and assign it to the Node/VM. For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). If you are looking for an automated way to create and assign Public IPs for your AKS Nodes, check [this project](https://github.com/dgkanatsios/AksNodePublicIPController).
+
+### Follow Normal Instructions to Install
 
 Continue to [Installing Agones](#installing-agones).
 

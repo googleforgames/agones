@@ -55,8 +55,8 @@ type FleetList struct {
 
 // FleetSpec is the spec for a Fleet
 type FleetSpec struct {
-	// Replicas are the number of GameServers that should be in this set
-	Replicas int32 `json:"replicas"`
+	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
+	Replicas int32 `json:"replicas,omitempty"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".

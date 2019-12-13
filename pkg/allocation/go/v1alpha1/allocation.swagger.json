@@ -19,7 +19,7 @@
         "operationId": "PostAllocate",
         "responses": {
           "200": {
-            "description": "",
+            "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1alpha1AllocationResponse"
             }

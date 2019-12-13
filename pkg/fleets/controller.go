@@ -17,7 +17,6 @@ package fleets
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -40,6 +39,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -542,7 +542,7 @@ func (c *Controller) filterGameServerSetByActive(fleet *agonesv1.Fleet, list []*
 	var rest []*agonesv1.GameServerSet
 
 	for _, gsSet := range list {
-		if reflect.DeepEqual(gsSet.Spec.Template, fleet.Spec.Template) {
+		if apiequality.Semantic.DeepEqual(gsSet.Spec.Template, fleet.Spec.Template) {
 			active = gsSet
 		} else {
 			rest = append(rest, gsSet)

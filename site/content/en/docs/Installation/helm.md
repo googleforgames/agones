@@ -10,7 +10,7 @@ description: >
 ## Prerequisites
 
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
-- Kubernetes 1.11+
+- Kubernetes 1.13
 - Role-based access controls (RBAC) activated
 - MutatingAdmissionWebhook and ValidatingAdmissionWebhook admission controllers activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
 
@@ -31,7 +31,7 @@ _We recommend to install Agones in its own namespaces (like `agones-system` as s
 you can use the helm `--namespace` parameter to specify a different namespace._
 
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
-run on regular nodes, but that's not recommended for production use. For instructions on setting up a decidated node
+run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
 pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment. 
 
 The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
@@ -110,14 +110,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
-| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
+| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with Stackdriver                              | ``                     |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
-| `agones.image.controller.pullSecret`                | Image pull secret for the controller                                                            | ``                     |
+| `agones.image.controller.pullSecret`                | Image pull secret for the controller, allocator, sdk and ping image. Should be created both in `agones-system` and `default` namespaces | ``                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
 | `agones.image.sdk.cpuRequest`                       | The [cpu request][constraints] for sdk server container                                         | `30m`                  |
 | `agones.image.sdk.cpuLimit`                         | The [cpu limit][constraints] for the sdk server container                                       | `0` (none)             |
@@ -159,8 +159,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
 | `agones.allocator.install`                          | Whether to install the [allocator service][allocator]                                           | `true`                 |
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
-| `agones.allocator.http.expose`                      | Expose the http allocator service via a Service                                                 | `true`                 |
-| `agones.allocator.http.response`                    | The string response returned from the http service                                              | `ok`                   |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
 | `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
@@ -168,7 +166,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="1.2.0" %}}
+{{% feature publishVersion="1.3.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
@@ -182,6 +180,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [constraints]: https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/cpu-constraint-namespace/
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
+[allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -204,7 +203,7 @@ You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}val
 
 ## TLS Certificates
 
-By default agones chart generates tls certificates used by the adminission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
+By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
 For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
