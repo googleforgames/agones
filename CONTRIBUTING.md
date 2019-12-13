@@ -48,6 +48,16 @@ When submitting pull requests, make sure to do the following:
 - Remove trailing whitespace. Many editors will do this automatically.
 - Ensure any new files have [a trailing newline](https://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
 
+## Feature Stages
+
+Often, new features will need to go through experimental stages so that we can gather feedback and adjust as necessary.
+
+You can see this project's [feature stage documentation](https://agones.dev/docs/guides/feature-stages/) on the Agones
+website.
+
+If you are working on a new feature, you may need to take feature stages into account. This should be discussed on a
+ design ticket prior to commencement of work. 
+
 ## Continuous Integration
 
 Continuous integration is provided by [Google Cloud Container Builder](https://cloud.google.com/container-builder/),
