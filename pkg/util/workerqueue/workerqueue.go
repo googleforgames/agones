@@ -26,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -150,8 +151,14 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 	}
 
 	if err := wq.SyncHandler(key); err != nil {
+		// Conflicts are expected, so only show them in debug operations.
+		if k8serror.IsConflict(err) {
+			wq.logger.WithField(wq.keyName, obj).Debug(err)
+		} else {
+			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
+		}
+
 		// we don't forget here, because we want this to be retried via the queue
-		runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
 		wq.queue.AddRateLimited(obj)
 		return true
 	}
