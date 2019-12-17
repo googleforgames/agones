@@ -34,7 +34,7 @@ func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocati
 			Namespace: in.GetNamespace(),
 		},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Preferred:  convertLabelSelectorsFromReference(in.GetPreferredGameServerSelectors()),
+			Preferred:  convertLabelSelectorsToInternalLabelSelectors(in.GetPreferredGameServerSelectors()),
 			Scheduling: convertAllocationSchedulingV1Alpha1ToSchedulingStrategyV1(in.GetScheduling()),
 		},
 	}
@@ -43,8 +43,8 @@ func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocati
 		gsa.Spec.MultiClusterSetting = allocationv1.MultiClusterSetting{
 			Enabled: in.GetMultiClusterSetting().GetEnabled(),
 		}
-		if in.GetMultiClusterSetting().GetPolicySelector() != nil {
-			gsa.Spec.MultiClusterSetting.PolicySelector = *in.GetMultiClusterSetting().GetPolicySelector()
+		if ls := convertLabelSelectorToInternalLabelSelector(in.GetMultiClusterSetting().GetPolicySelector()); ls != nil {
+			gsa.Spec.MultiClusterSetting.PolicySelector = *ls
 		}
 	}
 
@@ -55,8 +55,8 @@ func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocati
 		}
 	}
 
-	if in.GetRequiredGameServerSelector() != nil {
-		gsa.Spec.Required = *in.RequiredGameServerSelector
+	if ls := convertLabelSelectorToInternalLabelSelector(in.GetRequiredGameServerSelector()); ls != nil {
+		gsa.Spec.Required = *ls
 	}
 	return gsa
 }
@@ -69,12 +69,12 @@ func ConvertGSAV1ToAllocationRequestV1Alpha1(in *allocationv1.GameServerAllocati
 
 	out := &pb.AllocationRequest{
 		Namespace:                    in.GetNamespace(),
-		PreferredGameServerSelectors: convertLabelSelectorsToReference(in.Spec.Preferred),
+		PreferredGameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Preferred),
 		Scheduling:                   convertSchedulingStrategyV1ToAllocationSchedulingV1Alpha1(in.Spec.Scheduling),
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
-		RequiredGameServerSelector: &in.Spec.Required,
+		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
 		MetaPatch: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
@@ -82,7 +82,7 @@ func ConvertGSAV1ToAllocationRequestV1Alpha1(in *allocationv1.GameServerAllocati
 	}
 
 	if in.Spec.MultiClusterSetting.Enabled {
-		out.MultiClusterSetting.PolicySelector = &in.Spec.MultiClusterSetting.PolicySelector
+		out.MultiClusterSetting.PolicySelector = convertInternalLabelSelectorToLabelSelector(&in.Spec.MultiClusterSetting.PolicySelector)
 	}
 
 	return out
@@ -110,21 +110,35 @@ func convertSchedulingStrategyV1ToAllocationSchedulingV1Alpha1(in apis.Schedulin
 	return pb.AllocationRequest_Packed
 }
 
-// convertLabelSelectorsFromReference converts []* to [] for LabelSelector
-func convertLabelSelectorsFromReference(in []*metav1.LabelSelector) []metav1.LabelSelector {
-	var result []metav1.LabelSelector
+func convertLabelSelectorToInternalLabelSelector(in *pb.LabelSelector) *metav1.LabelSelector {
+	if in == nil {
+		return nil
+	}
+	return &metav1.LabelSelector{MatchLabels: in.GetMatchLabels()}
+}
+
+func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.LabelSelector {
+	if in == nil {
+		return nil
+	}
+	return &pb.LabelSelector{MatchLabels: in.MatchLabels}
+}
+
+func convertInternalLabelSelectorsToLabelSelectors(in []metav1.LabelSelector) []*pb.LabelSelector {
+	var result []*pb.LabelSelector
 	for _, l := range in {
-		result = append(result, *l)
+		c := convertInternalLabelSelectorToLabelSelector(&l)
+		result = append(result, c)
 	}
 	return result
 }
 
-// convertLabelSelectorsToReference converts [] to []* for LabelSelector
-func convertLabelSelectorsToReference(in []metav1.LabelSelector) []*metav1.LabelSelector {
-	var result []*metav1.LabelSelector
+func convertLabelSelectorsToInternalLabelSelectors(in []*pb.LabelSelector) []metav1.LabelSelector {
+	var result []metav1.LabelSelector
 	for _, l := range in {
-		l := l
-		result = append(result, &l)
+		if c := convertLabelSelectorToInternalLabelSelector(l); c != nil {
+			result = append(result, *c)
+		}
 	}
 	return result
 }

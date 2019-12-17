@@ -16,7 +16,6 @@ syntax = "proto3";
 
 package v1alpha1;
 
-import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 import "google/api/annotations.proto";
 
 service AllocationService {
@@ -36,11 +35,11 @@ message AllocationRequest {
   MultiClusterSetting multiClusterSetting = 2;
 
   // The required allocation. Defaults to all GameServers.
-  k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector requiredGameServerSelector = 3;
+  LabelSelector requiredGameServerSelector = 3;
 
   // The ordered list of preferred allocations out of the `required` set.
   // If the first selector is not matched, the selection attempts the second selector, and so on.
-  repeated k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector preferredGameServerSelectors = 4;
+  repeated LabelSelector preferredGameServerSelectors = 4;
 
   // Scheduling strategy. Defaults to "Packed".
   SchedulingStrategy scheduling = 5;
@@ -86,11 +85,17 @@ message MultiClusterSetting {
     bool enabled = 1;
 
     // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
-    k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector policySelector = 2;
+    LabelSelector policySelector = 2;
 }
    
 // MetaPatch is the metadata used to patch the GameServer metadata on allocation
 message MetaPatch {
     map<string, string> labels = 1;
     map<string, string> annotations = 2;
+}
+
+// LabelSelector used for finding a GameServer with matching labels.
+message LabelSelector {
+  // Labels to match.
+	map<string, string> matchLabels = 1;
 }
