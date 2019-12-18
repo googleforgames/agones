@@ -47,7 +47,7 @@ To accept allocation requests from other clusters, agones-allocator for cluster 
 
 Follow the steps to configure the [agones allocator REST API service]({{< relref "allocator-service.md">}}). The client certificate pair in the mentioned document is stored as a K8s secret. Here are the secrets to set:
 
-1. Client certificate to talk to other clusters:
+1.Client certificate to talk to other clusters:
 
 ```bash
 cat <<EOF | kubectl apply -f -
@@ -55,10 +55,11 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-client-to-cluster-B
+  namespace: cluster-A-ns
 type: Opaque
 data:
-  client.crt: <REDACTED>
-  client.key: <REDACTED>
+  tls.crt: <REDACTED>
+  tls.key: <REDACTED>
   ca.crt: <REDACTED>
 EOF
 ```
@@ -67,7 +68,7 @@ The certificates are base 64 string of the certificate file e.g. `cat ${CERT_FIL
 
 `ca.crt` is the server TLS public certificate if it is self-signed. For simplicity, it is recommended to use one client secret per cluster and make `ca.crt` bundle of server certificates.
 
-2. Add client CA to the list of authorized client certificates by agones-allocator in the targeted cluster.
+2.Add client CA to the list of authorized client certificates by agones-allocator in the targeted cluster.
 
 ```bash
 cat <<EOF | kubectl apply -f -
@@ -75,8 +76,9 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: allocator-client-ca
+  namespace: agones-system
 type: Opaque
-Data:
+data:
   client1.crt: <REDACTED>
   client2.crt: <REDACTED>
   …
@@ -96,7 +98,7 @@ FLEET_NAME=<fleet name>
 
 curl https://${EXTERNAL_IP}:443/v1alpha1/gameserverallocation \
     --header "Content-Type: application/json" \
-    -d '{"namespace": "'${NAMESPACE}'", "multiClusterSetting": {"enabled": true}, "requiredGameServerSelector": {"matchLabels": {"stable.agones.dev/fleet": "'${FLEET_NAME}'"}}}' \
+    -d '{"namespace": "'${NAMESPACE}'", "multiClusterSetting": {"enabled": true}, "requiredGameServerSelector": {"matchLabels": {"agones.dev/fleet": "'${FLEET_NAME}'"}}}' \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
     --cacert ${TLS_CERT_FILE} -v
