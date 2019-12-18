@@ -68,6 +68,7 @@ const (
 	apiServerSustainedQPSFlag    = "api-server-qps"
 	apiServerBurstQPSFlag        = "api-server-qps-burst"
 	logDirFlag                   = "log-dir"
+	logLevelFlag                 = "log-level"
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
 	defaultResync                = 30 * time.Second
@@ -101,6 +102,15 @@ func main() {
 
 	if ctlConf.LogDir != "" {
 		setupLogging(ctlConf.LogDir, ctlConf.LogSizeLimitMB)
+	}
+
+	logger.WithField("logLevel", ctlConf.LogLevel).Info("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(strings.ToLower(ctlConf.LogLevel))
+	if err == nil {
+		runtime.SetLevel(level)
+	} else {
+		logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		runtime.SetLevel(logrus.InfoLevel)
 	}
 
 	logger.WithField("version", pkg.Version).
@@ -235,6 +245,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(apiServerSustainedQPSFlag, 100)
 	viper.SetDefault(apiServerBurstQPSFlag, 200)
 	viper.SetDefault(logDirFlag, "")
+	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
@@ -255,6 +266,7 @@ func parseEnvFlags() config {
 	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
+	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -275,6 +287,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(numWorkersFlag))
 	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
 	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
+	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
 
@@ -306,6 +319,7 @@ func parseEnvFlags() config {
 		APIServerSustainedQPS: int(viper.GetInt32(apiServerSustainedQPSFlag)),
 		APIServerBurstQPS:     int(viper.GetInt32(apiServerBurstQPSFlag)),
 		LogDir:                viper.GetString(logDirFlag),
+		LogLevel:              viper.GetString(logLevelFlag),
 		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
 	}
 }
@@ -329,6 +343,7 @@ type config struct {
 	APIServerSustainedQPS int
 	APIServerBurstQPS     int
 	LogDir                string
+	LogLevel              string
 	LogSizeLimitMB        int
 }
 

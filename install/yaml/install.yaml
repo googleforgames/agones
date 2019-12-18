@@ -1362,6 +1362,8 @@ spec:
           value: "400"
         - name: API_SERVER_QPS_BURST
           value: "500"
+        - name: LOG_LEVEL
+          value: "info"
         - name: LOG_DIR
           value: "/home/agones/logs"
         - name: LOG_SIZE_LIMIT_MB
