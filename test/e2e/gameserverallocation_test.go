@@ -108,9 +108,10 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				},
 			}
 			resp, err := framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
-			if assert.Nil(t, err) {
-				assert.Equal(t, mca.Spec, resp.Spec)
+			if !assert.Nil(t, err) {
+				assert.FailNowf(t, "GameServerAllocationPolicies(%v).Create(%v)", fleet.ObjectMeta.Namespace, mca)
 			}
+			assert.Equal(t, mca.Spec, resp.Spec)
 
 			// Allocation Policy #2: another cluster with desired label, but lower priority.
 			// If the policy is selected due to a bug the request fails as it cannot find the secret.
@@ -131,7 +132,6 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				},
 			}
 			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
-			assert.Nil(t, err)
 			if assert.Nil(t, err) {
 				assert.Equal(t, mca.Spec, resp.Spec)
 			}
@@ -153,7 +153,6 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				},
 			}
 			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
-			assert.Nil(t, err)
 			if assert.Nil(t, err) {
 				assert.Equal(t, mca.Spec, resp.Spec)
 			}
@@ -178,10 +177,19 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 				},
 			}
 
-			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(gsa)
-			if assert.Nil(t, err) {
+			// wait for the allocation policies to be added.
+			err = wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
+				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(gsa)
+				if err != nil {
+					t.Logf("GameServerAllocations(%v).Create(%v) failed: %s", fleet.ObjectMeta.Namespace, gsa, err)
+					return false, nil
+				}
+
 				assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
-			}
+				return true, nil
+			})
+
+			assert.NoError(t, err)
 		})
 	}
 }
