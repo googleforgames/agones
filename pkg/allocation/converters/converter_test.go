@@ -38,18 +38,18 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 				Namespace: "ns",
 				MultiClusterSetting: &pb.MultiClusterSetting{
 					Enabled: true,
-					PolicySelector: &metav1.LabelSelector{
+					PolicySelector: &pb.LabelSelector{
 						MatchLabels: map[string]string{
 							"a": "b",
 						},
 					},
 				},
-				RequiredGameServerSelector: &metav1.LabelSelector{
+				RequiredGameServerSelector: &pb.LabelSelector{
 					MatchLabels: map[string]string{
 						"c": "d",
 					},
 				},
-				PreferredGameServerSelectors: []*metav1.LabelSelector{
+				PreferredGameServerSelectors: []*pb.LabelSelector{
 					{
 						MatchLabels: map[string]string{
 							"e": "f",
@@ -112,8 +112,8 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
-				RequiredGameServerSelector:   &metav1.LabelSelector{},
-				PreferredGameServerSelectors: []*metav1.LabelSelector{},
+				RequiredGameServerSelector:   &pb.LabelSelector{},
+				PreferredGameServerSelectors: []*pb.LabelSelector{},
 				Scheduling:                   pb.AllocationRequest_Distributed,
 				MetaPatch:                    &pb.MetaPatch{},
 			},
@@ -188,7 +188,7 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 			want: &pb.AllocationRequest{
 				Namespace:                  "",
 				MultiClusterSetting:        &pb.MultiClusterSetting{},
-				RequiredGameServerSelector: &metav1.LabelSelector{},
+				RequiredGameServerSelector: &pb.LabelSelector{},
 				Scheduling:                 pb.AllocationRequest_Distributed,
 				MetaPatch:                  &pb.MetaPatch{},
 			},
@@ -201,7 +201,7 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 			},
 			want: &pb.AllocationRequest{
 				MultiClusterSetting:        &pb.MultiClusterSetting{},
-				RequiredGameServerSelector: &metav1.LabelSelector{},
+				RequiredGameServerSelector: &pb.LabelSelector{},
 				MetaPatch:                  &pb.MetaPatch{},
 			},
 		},
