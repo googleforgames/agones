@@ -75,7 +75,7 @@ func TestAllocator(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
 		Namespace:                  namespace,
-		RequiredGameServerSelector: &metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 	}
 
 	body, err := json.Marshal(request)
@@ -168,7 +168,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		Namespace: namespaceA,
 		// Enable multi-cluster setting
 		MultiClusterSetting:        &pb.MultiClusterSetting{Enabled: true},
-		RequiredGameServerSelector: &metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 	}
 
 	body, err := json.Marshal(request)

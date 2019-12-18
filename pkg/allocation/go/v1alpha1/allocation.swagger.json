@@ -75,47 +75,6 @@
       },
       "description": "The gameserver port info that is allocated."
     },
-    "v1LabelSelector": {
-      "type": "object",
-      "properties": {
-        "matchLabels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "title": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.\n+optional"
-        },
-        "matchExpressions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1LabelSelectorRequirement"
-          },
-          "title": "matchExpressions is a list of label selector requirements. The requirements are ANDed.\n+optional"
-        }
-      },
-      "description": "A label selector is a label query over a set of resources. The result of matchLabels and\nmatchExpressions are ANDed. An empty label selector matches all objects. A null\nlabel selector matches no objects."
-    },
-    "v1LabelSelectorRequirement": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string",
-          "title": "key is the label key that the selector applies to.\n+patchMergeKey=key\n+patchStrategy=merge"
-        },
-        "operator": {
-          "type": "string",
-          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist."
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.\n+optional"
-        }
-      },
-      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values."
-    },
     "v1alpha1AllocationRequest": {
       "type": "object",
       "properties": {
@@ -128,13 +87,13 @@
           "description": "If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally."
         },
         "requiredGameServerSelector": {
-          "$ref": "#/definitions/v1LabelSelector",
+          "$ref": "#/definitions/v1alpha1LabelSelector",
           "description": "The required allocation. Defaults to all GameServers."
         },
         "preferredGameServerSelectors": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1LabelSelector"
+            "$ref": "#/definitions/v1alpha1LabelSelector"
           },
           "description": "The ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
         },
@@ -171,6 +130,19 @@
         }
       }
     },
+    "v1alpha1LabelSelector": {
+      "type": "object",
+      "properties": {
+        "matchLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels to match."
+        }
+      },
+      "description": "LabelSelector used for finding a GameServer with matching labels."
+    },
     "v1alpha1MetaPatch": {
       "type": "object",
       "properties": {
@@ -198,7 +170,7 @@
           "description": "If set to true, multi-cluster allocation is enabled."
         },
         "policySelector": {
-          "$ref": "#/definitions/v1LabelSelector",
+          "$ref": "#/definitions/v1alpha1LabelSelector",
           "description": "Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied."
         }
       },
