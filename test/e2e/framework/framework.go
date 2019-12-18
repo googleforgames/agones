@@ -190,7 +190,8 @@ func (f *Framework) ListGameServersFromFleet(flt *agonesv1.Fleet) ([]agonesv1.Ga
 		return results, err
 	}
 
-	for _, gsSet := range gsSetList.Items {
+	for i := range gsSetList.Items {
+		gsSet := &gsSetList.Items[i]
 		opts := metav1.ListOptions{LabelSelector: labels.Set{agonesv1.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
 		gsList, err := f.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).List(opts)
 		if err != nil {
@@ -214,10 +215,11 @@ func FleetReadyCount(amount int32) func(fleet *agonesv1.Fleet) bool {
 // WaitForFleetGameServersCondition waits for all GameServers for a given fleet to match
 // a condition specified by a callback.
 func (f *Framework) WaitForFleetGameServersCondition(flt *agonesv1.Fleet,
-	cond func(server agonesv1.GameServer) bool) error {
+	cond func(server *agonesv1.GameServer) bool) error {
 	return f.WaitForFleetGameServerListCondition(flt,
 		func(servers []agonesv1.GameServer) bool {
-			for _, gs := range servers {
+			for i := range servers {
+				gs := &servers[i]
 				if !cond(gs) {
 					return false
 				}
@@ -255,7 +257,7 @@ func (f *Framework) NewStatsCollector(name string) *StatsCollector {
 func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Cleaning up now.")
 	defer logrus.Info("Finished cleanup.")
-	agonesv1 := f.AgonesClient.AgonesV1()
+	agonesV1 := f.AgonesClient.AgonesV1()
 	deleteOptions := &metav1.DeleteOptions{}
 	listOptions := metav1.ListOptions{}
 
@@ -268,13 +270,14 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
-	for _, p := range podList.Items {
-		if err = pods.Delete(p.ObjectMeta.Name, deleteOptions); err != nil {
+	for i := range podList.Items {
+		p := &podList.Items[i]
+		if err := pods.Delete(p.ObjectMeta.Name, deleteOptions); err != nil {
 			return err
 		}
 	}
 
-	err = agonesv1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
+	err = agonesV1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
@@ -284,7 +287,7 @@ func (f *Framework) CleanUp(ns string) error {
 		return err
 	}
 
-	return agonesv1.GameServers(ns).
+	return agonesV1.GameServers(ns).
 		DeleteCollection(deleteOptions, listOptions)
 }
 
@@ -411,7 +414,8 @@ func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
 	if err != nil {
 		t.Fatalf("listing pods in namespace %s failed: %s", namespace, err)
 	}
-	for _, pod := range pods.Items {
+	for i := range pods.Items {
+		pod := &pods.Items[i]
 		if len(pod.Finalizers) > 0 {
 			pod.Finalizers = nil
 			payload := []patchRemoveNoValue{{

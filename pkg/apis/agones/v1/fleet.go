@@ -179,7 +179,7 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
 	}
-	objMetaCauses := validateObjectMeta(f.Spec.Template.ObjectMeta)
+	objMetaCauses := validateObjectMeta(&f.Spec.Template.ObjectMeta)
 	if len(objMetaCauses) > 0 {
 		causes = append(causes, objMetaCauses...)
 	}

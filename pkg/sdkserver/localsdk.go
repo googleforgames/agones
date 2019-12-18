@@ -103,16 +103,17 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 
 		go func() {
 			for event := range watcher.Events {
-				if event.Op == fsnotify.Write {
-					logrus.WithField("event", event).Info("File has been changed!")
-					err := l.setGameServerFromFilePath(filePath)
-					if err != nil {
-						logrus.WithError(err).Error("error setting GameServer from file")
-						continue
-					}
-					logrus.Info("Sending watched GameServer!")
-					l.update <- struct{}{}
+				if event.Op != fsnotify.Write {
+					continue
 				}
+				logrus.WithField("event", event).Info("File has been changed!")
+				err := l.setGameServerFromFilePath(filePath)
+				if err != nil {
+					logrus.WithError(err).Error("error setting GameServer from file")
+					continue
+				}
+				logrus.Info("Sending watched GameServer!")
+				l.update <- struct{}{}
 			}
 		}()
 
@@ -167,11 +168,12 @@ func (l *LocalSDKServer) recordRequest(request string) {
 func (l *LocalSDKServer) recordRequestWithValue(request string, value string, objMetaField string) {
 	if l.testMode {
 		fieldVal := ""
-		if objMetaField == "CreationTimestamp" {
+		switch objMetaField {
+		case "CreationTimestamp":
 			fieldVal = strconv.FormatInt(l.gs.ObjectMeta.CreationTimestamp, 10)
-		} else if objMetaField == "UID" {
+		case "UID":
 			fieldVal = l.gs.ObjectMeta.Uid
-		} else {
+		default:
 			fmt.Printf("Error: Unexpected Field to compare")
 		}
 

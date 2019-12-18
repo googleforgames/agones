@@ -234,14 +234,14 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	json, err := json.Marshal(patch)
+	jsonPatch, err := json.Marshal(patch)
 	if err != nil {
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
-	review.Response.Patch = json
+	review.Response.Patch = jsonPatch
 
 	return review, nil
 }
@@ -386,7 +386,7 @@ func (c *Controller) syncGameServer(key string) error {
 	if gs, err = c.syncDevelopmentGameServer(gs); err != nil {
 		return err
 	}
-	if err = c.syncGameServerShutdownState(gs); err != nil {
+	if err := c.syncGameServerShutdownState(gs); err != nil {
 		return err
 	}
 
@@ -654,7 +654,8 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 }
 
 func (c *Controller) addSDKServerEnvVars(gs *agonesv1.GameServer, pod *corev1.Pod) {
-	for i, c := range pod.Spec.Containers {
+	for i := range pod.Spec.Containers {
+		c := &pod.Spec.Containers[i]
 		if c.Name != sdkserverSidecarName {
 			sdkEnvVars := sdkEnvironmentVariables(gs)
 			if sdkEnvVars == nil {
@@ -671,8 +672,9 @@ func (c *Controller) addSDKServerEnvVars(gs *agonesv1.GameServer, pod *corev1.Po
 					env = append(env, e)
 				}
 			}
-			c.Env = append(env, sdkEnvVars...)
-			pod.Spec.Containers[i] = c
+			env = append(env, sdkEnvVars...)
+			c.Env = env
+			pod.Spec.Containers[i] = *c
 		}
 	}
 }
@@ -823,10 +825,10 @@ func (c *Controller) syncGameServerShutdownState(gs *agonesv1.GameServer) error 
 
 // moveToErrorState moves the GameServer to the error state
 func (c *Controller) moveToErrorState(gs *agonesv1.GameServer, msg string) (*agonesv1.GameServer, error) {
-	copy := gs.DeepCopy()
-	copy.Status.State = agonesv1.GameServerStateError
+	gsCopy := gs.DeepCopy()
+	gsCopy.Status.State = agonesv1.GameServerStateError
 
-	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(copy)
+	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error moving GameServer %s to Error State", gs.ObjectMeta.Name)
 	}

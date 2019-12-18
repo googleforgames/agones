@@ -44,11 +44,8 @@ func TestGameServerCacheEntry(t *testing.T) {
 
 	count := 0
 	cache.Range(func(key string, gs *agonesv1.GameServer) bool {
-		if count++; count == 2 {
-			return false
-		}
-
-		return true
+		count++
+		return count != 2
 	})
 
 	assert.Equal(t, 2, count, "Should only process one item")

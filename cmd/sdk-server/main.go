@@ -90,7 +90,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if ctlConf.IsLocal {
+	switch {
+	case ctlConf.IsLocal:
 		localSDK, err := registerLocal(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start local sdk server")
@@ -103,7 +104,7 @@ func main() {
 				close(timedStop)
 			}()
 		}
-	} else if ctlConf.Test != "" {
+	case ctlConf.Test != "":
 		localSDK, err := registerTestSdkServer(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start test sdk server")
@@ -116,7 +117,7 @@ func main() {
 				close(timedStop)
 			}()
 		}
-	} else {
+	default:
 		var config *rest.Config
 		config, err := rest.InClusterConfig()
 		if err != nil {

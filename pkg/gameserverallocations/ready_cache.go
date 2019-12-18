@@ -202,11 +202,11 @@ func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServ
 }
 
 // PatchGameServerMetadata patches the input gameserver with allocation meta patch and returns the updated gameserver
-func (c *ReadyGameServerCache) PatchGameServerMetadata(fam allocationv1.MetaPatch, gs agonesv1.GameServer) (*agonesv1.GameServer, error) {
-	c.patchMetadata(&gs, fam)
+func (c *ReadyGameServerCache) PatchGameServerMetadata(fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	c.patchMetadata(gs, fam)
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
-	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(&gs)
+	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs)
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation

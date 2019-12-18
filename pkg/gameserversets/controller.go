@@ -315,7 +315,7 @@ func (c *Controller) syncGameServerSet(key string) error {
 	for _, gs := range list {
 		key := "gsCount" + string(gs.Status.State)
 		if gs.ObjectMeta.DeletionTimestamp != nil {
-			key = key + "Deleted"
+			key += "Deleted"
 		}
 		v, ok := fields[key]
 		if !ok {

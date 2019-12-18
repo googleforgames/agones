@@ -37,7 +37,7 @@ func TestHandleError(t *testing.T) {
 	assert.Nil(t, result, "No Errors for now")
 
 	err := fmt.Errorf("test")
-	//test nil logger
+	// test nil logger
 	logger := NewLoggerWithSource("test")
 	HandleError(logger.WithError(err), err)
 	if result != err {

@@ -304,7 +304,7 @@ build-controller-binary: $(ensure-build-image)
 lint: LINT_TIMEOUT ?= 15m
 lint: $(ensure-build-image)
 	docker run -t -e "TERM=xterm-256color" -e "$(gomod_on)" --rm $(common_mounts) -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		"golangci-lint run ./examples/... && golangci-lint run --deadline $(LINT_TIMEOUT) ./..."
+		"golangci-lint run ./examples/... && golangci-lint run --timeout $(LINT_TIMEOUT) ./..."
 
 # Extract licenses from source tree
 build-licenses:

@@ -359,7 +359,7 @@ type config struct {
 }
 
 // validate ensures the ctlConfig data is valid.
-func (c config) validate() error {
+func (c *config) validate() error {
 	if c.MinPort <= 0 || c.MaxPort <= 0 {
 		return errors.New("min Port and Max Port values are required")
 	}

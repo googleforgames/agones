@@ -131,7 +131,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *handler) serveIndex(w http.ResponseWriter, r *http.Request) {
 	// Just redirect to the first one
 	// just commenting out, in case we want to soft launch
-	//http.Redirect(w, r, h.paths[0].repo, http.StatusTemporaryRedirect)
+	// http.Redirect(w, r, h.paths[0].repo, http.StatusTemporaryRedirect)
 	http.Redirect(w, r, "/site/", http.StatusTemporaryRedirect)
 }
 

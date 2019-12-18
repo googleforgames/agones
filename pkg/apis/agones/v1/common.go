@@ -74,7 +74,7 @@ func validateGSSpec(gs gsSpec) []metav1.StatusCause {
 
 // validateObjectMeta Check ObjectMeta specification
 // Used by Fleet, GameServerSet and GameServer
-func validateObjectMeta(objMeta metav1.ObjectMeta) []metav1.StatusCause {
+func validateObjectMeta(objMeta *metav1.ObjectMeta) []metav1.StatusCause {
 	var causes []metav1.StatusCause
 
 	errs := metav1validation.ValidateLabels(objMeta.Labels, field.NewPath("labels"))

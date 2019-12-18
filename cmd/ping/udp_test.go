@@ -120,9 +120,9 @@ func TestUDPServerHealth(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func defaultFixture(clock clock.Clock) (*udpServer, error) {
+func defaultFixture(cl clock.Clock) (*udpServer, error) {
 	u := newUDPServer(5)
-	u.clock = clock
+	u.clock = cl
 	var err error
 	u.conn, err = net.ListenPacket("udp", ":0")
 	return u, err
