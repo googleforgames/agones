@@ -16,12 +16,16 @@ package metrics
 
 import (
 	"net/http"
+	"os"
 	"time"
 
+	"cloud.google.com/go/compute/metadata"
 	"contrib.go.opencensus.io/exporter/stackdriver"
+	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
+	"google.golang.org/genproto/googleapis/api/monitoredres"
 )
 
 // RegisterPrometheusExporter register a prometheus exporter to OpenCensus with a given prometheus metric registry.
@@ -48,20 +52,30 @@ func RegisterPrometheusExporter(registry *prom.Registry) (http.Handler, error) {
 
 // RegisterStackdriverExporter register a Stackdriver exporter to OpenCensus.
 // It will add Agones metrics into Stackdriver on Google Cloud.
-func RegisterStackdriverExporter(projectID string) (sd *stackdriver.Exporter, err error) {
-	// Default project will be used
-	sd, err = stackdriver.NewExporter(stackdriver.Options{
+func RegisterStackdriverExporter(projectID string, defaultLabels string) (*stackdriver.Exporter, error) {
+	monitoredRes, err := getMonitoredResource(projectID)
+	if err != nil {
+		logger.WithError(err).Warn("error discovering monitored resource")
+	}
+	labels, err := parseLabels(defaultLabels)
+	if err != nil {
+		return nil, err
+	}
+
+	sd, err := stackdriver.NewExporter(stackdriver.Options{
 		ProjectID: projectID,
 		// MetricPrefix helps uniquely identify your metrics.
-		MetricPrefix: "agones",
+		MetricPrefix:            "agones",
+		Resource:                monitoredRes,
+		DefaultMonitoringLabels: labels,
 	})
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	// Register it as a metrics exporter
 	view.RegisterExporter(sd)
-	return
+	return sd, nil
 }
 
 // SetReportingPeriod set appropriate reporting period which depends on exporters
@@ -78,4 +92,34 @@ func SetReportingPeriod(prometheus, stackdriver bool) {
 	if stackdriver || prometheus {
 		view.SetReportingPeriod(reportingPeriod)
 	}
+}
+
+func getMonitoredResource(projectID string) (*monitoredres.MonitoredResource, error) {
+	instanceID, err := metadata.InstanceID()
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting instance ID")
+	}
+	zone, err := metadata.Zone()
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting zone")
+	}
+	clusterName, err := metadata.InstanceAttributeValue("cluster-name")
+	if err != nil {
+		return nil, errors.Wrap(err, "error getting cluster-name")
+	}
+
+	return &monitoredres.MonitoredResource{
+		Type: "k8s_container",
+		Labels: map[string]string{
+			"project_id":   projectID,
+			"instance_id":  instanceID,
+			"zone":         zone,
+			"cluster_name": clusterName,
+
+			// See: https://kubernetes.io/docs/tasks/inject-data-application/environment-variable-expose-pod-information/
+			"namespace_id":   os.Getenv("POD_NAMESPACE"),
+			"pod_id":         os.Getenv("POD_NAME"),
+			"container_name": os.Getenv("CONTAINER_NAME"),
+		},
+	}, nil
 }

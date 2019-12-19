@@ -90,6 +90,8 @@ spec:
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER
           value: {{ .Values.agones.metrics.stackdriverEnabled | quote }}
+        - name: STACKDRIVER_LABELS
+          value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: SIDECAR_CPU_LIMIT
@@ -108,6 +110,16 @@ spec:
         - name: LOG_SIZE_LIMIT_MB
           value: {{ .Values.agones.controller.persistentLogsSizeLimitMB | quote }}
 {{- end }}
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-controller"
         livenessProbe:
           httpGet:
             path: /live
