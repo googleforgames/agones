@@ -17,14 +17,11 @@
 namespaces=$@
 
 for ns in $namespaces; do
-
   # Building the list of pods we need to ensure are deleted.
   gs=$(kubectl -n $ns get gs -o jsonpath='{.items[*].metadata.name}')
 
   for g in $gs; do
     pod=$(kubectl -n $ns get po -l agones.dev/gameserver=$g -o jsonpath='{.items[*].metadata.name}')
-    # TODO(roberthbailey): Remove this after we cut Agones 0.12.0
-    pod=$(kubectl -n $ns get po -l stable.agones.dev/gameserver=$g -o jsonpath='{.items[*].metadata.name}')
     pods="$pods $pod"
   done
 
@@ -36,6 +33,7 @@ for ns in $namespaces; do
   kubectl -n $ns delete gameserverallocationpolicies --all
 
   # Since we don't have the nifty kubectl wait yet, hack one in the meantime
+  # Wait for GS underlying pods to be deleted
   for p in $pods; do
     get_po=$(kubectl -n $ns get po $p -o jsonpath='{.metadata.name}')
     while [ "$get_po" = "$p" ]; do

@@ -95,7 +95,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 set(CMAKE_DEBUG_POSTFIX "d")
-set(AGONES_GRPC_VERSION "1.16.1")
+set(AGONES_GRPC_VERSION "1.20.1")
 
 # Platform specific stuff
 if (WIN32)
@@ -203,13 +203,13 @@ if (NOT CLANG_FORMAT_APP)
     message(STATUS "clang-format not found.")
 else()
     message(STATUS "clang-format found: ${CLANG_FORMAT_APP}")
-    
+
     set(CLANGFORMAT_INPUT)
     foreach(relpath ${SDK_FILES})
         get_filename_component(fullpath "${CMAKE_CURRENT_LIST_DIR}/${relpath}" ABSOLUTE)
         list(APPEND CLANGFORMAT_INPUT ${fullpath})
     endforeach()
- 
+
     # format
     add_custom_target(
         clang-format-apply
@@ -219,7 +219,7 @@ else()
     if (${AGONES_CLANG_FORMAT})
         add_dependencies(${PROJECT_NAME} "clang-format-apply")
     endif()
-    
+
     # verification
     set(CLANGFORMAT_WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR})
     get_filename_component(AGONES_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
@@ -229,5 +229,5 @@ else()
         clang-format-verify
         COMMAND ${CMAKE_COMMAND} .
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/clang-format"
-    )    
+    )
 endif()

@@ -100,6 +100,8 @@ spec:
           value: {{ .Values.agones.controller.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
           value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.agones.controller.logLevel | quote }}
 {{- if .Values.agones.controller.persistentLogs }}
         - name: LOG_DIR
           value: "/home/agones/logs"

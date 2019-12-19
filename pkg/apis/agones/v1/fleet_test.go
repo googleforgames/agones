@@ -73,7 +73,7 @@ func TestFleetApplyDefaults(t *testing.T) {
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxUnavailable.String())
 	assert.Equal(t, "25%", f.Spec.Strategy.RollingUpdate.MaxSurge.String())
 	assert.Equal(t, apis.Packed, f.Spec.Scheduling)
-	assert.Equal(t, int32(1), f.Spec.Replicas)
+	assert.Equal(t, int32(0), f.Spec.Replicas)
 }
 
 func TestFleetUpperBoundReplicas(t *testing.T) {

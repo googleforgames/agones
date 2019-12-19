@@ -21,34 +21,27 @@
 #include <algorithm>
 
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/extension_set.h>
 #include <google/protobuf/wire_format_lite_inl.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
+#include <google/protobuf/port_def.inc>
 
-namespace protobuf_google_2fapi_2fhttp_2eproto {
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule;
-}  // namespace protobuf_google_2fapi_2fhttp_2eproto
+extern PROTOBUF_INTERNAL_EXPORT_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_google_2fapi_2fhttp_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule_google_2fapi_2fhttp_2eproto;
 namespace google {
 namespace api {
 class HttpDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<Http>
-      _instance;
+  ::google::protobuf::internal::ExplicitlyConstructed<Http> _instance;
 } _Http_default_instance_;
 class HttpRuleDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<HttpRule>
-      _instance;
+  ::google::protobuf::internal::ExplicitlyConstructed<HttpRule> _instance;
   ::google::protobuf::internal::ArenaStringPtr get_;
   ::google::protobuf::internal::ArenaStringPtr put_;
   ::google::protobuf::internal::ArenaStringPtr post_;
@@ -58,13 +51,11 @@ class HttpRuleDefaultTypeInternal {
 } _HttpRule_default_instance_;
 class CustomHttpPatternDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CustomHttpPattern>
-      _instance;
+  ::google::protobuf::internal::ExplicitlyConstructed<CustomHttpPattern> _instance;
 } _CustomHttpPattern_default_instance_;
 }  // namespace api
 }  // namespace google
-namespace protobuf_google_2fapi_2fhttp_2eproto {
-static void InitDefaultsHttp() {
+static void InitDefaultsHttp_google_2fapi_2fhttp_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
@@ -75,11 +66,11 @@ static void InitDefaultsHttp() {
   ::google::api::Http::InitAsDefaultInstance();
 }
 
-AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_Http =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttp}, {
-      &protobuf_google_2fapi_2fhttp_2eproto::scc_info_HttpRule.base,}};
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_Http_google_2fapi_2fhttp_2eproto =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttp_google_2fapi_2fhttp_2eproto}, {
+      &scc_info_HttpRule_google_2fapi_2fhttp_2eproto.base,}};
 
-static void InitDefaultsHttpRule() {
+static void InitDefaultsHttpRule_google_2fapi_2fhttp_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
@@ -90,11 +81,11 @@ static void InitDefaultsHttpRule() {
   ::google::api::HttpRule::InitAsDefaultInstance();
 }
 
-AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttpRule}, {
-      &protobuf_google_2fapi_2fhttp_2eproto::scc_info_CustomHttpPattern.base,}};
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<1> scc_info_HttpRule_google_2fapi_2fhttp_2eproto =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsHttpRule_google_2fapi_2fhttp_2eproto}, {
+      &scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto.base,}};
 
-static void InitDefaultsCustomHttpPattern() {
+static void InitDefaultsCustomHttpPattern_google_2fapi_2fhttp_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
@@ -105,50 +96,52 @@ static void InitDefaultsCustomHttpPattern() {
   ::google::api::CustomHttpPattern::InitAsDefaultInstance();
 }
 
-AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCustomHttpPattern}, {}};
+AGONES_EXPORT ::google::protobuf::internal::SCCInfo<0> scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto =
+    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCustomHttpPattern_google_2fapi_2fhttp_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_Http.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_HttpRule.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_CustomHttpPattern.base);
+void InitDefaults_google_2fapi_2fhttp_2eproto() {
+  ::google::protobuf::internal::InitSCC(&scc_info_Http_google_2fapi_2fhttp_2eproto.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_HttpRule_google_2fapi_2fhttp_2eproto.base);
+  ::google::protobuf::internal::InitSCC(&scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto.base);
 }
 
-::google::protobuf::Metadata file_level_metadata[3];
+::google::protobuf::Metadata file_level_metadata_google_2fapi_2fhttp_2eproto[3];
+constexpr ::google::protobuf::EnumDescriptor const** file_level_enum_descriptors_google_2fapi_2fhttp_2eproto = nullptr;
+constexpr ::google::protobuf::ServiceDescriptor const** file_level_service_descriptors_google_2fapi_2fhttp_2eproto = nullptr;
 
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+const ::google::protobuf::uint32 TableStruct_google_2fapi_2fhttp_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::Http, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::google::api::Http, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::Http, rules_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::Http, fully_decode_reserved_expansion_),
+  PROTOBUF_FIELD_OFFSET(::google::api::Http, rules_),
+  PROTOBUF_FIELD_OFFSET(::google::api::Http, fully_decode_reserved_expansion_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, _internal_metadata_),
   ~0u,  // no _extensions_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, _oneof_case_[0]),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, _oneof_case_[0]),
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, selector_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, selector_),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, get_),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, put_),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, post_),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, delete__),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, patch_),
   offsetof(::google::api::HttpRuleDefaultTypeInternal, custom_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, body_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, response_body_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, additional_bindings_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::HttpRule, pattern_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, body_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, response_body_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, additional_bindings_),
+  PROTOBUF_FIELD_OFFSET(::google::api::HttpRule, pattern_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::CustomHttpPattern, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::google::api::CustomHttpPattern, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::CustomHttpPattern, kind_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::google::api::CustomHttpPattern, path_),
+  PROTOBUF_FIELD_OFFSET(::google::api::CustomHttpPattern, kind_),
+  PROTOBUF_FIELD_OFFSET(::google::api::CustomHttpPattern, path_),
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::google::protobuf::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::google::api::Http)},
   { 7, -1, sizeof(::google::api::HttpRule)},
   { 23, -1, sizeof(::google::api::CustomHttpPattern)},
@@ -160,59 +153,43 @@ static ::google::protobuf::Message const * const file_default_instances[] = {
   reinterpret_cast<const ::google::protobuf::Message*>(&::google::api::_CustomHttpPattern_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "google/api/http.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, NULL, NULL);
-}
+::google::protobuf::internal::AssignDescriptorsTable assign_descriptors_table_google_2fapi_2fhttp_2eproto = {
+  {}, AddDescriptors_google_2fapi_2fhttp_2eproto, "google/api/http.proto", schemas,
+  file_default_instances, TableStruct_google_2fapi_2fhttp_2eproto::offsets,
+  file_level_metadata_google_2fapi_2fhttp_2eproto, 3, file_level_enum_descriptors_google_2fapi_2fhttp_2eproto, file_level_service_descriptors_google_2fapi_2fhttp_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
+const char descriptor_table_protodef_google_2fapi_2fhttp_2eproto[] =
+  "\n\025google/api/http.proto\022\ngoogle.api\"T\n\004H"
+  "ttp\022#\n\005rules\030\001 \003(\0132\024.google.api.HttpRule"
+  "\022\'\n\037fully_decode_reserved_expansion\030\002 \001("
+  "\010\"\201\002\n\010HttpRule\022\020\n\010selector\030\001 \001(\t\022\r\n\003get\030"
+  "\002 \001(\tH\000\022\r\n\003put\030\003 \001(\tH\000\022\016\n\004post\030\004 \001(\tH\000\022\020"
+  "\n\006delete\030\005 \001(\tH\000\022\017\n\005patch\030\006 \001(\tH\000\022/\n\006cus"
+  "tom\030\010 \001(\0132\035.google.api.CustomHttpPattern"
+  "H\000\022\014\n\004body\030\007 \001(\t\022\025\n\rresponse_body\030\014 \001(\t\022"
+  "1\n\023additional_bindings\030\013 \003(\0132\024.google.ap"
+  "i.HttpRuleB\t\n\007pattern\"/\n\021CustomHttpPatte"
+  "rn\022\014\n\004kind\030\001 \001(\t\022\014\n\004path\030\002 \001(\tBj\n\016com.go"
+  "ogle.apiB\tHttpProtoP\001ZAgoogle.golang.org"
+  "/genproto/googleapis/api/annotations;ann"
+  "otations\370\001\001\242\002\004GAPIb\006proto3"
+  ;
+::google::protobuf::internal::DescriptorTable descriptor_table_google_2fapi_2fhttp_2eproto = {
+  false, InitDefaults_google_2fapi_2fhttp_2eproto, 
+  descriptor_table_protodef_google_2fapi_2fhttp_2eproto,
+  "google/api/http.proto", &assign_descriptors_table_google_2fapi_2fhttp_2eproto, 546,
+};
 
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 3);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\025google/api/http.proto\022\ngoogle.api\"T\n\004H"
-      "ttp\022#\n\005rules\030\001 \003(\0132\024.google.api.HttpRule"
-      "\022\'\n\037fully_decode_reserved_expansion\030\002 \001("
-      "\010\"\201\002\n\010HttpRule\022\020\n\010selector\030\001 \001(\t\022\r\n\003get\030"
-      "\002 \001(\tH\000\022\r\n\003put\030\003 \001(\tH\000\022\016\n\004post\030\004 \001(\tH\000\022\020"
-      "\n\006delete\030\005 \001(\tH\000\022\017\n\005patch\030\006 \001(\tH\000\022/\n\006cus"
-      "tom\030\010 \001(\0132\035.google.api.CustomHttpPattern"
-      "H\000\022\014\n\004body\030\007 \001(\t\022\025\n\rresponse_body\030\014 \001(\t\022"
-      "1\n\023additional_bindings\030\013 \003(\0132\024.google.ap"
-      "i.HttpRuleB\t\n\007pattern\"/\n\021CustomHttpPatte"
-      "rn\022\014\n\004kind\030\001 \001(\t\022\014\n\004path\030\002 \001(\tBj\n\016com.go"
-      "ogle.apiB\tHttpProtoP\001ZAgoogle.golang.org"
-      "/genproto/googleapis/api/annotations;ann"
-      "otations\370\001\001\242\002\004GAPIb\006proto3"
+void AddDescriptors_google_2fapi_2fhttp_2eproto() {
+  static constexpr ::google::protobuf::internal::InitFunc deps[1] =
+  {
   };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 546);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "google/api/http.proto", &protobuf_RegisterTypes);
+ ::google::protobuf::internal::AddDescriptors(&descriptor_table_google_2fapi_2fhttp_2eproto, deps, 0);
 }
 
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_google_2fapi_2fhttp_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_google_2fapi_2fhttp_2eproto = []() { AddDescriptors_google_2fapi_2fhttp_2eproto(); return true; }();
 namespace google {
 namespace api {
 
@@ -220,15 +197,17 @@ namespace api {
 
 void Http::InitAsDefaultInstance() {
 }
+class Http::HasBitSetters {
+ public:
+};
+
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Http::kRulesFieldNumber;
 const int Http::kFullyDecodeReservedExpansionFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Http::Http()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_google_2fapi_2fhttp_2eproto::scc_info_Http.base);
+  : ::google::protobuf::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:google.api.Http)
 }
@@ -236,14 +215,13 @@ Http::Http(::google::protobuf::Arena* arena)
   : ::google::protobuf::Message(),
   _internal_metadata_(arena),
   rules_(arena) {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_Http.base);
   SharedCtor();
   RegisterArenaDtor(arena);
   // @@protoc_insertion_point(arena_constructor:google.api.Http)
 }
 Http::Http(const Http& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+      _internal_metadata_(nullptr),
       rules_(from.rules_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   fully_decode_reserved_expansion_ = from.fully_decode_reserved_expansion_;
@@ -251,6 +229,8 @@ Http::Http(const Http& from)
 }
 
 void Http::SharedCtor() {
+  ::google::protobuf::internal::InitSCC(
+      &scc_info_Http_google_2fapi_2fhttp_2eproto.base);
   fully_decode_reserved_expansion_ = false;
 }
 
@@ -260,25 +240,20 @@ Http::~Http() {
 }
 
 void Http::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaNoVirtual() == NULL);
+  GOOGLE_DCHECK(GetArenaNoVirtual() == nullptr);
 }
 
 void Http::ArenaDtor(void* object) {
   Http* _this = reinterpret_cast< Http* >(object);
   (void)_this;
 }
-void Http::RegisterArenaDtor(::google::protobuf::Arena* arena) {
+void Http::RegisterArenaDtor(::google::protobuf::Arena*) {
 }
 void Http::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* Http::descriptor() {
-  ::protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Http& Http::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_Http.base);
+  ::google::protobuf::internal::InitSCC(&::scc_info_Http_google_2fapi_2fhttp_2eproto.base);
   return *internal_default_instance();
 }
 
@@ -294,9 +269,65 @@ void Http::Clear() {
   _internal_metadata_.Clear();
 }
 
+#if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+const char* Http::_InternalParse(const char* begin, const char* end, void* object,
+                  ::google::protobuf::internal::ParseContext* ctx) {
+  auto msg = static_cast<Http*>(object);
+  ::google::protobuf::int32 size; (void)size;
+  int depth; (void)depth;
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::internal::ParseFunc parser_till_end; (void)parser_till_end;
+  auto ptr = begin;
+  while (ptr < end) {
+    ptr = ::google::protobuf::io::Parse32(ptr, &tag);
+    GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+    switch (tag >> 3) {
+      // repeated .google.api.HttpRule rules = 1;
+      case 1: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 10) goto handle_unusual;
+        do {
+          ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+          GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+          parser_till_end = ::google::api::HttpRule::_InternalParse;
+          object = msg->add_rules();
+          if (size > end - ptr) goto len_delim_till_end;
+          ptr += size;
+          GOOGLE_PROTOBUF_PARSER_ASSERT(ctx->ParseExactRange(
+              {parser_till_end, object}, ptr - size, ptr));
+          if (ptr >= end) break;
+        } while ((::google::protobuf::io::UnalignedLoad<::google::protobuf::uint64>(ptr) & 255) == 10 && (ptr += 1));
+        break;
+      }
+      // bool fully_decode_reserved_expansion = 2;
+      case 2: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 16) goto handle_unusual;
+        msg->set_fully_decode_reserved_expansion(::google::protobuf::internal::ReadVarint(&ptr));
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        break;
+      }
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->EndGroup(tag);
+          return ptr;
+        }
+        auto res = UnknownFieldParse(tag, {_InternalParse, msg},
+          ptr, end, msg->_internal_metadata_.mutable_unknown_fields(), ctx);
+        ptr = res.first;
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr != nullptr);
+        if (res.second) return ptr;
+      }
+    }  // switch
+  }  // while
+  return ptr;
+len_delim_till_end:
+  return ctx->StoreAndTailCall(ptr, end, {_InternalParse, msg},
+                               {parser_till_end, object}, size);
+}
+#else  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 bool Http::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+#define DO_(EXPRESSION) if (!PROTOBUF_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:google.api.Http)
   for (;;) {
@@ -306,8 +337,7 @@ bool Http::MergePartialFromCodedStream(
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // repeated .google.api.HttpRule rules = 1;
       case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (10 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                 input, add_rules()));
         } else {
@@ -318,8 +348,7 @@ bool Http::MergePartialFromCodedStream(
 
       // bool fully_decode_reserved_expansion = 2;
       case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (16 & 0xFF)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
@@ -349,6 +378,7 @@ failure:
   return false;
 #undef DO_
 }
+#endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 
 void Http::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
@@ -370,16 +400,15 @@ void Http::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->fully_decode_reserved_expansion(), output);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+        _internal_metadata_.unknown_fields(), output);
   }
   // @@protoc_insertion_point(serialize_end:google.api.Http)
 }
 
 ::google::protobuf::uint8* Http::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+    ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:google.api.Http)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
@@ -389,7 +418,7 @@ void Http::SerializeWithCachedSizes(
       n = static_cast<unsigned int>(this->rules_size()); i < n; i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        1, this->rules(static_cast<int>(i)), deterministic, target);
+        1, this->rules(static_cast<int>(i)), target);
   }
 
   // bool fully_decode_reserved_expansion = 2;
@@ -397,9 +426,9 @@ void Http::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->fully_decode_reserved_expansion(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+        _internal_metadata_.unknown_fields(), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:google.api.Http)
   return target;
@@ -409,11 +438,15 @@ size_t Http::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:google.api.Http)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+        _internal_metadata_.unknown_fields());
   }
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated .google.api.HttpRule rules = 1;
   {
     unsigned int count = static_cast<unsigned int>(this->rules_size());
@@ -439,9 +472,9 @@ void Http::MergeFrom(const ::google::protobuf::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:google.api.Http)
   GOOGLE_DCHECK_NE(&from, this);
   const Http* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Http>(
+      ::google::protobuf::DynamicCastToGenerated<Http>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:google.api.Http)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -490,7 +523,7 @@ void Http::Swap(Http* other) {
     temp->MergeFrom(*other);
     other->CopyFrom(*this);
     InternalSwap(temp);
-    if (GetArenaNoVirtual() == NULL) {
+    if (GetArenaNoVirtual() == nullptr) {
       delete temp;
     }
   }
@@ -502,14 +535,14 @@ void Http::UnsafeArenaSwap(Http* other) {
 }
 void Http::InternalSwap(Http* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   CastToBase(&rules_)->InternalSwap(CastToBase(&other->rules_));
   swap(fully_decode_reserved_expansion_, other->fully_decode_reserved_expansion_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
 ::google::protobuf::Metadata Http::GetMetadata() const {
-  protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages];
+  ::google::protobuf::internal::AssignDescriptors(&::assign_descriptors_table_google_2fapi_2fhttp_2eproto);
+  return ::file_level_metadata_google_2fapi_2fhttp_2eproto[kIndexInFileMessages];
 }
 
 
@@ -528,6 +561,15 @@ void HttpRule::InitAsDefaultInstance() {
       &::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::google::api::_HttpRule_default_instance_.custom_ = const_cast< ::google::api::CustomHttpPattern*>(
       ::google::api::CustomHttpPattern::internal_default_instance());
+}
+class HttpRule::HasBitSetters {
+ public:
+  static const ::google::api::CustomHttpPattern& custom(const HttpRule* msg);
+};
+
+const ::google::api::CustomHttpPattern&
+HttpRule::HasBitSetters::custom(const HttpRule* msg) {
+  return *msg->pattern_.custom_;
 }
 void HttpRule::set_allocated_custom(::google::api::CustomHttpPattern* custom) {
   ::google::protobuf::Arena* message_arena = GetArenaNoVirtual();
@@ -558,9 +600,7 @@ const int HttpRule::kAdditionalBindingsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 HttpRule::HttpRule()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_google_2fapi_2fhttp_2eproto::scc_info_HttpRule.base);
+  : ::google::protobuf::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:google.api.HttpRule)
 }
@@ -568,14 +608,13 @@ HttpRule::HttpRule(::google::protobuf::Arena* arena)
   : ::google::protobuf::Message(),
   _internal_metadata_(arena),
   additional_bindings_(arena) {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_HttpRule.base);
   SharedCtor();
   RegisterArenaDtor(arena);
   // @@protoc_insertion_point(arena_constructor:google.api.HttpRule)
 }
 HttpRule::HttpRule(const HttpRule& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+      _internal_metadata_(nullptr),
       additional_bindings_(from.additional_bindings_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   selector_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -627,6 +666,8 @@ HttpRule::HttpRule(const HttpRule& from)
 }
 
 void HttpRule::SharedCtor() {
+  ::google::protobuf::internal::InitSCC(
+      &scc_info_HttpRule_google_2fapi_2fhttp_2eproto.base);
   selector_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   body_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   response_body_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -639,7 +680,7 @@ HttpRule::~HttpRule() {
 }
 
 void HttpRule::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaNoVirtual() == NULL);
+  GOOGLE_DCHECK(GetArenaNoVirtual() == nullptr);
   selector_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   body_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   response_body_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -652,18 +693,13 @@ void HttpRule::ArenaDtor(void* object) {
   HttpRule* _this = reinterpret_cast< HttpRule* >(object);
   (void)_this;
 }
-void HttpRule::RegisterArenaDtor(::google::protobuf::Arena* arena) {
+void HttpRule::RegisterArenaDtor(::google::protobuf::Arena*) {
 }
 void HttpRule::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* HttpRule::descriptor() {
-  ::protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const HttpRule& HttpRule::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_HttpRule.base);
+  ::google::protobuf::internal::InitSCC(&::scc_info_HttpRule_google_2fapi_2fhttp_2eproto.base);
   return *internal_default_instance();
 }
 
@@ -697,7 +733,7 @@ void HttpRule::clear_pattern() {
       break;
     }
     case kCustom: {
-      if (GetArenaNoVirtual() == NULL) {
+      if (GetArenaNoVirtual() == nullptr) {
         delete pattern_.custom_;
       }
       break;
@@ -724,9 +760,203 @@ void HttpRule::Clear() {
   _internal_metadata_.Clear();
 }
 
+#if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+const char* HttpRule::_InternalParse(const char* begin, const char* end, void* object,
+                  ::google::protobuf::internal::ParseContext* ctx) {
+  auto msg = static_cast<HttpRule*>(object);
+  ::google::protobuf::int32 size; (void)size;
+  int depth; (void)depth;
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::internal::ParseFunc parser_till_end; (void)parser_till_end;
+  auto ptr = begin;
+  while (ptr < end) {
+    ptr = ::google::protobuf::io::Parse32(ptr, &tag);
+    GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+    switch (tag >> 3) {
+      // string selector = 1;
+      case 1: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 10) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.selector");
+        object = msg->mutable_selector();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string get = 2;
+      case 2: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 18) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.get");
+        object = msg->mutable_get();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string put = 3;
+      case 3: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 26) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.put");
+        object = msg->mutable_put();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string post = 4;
+      case 4: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 34) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.post");
+        object = msg->mutable_post();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string delete = 5;
+      case 5: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 42) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.delete");
+        object = msg->mutable_delete_();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string patch = 6;
+      case 6: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 50) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.patch");
+        object = msg->mutable_patch();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string body = 7;
+      case 7: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 58) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.body");
+        object = msg->mutable_body();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // .google.api.CustomHttpPattern custom = 8;
+      case 8: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 66) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        parser_till_end = ::google::api::CustomHttpPattern::_InternalParse;
+        object = msg->mutable_custom();
+        if (size > end - ptr) goto len_delim_till_end;
+        ptr += size;
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ctx->ParseExactRange(
+            {parser_till_end, object}, ptr - size, ptr));
+        break;
+      }
+      // repeated .google.api.HttpRule additional_bindings = 11;
+      case 11: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 90) goto handle_unusual;
+        do {
+          ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+          GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+          parser_till_end = ::google::api::HttpRule::_InternalParse;
+          object = msg->add_additional_bindings();
+          if (size > end - ptr) goto len_delim_till_end;
+          ptr += size;
+          GOOGLE_PROTOBUF_PARSER_ASSERT(ctx->ParseExactRange(
+              {parser_till_end, object}, ptr - size, ptr));
+          if (ptr >= end) break;
+        } while ((::google::protobuf::io::UnalignedLoad<::google::protobuf::uint64>(ptr) & 255) == 90 && (ptr += 1));
+        break;
+      }
+      // string response_body = 12;
+      case 12: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 98) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.HttpRule.response_body");
+        object = msg->mutable_response_body();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->EndGroup(tag);
+          return ptr;
+        }
+        auto res = UnknownFieldParse(tag, {_InternalParse, msg},
+          ptr, end, msg->_internal_metadata_.mutable_unknown_fields(), ctx);
+        ptr = res.first;
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr != nullptr);
+        if (res.second) return ptr;
+      }
+    }  // switch
+  }  // while
+  return ptr;
+string_till_end:
+  static_cast<::std::string*>(object)->clear();
+  static_cast<::std::string*>(object)->reserve(size);
+  goto len_delim_till_end;
+len_delim_till_end:
+  return ctx->StoreAndTailCall(ptr, end, {_InternalParse, msg},
+                               {parser_till_end, object}, size);
+}
+#else  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 bool HttpRule::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+#define DO_(EXPRESSION) if (!PROTOBUF_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:google.api.HttpRule)
   for (;;) {
@@ -736,8 +966,7 @@ bool HttpRule::MergePartialFromCodedStream(
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // string selector = 1;
       case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (10 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_selector()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -752,8 +981,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string get = 2;
       case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (18 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_get()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -768,8 +996,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string put = 3;
       case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (26 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_put()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -784,8 +1011,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string post = 4;
       case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (34 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_post()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -800,8 +1026,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string delete = 5;
       case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (42 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_delete_()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -816,8 +1041,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string patch = 6;
       case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (50 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_patch()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -832,8 +1056,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string body = 7;
       case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (58 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_body()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -848,8 +1071,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // .google.api.CustomHttpPattern custom = 8;
       case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (66 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_custom()));
         } else {
@@ -860,8 +1082,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // repeated .google.api.HttpRule additional_bindings = 11;
       case 11: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(90u /* 90 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (90 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                 input, add_additional_bindings()));
         } else {
@@ -872,8 +1093,7 @@ bool HttpRule::MergePartialFromCodedStream(
 
       // string response_body = 12;
       case 12: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(98u /* 98 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (98 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_response_body()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -905,6 +1125,7 @@ failure:
   return false;
 #undef DO_
 }
+#endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 
 void HttpRule::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
@@ -985,7 +1206,7 @@ void HttpRule::SerializeWithCachedSizes(
   // .google.api.CustomHttpPattern custom = 8;
   if (has_custom()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8, this->_internal_custom(), output);
+      8, HasBitSetters::custom(this), output);
   }
 
   // repeated .google.api.HttpRule additional_bindings = 11;
@@ -1007,16 +1228,15 @@ void HttpRule::SerializeWithCachedSizes(
       12, this->response_body(), output);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+        _internal_metadata_.unknown_fields(), output);
   }
   // @@protoc_insertion_point(serialize_end:google.api.HttpRule)
 }
 
 ::google::protobuf::uint8* HttpRule::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+    ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:google.api.HttpRule)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
@@ -1102,7 +1322,7 @@ void HttpRule::SerializeWithCachedSizes(
   if (has_custom()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        8, this->_internal_custom(), deterministic, target);
+        8, HasBitSetters::custom(this), target);
   }
 
   // repeated .google.api.HttpRule additional_bindings = 11;
@@ -1110,7 +1330,7 @@ void HttpRule::SerializeWithCachedSizes(
       n = static_cast<unsigned int>(this->additional_bindings_size()); i < n; i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        11, this->additional_bindings(static_cast<int>(i)), deterministic, target);
+        11, this->additional_bindings(static_cast<int>(i)), target);
   }
 
   // string response_body = 12;
@@ -1124,9 +1344,9 @@ void HttpRule::SerializeWithCachedSizes(
         12, this->response_body(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+        _internal_metadata_.unknown_fields(), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:google.api.HttpRule)
   return target;
@@ -1136,11 +1356,15 @@ size_t HttpRule::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:google.api.HttpRule)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+        _internal_metadata_.unknown_fields());
   }
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated .google.api.HttpRule additional_bindings = 11;
   {
     unsigned int count = static_cast<unsigned int>(this->additional_bindings_size());
@@ -1229,9 +1453,9 @@ void HttpRule::MergeFrom(const ::google::protobuf::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:google.api.HttpRule)
   GOOGLE_DCHECK_NE(&from, this);
   const HttpRule* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const HttpRule>(
+      ::google::protobuf::DynamicCastToGenerated<HttpRule>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:google.api.HttpRule)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -1315,7 +1539,7 @@ void HttpRule::Swap(HttpRule* other) {
     temp->MergeFrom(*other);
     other->CopyFrom(*this);
     InternalSwap(temp);
-    if (GetArenaNoVirtual() == NULL) {
+    if (GetArenaNoVirtual() == nullptr) {
       delete temp;
     }
   }
@@ -1327,6 +1551,7 @@ void HttpRule::UnsafeArenaSwap(HttpRule* other) {
 }
 void HttpRule::InternalSwap(HttpRule* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   CastToBase(&additional_bindings_)->InternalSwap(CastToBase(&other->additional_bindings_));
   selector_.Swap(&other->selector_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
@@ -1336,12 +1561,11 @@ void HttpRule::InternalSwap(HttpRule* other) {
     GetArenaNoVirtual());
   swap(pattern_, other->pattern_);
   swap(_oneof_case_[0], other->_oneof_case_[0]);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
 ::google::protobuf::Metadata HttpRule::GetMetadata() const {
-  protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages];
+  ::google::protobuf::internal::AssignDescriptors(&::assign_descriptors_table_google_2fapi_2fhttp_2eproto);
+  return ::file_level_metadata_google_2fapi_2fhttp_2eproto[kIndexInFileMessages];
 }
 
 
@@ -1349,29 +1573,30 @@ void HttpRule::InternalSwap(HttpRule* other) {
 
 void CustomHttpPattern::InitAsDefaultInstance() {
 }
+class CustomHttpPattern::HasBitSetters {
+ public:
+};
+
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int CustomHttpPattern::kKindFieldNumber;
 const int CustomHttpPattern::kPathFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 CustomHttpPattern::CustomHttpPattern()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_google_2fapi_2fhttp_2eproto::scc_info_CustomHttpPattern.base);
+  : ::google::protobuf::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:google.api.CustomHttpPattern)
 }
 CustomHttpPattern::CustomHttpPattern(::google::protobuf::Arena* arena)
   : ::google::protobuf::Message(),
   _internal_metadata_(arena) {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_CustomHttpPattern.base);
   SharedCtor();
   RegisterArenaDtor(arena);
   // @@protoc_insertion_point(arena_constructor:google.api.CustomHttpPattern)
 }
 CustomHttpPattern::CustomHttpPattern(const CustomHttpPattern& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   kind_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.kind().size() > 0) {
@@ -1387,6 +1612,8 @@ CustomHttpPattern::CustomHttpPattern(const CustomHttpPattern& from)
 }
 
 void CustomHttpPattern::SharedCtor() {
+  ::google::protobuf::internal::InitSCC(
+      &scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto.base);
   kind_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -1397,7 +1624,7 @@ CustomHttpPattern::~CustomHttpPattern() {
 }
 
 void CustomHttpPattern::SharedDtor() {
-  GOOGLE_DCHECK(GetArenaNoVirtual() == NULL);
+  GOOGLE_DCHECK(GetArenaNoVirtual() == nullptr);
   kind_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -1406,18 +1633,13 @@ void CustomHttpPattern::ArenaDtor(void* object) {
   CustomHttpPattern* _this = reinterpret_cast< CustomHttpPattern* >(object);
   (void)_this;
 }
-void CustomHttpPattern::RegisterArenaDtor(::google::protobuf::Arena* arena) {
+void CustomHttpPattern::RegisterArenaDtor(::google::protobuf::Arena*) {
 }
 void CustomHttpPattern::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* CustomHttpPattern::descriptor() {
-  ::protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const CustomHttpPattern& CustomHttpPattern::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_google_2fapi_2fhttp_2eproto::scc_info_CustomHttpPattern.base);
+  ::google::protobuf::internal::InitSCC(&::scc_info_CustomHttpPattern_google_2fapi_2fhttp_2eproto.base);
   return *internal_default_instance();
 }
 
@@ -1433,9 +1655,78 @@ void CustomHttpPattern::Clear() {
   _internal_metadata_.Clear();
 }
 
+#if GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
+const char* CustomHttpPattern::_InternalParse(const char* begin, const char* end, void* object,
+                  ::google::protobuf::internal::ParseContext* ctx) {
+  auto msg = static_cast<CustomHttpPattern*>(object);
+  ::google::protobuf::int32 size; (void)size;
+  int depth; (void)depth;
+  ::google::protobuf::uint32 tag;
+  ::google::protobuf::internal::ParseFunc parser_till_end; (void)parser_till_end;
+  auto ptr = begin;
+  while (ptr < end) {
+    ptr = ::google::protobuf::io::Parse32(ptr, &tag);
+    GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+    switch (tag >> 3) {
+      // string kind = 1;
+      case 1: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 10) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.CustomHttpPattern.kind");
+        object = msg->mutable_kind();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      // string path = 2;
+      case 2: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 18) goto handle_unusual;
+        ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+        ctx->extra_parse_data().SetFieldName("google.api.CustomHttpPattern.path");
+        object = msg->mutable_path();
+        if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+          parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+          goto string_till_end;
+        }
+        GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+        ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+        ptr += size;
+        break;
+      }
+      default: {
+      handle_unusual:
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->EndGroup(tag);
+          return ptr;
+        }
+        auto res = UnknownFieldParse(tag, {_InternalParse, msg},
+          ptr, end, msg->_internal_metadata_.mutable_unknown_fields(), ctx);
+        ptr = res.first;
+        GOOGLE_PROTOBUF_PARSER_ASSERT(ptr != nullptr);
+        if (res.second) return ptr;
+      }
+    }  // switch
+  }  // while
+  return ptr;
+string_till_end:
+  static_cast<::std::string*>(object)->clear();
+  static_cast<::std::string*>(object)->reserve(size);
+  goto len_delim_till_end;
+len_delim_till_end:
+  return ctx->StoreAndTailCall(ptr, end, {_InternalParse, msg},
+                               {parser_till_end, object}, size);
+}
+#else  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 bool CustomHttpPattern::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+#define DO_(EXPRESSION) if (!PROTOBUF_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:google.api.CustomHttpPattern)
   for (;;) {
@@ -1445,8 +1736,7 @@ bool CustomHttpPattern::MergePartialFromCodedStream(
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
       // string kind = 1;
       case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (10 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_kind()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -1461,8 +1751,7 @@ bool CustomHttpPattern::MergePartialFromCodedStream(
 
       // string path = 2;
       case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (18 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_path()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -1494,6 +1783,7 @@ failure:
   return false;
 #undef DO_
 }
+#endif  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 
 void CustomHttpPattern::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
@@ -1521,16 +1811,15 @@ void CustomHttpPattern::SerializeWithCachedSizes(
       2, this->path(), output);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
+        _internal_metadata_.unknown_fields(), output);
   }
   // @@protoc_insertion_point(serialize_end:google.api.CustomHttpPattern)
 }
 
 ::google::protobuf::uint8* CustomHttpPattern::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+    ::google::protobuf::uint8* target) const {
   // @@protoc_insertion_point(serialize_to_array_start:google.api.CustomHttpPattern)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
@@ -1557,9 +1846,9 @@ void CustomHttpPattern::SerializeWithCachedSizes(
         2, this->path(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+        _internal_metadata_.unknown_fields(), target);
   }
   // @@protoc_insertion_point(serialize_to_array_end:google.api.CustomHttpPattern)
   return target;
@@ -1569,11 +1858,15 @@ size_t CustomHttpPattern::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:google.api.CustomHttpPattern)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
+  if (_internal_metadata_.have_unknown_fields()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
+        _internal_metadata_.unknown_fields());
   }
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string kind = 1;
   if (this->kind().size() > 0) {
     total_size += 1 +
@@ -1597,9 +1890,9 @@ void CustomHttpPattern::MergeFrom(const ::google::protobuf::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:google.api.CustomHttpPattern)
   GOOGLE_DCHECK_NE(&from, this);
   const CustomHttpPattern* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const CustomHttpPattern>(
+      ::google::protobuf::DynamicCastToGenerated<CustomHttpPattern>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:google.api.CustomHttpPattern)
     ::google::protobuf::internal::ReflectionOps::Merge(from, this);
   } else {
@@ -1650,7 +1943,7 @@ void CustomHttpPattern::Swap(CustomHttpPattern* other) {
     temp->MergeFrom(*other);
     other->CopyFrom(*this);
     InternalSwap(temp);
-    if (GetArenaNoVirtual() == NULL) {
+    if (GetArenaNoVirtual() == nullptr) {
       delete temp;
     }
   }
@@ -1662,16 +1955,16 @@ void CustomHttpPattern::UnsafeArenaSwap(CustomHttpPattern* other) {
 }
 void CustomHttpPattern::InternalSwap(CustomHttpPattern* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   kind_.Swap(&other->kind_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   path_.Swap(&other->path_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
 ::google::protobuf::Metadata CustomHttpPattern::GetMetadata() const {
-  protobuf_google_2fapi_2fhttp_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_google_2fapi_2fhttp_2eproto::file_level_metadata[kIndexInFileMessages];
+  ::google::protobuf::internal::AssignDescriptors(&::assign_descriptors_table_google_2fapi_2fhttp_2eproto);
+  return ::file_level_metadata_google_2fapi_2fhttp_2eproto[kIndexInFileMessages];
 }
 
 
@@ -1680,16 +1973,17 @@ void CustomHttpPattern::InternalSwap(CustomHttpPattern* other) {
 }  // namespace google
 namespace google {
 namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::google::api::Http* Arena::CreateMaybeMessage< ::google::api::Http >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::google::api::Http* Arena::CreateMaybeMessage< ::google::api::Http >(Arena* arena) {
   return Arena::CreateMessageInternal< ::google::api::Http >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::google::api::HttpRule* Arena::CreateMaybeMessage< ::google::api::HttpRule >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::google::api::HttpRule* Arena::CreateMaybeMessage< ::google::api::HttpRule >(Arena* arena) {
   return Arena::CreateMessageInternal< ::google::api::HttpRule >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::google::api::CustomHttpPattern* Arena::CreateMaybeMessage< ::google::api::CustomHttpPattern >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::google::api::CustomHttpPattern* Arena::CreateMaybeMessage< ::google::api::CustomHttpPattern >(Arena* arena) {
   return Arena::CreateMessageInternal< ::google::api::CustomHttpPattern >(arena);
 }
 }  // namespace protobuf
 }  // namespace google
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
