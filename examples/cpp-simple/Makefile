@@ -41,3 +41,7 @@ root_path = $(realpath $(project_path)/../..)
 # build the cpp-simple binary
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
+
+# check if hosted on Google Cloud Registry
+gcr-check:
+	gcloud container images describe $(server_tag)

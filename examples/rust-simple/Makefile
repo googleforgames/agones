@@ -73,3 +73,7 @@ clean:
 # clean leftover files after building an image with Docker
 clean-docker:
 	rm -rf $(project_path)sdk
+
+# check if hosted on Google Cloud Registry
+gcr-check:
+	gcloud container images describe $(server_tag)

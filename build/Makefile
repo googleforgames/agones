@@ -187,6 +187,7 @@ include ./includes/kind.mk
 include ./includes/website.mk
 include ./includes/sdk.mk
 include ./includes/allocation.mk
+include ./includes/examples.mk
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
