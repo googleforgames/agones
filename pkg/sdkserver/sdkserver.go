@@ -307,6 +307,7 @@ func (s *SDKServer) updateState() error {
 	switch gs.Status.State {
 	case agonesv1.GameServerStateUnhealthy:
 		level = corev1.EventTypeWarning
+		message = "Health check failure"
 	case agonesv1.GameServerStateReserved:
 		s.gsUpdateMutex.Lock()
 		if s.gsReserveDuration != nil {

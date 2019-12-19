@@ -412,6 +412,47 @@ func TestSidecarHealthLastUpdated(t *testing.T) {
 	wg.Wait()
 }
 
+func TestSidecarUnhealthyMessage(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+	sc, err := NewSDKServer("test", "default", m.KubeClient, m.AgonesClient)
+	assert.NoError(t, err)
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test", Namespace: "default",
+			},
+			Spec: agonesv1.GameServerSpec{},
+			Status: agonesv1.GameServerStatus{
+				State: agonesv1.GameServerStateStarting,
+			},
+		}
+		gs.ApplyDefaults()
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+
+	stop := make(chan struct{})
+	defer close(stop)
+
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+	sc.recorder = m.FakeRecorder
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		err := sc.Run(ctx.Done())
+		assert.Nil(t, err)
+	}()
+
+	// manually push through an unhealthy state change
+	sc.enqueueState(agonesv1.GameServerStateUnhealthy)
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "Health check failure")
+}
+
 func TestSidecarHealthy(t *testing.T) {
 	t.Parallel()
 
