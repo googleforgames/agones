@@ -283,9 +283,6 @@ func (c *Controller) loggerForGameServerSet(gsSet *agonesv1.GameServerSet) *logr
 // syncGameServer synchronises the GameServers for the Set,
 // making sure there are aways as many GameServers as requested
 func (c *Controller) syncGameServerSet(key string) error {
-	c.loggerForGameServerSetKey(key).Info("syncGameServerSet")
-	defer c.loggerForGameServerSetKey(key).Info("syncGameServerSet finished")
-
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
