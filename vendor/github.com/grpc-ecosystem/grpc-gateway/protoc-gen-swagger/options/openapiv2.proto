@@ -5,6 +5,7 @@ package grpc.gateway.protoc_gen_swagger.options;
 option go_package = "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options";
 
 import "google/protobuf/any.proto";
+import "google/protobuf/struct.proto";
 
 // `Swagger` is a representation of OpenAPI v2 specification's Swagger object.
 //
@@ -15,6 +16,12 @@ message Swagger {
   string swagger = 1;
   Info info = 2;
   string host = 3;
+  // `base_path` is the common prefix path used on all API endpoints (ie. /api, /v1, etc.). By adding this,
+  // it allows you to remove this portion from the path endpoints in your Swagger file making them easier
+  // to read. Note that using `base_path` does not change the endpoint paths that are generated in the resulting 
+  // Swagger file. If you wish to use `base_path` with relatively generated Swagger paths, the 
+  // `base_path` prefix must be manually removed from your `google.api.http` paths and your code changed to 
+  // serve the API from the `base_path`.
   string base_path = 4;
   enum SwaggerScheme {
     UNKNOWN = 0;
@@ -39,6 +46,7 @@ message Swagger {
   // service objects into OpenAPI v2 Tag objects.
   reserved 13;
   ExternalDocumentation external_docs = 14;
+  map<string, google.protobuf.Value> extensions = 15;
 }
 
 // `Operation` is a representation of OpenAPI v2 specification's Operation object.
@@ -60,6 +68,7 @@ message Operation {
   repeated string schemes = 10;
   bool deprecated = 11;
   repeated SecurityRequirement security = 12;
+  map<string, google.protobuf.Value> extensions = 13;
 }
 
 // `Response` is a representation of OpenAPI v2 specification's Response object.
@@ -77,6 +86,7 @@ message Response {
   reserved 3;
   // field 3 is reserved for 'example'.
   reserved 4;
+  map<string, google.protobuf.Value> extensions = 5;
 }
 
 // `Info` is a representation of OpenAPI v2 specification's Info object.
@@ -89,9 +99,9 @@ message Info {
   string description = 2;
   string terms_of_service = 3;
   Contact contact = 4;
-  // field 5 is reserved for 'license'.
-  reserved 5;
+  License license = 5;
   string version = 6;
+  map<string, google.protobuf.Value> extensions = 7;
 }
 
 // `Contact` is a representation of OpenAPI v2 specification's Contact object.
@@ -103,6 +113,17 @@ message Contact {
   string name = 1;
   string url = 2;
   string email = 3;
+}
+
+// `License` is a representation of OpenAPI v2 specification's License object.
+//
+// See: https://github.com/OAI/OpenAPI-Specification/blob/3.0.0/versions/2.0.md#licenseObject
+//
+message License {
+  // Required. The license name used for the API.
+  string name = 1;
+  // A URL to the license used for the API.
+  string url = 2;
 }
 
 // `ExternalDocumentation` is a representation of OpenAPI v2 specification's
@@ -159,8 +180,7 @@ message JSONSchema {
   string title = 5;
   string description = 6;
   string default = 7;
-  // field 8 is reserved for 'readOnly', which has an OpenAPI v2-specific meaning and is defined there.
-  reserved 8;
+  bool read_only = 8;
   // field 9 is reserved for 'examples', which is omitted from OpenAPI v2 in favor of 'example' field.
   reserved 9;
   double multiple_of = 10;
@@ -319,6 +339,7 @@ message SecurityScheme {
   //
   // Valid for oauth2.
   Scopes scopes = 8;
+  map<string, google.protobuf.Value> extensions = 9;
 }
 
 // `SecurityRequirement` is a representation of OpenAPI v2 specification's

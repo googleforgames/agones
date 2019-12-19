@@ -40,9 +40,11 @@
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
 #include <grpcpp/impl/codegen/method_handler_impl.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
 #include <grpcpp/impl/codegen/rpc_method.h>
+#include <grpcpp/impl/codegen/server_callback.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/status.h>
 #include <grpcpp/impl/codegen/stub_options.h>
@@ -149,20 +151,29 @@ class SDK final {
       virtual ~experimental_async_interface() {}
       // Call when the GameServer is ready
       virtual void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       // Call to self Allocation the GameServer
       virtual void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       // Call when the GameServer is shutting down
       virtual void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       // Send a Empty every d Duration to declare that this GameSever is healthy
+      virtual void Health(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientWriteReactor< ::agones::dev::sdk::Empty>* reactor) = 0;
       // Retrieve the current GameServer data
       virtual void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) = 0;
       // Send GameServer details whenever the GameServer is updated
+      virtual void WatchGameServer(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* request, ::grpc::experimental::ClientReadReactor< ::agones::dev::sdk::GameServer>* reactor) = 0;
       // Apply a Label to the backing GameServer metadata
       virtual void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       // Apply a Annotation to the backing GameServer metadata
       virtual void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
       // Marks the GameServer as the Reserved state for Duration
       virtual void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) = 0;
     };
     virtual class experimental_async_interface* experimental_async() { return nullptr; }
   private:
@@ -261,12 +272,21 @@ class SDK final {
       public StubInterface::experimental_async_interface {
      public:
       void Ready(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void Ready(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void Allocate(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void Allocate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void Shutdown(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void Shutdown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void Health(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ClientWriteReactor< ::agones::dev::sdk::Empty>* reactor) override;
       void GetGameServer(::grpc::ClientContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) override;
+      void GetGameServer(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::GameServer* response, std::function<void(::grpc::Status)>) override;
+      void WatchGameServer(::grpc::ClientContext* context, ::agones::dev::sdk::Empty* request, ::grpc::experimental::ClientReadReactor< ::agones::dev::sdk::GameServer>* reactor) override;
       void SetLabel(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void SetLabel(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void SetAnnotation(::grpc::ClientContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void SetAnnotation(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
       void Reserve(::grpc::ClientContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
+      void Reserve(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::agones::dev::sdk::Empty* response, std::function<void(::grpc::Status)>) override;
      private:
       friend class Stub;
       explicit experimental_async(Stub* stub): stub_(stub) { }
@@ -514,6 +534,226 @@ class SDK final {
     }
   };
   typedef WithAsyncMethod_Ready<WithAsyncMethod_Allocate<WithAsyncMethod_Shutdown<WithAsyncMethod_Health<WithAsyncMethod_GetGameServer<WithAsyncMethod_WatchGameServer<WithAsyncMethod_SetLabel<WithAsyncMethod_SetAnnotation<WithAsyncMethod_Reserve<Service > > > > > > > > > AsyncService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Ready : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Ready() {
+      ::grpc::Service::experimental().MarkMethodCallback(0,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::Empty* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Ready(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_Ready() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Ready(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Ready(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Allocate : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Allocate() {
+      ::grpc::Service::experimental().MarkMethodCallback(1,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::Empty* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Allocate(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_Allocate() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Allocate(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Allocate(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Shutdown : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Shutdown() {
+      ::grpc::Service::experimental().MarkMethodCallback(2,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::Empty* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Shutdown(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_Shutdown() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Shutdown(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Health : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Health() {
+      ::grpc::Service::experimental().MarkMethodCallback(3,
+        new ::grpc::internal::CallbackClientStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>(
+          [this] { return this->Health(); }));
+    }
+    ~ExperimentalWithCallbackMethod_Health() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::agones::dev::sdk::Empty>* reader, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerReadReactor< ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>* Health() {
+      return new ::grpc::internal::UnimplementedReadReactor<
+        ::agones::dev::sdk::Empty, ::agones::dev::sdk::Empty>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_GetGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_GetGameServer() {
+      ::grpc::Service::experimental().MarkMethodCallback(4,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::Empty* request,
+                 ::agones::dev::sdk::GameServer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->GetGameServer(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_GetGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetGameServer(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_WatchGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_WatchGameServer() {
+      ::grpc::Service::experimental().MarkMethodCallback(5,
+        new ::grpc::internal::CallbackServerStreamingHandler< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>(
+          [this] { return this->WatchGameServer(); }));
+    }
+    ~ExperimentalWithCallbackMethod_WatchGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WatchGameServer(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::grpc::ServerWriter< ::agones::dev::sdk::GameServer>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>* WatchGameServer() {
+      return new ::grpc::internal::UnimplementedWriteReactor<
+        ::agones::dev::sdk::Empty, ::agones::dev::sdk::GameServer>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_SetLabel : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_SetLabel() {
+      ::grpc::Service::experimental().MarkMethodCallback(6,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::KeyValue* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->SetLabel(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_SetLabel() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetLabel(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void SetLabel(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_SetAnnotation : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_SetAnnotation() {
+      ::grpc::Service::experimental().MarkMethodCallback(7,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::KeyValue, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::KeyValue* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->SetAnnotation(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_SetAnnotation() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotation(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void SetAnnotation(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Reserve : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Reserve() {
+      ::grpc::Service::experimental().MarkMethodCallback(8,
+        new ::grpc::internal::CallbackUnaryHandler< ::agones::dev::sdk::Duration, ::agones::dev::sdk::Empty>(
+          [this](::grpc::ServerContext* context,
+                 const ::agones::dev::sdk::Duration* request,
+                 ::agones::dev::sdk::Empty* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Reserve(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithCallbackMethod_Reserve() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Reserve(::grpc::ServerContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Reserve(::grpc::ServerContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  typedef ExperimentalWithCallbackMethod_Ready<ExperimentalWithCallbackMethod_Allocate<ExperimentalWithCallbackMethod_Shutdown<ExperimentalWithCallbackMethod_Health<ExperimentalWithCallbackMethod_GetGameServer<ExperimentalWithCallbackMethod_WatchGameServer<ExperimentalWithCallbackMethod_SetLabel<ExperimentalWithCallbackMethod_SetAnnotation<ExperimentalWithCallbackMethod_Reserve<Service > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Ready : public BaseClass {
    private:
@@ -846,6 +1086,225 @@ class SDK final {
     void RequestReserve(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
     }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Ready : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Ready() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(0,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Ready(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Ready() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Ready(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Ready(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Allocate : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Allocate() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(1,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Allocate(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Allocate() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Allocate(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Allocate(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Shutdown : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Shutdown() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(2,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Shutdown(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Shutdown() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Shutdown(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Shutdown(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Health : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Health() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(3,
+        new ::grpc::internal::CallbackClientStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this] { return this->Health(); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Health() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Health(::grpc::ServerContext* context, ::grpc::ServerReader< ::agones::dev::sdk::Empty>* reader, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerReadReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Health() {
+      return new ::grpc::internal::UnimplementedReadReactor<
+        ::grpc::ByteBuffer, ::grpc::ByteBuffer>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_GetGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_GetGameServer() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(4,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->GetGameServer(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_GetGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetGameServer(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::agones::dev::sdk::GameServer* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetGameServer(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_WatchGameServer : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_WatchGameServer() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(5,
+        new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this] { return this->WatchGameServer(); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_WatchGameServer() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status WatchGameServer(::grpc::ServerContext* context, const ::agones::dev::sdk::Empty* request, ::grpc::ServerWriter< ::agones::dev::sdk::GameServer>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* WatchGameServer() {
+      return new ::grpc::internal::UnimplementedWriteReactor<
+        ::grpc::ByteBuffer, ::grpc::ByteBuffer>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_SetLabel : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_SetLabel() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(6,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->SetLabel(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_SetLabel() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetLabel(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void SetLabel(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_SetAnnotation : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_SetAnnotation() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(7,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->SetAnnotation(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_SetAnnotation() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status SetAnnotation(::grpc::ServerContext* context, const ::agones::dev::sdk::KeyValue* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void SetAnnotation(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Reserve : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Reserve() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(8,
+        new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Reserve(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Reserve() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Reserve(::grpc::ServerContext* context, const ::agones::dev::sdk::Duration* request, ::agones::dev::sdk::Empty* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Reserve(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Ready : public BaseClass {

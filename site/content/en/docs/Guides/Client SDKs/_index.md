@@ -40,15 +40,8 @@ by the game server.
 
 Agones will automatically set the following environment variables on all game server containers:
 
-{{% feature expiryVersion="1.2.0" %}}
-* `AGONES_SDK_GRPC_PORT`: The port where the gRPC server is listening
-* `AGONES_SDK_HTTP_PORT`: The port where the grpc-gateway is listening
-{{% /feature %}}
-
-{{% feature publishVersion="1.2.0" %}}
 * `AGONES_SDK_GRPC_PORT`: The port where the gRPC server is listening (defaults to 9357)
 * `AGONES_SDK_HTTP_PORT`: The port where the grpc-gateway is listening (defaults to 9358)
-{{% /feature %}}
 
 The SDKs will automatically discover and connect to the gRPC port specified in the environment variable.
 

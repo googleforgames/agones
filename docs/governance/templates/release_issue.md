@@ -18,7 +18,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be the {version} if a full release, {version}-rc if release candidate)
 - [ ] Run `make gen-install`
-- [ ] Ensure all example images exist on gcr.io/agones-images-
+- [ ] Run `test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
 - [ ] Create a *draft* release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
 - [ ] Site updated

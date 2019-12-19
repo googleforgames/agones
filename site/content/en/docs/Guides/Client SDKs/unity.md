@@ -31,8 +31,6 @@ To begin working with the SDK, get an instance of it.
 var agones = agonesGameObject.GetComponent<Agones.AgonesSdk>();
 ```
 
-{{% feature publishVersion="1.2.0" %}}
-
 To connect to the SDK server, either local or when running on Agones, run the async `Connect()` method.
 This will wait for up to 30 seconds if the SDK server has not yet started and the connection cannot be made,
 and will return `false` if there was an issue connecting.
@@ -40,7 +38,6 @@ and will return `false` if there was an issue connecting.
 ```csharp
 bool ok = await agones.Connect();
 ```
-{{% /feature %}}
 
 To mark the game server as [ready to receive player connections]({{< relref "_index.md#ready" >}}), call the async method `Ready()`.
 
@@ -50,8 +47,6 @@ async void SomeMethod()
     bool ok = await agones.Ready();
 }
 ```
-
-{{% feature publishVersion="1.2.0" %}}
 
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `GameServer()`.
 
@@ -67,8 +62,6 @@ To mark the GameServer as [Reserved]({{< relref "_index.md#reserve-seconds" >}})
 ```csharp
 ok = await agones.Reserve(duration);
 ```
-
-{{% /feature %}}
 
 To mark that the [game session is completed]({{< relref "_index.md#shutdown" >}}) and the game server should be shut down call `Shutdown()`.
 

@@ -49,6 +49,11 @@ func init() {
 	}
 }
 
+// SetLevel select level to filter logger output
+func SetLevel(level logrus.Level) {
+	logrus.SetLevel(level)
+}
+
 // HandleError wraps runtime.HandleError so that it is possible to
 // use WithField with logrus.
 func HandleError(logger *logrus.Entry, err error) {
