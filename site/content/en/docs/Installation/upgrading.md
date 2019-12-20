@@ -7,8 +7,10 @@ description: >
   Strategies and techniques for managing Agones and Kubernetes upgrades in a safe manner.
 ---
 
-> Note: Whichever approach you take to upgrading Agones, make sure to test it in your development environment 
-> before applying it to production.
+{{< alert color="info" title="Note" >}}
+Whichever approach you take to upgrading Agones, make sure to test it in your development environment 
+before applying it to production.
+{{< /alert >}}
 
 ## Upgrading Agones
 
@@ -44,7 +46,7 @@ for the period of your upgrade, as there will be a short period in which Agones 
 
 #### Installation with install.yaml
 
-If you installed [Agones with install.yaml]({{< relref "_index.md#install-with-yaml" >}}), then you will need to delete
+If you installed [Agones with install.yaml]({{< relref "./Install Agones/yaml.md" >}}), then you will need to delete
 the previous installation of Agones before upgrading to the new version, as we need to remove all of Agones before installing
 the new version.
 
@@ -52,7 +54,7 @@ the new version.
 1. Delete the current set of Fleets and/or GameServers in your cluster.
 1. Make sure to delete the same version of Agones that was previously installed, for example:
    `kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/<old-release-version>/install/yaml/install.yaml`
-1. Install Agones [with install.yaml]({{< relref "_index.md#install-with-yaml" >}}).
+1. Install Agones [with install.yaml]({{< relref "./Install Agones/yaml.md" >}}).
 1. Deploy the same set of Fleets and/or GameServers back into the cluster.
 1. Run any other tests to ensure the Agones installation is working as expected.
 1. Close your maintenance window.
