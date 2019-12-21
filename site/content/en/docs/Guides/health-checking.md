@@ -10,30 +10,42 @@ description: >
 
 ## Disabling Health Checking
 
-By default, health checking is enabled, but it can be turned off by setting the `health > disabled` property to true
+By default, health checking is enabled, but it can be turned off by setting the `spec.health.disabled` property to
+true.
 
 ## SDK API
 
-The `Health()` function on the [SDK object]({{< relref "./Client SDKs/_index.md" >}}) needs to be called at an interval less than the `health > periodSeconds`
+The `Health()` function on the [SDK object]({{< relref "./Client SDKs/_index.md" >}}) needs to be called at an
+interval less than the `spec.health.periodSeconds`
 threshold time to be considered before it will be considered a `failure`.
 
-The health check will also need to have not been called a consecutive number of times (`health > failureTheshold`),
+The health check will also need to have not been called a consecutive number of times (`spec.health.failureTheshold`),
 giving it a chance to heal if it there is an issue.
 
 ## Health Failure Strategy
 
 The following is the process for what happens to a `GameServer` when it is unhealthy.
 
-1. If any of the GameServer container fails health checking, or exits before the GameServer moves to `Ready` then, 
-   it is restart as per the `restartPolicy` (which defaults to "Always")
-1. If the GameServer container fails healthy checking after the `Ready` state, then it doesn't restart, 
-   but moves the GameServer to an `Unhealthy` state.
-1. If the GameServer container exits while in `Ready` state, it will be restarted as per the `restartPolicy` 
-   (which defaults to "Always", since `RestartPolicy` is a Pod wide setting), 
+1. If the `GameServer` container exits with an error before the `GameServer` moves to `Ready` then, 
+   it is restarted as per the `restartPolicy` (which defaults to "Always").
+1. If the `GameServer` fails health checking at any point, then it doesn't restart, 
+   but moves to an `Unhealthy` state.
+1. If the `GameServer` container exits while in `Ready`, `Allocated` or `Reserved` state, it will be restarted 
+   as per the `restartPolicy`  (which defaults to "Always", since `RestartPolicy` is a `Pod` wide setting), 
    but will immediately move to an `Unhealthy` state.
 1. If the SDK sidecar fails, then it will be restarted, assuming the `RestartPolicy` is Always/OnFailure.
 
-## Reference
+## Fleet Management of Unhealthy GameServers
+
+If a `GameServer` moves into an `Unhealthy` state when it is not part of a Fleet, the `GameServer` will remain in the
+Unhealthy state until explicitly deleted.  This is useful for debugging `Unhealthy` `GameServers`, or if you are
+creating your own `GameServer` management layer, you can explicitly choose what to do if a `GameServer` becomes
+`Unhealthy`.
+  
+If a `GameServer` is part of a `Fleet`, the `Fleet` management system will _delete_ any `Unhealthy` `GameServers` and
+immediately replace them with a brand new `GameServer` to ensure it has the configured number of Replicas.
+
+## Configuration Reference
 ```yaml
   # Health checking for the running game server
   health:
