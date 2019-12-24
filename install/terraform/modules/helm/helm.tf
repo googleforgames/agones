@@ -124,8 +124,13 @@ resource "helm_release" "agones" {
   }
 
   set {
-    name  = " agones.ping.http.serviceType"
+    name  = "agones.ping.http.serviceType"
     value = "${var.ping_service_type}"
+  }
+
+  set {
+    name = "agones.ping.udp.expose"
+    value ="${var.udp_expose}"
   }
 
   set {

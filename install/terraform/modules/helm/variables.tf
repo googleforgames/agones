@@ -22,6 +22,10 @@ variable "agones_version" {
   default = ""
 }
 
+variable "udp_expose" {
+  default = "true"
+}
+
 variable "host" {}
 
 variable "token" {}
