@@ -827,10 +827,12 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
-			assert.Len(t, pod.Spec.Containers[1].Env, 2, "2 env vars")
+			assert.Len(t, pod.Spec.Containers[1].Env, 3, "3 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
+			assert.Equal(t, "FEATURE_GATES", pod.Spec.Containers[1].Env[2].Name)
+
 			return true, pod, nil
 		})
 

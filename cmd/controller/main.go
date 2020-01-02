@@ -114,7 +114,7 @@ func main() {
 		runtime.SetLevel(logrus.InfoLevel)
 	}
 
-	logger.WithField("version", pkg.Version).
+	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting gameServer operator...")
 
 	if err := ctlConf.validate(); err != nil {
@@ -271,6 +271,7 @@ func parseEnvFlags() config {
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
+	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -295,6 +296,9 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
+	runtime.Must(runtime.FeaturesBindEnv())
+
+	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	request, err := resource.ParseQuantity(viper.GetString(sidecarCPURequestFlag))
 	if err != nil {

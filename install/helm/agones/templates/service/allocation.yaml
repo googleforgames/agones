@@ -124,6 +124,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-allocator"
+        - name: FEATURE_GATES
+          value: {{ .Values.agones.featureGates | quote }}
         ports:
         - name: https
           containerPort: 8443
