@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -89,29 +90,42 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	assert.Equal(t, "template", causes[0].Field)
 
 	newGSS = gsSet.DeepCopy()
-	nameLen := validation.LabelValueMaxLength + 1
-	bytes := make([]byte, nameLen)
-	for i := 0; i < nameLen; i++ {
-		bytes[i] = 'f'
-	}
-	newGSS.Name = string(bytes)
+	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
+	newGSS.Name = longName
 	causes, ok = newGSS.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
 
 	newGSS.Name = ""
-	newGSS.GenerateName = string(bytes)
+	newGSS.GenerateName = longName
 	causes, ok = newGSS.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
 
 	newGSS = gsSet.DeepCopy()
-	newGSS.Name = string(bytes)
+	newGSS.Name = longName
 	causes, ok = gsSet.ValidateUpdate(newGSS)
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
+
+	newGSS = gsSet.DeepCopy()
+	newGSS.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	newGSS.Spec.Template.ObjectMeta.Labels[longName] = ""
+	causes, ok = newGSS.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "labels", causes[0].Field)
+
+	// Same validation applies to nested Labels which applies to GameServer pod
+	newGSS = gsSet.DeepCopy()
+	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	newGSS.Spec.Template.Spec.Template.ObjectMeta.Labels[longName] = ""
+	causes, ok = newGSS.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "labels", causes[0].Field)
 
 	gsSet.Spec.Template.Spec.Template =
 		corev1.PodTemplateSpec{

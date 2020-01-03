@@ -15,6 +15,7 @@
 package v1
 
 import (
+	"strings"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
@@ -155,24 +156,36 @@ func TestFleetGameserverSpec(t *testing.T) {
 	causes, ok = f.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
+
+	f = defaultFleet()
+	f.ApplyDefaults()
+	f.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	f.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+
+	f = defaultFleet()
+	f.ApplyDefaults()
+	f.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	f.Spec.Template.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
 }
 
 func TestFleetName(t *testing.T) {
 	f := defaultFleet()
 
-	nameLen := validation.LabelValueMaxLength + 1
-	bytes := make([]byte, nameLen)
-	for i := 0; i < nameLen; i++ {
-		bytes[i] = 'f'
-	}
-	f.Name = string(bytes)
+	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
+	f.Name = longName
 	causes, ok := f.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
 
 	f.Name = ""
-	f.GenerateName = string(bytes)
+	f.GenerateName = longName
 	causes, ok = f.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)

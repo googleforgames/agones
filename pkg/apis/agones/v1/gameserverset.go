@@ -92,7 +92,7 @@ func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusC
 	return causes, len(causes) == 0
 }
 
-// Validate validates when Create occur. Check the name size
+// Validate validates when Create occurs. Check the name size
 func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	causes := validateName(gsSet)
 
@@ -100,6 +100,11 @@ func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	gsCauses := validateGSSpec(gsSet)
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
+	}
+
+	objMetaCauses := validateObjectMeta(gsSet.Spec.Template.ObjectMeta)
+	if len(objMetaCauses) > 0 {
+		causes = append(causes, objMetaCauses...)
 	}
 
 	return causes, len(causes) == 0

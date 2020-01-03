@@ -16,6 +16,7 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"agones.dev/agones/pkg"
@@ -406,22 +407,25 @@ func TestGameServerValidate(t *testing.T) {
 		},
 	}
 
-	nameLen := validation.LabelValueMaxLength + 1
-	bytes := make([]byte, nameLen)
-	for i := 0; i < nameLen; i++ {
-		bytes[i] = 'g'
-	}
-	gs.Name = string(bytes)
+	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
+	gs.Name = longName
 	causes, ok = gs.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "Name", causes[0].Field)
 
 	gs.Name = ""
-	gs.GenerateName = string(bytes)
+	gs.GenerateName = longName
 	causes, ok = gs.Validate()
 	assert.True(t, ok)
 	assert.Len(t, causes, 0)
+
+	gs.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	gs.Spec.Template.ObjectMeta.Labels[longName] = ""
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "labels", causes[0].Field)
 
 	gs = GameServer{
 		Spec: GameServerSpec{
