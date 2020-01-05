@@ -26,5 +26,5 @@
     "lint": "eslint --fix src spec",
     "test": "jasmine"
   },
-  "version": "0.8.0"
+  "version": "1.2.0"
 }
