@@ -134,7 +134,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 	})
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(s.logger.Infof)
+	eventBroadcaster.StartLogging(s.logger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&k8sv1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	s.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-sidecar"})
 
