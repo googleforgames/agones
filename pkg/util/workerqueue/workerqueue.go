@@ -89,7 +89,7 @@ func (wq *WorkerQueue) Enqueue(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField(wq.keyName, key).Info("Enqueuing")
+	wq.logger.WithField(wq.keyName, key).Debug("Enqueuing")
 	wq.queue.AddRateLimited(key)
 }
 
@@ -104,7 +104,7 @@ func (wq *WorkerQueue) EnqueueImmediately(obj interface{}) {
 		runtime.HandleError(wq.logger.WithField("obj", obj), err)
 		return
 	}
-	wq.logger.WithField(wq.keyName, key).Info("Enqueuing immediately")
+	wq.logger.WithField(wq.keyName, key).Debug("Enqueuing immediately")
 	wq.queue.Add(key)
 }
 
@@ -118,7 +118,7 @@ func (wq *WorkerQueue) EnqueueAfter(obj interface{}, duration time.Duration) {
 		return
 	}
 
-	wq.logger.WithField(wq.keyName, key).WithField("duration", duration).Info("Enqueueing after duration")
+	wq.logger.WithField(wq.keyName, key).WithField("duration", duration).Debug("Enqueueing after duration")
 	wq.queue.AddAfter(key, duration)
 }
 
@@ -139,7 +139,7 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 	}
 	defer wq.queue.Done(obj)
 
-	wq.logger.WithField(wq.keyName, obj).Info("Processing")
+	wq.logger.WithField(wq.keyName, obj).Debug("Processing")
 
 	var key string
 	var ok bool
