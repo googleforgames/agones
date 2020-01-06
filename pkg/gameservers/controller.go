@@ -239,8 +239,6 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	c.loggerForGameServer(gs).WithField("patch", string(json)).Infof("patch created!")
-
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
 	review.Response.Patch = json

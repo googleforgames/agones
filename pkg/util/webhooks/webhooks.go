@@ -73,7 +73,7 @@ func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op v1beta1.Opera
 
 // handle Handles http requests for webhooks
 func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) error { // nolint: interfacer
-	wh.logger.WithField("path", path).Info("running webhook")
+	wh.logger.WithField("path", path).Debug("running webhook")
 
 	var review v1beta1.AdmissionReview
 	err := json.NewDecoder(r.Body).Decode(&review)
