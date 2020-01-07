@@ -16,10 +16,10 @@ This guide addresses Google Kubernetes Engine and Minikube.  We would welcome a 
 4. kubectl properly configured
 
 To install on GKE, follow the install instructions (if you haven't already) at
-[Setting up a Google Kubernetes Engine (GKE) cluster]({{< ref "/docs/Installation/_index.md#setting-up-a-google-kubernetes-engine-gke-cluster" >}}).
+[Setting up a Google Kubernetes Engine (GKE) cluster]({{< ref "/docs/Installation/Creating Cluster/gke.md" >}}).
 Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page.
 
-To install locally on Minikube, read [Setting up a Minikube cluster]({{< ref "/docs/Installation/_index.md#setting-up-a-minikube-cluster" >}}).
+To install locally on Minikube, read [Setting up a Minikube cluster]({{< ref "/docs/Installation/Creating Cluster/minikube.md" >}}).
 Also complete the "Enabling creation of RBAC resources" and "Installing Agones" sets of instructions on the same page. 
 
 ## Modify the code and push another new image

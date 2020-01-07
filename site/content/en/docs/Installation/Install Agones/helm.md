@@ -1,18 +1,16 @@
 ---
 title: "Install Agones using Helm"
-linkTitle: "Install with Helm"
-weight: 4
+linkTitle: "Helm"
+weight: 20
 description: >
-  This chart install the Agones application and defines deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+  Install Agones on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ---
 
 ## Prerequisites
 
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
-- Kubernetes 1.13
-- Role-based access controls (RBAC) activated
-- MutatingAdmissionWebhook and ValidatingAdmissionWebhook admission controllers activated, see [recommendation](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use)
+- [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
 
 ## Installing the Chart
 
@@ -111,9 +109,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
-{{% feature publishVersion="1.3.0" %}}
-| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
-{{% /feature %}}
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -174,7 +169,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-
+| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
 | `agones.controller.logLevel`                        | Agones Controller Log level. Log only entries with that severity and above                      | `info`                |
 {{% /feature %}}
 
@@ -214,6 +209,6 @@ For most used cases the controller would have required a restart anyway (eg: con
 You can use our script located at `cert/cert.sh` to generates them.
 {{< /alert >}}
 
-## Confirm Agones is running
+## Next Steps
 
-To confirm Agones is up and running, [go to the next section]({{< relref "_index.md#confirming-agones-started-successfully" >}})
+- [Confirm Agones is up and running]({{< relref "../confirm.md" >}})

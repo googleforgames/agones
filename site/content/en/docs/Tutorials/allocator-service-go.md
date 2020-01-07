@@ -26,7 +26,7 @@ The type of service we will be learning about could be used by a game client to 
 5. A repository for Docker images, such as [Docker Hub](https://hub.docker.com/) or [GC Container Registry](https://cloud.google.com/container-registry/)
 
 To install on GKE, follow the install instructions (if you haven't already) at
-[Setting up a Google Kubernetes Engine (GKE) cluster]({{< relref "../Installation/_index.md#setting-up-a-google-kubernetes-engine-gke-cluster" >}}).
+[Setting up a Google Kubernetes Engine (GKE) cluster]({{< ref "/docs/Installation/Creating Cluster/gke.md" >}}).
 Also complete the "Installing Agones" instructions on the same page.
 
 

@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -221,8 +220,8 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 			body, err := ioutil.ReadAll(resp.Body)
 			assert.Nil(t, err)
 
-			expected := "cannot unmarshal bool into Go struct field Container.name of type string"
-			assert.True(t, strings.Contains(string(body), expected))
+			expected := "cannot unmarshal bool into Go struct field Container.spec.template.spec.template.spec.containers.name of type string"
+			assert.Contains(t, string(body), expected)
 
 			assert.Equal(t, handles.expected.count, callCount, "[%v] /test should have been called for %#v", k, handles)
 		})

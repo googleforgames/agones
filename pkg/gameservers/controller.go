@@ -130,7 +130,7 @@ func NewController(
 	c.baseLogger = runtime.NewLoggerWithType(c)
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(c.baseLogger.Infof)
+	eventBroadcaster.StartLogging(c.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserver-controller"})
 
@@ -238,8 +238,6 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	if err != nil {
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
-
-	c.loggerForGameServer(gs).WithField("patch", string(json)).Infof("patch created!")
 
 	pt := admv1beta1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt

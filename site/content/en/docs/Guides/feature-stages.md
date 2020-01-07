@@ -20,7 +20,7 @@ A feature within Agones can be in `Alpha`, `Beta` or `Stable` stage.
 ## Feature Gates
 
 `Alpha` and `Beta` features can be enabled or disabled through the `agones.featureGate` configuration option 
-that can be found in the [Helm configuration]({{< ref "/docs/Installation/helm.md#configuration" >}}) documentation.
+that can be found in the [Helm configuration]({{< ref "/docs/Installation/Install Agones/helm.md#configuration" >}}) documentation.
 
 The current set of `alpha` and `beta` feature gates are:
 

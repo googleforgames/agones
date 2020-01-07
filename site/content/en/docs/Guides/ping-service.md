@@ -15,7 +15,8 @@ To make latency testing easier, Agones installs with a simple ping service with 
 
 By default, Agones installs [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/) for
 both HTTP and the UDP ping endpoints. These can be disabled entirely,
-or disabled individually. See the [Helm install guide]({{< relref "../Installation/helm.md" >}}) for the parameters to pass through,
+or disabled individually. See the [Helm install guide]({{< ref "/docs/Installation/Install Agones/helm.md" >}}) for the parameters to
+ pass through,
 as well as configuration options. 
 
 The ping services as all installed under the `agones-system` namespace.
