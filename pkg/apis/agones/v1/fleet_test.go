@@ -157,10 +157,11 @@ func TestFleetGameserverSpec(t *testing.T) {
 	assert.False(t, ok)
 	assert.Len(t, causes, 2)
 
+	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
 	f = defaultFleet()
 	f.ApplyDefaults()
 	f.Spec.Template.ObjectMeta.Labels = make(map[string]string)
-	f.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	f.Spec.Template.ObjectMeta.Labels["label"] = longName
 	causes, ok = f.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
@@ -168,7 +169,16 @@ func TestFleetGameserverSpec(t *testing.T) {
 	f = defaultFleet()
 	f.ApplyDefaults()
 	f.Spec.Template.Spec.Template.ObjectMeta.Labels = make(map[string]string)
-	f.Spec.Template.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	f.Spec.Template.Spec.Template.ObjectMeta.Labels["label"] = longName
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+
+	// Annotations test
+	f = defaultFleet()
+	f.ApplyDefaults()
+	f.Spec.Template.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	f.Spec.Template.Spec.Template.ObjectMeta.Annotations[longName] = ""
 	causes, ok = f.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)

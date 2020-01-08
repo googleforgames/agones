@@ -427,6 +427,40 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Len(t, causes, 1)
 	assert.Equal(t, "labels", causes[0].Field)
 
+	gs.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	gs.Spec.Template.ObjectMeta.Labels["agones.dev/longValueKey"] = longName
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "labels", causes[0].Field)
+
+	// Validate Labels and Annotations
+	gs.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	gs.Spec.Template.ObjectMeta.Annotations[longName] = longName
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 2)
+
+	// No errors if valid Annotation was used
+	gs.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	gs.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	shortName := "agones.dev/shortName"
+	gs.Spec.Template.ObjectMeta.Annotations[shortName] = "shortValue"
+	causes, ok = gs.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
+
+	gs.Spec.Template.ObjectMeta.Annotations[shortName] = longName
+	causes, ok = gs.Validate()
+	assert.True(t, ok)
+	assert.Len(t, causes, 0)
+
+	gs.Spec.Template.ObjectMeta.Annotations["agones.dev/short±Name"] = "shortValue"
+	causes, ok = gs.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
+	assert.Equal(t, "annotations", causes[0].Field)
+
 	gs = GameServer{
 		Spec: GameServerSpec{
 			Ports: []GameServerPort{{Name: "one", PortPolicy: Passthrough, ContainerPort: 1294}, {PortPolicy: Passthrough, Name: "two", HostPort: 7890}},
