@@ -61,12 +61,6 @@ do-release:
 	$(MAKE) gcloud-auth-docker
 	$(MAKE) -j 3 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 
-	# create package for node registry
-	npm login --registry=https://npm.pkg.github.com
-	cd $(agones_path)/sdks/nodejs
-	npm version $(RELEASE_VERSION)
-	$(MAKE) run-sdk-command-node npm publish
-
 	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
 
