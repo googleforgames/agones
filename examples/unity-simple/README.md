@@ -53,4 +53,4 @@ $ kubectl create -f gameserver.yaml
     | Label $1 $2 | SetLabel($1, $2) |
     | Annotation $1 $2 | SetAnnotation($1, $2) |
     | Shutdown | Shutdown() |
-    | GaameServer | GameServer() |
+    | GameServer | GameServer() |
