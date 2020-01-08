@@ -18,8 +18,10 @@ import (
 	"fmt"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // Block of const Error messages
@@ -59,12 +61,30 @@ type gsSpec interface {
 	GetGameServerSpec() *GameServerSpec
 }
 
-// validateGSSpec Check GameserverSpec of a CRD
-// Used by Fleet and Gameserverset
+// validateGSSpec Check GameServerSpec of a CRD
+// Used by Fleet and GameServerSet
 func validateGSSpec(gs gsSpec) []metav1.StatusCause {
 	gsSpec := gs.GetGameServerSpec()
 	gsSpec.ApplyDefaults()
 	causes, _ := gsSpec.Validate("")
 
+	return causes
+}
+
+// validateObjectMeta Check ObjectMeta specification
+// Used by Fleet, GameServerSet and GameServer
+func validateObjectMeta(objMeta metav1.ObjectMeta) []metav1.StatusCause {
+	var causes []metav1.StatusCause
+
+	errs := metav1validation.ValidateLabels(objMeta.Labels, field.NewPath("labels"))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "labels",
+				Message: v.Error(),
+			})
+		}
+	}
 	return causes
 }

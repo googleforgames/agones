@@ -389,8 +389,12 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 			})
 		}
 	}
-	return causes, len(causes) == 0
+	objMetaCauses := validateObjectMeta(gss.Template.ObjectMeta)
+	if len(objMetaCauses) > 0 {
+		causes = append(causes, objMetaCauses...)
+	}
 
+	return causes, len(causes) == 0
 }
 
 // Validate validates the GameServer configuration.

@@ -17,6 +17,7 @@ package e2e
 import (
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -943,6 +944,31 @@ func TestFleetWithZeroReplicas(t *testing.T) {
 	list, err := framework.ListGameServersFromFleet(flt)
 	assert.NoError(t, err)
 	assert.Empty(t, list)
+}
+
+// TestFleetWithLongLabels ensures that we can not create a fleet
+// with label over 64 chars
+func TestFleetWithLongLabels(t *testing.T) {
+	t.Parallel()
+	client := framework.AgonesClient.AgonesV1()
+	fleetSize := int32(1)
+	flt := defaultFleet(defaultNs)
+	flt.Spec.Replicas = fleetSize
+	flt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	flt.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	_, err := client.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	goodFlt := defaultFleet(defaultNs)
+	goodFlt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
+	goodFlt.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength)
+	goodFlt, err = client.Fleets(defaultNs).Create(goodFlt)
+	if assert.Nil(t, err) {
+		defer client.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
 }
 
 // TestFleetRecreateGameServers tests various gameserver shutdown scenarios to ensure
