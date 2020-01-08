@@ -20,6 +20,7 @@ header() {
     cat /go/src/agones.dev/agones/build/boilerplate.go.txt ./$1 >> $2/$1
 }
 
+sdk=/go/src/agones.dev/agones/proto/sdk
 googleapis=/go/src/agones.dev/agones/proto/googleapis
 protoc_intermediate=/go/src/agones.dev/agones/sdks/cpp/.generated
 protoc_destination=/go/src/agones.dev/agones/sdks/cpp
@@ -33,8 +34,8 @@ mkdir -p ${protoc_destination}/include/google/api
 cd /go/src/agones.dev/agones/sdks/cpp
 find -name '*.pb.*' -delete
 cd /go/src/agones.dev/agones
-protoc -I ${googleapis} -I . --grpc_out=${protoc_intermediate} --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
-protoc -I ${googleapis} -I . --cpp_out=dllexport_decl=AGONES_EXPORT:${protoc_intermediate} sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
+protoc -I ${googleapis} -I ${sdk} --grpc_out=${protoc_intermediate} --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` sdk.proto
+protoc -I ${googleapis} -I ${sdk} --cpp_out=dllexport_decl=AGONES_EXPORT:${protoc_intermediate} sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
 
 cd ${protoc_intermediate}
 header sdk.grpc.pb.cc ${protoc_destination}/src/agones

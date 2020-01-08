@@ -54,7 +54,17 @@ let result = await agonesSDK.ready();
 
 Similarly `shutdown()`, `allocate()`, `setAnnotation(key, value)` and `setLabel(key, value)` are async methods that perform an action and return an empty result.
 
-To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method `getGameServer()`. The result will be an object representing `GameServer` defined in {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
+{{% feature expiryVersion="1.4.0" %}}
+To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method
+`getGameServer()`. The result will be an object representing `GameServer` defined
+in {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method
+`getGameServer()`. The result will be an object representing `GameServer` defined
+in {{< ghlink href="proto/sdk/sdk.proto" link_test="false" >}}`sdk.proto`{{< /ghlink >}}.
+{{% /feature %}}
 
 ```javascript
 let result = await agonesSDK.getGameServer();

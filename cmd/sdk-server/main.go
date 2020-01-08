@@ -27,7 +27,11 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
+	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
+	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
+	serveralpha "agones.dev/agones/pkg/sdkserver/alpha"
+	serverbeta "agones.dev/agones/pkg/sdkserver/beta"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -92,11 +96,11 @@ func main() {
 
 	switch {
 	case ctlConf.IsLocal:
-		localSDK, err := registerLocal(grpcServer, ctlConf)
+		cancel, err := registerLocal(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start local sdk server")
 		}
-		defer localSDK.Close()
+		defer cancel()
 
 		if ctlConf.Timeout != 0 {
 			go func() {
@@ -105,11 +109,11 @@ func main() {
 			}()
 		}
 	case ctlConf.Test != "":
-		localSDK, err := registerTestSdkServer(grpcServer, ctlConf)
+		cancel, err := registerTestSdkServer(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start test sdk server")
 		}
-		defer localSDK.Close()
+		defer cancel()
 
 		if ctlConf.Timeout != 0 {
 			go func() {
@@ -150,6 +154,8 @@ func main() {
 			}
 		}()
 		sdk.RegisterSDKServer(grpcServer, s)
+		sdkalpha.RegisterSDKServer(grpcServer, serveralpha.NewSDKServer())
+		sdkbeta.RegisterSDKServer(grpcServer, serverbeta.NewSDKServer())
 	}
 
 	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.GRPCPort)
@@ -164,39 +170,61 @@ func main() {
 	logger.Info("shutting down sdk server")
 }
 
-func registerLocal(grpcServer *grpc.Server, ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
+// registerLocal registers the local SDK servers, and returns a cancel func that
+// closes all the SDK implementations
+func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 	filePath := ""
 	if ctlConf.LocalFile != "" {
-		filePath, err = filepath.Abs(ctlConf.LocalFile)
+		filePath, err := filepath.Abs(ctlConf.LocalFile)
 		if err != nil {
-			return
+			return nil, err
 		}
 
 		if _, err = os.Stat(filePath); os.IsNotExist(err) {
-			err = errors.Errorf("Could not find file: %s", filePath)
-			return
+			return nil, errors.Errorf("Could not find file: %s", filePath)
 		}
 	}
 
-	localSDK, err = sdkserver.NewLocalSDKServer(filePath)
+	stableSDK, err := sdkserver.NewLocalSDKServer(filePath)
 	if err != nil {
-		return
+		return nil, err
 	}
-	sdk.RegisterSDKServer(grpcServer, localSDK)
-	return
+	alphaSDK := serveralpha.NewLocalSDKServer()
+	betaSDK := serverbeta.NewLocalSDKServer()
+
+	sdk.RegisterSDKServer(grpcServer, stableSDK)
+	sdkalpha.RegisterSDKServer(grpcServer, alphaSDK)
+	sdkbeta.RegisterSDKServer(grpcServer, betaSDK)
+	return func() {
+		alphaSDK.Close()
+		betaSDK.Close()
+		stableSDK.Close()
+	}, err
 }
 
-func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (localSDK *sdkserver.LocalSDKServer, err error) {
-	localSDK, err = sdkserver.NewLocalSDKServer("")
+// registerLocal registers the local test SDK servers, and returns a cancel func that
+// closes all the SDK implementations
+func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), error) {
+	stableSDK, err := sdkserver.NewLocalSDKServer("")
 	if err != nil {
-		return
+		return nil, err
 	}
-	localSDK.SetTestMode(true)
-	localSDK.GenerateUID()
+	alphaSDK := serveralpha.NewLocalSDKServer()
+	betaSDK := serverbeta.NewLocalSDKServer()
+
+	stableSDK.SetTestMode(true)
+	stableSDK.GenerateUID()
 	expectedFuncs := strings.Split(ctlConf.Test, ",")
-	localSDK.SetExpectedSequence(expectedFuncs)
-	sdk.RegisterSDKServer(grpcServer, localSDK)
-	return
+	stableSDK.SetExpectedSequence(expectedFuncs)
+
+	sdk.RegisterSDKServer(grpcServer, stableSDK)
+	sdkalpha.RegisterSDKServer(grpcServer, alphaSDK)
+	sdkbeta.RegisterSDKServer(grpcServer, betaSDK)
+	return func() {
+		alphaSDK.Close()
+		betaSDK.Close()
+		stableSDK.Close()
+	}, err
 }
 
 // runGrpc runs the grpc service

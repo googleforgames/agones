@@ -23,13 +23,30 @@ contain some retry logic to take this into account.
 
 ## Generating clients
 
-While you can hand write REST integrations, we also have a {{< ghlink href="sdk.swagger.json" >}}generated OpenAPI/Swagger definition{{< /ghlink >}}
-available. This means you can use OpenAPI/Swagger tooling to generate clients as well, if you need them.
+{{% feature expiryVersion="1.4.0" %}}
+While you can hand write REST integrations, we also have
+a {{< ghlink href="sdk.swagger.json" >}}generated OpenAPI/Swagger definition{{< /ghlink >}} available. This means you
+can use OpenAPI/Swagger tooling to generate clients as well, if you need them.
 
 For example (to be run in the `agones` home directory):
 ```bash
 docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdk.swagger.json  -l cpprest -o /local/out/cpp
 ```
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+While you can hand write REST integrations, we also have a set
+of {{< ghlink href="sdks/swagger" link_test="false" >}}generated OpenAPI/Swagger definitions{{< /ghlink >}} available.
+This means you can use OpenAPI/Swagger tooling to generate clients as well, if you need them.
+
+For example, to create a cpp client for the stable sdk endpoints (to be run in the `agones` home directory):
+```bash
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdk.swagger.json  -l cpprest -o /local/out/cpp
+```
+
+The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.
+
+{{% /feature %}}
 
 You can read more about OpenAPI/Swagger code generation in their [Command Line Tool Documentation](https://swagger.io/docs/open-source-tools/swagger-codegen/)
 

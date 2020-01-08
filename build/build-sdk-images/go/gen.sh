@@ -16,6 +16,13 @@
 
 set -ex
 
+header() {
+    cat /go/src/agones.dev/agones/build/boilerplate.go.txt "$1" | sponge "$1"
+}
+
+sdk=/go/src/agones.dev/agones/proto/sdk
+googleapis=/go/src/agones.dev/agones/proto/googleapis
+
 export GO111MODULE=on
 
 mkdir -p /go/src/
@@ -25,21 +32,42 @@ cd /go/src/agones.dev/agones
 go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-googleapis=/go/src/agones.dev/agones/proto/googleapis
+mkdir -p ./pkg/sdk/{alpha,beta} || true
 
+rm ./pkg/sdk/beta/beta.pb.gw.go || true
+rm ./pkg/sdk/alpha/alpha.pb.gw.go || true
 
-protoc -I ${googleapis} -I . sdk.proto --go_out=plugins=grpc:pkg/sdk
-protoc -I ${googleapis} -I . sdk.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
-protoc -I ${googleapis} -I . sdk.proto --swagger_out=logtostderr=true:.
-jq 'del(.schemes[] | select(. == "https"))' sdk.swagger.json > sdk.swagger.temp.json
-mv sdk.swagger.temp.json sdk.swagger.json
+# generate the go code for each feature stage
+protoc -I ${googleapis} -I ${sdk} sdk.proto --go_out=plugins=grpc:pkg/sdk
+protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --go_out=plugins=grpc:pkg/sdk/alpha
+protoc -I ${googleapis} -I ${sdk}/beta beta.proto --go_out=plugins=grpc:pkg/sdk/beta
 
-cat ./build/boilerplate.go.txt ./pkg/sdk/sdk.pb.go >> ./sdk.pb.go
-cat ./build/boilerplate.go.txt ./pkg/sdk/sdk.pb.gw.go >> ./sdk.pb.gw.go
+# generate grpc gateway
+protoc -I ${googleapis} -I ${sdk} sdk.proto --grpc-gateway_out=logtostderr=true:pkg/sdk
+protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --grpc-gateway_out=logtostderr=true:pkg/sdk/alpha
+protoc -I ${googleapis} -I ${sdk}/beta beta.proto --grpc-gateway_out=logtostderr=true:pkg/sdk/beta
 
-goimports -w ./sdk.pb.go
-goimports -w ./sdk.pb.gw.go
+protoc -I ${googleapis} -I ${sdk} sdk.proto --swagger_out=logtostderr=true:sdks/swagger
+protoc -I ${googleapis} -I ${sdk}/alpha alpha.proto --swagger_out=logtostderr=true:sdks/swagger
+protoc -I ${googleapis} -I ${sdk}/beta beta.proto --swagger_out=logtostderr=true:sdks/swagger
 
-mv ./sdk.pb.go ./pkg/sdk
-mv ./sdk.pb.gw.go ./pkg/sdk
+jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/sdk.swagger.json | sponge ./sdks/swagger/sdk.swagger.json
+jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/alpha.swagger.json | sponge ./sdks/swagger/alpha.swagger.json
+jq 'del(.schemes[] | select(. == "https"))' ./sdks/swagger/beta.swagger.json | sponge ./sdks/swagger/beta.swagger.json
 
+header ./pkg/sdk/sdk.pb.go
+header ./pkg/sdk/sdk.pb.gw.go
+header ./pkg/sdk/alpha/alpha.pb.go
+header ./pkg/sdk/beta/beta.pb.go
+
+# these files may not exist if there are no grpc services
+if [ -f "./pkg/sdk/alpha/alpha.pb.gw.go" ]; then
+    header ./pkg/sdk/alpha/alpha.pb.gw.go
+fi
+if [ -f "./pkg/sdk/beta/beta.pb.gw.go" ]; then
+    header ./pkg/sdk/beta/beta.pb.gw.go
+fi
+
+goimports -w ./pkg/sdk/*
+goimports -w ./pkg/sdk/alpha/*
+goimports -w ./pkg/sdk/beta/*

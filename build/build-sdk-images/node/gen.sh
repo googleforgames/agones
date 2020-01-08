@@ -20,12 +20,13 @@ header() {
     cat ./build/boilerplate.go.txt $1 >> ./tmp.js && mv ./tmp.js $1
 }
 
+sdk=/go/src/agones.dev/agones/proto/sdk
 googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 cd /go/src/agones.dev/agones
 
-protoc -I ${googleapis} -I . --grpc_out=./sdks/nodejs/lib --plugin=protoc-gen-grpc=`which grpc_node_plugin` sdk.proto
-protoc -I ${googleapis} -I . --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
+protoc -I ${googleapis} -I ${sdk} --grpc_out=./sdks/nodejs/lib --plugin=protoc-gen-grpc=`which grpc_node_plugin` sdk.proto
+protoc -I ${googleapis} -I ${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
 
 header ./sdks/nodejs/lib/sdk_pb.js
 header ./sdks/nodejs/lib/google/api/annotations_pb.js
