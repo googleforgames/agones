@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.8
+FROM alpine:3.11
 
 RUN apk --update add ca-certificates && \
     adduser -D agones

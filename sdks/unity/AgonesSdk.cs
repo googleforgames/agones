@@ -207,6 +207,26 @@ namespace Agones
             string json = JsonUtility.ToJson(new Duration(seconds: duration.Seconds));
             return await SendRequestAsync("/reserve", json).ContinueWith(task => task.Result.ok);
         }
+
+        /// <summary>
+        /// WatchGameServerCallback is the callback that will be executed every time
+        /// a GameServer is changed and WatchGameServer is notified
+        /// </summary>
+        /// <param name="gameServer">The GameServer value</param>
+        public delegate void WatchGameServerCallback(GameServer gameServer);
+        
+        /// <summary>
+        /// WatchGameServer watches for changes in the backing GameServer configuration.
+        /// </summary>
+        /// <param name="callback">This callback is executed whenever a GameServer configuration change occurs</param>
+        public void WatchGameServer(WatchGameServerCallback callback)
+        {
+            var req = new UnityWebRequest(sidecarAddress + "/watch/gameserver", UnityWebRequest.kHttpVerbGET);
+            req.downloadHandler = new GameServerHandler(callback);
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.SendWebRequest();
+            Log("Agones Watch Started");
+        }
         #endregion
 
         #region AgonesRestClient Private Methods
@@ -323,6 +343,29 @@ namespace Agones
             {
                 continuation?.Invoke();
                 continuation = null;
+            }
+        }
+
+        /// <summary>
+        /// Custom UnityWebRequest http data handler
+        /// that fires a callback whenever it receives data
+        /// from the SDK.Watch() REST endpoint 
+        /// </summary>
+        private class GameServerHandler : DownloadHandlerScript
+        {
+            private WatchGameServerCallback callback;
+            public GameServerHandler(WatchGameServerCallback callback)
+            {
+                this.callback = callback;
+            }
+
+            protected override bool ReceiveData(byte[] data, int dataLength)
+            {
+                string json = Encoding.UTF8.GetString(data);
+                var dictionary = (Dictionary<string, object>) Json.Deserialize(json);
+                var gameServer = new GameServer(dictionary["result"] as Dictionary<string, object>);
+                this.callback(gameServer);
+                return true;
             }
         }
         #endregion
