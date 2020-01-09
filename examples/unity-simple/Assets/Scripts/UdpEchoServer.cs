@@ -44,7 +44,7 @@ namespace AgonesExample
                 Debug.Log(("Server - Failed to connect, exiting"));
                 Application.Quit(1);
             }
-            
+
             ok = await agones.Ready();
             if (ok)
             {
@@ -79,13 +79,20 @@ namespace AgonesExample
                         Application.Quit();
                         return;
 
+                    case "Ready":
+                        ok = await agones.Ready();
+                        Debug.Log($"Server - Ready {ok}");
+
+                        echoBytes = Encoding.UTF8.GetBytes($"Ready {ok}");
+                        break;
+                    
                     case "Allocate":
                         ok = await agones.Allocate();
                         Debug.Log($"Server - Allocate {ok}");
 
                         echoBytes = Encoding.UTF8.GetBytes($"Allocate {ok}");
                         break;
-                    
+
                     case "GameServer":
                         var gameserver = await agones.GameServer();
                         Debug.Log($"Server - GameServer {gameserver}");
@@ -107,6 +114,7 @@ namespace AgonesExample
                         {
                             echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Label command, must use 2 arguments");
                         }
+
                         break;
 
                     case "Annotation":
@@ -129,13 +137,17 @@ namespace AgonesExample
                             TimeSpan duration = new TimeSpan(0, 0, Int32.Parse(recvTexts[1]));
                             ok = await agones.Reserve(duration);
                             Debug.Log($"Server - Reserve({recvTexts[1]} {ok}");
-                            
+
                             echoBytes = Encoding.UTF8.GetBytes($"Reserve({recvTexts[1]}) {ok}");
                         }
                         else
                         {
                             echoBytes = Encoding.UTF8.GetBytes($"ERROR: Invalid Reserve command, must use 1 argument");
                         }
+                        break;
+                    case "Watch":
+                        agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
+                        echoBytes = Encoding.UTF8.GetBytes("Watching()");
                         break;
                     default:
                         echoBytes = Encoding.UTF8.GetBytes($"Echo : {recvText}");

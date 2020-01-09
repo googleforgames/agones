@@ -7,8 +7,7 @@ description: "This is the Unity version of the Agones Game Server Client SDK."
 ---
 
 {{< alert title="Note" color="info" >}}
-The Unity SDK is functional, but not yet feature complete.
-[Pull requests](https://github.com/googleforgames/agones/pulls) to finish the functionality are appreciated.
+The Unity SDK is not feature complete in 1.2.0, but will be feature complete with the 1.3.0 release.
 {{< /alert >}}
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
@@ -72,6 +71,17 @@ bool ok = await agones.Shutdown();
 Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, string value)` are async methods that perform an action.
 
 And there is no need to call `Health()`, it is automatically called.
+
+{{% feature publishVersion="1.3.0" %}}
+To watch when 
+[the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserver-function-gameserver" >}})
+call `WatchGameServer(callback)`, where the delegate function `callback` will be executed every time the `GameServer` 
+configuration changes.
+
+```csharp
+agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
+```
+{{% /feature %}}
 
 {{% alert title="Warning" color="warning"%}}
 The following code causes deadlock. Do not use a `Wait` method with the returned Task.

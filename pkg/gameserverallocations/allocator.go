@@ -133,7 +133,7 @@ func NewAllocator(policyInformer multiclusterinformerv1alpha1.GameServerAllocati
 
 	ah.baseLogger = runtime.NewLoggerWithType(ah)
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(ah.baseLogger.Infof)
+	eventBroadcaster.StartLogging(ah.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	ah.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "GameServerAllocation-Allocator"})
 

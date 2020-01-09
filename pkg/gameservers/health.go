@@ -77,7 +77,7 @@ func NewHealthController(health healthcheck.Handler,
 	health.AddLivenessCheck("gameserver-health-workerqueue", healthcheck.Check(hc.workerqueue.Healthy))
 
 	eventBroadcaster := record.NewBroadcaster()
-	eventBroadcaster.StartLogging(hc.baseLogger.Infof)
+	eventBroadcaster.StartLogging(hc.baseLogger.Debugf)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	hc.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "health-controller"})
 
