@@ -18,6 +18,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// NilGameServer is the value to show in logging when the GameServer is a nil value
+	NilGameServer = "NilGameServer"
+)
+
 // ResourceType identifies the type of a resource for the purpose of putting it in structural logs.
 type ResourceType string
 

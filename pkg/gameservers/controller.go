@@ -17,7 +17,6 @@ package gameservers
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"strconv"
 	"sync"
 	"time"
@@ -44,7 +43,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
@@ -81,6 +79,7 @@ type Controller struct {
 	nodeSynced             cache.InformerSynced
 	portAllocator          *PortAllocator
 	healthController       *HealthController
+	migrationController    *MigrationController
 	workerqueue            *workerqueue.WorkerQueue
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
@@ -125,6 +124,7 @@ func NewController(
 		nodeSynced:             kubeInformerFactory.Core().V1().Nodes().Informer().HasSynced,
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -251,7 +251,7 @@ func (c *Controller) loggerForGameServerKey(key string) *logrus.Entry {
 }
 
 func (c *Controller) loggerForGameServer(gs *agonesv1.GameServer) *logrus.Entry {
-	gsName := "NilGameServer"
+	gsName := logfields.NilGameServer
 	if gs != nil {
 		gsName = gs.Namespace + "/" + gs.Name
 	}
@@ -316,9 +316,15 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 
 	// Run the Health Controller
 	go func() {
-		err = c.healthController.Run(stop)
-		if err != nil {
+		if err := c.healthController.Run(stop); err != nil {
 			c.baseLogger.WithError(err).Error("error running health controller")
+		}
+	}()
+
+	// Run the Migration Controller
+	go func() {
+		if err := c.migrationController.Run(stop); err != nil {
+			c.baseLogger.WithError(err).Error("error running migration controller")
 		}
 	}()
 
@@ -706,10 +712,12 @@ func (c *Controller) syncGameServerStartingState(gs *agonesv1.GameServer) (*agon
 	if err != nil {
 		return nil, err
 	}
-
+	node, err := c.nodeLister.Get(pod.Spec.NodeName)
+	if err != nil {
+		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
+	}
 	gsCopy := gs.DeepCopy()
-	// if we can't get the address, then go into queue backoff
-	gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
+	gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
 	if err != nil {
 		return gs, err
 	}
@@ -720,26 +728,6 @@ func (c *Controller) syncGameServerStartingState(gs *agonesv1.GameServer) (*agon
 		return gs, errors.Wrapf(err, "error updating GameServer %s to Scheduled state", gs.Name)
 	}
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Address and port populated")
-
-	return gs, nil
-}
-
-// applyGameServerAddressAndPort gets the backing Pod for the GamesServer,
-// and sets the allocated Address and Port values to it and returns it.
-func (c *Controller) applyGameServerAddressAndPort(gs *agonesv1.GameServer, pod *corev1.Pod) (*agonesv1.GameServer, error) {
-	addr, err := c.address(gs, pod)
-	if err != nil {
-		return gs, errors.Wrapf(err, "error getting external address for GameServer %s", gs.ObjectMeta.Name)
-	}
-
-	gs.Status.Address = addr
-	gs.Status.NodeName = pod.Spec.NodeName
-	// HostPort is always going to be populated, even when dynamic
-	// This will be a double up of information, but it will be easier to read
-	gs.Status.Ports = make([]agonesv1.GameServerStatusPort, len(gs.Spec.Ports))
-	for i, p := range gs.Spec.Ports {
-		gs.Status.Ports[i] = p.Status()
-	}
 
 	return gs, nil
 }
@@ -773,7 +761,11 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 	addressPopulated := false
 	if gs.Status.NodeName == "" {
 		addressPopulated = true
-		gsCopy, err = c.applyGameServerAddressAndPort(gsCopy, pod)
+		node, err := c.nodeLister.Get(pod.Spec.NodeName)
+		if err != nil {
+			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
+		}
+		gsCopy, err = applyGameServerAddressAndPort(gsCopy, node, pod)
 		if err != nil {
 			return gs, err
 		}
@@ -859,41 +851,4 @@ func (c *Controller) gameServerPod(gs *agonesv1.GameServer) (*corev1.Pod, error)
 	}
 
 	return pod, errors.Wrapf(err, "error retrieving pod for GameServer %s", gs.ObjectMeta.Name)
-}
-
-// address returns the IP that the given Pod is being run on
-// This should be the externalIP, but if the externalIP is
-// not set, it will fall back to the internalIP with a warning.
-// (basically because minikube only has an internalIP)
-func (c *Controller) address(gs *agonesv1.GameServer, pod *corev1.Pod) (string, error) {
-	node, err := c.nodeLister.Get(pod.Spec.NodeName)
-	if err != nil {
-		return "", errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
-	}
-
-	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeExternalIP && net.ParseIP(a.Address) != nil {
-			return a.Address, nil
-		}
-	}
-
-	// minikube only has an InternalIP on a Node, so we'll fall back to that.
-	c.loggerForGameServer(gs).WithField("node", node.ObjectMeta.Name).Warn("Could not find ExternalIP. Falling back to Internal")
-	for _, a := range node.Status.Addresses {
-		if a.Type == corev1.NodeInternalIP && net.ParseIP(a.Address) != nil {
-			return a.Address, nil
-		}
-	}
-
-	return "", errors.Errorf("Could not find an address for Node: %s", node.ObjectMeta.Name)
-}
-
-// isGameServerPod returns if this Pod is a Pod that comes from a GameServer
-func isGameServerPod(pod *corev1.Pod) bool {
-	if agonesv1.GameServerRolePodSelector.Matches(labels.Set(pod.ObjectMeta.Labels)) {
-		owner := metav1.GetControllerOf(pod)
-		return owner != nil && owner.Kind == "GameServer"
-	}
-
-	return false
 }
