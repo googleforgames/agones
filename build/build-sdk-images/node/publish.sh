@@ -14,18 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-AGONES_PATH=$1
-RELEASE_VERSION=$2
-
 npm login --registry=https://npm.pkg.github.com
-
-cd $AGONES_PATH/sdks/nodejs
-
-npm version $RELEASE_VERSION
-
-# not sure how to accomplish this
-# git add .
-# git commit -m "increase npm version"
-# git push origin master
-
 npm publish
