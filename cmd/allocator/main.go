@@ -78,8 +78,8 @@ type handler func(w http.ResponseWriter, r *http.Request)
 func main() {
 	conf := parseEnvFlags()
 
-	logger.WithField("version", pkg.Version).
-		WithField("sslPort", sslPort).
+	logger.WithField("version", pkg.Version).WithField("ctlConf", conf).
+		WithField("featureGates", runtime.EncodeFeatures()).WithField("sslPort", sslPort).
 		Info("Starting agones-allocator")
 
 	health, closer := setupMetricsRecorder(conf)
@@ -348,6 +348,7 @@ func parseEnvFlags() config {
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
+	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -356,6 +357,9 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(projectIDFlag))
 	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+	runtime.Must(runtime.FeaturesBindEnv())
+
+	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
 		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),

@@ -104,6 +104,8 @@ spec:
           value: {{ .Values.agones.controller.apiServerQPSBurst | quote }}
         - name: LOG_LEVEL
           value: {{ .Values.agones.controller.logLevel | quote }}
+        - name: FEATURE_GATES
+          value: {{ .Values.agones.featureGates | quote }}
 {{- if .Values.agones.controller.persistentLogs }}
         - name: LOG_DIR
           value: "/home/agones/logs"
