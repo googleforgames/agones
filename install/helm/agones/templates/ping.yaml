@@ -76,6 +76,8 @@ spec:
             value: {{ .Values.agones.ping.http.response | quote }}
           - name: UDP_RATE_LIMIT
             value: {{ .Values.agones.ping.udp.rateLimit | quote }}
+          - name: FEATURE_GATES
+            value: {{ .Values.agones.featureGates | quote }}
 {{- if .Values.agones.image.controller.pullSecret }}
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
