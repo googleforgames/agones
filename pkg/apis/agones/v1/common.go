@@ -17,6 +17,7 @@ package v1
 import (
 	"fmt"
 
+	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -82,6 +83,17 @@ func validateObjectMeta(objMeta metav1.ObjectMeta) []metav1.StatusCause {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   "labels",
+				Message: v.Error(),
+			})
+		}
+	}
+	errs = apivalidation.ValidateAnnotations(objMeta.Annotations,
+		field.NewPath("annotations"))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "annotations",
 				Message: v.Error(),
 			})
 		}

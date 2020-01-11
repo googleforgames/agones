@@ -946,29 +946,70 @@ func TestFleetWithZeroReplicas(t *testing.T) {
 	assert.Empty(t, list)
 }
 
-// TestFleetWithLongLabels ensures that we can not create a fleet
-// with label over 64 chars
-func TestFleetWithLongLabels(t *testing.T) {
+// TestFleetWithLongLabelsAnnotations ensures that we can not create a fleet
+// with label over 64 chars and Annotations key over 64
+func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	t.Parallel()
 	client := framework.AgonesClient.AgonesV1()
 	fleetSize := int32(1)
 	flt := defaultFleet(defaultNs)
 	flt.Spec.Replicas = fleetSize
+	normalLengthName := strings.Repeat("f", validation.LabelValueMaxLength)
+	longName := normalLengthName + "f"
 	flt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
-	flt.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength+1)
+	flt.Spec.Template.ObjectMeta.Labels["label"] = longName
 	_, err := client.Fleets(defaultNs).Create(flt)
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "labels", statusErr.Status().Details.Causes[0].Field)
+
+	// Set Label to normal size and add Annotations with an error
+	flt.Spec.Template.ObjectMeta.Labels["label"] = normalLengthName
+	flt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	flt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
+	_, err = client.Fleets(defaultNs).Create(flt)
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, "annotations", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+
 	goodFlt := defaultFleet(defaultNs)
 	goodFlt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
-	goodFlt.Spec.Template.ObjectMeta.Labels["label"] = strings.Repeat("f", validation.LabelValueMaxLength)
+	goodFlt.Spec.Template.ObjectMeta.Labels["label"] = normalLengthName
 	goodFlt, err = client.Fleets(defaultNs).Create(goodFlt)
 	if assert.Nil(t, err) {
 		defer client.Fleets(defaultNs).Delete(goodFlt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
+	err = framework.WaitForFleetCondition(t, goodFlt, e2e.FleetReadyCount(goodFlt.Spec.Replicas))
+	assert.Nil(t, err)
+
+	// Verify validation on Update()
+	flt, err = client.Fleets(defaultNs).Get(goodFlt.ObjectMeta.GetName(), metav1.GetOptions{})
+	assert.Nil(t, err)
+	goodFlt = flt.DeepCopy()
+	goodFlt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	goodFlt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
+	_, err = client.Fleets(defaultNs).Update(goodFlt)
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, "annotations", statusErr.Status().Details.Causes[0].Field)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+
+	// Make sure normal annotations path Validation on Update
+	flt, err = client.Fleets(defaultNs).Get(goodFlt.ObjectMeta.GetName(), metav1.GetOptions{})
+	assert.Nil(t, err)
+	goodFlt = flt.DeepCopy()
+	goodFlt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
+	goodFlt.Spec.Template.ObjectMeta.Annotations[normalLengthName] = longName
+	_, err = client.Fleets(defaultNs).Update(goodFlt)
+	assert.Nil(t, err)
 }
 
 // TestFleetRecreateGameServers tests various gameserver shutdown scenarios to ensure
