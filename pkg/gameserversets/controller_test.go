@@ -589,9 +589,9 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 	assert.Nil(t, err)
 
 	t.Run("valid gameserverset update", func(t *testing.T) {
-		new := fixture.DeepCopy()
-		new.Spec.Replicas = 10
-		newRaw, err := json.Marshal(new)
+		newGSS := fixture.DeepCopy()
+		newGSS.Spec.Replicas = 10
+		newRaw, err := json.Marshal(newGSS)
 		assert.Nil(t, err)
 
 		review := admv1beta1.AdmissionReview{
@@ -614,13 +614,13 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 	})
 
 	t.Run("invalid gameserverset update", func(t *testing.T) {
-		new := fixture.DeepCopy()
-		new.Spec.Template = agonesv1.GameServerTemplateSpec{
+		newGSS := fixture.DeepCopy()
+		newGSS.Spec.Template = agonesv1.GameServerTemplateSpec{
 			Spec: agonesv1.GameServerSpec{
 				Ports: []agonesv1.GameServerPort{{PortPolicy: agonesv1.Static}},
 			},
 		}
-		newRaw, err := json.Marshal(new)
+		newRaw, err := json.Marshal(newGSS)
 		assert.Nil(t, err)
 
 		assert.NotEqual(t, string(raw), string(newRaw))

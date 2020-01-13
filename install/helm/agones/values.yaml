@@ -15,6 +15,7 @@
 # Declare variables to be passed into your templates.
 
 agones:
+  featureGates: ""
   metrics:
     prometheusEnabled: true
     prometheusServiceDiscovery: true

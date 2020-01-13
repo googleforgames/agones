@@ -175,11 +175,11 @@ func selectRandomWeighted(connections []*ClusterConnectionInfo, weights []int) *
 		return nil
 	}
 
-	rand := rand.Intn(sum)
+	randValue := rand.Intn(sum)
 	sum = 0
 	for i, weight := range weights {
 		sum += weight
-		if rand < sum {
+		if randValue < sum {
 			return connections[i]
 		}
 	}

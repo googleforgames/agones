@@ -112,7 +112,7 @@ To verify that the cluster was created successfully, set up your kubectl credent
 gcloud container clusters get-credentials --zone us-west1-c agones-terraform-example
 ```
 
-Then check that you have access to kubernetes cluster:
+Then check that you have access to the Kubernetes cluster:
 ```
 kubectl get nodes
 ```

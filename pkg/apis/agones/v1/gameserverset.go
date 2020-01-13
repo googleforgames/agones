@@ -79,9 +79,9 @@ type GameServerSetStatus struct {
 
 // ValidateUpdate validates when updates occur. The argument
 // is the new GameServerSet, being passed into the old GameServerSet
-func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusCause, bool) {
-	causes := validateName(new)
-	if !apiequality.Semantic.DeepEqual(gsSet.Spec.Template, new.Spec.Template) {
+func (gsSet *GameServerSet) ValidateUpdate(newGSS *GameServerSet) ([]metav1.StatusCause, bool) {
+	causes := validateName(newGSS)
+	if !apiequality.Semantic.DeepEqual(gsSet.Spec.Template, newGSS.Spec.Template) {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Field:   "template",
@@ -92,7 +92,7 @@ func (gsSet *GameServerSet) ValidateUpdate(new *GameServerSet) ([]metav1.StatusC
 	return causes, len(causes) == 0
 }
 
-// Validate validates when Create occur. Check the name size
+// Validate validates when Create occurs. Check the name size
 func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	causes := validateName(gsSet)
 
@@ -100,6 +100,11 @@ func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	gsCauses := validateGSSpec(gsSet)
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
+	}
+
+	objMetaCauses := validateObjectMeta(&gsSet.Spec.Template.ObjectMeta)
+	if len(objMetaCauses) > 0 {
+		causes = append(causes, objMetaCauses...)
 	}
 
 	return causes, len(causes) == 0

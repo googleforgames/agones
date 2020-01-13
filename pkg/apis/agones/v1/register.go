@@ -53,8 +53,8 @@ func init() {
 }
 
 // Adds the list of known types to api.Scheme.
-func addKnownTypes(scheme *k8sruntime.Scheme) error {
-	scheme.AddKnownTypes(SchemeGroupVersion,
+func addKnownTypes(apiScheme *k8sruntime.Scheme) error {
+	apiScheme.AddKnownTypes(SchemeGroupVersion,
 		&GameServer{},
 		&GameServerList{},
 		&GameServerSet{},
@@ -62,6 +62,6 @@ func addKnownTypes(scheme *k8sruntime.Scheme) error {
 		&Fleet{},
 		&FleetList{},
 	)
-	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
+	metav1.AddToGroupVersion(apiScheme, SchemeGroupVersion)
 	return nil
 }

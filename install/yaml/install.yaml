@@ -1149,6 +1149,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-allocator"
+        - name: FEATURE_GATES
+          value: ""
         ports:
         - name: https
           containerPort: 8443
@@ -1378,6 +1380,8 @@ spec:
           value: "500"
         - name: LOG_LEVEL
           value: "info"
+        - name: FEATURE_GATES
+          value: ""
         - name: LOG_DIR
           value: "/home/agones/logs"
         - name: LOG_SIZE_LIMIT_MB
@@ -1489,6 +1493,8 @@ spec:
             value: "ok"
           - name: UDP_RATE_LIMIT
             value: "20"
+          - name: FEATURE_GATES
+            value: ""
 ---
 apiVersion: v1
 kind: Service

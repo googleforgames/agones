@@ -827,10 +827,12 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
-			assert.Len(t, pod.Spec.Containers[1].Env, 2, "2 env vars")
+			assert.Len(t, pod.Spec.Containers[1].Env, 3, "3 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
 			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
+			assert.Equal(t, "FEATURE_GATES", pod.Spec.Containers[1].Env[2].Name)
+
 			return true, pod, nil
 		})
 
@@ -889,32 +891,6 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 		assert.True(t, gsUpdated, "GameServer should be updated")
 		assert.Equal(t, agonesv1.GameServerStateError, gs.Status.State)
 	})
-}
-
-func TestControllerApplyGameServerAddressAndPort(t *testing.T) {
-	t.Parallel()
-	c, m := newFakeController()
-
-	gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
-	gsFixture.ApplyDefaults()
-	node := corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
-	pod, err := gsFixture.Pod()
-	assert.Nil(t, err)
-	pod.Spec.NodeName = node.ObjectMeta.Name
-
-	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &corev1.NodeList{Items: []corev1.Node{node}}, nil
-	})
-
-	_, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.nodeSynced)
-	defer cancel()
-
-	gs, err := c.applyGameServerAddressAndPort(gsFixture, pod)
-	assert.Nil(t, err)
-	assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
-	assert.Equal(t, ipFixture, gs.Status.Address)
-	assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
 }
 
 func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
@@ -1139,60 +1115,6 @@ func TestControllerSyncGameServerShutdownState(t *testing.T) {
 			return fixture, c.syncGameServerShutdownState(fixture)
 		})
 	})
-}
-
-func TestControllerAddress(t *testing.T) {
-	t.Parallel()
-
-	fixture := map[string]struct {
-		node            corev1.Node
-		expectedAddress string
-	}{
-		"node with external ip": {
-			node:            corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: "12.12.12.12", Type: corev1.NodeExternalIP}}}},
-			expectedAddress: "12.12.12.12",
-		},
-		"node with an internal ip": {
-			node:            corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: "11.11.11.11", Type: corev1.NodeInternalIP}}}},
-			expectedAddress: "11.11.11.11",
-		},
-		"node with internal and external ip": {
-			node: corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
-				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
-					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
-					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
-				}}},
-			expectedAddress: "9.9.9.8",
-		},
-	}
-
-	dummyGS := &agonesv1.GameServer{}
-	dummyGS.Name = "some-gs"
-
-	for name, fixture := range fixture {
-		t.Run(name, func(t *testing.T) {
-			c, mocks := newFakeController()
-			pod := corev1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "pod"},
-				Spec: corev1.PodSpec{NodeName: fixture.node.ObjectMeta.Name}}
-
-			mocks.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &corev1.PodList{Items: []corev1.Pod{pod}}, nil
-			})
-			mocks.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
-				return true, &corev1.NodeList{Items: []corev1.Node{fixture.node}}, nil
-			})
-
-			v1 := mocks.KubeInformerFactory.Core().V1()
-			nodeSynced := v1.Nodes().Informer().HasSynced
-			podSynced := v1.Pods().Informer().HasSynced
-			_, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, podSynced, nodeSynced)
-			defer cancel()
-
-			addr, err := c.address(dummyGS, &pod)
-			assert.Nil(t, err)
-			assert.Equal(t, fixture.expectedAddress, addr)
-		})
-	}
 }
 
 func TestControllerGameServerPod(t *testing.T) {
@@ -1468,24 +1390,6 @@ func TestControllerAddSDKServerEnvVars(t *testing.T) {
 				assert.Contains(t, c.Env, corev1.EnvVar{Name: httpPortEnvVar, Value: strconv.Itoa(int(gs.Spec.SdkServer.HTTPPort))})
 			}
 		}
-	})
-
-}
-
-func TestIsGameServerPod(t *testing.T) {
-
-	t.Run("it is a game server pod", func(t *testing.T) {
-		gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: newSingleContainerSpec()}
-		gs.ApplyDefaults()
-		pod, err := gs.Pod()
-		assert.Nil(t, err)
-
-		assert.True(t, isGameServerPod(pod))
-	})
-
-	t.Run("it is not a game server pod", func(t *testing.T) {
-		pod := &corev1.Pod{}
-		assert.False(t, isGameServerPod(pod))
 	})
 
 }

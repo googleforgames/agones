@@ -85,16 +85,14 @@ func NewHealthController(health healthcheck.Handler,
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			pod := newObj.(*corev1.Pod)
 			if isGameServerPod(pod) && hc.isUnhealthy(pod) {
-				owner := metav1.GetControllerOf(pod)
-				hc.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+				hc.workerqueue.Enqueue(pod)
 			}
 		},
 		DeleteFunc: func(obj interface{}) {
 			// Could be a DeletedFinalStateUnknown, in which case, just ignore it
 			pod, ok := obj.(*corev1.Pod)
 			if ok && isGameServerPod(pod) {
-				owner := metav1.GetControllerOf(pod)
-				hc.workerqueue.Enqueue(cache.ExplicitKey(pod.ObjectMeta.Namespace + "/" + owner.Name))
+				hc.workerqueue.Enqueue(pod)
 			}
 		},
 	})
@@ -157,7 +155,7 @@ func (hc *HealthController) loggerForGameServerKey(key string) *logrus.Entry {
 }
 
 func (hc *HealthController) loggerForGameServer(gs *agonesv1.GameServer) *logrus.Entry {
-	gsName := "NilGameServer"
+	gsName := logfields.NilGameServer
 	if gs != nil {
 		gsName = gs.Namespace + "/" + gs.Name
 	}

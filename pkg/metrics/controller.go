@@ -96,8 +96,8 @@ func NewController(
 
 	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.recordFleetChanges,
-		UpdateFunc: func(old, new interface{}) {
-			c.recordFleetChanges(new)
+		UpdateFunc: func(old, next interface{}) {
+			c.recordFleetChanges(next)
 		},
 		DeleteFunc: c.recordFleetDeletion,
 	})
@@ -117,9 +117,9 @@ func NewController(
 	return c
 }
 
-func (c *Controller) recordFleetAutoScalerChanges(old, new interface{}) {
+func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 
-	fas, ok := new.(*autoscalingv1.FleetAutoscaler)
+	fas, ok := next.(*autoscalingv1.FleetAutoscaler)
 	if !ok {
 		return
 	}
@@ -246,8 +246,8 @@ func (c *Controller) recordFleetReplicas(fleetName string, total, allocated, rea
 // per second.
 // Addition to the cache are not handled, otherwise resync would make metrics inaccurate by doubling
 // current gameservers states.
-func (c *Controller) recordGameServerStatusChanges(old, new interface{}) {
-	newGs, ok := new.(*agonesv1.GameServer)
+func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
+	newGs, ok := next.(*agonesv1.GameServer)
 	if !ok {
 		return
 	}

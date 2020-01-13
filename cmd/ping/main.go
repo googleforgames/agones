@@ -46,7 +46,7 @@ func main() {
 		logger.WithError(err).Fatal("could not create controller from environment or flags")
 	}
 
-	logger.WithField("version", pkg.Version).
+	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting ping...")
 
 	stop := signals.NewStopChannel()
@@ -125,10 +125,15 @@ func parseEnvFlags() config {
 
 	pflag.String(httpResponseFlag, viper.GetString(httpResponseFlag), "Flag to set text value when a 200 response is returned. Can be useful to identify clusters. Defaults to 'ok' Can also use HTTP_RESPONSE env variable")
 	pflag.Float64(udpRateLimitFlag, viper.GetFloat64(httpResponseFlag), "Flag to set how many UDP requests can be handled by a single source IP per second. Defaults to 20. Can also use UDP_RATE_LIMIT env variable")
+	runtime.FeaturesBindFlags()
+	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(httpResponseFlag))
 	runtime.Must(viper.BindEnv(udpRateLimitFlag))
+	runtime.Must(runtime.FeaturesBindEnv())
+
+	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
 		HTTPResponse: viper.GetString(httpResponseFlag),

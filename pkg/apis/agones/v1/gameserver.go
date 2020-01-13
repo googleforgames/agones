@@ -312,7 +312,7 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 // devAddress is a specific IP address used for local Gameservers, for fleets "" is used
 // If a GameServer Spec is invalid there will be > 0 values in
 // the returned array
-func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
+func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 	if devAddress != "" {
 		// verify that the value is a valid IP address.
@@ -342,7 +342,7 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 		}
 	} else {
 		// make sure a name is specified when there is multiple containers in the pod.
-		if len(gss.Container) == 0 && len(gss.Template.Spec.Containers) > 1 {
+		if gss.Container == "" && len(gss.Template.Spec.Containers) > 1 {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   "container",
@@ -389,8 +389,12 @@ func (gss GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, boo
 			})
 		}
 	}
-	return causes, len(causes) == 0
+	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
+	if len(objMetaCauses) > 0 {
+		causes = append(causes, objMetaCauses...)
+	}
 
+	return causes, len(causes) == 0
 }
 
 // Validate validates the GameServer configuration.

@@ -61,7 +61,7 @@ func TestControllerAllocator(t *testing.T) {
 	stop := signals.NewStopChannel()
 
 	t.Run("successful allocation", func(t *testing.T) {
-		f, _, gsList := defaultFixtures(3)
+		f, gsList := defaultFixtures(3)
 
 		gsa := &allocationv1.GameServerAllocation{
 			Spec: allocationv1.GameServerAllocationSpec{
@@ -158,7 +158,7 @@ func TestControllerAllocator(t *testing.T) {
 func TestControllerAllocate(t *testing.T) {
 	t.Parallel()
 
-	f, _, gsList := defaultFixtures(4)
+	f, gsList := defaultFixtures(4)
 	c, m := newFakeController()
 	n := metav1.Now()
 	l := map[string]string{"mode": "deathmatch"}
@@ -243,7 +243,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 	stop := signals.NewStopChannel()
 
 	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation)) {
-		f, _, gsList := defaultFixtures(4)
+		f, gsList := defaultFixtures(4)
 		c, m := newFakeController()
 
 		gsList[0].Status.NodeName = n1
@@ -346,7 +346,7 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 	t.Parallel()
 
 	t.Run("no problems", func(t *testing.T) {
-		f, _, gsList := defaultFixtures(5)
+		f, gsList := defaultFixtures(5)
 		gsList[0].Status.NodeName = "special"
 
 		c, m := newFakeController()
@@ -478,9 +478,9 @@ func TestAllocationApiResource(t *testing.T) {
 
 func TestControllerRunCacheSync(t *testing.T) {
 	c, m := newFakeController()
-	watch := watch.NewFake()
+	gsWatch := watch.NewFake()
 
-	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
 	stop, cancel := agtesting.StartInformers(m, c.allocator.readyGameServerCache.gameServerSynced)
 	defer cancel()
@@ -511,52 +511,52 @@ func TestControllerRunCacheSync(t *testing.T) {
 	}
 
 	logrus.Info("adding ready game server")
-	watch.Add(gs.DeepCopy())
+	gsWatch.Add(gs.DeepCopy())
 
 	assertCacheEntries(0)
 
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(1)
 
 	// try again, should be no change
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(1)
 
 	// now move it to Shutdown
 	gs.Status.State = agonesv1.GameServerStateShutdown
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 
 	assertCacheEntries(0)
 
 	// add back in ready gameserver
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(0)
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(1)
 
 	// update with deletion timestamp
 	n := metav1.Now()
 	deletedCopy := gs.DeepCopy()
 	deletedCopy.ObjectMeta.DeletionTimestamp = &n
-	watch.Modify(deletedCopy)
+	gsWatch.Modify(deletedCopy)
 	assertCacheEntries(0)
 
 	// add back in ready gameserver
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(0)
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Modify(gs.DeepCopy())
+	gsWatch.Modify(gs.DeepCopy())
 	assertCacheEntries(1)
 
 	// now actually delete it
-	watch.Delete(gs.DeepCopy())
+	gsWatch.Delete(gs.DeepCopy())
 	assertCacheEntries(0)
 }
 
@@ -573,7 +573,7 @@ func TestGetRandomlySelectedGS(t *testing.T) {
 		},
 	}
 
-	_, _, gsList := defaultFixtures(10)
+	_, gsList := defaultFixtures(10)
 
 	selectedGS := c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
@@ -582,12 +582,12 @@ func TestGetRandomlySelectedGS(t *testing.T) {
 		assert.NotEqual(t, expectedName, selectedGS.ObjectMeta.Name)
 	}
 
-	_, _, gsList = defaultFixtures(5)
+	_, gsList = defaultFixtures(5)
 
 	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
 
-	_, _, gsList = defaultFixtures(1)
+	_, gsList = defaultFixtures(1)
 
 	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
 	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
@@ -764,6 +764,8 @@ func TestControllerListSortedReadyGameServers(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
+		k := k
+		v := v
 		t.Run(k, func(t *testing.T) {
 			c, m := newFakeController()
 
@@ -1261,7 +1263,7 @@ func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*
 		return nil, err
 	}
 	rec := httptest.NewRecorder()
-	if err = c.processAllocationRequest(rec, r, gsa.Namespace, stop); err != nil {
+	if err := c.processAllocationRequest(rec, r, gsa.Namespace, stop); err != nil {
 		return nil, err
 	}
 
@@ -1271,7 +1273,7 @@ func executeAllocation(gsa *allocationv1.GameServerAllocation, c *Controller) (*
 }
 
 func addReactorForGameServer(m *agtesting.Mocks) string {
-	f, _, gsList := defaultFixtures(3)
+	f, gsList := defaultFixtures(3)
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
@@ -1301,7 +1303,7 @@ func createRequest(gsa *allocationv1.GameServerAllocation) (*http.Request, error
 	return r, nil
 }
 
-func defaultFixtures(gsLen int) (*agonesv1.Fleet, *agonesv1.GameServerSet, []agonesv1.GameServer) {
+func defaultFixtures(gsLen int) (*agonesv1.Fleet, []agonesv1.GameServer) {
 	f := &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "fleet-1",
@@ -1323,7 +1325,7 @@ func defaultFixtures(gsLen int) (*agonesv1.Fleet, *agonesv1.GameServerSet, []ago
 		gs.Status.State = agonesv1.GameServerStateReady
 		gsList = append(gsList, *gs)
 	}
-	return f, gsSet, gsList
+	return f, gsList
 }
 
 // newFakeController returns a controller, backed by the fake Clientset

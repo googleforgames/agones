@@ -108,10 +108,10 @@ func NewAPIServer(mux *http.ServeMux) *APIServer {
 // e.g. http://localhost:8001/apis/scheduling.k8s.io/v1beta1
 // as well as registering a CRDHandler that all http requests for the given APIResource are routed to
 func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIResource, handler CRDHandler) {
-	list, ok := as.resourceList[groupVersion]
+	_, ok := as.resourceList[groupVersion]
 	if !ok {
 		// discovery handler
-		list = &metav1.APIResourceList{GroupVersion: groupVersion, APIResources: []metav1.APIResource{}}
+		list := &metav1.APIResourceList{GroupVersion: groupVersion, APIResources: []metav1.APIResource{}}
 		as.resourceList[groupVersion] = list
 		pattern := fmt.Sprintf("/apis/%s", groupVersion)
 		as.addSerializedHandler(pattern, list)
@@ -125,7 +125,7 @@ func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIReso
 	}
 
 	// discovery resource
-	list.APIResources = append(as.resourceList[groupVersion].APIResources, resource)
+	as.resourceList[groupVersion].APIResources = append(as.resourceList[groupVersion].APIResources, resource)
 
 	// add specific crd resource handler
 	key := fmt.Sprintf("%s/%s", groupVersion, resource.Name)
@@ -149,7 +149,7 @@ func (as *APIServer) resourceHandler(gv string) https.ErrorHandlerFunc {
 			return nil
 		}
 
-		if err = delegate(w, r, namespace); err != nil {
+		if err := delegate(w, r, namespace); err != nil {
 			return err
 		}
 
@@ -192,7 +192,7 @@ func AcceptedSerializer(r *http.Request, codecs serializer.CodecFactory) (k8srun
 	}
 	header := r.Header.Get(AcceptHeader)
 	accept := goautoneg.Negotiate(header, alternatives)
-	if len(accept) == 0 {
+	if accept == "" {
 		accept = k8sruntime.ContentTypeJSON
 	}
 	info, ok := k8sruntime.SerializerInfoForMediaType(mediaTypes, accept)

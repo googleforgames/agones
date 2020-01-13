@@ -3,7 +3,7 @@ title: "Installing Agones on Azure Kubernetes Service using Terraform"
 linkTitle: "Azure"
 weight: 20
 description: >
-  You can use Terraform to provision a AKS cluster and install Agones on it.
+  You can use Terraform to provision an AKS cluster and install Agones on it.
 ---
 
 ## Installation
@@ -35,7 +35,7 @@ Once you created all resources on AKS you can get the credentials so that you ca
 az aks get-credentials --resource-group agonesRG --name test-cluster
 ```
 
-Check that you have access to kubernetes cluster:
+Check that you have access to the Kubernetes cluster:
 ```
 kubectl get nodes
 ```

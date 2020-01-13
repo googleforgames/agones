@@ -127,6 +127,7 @@ func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.L
 func convertInternalLabelSelectorsToLabelSelectors(in []metav1.LabelSelector) []*pb.LabelSelector {
 	var result []*pb.LabelSelector
 	for _, l := range in {
+		l := l
 		c := convertInternalLabelSelectorToLabelSelector(&l)
 		result = append(result, c)
 	}

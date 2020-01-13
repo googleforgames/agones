@@ -65,7 +65,7 @@ var (
 
 func main() {
 	ctlConf := parseEnvFlags()
-	logger.WithField("version", pkg.Version).
+	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("Starting sdk sidecar")
 
 	if ctlConf.Delay > 0 {
@@ -90,7 +90,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if ctlConf.IsLocal {
+	switch {
+	case ctlConf.IsLocal:
 		localSDK, err := registerLocal(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start local sdk server")
@@ -103,7 +104,7 @@ func main() {
 				close(timedStop)
 			}()
 		}
-	} else if ctlConf.Test != "" {
+	case ctlConf.Test != "":
 		localSDK, err := registerTestSdkServer(grpcServer, ctlConf)
 		if err != nil {
 			logger.WithError(err).Fatal("Could not start test sdk server")
@@ -116,7 +117,7 @@ func main() {
 				close(timedStop)
 			}()
 		}
-	} else {
+	default:
 		var config *rest.Config
 		config, err := rest.InClusterConfig()
 		if err != nil {
@@ -253,6 +254,7 @@ func parseEnvFlags() config {
 	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which shoud be called during the SDK Conformance test run.")
+	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
@@ -266,6 +268,9 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(grpcPortFlag))
 	runtime.Must(viper.BindEnv(httpPortFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
+	runtime.Must(runtime.FeaturesBindEnv())
+
+	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
 		IsLocal:   viper.GetBool(localFlag),

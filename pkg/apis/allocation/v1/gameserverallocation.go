@@ -101,6 +101,7 @@ func (gsas *GameServerAllocationSpec) PreferredSelectors() ([]labels.Selector, e
 
 	var err error
 	for i, p := range gsas.Preferred {
+		p := p
 		list[i], err = metav1.LabelSelectorAsSelector(&p)
 		if err != nil {
 			break

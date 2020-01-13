@@ -71,39 +71,39 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Equal(t, 2, countTotalAllocatedPorts(pa))
 
 		// double port, dynamic
-		copy := fixture.DeepCopy()
-		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
-		assert.Len(t, copy.Spec.Ports, 2)
-		pa.Allocate(copy.DeepCopy())
+		gsCopy := fixture.DeepCopy()
+		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
+		assert.Len(t, gsCopy.Spec.Ports, 2)
+		pa.Allocate(gsCopy.DeepCopy())
 		assert.Nil(t, err)
 		assert.Equal(t, 4, countTotalAllocatedPorts(pa))
 
 		// three ports, dynamic
-		copy = copy.DeepCopy()
-		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
-		assert.Len(t, copy.Spec.Ports, 3)
-		pa.Allocate(copy)
+		gsCopy = gsCopy.DeepCopy()
+		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
+		assert.Len(t, gsCopy.Spec.Ports, 3)
+		pa.Allocate(gsCopy)
 		assert.Nil(t, err)
 		assert.Equal(t, 7, countTotalAllocatedPorts(pa))
 
 		// 4 ports, 1 static, rest dynamic
-		copy = copy.DeepCopy()
+		gsCopy = gsCopy.DeepCopy()
 		expected := int32(9999)
-		copy.Spec.Ports = append(copy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: agonesv1.Static})
-		assert.Len(t, copy.Spec.Ports, 4)
-		pa.Allocate(copy)
+		gsCopy.Spec.Ports = append(gsCopy.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, HostPort: expected, PortPolicy: agonesv1.Static})
+		assert.Len(t, gsCopy.Spec.Ports, 4)
+		pa.Allocate(gsCopy)
 		assert.Nil(t, err)
 		assert.Equal(t, 10, countTotalAllocatedPorts(pa))
-		assert.Equal(t, agonesv1.Static, copy.Spec.Ports[3].PortPolicy)
-		assert.Equal(t, expected, copy.Spec.Ports[3].HostPort)
+		assert.Equal(t, agonesv1.Static, gsCopy.Spec.Ports[3].PortPolicy)
+		assert.Equal(t, expected, gsCopy.Spec.Ports[3].HostPort)
 
 		// single port, passthrough
-		copy = fixture.DeepCopy()
-		copy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough}
-		assert.Len(t, copy.Spec.Ports, 1)
-		pa.Allocate(copy)
-		assert.NotEmpty(t, copy.Spec.Ports[0].HostPort)
-		assert.Equal(t, copy.Spec.Ports[0].HostPort, copy.Spec.Ports[0].ContainerPort)
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough}
+		assert.Len(t, gsCopy.Spec.Ports, 1)
+		pa.Allocate(gsCopy)
+		assert.NotEmpty(t, gsCopy.Spec.Ports[0].HostPort)
+		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[0].ContainerPort)
 		assert.Nil(t, err)
 		assert.Equal(t, 11, countTotalAllocatedPorts(pa))
 	})
@@ -153,9 +153,10 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		defer cancel()
 
 		morePortFixture := fixture.DeepCopy()
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic})
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "static", ContainerPort: 6666, PortPolicy: agonesv1.Static, HostPort: 9999})
-		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports, agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough})
+		morePortFixture.Spec.Ports = append(morePortFixture.Spec.Ports,
+			agonesv1.GameServerPort{Name: "another", ContainerPort: 6666, PortPolicy: agonesv1.Dynamic},
+			agonesv1.GameServerPort{Name: "static", ContainerPort: 6666, PortPolicy: agonesv1.Static, HostPort: 9999},
+			agonesv1.GameServerPort{Name: "passthrough", PortPolicy: agonesv1.Passthrough})
 
 		assert.Len(t, morePortFixture.Spec.Ports, 4)
 
@@ -171,9 +172,9 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		for x := 0; x < 2; x++ {
 			// ports between 10 and 20, but there are 2 ports
 			for i := 10; i <= 14; i++ {
-				copy := morePortFixture.DeepCopy()
-				copy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
-				gs := pa.Allocate(copy)
+				gsCopy := morePortFixture.DeepCopy()
+				gsCopy.ObjectMeta.UID = types.UID(strconv.Itoa(x) + ":" + strconv.Itoa(i))
+				gs := pa.Allocate(gsCopy)
 
 				// Dynamic
 				assert.NotEmpty(t, gs.Spec.Ports[0].HostPort)
@@ -184,7 +185,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 				assert.NotEmpty(t, passThrough.HostPort)
 				assert.Equal(t, passThrough.HostPort, passThrough.ContainerPort)
 
-				logrus.WithField("uid", copy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
+				logrus.WithField("uid", gsCopy.ObjectMeta.UID).WithField("ports", gs.Spec.Ports).WithError(err).Info("Allocated Port")
 				assert.Nil(t, err)
 				for _, p := range gs.Spec.Ports {
 					if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
