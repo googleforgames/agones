@@ -1,6 +1,6 @@
 {
 		"dependencies": {
-				"agones": "../../../sdks/nodejs"
+				"@googleforgames/agones": "../../../sdks/nodejs"
 		},
 		"scripts": {
 				"testSDK": "node ./testSDKClient.js"

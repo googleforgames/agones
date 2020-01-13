@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "agones": "../../sdks/nodejs"
+    "@googleforgames/agones": "1.2.0"
   },
   "scripts": {
     "start": "node src/index.js"
