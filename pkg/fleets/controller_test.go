@@ -340,7 +340,7 @@ func TestControllerRun(t *testing.T) {
 
 	// test updating fleet
 	fCopy := fleet.DeepCopy()
-	fCopy.Spec.Replicas = fCopy.Spec.Replicas + 10
+	fCopy.Spec.Replicas += 10
 	fleetWatch.Modify(fCopy)
 	assert.Equal(t, expected, f())
 

@@ -386,16 +386,17 @@ func (c *Controller) deleteEmptyGameServerSets(fleet *agonesv1.Fleet, list []*ag
 // GameServerSets, and return the replica count for the active GameServerSet
 func (c *Controller) recreateDeployment(fleet *agonesv1.Fleet, rest []*agonesv1.GameServerSet) (int32, error) {
 	for _, gsSet := range rest {
-		if gsSet.Spec.Replicas != 0 {
-			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
-			gsSetCopy := gsSet.DeepCopy()
-			gsSetCopy.Spec.Replicas = 0
-			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
-				return 0, errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
-			}
-			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
-				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+		if gsSet.Spec.Replicas == 0 {
+			continue
 		}
+		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
+		gsSetCopy := gsSet.DeepCopy()
+		gsSetCopy.Spec.Replicas = 0
+		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
+			return 0, errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+		}
+		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 	}
 
 	return fleet.LowerBoundReplicas(fleet.Spec.Replicas - agonesv1.SumStatusAllocatedReplicas(rest)), nil

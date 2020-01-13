@@ -36,8 +36,7 @@ func WaitForEstablishedCRD(crdGetter extv1beta1.CustomResourceDefinitionInterfac
 		}
 
 		for _, cond := range crd.Status.Conditions {
-			switch cond.Type {
-			case apiv1beta1.Established:
+			if cond.Type == apiv1beta1.Established {
 				if cond.Status == apiv1beta1.ConditionTrue {
 					logger.WithField("crd", crd.ObjectMeta.Name).Info("custom resource definition established")
 					return true, err

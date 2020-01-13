@@ -35,7 +35,7 @@ func TestSDK(t *testing.T) {
 		health: sm.hm,
 	}
 
-	//gate
+	// gate
 	assert.False(t, sm.ready)
 	assert.False(t, sm.shutdown)
 	assert.False(t, sm.hm.healthy)

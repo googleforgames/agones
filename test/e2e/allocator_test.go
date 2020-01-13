@@ -297,7 +297,8 @@ func restartAllocator(t *testing.T) {
 	if err != nil {
 		t.Fatalf("listing pods failed: %s", err)
 	}
-	for _, pod := range pods.Items {
+	for i := range pods.Items {
+		pod := &pods.Items[i]
 		if !strings.HasPrefix(pod.Name, allocatorServiceName) {
 			continue
 		}

@@ -39,8 +39,8 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 
 	pnc, m := newFakePerNodeCounter()
 
-	watch := watch.NewFake()
-	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(watch, nil))
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
 	hasSynced := m.AgonesInformerFactory.Agones().V1().GameServers().Informer().HasSynced
 	stop, cancel := agtesting.StartInformers(m)
@@ -51,15 +51,17 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
 		Status: agonesv1.GameServerStatus{
-			State: agonesv1.GameServerStateStarting, NodeName: name1}}
+			State: agonesv1.GameServerStateStarting, NodeName: name1,
+		},
+	}
 
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	assert.Empty(t, pnc.Counts())
 
 	gs.Status.State = agonesv1.GameServerStateReady
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts := pnc.Counts()
@@ -68,7 +70,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.Status.State = agonesv1.GameServerStateAllocated
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
@@ -77,7 +79,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	assert.Equal(t, int64(1), counts[name1].Allocated)
 
 	gs.Status.State = agonesv1.GameServerStateShutdown
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
@@ -89,7 +91,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	gs.Status.State = agonesv1.GameServerStateReady
 	gs.Status.NodeName = name2
 
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
@@ -104,7 +106,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	gs.Status.State = agonesv1.GameServerStateAllocated
 	gs.Status.NodeName = name2
 
-	watch.Add(gs.DeepCopy())
+	fakeWatch.Add(gs.DeepCopy())
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()

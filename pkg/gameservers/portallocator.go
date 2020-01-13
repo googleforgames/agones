@@ -147,16 +147,17 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 			pa.gameServerRegistry[gs.ObjectMeta.UID] = true
 
 			for i, p := range gs.Spec.Ports {
-				if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
-					// pop off allocation
-					var a pn
-					a, allocations = allocations[0], allocations[1:]
-					a.pa[a.port] = true
-					gs.Spec.Ports[i].HostPort = a.port
+				if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.Passthrough {
+					continue
+				}
+				// pop off allocation
+				var a pn
+				a, allocations = allocations[0], allocations[1:]
+				a.pa[a.port] = true
+				gs.Spec.Ports[i].HostPort = a.port
 
-					if p.PortPolicy == agonesv1.Passthrough {
-						gs.Spec.Ports[i].ContainerPort = a.port
-					}
+				if p.PortPolicy == agonesv1.Passthrough {
+					gs.Spec.Ports[i].ContainerPort = a.port
 				}
 			}
 
@@ -271,17 +272,18 @@ func (pa *PortAllocator) registerExistingGameServerPorts(gameservers []*agonesv1
 
 	for _, gs := range gameservers {
 		for _, p := range gs.Spec.Ports {
-			if p.PortPolicy == agonesv1.Dynamic || p.PortPolicy == agonesv1.Passthrough {
-				gsRegistry[gs.ObjectMeta.UID] = true
+			if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.Passthrough {
+				continue
+			}
+			gsRegistry[gs.ObjectMeta.UID] = true
 
-				// if the node doesn't exist, it's likely unscheduled
-				_, ok := nodePortAllocation[gs.Status.NodeName]
-				if gs.Status.NodeName != "" && ok {
-					nodePortAllocation[gs.Status.NodeName][p.HostPort] = true
-					nodePortCount[gs.Status.NodeName]++
-				} else if p.HostPort != 0 {
-					nonReadyNodesPorts = append(nonReadyNodesPorts, p.HostPort)
-				}
+			// if the node doesn't exist, it's likely unscheduled
+			_, ok := nodePortAllocation[gs.Status.NodeName]
+			if gs.Status.NodeName != "" && ok {
+				nodePortAllocation[gs.Status.NodeName][p.HostPort] = true
+				nodePortCount[gs.Status.NodeName]++
+			} else if p.HostPort != 0 {
+				nonReadyNodesPorts = append(nonReadyNodesPorts, p.HostPort)
 			}
 		}
 	}

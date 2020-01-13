@@ -243,19 +243,20 @@ func getCACertPool(path string) (*x509.CertPool, error) {
 	}
 
 	for _, file := range filesInfo {
-		if strings.HasSuffix(file.Name(), ".crt") || strings.HasSuffix(file.Name(), ".pem") {
-			certFile := filepath.Join(path, file.Name())
-			caCert, err := ioutil.ReadFile(certFile)
-			if err != nil {
-				logger.Errorf("ca cert is not readable or missing: %s", err.Error())
-				continue
-			}
-			if !caCertPool.AppendCertsFromPEM(caCert) {
-				logger.Errorf("client cert %s cannot be installed", certFile)
-				continue
-			}
-			logger.Infof("client cert %s is installed", certFile)
+		if !strings.HasSuffix(file.Name(), ".crt") && !strings.HasSuffix(file.Name(), ".pem") {
+			continue
 		}
+		certFile := filepath.Join(path, file.Name())
+		caCert, err := ioutil.ReadFile(certFile)
+		if err != nil {
+			logger.Errorf("ca cert is not readable or missing: %s", err.Error())
+			continue
+		}
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			logger.Errorf("client cert %s cannot be installed", certFile)
+			continue
+		}
+		logger.Infof("client cert %s is installed", certFile)
 	}
 
 	return caCertPool, nil
@@ -323,8 +324,7 @@ func (h *httpHandler) allocateHandler(w http.ResponseWriter, r *http.Request) {
 
 func httpCode(err error) int {
 	code := http.StatusInternalServerError
-	switch t := err.(type) {
-	case k8serror.APIStatus:
+	if t, ok := err.(k8serror.APIStatus); ok {
 		code = int(t.Status().Code)
 	}
 	return code

@@ -238,11 +238,12 @@ func (c *Allocator) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocat
 		return nil, err
 	}
 
-	if err == ErrNoGameServerReady {
+	switch err {
+	case ErrNoGameServerReady:
 		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
-	} else if err == ErrConflictInGameServerSelection {
+	case ErrConflictInGameServerSelection:
 		gsa.Status.State = allocationv1.GameServerAllocationContention
-	} else {
+	default:
 		gsa.ObjectMeta.Name = gs.ObjectMeta.Name
 		gsa.Status.State = allocationv1.GameServerAllocationAllocated
 		gsa.Status.GameServerName = gs.ObjectMeta.Name
@@ -532,7 +533,7 @@ func (c *Allocator) allocationUpdateWorkers(workerCount int, stop <-chan struct{
 			for {
 				select {
 				case res := <-updateQueue:
-					gs, err := c.readyGameServerCache.PatchGameServerMetadata(res.request.gsa.Spec.MetaPatch, *res.gs)
+					gs, err := c.readyGameServerCache.PatchGameServerMetadata(res.request.gsa.Spec.MetaPatch, res.gs)
 					if err != nil {
 						// since we could not allocate, we should put it back
 						c.readyGameServerCache.AddToReadyGameServer(gs)

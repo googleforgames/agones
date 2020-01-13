@@ -46,6 +46,7 @@ output:
 
 linters:
   enable:
+    - deadcode
     - megacheck
     - govet
     - golint
@@ -53,16 +54,39 @@ linters:
     - unconvert
     - dupl
     - goconst
+    - gocritic
     - gocyclo
     - goimports
+    - interfacer
     - maligned
     - megacheck
+    - scopelint
+    - staticcheck
+    - structcheck
     - misspell
     - unparam
     - nakedret
     - bodyclose
 
+linters-settings:
+  gocritic:
+    enabled-tags:
+      - performance
+      - opinionated
+      - diagnostic
+    disabled-checks:
+      - paramTypeCombine
+      - unnamedResult
+    settings: # settings passed to gocritic
+      hugeParam:
+        sizeThreshold: 512
+      rangeValCopy:
+        sizeThreshold: 512
+        skipTestFuncs: true
+
 issues:
   # This turns off the default excludes - which was causing the linter
   # to miss things like erroneous comments
   exclude-use-default: false
+  exclude:
+    - Using the variable on range scope .* in function literal
