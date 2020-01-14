@@ -34,6 +34,8 @@ Documentation can be found on the [Agones website](https://agones.dev/site/docs/
 - [Slack](https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWU3ODAyZjdjMjNlYWIxZTAwODkxMGY3YWEyZjNjMjc4YWM1Zjk0OThlMGU2ZmUyMzRlMDljNDJiNmZlMGQ1M2U)
 - [Twitter](https://twitter.com/agonesdev)
 - [Mailing List](https://groups.google.com/forum/#!forum/agones-discuss)
+- [Community Meetings](https://www.youtube.com/playlist?list=PLhkWKwFGACw2dFpdmwxOyUCzlGP2-n7uF) (Join the mailing
+  list for details)
 
 ## Code of Conduct
 
