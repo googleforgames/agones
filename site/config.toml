@@ -127,6 +127,11 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 	url = "https://twitter.com/agonesdev"
 	icon = "fab fa-twitter"
         desc = "Follow us on Twitter to get the latest news!"
+[[params.links.user]]
+	name ="Community Meetings"
+	url = "https://www.youtube.com/playlist?list=PLhkWKwFGACw2dFpdmwxOyUCzlGP2-n7uF"
+	icon = "fab fa-youtube"
+        desc = "Live discussion of user demos and issues, see the mailing list for details"
 # Developer relevant links. These will show up on right side of footer and in the community page if you have one.
 [[params.links.developer]]
 	name = "GitHub"
@@ -138,6 +143,11 @@ no = 'Sorry to hear that. Please <a href="https://github.com/googleforgames/agon
 	url = "https://join.slack.com/t/agones/shared_invite/enQtMzE5NTE0NzkyOTk1LWU3ODAyZjdjMjNlYWIxZTAwODkxMGY3YWEyZjNjMjc4YWM1Zjk0OThlMGU2ZmUyMzRlMDljNDJiNmZlMGQ1M2U"
 	icon = "fab fa-slack"
         desc = "Chat with other project developers in #developers"
+[[params.links.developer]]
+	name ="Community Meetings"
+	url = "https://www.youtube.com/playlist?list=PLhkWKwFGACw2dFpdmwxOyUCzlGP2-n7uF"
+	icon = "fab fa-youtube"
+        desc = "Live discussion of new features and issues, see the mailing list for details"
 # [[params.links.developer]]
 # 	name = "Developer mailing list"
 # 	url = "https://example.org/mail"
