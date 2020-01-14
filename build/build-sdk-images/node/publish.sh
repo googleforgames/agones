@@ -14,5 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ex
+
+cd sdks/nodejs
 npm login --registry=https://npm.pkg.github.com
 npm publish
