@@ -644,3 +644,9 @@ func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	result, err = json.Marshal(patch)
 	return result, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 }
+
+// IsUnhealthy returns true if the GameServer is Unhealthy or in Error state
+func (gs *GameServer) IsUnhealthy() bool {
+	state := gs.Status.State
+	return state == GameServerStateUnhealthy || state == GameServerStateError
+}
