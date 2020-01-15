@@ -125,7 +125,7 @@ agones:
     generateTLS: true
   image:
     registry: gcr.io/agones-images
-    tag: 1.3.0
+    tag: 1.3.0-rc
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

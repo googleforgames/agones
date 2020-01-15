@@ -15,10 +15,11 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] `git checkout master && git pull --rebase upstream master`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
-- [ ] Ensure the [helm `tag` value][values] is correct (should be the {version} if a full release, {version}-rc if release candidate)
-- [ ] Ensure the [helm `Chart` version values][chart] are correct (should be the {version} if a full release, {version}-rc if release candidate)
+- [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
+- [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
+- [ ] Ensure the [`sdks/nodejs/package.json`][nodejs] version is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Run `make gen-install`
-- [ ] Run `test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
+- [ ] Run `make test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
 - [ ] Create a *draft* release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
 - [ ] Site updated
@@ -32,6 +33,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
+- [ ] Run `make publish-sdk-packages` to deploy SDK packages to registries
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
 - [ ] Do a `helm install` and a smoke test to confirm everything is working.
@@ -52,3 +54,4 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
 [release-template]: https://github.com/googleforgames/agones/blob/master/docs/governance/templates/release.md
 [build-makefile]: https://github.com/googleforgames/agones/blob/master/build/Makefile
+[nodejs]: https://github.com/googleforgames/agones/blob/master/sdks/nodejs/package.json
