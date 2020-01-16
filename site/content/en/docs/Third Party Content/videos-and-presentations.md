@@ -3,9 +3,14 @@ title: "Third Party Videos and Presentations"
 linkTitle: "Videos and Presentations"
 date: 2019-01-03T08:37:35Z
 description: "Community contributed videos and presentations on Agones."
+weight: 10
 ---
 
 ## Presentations
+
+### Large-Scale Multiplayer Gaming on Kubernetes (Cloud Next '19)
+
+{{< youtube "Imf_urBB7SI" >}}
 
 ### Agones: Scaling Multiplayer Game Servers with Open Source (GDC 2019)
 
