@@ -36,6 +36,13 @@ gen-changelog:
 		--release-branch=$(RELEASE_BRANCH) \
 		--token $$TOKEN
 
+# public the node sdk package
+pubish-sdk-node:
+	$(MAKE) run-sdk-command-node DOCKER_RUN_ARGS=-it COMMAND=publish
+
+# publish all the sdk packages
+publish-sdk-packages: pubish-sdk-node
+
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
 # - Build binaries and images
@@ -43,7 +50,7 @@ gen-changelog:
 # - Creates a zip of the install.yaml, LICENCE and README.md for installation
 # - Pushes the current chart version to the helm repository hosted on gcs.
 do-release: RELEASE_VERSION ?= $(base_version)
-do-release:
+do-release: $(ensure-build-image)
 	@echo "Starting release for version: $(RELEASE_VERSION)"
 
 	# switch to the right project
@@ -59,7 +66,7 @@ do-release:
 	cd $(agones_path) &&  zip -r ./release/agones-install-$(RELEASE_VERSION).zip ./README.md ./install ./LICENSE
 
 	$(MAKE) gcloud-auth-docker
-	$(MAKE) -j 3 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
+	$(MAKE) -j 4 push REGISTRY=$(release_registry) VERSION=$(RELEASE_VERSION)
 
 	$(MAKE) push-chart VERSION=$(RELEASE_VERSION)
 	git push -u upstream release-$(RELEASE_VERSION)
