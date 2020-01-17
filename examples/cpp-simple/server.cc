@@ -21,6 +21,22 @@
 #include <iostream>
 #include <thread>
 
+std::atomic_int stop_threads(0);
+
+class ThreadJoiner {
+ public:
+  explicit ThreadJoiner(std::thread t)
+    : t_(std::move(t)) {}
+
+  ~ThreadJoiner() {
+    // Stop threads loop
+    stop_threads.store(1);
+    t_.join();
+  }
+ private:
+  std::thread t_;
+};
+
 // send health check pings
 void DoHealth(std::shared_ptr<agones::SDK> sdk) {
   while (true) {
@@ -28,6 +44,9 @@ void DoHealth(std::shared_ptr<agones::SDK> sdk) {
     std::cout << "Health ping " << (ok ? "sent" : "failed") << "\n"
               << std::flush;
     std::this_thread::sleep_for(std::chrono::seconds(2));
+    if(stop_threads.load()) {
+       return ;
+    }
   }
 }
 
@@ -41,7 +60,6 @@ void WatchUpdates(std::shared_ptr<agones::SDK> sdk) {
               << std::flush;
   });
 }
-
 int main() {
   std::cout << "C++ Game Server has started!\n"
             << "Getting the instance of the SDK.\n"
@@ -57,6 +75,8 @@ int main() {
 
   std::thread health(DoHealth, sdk);
   std::thread watch(WatchUpdates, sdk);
+  ThreadJoiner h(std::move(health));
+  ThreadJoiner w(std::move(watch));
 
   std::cout << "Setting a label\n" << std::flush;
   grpc::Status status = sdk->SetLabel("test-label", "test-value");
