@@ -17,8 +17,8 @@ FROM alpine:3.11
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:root ./bin/ping /home/agones/ping
-COPY --chown=agones:root ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
+COPY --chown=agones:agones ./bin/ping /home/agones/ping
+COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000
 ENTRYPOINT ["/home/agones/ping"]
