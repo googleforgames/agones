@@ -15,10 +15,10 @@
 FROM alpine:3.11
 
 RUN apk --update add ca-certificates && \
-    adduser -D agones
+    adduser -D -u 1000 agones
 
 COPY --chown=agones:root ./bin/allocator /home/agones/allocator
 COPY --chown=agones:root ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
-USER agones
+USER 1000
 ENTRYPOINT ["/home/agones/allocator"]
