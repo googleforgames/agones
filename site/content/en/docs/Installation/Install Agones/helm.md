@@ -103,12 +103,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
 | `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
 | `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
+| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | ``|
 | `agones.crds.install`                               | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart. | `true` |
 | `agones.crds.cleanupOnDelete`                       | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion | `true`          |
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
+| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -135,6 +137,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
 | `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
 | `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
+| `agones.controller.logLevel`                        | Agones Controller Log level. Log only entries with that severity and above                      | `info`                 |
 | `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
 | `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
 | `agones.ping.install`                               | Whether to install the [ping service][ping]                                                     | `true`                 |
@@ -164,14 +167,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="1.3.0" %}}
+{{% feature publishVersion="1.4.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
-| `agones.controller.logLevel`                        | Agones Controller Log level. Log only entries with that severity and above                      | `info`                |
-| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | ``|
+|                                                     |                                                                                                 |                        |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
