@@ -72,7 +72,6 @@ Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, st
 
 And there is no need to call `Health()`, it is automatically called.
 
-{{% feature publishVersion="1.3.0" %}}
 To watch when 
 [the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserver-function-gameserver" >}})
 call `WatchGameServer(callback)`, where the delegate function `callback` will be executed every time the `GameServer` 
@@ -81,7 +80,6 @@ configuration changes.
 ```csharp
 agones.WatchGameServer(gameServer => Debug.Log($"Server - Watch {gameServer}"));
 ```
-{{% /feature %}}
 
 {{% alert title="Warning" color="warning"%}}
 The following code causes deadlock. Do not use a `Wait` method with the returned Task.
