@@ -491,8 +491,8 @@ func TestGameServerReserve(t *testing.T) {
 	assert.Equal(t, "ACK: RESERVE\n", reply)
 
 	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReserved, time.Minute)
-	assert.NoError(t, err)
-	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State)
+	assert.NoError(t, err, fmt.Sprintf("GameServer Name: %s", readyGs.ObjectMeta.Name))
+	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State, fmt.Sprintf("GameServer Name: %s", readyGs.ObjectMeta.Name))
 
 	// it should go back after 10 seconds
 	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReady, 15*time.Second)
