@@ -39,6 +39,8 @@ Agones incorporates these abilities:
 
 - Agones extends Kubernetes, such that it gets native abilities to create, run, manage and scale dedicated game server processes within
   Kubernetes clusters using standard Kubernetes tooling and APIs.
+- Run and update Fleets of Game Servers, without worrying about having Game Servers shutdown that have active players
+ on them.
 - Deploy game servers inside a [Docker container](https://www.docker.com/resources/what-container), with any combination of dependencies or binaries.
 - Integrated game server SDK for game server lifecycle managements, including health checking, state management, configuration and more.
 - Autoscaling capabilities to ensure players always have a game server availble to play on.
