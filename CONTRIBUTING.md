@@ -52,7 +52,7 @@ When submitting pull requests, make sure to do the following:
 
 Often, new features will need to go through experimental stages so that we can gather feedback and adjust as necessary.
 
-You can see this project's [feature stage documentation](https://agones.dev/docs/guides/feature-stages/) on the Agones
+You can see this project's [feature stage documentation](https://agones.dev/site/docs/guides/feature-stages/) on the Agones
 website.
 
 If you are working on a new feature, you may need to take feature stages into account. This should be discussed on a
