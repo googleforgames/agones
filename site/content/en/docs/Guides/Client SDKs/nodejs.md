@@ -19,41 +19,19 @@ Download the source {{< ghlink href="sdks/nodejs" >}}directly from GitHub{{< /gh
 
 ## Usage
 
-{{% feature expiryVersion="1.2.0" %}}
-Add the agones dependency to `package.json`, replacing with the download location:
-
-```json
-"dependencies": {
-  "agones": "./lib/agones"
-  ...
-}
-```
-{{% /feature %}}
-{{% feature publishVersion="1.2.0" %}}
 Add the agones dependency to your project:
 
 ```sh
 $ npm install @googleforgames/agones
 ```
-{{% /feature %}}
 
 To begin working with the SDK, create an instance of it.
 
-{{% feature expiryVersion="1.2.0" %}}
-```javascript
-const AgonesSDK = require('agones');
-
-let agonesSDK = new AgonesSDK();
-```
-{{% /feature %}}
-
-{{% feature publishVersion="1.2.0" %}}
 ```javascript
 const AgonesSDK = require('@googleforgames/agones');
 
 let agonesSDK = new AgonesSDK();
 ```
-{{% /feature %}}
 
 To connect to the SDK server, either local or when running on Agones, run the `async` method `sdk.connect()`, which will
 `resolve` once connected or `reject` on error or if no connection can be made after 30 seconds.
@@ -76,7 +54,17 @@ let result = await agonesSDK.ready();
 
 Similarly `shutdown()`, `allocate()`, `setAnnotation(key, value)` and `setLabel(key, value)` are async methods that perform an action and return an empty result.
 
-To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method `getGameServer()`. The result will be an object representing `GameServer` defined in {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
+{{% feature expiryVersion="1.4.0" %}}
+To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method
+`getGameServer()`. The result will be an object representing `GameServer` defined
+in {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+To get [details of the backing GameServer]({{< relref "_index.md#gameserver" >}}) call the async method
+`getGameServer()`. The result will be an object representing `GameServer` defined
+in {{< ghlink href="proto/sdk/sdk.proto" link_test="false" >}}`sdk.proto`{{< /ghlink >}}.
+{{% /feature %}}
 
 ```javascript
 let result = await agonesSDK.getGameServer();

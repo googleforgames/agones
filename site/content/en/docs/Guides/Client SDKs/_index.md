@@ -107,8 +107,17 @@ Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs
 the returned object is limited to that configuration that was deemed useful. If there are
 areas that you feel are missing, please [file an issue](https://github.com/googleforgames/agones/issues) or pull request.
 
-The easiest way to see what is exposed, is to check the  {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}},
-specifically at the `message GameServer`.
+{{% feature expiryVersion="1.4.0" %}}
+The easiest way to see what is exposed, is to check
+the {{% ghlink href="sdk.proto" %}}`sdk.proto`{{% /ghlink %}}, specifically at
+the `message GameServer`.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+The easiest way to see what is exposed, is to check
+the {{% ghlink href="proto/sdk/sdk.proto" link_test="false" %}}`sdk.proto`{{% /ghlink %}}, specifically at
+the `message GameServer`.
+{{% /feature %}}
 
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
@@ -126,8 +135,17 @@ Since the GameServer contains an entire [PodTemplate](https://kubernetes.io/docs
 the returned object is limited to that configuration that was deemed useful. If there are
 areas that you feel are missing, please [file an issue](https://github.com/googleforgames/agones/issues) or pull request.
 
-The easiest way to see what is exposed, is to check the {{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}},
-specifically at the `message GameServer`.
+{{% feature expiryVersion="1.4.0" %}}
+The easiest way to see what is exposed, is to check 
+the {{% ghlink href="sdk.proto" %}}`sdk.proto`{{% /ghlink %}}, specifically at
+the `message GameServer`.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+The easiest way to see what is exposed, is to check
+the {{% ghlink href="proto/sdk/sdk.proto" link_test="false" %}}`sdk.proto`{{% /ghlink %}}, specifically at
+the `message GameServer`.
+{{% /feature %}}
 
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
@@ -165,15 +183,33 @@ If there isn't an SDK for the language and platform you are looking for, you hav
 
 ### gRPC Client Generation
 
-If client generation is well supported by [gRPC](https://grpc.io/docs/), then generate a client from the
-{{< ghlink href="sdk.proto" >}}`sdk.proto`{{< /ghlink >}}, and look at the current {{< ghlink href="sdks" >}}sdks{{< /ghlink >}} to see how the wrappers are implemented to make interaction
+{{% feature expiryVersion="1.4.0" %}}
+If client generation is well supported by [gRPC](https://grpc.io/docs/), then generate a client from 
+the {{% ghlink href="sdk.proto" %}}`sdk.proto`{{% /ghlink %}}, and look at the
+current {{< ghlink href="sdks" >}}sdks{{< /ghlink >}} to see how the wrappers are implemented to make interaction
 with the SDK server simpler for the user.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+If client generation is well supported by [gRPC](https://grpc.io/docs/), then generate client(s) from
+the proto files found in the {{% ghlink href="proto/sdk" link_test="false" %}}`proto/sdk`{{% /ghlink %}},
+directory and look at the current {{< ghlink href="sdks" >}}sdks{{< /ghlink >}} to see how the wrappers are
+implemented to make interaction with the SDK server simpler for the user.
+{{% /feature %}}
 
 ### REST API Implementation
 
+{{% feature expiryVersion="1.4.0" %}}
 If client generation is not well supported by gRPC, or if there are other complicating factors, implement the SDK through
 the [REST]({{< relref "rest.md" >}}) HTTP+JSON interface. This could be written by hand, or potentially generated from
 the {{< ghlink href="sdk.swagger.json" >}}Swagger/OpenAPI Spec{{< /ghlink >}}.
+{{% /feature %}}
+
+{{% feature publishVersion="1.4.0" %}}
+If client generation is not well supported by gRPC, or if there are other complicating factors, implement the SDK through
+the [REST]({{< relref "rest.md" >}}) HTTP+JSON interface. This could be written by hand, or potentially generated from
+the {{< ghlink href="sdks/swagger" link_test="false" >}}Swagger/OpenAPI Specifications{{< /ghlink >}}.
+{{% /feature %}}
 
 Finally, if you build something that would be usable by the community, please submit a pull request!
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## [v1.3.0](https://github.com/googleforgames/agones/tree/v1.3.0) (2020-01-21)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.3.0-rc...v1.3.0)
+
+**Implemented enhancements:**
+
+- Site: Add video & podcasts to third party section [\#1281](https://github.com/googleforgames/agones/pull/1281) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 1.3.0-rc [\#1273](https://github.com/googleforgames/agones/issues/1273)
+
+**Merged pull requests:**
+
+- Nodejs docs: require for npm should switch on 1.3.0 [\#1284](https://github.com/googleforgames/agones/pull/1284) ([markmandel](https://github.com/markmandel))
+- Need to change to https url on swagger-codegen download [\#1278](https://github.com/googleforgames/agones/pull/1278) ([markmandel](https://github.com/markmandel))
+- Release publishing of NPM module [\#1277](https://github.com/googleforgames/agones/pull/1277) ([markmandel](https://github.com/markmandel))
+- Fix list formatting on the terraform install page. [\#1274](https://github.com/googleforgames/agones/pull/1274) ([roberthbailey](https://github.com/roberthbailey))
+
 ## [v1.3.0-rc](https://github.com/googleforgames/agones/tree/v1.3.0-rc) (2020-01-14)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.2.0...v1.3.0-rc)
@@ -51,6 +70,7 @@
 
 **Merged pull requests:**
 
+- Release 1.3.0-rc [\#1275](https://github.com/googleforgames/agones/pull/1275) ([markmandel](https://github.com/markmandel))
 - Fix broken link to Helm installation [\#1270](https://github.com/googleforgames/agones/pull/1270) ([mdanzinger](https://github.com/mdanzinger))
 - Update golangci-lint, add more linters [\#1267](https://github.com/googleforgames/agones/pull/1267) ([aLekSer](https://github.com/aLekSer))
 - Fix a minor typo in the unity example's README [\#1265](https://github.com/googleforgames/agones/pull/1265) ([roberthbailey](https://github.com/roberthbailey))

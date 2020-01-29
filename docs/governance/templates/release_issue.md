@@ -43,6 +43,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1
+- [ ] If full release move the [`sdks/nodejs/package.json`][nodejs] to {version}+1
 - [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval

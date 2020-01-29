@@ -115,7 +115,6 @@ func main() {
 	fmt.Printf("New game servers' name is: %s", newGS.ObjectMeta.Name)
 }
 ```
-{{% feature publishVersion="1.3.0" %}}
 In order to create GS using provided example, you can run it as a Kubernetes Job:
 ```
 $ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/crd-client/create-gs.yaml --namespace agones-system
@@ -126,7 +125,6 @@ $ kubectl logs pi-with-timeout-8qvfj  --namespace agones-syste
 {"message":"\u0026{0xc000243e00 default}","severity":"info","source":"main","time":"2019-12-06T14:36:54.265857671Z"}
 ```
 You have just created a GameServer using Kubernetes Go Client.
-{{% /feature %}}
 
 ## Direct Access to the REST API via Kubectl
 
