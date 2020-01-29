@@ -18,10 +18,11 @@ set -ex
 
 googleapis=/go/src/agones.dev/agones/proto/googleapis
 
+sdk=/go/src/agones.dev/agones/proto/sdk
 cd /go/src/agones.dev/agones
 
 protoc \
-    -I ${googleapis} -I . sdk.proto \
+    -I ${googleapis} -I ${sdk} sdk.proto \
     --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \
     --plugin=protoc-gen-grpc=`which grpc_rust_plugin` \
 

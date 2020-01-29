@@ -21,7 +21,7 @@ FROM debian:stretch
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \
-  automake libtool curl make g++ unzip \
+  automake libtool curl make g++ unzip moreutils \
   && apt-get clean
 
 ARG GRPC_RELEASE_TAG
