@@ -24,10 +24,16 @@
 #                 |___/
 
 # test all example images exist on Google Cloud Registry
-test-examples-on-gcr: example-image-test.autoscaler-webhook example-image-test.cpp-simple
-test-examples-on-gcr: example-image-test.nodejs-simple example-image-test.rust-simple example-image-test.simple-tcp
-test-examples-on-gcr: example-image-test.simple-udp example-image-test.unity-simple example-image-test.xonotic
+test-examples-on-gcr: example-image-test.autoscaler-webhook
+test-examples-on-gcr: example-image-test.cpp-simple
+test-examples-on-gcr: example-image-test.nodejs-simple
+test-examples-on-gcr: example-image-test.rust-simple
+test-examples-on-gcr: example-image-test.simple-tcp
+test-examples-on-gcr: example-image-test.simple-udp
+test-examples-on-gcr: example-image-test.unity-simple
+test-examples-on-gcr: example-image-test.xonotic
 test-examples-on-gcr: example-image-test.crd-client
+test-examples-on-gcr: example-image-test.supertuxkart
 
 # Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
 example-image-test.%:
