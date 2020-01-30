@@ -65,9 +65,6 @@ type GameServerAllocationPolicyList struct {
 	Items           []GameServerAllocationPolicy `json:"items"`
 }
 
-// clusterToPolicy map type definition for cluster to policy map
-type clusterToPolicy map[string][]*GameServerAllocationPolicy
-
 // ConnectionInfoIterator an iterator on ClusterConnectionInfo
 type ConnectionInfoIterator struct {
 	// currPriority Current priority index from the orderedPriorities
@@ -75,7 +72,7 @@ type ConnectionInfoIterator struct {
 	// orderedPriorities list of ordered priorities
 	orderedPriorities []int
 	// priorityToCluster Map of priority to cluster-policies map
-	priorityToCluster map[int]clusterToPolicy
+	priorityToCluster map[int]map[string][]*GameServerAllocationPolicy
 	// clusterBlackList the cluster blacklist for the clusters that has already returned
 	clusterBlackList map[string]bool
 }
@@ -102,7 +99,7 @@ func (it *ConnectionInfoIterator) Next() *ClusterConnectionInfo {
 
 // NewConnectionInfoIterator creates an iterator for connection info
 func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *ConnectionInfoIterator {
-	priorityToCluster := make(map[int]clusterToPolicy)
+	priorityToCluster := make(map[int]map[string][]*GameServerAllocationPolicy)
 	for _, policy := range policies {
 		priority := policy.Spec.Priority
 		clusterName := policy.Spec.ConnectionInfo.ClusterName
@@ -110,7 +107,7 @@ func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *Connecti
 		// 1. Add priorities to the map of priority to cluster-priorities map
 		clusterPolicy, ok := priorityToCluster[priority]
 		if !ok {
-			clusterPolicy = make(clusterToPolicy)
+			clusterPolicy = make(map[string][]*GameServerAllocationPolicy)
 			priorityToCluster[priority] = clusterPolicy
 		}
 
@@ -134,7 +131,7 @@ func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *Connecti
 }
 
 // getClusterConnectionInfo returns a ClusterConnectionInfo selected base on weighted randomization.
-func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy clusterToPolicy) *ClusterConnectionInfo {
+func (it *ConnectionInfoIterator) getClusterConnectionInfo(clusterPolicy map[string][]*GameServerAllocationPolicy) *ClusterConnectionInfo {
 	connections := []*ClusterConnectionInfo{}
 	weights := []int{}
 	for cluster, policies := range clusterPolicy {
