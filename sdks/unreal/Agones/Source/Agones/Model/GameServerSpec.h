@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,15 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "AgonesSettings.h"
+#pragma once
 
-UAgonesSettings::UAgonesSettings()
-	: Super()
-	, bHealthPingEnabled(true)
-	, HealthPingSeconds(5.0f)
-	, bDebugLogEnabled(false)
-	, RequestRetryLimit(30)
+#include "CoreMinimal.h"
+#include "JsonObject.h"
+#include "SpecHealth.h"
+#include "GameServerSpec.generated.h"
+
+USTRUCT()
+struct AGONES_API FSpec
 {
-}
+	GENERATED_BODY()
 
- 
+	UPROPERTY()
+	FHealth Health;
+
+	/** Default constructor, no initialization */
+	FSpec()
+	{}
+
+	FSpec(TSharedPtr<FJsonObject> JsonObject)
+	{
+		const TSharedPtr<FJsonObject>* HealthJsonObject;
+		if (JsonObject->TryGetObjectField(TEXT("health"), HealthJsonObject))
+		{
+			Health = FHealth(*HealthJsonObject);
+		}
+	}
+};
