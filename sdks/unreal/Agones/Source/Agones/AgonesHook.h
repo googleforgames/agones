@@ -59,7 +59,7 @@ public:
 	}
 
 private:
-	FVerb Verb;
+	const FVerb Verb;
 };
 
 class AGONES_API FAgonesHook : public FTickableGameObject

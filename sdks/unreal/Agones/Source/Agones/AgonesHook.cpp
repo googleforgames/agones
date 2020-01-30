@@ -157,7 +157,7 @@ void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delega
 		TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
 		if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
 		{
-			UE_LOG(LogAgonesHook, Error, TEXT("Failed to parse json: %s"), *Json);
+			UE_LOG(LogAgonesHook, Error, TEXT("Failed to parse GetGameServer response json: %s"), *Json);
 			Delegate.ExecuteIfBound(GameServer, false);
 			return;
 		}
