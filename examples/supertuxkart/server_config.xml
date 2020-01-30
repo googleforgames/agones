@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<!--
+Copyright 2020 Google LLC All Rights Reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<server-config version="6" >
+
+    <!-- Name of server, encode in XML if you want to use unicode characters. -->
+    <server-name value="agones stk server" />
+
+    <!-- Port used in server, if you specify 0, it will use the server port specified in stk_config.xml or if random-server-port is enabled in user config, than any port. STK will auto change to random port if the port you specify failed to be bound. -->
+    <server-port value="8080" />
+
+    <!-- Game mode in server, 0 is normal race (grand prix), 1 is time trial (grand prix), 3 is normal race, 4 time trial, 6 is soccer, 7 is free-for-all and 8 is capture the flag. Notice: grand prix server doesn't allow for players to join and wait for ongoing game. -->
+    <server-mode value="3" />
+
+    <!-- Difficulty in server, 0 is beginner, 1 is intermediate, 2 is expert and 3 is supertux (the most difficult). -->
+    <server-difficulty value="0" />
+
+    <!-- Number of grand prix tracks per game (If grand prix enabled). -->
+    <gp-track-count value="3" />
+
+    <!-- Use goal target in soccer. -->
+    <soccer-goal-target value="false" />
+
+    <!-- Enable wan server, which requires you to have an stk-addons account with a saved session. Check init-user command for details. -->
+    <wan-server value="false" />
+
+    <!-- Enable network console, which can do for example kickban. -->
+    <enable-console value="false" />
+
+    <!-- Maximum number of players on the server, setting it more than 8 will have performance degradation. -->
+    <server-max-players value="8" />
+
+    <!-- Password for private server, empty for a public server. -->
+    <private-server-password value="" />
+
+    <!-- Message of today shown in lobby, you can enter encoded XML words here or a file.txt and let STK load it. -->
+    <motd value="" />
+
+    <!-- If off this server will ignore chat message from all players. -->
+    <chat value="true" />
+
+    <!-- Allow players to vote track to play, if off server will pick next track to play randomly. -->
+    <track-voting value="true" />
+
+    <!-- Timeout in seconds for selecting karts and (or) voting tracks in server, you may want to use a lower value if you have track-voting off. -->
+    <voting-timeout value="30" />
+
+    <!-- Timeout in seconds for validation of clients in wan, currently stk will use the stk-addons server to share AES key between client and server. -->
+    <validation-timeout value="20" />
+
+    <!-- By default WAN server will always validate player and LAN will not, disable it to allow non-validated player in WAN. -->
+    <validating-player value="true" />
+
+    <!-- Disable it to turn off all stun related code in server, it allows saving server resource if your server is not behind a firewall. -->
+    <firewalled-server value="true" />
+
+    <!-- Enable to allow IPv6 connection if you have a public IPv6 address. STK currently use dual-stack mode which requires server to have both IPv4 and IPv6 and listen to same port, firewalled-server will be disabled so you need to make sure this server has port forward configured properly if needed. -->
+    <ipv6-server value="false" />
+
+    <!-- No server owner in lobby which can control the starting of game or kick any players. -->
+    <owner-less value="false" />
+
+    <!-- Time to wait before entering kart selection screen if satisfied min-start-game-players below for owner less or ranked server. -->
+    <start-game-counter value="60" />
+
+    <!-- Clients below this value will be rejected from joining this server. It's determined by number of official karts in client / number of official karts in server -->
+    <official-karts-threshold value="1" />
+
+    <!-- Clients below this value will be rejected from joining this server. It's determined by number of official tracks in client / number of official tracks in server, setting this value too high will prevent android players from joining this server, because STK android apk has some official tracks removed. -->
+    <official-tracks-threshold value="0.7" />
+
+    <!-- Only auto start kart selection when number of connected player is larger than or equals this value, for owner less or ranked server, after start-game-counter reaches 0. -->
+    <min-start-game-players value="2" />
+
+    <!-- Automatically end linear race game after 1st player finished for some time (currently his finished time * 0.25 + 15.0). -->
+    <auto-end value="false" />
+
+    <!-- Enable team choosing in lobby in team game (soccer and CTF). If owner-less is enabled and live-players is not enabled, than this option is always disabled. -->
+    <team-choosing value="true" />
+
+    <!-- If strict-players is on, no duplicated online id or split screen players are allowed, which can prevent someone using more than 1 network AI with this server. -->
+    <strict-players value="false" />
+
+    <!-- Server will submit ranking to stk addons server for linear race games, you require permission for that. validating-player, auto-end, strict-player and owner-less will be turned on. -->
+    <ranked value="false" />
+
+    <!-- If true, the server owner can config the difficulty and game mode in the GUI of lobby. This option cannot be used with owner-less or grand prix server, and will be automatically turned on if the server was created using the in-game GUI. The changed difficulty and game mode will not be saved in this config file. -->
+    <server-configurable value="false" />
+
+    <!-- If true, players can live join or spectate the in-progress game. Currently live joining is only available if the current game mode used in server is FFA, CTF or soccer, also no addon karts will be available for players to choose, and official-karts-threshold will be made 1.0. -->
+    <live-players value="true" />
+
+    <!-- Time in seconds when a flag is dropped a by player in CTF returning to its own base. -->
+    <flag-return-timeout value="20" />
+
+    <!-- Time in seconds to deactivate a flag when it's captured or returned to own base by players. -->
+    <flag-deactivated-time value="3" />
+
+    <!-- Hit limit of free for all, zero to disable hit limit. -->
+    <hit-limit value="20" />
+
+    <!-- Time limit of free for all in seconds, zero to disable time limit. -->
+    <time-limit-ffa value="360" />
+
+    <!-- Capture limit of CTF, zero to disable capture limit. -->
+    <capture-limit value="5" />
+
+    <!-- Time limit of CTF in seconds, zero to disable time limit. -->
+    <time-limit-ctf value="600" />
+
+    <!-- Value used by server to automatically estimate each game time. For races, it decides the lap of each race in network game, if more than 0.0f, the number of lap of each track vote in linear race will be determined by max(1.0f, auto-game-time-ratio * default lap of that track). For soccer if more than 0.0f, for time limit game it will be auto-game-time-ratio * soccer-time-limit in UserConfig, for goal limit game it will be auto-game-time-ratio * numgoals in UserConfig, -1 to disable for all. -->
+    <auto-game-time-ratio value="-1" />
+
+    <!-- Maximum ping allowed for a player (in ms), it's recommended to use default value if live-players is on. -->
+    <max-ping value="300" />
+
+    <!-- Tolerance of jitter in network allowed (in ms), it's recommended to use default value if live-players is on. -->
+    <jitter-tolerance value="100" />
+
+    <!-- Kick players whose ping is above max-ping. -->
+    <kick-high-ping-players value="false" />
+
+    <!-- Kick idle player which has no network activity to server for more than some seconds during game, unless he has finished the race. Negative value to disable, and this option will always be disabled for LAN server. -->
+    <kick-idle-player-seconds value="60" />
+
+    <!-- Set how many states the server will send per second, the higher this value, the more bandwidth requires, also each client will trigger more rewind, which clients with slow device may have problem playing this server, use the default value is recommended. -->
+    <state-frequency value="10" />
+
+    <!-- Use sql database for handling server stats and maintenance, STK needs to be compiled with sqlite3 supported. -->
+    <sql-management value="false" />
+
+    <!-- Database filename for sqlite to use, it can be shared for all servers created in this machine, and stk will create specific table for each server. You need to create the database yourself first, see NETWORKING.md for details -->
+    <database-file value="stkservers.db" />
+
+    <!-- Specified in millisecond for maximum time waiting in sqlite3_busy_handler. You may need a higher value if your database is shared by many servers or having a slow hard disk. -->
+    <database-timeout value="1000" />
+
+    <!-- Ip ban list table name, you need to create the table first, see NETWORKING.md for details, empty to disable. This table can be shared for all servers if you use the same name. -->
+    <ip-ban-table value="ip_ban" />
+
+    <!-- Online ID ban list table name, you need to create the table first, see NETWORKING.md for details, empty to disable. This table can be shared for all servers if you use the same name. -->
+    <online-id-ban-table value="online_id_ban" />
+
+    <!-- Player reports table name, which will be written when a player reports player in the network user dialog, you need to create the table first, see NETWORKING.md for details, empty to disable. This table can be shared for all servers if you use the same name. -->
+    <player-reports-table value="player_reports" />
+
+    <!-- Days to keep player reports, older than that will be auto cleared, 0 to keep them forever. -->
+    <player-reports-expired-days value="3" />
+
+    <!-- IP geolocation table, you only need this table if you want to geolocate IP from non-stk-addons connection, as all validated players connecting from stk-addons will provide the location info, you need to create the table first, see NETWORKING.md for details, empty to disable. This table can be shared for all servers if you use the same name. -->
+    <ip-geolocation-table value="ip_mapping" />
+
+</server-config>
