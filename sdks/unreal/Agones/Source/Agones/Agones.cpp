@@ -25,10 +25,23 @@
 
 #define LOCTEXT_NAMESPACE "AgonesModule"
 
+FAgonesModule* FAgonesModule::ModuleSingleton = nullptr;
+
+FAgonesHook& FAgonesModule::GetHook()
+{
+	if (ModuleSingleton == nullptr)
+	{
+		check(IsInGameThread());
+		FModuleManager::LoadModuleChecked<FAgonesModule>("Agones");
+	}
+	check(ModuleSingleton != nullptr);
+	return *ModuleSingleton->HookPtr.Get();
+}
+
 void FAgonesModule::StartupModule()
 {
+	ModuleSingleton = this;
 	FWorldDelegates::OnPostWorldInitialization.AddRaw(this, &FAgonesModule::OnWorldInitialized);
-
 
 #if WITH_EDITOR
 	// register Agones settings
@@ -63,6 +76,8 @@ void FAgonesModule::ShutdownModule()
 		SettingsModule->UnregisterSettings("Project", "Plugins", "Agones");
 	}
 #endif //WITH_EDITOR
+
+	ModuleSingleton = nullptr;
 }
 
 void FAgonesModule::OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS)

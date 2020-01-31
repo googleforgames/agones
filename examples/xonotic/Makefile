@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 root_path := $(realpath $(project_path)/../..)
-image_tag = $(REPOSITORY)/xonotic-example:0.7
+image_tag = $(REPOSITORY)/xonotic-example:0.8
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

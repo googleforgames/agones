@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #
-# Makefile for building a simple tcp server
+# Makefile for building the Super Tux Kart server
 #
 
 #  __     __         _       _     _
@@ -27,8 +27,8 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/tcp-server:0.4
-root_path = $(realpath $(project_path)/../..)
+root_path := $(realpath $(project_path)/../..)
+image_tag = $(REPOSITORY)/supertuxkart-example:0.1
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -39,8 +39,8 @@ root_path = $(realpath $(project_path)/../..)
 
 # Build a docker image for the server, and tag it
 build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
+	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
 
 # check if hosted on Google Cloud Registry
 gcr-check:
-	gcloud container images describe $(server_tag)
+	gcloud container images describe $(image_tag)

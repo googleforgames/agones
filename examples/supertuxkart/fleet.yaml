@@ -1,4 +1,4 @@
-# Copyright 2018 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.11
-
-RUN apk --update add ca-certificates && \
-    adduser -D -u 1000 agones
-
-COPY --chown=agones:agones ./bin/sdk-server.linux.amd64 /home/agones/sdk-server
-COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
-
-USER 1000
-ENTRYPOINT ["/home/agones/sdk-server"]
+apiVersion: "agones.dev/v1"
+kind: Fleet
+metadata:
+  name: supertuxkart
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      ports:
+      - name: default
+        containerPort: 8080
+      health:
+        initialDelaySeconds: 30
+        periodSeconds: 60
+      template:
+        spec:
+          containers:
+          - name: supertuxkart
+            image: gcr.io/agones-images/supertuxkart-example:0.1
