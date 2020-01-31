@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case autoscalingv1.SchemeGroupVersion.WithResource("fleetautoscalers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Autoscaling().V1().FleetAutoscalers().Informer()}, nil
 
-		// Group=multicluster, Version=v1alpha1
+		// Group=multicluster.agones.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer()}, nil
 

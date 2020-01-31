@@ -17,7 +17,4 @@ package multicluster
 const (
 	// GroupName is the Scheme Group Name for Agones Custom Resource Definitions
 	GroupName = "multicluster.agones.dev"
-	// VersionAnnotation is the key for version annotation
-	// associated with the CRD
-	VersionAnnotation = GroupName + "/sdk-version"
 )
