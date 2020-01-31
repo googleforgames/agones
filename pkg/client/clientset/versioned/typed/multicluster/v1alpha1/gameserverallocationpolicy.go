@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 package v1alpha1
 
 import (
+	"time"
+
 	v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,11 +77,16 @@ func (c *gameServerAllocationPolicies) Get(name string, options v1.GetOptions) (
 
 // List takes label and field selectors, and returns the list of GameServerAllocationPolicies that match those selectors.
 func (c *gameServerAllocationPolicies) List(opts v1.ListOptions) (result *v1alpha1.GameServerAllocationPolicyList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1alpha1.GameServerAllocationPolicyList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("gameserverallocationpolicies").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -87,11 +94,16 @@ func (c *gameServerAllocationPolicies) List(opts v1.ListOptions) (result *v1alph
 
 // Watch returns a watch.Interface that watches the requested gameServerAllocationPolicies.
 func (c *gameServerAllocationPolicies) Watch(opts v1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("gameserverallocationpolicies").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -133,10 +145,15 @@ func (c *gameServerAllocationPolicies) Delete(name string, options *v1.DeleteOpt
 
 // DeleteCollection deletes a collection of objects.
 func (c *gameServerAllocationPolicies) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("gameserverallocationpolicies").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

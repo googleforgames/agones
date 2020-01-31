@@ -23,10 +23,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 # final image
 FROM alpine:3.10
 
-RUN adduser -D server
+RUN adduser -D -u 1000 server
 COPY --from=builder /go/src/simple-tcp/server /home/server/server
 RUN chown -R server /home/server && \
     chmod o+x /home/server/server
 
-USER server
+USER 1000
 ENTRYPOINT ["/home/server/server"]

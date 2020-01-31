@@ -34,6 +34,8 @@ public class Agones : ModuleRules
 			new string[]
 			{
 				"CoreUObject",
+				"Json",
+				"JsonUtilities",
 				"Engine",
 				"Http",
 			});

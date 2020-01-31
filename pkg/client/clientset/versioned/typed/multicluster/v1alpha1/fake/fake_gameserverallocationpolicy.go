@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ type FakeGameServerAllocationPolicies struct {
 	ns   string
 }
 
-var gameserverallocationpoliciesResource = schema.GroupVersionResource{Group: "multicluster", Version: "v1alpha1", Resource: "gameserverallocationpolicies"}
+var gameserverallocationpoliciesResource = schema.GroupVersionResource{Group: "multicluster.agones.dev", Version: "v1alpha1", Resource: "gameserverallocationpolicies"}
 
-var gameserverallocationpoliciesKind = schema.GroupVersionKind{Group: "multicluster", Version: "v1alpha1", Kind: "GameServerAllocationPolicy"}
+var gameserverallocationpoliciesKind = schema.GroupVersionKind{Group: "multicluster.agones.dev", Version: "v1alpha1", Kind: "GameServerAllocationPolicy"}
 
 // Get takes name of the gameServerAllocationPolicy, and returns the corresponding gameServerAllocationPolicy object, and an error if there is any.
 func (c *FakeGameServerAllocationPolicies) Get(name string, options v1.GetOptions) (result *v1alpha1.GameServerAllocationPolicy, err error) {

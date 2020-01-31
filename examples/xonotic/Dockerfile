@@ -30,7 +30,7 @@ FROM debian:stretch
 
 WORKDIR /home/xonotic
 
-RUN useradd -m xonotic
+RUN useradd -u 1000 -m xonotic
 
 #
 # To learn about setting up a Xonotic dedicated server, read the `readme.txt` in the
@@ -45,5 +45,5 @@ COPY examples/xonotic/server.cfg ./.xonotic/data
 
 RUN chown -R xonotic:xonotic . && chmod +x wrapper
 
-USER xonotic
+USER 1000
 ENTRYPOINT /home/xonotic/wrapper -i /home/xonotic/Xonotic/server_linux.sh
