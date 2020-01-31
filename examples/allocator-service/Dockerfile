@@ -27,7 +27,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o service .
 # Create the final image that will run the allocator service
 FROM alpine:3.8
 RUN apk add --update ca-certificates
-RUN adduser -D service
+RUN adduser -D -u 1000 service
 
 COPY --from=builder /go/src/agones.dev/agones/examples/allocator-service \
                     /home/service
@@ -35,5 +35,5 @@ COPY --from=builder /go/src/agones.dev/agones/examples/allocator-service \
 RUN chown -R service /home/service && \
     chmod o+x /home/service/service
 
-USER service
+USER 1000
 ENTRYPOINT /home/service/service

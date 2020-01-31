@@ -35,11 +35,11 @@ RUN cd cpp-simple && mkdir -p .build && \
     cmake --build . --target install
 
 FROM debian:stretch
-RUN useradd -m server
+RUN useradd -u 1000 -m server
 
 COPY --from=builder /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple
 RUN chown -R server /home/server && \
     chmod o+x /home/server/cpp-simple
 
-USER server
+USER 1000
 ENTRYPOINT /home/server/cpp-simple

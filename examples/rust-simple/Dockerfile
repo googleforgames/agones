@@ -52,11 +52,11 @@ WORKDIR /home/builder/agones/examples/rust-simple
 RUN make build
 
 FROM debian:stretch
-RUN useradd -m server
+RUN useradd -u 1000 -m server
 
 COPY --from=builder /home/builder/agones/examples/rust-simple/target/release/rust-simple /home/server/rust-simple
 RUN chown -R server /home/server && \
     chmod o+x /home/server/rust-simple
 
-USER server
+USER 1000
 ENTRYPOINT /home/server/rust-simple
