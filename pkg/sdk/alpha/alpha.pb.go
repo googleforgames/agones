@@ -43,6 +43,121 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+// I am Empty
+type Empty struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Empty) Reset()         { *m = Empty{} }
+func (m *Empty) String() string { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()    {}
+func (*Empty) Descriptor() ([]byte, []int) {
+	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{0}
+}
+func (m *Empty) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Empty.Unmarshal(m, b)
+}
+func (m *Empty) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Empty.Marshal(b, m, deterministic)
+}
+func (dst *Empty) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Empty.Merge(dst, src)
+}
+func (m *Empty) XXX_Size() int {
+	return xxx_messageInfo_Empty.Size(m)
+}
+func (m *Empty) XXX_DiscardUnknown() {
+	xxx_messageInfo_Empty.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Empty proto.InternalMessageInfo
+
+// Store a count variable
+type Count struct {
+	Count                int64    `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Count) Reset()         { *m = Count{} }
+func (m *Count) String() string { return proto.CompactTextString(m) }
+func (*Count) ProtoMessage()    {}
+func (*Count) Descriptor() ([]byte, []int) {
+	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{1}
+}
+func (m *Count) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Count.Unmarshal(m, b)
+}
+func (m *Count) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Count.Marshal(b, m, deterministic)
+}
+func (dst *Count) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Count.Merge(dst, src)
+}
+func (m *Count) XXX_Size() int {
+	return xxx_messageInfo_Count.Size(m)
+}
+func (m *Count) XXX_DiscardUnknown() {
+	xxx_messageInfo_Count.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Count proto.InternalMessageInfo
+
+func (m *Count) GetCount() int64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+// The unique identifier for a given player
+type PlayerId struct {
+	PlayerId             string   `protobuf:"bytes,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PlayerId) Reset()         { *m = PlayerId{} }
+func (m *PlayerId) String() string { return proto.CompactTextString(m) }
+func (*PlayerId) ProtoMessage()    {}
+func (*PlayerId) Descriptor() ([]byte, []int) {
+	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{2}
+}
+func (m *PlayerId) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PlayerId.Unmarshal(m, b)
+}
+func (m *PlayerId) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PlayerId.Marshal(b, m, deterministic)
+}
+func (dst *PlayerId) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PlayerId.Merge(dst, src)
+}
+func (m *PlayerId) XXX_Size() int {
+	return xxx_messageInfo_PlayerId.Size(m)
+}
+func (m *PlayerId) XXX_DiscardUnknown() {
+	xxx_messageInfo_PlayerId.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PlayerId proto.InternalMessageInfo
+
+func (m *PlayerId) GetPlayerId() string {
+	if m != nil {
+		return m.PlayerId
+	}
+	return ""
+}
+
+func init() {
+	proto.RegisterType((*Empty)(nil), "agones.dev.sdk.alpha.Empty")
+	proto.RegisterType((*Count)(nil), "agones.dev.sdk.alpha.Count")
+	proto.RegisterType((*PlayerId)(nil), "agones.dev.sdk.alpha.PlayerId")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -55,6 +170,16 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SDKClient interface {
+	// Call when a player has connected
+	PlayerConnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error)
+	// Call when a player has disconnected
+	PlayerDisconnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error)
+	// change the player capacity to a new value
+	SetPlayerCapacity(ctx context.Context, in *Count, opts ...grpc.CallOption) (*Empty, error)
+	// get the current player capacity
+	GetPlayerCapacity(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error)
+	// get the current player count
+	GetPlayerCount(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error)
 }
 
 type sDKClient struct {
@@ -65,31 +190,210 @@ func NewSDKClient(cc *grpc.ClientConn) SDKClient {
 	return &sDKClient{cc}
 }
 
+func (c *sDKClient) PlayerConnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/PlayerConnect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sDKClient) PlayerDisconnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/PlayerDisconnect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sDKClient) SetPlayerCapacity(ctx context.Context, in *Count, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/SetPlayerCapacity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sDKClient) GetPlayerCapacity(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error) {
+	out := new(Count)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/GetPlayerCapacity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sDKClient) GetPlayerCount(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error) {
+	out := new(Count)
+	err := c.cc.Invoke(ctx, "/agones.dev.sdk.alpha.SDK/GetPlayerCount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SDKServer is the server API for SDK service.
 type SDKServer interface {
+	// Call when a player has connected
+	PlayerConnect(context.Context, *PlayerId) (*Empty, error)
+	// Call when a player has disconnected
+	PlayerDisconnect(context.Context, *PlayerId) (*Empty, error)
+	// change the player capacity to a new value
+	SetPlayerCapacity(context.Context, *Count) (*Empty, error)
+	// get the current player capacity
+	GetPlayerCapacity(context.Context, *Empty) (*Count, error)
+	// get the current player count
+	GetPlayerCount(context.Context, *Empty) (*Count, error)
 }
 
 func RegisterSDKServer(s *grpc.Server, srv SDKServer) {
 	s.RegisterService(&_SDK_serviceDesc, srv)
 }
 
+func _SDK_PlayerConnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlayerId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).PlayerConnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/PlayerConnect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).PlayerConnect(ctx, req.(*PlayerId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SDK_PlayerDisconnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlayerId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).PlayerDisconnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/PlayerDisconnect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).PlayerDisconnect(ctx, req.(*PlayerId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SDK_SetPlayerCapacity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Count)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).SetPlayerCapacity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/SetPlayerCapacity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).SetPlayerCapacity(ctx, req.(*Count))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SDK_GetPlayerCapacity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).GetPlayerCapacity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/GetPlayerCapacity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).GetPlayerCapacity(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SDK_GetPlayerCount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SDKServer).GetPlayerCount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agones.dev.sdk.alpha.SDK/GetPlayerCount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SDKServer).GetPlayerCount(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _SDK_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "agones.dev.sdk.alpha.SDK",
 	HandlerType: (*SDKServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "alpha.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "PlayerConnect",
+			Handler:    _SDK_PlayerConnect_Handler,
+		},
+		{
+			MethodName: "PlayerDisconnect",
+			Handler:    _SDK_PlayerDisconnect_Handler,
+		},
+		{
+			MethodName: "SetPlayerCapacity",
+			Handler:    _SDK_SetPlayerCapacity_Handler,
+		},
+		{
+			MethodName: "GetPlayerCapacity",
+			Handler:    _SDK_GetPlayerCapacity_Handler,
+		},
+		{
+			MethodName: "GetPlayerCount",
+			Handler:    _SDK_GetPlayerCount_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "alpha.proto",
 }
 
-func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_bbb93277db505a5f) }
+func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_f6b2d32c52a73de0) }
 
-var fileDescriptor_alpha_bbb93277db505a5f = []byte{
-	// 100 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4e, 0xcc, 0x29, 0xc8,
-	0x48, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x49, 0x4c, 0xcf, 0xcf, 0x4b, 0x2d, 0xd6,
-	0x4b, 0x49, 0x2d, 0xd3, 0x2b, 0x4e, 0xc9, 0xd6, 0x03, 0xcb, 0x49, 0xc9, 0xa4, 0xe7, 0xe7, 0xa7,
-	0xe7, 0xa4, 0xea, 0x27, 0x16, 0x64, 0xea, 0x27, 0xe6, 0xe5, 0xe5, 0x97, 0x24, 0x96, 0x64, 0xe6,
-	0xe7, 0x15, 0x43, 0xf4, 0x18, 0xb1, 0x72, 0x31, 0x07, 0xbb, 0x78, 0x3b, 0xb1, 0x47, 0xb1, 0x82,
-	0x55, 0x27, 0xb1, 0x81, 0x85, 0x8d, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x8c, 0x7d, 0xaf, 0x7a,
-	0x59, 0x00, 0x00, 0x00,
+var fileDescriptor_alpha_f6b2d32c52a73de0 = []byte{
+	// 316 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x4a, 0xc3, 0x40,
+	0x10, 0x40, 0x89, 0x35, 0xb6, 0x8e, 0x28, 0x76, 0x6d, 0x25, 0x24, 0xb6, 0xd4, 0x15, 0x44, 0x3c,
+	0x6c, 0x40, 0x6f, 0x1e, 0x6d, 0x45, 0xc4, 0x8b, 0xb4, 0x37, 0x6f, 0x6b, 0xb2, 0xc4, 0x60, 0xba,
+	0xbb, 0x34, 0x5b, 0x21, 0x57, 0x7f, 0xc1, 0x6f, 0xf1, 0x4b, 0xfc, 0x05, 0x3f, 0x44, 0x32, 0x1b,
+	0x2b, 0x96, 0xb6, 0x88, 0x78, 0xdb, 0x9d, 0x99, 0xbc, 0x37, 0x93, 0x1d, 0xd8, 0xe2, 0x99, 0x7e,
+	0xe4, 0x4c, 0x4f, 0x94, 0x51, 0xa4, 0xc5, 0x13, 0x25, 0x45, 0xce, 0x62, 0xf1, 0xcc, 0xf2, 0xf8,
+	0x89, 0x61, 0xce, 0x3f, 0x48, 0x94, 0x4a, 0x32, 0x11, 0x72, 0x9d, 0x86, 0x5c, 0x4a, 0x65, 0xb8,
+	0x49, 0x95, 0xcc, 0xed, 0x37, 0xb4, 0x0e, 0xee, 0xd5, 0x58, 0x9b, 0x82, 0x76, 0xc0, 0xed, 0xab,
+	0xa9, 0x34, 0xa4, 0x05, 0x6e, 0x54, 0x1e, 0x3c, 0xa7, 0xe7, 0x9c, 0xd4, 0x86, 0xf6, 0x42, 0x8f,
+	0xa1, 0x71, 0x97, 0xf1, 0x42, 0x4c, 0x6e, 0x62, 0xe2, 0x43, 0x43, 0x57, 0x67, 0x2c, 0xda, 0x1c,
+	0xce, 0xee, 0x67, 0x6f, 0xeb, 0x50, 0x1b, 0x0d, 0x6e, 0x89, 0x84, 0x6d, 0x5b, 0xdf, 0x57, 0x52,
+	0x8a, 0xc8, 0x90, 0x2e, 0x5b, 0xd4, 0x1d, 0xfb, 0x82, 0xfa, 0xc1, 0xe2, 0xbc, 0x6d, 0xae, 0xf7,
+	0xf2, 0xfe, 0xf1, 0xba, 0xe6, 0xd3, 0x76, 0x88, 0xd1, 0xd0, 0xea, 0xc2, 0xc8, 0xb2, 0x2f, 0x9c,
+	0x53, 0x62, 0x60, 0xd7, 0xa2, 0x06, 0x69, 0x1e, 0xfd, 0x87, 0xf2, 0x08, 0x95, 0x1d, 0xea, 0xfd,
+	0x54, 0xc6, 0x33, 0x7c, 0x69, 0xd5, 0xd0, 0x1c, 0x09, 0x53, 0x0d, 0xca, 0x35, 0x8f, 0x52, 0x53,
+	0x90, 0x25, 0x58, 0xfc, 0xbb, 0xab, 0x9d, 0x87, 0xe8, 0x0c, 0xe8, 0xfe, 0xdc, 0x98, 0x15, 0xb9,
+	0x34, 0x8e, 0xa1, 0x79, 0xfd, 0x5b, 0x23, 0x42, 0xfd, 0x55, 0xed, 0xd0, 0x2e, 0x1a, 0x3d, 0xb2,
+	0xc4, 0x48, 0x12, 0xd8, 0xf9, 0xd6, 0xe1, 0x7a, 0xfc, 0xdd, 0x15, 0xa0, 0xab, 0x4d, 0xf6, 0xe6,
+	0x1f, 0x71, 0x2a, 0xcd, 0x65, 0xfd, 0xde, 0xc5, 0xe8, 0xc3, 0x06, 0xee, 0xe5, 0xf9, 0x67, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x5e, 0x6a, 0xb8, 0x06, 0xda, 0x02, 0x00, 0x00,
 }
