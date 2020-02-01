@@ -254,7 +254,7 @@ func (c *Controller) gameServerSetEventHandler(obj interface{}) {
 // syncFleet synchronised the fleet CRDs and configures/updates
 // backing GameServerSets
 func (c *Controller) syncFleet(key string) error {
-	c.loggerForFleetKey(key).Info("Synchronising")
+	c.loggerForFleetKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
