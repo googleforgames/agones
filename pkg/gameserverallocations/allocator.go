@@ -15,15 +15,14 @@
 package gameserverallocations
 
 import (
-	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"agones.dev/agones/pkg/allocation/converters"
@@ -38,6 +37,8 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -65,12 +66,12 @@ const (
 	secretClientCertName = "tls.crt"
 	secretClientKeyName  = "tls.key"
 	secretCaCertName     = "ca.crt"
+	allocatorPort        = "443"
 
 	// Instead of selecting the top one, controller selects a random one
 	// from the topNGameServerCount of Ready gameservers
 	// to reduce the contention while allocating gameservers.
 	topNGameServerDefaultCount = 100
-	allocatorRequestURLFmt     = "https://%s/v1alpha1/gameserverallocation"
 )
 
 const (
@@ -94,15 +95,16 @@ var remoteAllocationRetry = wait.Backoff{
 
 // Allocator handles game server allocation
 type Allocator struct {
-	baseLogger             *logrus.Entry
-	allocationPolicyLister multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
-	allocationPolicySynced cache.InformerSynced
-	secretLister           corev1lister.SecretLister
-	secretSynced           cache.InformerSynced
-	recorder               record.EventRecorder
-	pendingRequests        chan request
-	readyGameServerCache   *ReadyGameServerCache
-	topNGameServerCount    int
+	baseLogger               *logrus.Entry
+	allocationPolicyLister   multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
+	allocationPolicySynced   cache.InformerSynced
+	secretLister             corev1lister.SecretLister
+	secretSynced             cache.InformerSynced
+	recorder                 record.EventRecorder
+	pendingRequests          chan request
+	readyGameServerCache     *ReadyGameServerCache
+	topNGameServerCount      int
+	remoteAllocationCallback func(string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 }
 
 // request is an async request for allocation
@@ -129,6 +131,16 @@ func NewAllocator(policyInformer multiclusterinformerv1alpha1.GameServerAllocati
 		secretSynced:           secretInformer.Informer().HasSynced,
 		readyGameServerCache:   readyGameServerCache,
 		topNGameServerCount:    topNGameServerDefaultCount,
+		remoteAllocationCallback: func(endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			conn, err := grpc.Dial(endpoint, dialOpts)
+			if err != nil {
+				return nil, err
+			}
+			defer conn.Close() // nolint: errcheck
+
+			grpcClient := pb.NewAllocationServiceClient(conn)
+			return grpcClient.PostAllocate(context.Background(), request)
+		},
 	}
 
 	ah.baseLogger = runtime.NewLoggerWithType(ah)
@@ -307,11 +319,11 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 // allocateFromRemoteCluster allocates gameservers from a remote cluster by making
 // an http call to allocation service in that cluster.
 func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
-	var allocationResponse pb.AllocationResponse
+	var allocationResponse *pb.AllocationResponse
 
 	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
-	client, err := c.createRemoteClusterRestClient(namespace, connectionInfo.SecretName)
+	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo.SecretName)
 	if err != nil {
 		return nil, err
 	}
@@ -322,55 +334,34 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	request := converters.ConvertGSAV1ToAllocationRequestV1Alpha1(gsa)
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
-	body, err := json.Marshal(request)
-	if err != nil {
-		return nil, err
-	}
 
-	// Retry on http status 500+.
+	// Retry on remote call failures.
 	err = Retry(remoteAllocationRetry, func() error {
-		for i, endpoint := range connectionInfo.AllocationEndpoints {
+		for i, ip := range connectionInfo.AllocationEndpoints {
+			endpoint := addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Info("forwarding allocation request")
-			requestURL := fmt.Sprintf(allocatorRequestURLFmt, endpoint)
-			response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+
+			allocationResponse, err = c.remoteAllocationCallback(endpoint, dialOpts, request)
 			if err != nil {
 				c.baseLogger.Errorf("remote allocation failed with: %v", err)
-				return err
-			}
-			defer response.Body.Close() // nolint: errcheck
-
-			data, err := ioutil.ReadAll(response.Body)
-			if err != nil {
-				return err
-			}
-			// If there are multiple enpoints for the allocator connection and the current one is
-			// failing with 5xx http status, try the next endpoint. Otherwise, return the error response.
-			if response.StatusCode >= 500 && (i+1) < len(connectionInfo.AllocationEndpoints) {
-				// If there is a server error try a different endpoint
-				c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
-				continue
-			}
-			if response.StatusCode >= 400 {
-				c.baseLogger.Errorf("remote allocation failed with: %v", string(data))
-
-				// For error responses return the body without deserializing to an object.
-				return errors.New(string(data))
-			}
-
-			err = json.Unmarshal(data, &allocationResponse)
-			if err != nil {
-				c.baseLogger.Errorf("Unexpected input: %v deserialization err: %v", string(data), err)
+				// If there are multiple enpoints for the allocator connection and the current one is
+				// failing, try the next endpoint. Otherwise, return the error response.
+				if (i + 1) < len(connectionInfo.AllocationEndpoints) {
+					// If there is a server error try a different endpoint
+					c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithError(err).WithField("endpoint", endpoint).Warn("The request failed. Trying next endpoint")
+					continue
+				}
 				return err
 			}
 			break
 		}
 		return nil
 	})
-	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(&allocationResponse), err
+	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(allocationResponse), err
 }
 
-// createRemoteClusterRestClient creates a rest client with proper certs to make a remote call.
-func (c *Allocator) createRemoteClusterRestClient(namespace, secretName string) (*http.Client, error) {
+// createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
+func (c *Allocator) createRemoteClusterDialOption(namespace, secretName string) (grpc.DialOption, error) {
 	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, secretName)
 	if err != nil {
 		return nil, err
@@ -395,12 +386,7 @@ func (c *Allocator) createRemoteClusterRestClient(namespace, secretName string) 
 		}
 	}
 
-	// Setup HTTPS client
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
-		},
-	}, nil
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
 
 // getClientCertificates returns the client certificates and CA cert for remote allocation cluster call
@@ -591,4 +577,11 @@ func (c *Allocator) getRandomlySelectedGS(gsa *allocationv1.GameServerAllocation
 	bestGSList = bestGSList[startIndex:]
 	index := rand.New(rand.NewSource(int64(seed))).Intn(ln)
 	return &bestGSList[index]
+}
+
+func addPort(ip string) string {
+	if strings.Contains(ip, ":") {
+		return ip
+	}
+	return fmt.Sprintf("%s:%s", ip, allocatorPort)
 }
