@@ -37,6 +37,14 @@ steps:
   waitFor: ['-']
 
 - name: gcr.io/$PROJECT_ID/restore_cache
+  id: cpp-sdk-conformance-restore-cache
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
+  waitFor: ['-']
+
+
+- name: gcr.io/$PROJECT_ID/restore_cache
   id: rust-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
@@ -238,9 +246,22 @@ steps:
 - name: "make-docker"
   id: sdk-conformance
   dir: "build"
-  args: [ "-j", "4", "--output-sync=target", "run-sdk-conformance-tests"]
+  args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
+
+#
+# Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
+#
+
+- name: 'gcr.io/$PROJECT_ID/save_cache'
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
+    - '--path=test/sdk/cpp/sdk'
+  id: cpp-sdk-conformance-save-cache
+  waitFor:
+    - sdk-conformance
 
 #
 # Cache the Rust SDK build directory, to speed up subsequent builds (considerably)
@@ -278,6 +299,7 @@ substitutions:
   _CACHE_BUCKET: agones-build-cache
   _HTMLTEST_CACHE_KEY: htmltest-0.10.1
   _CPP_SDK_BUILD_CACHE_KEY: cpp-sdk-build
+  _CPP_SDK_CONFORMANCE_CACHE_KEY: cpp-sdk-conformance
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 
 tags: ['ci']
