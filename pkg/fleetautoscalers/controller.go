@@ -171,7 +171,7 @@ func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1
 // syncFleetAutoscaler scales the attached fleet and
 // synchronizes the FleetAutoscaler CRD
 func (c *Controller) syncFleetAutoscaler(key string) error {
-	c.loggerForFleetAutoscalerKey(key).Info("Synchronising")
+	c.loggerForFleetAutoscalerKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
