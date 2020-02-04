@@ -61,7 +61,7 @@ gen-sdk-grpc: COMMAND := gen
 gen-sdk-grpc: run-sdk-command
 
 # Runs a command on all supported languages, use COMMAND variable to select which command.
-run-all-sdk-command: run-sdk-command-go run-sdk-command-rust run-sdk-command-cpp run-sdk-command-node run-sdk-command-restapi
+run-all-sdk-command: run-sdk-command-go run-sdk-command-rust run-sdk-command-cpp run-sdk-command-node run-sdk-command-restapi run-sdk-command-csharp
 
 run-sdk-command-node:
 	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=node
@@ -78,6 +78,8 @@ run-sdk-command-go:
 run-sdk-command-restapi:
 	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=restapi
 
+run-sdk-command-csharp:
+	$(MAKE) run-sdk-command COMMAND=$(COMMAND) SDK_FOLDER=csharp
 
 # Runs a command for a specific SDK if it exists.
 run-sdk-command:
