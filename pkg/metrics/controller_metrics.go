@@ -32,6 +32,7 @@ var (
 	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
 	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
 	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
+	gsReadyDuration           = stats.Float64("gameservers_ready/duration", "The duration of gameservers to become ready", stats.UnitMilliseconds)
 
 	stateViews = []*view.View{
 		&view.View{
@@ -109,6 +110,13 @@ var (
 			Measure:     gsPerNodesCountStats,
 			Description: "The count of gameservers per node in the cluster",
 			Aggregation: view.Distribution(0.00001, 1.00001, 2.00001, 3.00001, 4.00001, 5.00001, 6.00001, 7.00001, 8.00001, 9.00001, 10.00001, 11.00001, 12.00001, 13.00001, 14.00001, 15.00001, 16.00001, 32.00001, 40.00001, 50.00001, 60.00001, 70.00001, 80.00001, 90.00001, 100.00001, 110.00001, 120.00001),
+		},
+		&view.View{
+			Name:        "gameserver_ready_duration",
+			Measure:     gsReadyDuration,
+			Description: "The time before ready in seconds",
+			Aggregation: view.Distribution(2.0),
+			TagKeys:     []tag.Key{keyType, keyFleetName},
 		},
 	}
 )

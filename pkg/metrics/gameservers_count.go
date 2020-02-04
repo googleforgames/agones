@@ -31,6 +31,11 @@ type fleetKey struct {
 	namespace string
 }
 
+// GameServerState Calculate the duration of the GameServer in each state
+// GameServerName ->  seconds of a previous State change, calculated from the CreationTimeStamp
+// on delete remove GameServerName key
+type GameServerState map[string]map[agonesv1.GameServerState]float64
+
 // increment adds the count of gameservers for a given fleetName and state
 func (c GameServerCount) increment(fleetName, fleetNamespace string, state agonesv1.GameServerState) {
 	key := fleetKey{name: fleetName, namespace: fleetNamespace}

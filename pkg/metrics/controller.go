@@ -82,6 +82,7 @@ func NewController(
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
+	//events := kubeClient.CoreV1().Events(defaultNs)
 
 	c := &Controller{
 		gameServerLister: gameServer.Lister(),
@@ -264,6 +265,12 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
+		if newGs.Status.State == agonesv1.GameServerStateReady {
+			diff := time.Now().Sub(newGs.ObjectMeta.CreationTimestamp.Local()).Seconds()
+			c.logger.Info("Time taken to become ready", diff)
+			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
+				tag.Upsert(keyFleetName, fleetName)}, gsReadyDuration.M(diff*1000.))
+		}
 	}
 }
 
