@@ -28,13 +28,17 @@ const (
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
 	FeatureExample Feature = "Example"
+
+	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
+	FeaturePlayerTracking = "PlayerTracking"
 )
 
 var (
 	// featureDefaults is a map of all Feature Gates that are
 	// operational in Agones, and what their default configuration is.
 	featureDefaults = map[Feature]bool{
-		FeatureExample: true,
+		FeatureExample:        true,
+		FeaturePlayerTracking: false,
 	}
 
 	// featureGates is the storage of what features are enabled

@@ -148,4 +148,30 @@ properties:
             type: integer
             minimum: 1
             maximum: 2147483648
+      alpha:
+        type: object
+        title: Alpha properties for the GameServer
+        properties:
+          players:
+            type: object
+            title: Configuration of player capacity
+            properties:
+              initialCapacity:
+                type: integer
+                title: The intial player capacity that this Game Server has
+                minimum: 0
+              webhook:
+                type: object
+                title: webhook to call when a player connects or disconnects
+                properties:
+                  service:
+                    properties:
+                      name:
+                        type: string
+                      namespace:
+                        type: string
+                      path:
+                        type: string
+                  url:
+                    type: string
 {{- end }}

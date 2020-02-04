@@ -19,12 +19,14 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/mattbaird/jsonpatch"
+	"agones.dev/agones/pkg/util/runtime"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -150,6 +152,20 @@ type GameServerSpec struct {
 	SdkServer SdkServer `json:"sdkServer,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
+	// AlphaSpec describes the alpha properties for the GameServer
+	Alpha AlphaSpec `json:"alpha,omitempty"`
+}
+
+// AlphaSpec is the alpha properties of the GameServer
+type AlphaSpec struct {
+	Players PlayersSpec `json:"players"`
+}
+
+// PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
+// connection/disconnection events.
+type PlayersSpec struct {
+	InitialCapacity int64                          `json:"initialCapacity,omitempty"`
+	Webhook         *admregv1b.WebhookClientConfig `json:"webhook,omitempty"`
 }
 
 // GameServerState is the state for the GameServer
@@ -210,6 +226,7 @@ type GameServerStatus struct {
 	Address       string                 `json:"address"`
 	NodeName      string                 `json:"nodeName"`
 	ReservedUntil *metav1.Time           `json:"reservedUntil"`
+	Alpha         AlphaStatus            `json:"alpha"`
 }
 
 // GameServerStatusPort shows the port that was allocated to a
@@ -217,6 +234,17 @@ type GameServerStatus struct {
 type GameServerStatusPort struct {
 	Name string `json:"name,omitempty"`
 	Port int32  `json:"port"`
+}
+
+// AlphaStatus is the alpha status values for a GameServer
+type AlphaStatus struct {
+	Players PlayerStatus `json:"players"`
+}
+
+// PlayerStatus stores the current player capacity values
+type PlayerStatus struct {
+	Count    int64 `json:"count"`
+	Capacity int64 `json:"capacity"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
@@ -230,7 +258,7 @@ func (gs *GameServer) ApplyDefaults() {
 	gs.ObjectMeta.Finalizers = append(gs.ObjectMeta.Finalizers, agones.GroupName)
 
 	gs.Spec.ApplyDefaults()
-	gs.applyStateDefaults()
+	gs.applyStatusDefaults()
 }
 
 // ApplyDefaults applies default values to the GameServerSpec if they are not already populated
@@ -277,14 +305,18 @@ func (gss *GameServerSpec) applyHealthDefaults() {
 	}
 }
 
-// applyStateDefaults applies state defaults
-func (gs *GameServer) applyStateDefaults() {
+// applyStatusDefaults applies Status defaults
+func (gs *GameServer) applyStatusDefaults() {
 	if gs.Status.State == "" {
 		gs.Status.State = GameServerStateCreating
-		// applyStateDefaults() should be called after applyPortDefaults()
+		// applyStatusDefaults() should be called after applyPortDefaults()
 		if gs.HasPortPolicy(Dynamic) || gs.HasPortPolicy(Passthrough) {
 			gs.Status.State = GameServerStatePortAllocation
 		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		gs.Status.Alpha.Players.Capacity = gs.Spec.Alpha.Players.InitialCapacity
 	}
 }
 

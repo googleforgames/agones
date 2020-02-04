@@ -2534,6 +2534,19 @@ Kubernetes core/v1.PodTemplateSpec
 <p>Template describes the Pod that will be created for the GameServer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alpha</code></br>
+<em>
+<a href="#AlphaSpec">
+AlphaSpec
+</a>
+</em>
+</td>
+<td>
+<p>AlphaSpec describes the alpha properties for the GameServer</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -2654,6 +2667,68 @@ GameServerTemplateSpec
 <em>
 <a href="#GameServerSetStatus">
 GameServerSetStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="AlphaSpec">AlphaSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>AlphaSpec is the alpha properties of the GameServer</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="AlphaStatus">AlphaStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>AlphaStatus is the alpha status values for a GameServer</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayerStatus">
+PlayerStatus
 </a>
 </em>
 </td>
@@ -3098,6 +3173,19 @@ Kubernetes core/v1.PodTemplateSpec
 <p>Template describes the Pod that will be created for the GameServer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alpha</code></br>
+<em>
+<a href="#AlphaSpec">
+AlphaSpec
+</a>
+</em>
+</td>
+<td>
+<p>AlphaSpec describes the alpha properties for the GameServer</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="GameServerState">GameServerState
@@ -3177,6 +3265,18 @@ string
 <em>
 <a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#time-v1-meta">
 Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>alpha</code></br>
+<em>
+<a href="#AlphaStatus">
+AlphaStatus
 </a>
 </em>
 </td>
@@ -3346,6 +3446,19 @@ Kubernetes core/v1.PodTemplateSpec
 <p>Template describes the Pod that will be created for the GameServer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>alpha</code></br>
+<em>
+<a href="#AlphaSpec">
+AlphaSpec
+</a>
+</em>
+</td>
+<td>
+<p>AlphaSpec describes the alpha properties for the GameServer</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3410,6 +3523,87 @@ int32
 </td>
 <td>
 <p>InitialDelaySeconds initial delay before checking health</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="PlayerStatus">PlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#AlphaStatus">AlphaStatus</a>)
+</p>
+<p>
+<p>PlayerStatus stores the current player capacity values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="PlayersSpec">PlayersSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#AlphaSpec">AlphaSpec</a>)
+</p>
+<p>
+<p>PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
+connection/disconnection events.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>initialCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhook</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#webhookclientconfig-v1beta1-admissionregistration">
+Kubernetes admissionregistration/v1beta1.WebhookClientConfig
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
