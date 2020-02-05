@@ -18,7 +18,7 @@
 #include "GameServerObjectMeta.h"
 #include "GameServerSpec.h"
 #include "GameServerStatus.h"
-#include "JsonObject.h"
+#include "Dom/JsonObject.h"
 #include "GameServer.generated.h"
 
 USTRUCT()

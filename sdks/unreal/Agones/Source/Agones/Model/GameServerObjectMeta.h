@@ -15,7 +15,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JsonObject.h"
+#include "Dom/JsonObject.h"
 #include "GameServerObjectMeta.generated.h"
 
 USTRUCT()
