@@ -173,6 +173,12 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
 		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, &causes, "MaxUnavailable")
 		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, &causes, "MaxSurge")
+	} else if f.Spec.Strategy.Type != appsv1.RecreateDeploymentStrategyType {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "Type",
+			Message: "Strategy Type should be one of: RollingUpdate, Recreate.",
+		})
 	}
 	// check Gameserver specification in a Fleet
 	gsCauses := validateGSSpec(f)
