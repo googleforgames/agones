@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "google-beta" {
-  version = "~> 2.10"
-  zone    = "${var.cluster["zone"]}"
-}
-
-provider "google" {
-  version = "~> 2.10"
-}
-
 
 # Ports can be overriden using tfvars file
 variable "ports" {

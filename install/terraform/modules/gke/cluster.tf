@@ -17,15 +17,6 @@ terraform {
   required_version = ">= 0.12.6"
 }
 
-provider "google-beta" {
-  version = "~> 2.10"
-  zone    = "${var.cluster["zone"]}"
-}
-
-provider "google" {
-  version = "~> 2.10"
-}
-
 data "google_client_config" "default" {}
 
 # echo command used for debugging purpose

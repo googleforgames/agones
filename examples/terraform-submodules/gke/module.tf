@@ -16,6 +16,14 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.1.0"]
 
+provider "google" {
+  version = "~> 2.10"
+}
+
+provider "google-beta" {
+  version = "~> 2.10"
+}
+
 variable "project" {
   default = ""
 }
@@ -26,7 +34,7 @@ variable "name" {
 
 // Install latest version of agones
 variable "agones_version" {
-  default=""
+  default = ""
 }
 
 variable "machine_type" {
@@ -41,15 +49,15 @@ variable "node_count" {
 
 module "agones" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/?ref=master"
-  
+
   cluster = {
-      "zone"             = "us-west1-c"
-      "name"             = "${var.name}"
-      "machineType"      = "${var.machine_type}"
-      "initialNodeCount" = "${var.node_count}"
-      "project"          = "${var.project}"
+    "zone"             = "us-west1-c"
+    "name"             = var.name
+    "machineType"      = var.machine_type
+    "initialNodeCount" = var.node_count
+    "project"          = var.project
   }
-  agones_version = "${var.agones_version}"
-  values_file=""
-  chart="agones"
+  agones_version = var.agones_version
+  values_file    = ""
+  chart          = "agones"
 }
