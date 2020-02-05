@@ -18,13 +18,13 @@ resource "kubernetes_service_account" "tiller" {
     namespace = "kube-system"
   }
 
-  depends_on = ["google_container_cluster.primary"]
+  depends_on = [google_container_cluster.primary]
 
   automount_service_account_token = true
 }
 
 resource "kubernetes_cluster_role_binding" "tiller" {
-  depends_on = ["kubernetes_service_account.tiller"]
+  depends_on = [kubernetes_service_account.tiller]
 
   metadata {
     name = "tiller"
@@ -91,8 +91,8 @@ provider "kubernetes" {
   version                = "~> 1.5"
   load_config_file       = false
   host                   = "https://${google_container_cluster.primary.endpoint}"
-  token                  = "${data.google_client_config.default.access_token}"
-  cluster_ca_certificate = "${base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
 }
 
 provider "helm" {
@@ -100,21 +100,21 @@ provider "helm" {
 
   debug           = true
   install_tiller  = true
-  service_account = "${kubernetes_service_account.tiller.metadata.0.name}"
+  service_account = kubernetes_service_account.tiller.metadata.0.name
   tiller_image    = "gcr.io/kubernetes-helm/tiller:v2.14.2"
 
   kubernetes {
     load_config_file       = false
     host                   = "https://${google_container_cluster.primary.endpoint}"
-    token                  = "${data.google_client_config.default.access_token}"
-    cluster_ca_certificate = "${base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)}"
+    token                  = data.google_client_config.default.access_token
+    cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
   }
 }
 
 data "google_client_config" "current" {}
 
 data "helm_repository" "agones" {
-  depends_on = ["kubernetes_cluster_role_binding.tiller"]
+  depends_on = [kubernetes_cluster_role_binding.tiller]
   name       = "agones"
   url        = "https://agones.dev/chart/stable"
 }
@@ -126,63 +126,63 @@ locals {
 }
 
 resource "helm_release" "agones" {
-  depends_on   = ["null_resource.helm_init", "kubernetes_cluster_role_binding.tiller"]
+  depends_on   = [null_resource.helm_init, kubernetes_cluster_role_binding.tiller]
   name         = "agones"
   force_update = "true"
-  repository   = "${data.helm_repository.agones.metadata.0.name}"
-  chart        = "${var.chart}"
+  repository   = data.helm_repository.agones.metadata.0.name
+  chart        = var.chart
   timeout      = 420
 
   values = [
-    "${length(var.values_file) == 0 ? "" : file("${var.values_file}")}",
+    length(var.values_file) == 0 ? "" : file(var.values_file),
   ]
 
   set {
     name  = "crds.CleanupOnDelete"
-    value = "${var.crd_cleanup}"
+    value = var.crd_cleanup
   }
 
   set {
-    name  = "${local.tag_name}"
-    value = "${var.agones_version}"
+    name  = local.tag_name
+    value = var.agones_version
   }
 
   set {
     name  = "agones.image.registry"
-    value = "${var.image_registry}"
+    value = var.image_registry
   }
 
   set {
     name  = "agones.image.controller.pullPolicy"
-    value = "${var.pull_policy}"
+    value = var.pull_policy
   }
 
   set {
     name  = "agones.image.sdk.alwaysPull"
-    value = "${var.always_pull_sidecar}"
+    value = var.always_pull_sidecar
   }
 
   set {
     name  = "agones.image.controller.pullSecret"
-    value = "${var.image_pull_secret}"
+    value = var.image_pull_secret
   }
 
   set {
     name  = " agones.ping.http.serviceType"
-    value = "${var.ping_service_type}"
+    value = var.ping_service_type
   }
 
   set {
     name  = "agones.ping.udp.serviceType"
-    value = "${var.ping_service_type}"
+    value = var.ping_service_type
   }
 
   set {
     name  = " agones.allocator.http.serviceType"
-    value = "${var.allocator_service_type}"
+    value = var.allocator_service_type
   }
 
-  version   = "${var.agones_version}"
+  version   = var.agones_version
   namespace = "agones-system"
 
 }
