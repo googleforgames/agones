@@ -152,7 +152,7 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 
 	if err := wq.SyncHandler(key); err != nil {
 		// Conflicts are expected, so only show them in debug operations.
-		if k8serror.IsConflict(err) {
+		if k8serror.IsConflict(errors.Cause(err)) {
 			wq.logger.WithField(wq.keyName, obj).Debug(err)
 		} else {
 			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)

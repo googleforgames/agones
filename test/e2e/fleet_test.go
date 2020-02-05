@@ -78,6 +78,47 @@ func TestFleetRequestsLimits(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(newReplicas))
 }
 
+// TestFleetStrategyValidation reproduces an issue when we are trying
+// to update a fleet with no strategy in a new one
+func TestFleetStrategyValidation(t *testing.T) {
+	t.Parallel()
+
+	flt := defaultFleet(defaultNs)
+
+	client := framework.AgonesClient.AgonesV1()
+	flt, err := client.Fleets(defaultNs).Create(flt)
+	if assert.Nil(t, err) {
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	flt, err = client.Fleets(defaultNs).Get(flt.ObjectMeta.GetName(), metav1.GetOptions{})
+	assert.NoError(t, err)
+	// func to check that we receive an expected error
+	verifyErr := func(err error) {
+		assert.NotNil(t, err)
+		statusErr, ok := err.(*k8serrors.StatusError)
+		assert.True(t, ok)
+		fmt.Println(statusErr)
+		CausesMessages := []string{"Strategy Type should be one of: RollingUpdate, Recreate."}
+		assert.Len(t, statusErr.Status().Details.Causes, 1)
+		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
+	}
+
+	// Change DeploymentStrategy Type, set it to empty string, which is forbidden
+	fltCopy := flt.DeepCopy()
+	fltCopy.Spec.Strategy.Type = appsv1.DeploymentStrategyType("")
+	_, err = client.Fleets(defaultNs).Update(fltCopy)
+	verifyErr(err)
+
+	// Try to remove whole DeploymentStrategy in a patch
+	patch := `[{ "op": "remove", "path": "/spec/strategy"},
+				{ "op": "replace", "path": "/spec/replicas", "value": 3}]`
+	_, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Patch(flt.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	verifyErr(err)
+}
+
 func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	t.Parallel()
 

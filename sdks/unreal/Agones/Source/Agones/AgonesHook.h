@@ -15,11 +15,54 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HttpRetrySystem.h"
+#include "Model/GameServer.h"
 #include "Tickable.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogAgonesHook, Verbose, All);
 
-class FAgonesHook : public FTickableGameObject
+/**
+ * Delegate called when a GameServer request completes.
+ *
+ * @param GameServer - game server received from request to the Agones sidecar if successful
+ * @param bWasSuccessful - indicates whether or not the request was successful
+ */
+DECLARE_DELEGATE_TwoParams(FGameServerRequestCompleteDelegate, TSharedPtr<FGameServer> /*GameServer*/, bool /*bWasSuccessful*/);
+
+class FHttpVerb
+{
+public:
+	enum FVerb
+	{
+		GET,
+		POST,
+		PUT
+	};
+
+	FHttpVerb(FVerb Verb)
+		: Verb(Verb)
+	{};
+
+	FString ToString() const
+	{
+		switch (Verb)
+		{
+		case GET:
+			return TEXT("GET");
+		case POST:
+			return TEXT("POST");
+		case PUT:
+			return TEXT("PUT");
+		}
+
+		return TEXT("");
+	}
+
+private:
+	const FVerb Verb;
+};
+
+class AGONES_API FAgonesHook : public FTickableGameObject
 {
 public:
 
@@ -45,11 +88,21 @@ public:
 	void Health();
 	/** Sends shutdown request to sidecar **/
 	void Shutdown();
+	/** Sends set label request to sidecar **/
+	void SetLabel(const FString& Key, const FString& Value);
+	/** Sends set annotation request to sidecar **/
+	void SetAnnotation(const FString& Key, const FString& Value);
+	/** Retrieve the GameServer details from the sidecar */
+	void GetGameServer(const FGameServerRequestCompleteDelegate& Delegate);
 
 private:
 
+	/** Helper function to create requests */
+	TSharedRef<class IHttpRequest> MakeRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure);
 	/** Helper function to send requests with default debug output */
-	bool SendRequest(const FString& URL);
+	TSharedRef<class IHttpRequest> SendRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure);
+	/** Retry manager to retry failed http requests */
+	TSharedPtr<class FHttpRetrySystem::FManager> HttpRetryManager;
 
 	/** Time since last health ping */
 	float CurrentHealthTime;
@@ -61,4 +114,7 @@ private:
 	const FString ReadySuffix;
 	const FString HealthSuffix;
 	const FString ShutdownSuffix;
+	const FString SetLabelSuffix;
+	const FString SetAnnotationSuffix;
+	const FString GetGameServerSuffix;
 };

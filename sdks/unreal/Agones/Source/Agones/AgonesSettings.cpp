@@ -19,6 +19,7 @@ UAgonesSettings::UAgonesSettings()
 	, bHealthPingEnabled(true)
 	, HealthPingSeconds(5.0f)
 	, bDebugLogEnabled(false)
+	, RequestRetryLimit(30)
 {
 }
 

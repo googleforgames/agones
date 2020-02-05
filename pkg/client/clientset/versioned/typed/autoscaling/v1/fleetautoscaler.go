@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@
 package v1
 
 import (
+	"time"
+
 	v1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,11 +78,16 @@ func (c *fleetAutoscalers) Get(name string, options metav1.GetOptions) (result *
 
 // List takes label and field selectors, and returns the list of FleetAutoscalers that match those selectors.
 func (c *fleetAutoscalers) List(opts metav1.ListOptions) (result *v1.FleetAutoscalerList, err error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	result = &v1.FleetAutoscalerList{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("fleetautoscalers").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Do().
 		Into(result)
 	return
@@ -88,11 +95,16 @@ func (c *fleetAutoscalers) List(opts metav1.ListOptions) (result *v1.FleetAutosc
 
 // Watch returns a watch.Interface that watches the requested fleetAutoscalers.
 func (c *fleetAutoscalers) Watch(opts metav1.ListOptions) (watch.Interface, error) {
+	var timeout time.Duration
+	if opts.TimeoutSeconds != nil {
+		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
+	}
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
 		Resource("fleetautoscalers").
 		VersionedParams(&opts, scheme.ParameterCodec).
+		Timeout(timeout).
 		Watch()
 }
 
@@ -150,10 +162,15 @@ func (c *fleetAutoscalers) Delete(name string, options *metav1.DeleteOptions) er
 
 // DeleteCollection deletes a collection of objects.
 func (c *fleetAutoscalers) DeleteCollection(options *metav1.DeleteOptions, listOptions metav1.ListOptions) error {
+	var timeout time.Duration
+	if listOptions.TimeoutSeconds != nil {
+		timeout = time.Duration(*listOptions.TimeoutSeconds) * time.Second
+	}
 	return c.client.Delete().
 		Namespace(c.ns).
 		Resource("fleetautoscalers").
 		VersionedParams(&listOptions, scheme.ParameterCodec).
+		Timeout(timeout).
 		Body(options).
 		Do().
 		Error()

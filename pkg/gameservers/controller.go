@@ -349,7 +349,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 // syncGameServer synchronises the Pods for the GameServers.
 // and reacts to status changes that can occur through the client SDK
 func (c *Controller) syncGameServer(key string) error {
-	c.loggerForGameServerKey(key).Info("Synchronising")
+	c.loggerForGameServerKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)

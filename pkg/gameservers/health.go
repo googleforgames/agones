@@ -164,7 +164,7 @@ func (hc *HealthController) loggerForGameServer(gs *agonesv1.GameServer) *logrus
 
 // syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
 func (hc *HealthController) syncGameServer(key string) error {
-	hc.loggerForGameServerKey(key).Info("Synchronising")
+	hc.loggerForGameServerKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
