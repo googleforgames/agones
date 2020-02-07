@@ -688,7 +688,7 @@ func TestGameServerIsBeforeReady(t *testing.T) {
 	for _, test := range fixtures {
 		t.Run(string(test.state), func(t *testing.T) {
 			gs := &GameServer{Status: GameServerStatus{State: test.state}}
-			assert.Equal(t, test.expected, gs.IsBeforeReady())
+			assert.Equal(t, test.expected, gs.IsBeforeReady(), test.state)
 		})
 	}
 
