@@ -38,11 +38,14 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
-// MissingPodController watches makes sure that any GameServer
-// that isn't in Scheduled, or Unhealthy/Error state, that is missing a Pod
-// moved to Unhealthy. This can sometimes happen if the controller has downtime
-// for a unexpected reason, or if there is no Delete event for a Pod for any reason.
-// Since resync is every 30 seconds, even if there is some time in which a GameServer
+// MissingPodController makes sure that any GameServer
+// that isn't in a Scheduled or Unhealthy state and is missing a Pod is
+// moved to Unhealthy.
+//
+// It's possible that a GameServer is missing its associated pod due to
+// unexpected controller downtime or if the Pod is deleted with no subsequent Delete event.
+//
+// Since resync on the controller is every 30 seconds, even if there is some time in which a GameServer
 // is in a broken state, it will eventually move to Unhealthy, and get replaced (if in a Fleet).
 type MissingPodController struct {
 	baseLogger       *logrus.Entry
@@ -61,9 +64,9 @@ func NewMissingPodController(health healthcheck.Handler,
 	agonesClient versioned.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesInformerFactory externalversions.SharedInformerFactory) *MissingPodController {
-
 	podInformer := kubeInformerFactory.Core().V1().Pods().Informer()
 	gameServers := agonesInformerFactory.Agones().V1().GameServers()
+
 	c := &MissingPodController{
 		podSynced:        podInformer.HasSynced,
 		podLister:        kubeInformerFactory.Core().V1().Pods().Lister(),
@@ -84,8 +87,8 @@ func NewMissingPodController(health healthcheck.Handler,
 	gameServers.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(_, newObj interface{}) {
 			gs := newObj.(*agonesv1.GameServer)
-			_, isDev := gs.GetDevAddress()
-			if !isDev && !isBeforePodCreated(gs) && !gs.IsBeingDeleted() && !gs.IsUnhealthy() {
+			if _, isDev := gs.GetDevAddress(); !isDev && !isBeforePodCreated(gs) && !gs.IsBeingDeleted() &&
+				!(gs.Status.State == agonesv1.GameServerStateUnhealthy) {
 				c.workerqueue.Enqueue(gs)
 			}
 		},
@@ -125,11 +128,11 @@ func (c *MissingPodController) syncGameServer(key string) error {
 		if !k8serrors.IsNotFound(err) {
 			return errors.Wrapf(err, "error retrieving Pod %s from namespace %s", name, namespace)
 		}
-		c.loggerForGameServerKey(key).Debug("Pod is missing. Moving GameServer to Unhealthy.")
 	} else if isGameServerPod(pod) {
 		// if the pod exists, all is well, and we can continue on our merry way.
 		return nil
 	}
+	c.loggerForGameServerKey(key).Debug("Pod is missing. Moving GameServer to Unhealthy.")
 
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
@@ -141,7 +144,8 @@ func (c *MissingPodController) syncGameServer(key string) error {
 	}
 
 	// already on the way out, so no need to do anything.
-	if gs.IsBeingDeleted() || gs.IsUnhealthy() {
+	if gs.IsBeingDeleted() || gs.Status.State == agonesv1.GameServerStateUnhealthy {
+		c.loggerForGameServerKey(key).WithField("state", gs.Status.State).Debug("GameServer already being deleted/unhealthy. Skipping.")
 		return nil
 	}
 

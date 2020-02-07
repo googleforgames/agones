@@ -30,27 +30,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func TestIsBeforePodCreated(t *testing.T) {
-	fixture := map[string]struct {
-		state    agonesv1.GameServerState
-		expected bool
-	}{
-		"port":      {state: agonesv1.GameServerStatePortAllocation, expected: true},
-		"creating":  {state: agonesv1.GameServerStateCreating, expected: true},
-		"starting":  {state: agonesv1.GameServerStateStarting, expected: true},
-		"allocated": {state: agonesv1.GameServerStateAllocated, expected: false},
-		"ready":     {state: agonesv1.GameServerStateReady, expected: false},
-	}
-
-	for k, v := range fixture {
-		t.Run(k, func(t *testing.T) {
-			gs := &agonesv1.GameServer{Status: agonesv1.GameServerStatus{State: v.state}}
-
-			assert.Equal(t, v.expected, isBeforePodCreated(gs))
-		})
-	}
-}
-
 func TestMissingPodControllerSyncGameServer(t *testing.T) {
 	type expected struct {
 		updated     bool
