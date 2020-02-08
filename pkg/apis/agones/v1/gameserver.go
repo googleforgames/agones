@@ -19,11 +19,10 @@ import (
 	"fmt"
 	"net"
 
-	"agones.dev/agones/pkg/util/runtime"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	admregv1b "k8s.io/api/admissionregistration/v1beta1"
@@ -152,11 +151,11 @@ type GameServerSpec struct {
 	SdkServer SdkServer `json:"sdkServer,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
-	// AlphaSpec describes the alpha properties for the GameServer
+	// Alpha describes the alpha properties for the GameServer.
 	Alpha AlphaSpec `json:"alpha,omitempty"`
 }
 
-// AlphaSpec is the alpha properties of the GameServer
+// AlphaSpec contains the alpha properties of the GameServer.
 type AlphaSpec struct {
 	Players PlayersSpec `json:"players"`
 }

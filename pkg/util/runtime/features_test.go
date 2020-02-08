@@ -26,6 +26,9 @@ import (
 
 func TestFeatures(t *testing.T) {
 	t.Parallel()
+	FeatureTestMutex.Lock()
+	defer FeatureTestMutex.Unlock()
+
 	// stable feature flag state
 	featureDefaults = map[Feature]bool{
 		FeatureExample:  true,

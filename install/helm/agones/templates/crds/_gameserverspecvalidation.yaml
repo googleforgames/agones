@@ -158,7 +158,7 @@ properties:
             properties:
               initialCapacity:
                 type: integer
-                title: The intial player capacity that this Game Server has
+                title: The initial player capacity of this Game Server
                 minimum: 0
               webhook:
                 type: object
@@ -173,5 +173,7 @@ properties:
                       path:
                         type: string
                   url:
+                    type: string
+                  caBundle:
                     type: string
 {{- end }}

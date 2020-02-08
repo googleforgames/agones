@@ -17,14 +17,12 @@ package v1
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"testing"
-
-	"agones.dev/agones/pkg/util/runtime"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -328,13 +326,12 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 	}
 
-	// otherwise the race condition detector is not happy.
-	mtx := sync.Mutex{}
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	for name, test := range data {
 		t.Run(name, func(t *testing.T) {
-			mtx.Lock()
 			err := runtime.ParseFeatures(test.featureFlags)
-			mtx.Unlock()
 			assert.NoError(t, err)
 
 			test.gameServer.ApplyDefaults()

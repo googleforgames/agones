@@ -404,7 +404,7 @@ spec:
                           properties:
                             initialCapacity:
                               type: integer
-                              title: The intial player capacity that this Game Server has
+                              title: The initial player capacity of this Game Server
                               minimum: 0
                             webhook:
                               type: object
@@ -419,6 +419,8 @@ spec:
                                     path:
                                       type: string
                                 url:
+                                  type: string
+                                caBundle:
                                   type: string
   subresources:
     # status enables the status subresource.
@@ -716,7 +718,7 @@ spec:
                   properties:
                     initialCapacity:
                       type: integer
-                      title: The intial player capacity that this Game Server has
+                      title: The initial player capacity of this Game Server
                       minimum: 0
                     webhook:
                       type: object
@@ -731,6 +733,8 @@ spec:
                             path:
                               type: string
                         url:
+                          type: string
+                        caBundle:
                           type: string
 
 ---
@@ -1044,7 +1048,7 @@ spec:
                           properties:
                             initialCapacity:
                               type: integer
-                              title: The intial player capacity that this Game Server has
+                              title: The initial player capacity of this Game Server
                               minimum: 0
                             webhook:
                               type: object
@@ -1059,6 +1063,8 @@ spec:
                                     path:
                                       type: string
                                 url:
+                                  type: string
+                                caBundle:
                                   type: string
   subresources:
     # status enables the status subresource.

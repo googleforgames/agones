@@ -17,6 +17,7 @@ package runtime
 import (
 	"net/url"
 	"strconv"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -44,6 +45,14 @@ var (
 	// featureGates is the storage of what features are enabled
 	// or disabled.
 	featureGates map[Feature]bool
+
+	// featureMutex ensures that updates to featureGates don't happen at the same time as reads.
+	// this is mostly to protect tests which can change gates in parallel.
+	featureMutex = sync.RWMutex{}
+
+	// FeatureTestMutex is a mutex to be shared between tests to ensure that a test that involves changing featureGates
+	// cannot accidentally run at the same time as another test that also changing feature flags.
+	FeatureTestMutex sync.Mutex
 )
 
 // Feature is a type for defining feature gates.
@@ -70,6 +79,9 @@ func ParseFeaturesFromEnv() error {
 // ParseFeatures parses the url encoded query string of features and stores the value
 // for later retrieval
 func ParseFeatures(queryString string) error {
+	featureMutex.Lock()
+	defer featureMutex.Unlock()
+
 	features := map[Feature]bool{}
 	// copy the defaults into this map
 	for k, v := range featureDefaults {
@@ -101,12 +113,17 @@ func ParseFeatures(queryString string) error {
 
 // FeatureEnabled returns if a Feature is enabled or not
 func FeatureEnabled(feature Feature) bool {
+	featureMutex.RLock()
+	defer featureMutex.RUnlock()
 	return featureGates[feature]
 }
 
 // EncodeFeatures returns the feature set as a URL encoded query string
 func EncodeFeatures() string {
 	values := url.Values{}
+	featureMutex.RLock()
+	defer featureMutex.RUnlock()
+
 	for k, v := range featureGates {
 		values.Add(string(k), strconv.FormatBool(v))
 	}
