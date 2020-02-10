@@ -205,14 +205,14 @@ Note that Stackdriver monitoring is enabled by default on GKE clusters, however 
 
 Default metrics exporter is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
 ```
-helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones
+helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
 With this configuration only Stackdriver exporter would be used instead of Prometheus exporter.
 
 Create a Fleet or a Gameserver in order to check that connection with stackdriver API is configured properly and so that you will be able to see the metrics data.
 
-Visit [Stackdriver monitoring](https://app.google.stackdriver.com) website, select your project, or choose `Create a new Workspace` and select GCP project where your cluster resides. In [Stackdriver metrics explorer](https://cloud.google.com/monitoring/charts/metrics-explorer) you should be able to find new metrics with prefix `agones/` (resource type is `Global`) after a couple of minutes. Choose the metrics you are interested in and add to a single or separate graphs. You can create multiple graphs, save them into your dashboard and use various aggregation parameters and reducers for each graph.
+Visit [Stackdriver monitoring](https://app.google.stackdriver.com) website, select your project, or choose `Create a new Workspace` and select GCP project where your cluster resides. In [Stackdriver metrics explorer](https://cloud.google.com/monitoring/charts/metrics-explorer) you should be able to find new metrics with prefix `agones/` after a couple of minutes. Choose the metrics you are interested in and add to a single or separate graphs. Select `Kubernetes Container` resource type for each of them. You can create multiple graphs, save them into your dashboard and use various aggregation parameters and reducers for each graph.
 
 Example of the dashboard appearance is provided below:
 
