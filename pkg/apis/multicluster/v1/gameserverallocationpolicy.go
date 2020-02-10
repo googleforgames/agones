@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package v1
 
 import (
 	"math/rand"
@@ -24,7 +24,7 @@ import (
 // GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy
 type GameServerAllocationPolicySpec struct {
 	// +kubebuilder:validation:Minimum=0
-	Priority int `json:"priority"`
+	Priority int32 `json:"priority"`
 	// +kubebuilder:validation:Minimum=0
 	Weight         int                   `json:"weight"`
 	ConnectionInfo ClusterConnectionInfo `json:"connectionInfo,omitempty"`
@@ -70,9 +70,9 @@ type ConnectionInfoIterator struct {
 	// currPriority Current priority index from the orderedPriorities
 	currPriority int
 	// orderedPriorities list of ordered priorities
-	orderedPriorities []int
+	orderedPriorities []int32
 	// priorityToCluster Map of priority to cluster-policies map
-	priorityToCluster map[int]map[string][]*GameServerAllocationPolicy
+	priorityToCluster map[int32]map[string][]*GameServerAllocationPolicy
 	// clusterBlackList the cluster blacklist for the clusters that has already returned
 	clusterBlackList map[string]bool
 }
@@ -99,7 +99,7 @@ func (it *ConnectionInfoIterator) Next() *ClusterConnectionInfo {
 
 // NewConnectionInfoIterator creates an iterator for connection info
 func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *ConnectionInfoIterator {
-	priorityToCluster := make(map[int]map[string][]*GameServerAllocationPolicy)
+	priorityToCluster := make(map[int32]map[string][]*GameServerAllocationPolicy)
 	for _, policy := range policies {
 		priority := policy.Spec.Priority
 		clusterName := policy.Spec.ConnectionInfo.ClusterName
@@ -120,7 +120,7 @@ func NewConnectionInfoIterator(policies []*GameServerAllocationPolicy) *Connecti
 	}
 
 	// 3. Sort priorities
-	priorities := make([]int, 0, len(priorityToCluster))
+	priorities := make([]int32, 0, len(priorityToCluster))
 	for k := range priorityToCluster {
 		priorities = append(priorities, k)
 	}

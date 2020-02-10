@@ -28,7 +28,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/apiserver"
@@ -796,13 +796,13 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		fleetName := addReactorForGameServer(&m)
 
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
-				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
-						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
 							Priority: 1,
 							Weight:   200,
-							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 								ClusterName: "multicluster",
 								SecretName:  "localhostsecret",
 								Namespace:   defaultNs,
@@ -860,8 +860,8 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		fleetName := addReactorForGameServer(&m)
 
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
-				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{},
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{},
 			}, nil
 		})
 
@@ -914,13 +914,13 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		secretName := clusterName + "secret"
 		targetedNamespace := "tns"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
-				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
-						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
 							Priority: 1,
 							Weight:   200,
-							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 								AllocationEndpoints: []string{endpoint, "non-existing"},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
@@ -1002,13 +1002,13 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
-				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
-						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
 							Priority: 1,
 							Weight:   200,
-							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 								AllocationEndpoints: []string{endpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
@@ -1020,10 +1020,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 						},
 					},
 					{
-						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
 							Priority: 2,
 							Weight:   200,
-							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 								AllocationEndpoints: []string{endpoint},
 								ClusterName:         "remotecluster2",
 								SecretName:          secretName,
@@ -1098,13 +1098,13 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
 		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-			return true, &multiclusterv1alpha1.GameServerAllocationPolicyList{
-				Items: []multiclusterv1alpha1.GameServerAllocationPolicy{
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
 					{
-						Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
 							Priority: 1,
 							Weight:   200,
-							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 								AllocationEndpoints: []string{unhealthyEndpoint, healthyEndpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
