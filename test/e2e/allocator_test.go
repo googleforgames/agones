@@ -15,19 +15,16 @@
 package e2e
 
 import (
-	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"net"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -39,6 +36,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -53,7 +52,7 @@ const (
 	tlsCrtTag             = "tls.crt"
 	tlsKeyTag             = "tls.key"
 	serverCATag           = "ca.crt"
-	allocatorReqURLFmt    = "https://%s:%d/v1alpha1/gameserverallocation"
+	allocatorReqURLFmt    = "%s:%d"
 )
 
 func TestAllocator(t *testing.T) {
@@ -74,49 +73,41 @@ func TestAllocator(t *testing.T) {
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
-		Namespace:                  namespace,
-		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
-	}
-
-	body, err := json.Marshal(request)
-	if !assert.Nil(t, err) {
-		return
+		Namespace:                    namespace,
+		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		Scheduling:                   pb.AllocationRequest_Packed,
+		MetaPatch:                    &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
-		// create the rest client each time, as we may end up looking at an old cert
-		var client *http.Client
-		client, err = creatRestClient(namespace, clientSecretName)
+		// create the grpc client each time, as we may end up looking at an old cert
+		dialOpts, err := createRemoteClusterDialOption(namespace, clientSecretName)
 		if err != nil {
 			return false, err
 		}
 
-		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+		conn, err := grpc.Dial(requestURL, dialOpts)
 		if err != nil {
-			logrus.WithError(err).Info("failing http request")
+			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil
 		}
-		defer response.Body.Close() // nolint: errcheck
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		body, err = ioutil.ReadAll(response.Body)
-		if !assert.Nil(t, err) {
-			t.Logf("reading response body failed: %s", err)
+		defer conn.Close() // nolint: errcheck
+
+		grpcClient := pb.NewAllocationServiceClient(conn)
+		response, err := grpcClient.PostAllocate(context.Background(), request)
+		if err != nil {
+			logrus.WithError(err).Info("failing PostAllocate request")
 			return false, nil
 		}
+		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)
 		return true, nil
 	})
 
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "Http test failed")
 	}
-
-	result := pb.AllocationResponse{}
-	err = json.Unmarshal(body, &result)
-	if !assert.Nil(t, err) {
-		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
-	}
-	assert.Equal(t, pb.AllocationResponse_Allocated, result.State)
 }
 
 // Tests multi-cluster allocation by reusing the same cluster but across namespace.
@@ -171,45 +162,34 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 	}
 
-	body, err := json.Marshal(request)
-	if !assert.Nil(t, err) {
-		return
-	}
-
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
-		// create the rest client each time, as we may end up looking at an old cert
-		var client *http.Client
-		client, err = creatRestClient(namespaceA, clientSecretNameA)
+		// create the grpc client each time, as we may end up looking at an old cert
+		dialOpts, err := createRemoteClusterDialOption(namespaceA, clientSecretNameA)
 		if err != nil {
 			return false, err
 		}
 
-		response, err := client.Post(requestURL, "application/json", bytes.NewBuffer(body))
+		conn, err := grpc.Dial(requestURL, dialOpts)
 		if err != nil {
 			logrus.WithError(err).Info("failing http request")
 			return false, nil
 		}
-		defer response.Body.Close() // nolint: errcheck
-		assert.Equal(t, http.StatusOK, response.StatusCode)
-		body, err = ioutil.ReadAll(response.Body)
-		if !assert.Nil(t, err) {
-			t.Logf("reading response body failed: %s", err)
+		defer conn.Close() // nolint: errcheck
+
+		grpcClient := pb.NewAllocationServiceClient(conn)
+		response, err := grpcClient.PostAllocate(context.Background(), request)
+		if err != nil {
+			logrus.WithError(err).Info("failing PostAllocate request")
 			return false, nil
 		}
+		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)
 		return true, nil
 	})
 
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "Http test failed")
 	}
-
-	result := pb.AllocationResponse{}
-	err = json.Unmarshal(body, &result)
-	if !assert.Nil(t, err) {
-		t.Fatalf("failed to unmarshall response body: %s\nerror:%s", string(body), err)
-	}
-	assert.Equal(t, pb.AllocationResponse_Allocated, result.State)
 }
 
 func createAllocationPolicy(t *testing.T, p *multiclusterv1alpha1.GameServerAllocationPolicy) {
@@ -243,8 +223,8 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 	return svc.Status.LoadBalancer.Ingress[0].IP, port.Port
 }
 
-// creatRestClient creates a rest client with proper certs to make a remote call.
-func creatRestClient(namespace string, clientSecretName string) (*http.Client, error) {
+// createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
+func createRemoteClusterDialOption(namespace, clientSecretName string) (grpc.DialOption, error) {
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
 	if err != nil {
@@ -270,17 +250,12 @@ func creatRestClient(namespace string, clientSecretName string) (*http.Client, e
 		return nil, errors.New("could not append PEM format CA cert")
 	}
 
-	// Setup HTTPS client
-	return &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				GetClientCertificate: func(cri *tls.CertificateRequestInfo) (*tls.Certificate, error) {
-					return &cert, nil
-				},
-				RootCAs: rootCA,
-			},
-		},
-	}, nil
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      rootCA,
+	}
+
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
 
 func createFleet(namespace string) (*agonesv1.Fleet, error) {

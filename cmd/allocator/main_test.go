@@ -14,17 +14,17 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
 	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +34,7 @@ import (
 func TestAllocateHandler(t *testing.T) {
 	t.Parallel()
 
-	h := httpHandler{
+	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return &allocationv1.GameServerAllocation{
 				ObjectMeta: metav1.ObjectMeta{
@@ -53,52 +53,35 @@ func TestAllocateHandler(t *testing.T) {
 			Enabled: true,
 		},
 	}
-	body, _ := json.Marshal(request)
-	buf := bytes.NewBuffer(body)
-	req, err := http.NewRequest(http.MethodPost, "/", buf)
-	if !assert.Nil(t, err) {
+
+	response, err := h.PostAllocate(context.Background(), request)
+	if !assert.NoError(t, err) {
 		return
 	}
-
-	rec := httptest.NewRecorder()
-	h.allocateHandler(rec, req)
-
-	response := &pb.AllocationResponse{}
-	assert.Equal(t, rec.Code, 200)
-	assert.Equal(t, "application/json", rec.Header()["Content-Type"][0])
-	err = json.Unmarshal(rec.Body.Bytes(), response)
-	assert.NoError(t, err)
 	assert.Equal(t, pb.AllocationResponse_Contention, response.State)
 }
 
 func TestAllocateHandlerReturnsError(t *testing.T) {
 	t.Parallel()
 
-	h := httpHandler{
+	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return nil, k8serror.NewBadRequest("error")
 		},
 	}
 
 	request := &pb.AllocationRequest{}
-	body, _ := json.Marshal(request)
-	buf := bytes.NewBuffer(body)
-	req, err := http.NewRequest(http.MethodPost, "/", buf)
-	if !assert.Nil(t, err) {
-		return
+	_, err := h.PostAllocate(context.Background(), request)
+	if assert.Error(t, err) {
+		assert.Equal(t, "error", err.Error())
 	}
-
-	rec := httptest.NewRecorder()
-	h.allocateHandler(rec, req)
-	assert.Equal(t, rec.Code, 400)
-	assert.Contains(t, rec.Body.String(), "error")
 }
 
 func TestHandlingStatus(t *testing.T) {
 	t.Parallel()
 
 	errorMessage := "GameServerAllocation is invalid"
-	h := httpHandler{
+	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return &metav1.Status{
 				Status:  metav1.StatusFailure,
@@ -114,40 +97,40 @@ func TestHandlingStatus(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	body, _ := json.Marshal(request)
-	buf := bytes.NewBuffer(body)
-	req, err := http.NewRequest(http.MethodPost, "/", buf)
-	if !assert.Nil(t, err) {
+	_, err := h.PostAllocate(context.Background(), request)
+	if !assert.Error(t, err, "expecting failure") {
 		return
 	}
 
-	rec := httptest.NewRecorder()
-	h.allocateHandler(rec, req)
-	assert.Equal(t, rec.Code, 422)
-	assert.Contains(t, rec.Body.String(), errorMessage)
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Errorf("expecting status error: %v", err)
+	}
+	assert.Equal(t, 422, int(st.Code()))
+	assert.Contains(t, st.Message(), errorMessage)
 }
 
 func TestBadReturnType(t *testing.T) {
 	t.Parallel()
 
-	h := httpHandler{
+	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return &corev1.Secret{}, nil
 		},
 	}
 
 	request := &pb.AllocationRequest{}
-	body, _ := json.Marshal(request)
-	buf := bytes.NewBuffer(body)
-	req, err := http.NewRequest(http.MethodPost, "/", buf)
-	if !assert.Nil(t, err) {
+	_, err := h.PostAllocate(context.Background(), request)
+	if !assert.Error(t, err, "expecting failure") {
 		return
 	}
 
-	rec := httptest.NewRecorder()
-	h.allocateHandler(rec, req)
-	assert.Equal(t, rec.Code, 500)
-	assert.Contains(t, rec.Body.String(), "internal server error")
+	st, ok := status.FromError(err)
+	if !ok {
+		t.Errorf("expecting status error: %v", err)
+	}
+	assert.Equal(t, codes.Internal, st.Code())
+	assert.Contains(t, st.Message(), "internal server error")
 }
 
 func TestGettingCaCert(t *testing.T) {

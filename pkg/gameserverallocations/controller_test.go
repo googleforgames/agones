@@ -16,14 +16,10 @@ package gameserverallocations
 
 import (
 	"bytes"
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strconv"
 	"testing"
 	"time"
@@ -41,6 +37,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -910,25 +907,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 	t.Run("Handle allocation request remotely", func(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
-
-		// Mock server
 		expectedGSName := "mocked"
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serverResponse := pb.AllocationResponse{
-				GameServerName: expectedGSName,
-				State:          pb.AllocationResponse_Allocated,
-			}
-			response, _ := json.Marshal(serverResponse)
-			_, _ = w.Write(response)
-		}))
-		defer server.Close()
-		serverURL := parseURL(t, server.URL)
-
-		// Set client CA for server
-		certpool := x509.NewCertPool()
-		certpool.AppendCertsFromPEM(clientCert)
-		server.TLS.ClientCAs = certpool
-		server.TLS.ClientAuth = tls.RequireAndVerifyClientCert
+		endpoint := "x.x.x.x"
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
@@ -941,7 +921,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{serverURL.Host, "non-existing"},
+								AllocationEndpoints: []string{endpoint, "non-existing"},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 								Namespace:           targetedNamespace,
@@ -957,7 +937,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, getPEMFromDER(server.TLS.Certificates[0].Certificate[0])), nil
+				return true, getTestSecret(secretName, clientCert), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -984,6 +964,15 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			},
 		}
 
+		c.allocator.remoteAllocationCallback = func(e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			assert.Equal(t, endpoint+":443", e)
+			serverResponse := pb.AllocationResponse{
+				GameServerName: expectedGSName,
+				State:          pb.AllocationResponse_Allocated,
+			}
+			return &serverResponse, nil
+		}
+
 		result, err := executeAllocation(gsa, c)
 		if assert.NoError(t, err) {
 			assert.Equal(t, expectedGSName, result.Status.GameServerName)
@@ -997,25 +986,18 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		// Mock server to return unallocated and then error
 		count := 0
 		retry := 0
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		endpoint := "z.z.z.z"
+
+		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if count == 0 {
 				serverResponse := pb.AllocationResponse{}
-				response, _ := json.Marshal(serverResponse)
-				_, _ = w.Write(response)
 				count++
-			} else {
-				http.Error(w, "test error message", 500)
-				retry++
+				return &serverResponse, nil
 			}
-		}))
-		defer server.Close()
-		serverURL := parseURL(t, server.URL)
 
-		// Set client CA for server
-		certpool := x509.NewCertPool()
-		certpool.AppendCertsFromPEM(clientCert)
-		server.TLS.ClientCAs = certpool
-		server.TLS.ClientAuth = tls.RequireAndVerifyClientCert
+			retry++
+			return nil, errors.New("test error message")
+		}
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
@@ -1027,7 +1009,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{serverURL.Host},
+								AllocationEndpoints: []string{endpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 							},
@@ -1042,7 +1024,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 2,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{serverURL.Host},
+								AllocationEndpoints: []string{endpoint},
 								ClusterName:         "remotecluster2",
 								SecretName:          secretName,
 							},
@@ -1058,7 +1040,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, getPEMFromDER(server.TLS.Certificates[0].Certificate[0])), nil
+				return true, getTestSecret(secretName, clientCert), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1096,32 +1078,22 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		// Mock server to return error
-		unhealthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Error(w, "test error message", 500)
-		}))
-		defer unhealthyServer.Close()
-		unhealthyServerURL := parseURL(t, unhealthyServer.URL)
+		unhealthyEndpoint := "unhealthy_endpoint:443"
+		healthyEndpoint := "healthy_endpoint:443"
 
-		// Set client CA for unhealthy server
-		certpool := x509.NewCertPool()
-		certpool.AppendCertsFromPEM(clientCert)
-		unhealthyServer.TLS.ClientCAs = certpool
-		unhealthyServer.TLS.ClientAuth = tls.RequireAndVerifyClientCert
-
-		// Mock healthyServer
 		expectedGSName := "mocked"
-		healthyServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			if endpoint == unhealthyEndpoint {
+				return nil, errors.New("test error message")
+			}
+
+			assert.Equal(t, healthyEndpoint, endpoint)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
 				State:          pb.AllocationResponse_Allocated,
 			}
-			response, _ := json.Marshal(serverResponse)
-			_, _ = w.Write(response)
-		}))
-		defer healthyServer.Close()
-		healthyServerURL := parseURL(t, healthyServer.URL)
-		healthyServer.TLS = unhealthyServer.TLS
+			return &serverResponse, nil
+		}
 
 		// Allocation policy reactor
 		secretName := clusterName + "secret"
@@ -1133,7 +1105,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{unhealthyServerURL.Host, healthyServerURL.Host},
+								AllocationEndpoints: []string{unhealthyEndpoint, healthyEndpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 							},
@@ -1148,7 +1120,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, getPEMFromDER(unhealthyServer.TLS.Certificates[0].Certificate[0])), nil
+				return true, getTestSecret(secretName, clientCert), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1186,7 +1158,7 @@ func TestCreateRestClientError(t *testing.T) {
 	t.Parallel()
 	t.Run("Missing secret", func(t *testing.T) {
 		c, _ := newFakeController()
-		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "secret-name")
 	})
@@ -1210,7 +1182,7 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "missing client certificate key pair in secret secret-name")
 	})
@@ -1235,7 +1207,7 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to find any PEM data in certificate input")
 	})
@@ -1250,7 +1222,7 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterRestClient(defaultNs, "secret-name")
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "PEM format")
 	})
@@ -1357,18 +1329,6 @@ func getTestSecret(secretName string, serverCert []byte) *corev1.SecretList {
 			},
 		},
 	}
-}
-
-func getPEMFromDER(der []byte) []byte {
-	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
-}
-
-func parseURL(t *testing.T, rawURL string) *url.URL {
-	serverURL, err := url.Parse(rawURL)
-	if err != nil {
-		t.Fatalf("failed to parse URL %s: %s", rawURL, err)
-	}
-	return serverURL
 }
 
 var clientCert = []byte(`-----BEGIN CERTIFICATE-----
