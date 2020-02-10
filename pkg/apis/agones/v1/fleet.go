@@ -56,7 +56,7 @@ type FleetList struct {
 // FleetSpec is the spec for a Fleet
 type FleetSpec struct {
 	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas"`
 	// Deployment strategy
 	Strategy appsv1.DeploymentStrategy `json:"strategy"`
 	// Scheduling strategy. Defaults to "Packed".
@@ -173,6 +173,12 @@ func (f *Fleet) Validate() ([]metav1.StatusCause, bool) {
 	if f.Spec.Strategy.Type == appsv1.RollingUpdateDeploymentStrategyType {
 		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxUnavailable, &causes, "MaxUnavailable")
 		f.validateRollingUpdate(f.Spec.Strategy.RollingUpdate.MaxSurge, &causes, "MaxSurge")
+	} else if f.Spec.Strategy.Type != appsv1.RecreateDeploymentStrategyType {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "Type",
+			Message: "Strategy Type should be one of: RollingUpdate, Recreate.",
+		})
 	}
 	// check Gameserver specification in a Fleet
 	gsCauses := validateGSSpec(f)

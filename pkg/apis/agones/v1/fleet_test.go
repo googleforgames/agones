@@ -182,10 +182,19 @@ func TestFleetGameserverSpec(t *testing.T) {
 	causes, ok = f.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
+
+	// Strategy Type validation test
+	f = defaultFleet()
+	f.ApplyDefaults()
+	f.Spec.Strategy.Type = appsv1.DeploymentStrategyType("")
+	causes, ok = f.Validate()
+	assert.False(t, ok)
+	assert.Len(t, causes, 1)
 }
 
 func TestFleetName(t *testing.T) {
 	f := defaultFleet()
+	f.ApplyDefaults()
 
 	longName := strings.Repeat("f", validation.LabelValueMaxLength+1)
 	f.Name = longName

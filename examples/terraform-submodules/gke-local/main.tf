@@ -16,6 +16,14 @@
 // Run:
 //  terraform apply [-var agones_version="1.1.0"]
 
+provider "google" {
+  version = "~> 2.10"
+}
+
+provider "google-beta" {
+  version = "~> 2.10"
+}
+
 // Install latest version of agones
 variable "agones_version" {
   default = ""
@@ -30,7 +38,7 @@ module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
   cluster = {
-    "project"          = "${var.project}"
+    "project"          = var.project
     "zone"             = "us-west1-c"
     "name"             = "test-cluster3"
     "machineType"      = "n1-standard-4"
@@ -42,20 +50,20 @@ module "helm_agones" {
 
   source = "../../../install/terraform/modules/helm"
 
-  agones_version         = "${var.agones_version}"
+  agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
-  host                   = "${module.gke_cluster.host}"
-  token                  = "${module.gke_cluster.token}"
-  cluster_ca_certificate = "${module.gke_cluster.cluster_ca_certificate}"
+  host                   = module.gke_cluster.host
+  token                  = module.gke_cluster.token
+  cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
 }
 
 output "host" {
-  value = "${module.gke_cluster.host}"
+  value = module.gke_cluster.host
 }
 output "token" {
-  value = "${module.gke_cluster.token}"
+  value = module.gke_cluster.token
 }
 output "cluster_ca_certificate" {
-  value = "${module.gke_cluster.cluster_ca_certificate}"
+  value = module.gke_cluster.cluster_ca_certificate
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,33 +21,10 @@
 #include <iostream>
 #include <thread>
 
-std::atomic_int stop_threads(0);
-
-class ThreadJoiner {
- public:
-  explicit ThreadJoiner(std::thread t)
-    : t_(std::move(t)) {}
-
-  ~ThreadJoiner() {
-    // Stop threads loop
-    stop_threads.store(1);
-    t_.join();
-  }
- private:
-  std::thread t_;
-};
-
 // send health check pings
 void DoHealth(std::shared_ptr<agones::SDK> sdk) {
-  while (true) {
-    bool ok = sdk->Health();
-    std::cout << "Health ping " << (ok ? "sent" : "failed") << "\n"
-              << std::flush;
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    if(stop_threads.load()) {
-       return ;
-    }
-  }
+  bool ok = sdk->Health();
+  std::cout << "Health ping " << (ok ? "sent" : "failed") << "\n" << std::flush;
 }
 
 // watch GameServer Updates
@@ -60,10 +37,10 @@ void WatchUpdates(std::shared_ptr<agones::SDK> sdk) {
               << std::flush;
   });
 }
+
 int main() {
   std::cout << "C++ Game Server has started!\n"
-            << "Getting the instance of the SDK.\n"
-            << std::flush;
+            << "Getting the instance of the SDK.\n" << std::flush;
   auto sdk = std::make_shared<agones::SDK>();
 
   std::cout << "Attempting to connect...\n" << std::flush;
@@ -73,35 +50,34 @@ int main() {
   }
   std::cout << "...handshake complete.\n" << std::flush;
 
-  std::thread health(DoHealth, sdk);
+  DoHealth(sdk);
   std::thread watch(WatchUpdates, sdk);
-  ThreadJoiner h(std::move(health));
-  ThreadJoiner w(std::move(watch));
-
-  std::cout << "Setting a label\n" << std::flush;
-  grpc::Status status = sdk->SetLabel("test-label", "test-value");
-  if (!status.ok()) {
-    std::cerr << "Could not run SetLabel(): " << status.error_message()
-              << ". Exiting!\n";
-    return -1;
-  }
-
-  std::cout << "Setting an annotation\n" << std::flush;
-  status = sdk->SetAnnotation("test-annotation", "test value");
-  if (!status.ok()) {
-    std::cerr << "Could not run SetAnnotation(): " << status.error_message()
-              << ". Exiting!\n";
-    return -1;
-  }
 
   std::cout << "Marking server as ready...\n" << std::flush;
-  status = sdk->Ready();
+  grpc::Status status = sdk->Ready();
   if (!status.ok()) {
     std::cerr << "Could not run Ready(): " << status.error_message()
               << ". Exiting!\n";
     return -1;
   }
   std::cout << "...marked Ready\n" << std::flush;
+
+  status = sdk->Allocate();
+  if (!status.ok()) {
+    std::cerr << "Could not run Allocate(): " << status.error_message()
+              << ". Exiting!\n";
+    return -1;
+  }
+  std::cout << "...marked Allocated\n" << std::flush;
+
+  std::chrono::seconds sec(1);
+  status = sdk->Reserve(sec);
+  if (!status.ok()) {
+    std::cerr << "Could not run Reserve(): " << status.error_message()
+              << ". Exiting!\n";
+    return -1;
+  }
+  std::cout << "...marked Reserved\n" << std::flush;
 
   std::cout << "Getting GameServer details...\n" << std::flush;
   agones::dev::sdk::GameServer gameserver;
@@ -116,15 +92,34 @@ int main() {
   std::cout << "GameServer name: " << gameserver.object_meta().name() << "\n"
             << std::flush;
 
-  for (int i = 0; i < 10; i++) {
+  std::cout << "Setting a label\n" << std::flush;
+  status = sdk->SetLabel(
+      "test-label",
+      std::to_string(gameserver.object_meta().creation_timestamp()));
+  if (!status.ok()) {
+    std::cerr << "Could not run SetLabel(): " << status.error_message()
+              << ". Exiting!\n";
+    return -1;
+  }
+
+  std::cout << "Setting an annotation\n" << std::flush;
+  status =
+      sdk->SetAnnotation("test-annotation", gameserver.object_meta().uid());
+  if (!status.ok()) {
+    std::cerr << "Could not run SetAnnotation(): " << status.error_message()
+              << ". Exiting!\n";
+    return -1;
+  }
+
+  for (int i = 0; i < 2; i++) {
     int time = i * 10;
     std::cout << "Running for " + std::to_string(time) + " seconds !\n"
               << std::flush;
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    if (i == 5) {
-      std::cout << "Shutting down after 60 seconds...\n" << std::flush;
+    if (i == 1) {
+      std::cout << "Shutting down after 10 seconds...\n" << std::flush;
       grpc::Status status = sdk->Shutdown();
       if (!status.ok()) {
         std::cerr << "Could not run Shutdown():" << status.error_message()
@@ -134,6 +129,7 @@ int main() {
       std::cout << "...marked for Shutdown\n" << std::flush;
     }
   }
+  watch.join();
 
   return 0;
 }

@@ -146,6 +146,9 @@ run-sdk-conformance-test: ensure-build-sdk-image
 	$(MAKE) run-sdk-command COMMAND=build-sdk-test
 	$(MAKE) run-sdk-conformance-no-build
 
+run-sdk-conformance-test-cpp:
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=cpp GRPC_PORT=9003 HTTP_PORT=9103
+
 run-sdk-conformance-test-node:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102
 
@@ -160,7 +163,7 @@ run-sdk-conformance-test-rest:
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
 # Run a conformance test for all SDKs supported
-run-sdk-conformance-tests: run-sdk-conformance-test-node run-sdk-conformance-test-go run-sdk-conformance-test-rust run-sdk-conformance-test-rest
+run-sdk-conformance-tests: run-sdk-conformance-test-node run-sdk-conformance-test-go run-sdk-conformance-test-rust run-sdk-conformance-test-rest run-sdk-conformance-test-cpp
 
 # Clean package directories and binary files left
 # after building conformance tests for all SDKs supported

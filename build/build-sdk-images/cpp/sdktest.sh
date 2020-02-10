@@ -1,4 +1,6 @@
-# Copyright 2019 Google LLC All Rights Reserved.
+#!/usr/bin/env bash
+
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-output "cluster_ca_certificate" {
-  value = base64decode(google_container_cluster.primary.master_auth.0.cluster_ca_certificate)
-}
-
-output "host" {
-  value = "https://${google_container_cluster.primary.endpoint}"
-}
-
-output "token" {
-  value = data.google_client_config.default.access_token
-}
+set -ex
+/go/src/agones.dev/agones/test/sdk/cpp/.build/.bin/cpp-simple

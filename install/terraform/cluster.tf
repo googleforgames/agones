@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "google-beta" {
-  version = "~> 2.10"
-  zone    = "${var.cluster["zone"]}"
-}
-
-provider "google" {
-  version = "~> 2.10"
-}
-
 
 # Ports can be overriden using tfvars file
 variable "ports" {
@@ -32,7 +23,7 @@ variable "ports" {
 # It is crucial to set valid ProjectID for "project".
 variable "cluster" {
   description = "Set of GKE cluster parameters."
-  type        = "map"
+  type        = map
 
   default = {
     "zone"             = "us-west1-c"
@@ -47,29 +38,29 @@ variable "cluster" {
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
   provisioner "local-exec" {
-    command = "${"${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, zone: %s",
-      "${var.cluster["name"]}", "${var.cluster["project"]}",
-      "${var.cluster["machineType"]}", "${var.cluster["initialNodeCount"]}",
-    "${var.cluster["zone"]}")}"}"
+    command = format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, zone: %s",
+      var.cluster["name"], var.cluster["project"],
+      var.cluster["machineType"], var.cluster["initialNodeCount"],
+    var.cluster["zone"])
   }
 }
 
 resource "google_container_cluster" "primary" {
-  name     = "${var.cluster["name"]}"
-  location = "${var.cluster["zone"]}"
-  project  = "${var.cluster["project"]}"
-  provider = "google-beta"
+  name     = var.cluster["name"]
+  location = var.cluster["zone"]
+  project  = var.cluster["project"]
+  provider = google-beta
 
   node_pool {
     name       = "default"
-    node_count = "${var.cluster["initialNodeCount"]}"
+    node_count = var.cluster["initialNodeCount"]
 
     management {
       auto_upgrade = false
     }
 
     node_config {
-      machine_type = "${var.cluster["machineType"]}"
+      machine_type = var.cluster["machineType"]
 
       oauth_scopes = [
         "https://www.googleapis.com/auth/devstorage.read_only",
@@ -156,22 +147,22 @@ resource "google_container_cluster" "primary" {
 
 resource "google_compute_firewall" "default" {
   name    = "game-server-firewall-firewall-${var.cluster["name"]}"
-  project = "${var.cluster["project"]}"
-  network = "${google_compute_network.default.name}"
+  project = var.cluster["project"]
+  network = google_compute_network.default.name
 
   allow {
     protocol = "udp"
-    ports    = ["${var.ports}"]
+    ports    = [var.ports]
   }
 
   source_tags = ["game-server"]
 }
 
 resource "google_compute_network" "default" {
-  project = "${var.cluster["project"]}"
+  project = var.cluster["project"]
   name    = "agones-network-${var.cluster["name"]}"
 }
 
 output "cluster_ca_certificate" {
-  value = "${google_container_cluster.primary.master_auth.0.cluster_ca_certificate}"
+  value = google_container_cluster.primary.master_auth.0.cluster_ca_certificate
 }

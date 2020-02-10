@@ -15,7 +15,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "JsonObject.h"
+#include "Dom/JsonObject.h"
 #include "StatusPort.h"
 #include "GameServerStatus.generated.h"
 

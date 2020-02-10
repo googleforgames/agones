@@ -80,6 +80,7 @@ type Controller struct {
 	portAllocator          *PortAllocator
 	healthController       *HealthController
 	migrationController    *MigrationController
+	missingPodController   *MissingPodController
 	workerqueue            *workerqueue.WorkerQueue
 	creationWorkerQueue    *workerqueue.WorkerQueue // handles creation only
 	deletionWorkerQueue    *workerqueue.WorkerQueue // handles deletion only
@@ -125,6 +126,7 @@ func NewController(
 		portAllocator:          NewPortAllocator(minPort, maxPort, kubeInformerFactory, agonesInformerFactory),
 		healthController:       NewHealthController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 		migrationController:    NewMigrationController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
+		missingPodController:   NewMissingPodController(health, kubeClient, agonesClient, kubeInformerFactory, agonesInformerFactory),
 	}
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
@@ -325,6 +327,13 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 	go func() {
 		if err := c.migrationController.Run(stop); err != nil {
 			c.baseLogger.WithError(err).Error("error running migration controller")
+		}
+	}()
+
+	// Run the Missing Pod Controller
+	go func() {
+		if err := c.missingPodController.Run(stop); err != nil {
+			c.baseLogger.WithError(err).Error("error running missing pod controller")
 		}
 	}()
 
