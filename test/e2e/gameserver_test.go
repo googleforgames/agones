@@ -37,7 +37,7 @@ const (
 
 func TestCreateConnect(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 
 	if err != nil {
@@ -61,7 +61,7 @@ func TestCreateConnect(t *testing.T) {
 // nolint:dupl
 func TestSDKSetLabel(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -91,7 +91,7 @@ func TestSDKSetLabel(t *testing.T) {
 
 func TestHealthCheckDisable(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.Spec.Health = agonesv1.Health{
 		Disabled:            true,
 		FailureThreshold:    1,
@@ -123,7 +123,7 @@ func TestHealthCheckDisable(t *testing.T) {
 // nolint:dupl
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	annotation := "agones.dev/sdk-timestamp"
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
@@ -162,7 +162,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 
 func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.Spec.Health.FailureThreshold = 1
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
@@ -184,7 +184,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	// gate
 	assert.True(t, len(nodes.Items) > 0)
 
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.Spec.Ports[0].HostPort = 7515
 	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
 
@@ -204,7 +204,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -233,7 +233,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	t.Parallel()
 	logger := logrus.WithField("test", t.Name())
 
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	// give some buffer with gameservers crashing and coming back
 	gs.Spec.Health.PeriodSeconds = 60 * 60
 	gs.Spec.Template.Spec.Containers[0].Env = append(gs.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "READY", Value: "FALSE"})
@@ -339,7 +339,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
 
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -425,7 +425,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 
 func TestGameServerSelfAllocate(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -447,7 +447,7 @@ func TestGameServerSelfAllocate(t *testing.T) {
 
 func TestGameServerReadyAllocateReady(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -476,7 +476,7 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -502,7 +502,7 @@ func TestGameServerReserve(t *testing.T) {
 
 func TestGameServerShutdown(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -533,7 +533,7 @@ func TestGameServerShutdown(t *testing.T) {
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
 	newGs, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
 
@@ -549,7 +549,7 @@ func TestGameServerEvicted(t *testing.T) {
 
 func TestGameServerPassthroughPort(t *testing.T) {
 	t.Parallel()
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Passthrough}
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "PASSTHROUGH", Value: "TRUE"}}
 	// gate
@@ -572,44 +572,4 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	}
 
 	assert.Equal(t, "ACK: Hello World !\n", reply)
-}
-
-func defaultGameServer(namespace string) *agonesv1.GameServer {
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: namespace},
-		Spec: agonesv1.GameServerSpec{
-			Container: "udp-server",
-			Ports: []agonesv1.GameServerPort{{
-				ContainerPort: 7654,
-				Name:          "gameport",
-				PortPolicy:    agonesv1.Dynamic,
-				Protocol:      corev1.ProtocolUDP,
-			}},
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Name:            "udp-server",
-						Image:           framework.GameServerImage,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("30m"),
-								corev1.ResourceMemory: resource.MustParse("32Mi"),
-							},
-							Limits: corev1.ResourceList{
-								corev1.ResourceCPU:    resource.MustParse("30m"),
-								corev1.ResourceMemory: resource.MustParse("32Mi"),
-							},
-						},
-					}},
-				},
-			},
-		},
-	}
-
-	if framework.PullSecret != "" {
-		gs.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{
-			Name: framework.PullSecret}}
-	}
-
-	return gs
 }

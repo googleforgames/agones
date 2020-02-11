@@ -18,12 +18,15 @@ package framework
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net"
+	"os/user"
+	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -31,6 +34,7 @@ import (
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -81,6 +85,33 @@ func New(kubeconfig string) (*Framework, error) {
 		KubeClient:   kubeClient,
 		AgonesClient: agonesClient,
 	}, nil
+}
+
+// NewFromFlags sets up the testing framework with the standard command line flags.
+func NewFromFlags() (*Framework, error) {
+	usr, _ := user.Current()
+	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
+		"kube config path, e.g. $HOME/.kube/config")
+	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.17",
+		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.17")
+	pullSecret := flag.String("pullsecret", "",
+		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
+	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
+	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directory")
+
+	flag.Parse()
+
+	framework, err := New(*kubeconfig)
+	if err != nil {
+		return framework, err
+	}
+
+	framework.GameServerImage = *gsimage
+	framework.PullSecret = *pullSecret
+	framework.StressTestLevel = *stressTestLevel
+	framework.PerfOutputDir = *perfOutputDir
+
+	return framework, nil
 }
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
@@ -438,4 +469,46 @@ func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
 type patchRemoveNoValue struct {
 	Op   string `json:"op"`
 	Path string `json:"path"`
+}
+
+// DefaultGameServer provides a default GameServer fixture, based on parameters
+// passed to the Test Framework.
+func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: namespace},
+		Spec: agonesv1.GameServerSpec{
+			Container: "udp-server",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:            "udp-server",
+						Image:           f.GameServerImage,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
+
+	if f.PullSecret != "" {
+		gs.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{
+			Name: f.PullSecret}}
+	}
+
+	return gs
 }

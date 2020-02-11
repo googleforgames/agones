@@ -462,7 +462,7 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 
 	client := framework.AgonesClient.AgonesV1()
 
-	gsSpec := defaultGameServer(defaultNs).Spec
+	gsSpec := framework.DefaultGameServer(defaultNs).Spec
 	oldPort := int32(7111)
 	gsSpec.Ports = []agonesv1.GameServerPort{{
 		ContainerPort: oldPort,
@@ -1234,7 +1234,7 @@ func scaleFleetSubresource(t *testing.T, f *agonesv1.Fleet, scale int32) *agones
 
 // defaultFleet returns a default fleet configuration
 func defaultFleet(namespace string) *agonesv1.Fleet {
-	gs := defaultGameServer(namespace)
+	gs := framework.DefaultGameServer(namespace)
 	return fleetWithGameServerSpec(&gs.Spec, namespace)
 }
 

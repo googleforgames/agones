@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package e2e
+package controller
 
 import (
 	"testing"
@@ -24,20 +24,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-// This file is to test controller failures.
-//
-// *** Under no circumstance should these tests be made t.Parallel()! ***
-//
-
 func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
-	gs := defaultGameServer(defaultNs)
+	logger := logrus.WithField("test", t.Name())
+	gs := framework.DefaultGameServer(defaultNs)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	logrus.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
+	logger.WithField("gsKey", readyGs.ObjectMeta.Name).Info("GameServer Ready")
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
@@ -54,6 +51,8 @@ func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
 
 	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
+	logger.Info("waiting for Agones controller to come back to running")
+	assert.NoError(t, waitForAgonesControllerRunning())
 }
 
 // deleteAgonesControllerPods deletes all the Controller pods for the Agones controller,
@@ -73,6 +72,25 @@ func deleteAgonesControllerPods() error {
 		}
 	}
 	return nil
+}
+
+func waitForAgonesControllerRunning() error {
+	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
+		list, err := getAgonesControllerPods()
+		if err != nil {
+			return true, err
+		}
+
+		for i := range list.Items {
+			for _, c := range list.Items[i].Status.ContainerStatuses {
+				if c.State.Running == nil {
+					return false, nil
+				}
+			}
+		}
+
+		return true, nil
+	})
 }
 
 // getAgonesControllerPods returns all the Agones controller pods

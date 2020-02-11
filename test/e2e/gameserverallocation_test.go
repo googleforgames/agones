@@ -245,7 +245,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 
-	gs := defaultGameServer(defaultNs)
+	gs := framework.DefaultGameServer(defaultNs)
 	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
 
 	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
