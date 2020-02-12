@@ -31,7 +31,7 @@ import (
 
 	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -132,15 +132,15 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	genClientSecret(t, tlsCA, namespaceA, clientSecretNameA)
 
 	policyName := fmt.Sprintf("a-to-b-%s", uuid.NewUUID())
-	p := &multiclusterv1alpha1.GameServerAllocationPolicy{
+	p := &multiclusterv1.GameServerAllocationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      policyName,
 			Namespace: namespaceA,
 		},
-		Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+		Spec: multiclusterv1.GameServerAllocationPolicySpec{
 			Priority: 1,
 			Weight:   1,
-			ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+			ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 				SecretName:          clientSecretNameA,
 				Namespace:           namespaceB,
 				AllocationEndpoints: []string{ip},
@@ -192,10 +192,10 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	}
 }
 
-func createAllocationPolicy(t *testing.T, p *multiclusterv1alpha1.GameServerAllocationPolicy) {
+func createAllocationPolicy(t *testing.T, p *multiclusterv1.GameServerAllocationPolicy) {
 	t.Helper()
 
-	mc := framework.AgonesClient.MulticlusterV1alpha1()
+	mc := framework.AgonesClient.MulticlusterV1()
 	policy, err := mc.GameServerAllocationPolicies(p.Namespace).Create(p)
 	if err != nil {
 		t.Fatalf("creating allocation policy failed: %s", err)

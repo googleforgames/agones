@@ -26,8 +26,8 @@ import (
 	fakeallocationv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/allocation/v1/fake"
 	autoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1"
 	fakeautoscalingv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/autoscaling/v1/fake"
-	multiclusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1"
-	fakemulticlusterv1alpha1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1alpha1/fake"
+	multiclusterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1"
+	fakemulticlusterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/multicluster/v1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -107,12 +107,12 @@ func (c *Clientset) Autoscaling() autoscalingv1.AutoscalingV1Interface {
 	return &fakeautoscalingv1.FakeAutoscalingV1{Fake: &c.Fake}
 }
 
-// MulticlusterV1alpha1 retrieves the MulticlusterV1alpha1Client
-func (c *Clientset) MulticlusterV1alpha1() multiclusterv1alpha1.MulticlusterV1alpha1Interface {
-	return &fakemulticlusterv1alpha1.FakeMulticlusterV1alpha1{Fake: &c.Fake}
+// MulticlusterV1 retrieves the MulticlusterV1Client
+func (c *Clientset) MulticlusterV1() multiclusterv1.MulticlusterV1Interface {
+	return &fakemulticlusterv1.FakeMulticlusterV1{Fake: &c.Fake}
 }
 
-// Multicluster retrieves the MulticlusterV1alpha1Client
-func (c *Clientset) Multicluster() multiclusterv1alpha1.MulticlusterV1alpha1Interface {
-	return &fakemulticlusterv1alpha1.FakeMulticlusterV1alpha1{Fake: &c.Fake}
+// Multicluster retrieves the MulticlusterV1Client
+func (c *Clientset) Multicluster() multiclusterv1.MulticlusterV1Interface {
+	return &fakemulticlusterv1.FakeMulticlusterV1{Fake: &c.Fake}
 }

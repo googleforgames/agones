@@ -709,7 +709,14 @@ metadata:
   name: gameserverallocationpolicies.multicluster.agones.dev
 spec:
   group: multicluster.agones.dev
-  version: v1alpha1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+  - name: v1alpha1
+    # Disable the v1alpha1 version, but include it for inplace upgrade.
+    served: false
+    storage: false
   names:
     kind: GameServerAllocationPolicy
     plural: gameserverallocationpolicies
@@ -748,7 +755,7 @@ spec:
               - namespace
               type: object
             priority:
-              format: int64
+              format: int32
               minimum: 0
               type: integer
             weight:

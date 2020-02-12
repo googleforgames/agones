@@ -29,9 +29,9 @@ import (
 	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
-	multiclusterinformerv1alpha1 "agones.dev/agones/pkg/client/informers/externalversions/multicluster/v1alpha1"
-	multiclusterlisterv1alpha1 "agones.dev/agones/pkg/client/listers/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	multiclusterinformerv1 "agones.dev/agones/pkg/client/informers/externalversions/multicluster/v1"
+	multiclusterlisterv1 "agones.dev/agones/pkg/client/listers/multicluster/v1"
 	"agones.dev/agones/pkg/util/apiserver"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
@@ -96,7 +96,7 @@ var remoteAllocationRetry = wait.Backoff{
 // Allocator handles game server allocation
 type Allocator struct {
 	baseLogger               *logrus.Entry
-	allocationPolicyLister   multiclusterlisterv1alpha1.GameServerAllocationPolicyLister
+	allocationPolicyLister   multiclusterlisterv1.GameServerAllocationPolicyLister
 	allocationPolicySynced   cache.InformerSynced
 	secretLister             corev1lister.SecretLister
 	secretSynced             cache.InformerSynced
@@ -121,7 +121,7 @@ type response struct {
 }
 
 // NewAllocator creates an instance off Allocator
-func NewAllocator(policyInformer multiclusterinformerv1alpha1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
+func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
 	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache) *Allocator {
 	ah := &Allocator{
 		pendingRequests:        make(chan request, maxBatchQueue),
@@ -286,7 +286,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 		return nil, errors.New("no multi-cluster allocation policy is specified")
 	}
 
-	it := multiclusterv1alpha1.NewConnectionInfoIterator(policies)
+	it := multiclusterv1.NewConnectionInfoIterator(policies)
 	for {
 		connectionInfo := it.Next()
 		if connectionInfo == nil {
@@ -318,7 +318,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 
 // allocateFromRemoteCluster allocates gameservers from a remote cluster by making
 // an http call to allocation service in that cluster.
-func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1alpha1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
+func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
 	var allocationResponse *pb.AllocationResponse
 
 	// TODO: handle converting error to apiserver error

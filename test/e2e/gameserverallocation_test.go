@@ -23,7 +23,7 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	multiclusterv1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -92,11 +92,11 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 
 			// Allocation Policy #1: local cluster with desired label.
 			// This policy allocates locally on the cluster due to matching namespace with gsa and not setting AllocationEndpoints.
-			mca := &multiclusterv1alpha1.GameServerAllocationPolicy{
-				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+			mca := &multiclusterv1.GameServerAllocationPolicy{
+				Spec: multiclusterv1.GameServerAllocationPolicySpec{
 					Priority: 1,
 					Weight:   100,
-					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+					ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 						ClusterName: "multicluster1",
 						SecretName:  "sec1",
 						Namespace:   namespace,
@@ -107,7 +107,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					GenerateName: "allocationpolicy-",
 				},
 			}
-			resp, err := framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			resp, err := framework.AgonesClient.MulticlusterV1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
 			if !assert.Nil(t, err) {
 				assert.FailNowf(t, "GameServerAllocationPolicies(%v).Create(%v)", fleet.ObjectMeta.Namespace, mca)
 			}
@@ -115,11 +115,11 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 
 			// Allocation Policy #2: another cluster with desired label, but lower priority.
 			// If the policy is selected due to a bug the request fails as it cannot find the secret.
-			mca = &multiclusterv1alpha1.GameServerAllocationPolicy{
-				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+			mca = &multiclusterv1.GameServerAllocationPolicy{
+				Spec: multiclusterv1.GameServerAllocationPolicySpec{
 					Priority: 2,
 					Weight:   100,
-					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+					ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 						AllocationEndpoints: []string{"another-endpoint"},
 						ClusterName:         "multicluster2",
 						SecretName:          "sec2",
@@ -131,17 +131,17 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					GenerateName: "allocationpolicy-",
 				},
 			}
-			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			resp, err = framework.AgonesClient.MulticlusterV1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
 			if assert.Nil(t, err) {
 				assert.Equal(t, mca.Spec, resp.Spec)
 			}
 
 			// Allocation Policy #3: another cluster with highest priority, but missing desired label (will not be selected)
-			mca = &multiclusterv1alpha1.GameServerAllocationPolicy{
-				Spec: multiclusterv1alpha1.GameServerAllocationPolicySpec{
+			mca = &multiclusterv1.GameServerAllocationPolicy{
+				Spec: multiclusterv1.GameServerAllocationPolicySpec{
 					Priority: 1,
 					Weight:   10,
-					ConnectionInfo: multiclusterv1alpha1.ClusterConnectionInfo{
+					ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
 						AllocationEndpoints: []string{"another-endpoint"},
 						ClusterName:         "multicluster3",
 						SecretName:          "sec3",
@@ -152,7 +152,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 					GenerateName: "allocationpolicy-",
 				},
 			}
-			resp, err = framework.AgonesClient.MulticlusterV1alpha1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
+			resp, err = framework.AgonesClient.MulticlusterV1().GameServerAllocationPolicies(fleet.ObjectMeta.Namespace).Create(mca)
 			if assert.Nil(t, err) {
 				assert.Equal(t, mca.Spec, resp.Spec)
 			}
