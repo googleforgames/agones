@@ -28,7 +28,7 @@ gen-changelog: RELEASE_VERSION ?= $(base_version)
 gen-changelog: RELEASE_BRANCH ?= master
 gen-changelog:
 	read -p 'Github Token: ' TOKEN && \
-    docker run -it --rm -v "$(agones_path)":/project markmandel/github-changelog-generator \
+    docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.15.0 \
 		--user=googleforgames --project=agones \
 		--bug-labels=kind/bug --enhancement-labels=kind/feature \
 		--breaking-labels=kind/breaking --security-labels=area/security \
