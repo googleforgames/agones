@@ -59,10 +59,14 @@ namespace Agones
 
         #region Unity Methods
         // Use this for initialization.
-        private void Start()
+        private void Awake()
         {
             String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
             sidecarAddress = "http://localhost:" + (port ?? "9358");
+        }
+
+        private void Start()
+        {
             HealthCheckAsync();
         }
 
