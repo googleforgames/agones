@@ -4494,7 +4494,7 @@ If unspecified, system trust roots on the apiserver are used.</p>
 <hr/>
 <h2 id="multicluster.agones.dev">multicluster.agones.dev</h2>
 <p>
-<p>Package v1alpha1 is the v1alpha1 version of the API.</p>
+<p>Package v1 is the v1 version of the API.</p>
 </p>
 Resource Types:
 <ul><li>
@@ -4523,7 +4523,7 @@ Resource Types:
 string</td>
 <td>
 <code>
-multicluster.agones.dev/v1alpha1
+multicluster.agones.dev/v1
 </code>
 </td>
 </tr>
@@ -4565,7 +4565,7 @@ GameServerAllocationPolicySpec
 <td>
 <code>priority</code></br>
 <em>
-int
+int32
 </em>
 </td>
 <td>
@@ -4691,7 +4691,7 @@ int
 <td>
 <code>orderedPriorities</code></br>
 <em>
-[]int
+[]int32
 </em>
 </td>
 <td>
@@ -4703,7 +4703,7 @@ int
 <code>priorityToCluster</code></br>
 <em>
 <a href="#GameServerAllocationPolicy">
-map[int]map[string][]*agones.dev/agones/pkg/apis/multicluster/v1alpha1.GameServerAllocationPolicy
+map[int32]map[string][]*agones.dev/agones/pkg/apis/multicluster/v1.GameServerAllocationPolicy
 </a>
 </em>
 </td>
@@ -4745,7 +4745,7 @@ map[string]bool
 <td>
 <code>priority</code></br>
 <em>
-int
+int32
 </em>
 </td>
 <td>

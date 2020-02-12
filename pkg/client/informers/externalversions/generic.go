@@ -23,7 +23,7 @@ import (
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -66,9 +66,9 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case autoscalingv1.SchemeGroupVersion.WithResource("fleetautoscalers"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Autoscaling().V1().FleetAutoscalers().Informer()}, nil
 
-		// Group=multicluster.agones.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Multicluster().V1alpha1().GameServerAllocationPolicies().Informer()}, nil
+		// Group=multicluster.agones.dev, Version=v1
+	case multiclusterv1.SchemeGroupVersion.WithResource("gameserverallocationpolicies"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Multicluster().V1().GameServerAllocationPolicies().Informer()}, nil
 
 	}
 

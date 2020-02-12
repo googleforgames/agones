@@ -19,7 +19,7 @@
 package fake
 
 import (
-	v1alpha1 "agones.dev/agones/pkg/apis/multicluster/v1alpha1"
+	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -30,29 +30,29 @@ import (
 
 // FakeGameServerAllocationPolicies implements GameServerAllocationPolicyInterface
 type FakeGameServerAllocationPolicies struct {
-	Fake *FakeMulticlusterV1alpha1
+	Fake *FakeMulticlusterV1
 	ns   string
 }
 
-var gameserverallocationpoliciesResource = schema.GroupVersionResource{Group: "multicluster.agones.dev", Version: "v1alpha1", Resource: "gameserverallocationpolicies"}
+var gameserverallocationpoliciesResource = schema.GroupVersionResource{Group: "multicluster.agones.dev", Version: "v1", Resource: "gameserverallocationpolicies"}
 
-var gameserverallocationpoliciesKind = schema.GroupVersionKind{Group: "multicluster.agones.dev", Version: "v1alpha1", Kind: "GameServerAllocationPolicy"}
+var gameserverallocationpoliciesKind = schema.GroupVersionKind{Group: "multicluster.agones.dev", Version: "v1", Kind: "GameServerAllocationPolicy"}
 
 // Get takes name of the gameServerAllocationPolicy, and returns the corresponding gameServerAllocationPolicy object, and an error if there is any.
-func (c *FakeGameServerAllocationPolicies) Get(name string, options v1.GetOptions) (result *v1alpha1.GameServerAllocationPolicy, err error) {
+func (c *FakeGameServerAllocationPolicies) Get(name string, options v1.GetOptions) (result *multiclusterv1.GameServerAllocationPolicy, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(gameserverallocationpoliciesResource, c.ns, name), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewGetAction(gameserverallocationpoliciesResource, c.ns, name), &multiclusterv1.GameServerAllocationPolicy{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.GameServerAllocationPolicy), err
+	return obj.(*multiclusterv1.GameServerAllocationPolicy), err
 }
 
 // List takes label and field selectors, and returns the list of GameServerAllocationPolicies that match those selectors.
-func (c *FakeGameServerAllocationPolicies) List(opts v1.ListOptions) (result *v1alpha1.GameServerAllocationPolicyList, err error) {
+func (c *FakeGameServerAllocationPolicies) List(opts v1.ListOptions) (result *multiclusterv1.GameServerAllocationPolicyList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(gameserverallocationpoliciesResource, gameserverallocationpoliciesKind, c.ns, opts), &v1alpha1.GameServerAllocationPolicyList{})
+		Invokes(testing.NewListAction(gameserverallocationpoliciesResource, gameserverallocationpoliciesKind, c.ns, opts), &multiclusterv1.GameServerAllocationPolicyList{})
 
 	if obj == nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (c *FakeGameServerAllocationPolicies) List(opts v1.ListOptions) (result *v1
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.GameServerAllocationPolicyList{ListMeta: obj.(*v1alpha1.GameServerAllocationPolicyList).ListMeta}
-	for _, item := range obj.(*v1alpha1.GameServerAllocationPolicyList).Items {
+	list := &multiclusterv1.GameServerAllocationPolicyList{ListMeta: obj.(*multiclusterv1.GameServerAllocationPolicyList).ListMeta}
+	for _, item := range obj.(*multiclusterv1.GameServerAllocationPolicyList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -79,31 +79,31 @@ func (c *FakeGameServerAllocationPolicies) Watch(opts v1.ListOptions) (watch.Int
 }
 
 // Create takes the representation of a gameServerAllocationPolicy and creates it.  Returns the server's representation of the gameServerAllocationPolicy, and an error, if there is any.
-func (c *FakeGameServerAllocationPolicies) Create(gameServerAllocationPolicy *v1alpha1.GameServerAllocationPolicy) (result *v1alpha1.GameServerAllocationPolicy, err error) {
+func (c *FakeGameServerAllocationPolicies) Create(gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicy) (result *multiclusterv1.GameServerAllocationPolicy, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewCreateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &multiclusterv1.GameServerAllocationPolicy{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.GameServerAllocationPolicy), err
+	return obj.(*multiclusterv1.GameServerAllocationPolicy), err
 }
 
 // Update takes the representation of a gameServerAllocationPolicy and updates it. Returns the server's representation of the gameServerAllocationPolicy, and an error, if there is any.
-func (c *FakeGameServerAllocationPolicies) Update(gameServerAllocationPolicy *v1alpha1.GameServerAllocationPolicy) (result *v1alpha1.GameServerAllocationPolicy, err error) {
+func (c *FakeGameServerAllocationPolicies) Update(gameServerAllocationPolicy *multiclusterv1.GameServerAllocationPolicy) (result *multiclusterv1.GameServerAllocationPolicy, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewUpdateAction(gameserverallocationpoliciesResource, c.ns, gameServerAllocationPolicy), &multiclusterv1.GameServerAllocationPolicy{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.GameServerAllocationPolicy), err
+	return obj.(*multiclusterv1.GameServerAllocationPolicy), err
 }
 
 // Delete takes name of the gameServerAllocationPolicy and deletes it. Returns an error if one occurs.
 func (c *FakeGameServerAllocationPolicies) Delete(name string, options *v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(gameserverallocationpoliciesResource, c.ns, name), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewDeleteAction(gameserverallocationpoliciesResource, c.ns, name), &multiclusterv1.GameServerAllocationPolicy{})
 
 	return err
 }
@@ -112,17 +112,17 @@ func (c *FakeGameServerAllocationPolicies) Delete(name string, options *v1.Delet
 func (c *FakeGameServerAllocationPolicies) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
 	action := testing.NewDeleteCollectionAction(gameserverallocationpoliciesResource, c.ns, listOptions)
 
-	_, err := c.Fake.Invokes(action, &v1alpha1.GameServerAllocationPolicyList{})
+	_, err := c.Fake.Invokes(action, &multiclusterv1.GameServerAllocationPolicyList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gameServerAllocationPolicy.
-func (c *FakeGameServerAllocationPolicies) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1alpha1.GameServerAllocationPolicy, err error) {
+func (c *FakeGameServerAllocationPolicies) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *multiclusterv1.GameServerAllocationPolicy, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GameServerAllocationPolicy{})
+		Invokes(testing.NewPatchSubresourceAction(gameserverallocationpoliciesResource, c.ns, name, pt, data, subresources...), &multiclusterv1.GameServerAllocationPolicy{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1alpha1.GameServerAllocationPolicy), err
+	return obj.(*multiclusterv1.GameServerAllocationPolicy), err
 }
