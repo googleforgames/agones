@@ -468,6 +468,14 @@ message like
 Post https://autoscaler-tls-service.default.svc:8000/scale: x509: certificate is not valid for any names, but wanted to match autoscaler-tls-service.default.svc
 ```
 
+If you see errors like the following in `autoscaler-webhook-tls` pod logs:
+```
+http: TLS handshake error from 10.48.3.125:33374: remote error: tls: bad certificate
+```
+Then there could be an issue with your `./rootCA.pem`.
+
+You can repeat the process from step 2, in order to fix your certificates setup.
+
 ## Next Steps
 
 Read the advanced [Scheduling and Autoscaling]({{< relref "../Advanced/scheduling-and-autoscaling.md" >}}) guide, for more details on autoscaling.
