@@ -13,6 +13,144 @@
   "produces": [
     "application/json"
   ],
-  "paths": {},
-  "definitions": {}
+  "paths": {
+    "/alpha/player/capacity": {
+      "get": {
+        "summary": "get the current player capacity",
+        "operationId": "GetPlayerCapacity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaCount"
+            }
+          }
+        },
+        "tags": [
+          "SDK"
+        ]
+      },
+      "post": {
+        "summary": "change the player capacity to a new value",
+        "operationId": "SetPlayerCapacity",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/alphaCount"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/alpha/player/connect": {
+      "post": {
+        "summary": "Call when a player has connected",
+        "operationId": "PlayerConnect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/alphaPlayerId"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/alpha/player/count": {
+      "get": {
+        "summary": "get the current player count",
+        "operationId": "GetPlayerCount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaCount"
+            }
+          }
+        },
+        "tags": [
+          "SDK"
+        ]
+      }
+    },
+    "/alpha/player/disconnect": {
+      "post": {
+        "summary": "Call when a player has disconnected",
+        "operationId": "PlayerDisconnect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/alphaEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/alphaPlayerId"
+            }
+          }
+        ],
+        "tags": [
+          "SDK"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "alphaCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "Store a count variable"
+    },
+    "alphaEmpty": {
+      "type": "object",
+      "title": "I am Empty"
+    },
+    "alphaPlayerId": {
+      "type": "object",
+      "properties": {
+        "playerId": {
+          "type": "string"
+        }
+      },
+      "title": "The unique identifier for a given player"
+    }
+  }
 }
