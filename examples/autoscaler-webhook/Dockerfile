@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Gather dependencies and build the executable
-FROM golang:1.11.5 as builder
+FROM golang:1.13.7 as builder
 WORKDIR /go/src/autoscaler-webhook
 
 COPY examples/autoscaler-webhook/main.go .
