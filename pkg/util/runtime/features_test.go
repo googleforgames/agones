@@ -26,7 +26,14 @@ import (
 
 func TestFeatures(t *testing.T) {
 	t.Parallel()
-	featureDefaults[Feature("Test")] = false
+	FeatureTestMutex.Lock()
+	defer FeatureTestMutex.Unlock()
+
+	// stable feature flag state
+	featureDefaults = map[Feature]bool{
+		FeatureExample:  true,
+		Feature("Test"): false,
+	}
 
 	t.Run("invalid Feature gate", func(t *testing.T) {
 		err := ParseFeatures("Foo")

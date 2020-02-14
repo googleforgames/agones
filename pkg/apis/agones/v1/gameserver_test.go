@@ -22,6 +22,7 @@ import (
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,21 +63,25 @@ func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		protocol   corev1.Protocol
-		state      GameServerState
-		policy     PortPolicy
-		health     Health
-		scheduling apis.SchedulingStrategy
-		sdkServer  SdkServer
+		protocol            corev1.Protocol
+		state               GameServerState
+		policy              PortPolicy
+		health              Health
+		scheduling          apis.SchedulingStrategy
+		sdkServer           SdkServer
+		alphaPlayerCapacity int64
 	}
 	data := map[string]struct {
-		gameServer GameServer
-		container  string
-		expected   expected
+		gameServer   GameServer
+		container    string
+		featureFlags string
+		expected     expected
 	}{
 		"set basic defaults on a very simple gameserver": {
+			featureFlags: runtime.FeaturePlayerTracking + "=true",
 			gameServer: GameServer{
 				Spec: GameServerSpec{
+					Alpha: AlphaSpec{Players: PlayersSpec{InitialCapacity: 10}},
 					Ports: []GameServerPort{{ContainerPort: 999}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
@@ -100,6 +105,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					GRPCPort: 9357,
 					HTTPPort: 9358,
 				},
+				alphaPlayerCapacity: 10,
 			},
 		},
 		"defaults on passthrough": {
@@ -180,6 +186,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
 					Ports: []GameServerPort{{PortPolicy: Static}},
+					Alpha: AlphaSpec{Players: PlayersSpec{InitialCapacity: 10}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -319,8 +326,14 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		},
 	}
 
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	for name, test := range data {
 		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(test.featureFlags)
+			assert.NoError(t, err)
+
 			test.gameServer.ApplyDefaults()
 
 			assert.Equal(t, pkg.Version, test.gameServer.Annotations[VersionAnnotation])
@@ -333,6 +346,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 			assert.Equal(t, test.expected.sdkServer, test.gameServer.Spec.SdkServer)
+			assert.Equal(t, test.expected.alphaPlayerCapacity, test.gameServer.Status.Alpha.Players.Capacity)
 		})
 	}
 }
