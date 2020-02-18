@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="1.1.0"]
+//  terraform apply [-var agones_version="1.3.0"]
 
 provider "google" {
   version = "~> 2.10"
