@@ -39,6 +39,6 @@ Available settings:
 
 - Health Ping Enabled. Whether the server sends a health ping to the Agones sidecar. (default: `true`)
 - Health Ping Seconds. Interval of the server sending a health ping to the Agones sidecar. (default: `5`)
-- Debug Logging Enabled. Debug logging for development of this Plugin. (default: `false`)
 - Request Retry Limit. Maximum number of times a failed request to the Agones sidecar is retried. Health requests are not retried. (default: `30`)
+- Send Ready at Startup. Automatically send a Ready request when the server starts. Disable this to manually control when the game server should be marked as ready. (default: `true`)
 
