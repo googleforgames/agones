@@ -226,7 +226,8 @@ type GameServerStatus struct {
 	Address       string                 `json:"address"`
 	NodeName      string                 `json:"nodeName"`
 	ReservedUntil *metav1.Time           `json:"reservedUntil"`
-	// (Alpha, PlayerTracking feature flag)
+	// [Stage:Alpha]
+	// [FeatureFlag:PlayerTesting]
 	// +optional
 	Players *PlayerStatus `json:"players"`
 }
@@ -313,10 +314,12 @@ func (gs *GameServer) applyStatusDefaults() {
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		// set value if enabled, otherwise very easy to accidentally panic
+		// when gs.Status.Players is nil
+		if gs.Status.Players == nil {
+			gs.Status.Players = &PlayerStatus{}
+		}
 		if gs.Spec.Players != nil {
-			if gs.Status.Players == nil {
-				gs.Status.Players = &PlayerStatus{}
-			}
 			gs.Status.Players.Capacity = gs.Spec.Players.InitialCapacity
 		}
 	}

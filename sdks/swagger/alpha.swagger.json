@@ -16,7 +16,7 @@
   "paths": {
     "/alpha/player/capacity": {
       "get": {
-        "summary": "get the current player capacity",
+        "summary": "Get the last player capacity that was set through the SDK.\nIf the player capacity is set from outside the SDK, use SDK.GameServer() instead.",
         "operationId": "GetPlayerCapacity",
         "responses": {
           "200": {
@@ -31,7 +31,7 @@
         ]
       },
       "post": {
-        "summary": "change the player capacity to a new value",
+        "summary": "Change the player capacity to a new value.",
         "operationId": "SetPlayerCapacity",
         "responses": {
           "200": {
@@ -58,7 +58,7 @@
     },
     "/alpha/player/connect": {
       "post": {
-        "summary": "Call when a player has connected",
+        "summary": "Call when a player has connected.",
         "operationId": "PlayerConnect",
         "responses": {
           "200": {
@@ -102,7 +102,7 @@
     },
     "/alpha/player/disconnect": {
       "post": {
-        "summary": "Call when a player has disconnected",
+        "summary": "Call when a player has disconnected.",
         "operationId": "PlayerDisconnect",
         "responses": {
           "200": {
@@ -137,7 +137,7 @@
           "format": "int64"
         }
       },
-      "title": "Store a count variable"
+      "description": "Store a count variable."
     },
     "alphaEmpty": {
       "type": "object",
@@ -150,7 +150,7 @@
           "type": "string"
         }
       },
-      "title": "The unique identifier for a given player"
+      "description": "The unique identifier for a given player."
     }
   }
 }

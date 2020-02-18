@@ -30,8 +30,6 @@ import (
 	sdkalpha "agones.dev/agones/pkg/sdk/alpha"
 	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
-	serveralpha "agones.dev/agones/pkg/sdkserver/alpha"
-	serverbeta "agones.dev/agones/pkg/sdkserver/beta"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -154,8 +152,8 @@ func main() {
 			}
 		}()
 		sdk.RegisterSDKServer(grpcServer, s)
-		sdkalpha.RegisterSDKServer(grpcServer, serveralpha.NewSDKServer())
-		sdkbeta.RegisterSDKServer(grpcServer, serverbeta.NewSDKServer())
+		sdkalpha.RegisterSDKServer(grpcServer, s)
+		sdkbeta.RegisterSDKServer(grpcServer, s)
 	}
 
 	grpcEndpoint := fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.GRPCPort)
@@ -185,45 +183,37 @@ func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 		}
 	}
 
-	stableSDK, err := sdkserver.NewLocalSDKServer(filePath)
+	s, err := sdkserver.NewLocalSDKServer(filePath)
 	if err != nil {
 		return nil, err
 	}
-	alphaSDK := serveralpha.NewLocalSDKServer()
-	betaSDK := serverbeta.NewLocalSDKServer()
 
-	sdk.RegisterSDKServer(grpcServer, stableSDK)
-	sdkalpha.RegisterSDKServer(grpcServer, alphaSDK)
-	sdkbeta.RegisterSDKServer(grpcServer, betaSDK)
+	sdk.RegisterSDKServer(grpcServer, s)
+	sdkalpha.RegisterSDKServer(grpcServer, s)
+	sdkbeta.RegisterSDKServer(grpcServer, s)
 	return func() {
-		alphaSDK.Close()
-		betaSDK.Close()
-		stableSDK.Close()
+		s.Close()
 	}, err
 }
 
 // registerLocal registers the local test SDK servers, and returns a cancel func that
 // closes all the SDK implementations
 func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), error) {
-	stableSDK, err := sdkserver.NewLocalSDKServer("")
+	s, err := sdkserver.NewLocalSDKServer("")
 	if err != nil {
 		return nil, err
 	}
-	alphaSDK := serveralpha.NewLocalSDKServer()
-	betaSDK := serverbeta.NewLocalSDKServer()
 
-	stableSDK.SetTestMode(true)
-	stableSDK.GenerateUID()
+	s.SetTestMode(true)
+	s.GenerateUID()
 	expectedFuncs := strings.Split(ctlConf.Test, ",")
-	stableSDK.SetExpectedSequence(expectedFuncs)
+	s.SetExpectedSequence(expectedFuncs)
 
-	sdk.RegisterSDKServer(grpcServer, stableSDK)
-	sdkalpha.RegisterSDKServer(grpcServer, alphaSDK)
-	sdkbeta.RegisterSDKServer(grpcServer, betaSDK)
+	sdk.RegisterSDKServer(grpcServer, s)
+	sdkalpha.RegisterSDKServer(grpcServer, s)
+	sdkbeta.RegisterSDKServer(grpcServer, s)
 	return func() {
-		alphaSDK.Close()
-		betaSDK.Close()
-		stableSDK.Close()
+		s.Close()
 	}, err
 }
 
@@ -281,7 +271,7 @@ func parseEnvFlags() config {
 	pflag.Int(httpPortFlag, viper.GetInt(httpPortFlag), fmt.Sprintf("Port on which to bind the HTTP server. Defaults to %d", defaultHTTPPort))
 	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
-	pflag.String(testFlag, viper.GetString(testFlag), "List functions which shoud be called during the SDK Conformance test run.")
+	pflag.String(testFlag, viper.GetString(testFlag), "List functions which should be called during the SDK Conformance test run.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 

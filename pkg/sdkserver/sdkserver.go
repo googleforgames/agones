@@ -29,6 +29,8 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listersv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/util/logfields"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/workerqueue"
@@ -51,12 +53,17 @@ import (
 type Operation string
 
 const (
-	updateState      Operation = "updateState"
-	updateLabel      Operation = "updateLabel"
-	updateAnnotation Operation = "updateAnnotation"
+	updateState          Operation = "updateState"
+	updateLabel          Operation = "updateLabel"
+	updateAnnotation     Operation = "updateAnnotation"
+	updatePlayerCapacity Operation = "updatePlayerCapacity"
 )
 
-var _ sdk.SDKServer = &SDKServer{}
+var (
+	_ sdk.SDKServer   = &SDKServer{}
+	_ alpha.SDKServer = &LocalSDKServer{}
+	_ beta.SDKServer  = &LocalSDKServer{}
+)
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
 // for a GameServer that will update the game server status on SDK requests
@@ -88,6 +95,7 @@ type SDKServer struct {
 	gsWaitForSync      sync.WaitGroup
 	reserveTimer       *time.Timer
 	gsReserveDuration  *time.Duration
+	gsPlayerCapacity   int64
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -222,6 +230,15 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
+	// populate player capacity value
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		s.gsUpdateMutex.Lock()
+		if gs.Status.Players != nil {
+			s.gsPlayerCapacity = gs.Status.Players.Capacity
+		}
+		s.gsUpdateMutex.Unlock()
+	}
+
 	// then start the http endpoints
 	s.logger.Debug("Starting SDKServer http health check...")
 	go func() {
@@ -253,6 +270,8 @@ func (s *SDKServer) syncGameServer(key string) error {
 		return s.updateLabels()
 	case updateAnnotation:
 		return s.updateAnnotations()
+	case updatePlayerCapacity:
+		return s.updatePlayerCapacity()
 	}
 
 	return errors.Errorf("could not sync game server key: %s", key)
@@ -524,6 +543,54 @@ func (s *SDKServer) stopReserveTimer() {
 	s.gsReserveDuration = nil
 }
 
+// PlayerConnect should be called when a player connects.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+	panic("implement me")
+}
+
+// PlayerDisconnect should be called when a player disconnects.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+	panic("implement me")
+}
+
+// GetPlayerCount returns the current player count.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	panic("implement me")
+}
+
+// SetPlayerCapacity to change the game server's player capacity.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) SetPlayerCapacity(ctx context.Context, count *alpha.Count) (*alpha.Empty, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.gsUpdateMutex.Lock()
+	s.gsPlayerCapacity = count.Count
+	s.gsUpdateMutex.Unlock()
+	s.workerqueue.Enqueue(cache.ExplicitKey(string(updatePlayerCapacity)))
+
+	return &alpha.Empty{}, nil
+}
+
+// GetPlayerCapacity returns the current player capacity, as set by SDK.SetPlayerCapacity()
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+	return &alpha.Count{Count: s.gsPlayerCapacity}, nil
+}
+
 // sendGameServerUpdate sends a watch game server event
 func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 	s.logger.Debug("Sending GameServer Event to connectedStreams")
@@ -587,4 +654,25 @@ func (s *SDKServer) healthy() bool {
 	s.healthMutex.RLock()
 	defer s.healthMutex.RUnlock()
 	return s.healthFailureCount < s.health.FailureThreshold
+}
+
+// updatePlayerCapacity updates the Player Capacity field in the GameServer's Status.
+func (s *SDKServer) updatePlayerCapacity() error {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.logger.WithField("capacity", s.gsPlayerCapacity).Debug("updating player capacity")
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+
+	gsCopy := gs.DeepCopy()
+
+	s.gsUpdateMutex.RLock()
+	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
+	s.gsUpdateMutex.RUnlock()
+
+	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+	return err
 }

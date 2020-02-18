@@ -54,7 +54,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{0}
+	return fileDescriptor_alpha_8cdd011a8dc56535, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -74,7 +74,7 @@ func (m *Empty) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
-// Store a count variable
+// Store a count variable.
 type Count struct {
 	Count                int64    `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -86,7 +86,7 @@ func (m *Count) Reset()         { *m = Count{} }
 func (m *Count) String() string { return proto.CompactTextString(m) }
 func (*Count) ProtoMessage()    {}
 func (*Count) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{1}
+	return fileDescriptor_alpha_8cdd011a8dc56535, []int{1}
 }
 func (m *Count) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Count.Unmarshal(m, b)
@@ -113,7 +113,7 @@ func (m *Count) GetCount() int64 {
 	return 0
 }
 
-// The unique identifier for a given player
+// The unique identifier for a given player.
 type PlayerId struct {
 	PlayerId             string   `protobuf:"bytes,1,opt,name=playerId,proto3" json:"playerId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -125,7 +125,7 @@ func (m *PlayerId) Reset()         { *m = PlayerId{} }
 func (m *PlayerId) String() string { return proto.CompactTextString(m) }
 func (*PlayerId) ProtoMessage()    {}
 func (*PlayerId) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_f6b2d32c52a73de0, []int{2}
+	return fileDescriptor_alpha_8cdd011a8dc56535, []int{2}
 }
 func (m *PlayerId) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PlayerId.Unmarshal(m, b)
@@ -170,13 +170,14 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type SDKClient interface {
-	// Call when a player has connected
+	// Call when a player has connected.
 	PlayerConnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error)
-	// Call when a player has disconnected
+	// Call when a player has disconnected.
 	PlayerDisconnect(ctx context.Context, in *PlayerId, opts ...grpc.CallOption) (*Empty, error)
-	// change the player capacity to a new value
+	// Change the player capacity to a new value.
 	SetPlayerCapacity(ctx context.Context, in *Count, opts ...grpc.CallOption) (*Empty, error)
-	// get the current player capacity
+	// Get the last player capacity that was set through the SDK.
+	// If the player capacity is set from outside the SDK, use SDK.GameServer() instead.
 	GetPlayerCapacity(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error)
 	// get the current player count
 	GetPlayerCount(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Count, error)
@@ -237,13 +238,14 @@ func (c *sDKClient) GetPlayerCount(ctx context.Context, in *Empty, opts ...grpc.
 
 // SDKServer is the server API for SDK service.
 type SDKServer interface {
-	// Call when a player has connected
+	// Call when a player has connected.
 	PlayerConnect(context.Context, *PlayerId) (*Empty, error)
-	// Call when a player has disconnected
+	// Call when a player has disconnected.
 	PlayerDisconnect(context.Context, *PlayerId) (*Empty, error)
-	// change the player capacity to a new value
+	// Change the player capacity to a new value.
 	SetPlayerCapacity(context.Context, *Count) (*Empty, error)
-	// get the current player capacity
+	// Get the last player capacity that was set through the SDK.
+	// If the player capacity is set from outside the SDK, use SDK.GameServer() instead.
 	GetPlayerCapacity(context.Context, *Empty) (*Count, error)
 	// get the current player count
 	GetPlayerCount(context.Context, *Empty) (*Count, error)
@@ -372,9 +374,9 @@ var _SDK_serviceDesc = grpc.ServiceDesc{
 	Metadata: "alpha.proto",
 }
 
-func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_f6b2d32c52a73de0) }
+func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_8cdd011a8dc56535) }
 
-var fileDescriptor_alpha_f6b2d32c52a73de0 = []byte{
+var fileDescriptor_alpha_8cdd011a8dc56535 = []byte{
 	// 316 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xc1, 0x4a, 0xc3, 0x40,
 	0x10, 0x40, 0x89, 0x35, 0xb6, 0x8e, 0x28, 0x76, 0x6d, 0x25, 0x24, 0xb6, 0xd4, 0x15, 0x44, 0x3c,
