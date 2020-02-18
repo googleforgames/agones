@@ -56,6 +56,17 @@ functions that implement the core responsibilities of the SDK.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
+Calling any of state changing functions mentioned below does not guarantee that GameServer Custom Resource object would actually change its state right after the call. For instance, it could be moved to the `Shutdown` state elsewhere (for example, when a fleet scales down), which leads to no changes in `GameServer` object. You can verify the result of this call by waiting for the desired state in a callback to WatchGameServer() function.
+
+Functions which changes GameServer state or settings are:
+
+1. Ready()
+1. Shutdown()
+1. SetLabel()
+1. SetAnnotation()
+1. Allocate()
+1. Reserve()
+
 ### Ready()
 This tells Agones that the Game Server is ready to take player connections.
 Once a Game Server has specified that it is `Ready`, then the Kubernetes
@@ -153,7 +164,9 @@ and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 ### Allocate()
 
 With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
-For those scenarios, this SDK functionality exists. 
+For those scenarios, this SDK functionality exists.
+
+There is a chance that GameServer does not actually become `Allocated` after this call. Please refer to the general note in [Function Reference](#function-reference) above.
 
 {{< alert title="Note" color="info">}}
 Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
