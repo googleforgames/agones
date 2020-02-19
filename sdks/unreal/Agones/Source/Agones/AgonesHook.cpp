@@ -123,28 +123,26 @@ void FAgonesHook::SetLabel(const FString& Key, const FString& Value)
 {
 	FKeyValuePair Label = { Key, Value };
 	FString Json;
-	if (FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		SendRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed to set label, error serializing key-value pair (%s: %s)"), *Key, *Value);
+		return;
 	}
-	else
-	{
-		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send request, error serializing key-value pair (%s: %s)"), *Key, *Value);
-	}
+
+	SendRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
 }
 
 void FAgonesHook::SetAnnotation(const FString& Key, const FString& Value)
 {
 	FKeyValuePair Annotation = { Key, Value };
 	FString Json;
-	if (FJsonObjectConverter::UStructToJsonObjectString(Annotation, Json))
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Annotation, Json))
 	{
-		SendRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed to set annotation, error serializing key-value pair (%s: %s)"), *Key, *Value);
+		return;
 	}
-	else
-	{
-		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send request, error serializing key-value pair (%s: %s)"), *Key, *Value);
-	}
+
+	SendRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
 }
 
 void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delegate)
@@ -184,14 +182,13 @@ void FAgonesHook::Reserve(const int64 Seconds)
 {
 	FDuration Duration = { Seconds };
 	FString Json;
-	if (FJsonObjectConverter::UStructToJsonObjectString(Duration, Json))
-	{
-		SendRequest(SidecarAddress + ReserveSuffix, Json, FHttpVerb::POST, true);
-	}
-	else
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Duration, Json))
 	{
 		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send reserve request, error serializing duration (%d)"), Seconds);
+		return;
 	}
+
+	SendRequest(SidecarAddress + ReserveSuffix, Json, FHttpVerb::POST, true);
 }
 
 TSharedRef<IHttpRequest> FAgonesHook::MakeRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure)
