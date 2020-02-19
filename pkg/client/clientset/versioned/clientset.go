@@ -31,17 +31,9 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AgonesV1() agonesv1.AgonesV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Agones() agonesv1.AgonesV1Interface
 	AllocationV1() allocationv1.AllocationV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Allocation() allocationv1.AllocationV1Interface
 	AutoscalingV1() autoscalingv1.AutoscalingV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Autoscaling() autoscalingv1.AutoscalingV1Interface
 	MulticlusterV1() multiclusterv1.MulticlusterV1Interface
-	// Deprecated: please explicitly pick a version if possible.
-	Multicluster() multiclusterv1.MulticlusterV1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -59,20 +51,8 @@ func (c *Clientset) AgonesV1() agonesv1.AgonesV1Interface {
 	return c.agonesV1
 }
 
-// Deprecated: Agones retrieves the default version of AgonesClient.
-// Please explicitly pick a version.
-func (c *Clientset) Agones() agonesv1.AgonesV1Interface {
-	return c.agonesV1
-}
-
 // AllocationV1 retrieves the AllocationV1Client
 func (c *Clientset) AllocationV1() allocationv1.AllocationV1Interface {
-	return c.allocationV1
-}
-
-// Deprecated: Allocation retrieves the default version of AllocationClient.
-// Please explicitly pick a version.
-func (c *Clientset) Allocation() allocationv1.AllocationV1Interface {
 	return c.allocationV1
 }
 
@@ -81,20 +61,8 @@ func (c *Clientset) AutoscalingV1() autoscalingv1.AutoscalingV1Interface {
 	return c.autoscalingV1
 }
 
-// Deprecated: Autoscaling retrieves the default version of AutoscalingClient.
-// Please explicitly pick a version.
-func (c *Clientset) Autoscaling() autoscalingv1.AutoscalingV1Interface {
-	return c.autoscalingV1
-}
-
 // MulticlusterV1 retrieves the MulticlusterV1Client
 func (c *Clientset) MulticlusterV1() multiclusterv1.MulticlusterV1Interface {
-	return c.multiclusterV1
-}
-
-// Deprecated: Multicluster retrieves the default version of MulticlusterClient.
-// Please explicitly pick a version.
-func (c *Clientset) Multicluster() multiclusterv1.MulticlusterV1Interface {
 	return c.multiclusterV1
 }
 
