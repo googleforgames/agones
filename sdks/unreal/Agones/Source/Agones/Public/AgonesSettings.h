@@ -22,7 +22,7 @@
 /**
  * Implements the settings for Agones.
  */
-UCLASS(config = Game)
+UCLASS(config = Game, defaultconfig)
 class AGONES_API UAgonesSettings : public UObject
 {
 	GENERATED_BODY()
