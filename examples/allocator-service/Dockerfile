@@ -25,7 +25,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o service .
 
 
 # Create the final image that will run the allocator service
-FROM alpine:3.8
+FROM alpine:3.11
 RUN apk add --update ca-certificates
 RUN adduser -D -u 1000 service
 

@@ -16,7 +16,6 @@ apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
   generateName: "simple-tcp-"
-  name: simple-tcp
 spec:
   ports:
   - name: default

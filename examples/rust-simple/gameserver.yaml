@@ -27,4 +27,4 @@ spec:
       containers:
       - name: rust-simple
         image: gcr.io/agones-images/rust-simple-server:0.7 
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always

@@ -21,7 +21,7 @@ COPY . /go/src/agones.dev/agones
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
-FROM alpine:3.10
+FROM alpine:3.11
 
 RUN adduser -D -u 1000 server
 COPY --from=builder /go/src/simple-tcp/server /home/server/server
