@@ -94,6 +94,10 @@ public:
 	void SetAnnotation(const FString& Key, const FString& Value);
 	/** Retrieve the GameServer details from the sidecar */
 	void GetGameServer(const FGameServerRequestCompleteDelegate& Delegate);
+	/** Sends a request to allocate the GameServer **/
+	void Allocate();
+	/** Sends a request to mark the GameServer as reserved for the specified duration */
+	void Reserve(const int64 Seconds);
 
 private:
 
@@ -117,4 +121,6 @@ private:
 	const FString SetLabelSuffix;
 	const FString SetAnnotationSuffix;
 	const FString GetGameServerSuffix;
+	const FString AllocateSuffix;
+	const FString ReserveSuffix;
 };
