@@ -19,6 +19,7 @@
 #include "JsonObjectConverter.h"
 #include "Serialization/JsonReader.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "Model/Duration.h"
 #include "Model/KeyValuePair.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
 #include "Serialization/JsonSerializer.h"
@@ -43,6 +44,8 @@ FAgonesHook::FAgonesHook()
 	, SetLabelSuffix(FString(TEXT("/metadata/label")))
 	, SetAnnotationSuffix(FString(TEXT("/metadata/annotation")))
 	, GetGameServerSuffix(FString(TEXT("/gameserver")))
+	, AllocateSuffix(FString(TEXT("/allocate")))
+	, ReserveSuffix(FString(TEXT("/reserve")))
 {
 	Settings = GetDefault<UAgonesSettings>();
 	check(Settings != nullptr);
@@ -52,12 +55,17 @@ FAgonesHook::FAgonesHook()
 		FHttpRetrySystem::FRetryLimitCountSetting(RetryLimitCount),
 		FHttpRetrySystem::FRetryTimeoutRelativeSecondsSetting());
 
-	UE_LOG(LogAgonesHook, Log, TEXT("Initialized Agones Hook, Sidecar address: %s, Health Enabled: %s, Health Ping: %f, Debug: %s, Request Retry Limit: %d")
+	UE_LOG(LogAgonesHook, Log, TEXT("Initialized Agones Hook, Sidecar address: %s, Health Enabled: %s, Health Ping: %f, Request Retry Limit: %d, Send Ready at Startup: %s")
 		, *SidecarAddress
 		, (Settings->bHealthPingEnabled ? TEXT("True") : TEXT("False"))
 		, Settings->HealthPingSeconds
-		, (Settings->bDebugLogEnabled ? TEXT("True") : TEXT("False"))
-		, Settings->RequestRetryLimit);
+		, Settings->RequestRetryLimit
+		, (Settings->bSendReadyAtStartup ? TEXT("True") : TEXT("False")));
+
+	if (Settings->bSendReadyAtStartup)
+	{
+		Ready();
+	}
 }
 
 FAgonesHook::~FAgonesHook()
@@ -115,28 +123,26 @@ void FAgonesHook::SetLabel(const FString& Key, const FString& Value)
 {
 	FKeyValuePair Label = { Key, Value };
 	FString Json;
-	if (FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		SendRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed to set label, error serializing key-value pair (%s: %s)"), *Key, *Value);
+		return;
 	}
-	else
-	{
-		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send request, error serializing key-value pair (%s: %s)"), *Key, *Value);
-	}
+
+	SendRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
 }
 
 void FAgonesHook::SetAnnotation(const FString& Key, const FString& Value)
 {
 	FKeyValuePair Annotation = { Key, Value };
 	FString Json;
-	if (FJsonObjectConverter::UStructToJsonObjectString(Annotation, Json))
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Annotation, Json))
 	{
-		SendRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed to set annotation, error serializing key-value pair (%s: %s)"), *Key, *Value);
+		return;
 	}
-	else
-	{
-		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send request, error serializing key-value pair (%s: %s)"), *Key, *Value);
-	}
+
+	SendRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
 }
 
 void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delegate)
@@ -167,6 +173,24 @@ void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delega
 	});
 }
 
+void FAgonesHook::Allocate()
+{
+	SendRequest(SidecarAddress + AllocateSuffix, TEXT("{}"), FHttpVerb::POST, true);
+}
+
+void FAgonesHook::Reserve(const int64 Seconds)
+{
+	FDuration Duration = { Seconds };
+	FString Json;
+	if (!FJsonObjectConverter::UStructToJsonObjectString(Duration, Json))
+	{
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed to send reserve request, error serializing duration (%d)"), Seconds);
+		return;
+	}
+
+	SendRequest(SidecarAddress + ReserveSuffix, Json, FHttpVerb::POST, true);
+}
+
 TSharedRef<IHttpRequest> FAgonesHook::MakeRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure)
 {
 	TSharedRef<IHttpRequest> Req = bRetryOnFailure
@@ -184,16 +208,13 @@ TSharedRef<IHttpRequest> FAgonesHook::SendRequest(const FString& URL, const FStr
 {
 	TSharedRef<IHttpRequest> Req = MakeRequest(URL, JsonContent, Verb, bRetryOnFailure);
 	bool bSuccess = Req->ProcessRequest();
-	if (Settings->bDebugLogEnabled)
+	if (bSuccess)
 	{
-		if (bSuccess)
-		{
-			UE_LOG(LogAgonesHook, Log, TEXT("Send: %s"), *URL);
-		}
-		else
-		{
-			UE_LOG(LogAgonesHook, Error, TEXT("Failed sending: %s"), *URL);
-		}
+		UE_LOG(LogAgonesHook, Verbose, TEXT("Send: %s"), *URL);
+	}
+	else
+	{
+		UE_LOG(LogAgonesHook, Error, TEXT("Failed sending: %s"), *URL);
 	}
 
 	return Req;
