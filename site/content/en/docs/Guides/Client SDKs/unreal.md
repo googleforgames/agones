@@ -31,6 +31,40 @@ At this moment we do not provide binaries for the plugin. This requires you to c
 2. Copy {{< ghlink href="sdks/unreal" >}}the Agones plugin directory{{< /ghlink >}} into the Plugins directory.
 3. Build the project.
 
+### Agones Hook
+
+To manually call the Agones SDK methods add the plugin as a dependency inside the `<project>.Build.cs` file:
+
+```
+PublicDependencyModuleNames.AddRange(
+    new string[]
+    {
+        ...
+        "Agones"
+    });
+```
+
+Then use `FAgonesModule::GetHook()` to get a reference to the Agones hook and call the SDK methods using the hook:
+
+```
+#include "Agones.h"
+
+...
+
+// Get a reference to the Agones hook.
+FAgonesHook& Hook = FAgonesModule::GetHook();
+
+Hook.Ready();
+Hook.SetLabel(TEXT("key"), TEXT("value"));
+
+// GetGameServerDelegate here is a class member of type FGameServerRequestCompleteDelegate.
+Hook.GetGameServer(GetGameServerDelegate);
+GetGameServerDelegate.BindLambda([](TSharedPtr<FGameServer> GameServer, bool bSuccess)
+{
+    // ...
+});
+```
+
 ## Settings
 
 The settings for the Agones Plugin can be found in the Unreal Engine editor `Edit > Project Settings > Plugins >  Agones`
@@ -39,6 +73,6 @@ Available settings:
 
 - Health Ping Enabled. Whether the server sends a health ping to the Agones sidecar. (default: `true`)
 - Health Ping Seconds. Interval of the server sending a health ping to the Agones sidecar. (default: `5`)
-- Debug Logging Enabled. Debug logging for development of this Plugin. (default: `false`)
 - Request Retry Limit. Maximum number of times a failed request to the Agones sidecar is retried. Health requests are not retried. (default: `30`)
+- Send Ready at Startup. Automatically send a Ready request when the server starts. Disable this to manually control when the game server should be marked as ready. (default: `true`)
 

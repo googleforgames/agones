@@ -35,7 +35,7 @@ resource "google_container_cluster" "primary" {
   project  = var.cluster["project"]
   provider = google-beta
 
-  min_master_version = "1.13"
+  min_master_version = "1.14"
 
   node_pool {
     name       = "default"

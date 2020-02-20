@@ -19,7 +19,7 @@ resources:
     cluster:
       name: e2e-test-cluster
       description: End to end tests cluster for Agones
-      initialClusterVersion: "1.13"
+      initialClusterVersion: "1.14"
       nodePools:
         - name: "default"
           initialNodeCount: 8
