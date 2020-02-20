@@ -86,7 +86,6 @@ void FAgonesModule::OnWorldInitialized(UWorld* World, const UWorld::Initializati
 	if (World != nullptr && World->GetNetMode() == ENetMode::NM_DedicatedServer)
 	{
 		HookPtr = MakeShareable(new FAgonesHook());
-		HookPtr->Ready();
 	}
 }
 

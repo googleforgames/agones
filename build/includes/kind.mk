@@ -28,7 +28,7 @@ kind-test-cluster: $(ensure-build-image)
 		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
 		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.14.10 --wait 5m;\
 	fi
-	$(MAKE) setup-test-cluster KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
+	$(MAKE) setup-test-cluster DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 
 # deletes the kind agones cluster
 # useful if you're want to start from scratch
@@ -37,15 +37,13 @@ kind-delete-cluster:
 
 # start an interactive shell with kubectl configured to target the kind cluster
 kind-shell: $(ensure-build-image)
-	$(MAKE) shell KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-	 DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)"
+	$(MAKE) shell DOCKER_RUN_ARGS="--network=host $(DOCKER_RUN_ARGS)"
 
 # installs the current dev version of agones
 # you should build-images and kind-push first.
 kind-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host" ALWAYS_PULL_SIDECAR=false \
-		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort\
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")"
+		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort
 
 # pushes the current dev version of agones to the kind single node cluster.
 kind-push:
@@ -56,39 +54,27 @@ kind-push:
 
 # Runs e2e tests against our kind cluster
 kind-test-e2e:
-	$(MAKE) KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS=--network=host \
-		test-e2e
+	$(MAKE) DOCKER_RUN_ARGS=--network=host test-e2e
 
 # prometheus on kind
 # we have to disable PVC as it's not supported on kind.
 kind-setup-prometheus:
-	$(MAKE) setup-prometheus \
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host" PVC=false \
+	$(MAKE) setup-prometheus DOCKER_RUN_ARGS="--network=host" PVC=false \
 		HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
 
 # grafana on kind with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on kind.
 kind-setup-grafana:
-	$(MAKE) setup-grafana \
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host" PVC=false
+	$(MAKE) setup-grafana DOCKER_RUN_ARGS="--network=host" PVC=false
 
 # kind port forwarding controller web
 kind-controller-portforward:
-	$(MAKE) controller-portforward \
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host"
+	$(MAKE) controller-portforward DOCKER_RUN_ARGS="--network=host"
 
 # kind port forwarding grafana
 kind-grafana-portforward:
-	$(MAKE) grafana-portforward \
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host"
+	$(MAKE) grafana-portforward DOCKER_RUN_ARGS="--network=host"
 
 # kind port forwarding for prometheus web ui
 kind-prometheus-portforward:
-	$(MAKE) prometheus-portforward \
-		KUBECONFIG="$(shell kind get kubeconfig-path --name="$(KIND_PROFILE)")" \
-		DOCKER_RUN_ARGS="--network=host"
+	$(MAKE) prometheus-portforward DOCKER_RUN_ARGS="--network=host"

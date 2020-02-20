@@ -38,9 +38,9 @@ public:
 	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Health Ping Seconds"))
 	float HealthPingSeconds;
 
-	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Debug Logging Enabled"))
-	bool bDebugLogEnabled;
-
 	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Request Retry Limit"))
 	uint32 RequestRetryLimit;
+
+	UPROPERTY(EditAnywhere, config, Category = "Agones", meta = (DisplayName = "Send Ready at Startup"))
+	bool bSendReadyAtStartup;
 };
