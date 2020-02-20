@@ -40,11 +40,11 @@ resource "kubernetes_cluster_role_binding" "tiller" {
     namespace = "kube-system"
   }
 
-  depends_on = ["kubernetes_service_account.tiller"]
+  depends_on = [kubernetes_service_account.tiller]
 }
 
 provider "kubernetes" {
-  version                = "~> 1.5"
+  version                = "~> 1.5, <=1.10"
   load_config_file       = false
   host                   = "${var.host}"
   token                  = "${var.token}"
@@ -72,7 +72,7 @@ data "helm_repository" "agones" {
   name = "agones"
   url  = "https://agones.dev/chart/stable"
 
-  depends_on = ["kubernetes_cluster_role_binding.tiller"]
+  depends_on = [kubernetes_cluster_role_binding.tiller]
 }
 
 locals {
@@ -80,6 +80,7 @@ locals {
   # for installing latest image it would use chart value
   tag_name = "${var.agones_version != "" ? "agones.image.tag" : "skip"}"
 }
+
 
 resource "helm_release" "agones" {
   name         = "agones"
@@ -129,8 +130,8 @@ resource "helm_release" "agones" {
   }
 
   set {
-    name = "agones.ping.udp.expose"
-    value ="${var.udp_expose}"
+    name  = "agones.ping.udp.expose"
+    value = "${var.udp_expose}"
   }
 
   set {

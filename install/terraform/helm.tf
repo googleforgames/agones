@@ -88,7 +88,7 @@ variable "values_file" {
 data "google_client_config" "default" {}
 
 provider "kubernetes" {
-  version                = "~> 1.5"
+  version                = "~> 1.5, <=1.10"
   load_config_file       = false
   host                   = "https://${google_container_cluster.primary.endpoint}"
   token                  = data.google_client_config.default.access_token

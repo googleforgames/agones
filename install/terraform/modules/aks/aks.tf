@@ -19,8 +19,8 @@ provider "azuread" {
 # Create Service Principal password
 resource "azuread_service_principal_password" "aks" {
   end_date             = "2299-12-30T23:00:00Z" # Forever
-  service_principal_id = "${azuread_service_principal.aks.id}"
-  value                = "${random_string.password.result}"
+  service_principal_id = azuread_service_principal.aks.id
+  value                = random_string.password.result
 }
 
 # Create Azure AD Application for Service Principal
@@ -30,7 +30,7 @@ resource "azuread_application" "aks" {
 
 # Create Service Principal
 resource "azuread_service_principal" "aks" {
-  application_id = "${azuread_application.aks.application_id}"
+  application_id = azuread_application.aks.application_id
 }
 
 # Generate random string to be used for Service Principal Password
@@ -50,18 +50,18 @@ resource "azurerm_kubernetes_cluster" "test" {
   resource_group_name = "${azurerm_resource_group.test.name}"
   dns_prefix          = "agones"
 
-  kubernetes_version = "1.14.10"
+  kubernetes_version = "1.14.8"
 
-  agent_pool_profile {
-    name            = "default"
-    count           = 2
-    vm_size         = "${var.machine_type}"
-    os_type         = "Linux"
-    os_disk_size_gb = 30
+  default_node_pool {
+    name                = "default"
+    node_count          = 2
+    vm_size             = "${var.machine_type}"
+    os_disk_size_gb     = 30
+    enable_auto_scaling = false
   }
   service_principal {
-    client_id     = "${azuread_application.aks.application_id}"
-    client_secret = "${azuread_service_principal_password.aks.value}"
+    client_id     = "${var.client_id}"
+    client_secret = "${var.client_secret}"
   }
   tags = {
     Environment = "Production"

@@ -19,3 +19,9 @@ variable "machine_type" {
 variable "cluster_name" {
   default = "test-cluster"
 }
+
+variable "client_id" {
+}
+
+variable "client_secret" {
+}
