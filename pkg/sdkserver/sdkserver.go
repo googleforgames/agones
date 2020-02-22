@@ -196,17 +196,17 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 	if gs.Spec.SdkServer.LogLevel != "" {
 		logLevel = gs.Spec.SdkServer.LogLevel
 	}
-	s.logger.WithField("logLevel", logLevel).Info("Setting LogLevel configuration")
+	s.logger.WithField("logLevel", logLevel).Debug("Setting LogLevel configuration")
 	level, err := logrus.ParseLevel(strings.ToLower(string(logLevel)))
 	if err == nil {
 		s.logger.Logger.SetLevel(level)
 	} else {
-		s.logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		s.logger.WithError(err).Warn("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
 		s.logger.Logger.SetLevel(logrus.InfoLevel)
 	}
 
 	s.health = gs.Spec.Health
-	s.logger.WithField("health", s.health).Info("Setting health configuration")
+	s.logger.WithField("health", s.health).Debug("Setting health configuration")
 	s.healthTimeout = time.Duration(gs.Spec.Health.PeriodSeconds) * time.Second
 	s.initHealthLastUpdated(time.Duration(gs.Spec.Health.InitialDelaySeconds) * time.Second)
 
@@ -218,16 +218,16 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 
 	// start health checking running
 	if !s.health.Disabled {
-		s.logger.Info("Starting GameServer health checking")
+		s.logger.Debug("Starting GameServer health checking")
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
 	// then start the http endpoints
-	s.logger.Info("Starting SDKServer http health check...")
+	s.logger.Debug("Starting SDKServer http health check...")
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				s.logger.WithError(err).Info("Health check: http server closed")
+				s.logger.WithError(err).Error("Health check: http server closed")
 			} else {
 				err = errors.Wrap(err, "Could not listen on :8080")
 				runtime.HandleError(s.logger.WithError(err), err)
@@ -261,7 +261,7 @@ func (s *SDKServer) syncGameServer(key string) error {
 // updateState sets the GameServer Status's state to the one persisted in SDKServer,
 // i.e. SDKServer.gsState.
 func (s *SDKServer) updateState() error {
-	s.logger.WithField("state", s.gsState).Info("Updating state")
+	s.logger.WithField("state", s.gsState).Debug("Updating state")
 	if len(s.gsState) == 0 {
 		return errors.Errorf("could not update GameServer %s/%s to empty state", s.namespace, s.gameServerName)
 	}
@@ -274,13 +274,13 @@ func (s *SDKServer) updateState() error {
 
 	// If we are currently in shutdown/being deleted, there is no escaping.
 	if gs.IsBeingDeleted() {
-		s.logger.Info("GameServerState being shutdown. Skipping update.")
+		s.logger.Debug("GameServerState being shutdown. Skipping update.")
 		return nil
 	}
 
 	// If the state is currently unhealthy, you can't go back to Ready.
 	if gs.Status.State == agonesv1.GameServerStateUnhealthy {
-		s.logger.Info("GameServerState already unhealthy. Skipping update.")
+		s.logger.Debug("GameServerState already unhealthy. Skipping update.")
 		return nil
 	}
 
@@ -333,7 +333,7 @@ func (s *SDKServer) gameServer() (*agonesv1.GameServer, error) {
 // updateLabels updates the labels on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsLabels, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateLabels() error {
-	s.logger.WithField("labels", s.gsLabels).Info("Updating label")
+	s.logger.WithField("labels", s.gsLabels).Debug("Updating label")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -357,7 +357,7 @@ func (s *SDKServer) updateLabels() error {
 // updateAnnotations updates the Annotations on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsAnnotations, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateAnnotations() error {
-	s.logger.WithField("annotations", s.gsAnnotations).Info("updating annotation")
+	s.logger.WithField("annotations", s.gsAnnotations).Debug("updating annotation")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
@@ -390,7 +390,7 @@ func (s *SDKServer) enqueueState(state agonesv1.GameServerState) {
 // Ready enters the RequestReady state change for this GameServer into
 // the workqueue so it can be updated
 func (s *SDKServer) Ready(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
-	s.logger.Info("Received Ready request, adding to queue")
+	s.logger.Debug("Received Ready request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateRequestReady)
 	return e, nil
@@ -406,7 +406,7 @@ func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 // Shutdown enters the Shutdown state change for this GameServer into
 // the workqueue so it can be updated
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
-	s.logger.Info("Received Shutdown request, adding to queue")
+	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
 	return e, nil
@@ -418,13 +418,13 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {
-			s.logger.Info("Health stream closed.")
+			s.logger.Debug("Health stream closed.")
 			return stream.SendAndClose(&sdk.Empty{})
 		}
 		if err != nil {
 			return errors.Wrap(err, "Error with Health check")
 		}
-		s.logger.Info("Health Ping Received")
+		s.logger.Debug("Health Ping Received")
 		s.touchHealthLastUpdated()
 	}
 }
@@ -432,7 +432,7 @@ func (s *SDKServer) Health(stream sdk.SDK_HealthServer) error {
 // SetLabel adds the Key/Value to be used to set the label with the metadataPrefix to the `GameServer`
 // metdata
 func (s *SDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	s.logger.WithField("values", kv).Info("Adding SetLabel to queue")
+	s.logger.WithField("values", kv).Debug("Adding SetLabel to queue")
 
 	s.gsUpdateMutex.Lock()
 	s.gsLabels[kv.Key] = kv.Value
@@ -445,7 +445,7 @@ func (s *SDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, e
 // SetAnnotation adds the Key/Value to be used to set the annotations with the metadataPrefix to the `GameServer`
 // metdata
 func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	s.logger.WithField("values", kv).Info("Adding SetAnnotation to queue")
+	s.logger.WithField("values", kv).Debug("Adding SetAnnotation to queue")
 
 	s.gsUpdateMutex.Lock()
 	s.gsAnnotations[kv.Key] = kv.Value
@@ -457,7 +457,7 @@ func (s *SDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 
 // GetGameServer returns the current GameServer configuration and state from the backing GameServer CRD
 func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
-	s.logger.Info("Received GetGameServer request")
+	s.logger.Debug("Received GetGameServer request")
 	gs, err := s.gameServer()
 	if err != nil {
 		return nil, err
@@ -469,7 +469,7 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 // WatchGameServer sends events through the stream when changes occur to the
 // backing GameServer configuration / status
 func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
-	s.logger.Info("Received WatchGameServer request, adding stream to connectedStreams")
+	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
 	s.streamMutex.Lock()
 	s.connectedStreams = append(s.connectedStreams, stream)
 	s.streamMutex.Unlock()
@@ -492,7 +492,7 @@ func (s *SDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, e
 		s.gsUpdateMutex.Unlock()
 	}
 
-	s.logger.Info("Received Reserve request, adding to queue")
+	s.logger.Debug("Received Reserve request, adding to queue")
 	s.enqueueState(agonesv1.GameServerStateReserved)
 
 	return e, nil
@@ -525,7 +525,7 @@ func (s *SDKServer) stopReserveTimer() {
 
 // sendGameServerUpdate sends a watch game server event
 func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
-	s.logger.Info("Sending GameServer Event to connectedStreams")
+	s.logger.Debug("Sending GameServer Event to connectedStreams")
 
 	s.streamMutex.RLock()
 	defer s.streamMutex.RUnlock()
@@ -548,7 +548,7 @@ func (s *SDKServer) sendGameServerUpdate(gs *agonesv1.GameServer) {
 func (s *SDKServer) runHealth() {
 	s.checkHealth()
 	if !s.healthy() {
-		s.logger.WithField("gameServerName", s.gameServerName).Info("GameServer has failed health check")
+		s.logger.WithField("gameServerName", s.gameServerName).Warn("GameServer has failed health check")
 		s.enqueueState(agonesv1.GameServerStateUnhealthy)
 	}
 }
@@ -571,7 +571,7 @@ func (s *SDKServer) checkHealth() {
 		s.healthMutex.Lock()
 		defer s.healthMutex.Unlock()
 		s.healthFailureCount++
-		s.logger.WithField("failureCount", s.healthFailureCount).Infof("GameServer Health Check failed")
+		s.logger.WithField("failureCount", s.healthFailureCount).Warn("GameServer Health Check failed")
 	}
 }
 
