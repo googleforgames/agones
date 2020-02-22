@@ -95,35 +95,16 @@ For example: `apiVersion: "agones.dev/v1"` is a `stable` resource, `apiVersion: 
 
 #### New CRD attributes
 
-`alpha` and `beta` attributes will have a corresponding `alpha` or `beta` parent element in their configuration to
-delineate their feature stage.
+When `alpha` and `beta` attributes are added to an existing stable Agones CRD, we will follow the Kubernetes [_Adding
+ Unstable Features to Stable Versions_](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api_changes.md#adding-unstable-features-to-stable-versions)
+Guide to optimise on the least amount of breaking changes for users as attributes progress through feature stages.
 
-If no such parent exists, this attribute is a `stable` feature.
+`alpha` and `beta` attributes will be added to the existing CRD as `optional` and documented with their feature stage.
+Attempting to populate these `alpha` and `beta` attributes on an Agones CRD will return a validation error if their
+ accompanying Feature Flag is not enabled.
 
-For example, if we were to add a hypothetical `alpha` configuration option of `timeoutSeconds` to the `GameServer`
- resource, it would be configured like so:
- 
-```yaml
-apiVersion: "agones.dev/v1"
-kind: GameServer
-metadata:
-  generateName: "simple-udp-"
-spec:
-  alpha: # this is the alpha feature block
-    timeoutSeconds: 30
-  ports:
-  - name: default
-    portPolicy: Dynamic
-    containerPort: 7654
-  template:
-    spec:
-      containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.15
-``` 
-
-As resource attributes progress through their stages, there may be breaking changes, as backward conversion between
- `alpha`, `beta` and `stable` positioning in the resource configuration may not be guaranteed.
+`alpha` and `beta` attributes can be subject to change of name and structure, and will result in breaking changes
+ before moving to a `stable` stage. These changes will be outlined in release notes and feature documentation. 
 
 ### Agones Game Server SDK
 
