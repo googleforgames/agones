@@ -54,10 +54,6 @@ minikube-push: minikube-agones-profile
 	$(MAKE) minikube-transfer-image TAG=$(ping_tag)
 	$(MAKE) minikube-transfer-image TAG=$(allocator_tag)
 
-minikube-push-simple-udp: minikube-agones-profile
-	$(MAKE) minikube-transfer-image TAG=gcr.io/agones-images/udp-server:0.18
-
-
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
 minikube-install: minikube-agones-profile
