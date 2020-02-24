@@ -10,19 +10,19 @@ description: >
 This feature is in a pre-release state and might change.
 {{< /alert >}}
 
-There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost saving and availability. For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on [GameServerAllocationPolicy](https://github.com/googleforgames/agones/blob/master/pkg/apis/multicluster/v1alpha1/gameserverallocationpolicy.go) agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
+There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost saving and availability. For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on [GameServerAllocationPolicy](https://github.com/googleforgames/agones/blob/master/pkg/apis/multicluster/v1/gameserverallocationpolicy.go) agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
 
 The remainder of this article describes how to enable multi-cluster allocation.
 
 ## Define Cluster Priority
 
-[GameServerAllocationPolicy](https://github.com/googleforgames/agones/blob/master/pkg/apis/multicluster/v1alpha1/gameserverallocationpolicy.go) is the CRD defined by Agones for setting multi-cluster allocation rules. In addition to cluster priority, it describes the connection information for the target cluster, including the game server namespace, agones-allocator endpoint and client K8s secrets name for redirecting the allocation request. Here is an example of setting the priority for a cluster and it's connection rules. One such resource should be defined per cluster. For clusters with the same priority, the cluster is chosen with a probability relative to its weight.
+[GameServerAllocationPolicy](https://github.com/googleforgames/agones/blob/master/pkg/apis/multicluster/v1/gameserverallocationpolicy.go) is the CRD defined by Agones for setting multi-cluster allocation rules. In addition to cluster priority, it describes the connection information for the target cluster, including the game server namespace, agones-allocator endpoint and client K8s secrets name for redirecting the allocation request. Here is an example of setting the priority for a cluster and it's connection rules. One such resource should be defined per cluster. For clusters with the same priority, the cluster is chosen with a probability relative to its weight.
 
 In the following example the policy is defined for cluster B in cluster A.
 
 ```bash
 cat <<EOF | kubectl apply -f -
-apiVersion: multicluster.agones.dev/v1alpha1
+apiVersion: multicluster.agones.dev/v1
 kind: GameServerAllocationPolicy
 metadata:
   name: allocator-cluster-B
@@ -96,7 +96,7 @@ To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` 
 NAMESPACE=<namespace>
 FLEET_NAME=<fleet name>
 
-curl https://${EXTERNAL_IP}:443/v1alpha1/gameserverallocation \
+curl https://${EXTERNAL_IP}:443/v1alpha/gameserverallocation \
     --header "Content-Type: application/json" \
     -d '{"namespace": "'${NAMESPACE}'", "multiClusterSetting": {"enabled": true}, "requiredGameServerSelector": {"matchLabels": {"agones.dev/fleet": "'${FLEET_NAME}'"}}}' \
     --key ${KEY_FILE} \
