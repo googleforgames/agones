@@ -2536,15 +2536,16 @@ Kubernetes core/v1.PodTemplateSpec
 </tr>
 <tr>
 <td>
-<code>alpha</code></br>
+<code>players</code></br>
 <em>
-<a href="#AlphaSpec">
-AlphaSpec
+<a href="#PlayersSpec">
+PlayersSpec
 </a>
 </em>
 </td>
 <td>
-<p>Alpha describes the alpha properties for the GameServer.</p>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
 </td>
 </tr>
 </table>
@@ -2667,68 +2668,6 @@ GameServerTemplateSpec
 <em>
 <a href="#GameServerSetStatus">
 GameServerSetStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="AlphaSpec">AlphaSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>AlphaSpec contains the alpha properties of the GameServer.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#PlayersSpec">
-PlayersSpec
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="AlphaStatus">AlphaStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#GameServerStatus">GameServerStatus</a>)
-</p>
-<p>
-<p>AlphaStatus is the alpha status values for a GameServer</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#PlayerStatus">
-PlayerStatus
 </a>
 </em>
 </td>
@@ -3175,15 +3114,16 @@ Kubernetes core/v1.PodTemplateSpec
 </tr>
 <tr>
 <td>
-<code>alpha</code></br>
+<code>players</code></br>
 <em>
-<a href="#AlphaSpec">
-AlphaSpec
+<a href="#PlayersSpec">
+PlayersSpec
 </a>
 </em>
 </td>
 <td>
-<p>Alpha describes the alpha properties for the GameServer.</p>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
 </td>
 </tr>
 </tbody>
@@ -3273,14 +3213,16 @@ Kubernetes meta/v1.Time
 </tr>
 <tr>
 <td>
-<code>alpha</code></br>
+<code>players</code></br>
 <em>
-<a href="#AlphaStatus">
-AlphaStatus
+<a href="#PlayerStatus">
+PlayerStatus
 </a>
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag)</p>
 </td>
 </tr>
 </tbody>
@@ -3448,15 +3390,16 @@ Kubernetes core/v1.PodTemplateSpec
 </tr>
 <tr>
 <td>
-<code>alpha</code></br>
+<code>players</code></br>
 <em>
-<a href="#AlphaSpec">
-AlphaSpec
+<a href="#PlayersSpec">
+PlayersSpec
 </a>
 </em>
 </td>
 <td>
-<p>Alpha describes the alpha properties for the GameServer.</p>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
 </td>
 </tr>
 </table>
@@ -3531,7 +3474,7 @@ int32
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#AlphaStatus">AlphaStatus</a>)
+<a href="#GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
 <p>PlayerStatus stores the current player capacity values</p>
@@ -3570,7 +3513,7 @@ int64
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#AlphaSpec">AlphaSpec</a>)
+<a href="#GameServerSpec">GameServerSpec</a>)
 </p>
 <p>
 <p>PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
