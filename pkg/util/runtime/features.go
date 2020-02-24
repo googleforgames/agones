@@ -31,7 +31,7 @@ const (
 	FeatureExample Feature = "Example"
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
-	FeaturePlayerTracking = "PlayerTracking"
+	FeaturePlayerTracking Feature = "PlayerTracking"
 )
 
 var (

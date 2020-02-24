@@ -82,18 +82,8 @@ func (c *Clientset) AgonesV1() agonesv1.AgonesV1Interface {
 	return &fakeagonesv1.FakeAgonesV1{Fake: &c.Fake}
 }
 
-// Agones retrieves the AgonesV1Client
-func (c *Clientset) Agones() agonesv1.AgonesV1Interface {
-	return &fakeagonesv1.FakeAgonesV1{Fake: &c.Fake}
-}
-
 // AllocationV1 retrieves the AllocationV1Client
 func (c *Clientset) AllocationV1() allocationv1.AllocationV1Interface {
-	return &fakeallocationv1.FakeAllocationV1{Fake: &c.Fake}
-}
-
-// Allocation retrieves the AllocationV1Client
-func (c *Clientset) Allocation() allocationv1.AllocationV1Interface {
 	return &fakeallocationv1.FakeAllocationV1{Fake: &c.Fake}
 }
 
@@ -102,17 +92,7 @@ func (c *Clientset) AutoscalingV1() autoscalingv1.AutoscalingV1Interface {
 	return &fakeautoscalingv1.FakeAutoscalingV1{Fake: &c.Fake}
 }
 
-// Autoscaling retrieves the AutoscalingV1Client
-func (c *Clientset) Autoscaling() autoscalingv1.AutoscalingV1Interface {
-	return &fakeautoscalingv1.FakeAutoscalingV1{Fake: &c.Fake}
-}
-
 // MulticlusterV1 retrieves the MulticlusterV1Client
 func (c *Clientset) MulticlusterV1() multiclusterv1.MulticlusterV1Interface {
-	return &fakemulticlusterv1.FakeMulticlusterV1{Fake: &c.Fake}
-}
-
-// Multicluster retrieves the MulticlusterV1Client
-func (c *Clientset) Multicluster() multiclusterv1.MulticlusterV1Interface {
 	return &fakemulticlusterv1.FakeMulticlusterV1{Fake: &c.Fake}
 }

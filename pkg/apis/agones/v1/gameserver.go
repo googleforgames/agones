@@ -151,13 +151,9 @@ type GameServerSpec struct {
 	SdkServer SdkServer `json:"sdkServer,omitempty"`
 	// Template describes the Pod that will be created for the GameServer
 	Template corev1.PodTemplateSpec `json:"template"`
-	// Alpha describes the alpha properties for the GameServer.
-	Alpha AlphaSpec `json:"alpha,omitempty"`
-}
-
-// AlphaSpec contains the alpha properties of the GameServer.
-type AlphaSpec struct {
-	Players PlayersSpec `json:"players"`
+	// (Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.
+	// +optional
+	Players *PlayersSpec `json:"players,omitempty"`
 }
 
 // PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
@@ -225,7 +221,9 @@ type GameServerStatus struct {
 	Address       string                 `json:"address"`
 	NodeName      string                 `json:"nodeName"`
 	ReservedUntil *metav1.Time           `json:"reservedUntil"`
-	Alpha         AlphaStatus            `json:"alpha"`
+	// (Alpha, PlayerTracking feature flag)
+	// +optional
+	Players *PlayerStatus `json:"players"`
 }
 
 // GameServerStatusPort shows the port that was allocated to a
@@ -233,11 +231,6 @@ type GameServerStatus struct {
 type GameServerStatusPort struct {
 	Name string `json:"name,omitempty"`
 	Port int32  `json:"port"`
-}
-
-// AlphaStatus is the alpha status values for a GameServer
-type AlphaStatus struct {
-	Players PlayerStatus `json:"players"`
 }
 
 // PlayerStatus stores the current player capacity values
@@ -315,7 +308,12 @@ func (gs *GameServer) applyStatusDefaults() {
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		gs.Status.Alpha.Players.Capacity = gs.Spec.Alpha.Players.InitialCapacity
+		if gs.Spec.Players != nil {
+			if gs.Status.Players == nil {
+				gs.Status.Players = &PlayerStatus{}
+			}
+			gs.Status.Players.Capacity = gs.Spec.Players.InitialCapacity
+		}
 	}
 }
 
@@ -345,6 +343,17 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 // the returned array
 func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
+
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		if gss.Players != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueNotSupported,
+				Field:   "players",
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled,", runtime.FeaturePlayerTracking),
+			})
+		}
+	}
+
 	if devAddress != "" {
 		// verify that the value is a valid IP address.
 		if net.ParseIP(devAddress) == nil {

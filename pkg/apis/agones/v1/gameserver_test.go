@@ -62,6 +62,8 @@ func TestGameServerFindGameServerContainer(t *testing.T) {
 func TestGameServerApplyDefaults(t *testing.T) {
 	t.Parallel()
 
+	ten := int64(10)
+
 	type expected struct {
 		protocol            corev1.Protocol
 		state               GameServerState
@@ -69,7 +71,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		health              Health
 		scheduling          apis.SchedulingStrategy
 		sdkServer           SdkServer
-		alphaPlayerCapacity int64
+		alphaPlayerCapacity *int64
 	}
 	data := map[string]struct {
 		gameServer   GameServer
@@ -78,11 +80,11 @@ func TestGameServerApplyDefaults(t *testing.T) {
 		expected     expected
 	}{
 		"set basic defaults on a very simple gameserver": {
-			featureFlags: runtime.FeaturePlayerTracking + "=true",
+			featureFlags: string(runtime.FeaturePlayerTracking) + "=true",
 			gameServer: GameServer{
 				Spec: GameServerSpec{
-					Alpha: AlphaSpec{Players: PlayersSpec{InitialCapacity: 10}},
-					Ports: []GameServerPort{{ContainerPort: 999}},
+					Players: &PlayersSpec{InitialCapacity: 10},
+					Ports:   []GameServerPort{{ContainerPort: 999}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{
 							{Name: "testing", Image: "testing/image"},
@@ -105,7 +107,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 					GRPCPort: 9357,
 					HTTPPort: 9358,
 				},
-				alphaPlayerCapacity: 10,
+				alphaPlayerCapacity: &ten,
 			},
 		},
 		"defaults on passthrough": {
@@ -186,7 +188,6 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			gameServer: GameServer{
 				Spec: GameServerSpec{
 					Ports: []GameServerPort{{PortPolicy: Static}},
-					Alpha: AlphaSpec{Players: PlayersSpec{InitialCapacity: 10}},
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 			},
@@ -346,7 +347,12 @@ func TestGameServerApplyDefaults(t *testing.T) {
 			assert.Equal(t, test.expected.scheduling, test.gameServer.Spec.Scheduling)
 			assert.Equal(t, test.expected.health, test.gameServer.Spec.Health)
 			assert.Equal(t, test.expected.sdkServer, test.gameServer.Spec.SdkServer)
-			assert.Equal(t, test.expected.alphaPlayerCapacity, test.gameServer.Status.Alpha.Players.Capacity)
+			if test.expected.alphaPlayerCapacity != nil {
+				assert.Equal(t, *test.expected.alphaPlayerCapacity, test.gameServer.Status.Players.Capacity)
+			} else {
+				assert.Nil(t, test.gameServer.Spec.Players)
+				assert.Nil(t, test.gameServer.Status.Players)
+			}
 		})
 	}
 }
@@ -491,6 +497,36 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Len(t, causes, 2)
 	assert.Contains(t, fields, "one.containerPort")
 	assert.Contains(t, fields, "two.hostPort")
+
+	t.Run("validation of "+string(runtime.FeaturePlayerTracking), func(t *testing.T) {
+		gs := GameServer{
+			Spec: GameServerSpec{
+				Players: &PlayersSpec{InitialCapacity: 10},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+		}
+		gs.ApplyDefaults()
+		causes, ok := gs.Validate()
+		for _, f := range causes {
+			fields = append(fields, f.Field)
+		}
+		assert.False(t, ok)
+		assert.Len(t, causes, 1)
+		assert.Contains(t, fields, "players")
+
+		err := runtime.ParseFeatures(string(runtime.FeaturePlayerTracking) + "=true")
+		assert.NoError(t, err)
+		gs = GameServer{
+			Spec: GameServerSpec{
+				Players: &PlayersSpec{InitialCapacity: 10},
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
+		}
+		gs.ApplyDefaults()
+		causes, ok = gs.Validate()
+		assert.True(t, ok)
+		assert.Empty(t, causes)
+	})
 }
 
 func TestGameServerPod(t *testing.T) {
