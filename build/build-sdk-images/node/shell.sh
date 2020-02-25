@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2019 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -ex
-
-cd sdks/nodejs
-npm login --registry=https://npm.pkg.github.com
-npm publish
+mkdir -p /root/.ssh || true
+cp /tmp/.ssh/* /root/.ssh/
+cd ./sdks/nodejs
+bash
