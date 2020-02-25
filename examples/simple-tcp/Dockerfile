@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.11.5 as builder
+FROM golang:1.13.7 as builder
 WORKDIR /go/src/simple-tcp
 
 COPY examples/simple-tcp/main.go .
@@ -21,7 +21,7 @@ COPY . /go/src/agones.dev/agones
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
-FROM alpine:3.10
+FROM alpine:3.11
 
 RUN adduser -D -u 1000 server
 COPY --from=builder /go/src/simple-tcp/server /home/server/server

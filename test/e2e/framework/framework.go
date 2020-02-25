@@ -92,8 +92,8 @@ func NewFromFlags() (*Framework, error) {
 	usr, _ := user.Current()
 	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
 		"kube config path, e.g. $HOME/.kube/config")
-	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.17",
-		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.17")
+	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.18",
+		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.18")
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")

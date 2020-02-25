@@ -51,7 +51,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.17
+        Image:  gcr.io/agones-images/udp-server:0.18
         Name:   simple-udp
         Resources:
           Limits:
@@ -82,7 +82,7 @@ Events:
 The backing Pod has the same name as the `GameServer` - so it's also worth looking at the
 details and events for the Pod to see if there are any issues there, such as restarts due to binary crashes etc.
 
-For example, you can see the restart count on the gcr.io/agones-images/udp-server:0.17 container
+For example, you can see the restart count on the gcr.io/agones-images/udp-server:0.18 container
 is set to `1`, due to the game server binary crash
 
 ```
@@ -104,7 +104,7 @@ Controlled By:      GameServer/simple-udp-zqppv
 Containers:
   simple-udp:
     Container ID:   docker://69eacd03cc89b0636b78abe47926b02183ba84d18fa20649ca443f5232511661
-    Image:          gcr.io/agones-images/udp-server:0.17
+    Image:          gcr.io/agones-images/udp-server:0.18
     Image ID:       docker-pullable://gcr.io/agones-images/udp-server@sha256:6a60eff5e68b88b5ce75ae98082d79cff36cda411a090f3495760e5c3b6c3575
     Port:           7654/UDP
     Host Port:      7058/UDP
@@ -173,7 +173,7 @@ Events:
   Normal  Created    2m28s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Created    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Started    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Started container
-  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "gcr.io/agones-images/udp-server:0.17" already present on machine
+  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "gcr.io/agones-images/udp-server:0.18" already present on machine
 ```
 
 Finally, you can also get the logs of your `GameServer` `Pod` as well via `kubectl logs <pod name> -c <game server container name>`, for example:
