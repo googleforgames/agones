@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: simple-tcp
-        image: gcr.io/agones-images/tcp-server:0.3
+        image: gcr.io/agones-images/tcp-server:0.4
         resources:
           requests:
             memory: "32Mi"

@@ -67,7 +67,7 @@ spec:
         spec:
           containers:
           - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.17
+            image: gcr.io/agones-images/udp-server:0.18
 ```
 
 Since Agones defines a new 

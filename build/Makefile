@@ -57,7 +57,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.17
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.18
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))

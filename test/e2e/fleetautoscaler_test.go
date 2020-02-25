@@ -642,7 +642,7 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "gcr.io/agones-images/autoscaler-webhook:0.2",
+				Image:           "gcr.io/agones-images/autoscaler-webhook:0.3",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,

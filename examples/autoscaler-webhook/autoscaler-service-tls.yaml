@@ -54,7 +54,7 @@ spec:
           secretName: autoscalersecret
       containers:
       - name: autoscaler-webhook
-        image: gcr.io/agones-images/autoscaler-webhook:0.2
+        image: gcr.io/agones-images/autoscaler-webhook:0.3
         imagePullPolicy: Always
         volumeMounts:
         - mountPath: /home/service/certs
