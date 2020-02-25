@@ -10,7 +10,7 @@ description: >
 This feature is in a pre-release state and might change.
 {{< /alert >}}
 
-To allocate a game server, Agones in addition to [GameServerAllocations](https://github.com/googleforgames/agones/blob/master/pkg/apis/allocation/v1/gameserverallocation.go), provides a REST API service with mTLS authentication, called agones-allocator, which is on [v1alpha1 version](https://github.com/googleforgames/agones/blob/master/proto/allocation/v1alpha1), starting on agones v1.1.
+To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a REST API service with mTLS authentication, called agones-allocator, which is on {{< ghlink href="proto/allocation/v1alpha1" >}}v1alpha1 version{{< /ghlink >}}, starting on agones v1.1.
 
 The REST API service is accessible through a Kubernetes service that is externalized using a load balancer. For the http request to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 
@@ -31,18 +31,13 @@ NAME                        TYPE           CLUSTER-IP      <b>EXTERNAL-IP</b>   
 agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b>   443:30250/TCP      7d22h
 </pre>
 
-Store the IP in a variable to use as the server endpoint in the next sections:
-
-```bash
-EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-```
-
 ## Server TLS certificate
 
-Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate, including using CA. The following provides an example of generating a self-signed certificate using openssl.
+Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate, including using CA. The following provides an example of generating a self-signed certificate using openssl and storing it in allocator-tls Kubernetes secret.
 
 ```bash
 #!/bin/bash
+EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
 TLS_KEY_FILE=tls.key
 TLS_CERT_FILE=tls.crt
@@ -61,12 +56,13 @@ openssl x509 -req -days 365 -in tls.csr \
     -out ${TLS_CERT_FILE} \
     -extensions SAN \
     -extfile openssl.cnf
-```
 
-After having the TLS certificates ready, run the following command to store the certificate as a Kubernetes TLS secret.
-
-```bash
+# After having the TLS certificates ready, run the following command to store the certificate as a Kubernetes TLS secret.
 kubectl create secret --save-config=true tls allocator-tls -n agones-system --key=${TLS_KEY_FILE} --cert=${TLS_CERT_FILE} --dry-run -o yaml | kubectl apply -f -
+
+# Optional: Add the TLS signing CA to allocator-tls-ca
+TLS_CERT_FILE_VALUE=`cat ${TLS_CERT_FILE} | base64 -w 0`
+kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CERT_FILE_VALUE}'"' | kubectl apply -f -
 ```
 
 ## Client Certificate
@@ -107,7 +103,7 @@ kubectl get pods -n agones-system -o=name | grep agones-allocator | xargs kubect
 
 ## Send allocation request
 
-Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet](https://agones.dev/site/docs/getting-started/create-fleet/#1-create-a-fleet) and send an HTTP request to agones-allocator by providing fleet's name and the namespace to which it is deployed, set in the JSON [body](https://github.com/googleforgames/agones/blob/master/proto/allocation/v1alpha1/allocation.proto).
+Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet](https://agones.dev/site/docs/getting-started/create-fleet/#1-create-a-fleet) and send an HTTP request to agones-allocator by providing fleet's name and the namespace to which it is deployed, set in the JSON {{< ghlink href="proto/allocation/v1alpha1/allocation.proto" >}}body{{< /ghlink >}}.
 
 ```bash
 #!/bin/bash
@@ -115,7 +111,7 @@ Now the service is ready to accept requests from the client with the generated c
 NAMESPACE=<namespace>
 FLEET_NAME=<fleet name>
 
-curl https://${EXTERNAL_IP}:443/v1alpha1/gameserverallocation \
+curl --http2 https://${EXTERNAL_IP}:443/v1alpha1/gameserverallocation \
     --header "Content-Type: application/json" \
     -d '{"namespace": "'${NAMESPACE}'", "requiredGameServerSelector": {"matchLabels": {"agones.dev/fleet": "'${FLEET_NAME}'"}}}' \
     --key ${KEY_FILE} \
@@ -123,4 +119,4 @@ curl https://${EXTERNAL_IP}:443/v1alpha1/gameserverallocation \
     --cacert ${TLS_CERT_FILE} -v
 ```
 
-If your matchmaker is external to the cluster on which your game servers are hosted, agones-allocator provides the HTTP API (and gRPC in future) to allocate game services using mTLS authentication, which can scale independent to agones controller.
+If your matchmaker is external to the cluster on which your game servers are hosted, agones-allocator provides the gRPC API to allocate game services using mTLS authentication, which can scale independent to agones controller.
