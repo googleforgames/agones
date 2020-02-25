@@ -36,13 +36,6 @@ gen-changelog:
 		--release-branch=$(RELEASE_BRANCH) \
 		--token $$TOKEN
 
-# public the node sdk package
-pubish-sdk-node:
-	$(MAKE) run-sdk-command-node DOCKER_RUN_ARGS=-it COMMAND=publish
-
-# publish all the sdk packages
-publish-sdk-packages: pubish-sdk-node
-
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
 # - Build binaries and images

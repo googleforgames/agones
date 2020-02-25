@@ -1,8 +1,8 @@
 {
-		"dependencies": {
-				"@googleforgames/agones": "../../../sdks/nodejs"
-		},
-		"scripts": {
-				"testSDK": "node ./testSDKClient.js"
-		}
+    "dependencies": {
+        "@google-cloud/agones-sdk": "../../../sdks/nodejs"
+    },
+    "scripts": {
+        "testSDK": "node ./testSDKClient.js"
+    }
 }

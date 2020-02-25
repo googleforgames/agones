@@ -9,10 +9,6 @@ description: "This is the Node.js version of the Agones Game Server Client SDK."
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
-## Download
-
-Download the source {{< ghlink href="sdks/nodejs" >}}directly from GitHub{{< /ghlink >}}.
-
 ## Prerequisites
 
 - Node.js >= 10.13.0
@@ -22,13 +18,16 @@ Download the source {{< ghlink href="sdks/nodejs" >}}directly from GitHub{{< /gh
 Add the agones dependency to your project:
 
 ```sh
-$ npm install @googleforgames/agones
+$ npm install @google-cloud/agones-sdk
 ```
+
+If you need to download the source, rather than install from NPM, you can find it on 
+{{< ghlink href="sdks/nodejs" >}}GitHub{{< /ghlink >}}.
 
 To begin working with the SDK, create an instance of it.
 
 ```javascript
-const AgonesSDK = require('@googleforgames/agones');
+const AgonesSDK = require('@google-cloud/agones-sdk');
 
 let agonesSDK = new AgonesSDK();
 ```
