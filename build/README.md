@@ -63,6 +63,7 @@ Table of Contents
      * [Google Cloud Platform](#google-cloud-platform)
         * [make gcloud-init](#make-gcloud-init)
         * [make gcloud-test-cluster](#make-gcloud-test-cluster)
+        * [make clean-gcloud-test-cluster](#make-clean-gcloud-test-cluster)
         * [make gcloud-auth-cluster](#make-gcloud-auth-cluster)
         * [make gcloud-auth-docker](#make-gcloud-auth-docker)
      * [Minikube](#minikube)
@@ -357,8 +358,8 @@ Now you're ready to begin the development/test cycle:
 - `make build` will build Agones
 - `make test` will run local tests, which includes `site-test` target
 - `make push` will push the Agones images to your image repository 
-- `make test-e2e` will run end-to-end tests in your cluster
 - `make install` will install/upgrade Agones into your cluster
+- `make test-e2e` will run end-to-end tests in your cluster
 
 You can combine some of the above steps into a single one, for example `make build push install` or `make build push test-e2e`.
 
@@ -579,14 +580,17 @@ A set of utilities for setting up a Kubernetes Engine cluster on Google Cloud Pl
 since it's an easy way to get a test cluster working with Kubernetes.
 
 #### `make gcloud-init`
-Initialise the gcloud login and project configuration, if you are working with GCP
+Initialise the gcloud login and project configuration, if you are working with GCP.
 
 #### `make gcloud-test-cluster`
-Creates and authenticates a small, 3 node GKE cluster to work against
+Creates and authenticates a GKE cluster to work against.
+
+#### `make clean-gcloud-test-cluster`
+Delete a GKE cluster previously created with `make gcloud-test-cluster`.
 
 #### `make gcloud-auth-cluster`
 Pulls down authentication information for kubectl against a cluster, name can be specified through CLUSTER_NAME
-(defaults to 'test-cluster')
+(defaults to 'test-cluster').
 
 #### `make gcloud-auth-docker`
 Creates a short lived access to Google Cloud container repositories, so that you are able to call
