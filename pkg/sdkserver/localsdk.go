@@ -125,7 +125,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 
 	go func() {
 		for value := range l.update {
-			logrus.Debug("gameserver update received")
+			logrus.Debug("Gameserver update received")
 			l.updateObservers.Range(func(observer, _ interface{}) bool {
 				observer.(chan struct{}) <- value
 				return true
@@ -285,7 +285,7 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 
 // GetGameServer returns current GameServer configuration.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
-	logrus.Debug("getting GameServer details")
+	logrus.Debug("Getting GameServer details")
 	l.recordRequest("gameserver")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -294,7 +294,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 
 // WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
-	logrus.Debug("connected to watch GameServer...")
+	logrus.Debug("Connected to watch GameServer...")
 	observer := make(chan struct{})
 
 	defer func() {
@@ -387,7 +387,7 @@ func EqualSets(a, b []string) bool {
 
 // Close tears down all the things
 func (l *LocalSDKServer) compare() {
-	logrus.Debug(fmt.Sprintf("Compare"))
+	logrus.Debug("Compare")
 
 	if l.testMode {
 		if !EqualSets(l.expectedSequence, l.requestSequence) {

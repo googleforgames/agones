@@ -357,7 +357,7 @@ func (s *SDKServer) updateLabels() error {
 // updateAnnotations updates the Annotations on this GameServer to the ones persisted in SDKServer,
 // i.e. SDKServer.gsAnnotations, with the prefix of "agones.dev/sdk-"
 func (s *SDKServer) updateAnnotations() error {
-	s.logger.WithField("annotations", s.gsAnnotations).Debug("updating annotation")
+	s.logger.WithField("annotations", s.gsAnnotations).Debug("Updating annotation")
 	gs, err := s.gameServer()
 	if err != nil {
 		return err
