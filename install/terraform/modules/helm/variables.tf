@@ -46,11 +46,11 @@ variable "image_registry" {
 }
 
 variable "pull_policy" {
-  default = "Always"
+  default = "IfNotPresent"
 }
 
 variable "always_pull_sidecar" {
-  default = "true"
+  default = "false"
 }
 
 variable "image_pull_secret" {

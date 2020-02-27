@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.1.0"]
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.4.0"]
 
 provider "google" {
   version = "~> 2.10"
@@ -47,17 +47,54 @@ variable "node_count" {
   default = "4"
 }
 
-module "agones" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/?ref=master"
+variable "zone" {
+  default     = "us-west1-c"
+  description = "The GCP zone to create the cluster in"
+}
+
+variable "network" {
+  default     = "default"
+  description = "The name of the VPC network to attach the cluster and firewall rule to"
+}
+
+module "gke_cluster" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
+  // to Agones version 1.3.0
+  // ***************************************************************************************************
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"
 
   cluster = {
-    "zone"             = "us-west1-c"
     "name"             = var.name
+    "zone"             = var.zone
     "machineType"      = var.machine_type
     "initialNodeCount" = var.node_count
     "project"          = var.project
+    "network"          = var.network
   }
-  agones_version = var.agones_version
-  values_file    = ""
-  chart          = "agones"
+}
+
+module "helm_agones" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
+  // to Agones version 1.3.0
+  // ***************************************************************************************************
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
+
+  agones_version         = var.agones_version
+  values_file            = ""
+  chart                  = "agones"
+  host                   = module.gke_cluster.host
+  token                  = module.gke_cluster.token
+  cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
+}
+
+output "host" {
+  value = module.gke_cluster.host
+}
+output "token" {
+  value = module.gke_cluster.token
+}
+output "cluster_ca_certificate" {
+  value = module.gke_cluster.cluster_ca_certificate
 }
