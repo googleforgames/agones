@@ -41,6 +41,8 @@ Table of Contents
         * [make install](#make-install)
         * [make uninstall](#make-uninstall)
         * [make test-e2e](#make-test-e2e)
+        * [make test-e2e-integration](#make-test-e2e-integration)
+        * [make test-e2e-controller-failure](#make-test-e2e-controller-failure)
         * [make setup-prometheus](#make-setup-prometheus)
         * [make setup-grafana](#make-setup-grafana)
         * [make prometheus-portforward](#make-prometheus-portforward)
@@ -475,6 +477,19 @@ These tests validate Agones flow from start to finish.
 It uses the KUBECONFIG to target a Kubernetes cluster.
 
 See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on Minikube.
+
+#### `make test-e2e-integration`
+Runs integration portion of the end-to-end tests.
+
+Pass flags to [go test](https://golang.org/cmd/go/#hdr-Testing_flags) command
+using the `ARGS` parameter. For example, to run only the `TestGameServerReserve` test:
+
+```bash
+make test-e2e-integration ARGS='-run TestGameServerReserve'
+```
+
+#### `make test-e2e-controller-failure`
+Runs controller failure portion of the end-to-end tests.
 
 #### `make setup-prometheus`
 
