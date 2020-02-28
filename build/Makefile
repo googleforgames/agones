@@ -238,7 +238,12 @@ test-go:
 
 # Runs end-to-end tests on the current configured cluster
 # For minikube user the minikube-test-e2e targets
-test-e2e: test-e2e-integration test-e2e-controller-failure
+test-e2e: test-e2e-integration
+	echo "starting e2e controller failure test"
+	$(GO_TEST) -parallel=1 $(agones_package)/test/e2e/controller $(GO_E2E_TEST_ARGS) \
+    		--gameserver-image=$(GS_TEST_IMAGE) \
+    		--pullsecret=$(IMAGE_PULL_SECRET)
+	echo "Finishing e2e controller failure test!"
 
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
@@ -246,13 +251,6 @@ test-e2e-integration: $(ensure-build-image)
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET)
 	echo "Finishing e2e integration test!"
-
-test-e2e-controller-failure: $(ensure-build-image)
-	echo "starting e2e controller failure test"
-	$(GO_TEST) -parallel=1 $(agones_package)/test/e2e/controller $(GO_E2E_TEST_ARGS) \
-    		--gameserver-image=$(GS_TEST_IMAGE) \
-    		--pullsecret=$(IMAGE_PULL_SECRET)
-	echo "Finishing e2e controller failure test!"
 
 # Runs end-to-end stress tests on the current configured cluster
 # For minikube user the minikube-stress-test-e2e targets

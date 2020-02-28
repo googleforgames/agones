@@ -42,7 +42,6 @@ Table of Contents
         * [make uninstall](#make-uninstall)
         * [make test-e2e](#make-test-e2e)
         * [make test-e2e-integration](#make-test-e2e-integration)
-        * [make test-e2e-controller-failure](#make-test-e2e-controller-failure)
         * [make setup-prometheus](#make-setup-prometheus)
         * [make setup-grafana](#make-setup-grafana)
         * [make prometheus-portforward](#make-prometheus-portforward)
@@ -488,9 +487,6 @@ using the `ARGS` parameter. For example, to run only the `TestGameServerReserve`
 ```bash
 make test-e2e-integration ARGS='-run TestGameServerReserve'
 ```
-
-#### `make test-e2e-controller-failure`
-Runs controller failure portion of the end-to-end tests.
 
 #### `make setup-prometheus`
 
