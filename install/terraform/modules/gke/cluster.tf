@@ -31,6 +31,7 @@ resource "null_resource" "test-setting-variables" {
     EOT
   }
 }
+
 resource "google_container_cluster" "primary" {
   name     = var.cluster["name"]
   location = var.cluster["zone"]
@@ -139,6 +140,5 @@ resource "google_compute_firewall" "default" {
     protocol = "udp"
     ports    = [var.ports]
   }
-
   target_tags = ["game-server"]
 }

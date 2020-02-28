@@ -40,6 +40,29 @@ variable "agones_version" {
 variable "machine_type" {
   default = "n1-standard-4"
 }
+<<<<<<< HEAD:examples/terraform-submodules/gke-local/module.tf
+=======
+
+variable "name" {
+  default = "agones-terraform-example"
+}
+
+variable "machine_type" {
+  default = "n1-standard-4"
+}
+
+variable "values_file" {
+  default = ""
+}
+
+// Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
+// two node pools with 1 node each for "agones-system" and "agones-metrics".
+variable "node_count" {
+  default = "4"
+}
+
+module "gke_cluster" {
+>>>>>>> Switch from the normal to module terraform config:examples/terraform-submodules/gke-local/main.tf
 
 // Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
 // two node pools with 1 node each for "agones-system" and "agones-metrics".
@@ -74,7 +97,7 @@ module "helm_agones" {
   source = "../../../install/terraform/modules/helm"
 
   agones_version         = var.agones_version
-  values_file            = ""
+  values_file            = var.values_file
   chart                  = "agones"
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token

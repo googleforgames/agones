@@ -16,28 +16,25 @@
 terraform-init:
 terraform-init: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
-	cd $(mount_path)/install/terraform && terraform init && gcloud auth application-default login'
+	cd $(mount_path)/examples/terraform-submodules/gke-local && terraform init && gcloud auth application-default login'
 
 terraform-clean:
-	rm -r ../install/terraform/.terraform
-	rm ../install/terraform/terraform.tfstate*
+	rm -r ../examples/terraform-submodules/gke-local/.terraform
+	rm ../examples/terraform-submodules/gke-local/.tfstate*
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
+gcloud-terraform-cluster: GCP_CLUSTER_NAME ?= test-cluster
 gcloud-terraform-cluster: $(ensure-build-image)
 gcloud-terraform-cluster:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
 	$(DOCKER_RUN) bash -c 'export TF_VAR_agones_version=$(AGONES_VERSION) && \
-		cd $(mount_path)/install/terraform && terraform apply -auto-approve -var values_file="" \
-		-var chart="agones" \
-	 	-var "cluster={name=\"$(GCP_CLUSTER_NAME)\", machineType=\"$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\", \
-		 zone=\"$(GCP_CLUSTER_ZONE)\", project=\"$(GCP_PROJECT)\", \
-		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\"}"'
+		cd $(mount_path)/examples/terraform-submodules/gke-local && terraform apply -auto-approve -var project="$(GCP_PROJECT)" -var name="$(GCP_CLUSTER_NAME)"'
 	$(MAKE) gcloud-auth-cluster
 
 # Creates a cluster and install current version of Agones controller
@@ -53,13 +50,14 @@ ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
 	$(DOCKER_RUN) bash -c ' \
-		cd $(mount_path)/install/terraform && terraform apply -auto-approve -var agones_version="$(VERSION)" -var image_registry="$(REGISTRY)" \
+	cd $(mount_path)/examples/terraform-submodules/gke-local && terraform apply -auto-approve -var agones_version="$(VERSION)" -var image_registry="$(REGISTRY)" \
 		-var pull_policy="$(IMAGE_PULL_POLICY)" \
 		-var always_pull_sidecar="$(ALWAYS_PULL_SIDECAR)" \
 		-var image_pull_secret="$(IMAGE_PULL_SECRET)" \
 		-var ping_service_type="$(PING_SERVICE_TYPE)" \
 		-var crd_cleanup="$(CRD_CLEANUP)" \
 		-var "cluster={name=\"$(GCP_CLUSTER_NAME)\", machineType=\"$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\", \
+		-var values_file="../../../helm/agones/values.yaml" \
 		 zone=\"$(GCP_CLUSTER_ZONE)\", project=\"$(GCP_PROJECT)\", \
 		 initialNodeCount=\"$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)\"}"'
 	$(MAKE) gcloud-auth-cluster
