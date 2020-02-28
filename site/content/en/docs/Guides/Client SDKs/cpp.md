@@ -168,7 +168,7 @@ Following options are available:
 
 (Windows only):
 - **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisities. Option is not used if you already have built gRPC.
-- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
+- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL.md)). Used only if OpenSSL and gRPC is built by Agones.
 
 ## Linux / MacOS
 ```
