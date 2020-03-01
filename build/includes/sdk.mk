@@ -170,6 +170,17 @@ run-sdk-conformance-tests: run-sdk-conformance-test-node run-sdk-conformance-tes
 clean-sdk-conformance-tests:
 	$(MAKE) run-all-sdk-command COMMAND=clean
 
+# Start a shell in the SDK image. This is primarily used for publishing packages.
+# Using a shell is the easiest, because of Google internal processes and interactive commands required.
+sdk-shell:
+	$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER)
+	docker run --rm -it $(common_mounts) -v ~/.ssh:/tmp/.ssh:ro $(DOCKER_RUN_ARGS) \
+ 	--entrypoint=/root/shell.sh $(SDK_IMAGE_TAG)
+
+# SDK shell for node
+sdk-shell-node:
+	$(MAKE) sdk-shell SDK_FOLDER=node
+
 # Perform make build for all examples
 build-examples: build-example-xonotic build-example-cpp-simple build-example-simple-udp build-example-autoscaler-webhook build-example-nodejs-simple
 

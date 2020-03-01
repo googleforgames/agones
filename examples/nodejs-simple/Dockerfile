@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:stretch
+FROM debian:buster
 RUN useradd -u 1000 -m server
 RUN apt-get update && apt-get install -y curl  && apt-get clean
-RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs
 
 WORKDIR /home/server
 
-COPY ./sdks/nodejs sdks/nodejs
 COPY ./examples/nodejs-simple examples/nodejs-simple
 RUN cd examples/nodejs-simple && \
     npm install
-
+RUN chown -R server /home/server
 USER 1000
 ENTRYPOINT cd /home/server/examples/nodejs-simple && npm start

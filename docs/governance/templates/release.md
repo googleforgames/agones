@@ -27,6 +27,8 @@ Images available with this release:
 - [gcr.io/agones-images/udp-server:{example-version}](https://gcr.io/agones-images/udp-server:{example-version})
 - [gcr.io/agones-images/tcp-server:{example-version}](https://gcr.io/agones-images/tcp-server:{example-version})
 - [gcr.io/agones-images/xonotic-example:{example-version}](https://gcr.io/agones-images/xonotic-example:{example-version})
+- [gcr.io/agones-images/supertuxkart-example:{example-version}](https://gcr.io/agones-images/supertuxkart-example:{example-version})
+- [gcr.io/agones-images/crd-client:{example-version}](https://gcr.io/agones-images/crd-client:{example-version})
 
 Helm chart available with this release:
 
