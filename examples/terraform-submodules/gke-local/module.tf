@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="1.3.0"]
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.4.0"]
 
 provider "google" {
   version = "~> 2.10"
@@ -24,30 +24,53 @@ provider "google-beta" {
   version = "~> 2.10"
 }
 
+variable "project" {
+  default = ""
+}
+
+variable "name" {
+  default = "agones-terraform-example"
+}
+
 // Install latest version of agones
 variable "agones_version" {
   default = ""
 }
 
-// Your GKE project name
-variable "project" {
-  default = "agones"
+variable "machine_type" {
+  default = "n1-standard-4"
 }
-module "gke_cluster" {
 
+// Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
+// two node pools with 1 node each for "agones-system" and "agones-metrics".
+variable "node_count" {
+  default = "4"
+}
+
+variable "zone" {
+  default     = "us-west1-c"
+  description = "The GCP zone to create the cluster in"
+}
+
+variable "network" {
+  default     = "default"
+  description = "The name of the VPC network to attach the cluster and firewall rule to"
+}
+
+module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
   cluster = {
+    "name"             = var.name
+    "zone"             = var.zone
+    "machineType"      = var.machine_type
+    "initialNodeCount" = var.node_count
     "project"          = var.project
-    "zone"             = "us-west1-c"
-    "name"             = "test-cluster3"
-    "machineType"      = "n1-standard-4"
-    "initialNodeCount" = "4"
+    "network"          = var.network
   }
 }
 
 module "helm_agones" {
-
   source = "../../../install/terraform/modules/helm"
 
   agones_version         = var.agones_version
