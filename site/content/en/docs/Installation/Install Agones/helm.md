@@ -209,7 +209,7 @@ By default agones chart generates tls certificates used by the admission control
 For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
-You can use our script located at `cert/cert.sh` to generates them.
+You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generates them.
 {{< /alert >}}
 
 ## Next Steps
