@@ -116,3 +116,11 @@ repository, we have a [community membership guide](./docs/governance/community_m
 
 - [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) -
   Great way to make sure your Pull Requests get accepted.
+- **Log levels usage:**
+  - Fatal - a critical error has happened and the application can not perform subsequent work anymore. Examples: missing configuration information in case there are no default values provided, one of the services can not start normally, etc.
+  - Error - a serious issue has happened, users are affected without having a way to work around one, but an application may continue to work. This error usually requires someone’s attention. Examples: a file cannot be opened, cannot respond to HTTP request properly, etc.
+  - Warn - something bad has happened, but the application still has the chance to heal itself or the issue can wait for some time to be fixed. Example: a system has failed to connect to an external resource but will try again automatically.
+  - Info - should be used to document state changes in the application or some entity within the application. These logs provide the skeleton of what has happened. Examples: system started/stopped, remote API calls, a new user has been created/updated, etc.
+  - Debug - diagnostic information goes here and everything that can help to troubleshoot an application. Examples: any values in business logic, detailed information about the data flow.
+
+  More details can be found here: https://reflectoring.io/logging-levels/
