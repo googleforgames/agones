@@ -15,20 +15,6 @@ Possible steps are the following:
 1. Run `aws configure` to authorize your `awscli` with proper `AWS Access Key ID` and `AWS Secret Access Key`.
 1. Create an example cluster:
 
-{{% feature expiryVersion="1.4.0" %}}
-```
-eksctl create cluster \
---name prod \
---version 1.13 \
---nodegroup-name standard-workers \
---node-type t3.medium \
---nodes 3 \
---nodes-min 3 \
---nodes-max 4 \
---node-ami auto
-```
-{{% /feature %}}
-{{% feature publishVersion="1.4.0" %}}
 ```
 eksctl create cluster \
 --name prod \
@@ -40,7 +26,6 @@ eksctl create cluster \
 --nodes-max 4 \
 --node-ami auto
 ```
-{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 EKS does not use the normal Kubernetes networking since it is [incompatible with Amazon VPC networking](https://www.contino.io/insights/kubernetes-is-hard-why-eks-makes-it-easier-for-network-and-security-architects).
