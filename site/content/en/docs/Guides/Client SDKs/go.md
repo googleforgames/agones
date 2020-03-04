@@ -14,4 +14,4 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 
 ## Usage
 
-Review the [GoDoc](https://godoc.org/agones.dev/agones/sdks/go) for usage instructions
+Review the [GoDoc](https://pkg.go.dev/agones.dev/agones/sdks/go) for usage instructions
