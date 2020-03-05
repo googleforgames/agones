@@ -30,8 +30,8 @@ but other methods may also work as well.
 Kubernetes Go Client tooling generates a Client for Agones that we can use to interact with the Agones
 installation on our Kubernetes cluster.
 
-- [Godoc for the Agones Client](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned)
-- [Godoc for the standard Kubernetes Client](https://godoc.org/k8s.io/client-go)
+- [Godoc for the Agones Client](https://pkg.go.dev/agones.dev/agones/pkg/client/clientset/versioned)
+- [Godoc for the standard Kubernetes Client](https://pkg.go.dev/k8s.io/client-go/kubernetes)
 
 ### Authentication
 
