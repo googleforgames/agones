@@ -30,14 +30,12 @@ These are all examples of simple game server implementations, that integrate the
 - {{< ghlink href="examples/unity-simple" >}}Unity Simple{{< /ghlink >}} (Unity3d)  - 
   This is a very simple "unity server" that doesn't do much other than show how the SDK works in Unity.
 - {{< ghlink href="examples/xonotic" >}}Xonotic{{< /ghlink >}} - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.
-{{% feature publishVersion="1.4.0" %}}
 - {{< ghlink href="examples/supertuxkart" >}}SuperTuxKart{{< /ghlink >}} \- Wraps the SDK around the open source
   racing game [SuperTuxKart](https://supertuxkart.net/), and hosts it on Agones.
-{{% /feature %}}
 
 ## Building on top of Agones
 
 - {{< ghlink href="examples/allocator-service" >}}Allocator Service{{< /ghlink >}} (Go) - 
-  This service provides an example of using the [Agones API](https://godoc.org/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1)
+  This service provides an example of using the [Agones API](https://pkg.go.dev/agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1)
   to allocate a GameServer from a Fleet,
   and is used in the [Create an Allocator Service (Go)]({{< ref "/docs/Tutorials/allocator-service-go.md" >}}) tutorial.

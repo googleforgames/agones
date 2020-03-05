@@ -1,5 +1,6 @@
 <img src="./docs/agones.png" alt="Agones logo" width="250px" height="250px" />
 
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/agones.dev/agones)
 [![GoDoc](https://godoc.org/agones.dev/agones?status.svg)](https://godoc.org/agones.dev/agones)
 [![Go Report Card](https://goreportcard.com/badge/github.com/googleforgames/agones)](https://goreportcard.com/report/github.com/googleforgames/agones)
 [![GitHub release](https://img.shields.io/github/release/googleforgames/agones.svg)](https://github.com/googleforgames/agones/releases)

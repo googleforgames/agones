@@ -51,7 +51,7 @@ manually before the PR is approved, using the latest released version of UE4.
 When submitting pull requests, make sure to do the following:
 
 - Format all Go code with [gofmt](https://golang.org/cmd/gofmt/). Many people
-  use [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports) which
+  use [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports) which
   fixes import statements and formats code in the same style of `gofmt`.
 - C++ code should follow the [Google C++ Style
   Guide](https://google.github.io/styleguide/cppguide.html), which can be
