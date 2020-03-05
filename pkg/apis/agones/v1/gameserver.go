@@ -192,8 +192,10 @@ type GameServerPort struct {
 	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
-	// ContainerPort is the port that is being opened on the game server process
+	// ContainerPort is the port that is being opened on the specified container's process
 	ContainerPort int32 `json:"containerPort,omitempty"`
+	// ContainerName is the container on which to open the port. Defaults to the game server container.
+	ContainerName string `json:"containerName,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
@@ -328,6 +330,10 @@ func (gss *GameServerSpec) applyPortDefaults() {
 		if p.Protocol == "" {
 			gss.Ports[i].Protocol = "UDP"
 		}
+
+		if p.ContainerName == "" {
+			gss.Ports[i].ContainerName = gss.Container
+		}
 	}
 }
 
@@ -416,6 +422,22 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
 					Message: ErrHostPortDynamic,
 				})
+			}
+
+			if p.ContainerName != ""  && gss.Container != "" {
+				containerFound := false
+				for _, container := range gss.Template.Spec.Containers {
+					if container.Name == p.ContainerName {
+						containerFound = true
+					}
+				}
+				if !containerFound {
+					causes = append(causes, metav1.StatusCause{
+						Type:    metav1.CauseTypeFieldValueInvalid,
+						Field:   fmt.Sprintf("%s.containerName", p.Name),
+						Message: ErrContainerNameInvalid,
+					})
+				}
 			}
 		}
 
@@ -532,12 +554,7 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
-
-	i, gsContainer, err := gs.FindGameServerContainer()
-	// this shouldn't happen, but if it does.
-	if err != nil {
-		return pod, err
-	}
+	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 
 	for _, p := range gs.Spec.Ports {
 		cp := corev1.ContainerPort{
@@ -545,11 +562,18 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			HostPort:      p.HostPort,
 			Protocol:      p.Protocol,
 		}
-		gsContainer.Ports = append(gsContainer.Ports, cp)
+		portApplied := false
+		for j, container := range pod.Spec.Containers {
+			if container.Name == p.ContainerName {
+				container.Ports = append(container.Ports, cp)
+				pod.Spec.Containers[j] = container
+				portApplied = true
+			}
+		}
+		if !portApplied {
+			return nil, errors.Errorf("Could not find a container named %q for port named %q", p.ContainerName, p.Name)
+		}
 	}
-	pod.Spec.Containers[i] = gsContainer
-
-	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 
 	gs.podScheduling(pod)
 

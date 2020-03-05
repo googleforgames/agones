@@ -375,6 +375,12 @@ func TestGameServerValidate(t *testing.T) {
 				Name:       "main",
 				HostPort:   5001,
 				PortPolicy: Dynamic,
+			}, {
+				Name:       "sidecar",
+				HostPort:   5002,
+				PortPolicy: Static,
+				ContainerPort: 5002,
+				ContainerName: "anothertest",
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{Containers: []corev1.Container{
@@ -543,11 +549,19 @@ func TestGameServerPod(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 	assert.Equal(t, fixture.Spec.Ports[0].HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
+	assert.Equal(t, fixture.Spec.Ports[0].ContainerName, pod.Spec.Containers[0].Name)
 	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 
 	sidecar := corev1.Container{Name: "sidecar", Image: "container/sidecar"}
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
+	fixture.Spec.Ports = append(fixture.Spec.Ports, GameServerPort{
+		Name:          "sidecarPort",
+		PortPolicy:    Static,
+		ContainerPort: 5555,
+		ContainerName: "sidecar",
+		HostPort:      3333,
+	})
 	pod, err = fixture.Pod(sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
@@ -555,6 +569,9 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
 	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
 	assert.Equal(t, "sidecar", pod.Spec.Containers[1].Name)
+	assert.Equal(t, fixture.Spec.Ports[1].HostPort, pod.Spec.Containers[1].Ports[0].HostPort)
+	assert.Equal(t, fixture.Spec.Ports[1].ContainerPort, pod.Spec.Containers[1].Ports[0].ContainerPort)
+	assert.Equal(t, fixture.Spec.Ports[1].ContainerName, pod.Spec.Containers[1].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 

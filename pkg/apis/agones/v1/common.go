@@ -32,6 +32,7 @@ const (
 	ErrPortPolicyStatic         = "PortPolicy must be Static"
 	ErrContainerPortRequired    = "ContainerPort must be defined for Dynamic and Static PortPolicies"
 	ErrContainerPortPassthrough = "ContainerPort cannot be specified with Passthrough PortPolicy"
+	ErrContainerNameInvalid     = "ContainerName must be empty or the name of a container in the pod template"
 )
 
 // crd is an interface to get Name and Kind of CRD
