@@ -121,7 +121,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
 	}
 
-	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
+	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer created, waiting for Ready")
 
 	readyGs, err := f.WaitForGameServerState(newGs, agonesv1.GameServerStateReady, 5*time.Minute)
 
@@ -133,34 +133,44 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
 	}
 
-	logrus.WithField("name", newGs.ObjectMeta.Name).Info("GameServer Ready")
+	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer Ready")
 
 	return readyGs, nil
 }
 
-// WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires
-func (f *Framework) WaitForGameServerState(gs *agonesv1.GameServer, state agonesv1.GameServerState,
-	timeout time.Duration) (*agonesv1.GameServer, error) {
-	var readyGs *agonesv1.GameServer
+// WaitForGameServerStateWithLogger Waits untils the gameserver reach a given state before the timeout expires, and logs against
+// a give logger (usually useful to log the name of the test with the checks)
+func (f *Framework) WaitForGameServerStateWithLogger(logger *logrus.Entry, gs *agonesv1.GameServer, state agonesv1.GameServerState, timeout time.Duration) (*agonesv1.GameServer, error) {
+	var checkGs *agonesv1.GameServer
 
-	err := wait.PollImmediate(2*time.Second, timeout, func() (bool, error) {
+	err := wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
 		var err error
-		readyGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
+		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
 		if err != nil {
 			logrus.WithError(err).Warn("error retrieving gameserver")
 			return false, nil
 		}
 
-		if readyGs.Status.State == state {
+		logger.WithField("gs", checkGs.ObjectMeta.Name).
+			WithField("currentState", checkGs.Status.State).
+			WithField("awaitingState", state).Info("Waiting for states to match")
+
+		if checkGs.Status.State == state {
 			return true, nil
 		}
 
 		return false, nil
 	})
 
-	return readyGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
+	return checkGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
 		state, gs.Namespace, gs.Name)
+}
+
+// WaitForGameServerState Waits untils the gameserver reach a given state before the timeout expires (with a default logger)
+func (f *Framework) WaitForGameServerState(gs *agonesv1.GameServer, state agonesv1.GameServerState,
+	timeout time.Duration) (*agonesv1.GameServer, error) {
+	return f.WaitForGameServerStateWithLogger(logrus.WithFields(nil), gs, state, timeout)
 }
 
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.

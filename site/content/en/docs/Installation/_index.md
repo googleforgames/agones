@@ -8,21 +8,6 @@ description: >
 
 ## Usage Requirements
 
-{{% feature expiryVersion="1.4.0" %}}
-- **Kubernetes cluster version 1.13**
-    - [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
-      [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/),
-      [Amazon EKS](https://aws.amazon.com/eks/) and [Minikube](https://github.com/kubernetes/minikube) have been tested
-    - If you are creating and managing your own Kubernetes cluster, the
-    [MutatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#mutatingadmissionwebhook-beta-in-19), and
-    [ValidatingAdmissionWebhook](https://kubernetes.io/docs/admin/admission-controllers/#validatingadmissionwebhook-alpha-in-18-beta-in-19)
-    admission controllers are required.
-       - We also recommend following the
-    [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
-- Firewall access for the range of ports that Game Servers can be connected to in the cluster.
-- Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
-{{% /feature %}}
-{{% feature publishVersion="1.4.0" %}}
 - **Kubernetes cluster version 1.14**
     - [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/),
@@ -35,20 +20,11 @@ description: >
     [recommended set of admission controllers](https://kubernetes.io/docs/admin/admission-controllers/#is-there-a-recommended-set-of-admission-controllers-to-use).
 - Firewall access for the range of ports that Game Servers can be connected to in the cluster.
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
-{{% /feature %}}
 
-{{% feature expiryVersion="1.4.0" %}}
-{{< alert title="Warning" color="warning">}}
-Later versions of Kubernetes may work, but this project is tested against 1.13, and is therefore the supported version.
-Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
-{{< /alert >}}
-{{% /feature %}}
-{{% feature publishVersion="1.4.0" %}}
 {{< alert title="Warning" color="warning">}}
 Later versions of Kubernetes may work, but this project is tested against 1.14, and is therefore the supported version.
 Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
 {{< /alert >}}
-{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers
