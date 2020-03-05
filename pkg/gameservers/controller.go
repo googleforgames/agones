@@ -218,7 +218,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Info("creationMutationHandler failed to unmarshal JSON")
+		c.baseLogger.WithField("review", review).WithError(err).Error("creationMutationHandler failed to unmarshal JSON")
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
@@ -267,7 +267,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Info("creationValidationHandler failed to unmarshal JSON")
+		c.baseLogger.WithField("review", review).WithError(err).Error("creationValidationHandler failed to unmarshal JSON")
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
@@ -306,7 +306,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 		return err
 	}
 
-	c.baseLogger.Info("Wait for cache sync")
+	c.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.podSynced, c.nodeSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -371,7 +371,7 @@ func (c *Controller) syncGameServer(key string) error {
 	gs, err := c.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
+			c.loggerForGameServerKey(key).Debug("GameServer is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
@@ -411,7 +411,7 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *agonesv1.GameServer) (*
 		return gs, nil
 	}
 
-	c.loggerForGameServer(gs).Info("Syncing with Deletion Timestamp")
+	c.loggerForGameServer(gs).Debug("Syncing with Deletion Timestamp")
 
 	pod, err := c.gameServerPod(gs)
 	if err != nil && !k8serrors.IsNotFound(err) {
@@ -458,7 +458,7 @@ func (c *Controller) syncGameServerPortAllocationState(gs *agonesv1.GameServer) 
 	gsCopy.Status.State = agonesv1.GameServerStateCreating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
 
-	c.loggerForGameServer(gsCopy).Info("Syncing Port Allocation GameServerState")
+	c.loggerForGameServer(gsCopy).Debug("Syncing Port Allocation GameServerState")
 	gs, err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy)
 	if err != nil {
 		// if the GameServer doesn't get updated with the port data, then put the port
@@ -480,7 +480,7 @@ func (c *Controller) syncGameServerCreatingState(gs *agonesv1.GameServer) (*agon
 		return gs, nil
 	}
 
-	c.loggerForGameServer(gs).Info("Syncing Create State")
+	c.loggerForGameServer(gs).Debug("Syncing Create State")
 
 	// Maybe something went wrong, and the pod was created, but the state was never moved to Starting, so let's check
 	_, err := c.gameServerPod(gs)
@@ -517,7 +517,7 @@ func (c *Controller) syncDevelopmentGameServer(gs *agonesv1.GameServer) (*agones
 	}
 
 	if !(gs.Status.State == agonesv1.GameServerStateReady) {
-		c.loggerForGameServer(gs).Info("GS is a development game server and will not be managed by Agones.")
+		c.loggerForGameServer(gs).Debug("GS is a development game server and will not be managed by Agones.")
 	}
 
 	gsCopy := gs.DeepCopy()
@@ -559,7 +559,7 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 	c.addGameServerHealthCheck(gs, pod)
 	c.addSDKServerEnvVars(gs, pod)
 
-	c.loggerForGameServer(gs).WithField("pod", pod).Info("creating Pod for GameServer")
+	c.loggerForGameServer(gs).WithField("pod", pod).Debug("Creating Pod for GameServer")
 	pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
 	if k8serrors.IsAlreadyExists(err) {
 		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Pod already exists, reused")
@@ -719,7 +719,7 @@ func (c *Controller) syncGameServerStartingState(gs *agonesv1.GameServer) (*agon
 		return gs, nil
 	}
 
-	c.loggerForGameServer(gs).Info("Syncing Starting GameServerState")
+	c.loggerForGameServer(gs).Debug("Syncing Starting GameServerState")
 
 	// there should be a pod (although it may not have a scheduled container),
 	// so if there is an error of any kind, then move this to queue backoff
@@ -759,7 +759,7 @@ func (c *Controller) syncGameServerRequestReadyState(gs *agonesv1.GameServer) (*
 		return gs, nil
 	}
 
-	c.loggerForGameServer(gs).Info("Syncing RequestReady State")
+	c.loggerForGameServer(gs).Debug("Syncing RequestReady State")
 
 	gsCopy := gs.DeepCopy()
 
@@ -821,7 +821,7 @@ func (c *Controller) syncGameServerShutdownState(gs *agonesv1.GameServer) error 
 		return nil
 	}
 
-	c.loggerForGameServer(gs).Info("Syncing Shutdown State")
+	c.loggerForGameServer(gs).Debug("Syncing Shutdown State")
 	// be explicit about where to delete.
 	p := metav1.DeletePropagationBackground
 	err := c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Delete(gs.ObjectMeta.Name, &metav1.DeleteOptions{PropagationPolicy: &p})
