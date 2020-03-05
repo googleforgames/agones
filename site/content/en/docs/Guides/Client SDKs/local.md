@@ -21,7 +21,7 @@ will not try to connect to anything, and will just send log messages to stdout a
 that you can see exactly what the SDK in your game server is doing, and can
 confirm everything works.
 
-To do this you will need to download {{% ghrelease file_prefix="agonessdk-server" link_test="false" %}}, and unzip it.
+To do this you will need to download {{% ghrelease file_prefix="agonessdk-server" %}}, and unzip it.
 You will find the executables for the SDK server, one for each type of operating system.
 
 - `sdk-server.windows.amd64.exe` - Windows
