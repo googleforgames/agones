@@ -22,7 +22,7 @@ variable "ports" {
 # It is crucial to set valid ProjectID for "project".
 variable "cluster" {
   description = "Set of GKE cluster parameters."
-  type        = "map"
+  type        = map
 
   default = {
     "zone"             = "us-west1-c"
@@ -30,5 +30,6 @@ variable "cluster" {
     "machineType"      = "n1-standard-4"
     "initialNodeCount" = "4"
     "project"          = "agones"
+    "network"          = "default"
   }
 }

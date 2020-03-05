@@ -21,6 +21,8 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
 
 ## Submitting code via Pull Requests
 
+*Thank you* for considering submitting code to Agones!
+
 - We follow the [GitHub Pull Request Model](https://help.github.com/articles/about-pull-requests/) for
   all contributions.
 - For large bodies of work, we recommend creating an issue and labelling it
@@ -31,7 +33,18 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
   guide for details.
 - All submissions, including submissions by project members, will require review before being merged.
 - Once review has occurred, please rebase your PR down to a single commit. This will ensure a nice clean Git history.
-- Finally - *Thanks* for considering submitting code to Agones!
+- Please follow the code formatting instructions below.
+
+### Additional Instructions for Unreal Plugin Pull Requests
+
+As there is no CI for the Unreal plugin, the following checklist should be run
+manually before the PR is approved, using the latest released version of UE4.
+
+1. Create default C++ template project in UE4.
+1. Create a Plugins folder under the project directory (should be a sibling of the .uproject file).
+1. Copy the [sdks/unreal/Agones](sdks/unreal/Agones) directory into the Plugins folder.
+1. Build the UE4 project.
+1. If the build succeeded, paste the build logs into the PR.
 
 ## Formatting
 
@@ -44,7 +57,9 @@ When submitting pull requests, make sure to do the following:
   Guide](https://google.github.io/styleguide/cppguide.html), which can be
   applied automatically using the
   [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html) command-line tool
-  (e.g., `clang-format -style=Google foo.cc`).
+  (e.g., `clang-format -style=Google foo.cc`). The exception to this is
+  the [Unreal Engine plugin code](sdks/unreal/Agones), which should follow the
+  [Unreal Engine 4 Coding Standard](https://docs.unrealengine.com/en-US/Programming/Development/CodingStandard/index.html).
 - Remove trailing whitespace. Many editors will do this automatically.
 - Ensure any new files have [a trailing newline](https://stackoverflow.com/questions/5813311/no-newline-at-end-of-file)
 
@@ -101,3 +116,11 @@ repository, we have a [community membership guide](./docs/governance/community_m
 
 - [How to write a good Git Commit message](https://chris.beams.io/posts/git-commit/) -
   Great way to make sure your Pull Requests get accepted.
+- **Log levels usage:**
+  - Fatal - a critical error has happened and the application can not perform subsequent work anymore. Examples: missing configuration information in case there are no default values provided, one of the services can not start normally, etc.
+  - Error - a serious issue has happened, users are affected without having a way to work around one, but an application may continue to work. This error usually requires someone’s attention. Examples: a file cannot be opened, cannot respond to HTTP request properly, etc.
+  - Warn - something bad has happened, but the application still has the chance to heal itself or the issue can wait for some time to be fixed. Example: a system has failed to connect to an external resource but will try again automatically.
+  - Info - should be used to document state changes in the application or some entity within the application. These logs provide the skeleton of what has happened. Examples: system started/stopped, remote API calls, a new user has been created/updated, etc.
+  - Debug - diagnostic information goes here and everything that can help to troubleshoot an application. Examples: any values in business logic, detailed information about the data flow.
+
+  More details can be found here: https://reflectoring.io/logging-levels/
