@@ -26,10 +26,10 @@ ENV GOPATH /go
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir -p ${GOPATH}
 
-RUN curl -sL https://deb.nodesource.com/setup_11.x | bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs
 
-RUN  apt-get install -y openjdk-8-jre
+RUN apt-get install -y openjdk-8-jre
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 

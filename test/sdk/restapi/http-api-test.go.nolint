@@ -32,8 +32,8 @@ func main() {
 
 	ctx := context.Background()
 
-	// Wait for SDK server to start the test (30 seconds)
-	for c := 0; c < 5; c++ {
+	// Wait for SDK server to start the test (15 seconds)
+	for c := 0; c < 15; c++ {
 		_, _, err := cli.SDKApi.Ready(ctx, swagger.SdkEmpty{})
 		if err == nil {
 			break
