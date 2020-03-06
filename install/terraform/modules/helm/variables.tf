@@ -62,5 +62,5 @@ variable "ping_service_type" {
 }
 
 variable "values_file" {
-  default = "../../../helm/agones/values.yaml"
+  default = ""
 }

@@ -28,10 +28,6 @@ variable "project" {
   default = ""
 }
 
-variable "name" {
-  default = "agones-terraform-example"
-}
-
 // Install latest version of agones
 variable "agones_version" {
   default = ""
@@ -40,19 +36,13 @@ variable "agones_version" {
 variable "machine_type" {
   default = "n1-standard-4"
 }
-<<<<<<< HEAD:examples/terraform-submodules/gke-local/module.tf
-=======
 
 variable "name" {
-  default = "agones-terraform-example"
-}
-
-variable "machine_type" {
-  default = "n1-standard-4"
+  default = "agones-tf-cluster"
 }
 
 variable "values_file" {
-  default = ""
+  default = "../../../install/helm/agones/values.yaml"
 }
 
 // Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
@@ -60,14 +50,16 @@ variable "values_file" {
 variable "node_count" {
   default = "4"
 }
+variable "chart" {
+  default = "agones"
+}
 
-module "gke_cluster" {
->>>>>>> Switch from the normal to module terraform config:examples/terraform-submodules/gke-local/main.tf
+variable "crd_cleanup" {
+  default = "true"
+}
 
-// Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
-// two node pools with 1 node each for "agones-system" and "agones-metrics".
-variable "node_count" {
-  default = "4"
+variable "ping_service_type" {
+  default = "LoadBalancer"
 }
 
 variable "zone" {
@@ -79,6 +71,23 @@ variable "network" {
   default     = "default"
   description = "The name of the VPC network to attach the cluster and firewall rule to"
 }
+
+variable "pull_policy" {
+  default = "Always"
+}
+
+variable "image_registry" {
+  default = "gcr.io/agones-images"
+}
+
+variable "always_pull_sidecar" {
+  default = "true"
+}
+
+variable "image_pull_secret" {
+  default = ""
+}
+
 
 module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
@@ -98,10 +107,14 @@ module "helm_agones" {
 
   agones_version         = var.agones_version
   values_file            = var.values_file
-  chart                  = "agones"
+  chart                  = var.chart
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token
   cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
+  image_registry         = var.image_registry
+  image_pull_secret      = var.image_pull_secret
+  crd_cleanup            = var.crd_cleanup
+  ping_service_type      = var.ping_service_type
 }
 
 output "host" {
