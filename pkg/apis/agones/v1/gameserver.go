@@ -192,10 +192,10 @@ type GameServerPort struct {
 	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
-	// ContainerPort is the port that is being opened on the specified container's process
-	ContainerPort int32 `json:"containerPort,omitempty"`
 	// ContainerName is the container on which to open the port. Defaults to the game server container.
 	ContainerName string `json:"containerName,omitempty"`
+	// ContainerPort is the port that is being opened on the specified container's process
+	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
 	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
@@ -424,7 +424,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 
-			if p.ContainerName != ""  && gss.Container != "" {
+			if p.ContainerName != "" && gss.Container != "" {
 				containerFound := false
 				for _, container := range gss.Template.Spec.Containers {
 					if container.Name == p.ContainerName {

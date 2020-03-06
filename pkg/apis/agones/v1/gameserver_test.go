@@ -376,9 +376,9 @@ func TestGameServerValidate(t *testing.T) {
 				HostPort:   5001,
 				PortPolicy: Dynamic,
 			}, {
-				Name:       "sidecar",
-				HostPort:   5002,
-				PortPolicy: Static,
+				Name:          "sidecar",
+				HostPort:      5002,
+				PortPolicy:    Static,
 				ContainerPort: 5002,
 				ContainerName: "anothertest",
 			}},
