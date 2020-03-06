@@ -285,18 +285,19 @@ func (s *SDKServer) updateState() error {
 	}
 
 	s.gsUpdateMutex.RLock()
-	gs.Status.State = s.gsState
+	gsCopy := gs.DeepCopy()
+	gsCopy.Status.State = s.gsState
 
 	// If we are setting the Reserved status, check for the duration, and set that too.
-	if gs.Status.State == agonesv1.GameServerStateReserved && s.gsReserveDuration != nil {
+	if gsCopy.Status.State == agonesv1.GameServerStateReserved && s.gsReserveDuration != nil {
 		n := metav1.NewTime(time.Now().Add(*s.gsReserveDuration))
-		gs.Status.ReservedUntil = &n
+		gsCopy.Status.ReservedUntil = &n
 	} else {
-		gs.Status.ReservedUntil = nil
+		gsCopy.Status.ReservedUntil = nil
 	}
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = gameServers.Update(gs)
+	gs, err = gameServers.Update(gsCopy)
 	if err != nil {
 		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
 	}
