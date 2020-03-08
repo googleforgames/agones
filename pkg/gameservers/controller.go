@@ -570,6 +570,10 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 			c.loggerForGameServer(gs).WithField("pod", pod).Errorf("Pod created is invalid")
 			gs, err = c.moveToErrorState(gs, err.Error())
 			return gs, err
+		} else if k8serrors.IsForbidden(err) {
+			c.loggerForGameServer(gs).WithField("pod", pod).Errorf("Pod created is forbidden")
+			gs, err = c.moveToErrorState(gs, err.Error())
+			return gs, err
 		}
 		return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 	}
