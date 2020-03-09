@@ -128,7 +128,7 @@ func NewController(
 // Should only be called on fleet create operations.
 // nolint:dupl
 func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Info("creationMutationHandler")
+	c.baseLogger.WithField("review", review).Debug("creationMutationHandler")
 
 	obj := review.Request.Object
 	fleet := &agonesv1.Fleet{}
@@ -168,7 +168,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 // creationValidationHandler that validates a Fleet when it is created
 // Should only be called on Fleet create and Update operations.
 func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
-	c.baseLogger.WithField("review", review).Info("creationValidationHandler")
+	c.baseLogger.WithField("review", review).Debug("creationValidationHandler")
 
 	obj := review.Request.Object
 	fleet := &agonesv1.Fleet{}
@@ -193,7 +193,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 			Details: &details,
 		}
 
-		c.loggerForFleet(fleet).WithField("review", review).Info("Invalid Fleet")
+		c.loggerForFleet(fleet).WithField("review", review).Warn("Invalid Fleet")
 		return review, nil
 	}
 
@@ -208,7 +208,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 		return err
 	}
 
-	c.baseLogger.Info("Wait for cache sync")
+	c.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSetSynced, c.fleetSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -241,7 +241,7 @@ func (c *Controller) gameServerSetEventHandler(obj interface{}) {
 	fleet, err := c.fleetLister.Fleets(gsSet.ObjectMeta.Namespace).Get(ref.Name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.baseLogger.WithField("ref", ref).Info("Owner Fleet no longer available for syncing")
+			c.baseLogger.WithField("ref", ref).Warn("Owner Fleet no longer available for syncing")
 		} else {
 			runtime.HandleError(c.loggerForFleet(fleet).WithField("ref", ref),
 				errors.Wrap(err, "error retrieving GameServerSet owner"))
@@ -267,7 +267,7 @@ func (c *Controller) syncFleet(key string) error {
 	fleet, err := c.fleetLister.Fleets(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.loggerForFleetKey(key).Info("Fleet is no longer available for syncing")
+			c.loggerForFleetKey(key).Debug("Fleet is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving fleet %s from namespace %s", name, namespace)
@@ -282,7 +282,7 @@ func (c *Controller) syncFleet(key string) error {
 
 	// if there isn't an active gameServerSet, create one (but don't persist yet)
 	if active == nil {
-		c.loggerForFleet(fleet).Info("could not find active GameServerSet, creating")
+		c.loggerForFleet(fleet).Debug("could not find active GameServerSet, creating")
 		active = fleet.GameServerSet()
 	}
 
@@ -389,7 +389,7 @@ func (c *Controller) recreateDeployment(fleet *agonesv1.Fleet, rest []*agonesv1.
 		if gsSet.Spec.Replicas == 0 {
 			continue
 		}
-		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).Info("applying recreate deployment: scaling to 0")
+		c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).Debug("applying recreate deployment: scaling to 0")
 		gsSetCopy := gsSet.DeepCopy()
 		gsSetCopy.Spec.Replicas = 0
 		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
@@ -455,7 +455,7 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	}
 
 	c.loggerForFleet(fleet).WithField("gameserverset", active.ObjectMeta.Name).WithField("replicas", replicas).
-		Info("applying rolling update to active gameserverset")
+		Debug("applying rolling update to active gameserverset")
 
 	return replicas, nil
 }
@@ -488,9 +488,9 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.G
 		if gsSet.Status.ShutdownReplicas == 0 {
 			gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 
-			c.loggerForFleet(fleet).Info(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
+			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
 			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
-				Info("applying rolling update to inactive gameserverset")
+				Debug("applying rolling update to inactive gameserverset")
 
 			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
 				return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
@@ -509,7 +509,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.G
 // updateFleetStatus gets the GameServerSets for this Fleet and then
 // calculates the counts for the status, and updates the Fleet
 func (c *Controller) updateFleetStatus(fleet *agonesv1.Fleet) error {
-	c.loggerForFleet(fleet).Info("Update Fleet Status")
+	c.loggerForFleet(fleet).Debug("Update Fleet Status")
 
 	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {

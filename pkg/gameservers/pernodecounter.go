@@ -138,7 +138,7 @@ func (pnc *PerNodeCounter) Run(_ int, stop <-chan struct{}) error {
 	pnc.countMutex.Lock()
 	defer pnc.countMutex.Unlock()
 
-	pnc.logger.Info("Running")
+	pnc.logger.Debug("Running")
 
 	if !cache.WaitForCacheSync(stop, pnc.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
