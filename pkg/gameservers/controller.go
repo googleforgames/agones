@@ -647,7 +647,7 @@ func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *core
 		return
 	}
 
-	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+	_, _ = gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		if c.LivenessProbe == nil {
 			c.LivenessProbe = &corev1.Probe{
 				Handler: corev1.Handler{

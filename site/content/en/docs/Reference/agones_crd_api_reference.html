@@ -3,7 +3,7 @@ title="Agones Kubernetes API"
 description="Detailed list of Agones Custom Resource Definitions available"
 +++
 
-{{% feature expiryVersion="1.4.0" %}}
+{{% feature expiryVersion="1.5.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -14,6 +14,9 @@ description="Detailed list of Agones Custom Resource Definitions available"
 </li>
 <li>
 <a href="#autoscaling.agones.dev">autoscaling.agones.dev</a>
+</li>
+<li>
+<a href="#multicluster.agones.dev">multicluster.agones.dev</a>
 </li>
 </ul>
 <h2 id="agones.dev">agones.dev</h2>
@@ -284,6 +287,20 @@ Kubernetes core/v1.PodTemplateSpec
 </td>
 <td>
 <p>Template describes the Pod that will be created for the GameServer</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
 </td>
 </tr>
 </table>
@@ -850,6 +867,20 @@ Kubernetes core/v1.PodTemplateSpec
 <p>Template describes the Pod that will be created for the GameServer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="GameServerState">GameServerState
@@ -933,6 +964,20 @@ Kubernetes meta/v1.Time
 </em>
 </td>
 <td>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayerStatus">
+PlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag)</p>
 </td>
 </tr>
 </tbody>
@@ -1098,6 +1143,20 @@ Kubernetes core/v1.PodTemplateSpec
 <p>Template describes the Pod that will be created for the GameServer</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -1162,6 +1221,87 @@ int32
 </td>
 <td>
 <p>InitialDelaySeconds initial delay before checking health</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="PlayerStatus">PlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>PlayerStatus stores the current player capacity values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="PlayersSpec">PlayersSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
+connection/disconnection events.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>initialCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhook</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#webhookclientconfig-v1beta1-admissionregistration">
+Kubernetes admissionregistration/v1beta1.WebhookClientConfig
+</a>
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
@@ -2244,11 +2384,295 @@ If unspecified, system trust roots on the apiserver are used.</p>
 </tbody>
 </table>
 <hr/>
+<h2 id="multicluster.agones.dev">multicluster.agones.dev</h2>
+<p>
+<p>Package v1 is the v1 version of the API.</p>
+</p>
+Resource Types:
+<ul><li>
+<a href="#GameServerAllocationPolicy">GameServerAllocationPolicy</a>
+</li></ul>
+<h3 id="GameServerAllocationPolicy">GameServerAllocationPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#ConnectionInfoIterator">ConnectionInfoIterator</a>)
+</p>
+<p>
+<p>GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+multicluster.agones.dev/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>GameServerAllocationPolicy</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#GameServerAllocationPolicySpec">
+GameServerAllocationPolicySpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>priority</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>weight</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>connectionInfo</code></br>
+<em>
+<a href="#ClusterConnectionInfo">
+ClusterConnectionInfo
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ClusterConnectionInfo">ClusterConnectionInfo
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocationPolicySpec">GameServerAllocationPolicySpec</a>)
+</p>
+<p>
+<p>ClusterConnectionInfo defines the connection information for a cluster</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clusterName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Optional: the name of the targeted cluster</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocationEndpoints</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<p>The endpoints for the allocator service in the targeted cluster.
+If the AllocationEndpoints is not set, the allocation happens on local cluster.
+If there are multiple endpoints any of the endpoints that can handle allocation request should suffice</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name of the secret that contains TLS client certificates to connect the allocator server in the targeted cluster</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The cluster namespace from which to allocate gameservers</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ConnectionInfoIterator">ConnectionInfoIterator
+</h3>
+<p>
+<p>ConnectionInfoIterator an iterator on ClusterConnectionInfo</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>currPriority</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>currPriority Current priority index from the orderedPriorities</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>orderedPriorities</code></br>
+<em>
+[]int32
+</em>
+</td>
+<td>
+<p>orderedPriorities list of ordered priorities</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>priorityToCluster</code></br>
+<em>
+<a href="#GameServerAllocationPolicy">
+map[int32]map[string][]*agones.dev/agones/pkg/apis/multicluster/v1.GameServerAllocationPolicy
+</a>
+</em>
+</td>
+<td>
+<p>priorityToCluster Map of priority to cluster-policies map</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterBlackList</code></br>
+<em>
+map[string]bool
+</em>
+</td>
+<td>
+<p>clusterBlackList the cluster blacklist for the clusters that has already returned</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="GameServerAllocationPolicySpec">GameServerAllocationPolicySpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#GameServerAllocationPolicy">GameServerAllocationPolicy</a>)
+</p>
+<p>
+<p>GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>priority</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>weight</code></br>
+<em>
+int
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>connectionInfo</code></br>
+<em>
+<a href="#ClusterConnectionInfo">
+ClusterConnectionInfo
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>.
 </em></p>
 {{% /feature %}}
-{{% feature publishVersion="1.4.0" %}}
+{{% feature publishVersion="1.5.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -2856,13 +3280,26 @@ connect to</p>
 </tr>
 <tr>
 <td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container is the name of the container on which to open the port. Defaults to the game server container.
+This field is alpha-level and is only honored by servers that enable the &ldquo;FeatureContainerPortAllocation&rdquo; feature.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containerPort</code></br>
 <em>
 int32
 </em>
 </td>
 <td>
-<p>ContainerPort is the port that is being opened on the game server process</p>
+<p>ContainerPort is the port that is being opened on the specified container&rsquo;s process</p>
 </td>
 </tr>
 <tr>

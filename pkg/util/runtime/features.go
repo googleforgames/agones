@@ -32,14 +32,18 @@ const (
 
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
+
+	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
+	FeatureContainerPortAllocation Feature = "FeatureContainerPortAllocation"
 )
 
 var (
 	// featureDefaults is a map of all Feature Gates that are
 	// operational in Agones, and what their default configuration is.
 	featureDefaults = map[Feature]bool{
-		FeatureExample:        true,
-		FeaturePlayerTracking: false,
+		FeatureExample:                 true,
+		FeaturePlayerTracking:          false,
+		FeatureContainerPortAllocation: false,
 	}
 
 	// featureGates is the storage of what features are enabled

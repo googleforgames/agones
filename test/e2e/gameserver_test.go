@@ -475,6 +475,62 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 }
 
+func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
+	t.Parallel()
+	firstContainerName := "udp-server"
+	secondContainerName := "second-udp-server"
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
+		Spec: agonesv1.GameServerSpec{
+			Container: firstContainerName,
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}, {
+				ContainerPort: 5000,
+				Name:          "second-gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+				Container:     &secondContainerName,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:            firstContainerName,
+						Image:           framework.GameServerImage,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+					},
+						{
+							Name:            secondContainerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						}},
+				},
+			},
+		},
+	}
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	firstContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "gameport", "Ping 1")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	assert.Contains(t, firstContainerReply, "Ping 1")
+
+	secondContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "second-gameport", "Ping 2")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	assert.Contains(t, secondContainerReply, "Ping 2")
+}
+
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
 	logger := logrus.WithField("test", t.Name())
