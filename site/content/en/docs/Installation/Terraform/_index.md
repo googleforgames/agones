@@ -8,7 +8,7 @@ description: >
 
 ## Prerequisites
 
-- [Terraform](https://www.terraform.io/) v0.12.3
+- [Terraform](https://www.terraform.io/) v0.12.21
 - [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
 - Access to the the Kubernetes hosting provider you are using (e.g. `gcloud`,
   `awscli`, or `az` utility installed)

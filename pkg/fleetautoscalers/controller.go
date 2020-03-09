@@ -115,7 +115,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 		return err
 	}
 
-	c.baseLogger.Info("Wait for cache sync")
+	c.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, c.fleetSynced, c.fleetAutoscalerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -143,7 +143,7 @@ func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1
 	fas := &autoscalingv1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
 	if err != nil {
-		c.baseLogger.WithField("review", review).WithError(err).Info("validationHandler")
+		c.baseLogger.WithField("review", review).WithError(err).Error("validationHandler")
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
 	}
 
@@ -184,7 +184,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 	fas, err := c.fleetAutoscalerLister.FleetAutoscalers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.loggerForFleetAutoscalerKey(key).Info(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
+			c.loggerForFleetAutoscalerKey(key).Debug(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving FleetAutoscaler %s from namespace %s", name, namespace)
@@ -194,7 +194,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 	fleet, err := c.fleetLister.Fleets(namespace).Get(fas.Spec.FleetName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			c.loggerForFleetAutoscaler(fas).Warn("Could not find fleet for autoscaler. Skipping.")
+			c.loggerForFleetAutoscaler(fas).Debug("Could not find fleet for autoscaler. Skipping.")
 
 			c.recorder.Eventf(fas, corev1.EventTypeWarning, "FailedGetFleet",
 				"could not fetch fleet: %s", fas.Spec.FleetName)

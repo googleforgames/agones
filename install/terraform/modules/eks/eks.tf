@@ -18,7 +18,7 @@ terraform {
 }
 
 provider "aws" {
-  version = "~> 2.8"
+  version = "= 2.51.0"
   region  = var.region
 }
 
@@ -81,7 +81,7 @@ module "eks" {
   cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
-  cluster_version = "1.13"
+  cluster_version = "1.14"
 
   worker_groups_launch_template = [
     {

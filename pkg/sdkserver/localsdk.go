@@ -106,13 +106,13 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 				if event.Op != fsnotify.Write {
 					continue
 				}
-				logrus.WithField("event", event).Info("File has been changed!")
+				logrus.WithField("event", event).Debug("File has been changed!")
 				err := l.setGameServerFromFilePath(filePath)
 				if err != nil {
 					logrus.WithError(err).Error("error setting GameServer from file")
 					continue
 				}
-				logrus.Info("Sending watched GameServer!")
+				logrus.Debug("Sending watched GameServer!")
 				l.update <- struct{}{}
 			}
 		}()
@@ -125,7 +125,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 
 	go func() {
 		for value := range l.update {
-			logrus.Info("gameserver update received")
+			logrus.Debug("Gameserver update received")
 			l.updateObservers.Range(func(observer, _ interface{}) bool {
 				observer.(chan struct{}) <- value
 				return true
@@ -192,7 +192,7 @@ func (l *LocalSDKServer) updateState(newState agonesv1.GameServerState) {
 
 // Ready logs that the Ready request has been received
 func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Ready request has been received!")
+	logrus.Debug("Ready request has been received!")
 	l.recordRequest("ready")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -206,7 +206,7 @@ func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) 
 
 // Allocate logs that an allocate request has been received
 func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Allocate request has been received!")
+	logrus.Debug("Allocate request has been received!")
 	l.recordRequest("allocate")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -219,7 +219,7 @@ func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, erro
 
 // Shutdown logs that the shutdown request has been received
 func (l *LocalSDKServer) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Shutdown request has been received!")
+	logrus.Debug("Shutdown request has been received!")
 	l.recordRequest("shutdown")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -234,20 +234,20 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {
-			logrus.Info("Health stream closed.")
+			logrus.Debug("Health stream closed.")
 			return stream.SendAndClose(&sdk.Empty{})
 		}
 		if err != nil {
 			return errors.Wrap(err, "Error with Health check")
 		}
 		l.recordRequest("health")
-		logrus.Info("Health Ping Received!")
+		logrus.Debug("Health Ping Received!")
 	}
 }
 
 // SetLabel applies a Label to the backing GameServer metadata
 func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	logrus.WithField("values", kv).Info("Setting label")
+	logrus.WithField("values", kv).Debug("Setting label")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -266,7 +266,7 @@ func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 
 // SetAnnotation applies a Annotation to the backing GameServer metadata
 func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	logrus.WithField("values", kv).Info("Setting annotation")
+	logrus.WithField("values", kv).Debug("Setting annotation")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -285,7 +285,7 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 
 // GetGameServer returns current GameServer configuration.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
-	logrus.Info("getting GameServer details")
+	logrus.Debug("Getting GameServer details")
 	l.recordRequest("gameserver")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -294,7 +294,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 
 // WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
-	logrus.Info("connected to watch GameServer...")
+	logrus.Debug("Connected to watch GameServer...")
 	observer := make(chan struct{})
 
 	defer func() {
@@ -319,7 +319,7 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 
 // Reserve moves this GameServer to the Reserved state for the Duration specified
 func (l *LocalSDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, error) {
-	logrus.WithField("duration", d).Info("Reserve request has been received!")
+	logrus.WithField("duration", d).Debug("Reserve request has been received!")
 	l.recordRequest("reserve")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -387,18 +387,18 @@ func EqualSets(a, b []string) bool {
 
 // Close tears down all the things
 func (l *LocalSDKServer) compare() {
-	logrus.Info(fmt.Sprintf("Compare"))
+	logrus.Debug("Compare")
 
 	if l.testMode {
 		if !EqualSets(l.expectedSequence, l.requestSequence) {
-			logrus.Info(fmt.Sprintf("Testing Failed %v %v", l.expectedSequence, l.requestSequence))
+			logrus.Debug(fmt.Sprintf("Testing Failed %v %v", l.expectedSequence, l.requestSequence))
 			os.Exit(1)
 		}
 	}
 }
 
 func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
-	logrus.WithField("filePath", filePath).Info("Reading GameServer configuration")
+	logrus.WithField("filePath", filePath).Debug("Reading GameServer configuration")
 
 	reader, err := os.Open(filePath) // nolint: gosec
 	defer reader.Close()             // nolint: megacheck,errcheck

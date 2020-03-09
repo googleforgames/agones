@@ -17,6 +17,7 @@ package gameservers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -875,6 +876,32 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			podCreated = true
 			return true, nil, k8serrors.NewInvalid(schema.GroupKind{}, "test", field.ErrorList{})
+		})
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gsUpdated = true
+			ua := action.(k8stesting.UpdateAction)
+			gs := ua.GetObject().(*agonesv1.GameServer)
+			assert.Equal(t, agonesv1.GameServerStateError, gs.Status.State)
+			return true, gs, nil
+		})
+
+		gs, err := c.createGameServerPod(fixture)
+		assert.Nil(t, err)
+
+		assert.True(t, podCreated, "attempt should have been made to create a pod")
+		assert.True(t, gsUpdated, "GameServer should be updated")
+		assert.Equal(t, agonesv1.GameServerStateError, gs.Status.State)
+	})
+
+	t.Run("forbidden pods creation", func(t *testing.T) {
+		c, mocks := newFakeController()
+		fixture := newFixture()
+		podCreated := false
+		gsUpdated := false
+
+		mocks.KubeClient.AddReactor("create", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			podCreated = true
+			return true, nil, k8serrors.NewForbidden(schema.GroupResource{}, "test", errors.New("test"))
 		})
 		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			gsUpdated = true

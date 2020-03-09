@@ -14,11 +14,11 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="1.2.0"]
-// to install "1.2.0" version of agones
+//  terraform apply [-var agones_version="1.4.0"]
 
+// Install latest version of agones
 variable "agones_version" {
-  default = "1.2.0"
+  default = ""
 }
 
 variable "cluster_name" {
