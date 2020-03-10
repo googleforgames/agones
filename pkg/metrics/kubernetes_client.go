@@ -292,7 +292,7 @@ func (clientGoMetricAdapter) NewAddsMetric(name string) workqueue.CounterMetric 
 	return newOcMetric(workQueueItemsTotalStats).withTag(keyQueueName, name)
 }
 
-func (clientGoMetricAdapter) NewLatencyMetric(name string) workqueue.SummaryMetric {
+func (clientGoMetricAdapter) NewLatencyMetric(name string) workqueue.HistogramMetric {
 	m := newOcMetric(workQueueLatencyStats).withTag(keyQueueName, name)
 	// Convert microseconds to seconds for consistency across metrics.
 	return observeFunc(func(f float64) {
@@ -300,7 +300,7 @@ func (clientGoMetricAdapter) NewLatencyMetric(name string) workqueue.SummaryMetr
 	})
 }
 
-func (clientGoMetricAdapter) NewWorkDurationMetric(name string) workqueue.SummaryMetric {
+func (clientGoMetricAdapter) NewWorkDurationMetric(name string) workqueue.HistogramMetric {
 	m := newOcMetric(workQueueWorkDurationStats).withTag(keyQueueName, name)
 	// Convert microseconds to seconds for consistency across metrics.
 	return observeFunc(func(f float64) {
@@ -312,10 +312,46 @@ func (clientGoMetricAdapter) NewRetriesMetric(name string) workqueue.CounterMetr
 	return newOcMetric(workQueueRetriesTotalStats).withTag(keyQueueName, name)
 }
 
-func (clientGoMetricAdapter) NewLongestRunningProcessorMicrosecondsMetric(string) workqueue.SettableGaugeMetric {
+func (clientGoMetricAdapter) NewLongestRunningProcessorSecondsMetric(string) workqueue.SettableGaugeMetric {
 	return newOcMetric(workQueueLongestRunningProcessorStats)
 }
 
 func (clientGoMetricAdapter) NewUnfinishedWorkSecondsMetric(string) workqueue.SettableGaugeMetric {
 	return newOcMetric(workQueueUnfinishedWorkStats)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedDepthMetric(name string) workqueue.GaugeMetric {
+	return newOcMetric(workQueueDepthStats).withTag(keyQueueName, name)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedAddsMetric(name string) workqueue.CounterMetric {
+	return newOcMetric(workQueueItemsTotalStats).withTag(keyQueueName, name)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedLatencyMetric(name string) workqueue.SummaryMetric {
+	m := newOcMetric(workQueueLatencyStats).withTag(keyQueueName, name)
+	// Convert microseconds to seconds for consistency across metrics.
+	return observeFunc(func(f float64) {
+		m.Observe(f / 1e6)
+	})
+}
+
+func (clientGoMetricAdapter) NewDeprecatedLongestRunningProcessorMicrosecondsMetric(string) workqueue.SettableGaugeMetric {
+	return newOcMetric(workQueueLongestRunningProcessorStats)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedRetriesMetric(name string) workqueue.CounterMetric {
+	return newOcMetric(workQueueRetriesTotalStats).withTag(keyQueueName, name)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedUnfinishedWorkSecondsMetric(string) workqueue.SettableGaugeMetric {
+	return newOcMetric(workQueueUnfinishedWorkStats)
+}
+
+func (clientGoMetricAdapter) NewDeprecatedWorkDurationMetric(name string) workqueue.SummaryMetric {
+	m := newOcMetric(workQueueWorkDurationStats).withTag(keyQueueName, name)
+	// Convert microseconds to seconds for consistency across metrics.
+	return observeFunc(func(f float64) {
+		m.Observe(f / 1e6)
+	})
 }
