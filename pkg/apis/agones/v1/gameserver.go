@@ -323,6 +323,7 @@ func (gs *GameServer) applyStatusDefaults() {
 
 // applyPortDefaults applies default values for all ports
 func (gss *GameServerSpec) applyPortDefaults() {
+
 	for i, p := range gss.Ports {
 		// basic spec
 		if p.PortPolicy == "" {
@@ -530,15 +531,23 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
 // Returns an error if the container is not found.
-func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) (*corev1.Pod, error) {
-	containerIndex, container, err := gs.Spec.FindContainer(containerName)
-	if err != nil {
-		return pod, err
+func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
+	var container corev1.Container
+	containerIndex := -1
+	for i, c := range pod.Spec.Containers {
+		if c.Name == containerName {
+			container = c
+			containerIndex = i
+		}
 	}
+	if containerIndex == -1 {
+		return errors.Errorf("failed to find container named %q in pod spec", containerName)
+	}
+
 	container = f(container)
 	pod.Spec.Containers[containerIndex] = container
 
-	return pod, nil
+	return nil
 }
 
 // Pod creates a new Pod from the PodTemplateSpec
@@ -558,7 +567,7 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			Protocol:      p.Protocol,
 		}
 		var err error
-		pod, err = gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+		err = gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
 			c.Ports = append(c.Ports, cp)
 
 			return c
@@ -639,13 +648,13 @@ func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 }
 
 // DisableServiceAccount disables the service account for the gameserver container
-func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) {
+func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) error {
 	// gameservers don't get access to the k8s api.
 	emptyVol := corev1.Volume{Name: "empty", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}}
 	pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVol)
 	mount := corev1.VolumeMount{MountPath: "/var/run/secrets/kubernetes.io/serviceaccount", Name: emptyVol.Name, ReadOnly: true}
 
-	_, _ = gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
+	return gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		c.VolumeMounts = append(c.VolumeMounts, mount)
 
 		return c

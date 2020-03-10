@@ -802,9 +802,9 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 		},
 	}
 
-	p1 := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
+	pod := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
 
-	p2, err := gs.ApplyToPodContainer(p1, gs.Spec.Container, func(c corev1.Container) corev1.Container {
+	err := gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		//  easy thing to change and test for
 		c.TTY = true
 
@@ -812,9 +812,9 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Len(t, p2.Spec.Containers, 2)
-	assert.True(t, p2.Spec.Containers[0].TTY)
-	assert.False(t, p2.Spec.Containers[1].TTY)
+	assert.Len(t, pod.Spec.Containers, 2)
+	assert.True(t, pod.Spec.Containers[0].TTY)
+	assert.False(t, pod.Spec.Containers[1].TTY)
 }
 
 func defaultGameServer() *GameServer {
