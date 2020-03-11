@@ -566,8 +566,7 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			HostPort:      p.HostPort,
 			Protocol:      p.Protocol,
 		}
-		var err error
-		err = gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
 			c.Ports = append(c.Ports, cp)
 
 			return c
