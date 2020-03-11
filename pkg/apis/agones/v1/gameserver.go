@@ -399,6 +399,16 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			})
 		}
 
+		// make sure the container value points to a valid container
+		_, _, err := gss.FindContainer(gss.Container)
+		if err != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: err.Error(),
+			})
+		}
+
 		// no host port when using dynamic PortPolicy
 		for _, p := range gss.Ports {
 			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
@@ -432,21 +442,11 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				if err != nil {
 					causes = append(causes, metav1.StatusCause{
 						Type:    metav1.CauseTypeFieldValueInvalid,
-						Field:   fmt.Sprintf("%s.containerName", p.Name),
+						Field:   fmt.Sprintf("%s.container", p.Name),
 						Message: ErrContainerNameInvalid,
 					})
 				}
 			}
-		}
-
-		// make sure the container value points to a valid container
-		_, _, err := gss.FindContainer(gss.Container)
-		if err != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "container",
-				Message: err.Error(),
-			})
 		}
 	}
 	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
