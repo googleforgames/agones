@@ -98,7 +98,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
 -`sdkServer` defines parameters for the game server sidecar
-  - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
+  - `logLevel` field defines log level for SDK server. Defaults to "Info". It has three options:
     - "Info" (default) The SDK server will output all messages except for debug messages
     - "Debug" The SDK server will output all messages including debug messages
     - "Error" The SDK server will only output error messages
