@@ -148,7 +148,7 @@ func (f *Framework) WaitForGameServerStateWithLogger(logger *logrus.Entry, gs *a
 		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
 
 		if err != nil {
-			logrus.WithError(err).Warn("error retrieving gameserver")
+			logger.WithError(err).Warn("error retrieving gameserver")
 			return false, nil
 		}
 

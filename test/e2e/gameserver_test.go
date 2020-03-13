@@ -495,8 +495,24 @@ func TestGameServerReserve(t *testing.T) {
 	logger.Info("Received response")
 	assert.Equal(t, "ACK: RESERVE\n", reply)
 
-	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReserved, time.Minute)
-	assert.NoError(t, err, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
+	// special case -- since the goroutine function might get scheduled to wait for another process,
+	// and we can't wait 10 seconds we will use a for loop to ensure the polling operation happens without waiting.
+	for i := 0; i < 15; i++ {
+		logger.Info("checking for reserved state")
+
+		var err error
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
+		assert.NoError(t, err)
+
+		if gs.Status.State == agonesv1.GameServerStateReserved {
+			break
+		}
+
+		logger.WithField("gs", gs.ObjectMeta.Name).
+			WithField("currentState", gs.Status.State).Info("Waiting for reserved state")
+
+		time.Sleep(time.Second)
+	}
 	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
 
 	// it should go back after 10 seconds
