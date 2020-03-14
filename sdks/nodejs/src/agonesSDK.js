@@ -40,9 +40,9 @@ class AgonesSDK {
 		});
 	}
 
-	async close() {
+	close() {
 		if (this.healthStream !== undefined) {
-			this.healthStream.destroy();
+			this.healthStream.end();
 		}
 		this.emitters.forEach(emitter => emitter.call.cancel());
 		this.client.close();
