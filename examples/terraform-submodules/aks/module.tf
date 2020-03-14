@@ -20,8 +20,17 @@
 variable "agones_version" {
   default = ""
 }
+
 variable "cluster_name" {
   default = "test-cluster"
+}
+
+variable "node_count" {
+  default = 4
+}
+
+variable "disk_size" {
+  default = 30
 }
 
 variable "client_id" {
@@ -37,29 +46,31 @@ variable "machine_type" { default = "Standard_D2_v2" }
 module "aks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=master"
 
-  machine_type  = "${var.machine_type}"
-  cluster_name  = "${var.cluster_name}"
-  client_id     = "${var.client_id}"
-  client_secret = "${var.client_secret}"
+  machine_type  = var.machine_type
+  cluster_name  = var.cluster_name
+  node_count    = var.node_count
+  disk_size     = var.disk_size
+  client_id     = var.client_id
+  client_secret = var.client_secret
 }
 
 module "helm_agones" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
 
-  agones_version         = "${var.agones_version}"
+  agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
-  host                   = "${module.aks_cluster.host}"
-  token                  = "${module.aks_cluster.token}"
-  cluster_ca_certificate = "${module.aks_cluster.cluster_ca_certificate}"
+  host                   = module.aks_cluster.host
+  token                  = module.aks_cluster.token
+  cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
 }
 
 output "host" {
-  value = "${module.aks_cluster.host}"
+  value = module.aks_cluster.host
 }
 output "token" {
-  value = "${module.aks_cluster.token}"
+  value = module.aks_cluster.token
 }
 output "cluster_ca_certificate" {
-  value = "${module.aks_cluster.cluster_ca_certificate}"
+  value = module.aks_cluster.cluster_ca_certificate
 }
