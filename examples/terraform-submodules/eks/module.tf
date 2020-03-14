@@ -43,28 +43,28 @@ variable "machine_type" { default = "t2.large" }
 module "eks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=master"
 
-  machine_type = "${var.machine_type}"
-  cluster_name = "${var.cluster_name}"
-  node_count   = "${var.node_count}"
-  region       = "${var.region}"
+  machine_type = var.machine_type
+  cluster_name = var.cluster_name
+  node_count   = var.node_count
+  region       = var.region
 }
 
 data "aws_eks_cluster_auth" "example" {
-  name = "${var.cluster_name}"
+  name = var.cluster_name
 }
 
 // Next Helm module cause "terraform destroy" timeout, unless helm release would be deleted first.
 // Therefore "helm delete --purge agones" should be executed from the CLI before executing "terraform destroy".
 module "helm_agones" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"   
 
   udp_expose             = "false"
-  agones_version         = "${var.agones_version}"
+  agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
-  host                   = "${module.eks_cluster.host}"
-  token                  = "${data.aws_eks_cluster_auth.example.token}"
-  cluster_ca_certificate = "${module.eks_cluster.cluster_ca_certificate}"
+  host                   = module.eks_cluster.host
+  token                  = data.aws_eks_cluster_auth.example.token
+  cluster_ca_certificate = module.eks_cluster.cluster_ca_certificate
 }
 
 output "host" {

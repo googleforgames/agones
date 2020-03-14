@@ -541,7 +541,7 @@ func TestGameServerReserve(t *testing.T) {
 		logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
 			WithField("last-time", e.LastTimestamp).
 			WithField("name", e.Name).
-			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs event details")
+			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs pod details")
 	}
 }
 
