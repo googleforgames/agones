@@ -43,7 +43,7 @@ build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
 
 run:
-	docker run --network=host $(server_tag)
+	docker run --network=host $(server_tag) $(args)
 
 # check if hosted on Google Cloud Registry
 gcr-check:
