@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC, All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,10 +28,10 @@ import (
 	sdk "agones.dev/agones/sdks/go"
 )
 
-// logLocation is the path to the location of the Super Tux Kart log file
+// logLocation is the path to the location of the SuperTuxKart log file
 const logLocation = "/.config/supertuxkart/config-0.10/server_config.log"
 
-// main intercepts the log file of the Super Tux Kart gameserver and uses it
+// main intercepts the log file of the SuperTuxKart gameserver and uses it
 // to determine if the game server is ready or not.
 func main() {
 	input := flag.String("i", "", "the command and arguments to execute the server binary")
@@ -40,14 +40,14 @@ func main() {
 	fmt.Println(">>> Connecting to Agones with the SDK")
 	s, err := sdk.NewSDK()
 	if err != nil {
-		log.Fatalf(">>> Could not connect to sdk: %v", err)
+		log.Fatalf(">>> Could not connect to SDK: %v", err)
 	}
 
 	fmt.Println(">>> Starting health checking")
 	go doHealth(s)
 
-	fmt.Println(">>> Starting wrapper for Super Tux Kart!")
-	fmt.Printf(">>> Command run for Super Tux Kart server: %s \n", *input)
+	fmt.Println(">>> Starting wrapper for SuperTuxKart")
+	fmt.Printf(">>> Command being run for SuperTuxKart server: %s \n", *input)
 
 	cmdString := strings.Split(*input, " ")
 	command, args := cmdString[0], cmdString[1:]
@@ -57,10 +57,10 @@ func main() {
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Start(); err != nil {
-		log.Fatalf(">>> Error Starting Cmd: %v", err)
+		log.Fatalf(">>> Error starting cmd: %v", err)
 	}
 
-	// Super Tux Kart refuses to output to foreground, so we're going to
+	// SuperTuxKart refuses to output to foreground, so we're going to
 	// poll the server log.
 	ready := false
 	home, err := os.UserHomeDir()
@@ -99,7 +99,7 @@ func main() {
 	}
 
 	err = cmd.Wait()
-	log.Fatalf(">>> Super Tux Kart shutdown unexpectedly: %v", err)
+	log.Fatalf(">>> SuperTuxKart shutdown unexpectedly: %v", err)
 }
 
 // doHealth sends the regular Health Pings

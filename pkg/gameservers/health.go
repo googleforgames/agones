@@ -140,7 +140,7 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 // Run processes the rate limited queue.
 // Will block until stop is closed
 func (hc *HealthController) Run(stop <-chan struct{}) error {
-	hc.baseLogger.Info("Wait for cache sync")
+	hc.baseLogger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(stop, hc.gameServerSynced, hc.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -177,7 +177,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 	gs, err := hc.gameServerLister.GameServers(namespace).Get(name)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			hc.loggerForGameServerKey(key).Info("GameServer is no longer available for syncing")
+			hc.loggerForGameServerKey(key).Debug("GameServer is no longer available for syncing")
 			return nil
 		}
 		return errors.Wrapf(err, "error retrieving GameServer %s from namespace %s", name, namespace)
@@ -192,7 +192,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 		return err
 	}
 
-	hc.loggerForGameServer(gs).Info("Issue with GameServer pod, marking as GameServerStateUnhealthy")
+	hc.loggerForGameServer(gs).Debug("Issue with GameServer pod, marking as GameServerStateUnhealthy")
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
 

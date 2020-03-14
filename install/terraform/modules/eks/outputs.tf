@@ -43,6 +43,6 @@ output "cluster_ca_certificate" {
 }
 
 output "host" {
-  depends_on = ["module.eks"]
+  depends_on = [module.eks]
   value      = "${module.eks.cluster_endpoint}"
 }
