@@ -115,13 +115,13 @@ func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIReso
 		as.resourceList[groupVersion] = list
 		pattern := fmt.Sprintf("/apis/%s", groupVersion)
 		as.addSerializedHandler(pattern, list)
-		as.logger.WithField("groupversion", groupVersion).WithField("pattern", pattern).Info("Adding Discovery Handler")
+		as.logger.WithField("groupversion", groupVersion).WithField("pattern", pattern).Debug("Adding Discovery Handler")
 
 		// e.g.  /apis/agones.dev/v1/namespaces/default/gameservers
 		// CRD handler
 		pattern = fmt.Sprintf("/apis/%s/namespaces/", groupVersion)
 		as.mux.HandleFunc(pattern, https.ErrorHTTPHandler(as.logger, as.resourceHandler(groupVersion)))
-		as.logger.WithField("groupversion", groupVersion).WithField("pattern", pattern).Info("Adding Resource Handler")
+		as.logger.WithField("groupversion", groupVersion).WithField("pattern", pattern).Debug("Adding Resource Handler")
 	}
 
 	// discovery resource
@@ -131,7 +131,7 @@ func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIReso
 	key := fmt.Sprintf("%s/%s", groupVersion, resource.Name)
 	as.delegates[key] = handler
 
-	as.logger.WithField("groupversion", groupVersion).WithField("apiresource", resource).Info("Adding APIResource")
+	as.logger.WithField("groupversion", groupVersion).WithField("apiresource", resource).Debug("Adding APIResource")
 }
 
 // resourceHandler handles namespaced resource calls, and sends them to the appropriate CRDHandler delegate

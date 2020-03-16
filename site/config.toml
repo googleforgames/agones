@@ -83,7 +83,7 @@ privacy_policy = "https://policies.google.com/privacy"
 github_repo = "https://github.com/googleforgames/agones"
 
 # Google Custom Search Engine ID. Remove or comment out to disable search.
-gcs_engine_id = "002375903941309441958:rceiko9wfuw"
+gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch - could be rc
 release_branch = "release-1.4.0"

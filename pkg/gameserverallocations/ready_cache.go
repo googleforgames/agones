@@ -107,7 +107,7 @@ func (c *ReadyGameServerCache) RemoveFromReadyGameServer(gs *agonesv1.GameServer
 
 // Sync waits for cache to sync
 func (c *ReadyGameServerCache) Sync(stop <-chan struct{}) error {
-	c.baseLogger.Info("Wait for ReadyGameServerCache cache sync")
+	c.baseLogger.Debug("Wait for ReadyGameServerCache cache sync")
 	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -234,7 +234,7 @@ func (c *ReadyGameServerCache) patchMetadata(gs *agonesv1.GameServer, fam alloca
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure
 // happened during the allocation. This method will sync and make sure the cache is up to date.
 func (c *ReadyGameServerCache) SyncGameServers(key string) error {
-	c.loggerForGameServerKey(key).Info("Refreshing Ready Gameserver cache")
+	c.loggerForGameServerKey(key).Debug("Refreshing Ready Gameserver cache")
 
 	return c.syncReadyGSServerCache()
 }

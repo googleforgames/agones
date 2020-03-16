@@ -170,7 +170,7 @@ func (c *Allocator) Start(stop <-chan struct{}) error {
 
 // Sync waits for cache to sync
 func (c *Allocator) Sync(stop <-chan struct{}) error {
-	c.baseLogger.Info("Wait for Allocator cache sync")
+	c.baseLogger.Debug("Wait for Allocator cache sync")
 	if !cache.WaitForCacheSync(stop, c.secretSynced, c.allocationPolicySynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
@@ -198,7 +198,7 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find objectkinds for status")
 		}
-		c.loggerForGameServerAllocation(gsa).Info("GameServerAllocation is invalid")
+		c.loggerForGameServerAllocation(gsa).Debug("GameServerAllocation is invalid")
 
 		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
 		return status, nil
@@ -264,7 +264,7 @@ func (c *Allocator) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocat
 		gsa.Status.NodeName = gs.Status.NodeName
 	}
 
-	c.loggerForGameServerAllocation(gsa).Info("game server allocation")
+	c.loggerForGameServerAllocation(gsa).Debug("Game server allocation")
 	return gsa, nil
 }
 
@@ -339,7 +339,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			endpoint := addPort(ip)
-			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Info("forwarding allocation request")
+			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 
 			allocationResponse, err = c.remoteAllocationCallback(endpoint, dialOpts, request)
 			if err != nil {

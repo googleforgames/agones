@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
@@ -476,28 +477,56 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
+	logger := logrus.WithField("test", t.Name())
+
 	gs := framework.DefaultGameServer(defaultNs)
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
-	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(gs.ObjectMeta.Name, nil) // nolint: errcheck
+	assert.Equal(t, gs.Status.State, agonesv1.GameServerStateReady)
 
-	reply, err := e2eframework.SendGameServerUDP(readyGs, "RESERVE")
+	logger.Info("sending RESERVE command")
+	reply, err := e2eframework.SendGameServerUDP(gs, "RESERVE")
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "Could not message GameServer")
 	}
+	logger.Info("Received response")
 	assert.Equal(t, "ACK: RESERVE\n", reply)
 
-	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReserved, time.Minute)
-	assert.NoError(t, err, fmt.Sprintf("GameServer Name: %s", readyGs.ObjectMeta.Name))
-	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State, fmt.Sprintf("GameServer Name: %s", readyGs.ObjectMeta.Name))
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReserved, time.Minute)
+	assert.NoError(t, err, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
+	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
 
 	// it should go back after 10 seconds
-	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateReady, 15*time.Second)
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReady, 15*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
+
+	list, err := framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, gs)
+	assert.NoError(t, err)
+
+	for _, e := range list.Items {
+		logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
+			WithField("last-time", e.LastTimestamp).
+			WithField("name", e.Name).
+			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs event details")
+	}
+
+	pod, err := framework.KubeClient.CoreV1().Pods(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+	assert.NoError(t, err)
+	logger.WithField("status", pod.Status).Info("Pod Status")
+
+	list, err = framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, pod)
+	assert.NoError(t, err)
+
+	for _, e := range list.Items {
+		logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
+			WithField("last-time", e.LastTimestamp).
+			WithField("name", e.Name).
+			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs pod details")
+	}
 }
 
 func TestGameServerShutdown(t *testing.T) {

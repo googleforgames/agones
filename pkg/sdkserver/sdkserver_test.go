@@ -432,6 +432,11 @@ func TestSidecarUnhealthyMessage(t *testing.T) {
 		gs.ApplyDefaults()
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
 	})
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+		return true, gs, nil
+	})
 
 	stop := make(chan struct{})
 	defer close(stop)
