@@ -193,7 +193,7 @@ type GameServerPort struct {
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// Container is the name of the container on which to open the port. Defaults to the game server container.
-	// This field is alpha-level and is only honored by servers that enable the "FeatureContainerPortAllocation" feature.
+	// This field is alpha-level and is only honored by servers that enable the "ContainerPortAllocation" feature.
 	// +optional
 	Container *string `json:"container,omitempty"`
 	// ContainerPort is the port that is being opened on the specified container's process
@@ -323,7 +323,6 @@ func (gs *GameServer) applyStatusDefaults() {
 
 // applyPortDefaults applies default values for all ports
 func (gss *GameServerSpec) applyPortDefaults() {
-
 	for i, p := range gss.Ports {
 		// basic spec
 		if p.PortPolicy == "" {
