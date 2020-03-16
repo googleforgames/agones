@@ -157,7 +157,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["events"]
-  verbs: ["create"]
+  verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
@@ -1453,6 +1453,12 @@ spec:
           value: "false"
         - name: SIDECAR_CPU_REQUEST
           value: "30m"
+        - name: SIDECAR_CPU_LIMIT
+          value: "0"
+        - name: SIDECAR_MEMORY_REQUEST
+          value: "0"
+        - name: SIDECAR_MEMORY_LIMIT
+          value: "0"
         - name: SDK_SERVICE_ACCOUNT
           value: "agones-sdk"
         - name: PROMETHEUS_EXPORTER
@@ -1463,8 +1469,6 @@ spec:
           value: ""
         - name: GCP_PROJECT_ID
           value: ""
-        - name: SIDECAR_CPU_LIMIT
-          value: "0"
         - name: NUM_WORKERS
           value: "100"
         - name: API_SERVER_QPS

@@ -78,7 +78,7 @@ module "vpc" {
 
 module "eks" {
   source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v7.0.1"
-  cluster_name    = "${var.cluster_name}"
+  cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
   cluster_version = "1.14"
@@ -86,24 +86,24 @@ module "eks" {
   worker_groups_launch_template = [
     {
       name                          = "default"
-      instance_type                 = "${var.machine_type}"
-      asg_desired_capacity          = "${var.node_count}"
-      asg_min_size                  = "${var.node_count}"
-      asg_max_size                  = "${var.node_count}"
+      instance_type                 = var.machine_type
+      asg_desired_capacity          = var.node_count
+      asg_min_size                  = var.node_count
+      asg_max_size                  = var.node_count
       additional_security_group_ids = [aws_security_group.worker_group_mgmt_one.id]
       public_ip                     = true
     },
     // Node Pools with taints for metrics and system
     {
       name                 = "agones-system"
-      instance_type        = "${var.machine_type}"
+      instance_type        = var.machine_type
       asg_desired_capacity = 1
       kubelet_extra_args   = "--node-labels=agones.dev/agones-system=true --register-with-taints=agones.dev/agones-system=true:NoExecute"
       public_ip            = true
     },
     {
       name                 = "agones-metrics"
-      instance_type        = "${var.machine_type}"
+      instance_type        = var.machine_type
       asg_desired_capacity = 1
       kubelet_extra_args   = "--node-labels=agones.dev/agones-metrics=true --register-with-taints=agones.dev/agones-metrics=true:NoExecute"
       public_ip            = true

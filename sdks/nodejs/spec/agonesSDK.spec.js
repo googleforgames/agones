@@ -361,15 +361,15 @@ describe('agones', () => {
 			await agonesSDK.close();
 			expect(agonesSDK.client.close).toHaveBeenCalled();
 		});
-		it('destroys the health stream if set', async () => {
-			let stream = jasmine.createSpyObj('stream', ['destroy', 'write']);
+		it('ends the health stream if set', async () => {
+			let stream = jasmine.createSpyObj('stream', ['end', 'write']);
 			spyOn(agonesSDK.client, 'health').and.callFake(() => {
 				return stream;
 			});
 			agonesSDK.health();
 			spyOn(agonesSDK.client, 'close').and.callFake(() => {});
 			await agonesSDK.close();
-			expect(stream.destroy).toHaveBeenCalled();
+			expect(stream.end).toHaveBeenCalled();
 		});
 		it('cancels any watchers', async () => {
 			let serverEmitter = new EventEmitter();
