@@ -334,7 +334,7 @@ func (gss *GameServerSpec) applyPortDefaults() {
 			gss.Ports[i].Protocol = "UDP"
 		}
 
-		if p.Container == nil || *p.Container == "" {
+		if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) && (p.Container == nil || *p.Container == "") {
 			gss.Ports[i].Container = &gss.Container
 		}
 	}
@@ -559,23 +559,39 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
+	if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+		for _, p := range gs.Spec.Ports {
+			cp := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      p.Protocol,
+			}
+			err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+				c.Ports = append(c.Ports, cp)
 
-	for _, p := range gs.Spec.Ports {
-		cp := corev1.ContainerPort{
-			ContainerPort: p.ContainerPort,
-			HostPort:      p.HostPort,
-			Protocol:      p.Protocol,
+				return c
+			})
+			if err != nil {
+				return nil, err
+			}
 		}
-		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
-			c.Ports = append(c.Ports, cp)
-
-			return c
-		})
+	} else {
+		i, gsContainer, err := gs.FindGameServerContainer()
+		// this shouldn't happen, but if it does.
 		if err != nil {
-			return nil, err
+			return pod, err
 		}
-	}
 
+		for _, p := range gs.Spec.Ports {
+			cp := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      p.Protocol,
+			}
+			gsContainer.Ports = append(gsContainer.Ports, cp)
+		}
+		pod.Spec.Containers[i] = gsContainer
+	}
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 
 	gs.podScheduling(pod)
@@ -692,12 +708,6 @@ func (gs *GameServer) CountPorts(f func(policy PortPolicy) bool) int {
 // to the passed in delta GameServer
 func (gs *GameServer) Patch(delta *GameServer) ([]byte, error) {
 	var result []byte
-
-	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
-		for _, p := range delta.Spec.Ports {
-			p.Container = nil
-		}
-	}
 
 	oldJSON, err := json.Marshal(gs)
 	if err != nil {

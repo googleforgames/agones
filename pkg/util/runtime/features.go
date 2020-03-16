@@ -34,7 +34,7 @@ const (
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
 	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
-	FeatureContainerPortAllocation Feature = "FeatureContainerPortAllocation"
+	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
 )
 
 var (

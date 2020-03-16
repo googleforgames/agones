@@ -566,6 +566,12 @@ func TestGameServerPod(t *testing.T) {
 }
 
 func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
+	assert.NoError(t, err)
+
 	fixture := defaultGameServer()
 	containerName := "authContainer"
 	fixture.Spec.Template.Spec.Containers = append(fixture.Spec.Template.Spec.Containers, corev1.Container{
