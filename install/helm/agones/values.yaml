@@ -133,6 +133,8 @@ agones:
       name: agones-sdk
       cpuRequest: 30m
       cpuLimit: 0
+      memoryRequest: 0
+      memoryLimit: 0
       alwaysPull: false
     ping:
       name: agones-ping
