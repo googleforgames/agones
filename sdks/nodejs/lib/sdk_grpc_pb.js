@@ -24,7 +24,7 @@ function serialize_agones_dev_sdk_Duration(arg) {
   if (!(arg instanceof sdk_pb.Duration)) {
     throw new Error('Expected argument of type agones.dev.sdk.Duration');
   }
-  return new Buffer(arg.serializeBinary());
+  return Buffer.from(arg.serializeBinary());
 }
 
 function deserialize_agones_dev_sdk_Duration(buffer_arg) {
@@ -35,7 +35,7 @@ function serialize_agones_dev_sdk_Empty(arg) {
   if (!(arg instanceof sdk_pb.Empty)) {
     throw new Error('Expected argument of type agones.dev.sdk.Empty');
   }
-  return new Buffer(arg.serializeBinary());
+  return Buffer.from(arg.serializeBinary());
 }
 
 function deserialize_agones_dev_sdk_Empty(buffer_arg) {
@@ -46,7 +46,7 @@ function serialize_agones_dev_sdk_GameServer(arg) {
   if (!(arg instanceof sdk_pb.GameServer)) {
     throw new Error('Expected argument of type agones.dev.sdk.GameServer');
   }
-  return new Buffer(arg.serializeBinary());
+  return Buffer.from(arg.serializeBinary());
 }
 
 function deserialize_agones_dev_sdk_GameServer(buffer_arg) {
@@ -57,7 +57,7 @@ function serialize_agones_dev_sdk_KeyValue(arg) {
   if (!(arg instanceof sdk_pb.KeyValue)) {
     throw new Error('Expected argument of type agones.dev.sdk.KeyValue');
   }
-  return new Buffer(arg.serializeBinary());
+  return Buffer.from(arg.serializeBinary());
 }
 
 function deserialize_agones_dev_sdk_KeyValue(buffer_arg) {

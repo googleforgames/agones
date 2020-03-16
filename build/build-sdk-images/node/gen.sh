@@ -25,7 +25,7 @@ googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 cd /go/src/agones.dev/agones
 
-protoc -I ${googleapis} -I ${sdk} --grpc_out=./sdks/nodejs/lib --plugin=protoc-gen-grpc=`which grpc_node_plugin` sdk.proto
+protoc -I ${googleapis} -I ${sdk} --grpc_out=minimum_node_version=12:./sdks/nodejs/lib --plugin=protoc-gen-grpc=`which grpc_node_plugin` sdk.proto
 protoc -I ${googleapis} -I ${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto ${googleapis}/google/api/annotations.proto ${googleapis}/google/api/http.proto
 
 header ./sdks/nodejs/lib/sdk_pb.js

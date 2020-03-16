@@ -1,11 +1,11 @@
-# Super Tux Kart Example
+# SuperTuxKart Game Server Example
 
-Example using a [Super Tux Kart](https://supertuxkart.net/) dedicated game server.
+Example using a [SuperTuxKart](https://supertuxkart.net/) dedicated game server.
 
-This example wraps the Super Tux Kart server with a [Go](https://golang.org) binary, and introspects
+This example wraps the SuperTuxKart server with a [Go](https://golang.org) binary, and introspects
 the log file to provide the event hooks for the SDK integration.
 
-It is not a direct integration, but is an approach for to integrate with existing
+It is not a direct integration, but is an approach to integrate with existing
 dedicated game servers.
 
-You will need to download the Super Tux Kart client separately to play.
+You will need to download the SuperTuxKart client separately to play.

@@ -39,7 +39,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["events"]
-  verbs: ["create"]
+  verbs: ["create", "patch"]
 - apiGroups: ["agones.dev"]
   resources: ["gameservers"]
   verbs: ["list", "update", "watch"]
