@@ -287,6 +287,7 @@ install: PING_SERVICE_TYPE := "LoadBalancer"
 install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
+install: FEATURE_GATES := "PlayerTracking=true"
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\
@@ -297,6 +298,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.allocator.http.serviceType=$(ALLOCATOR_SERVICE_TYPE) \
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
+		--set agones.featureGates=$(FEATURE_GATES) \
 		agones $(mount_path)/install/helm/agones/
 
 uninstall: $(ensure-build-image)
