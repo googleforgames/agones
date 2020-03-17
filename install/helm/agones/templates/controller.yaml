@@ -84,6 +84,12 @@ spec:
           value: {{ .Values.agones.image.sdk.alwaysPull | quote }}
         - name: SIDECAR_CPU_REQUEST
           value: {{ .Values.agones.image.sdk.cpuRequest | quote }}
+        - name: SIDECAR_CPU_LIMIT
+          value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
+        - name: SIDECAR_MEMORY_REQUEST
+          value: {{ .Values.agones.image.sdk.memoryRequest | quote }}
+        - name: SIDECAR_MEMORY_LIMIT
+          value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
         - name: SDK_SERVICE_ACCOUNT
           value: {{ .Values.agones.serviceaccount.sdk | quote }}
         - name: PROMETHEUS_EXPORTER
@@ -94,8 +100,6 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: GCP_PROJECT_ID
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
-        - name: SIDECAR_CPU_LIMIT
-          value: {{ .Values.agones.image.sdk.cpuLimit | quote }}
         - name: NUM_WORKERS
           value: {{ .Values.agones.controller.numWorkers | quote }}
         - name: API_SERVER_QPS
