@@ -49,9 +49,8 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | Name                                            | Description                                                         | Type      |
 |-------------------------------------------------|---------------------------------------------------------------------|-----------|
 | agones_gameservers_count                        | The number of gameservers per fleet and status                      | gauge     |
-| agones_fleet_allocations_count                  | The number of fleet allocations per fleet                           | gauge     |
+| agones_gameserver_allocations_duration_seconds  | The distribution of gameserver allocation requests latencies         | histogram     |
 | agones_gameservers_total                        | The total of gameservers per fleet and status                       | counter   |
-| agones_fleet_allocations_total                  | The total of fleet allocations per fleet                            | counter   |
 | agones_fleets_replicas_count                    | The number of replicas per fleet (total, desired, ready, allocated) | gauge     |
 | agones_fleet_autoscalers_able_to_scale          | The fleet autoscaler can access the fleet to scale                  | gauge     |
 | agones_fleet_autoscalers_buffer_limits          | The limits of buffer based fleet autoscalers (min, max)              | gauge     |
@@ -61,6 +60,20 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | agones_fleet_autoscalers_limited                | The fleet autoscaler is capped (1)                                  | gauge     |
 | agones_gameservers_node_count                   | The distribution of gameservers per node                            | histogram |
 | agones_nodes_count                              | The count of nodes empty and with gameservers                       | gauge     |
+| agones_k8s_client_http_request_total            | The total of HTTP requests to the Kubernetes API by status code       | counter   |
+| agones_k8s_client_http_request_duration_seconds | The distribution of HTTP requests latencies to the Kubernetes API by status code  | histogram   |
+| agones_k8s_client_cache_list_total              | The total number of list operations for client-go caches                         | counter   |
+| agones_k8s_client_cache_list_duration_seconds   | Duration of a Kubernetes list API call in seconds                        | histogram   |
+| agones_k8s_client_cache_list_items              | Count of items in a list from the Kubernetes API                            | histogram   |
+| agones_k8s_client_cache_watches_total           | The total number of watch operations for client-go caches                         | counter   |
+| agones_k8s_client_cache_last_resource_version   | Last resource version from the Kubernetes API                            | gauge   |
+| agones_k8s_client_workqueue_depth               | Current depth of the work queue                          | gauge   |
+| agones_k8s_client_workqueue_latency_seconds     | How long an item stays in the work queue                          | histogram   |
+| agones_k8s_client_workqueue_items_total         | Total number of items added to the work queue                          | counter   |
+| agones_k8s_client_workqueue_work_duration_seconds | How long processing an item from the work queue takes                          | histogram   |
+| agones_k8s_client_workqueue_retries_total         | Total number of items retried to the work queue                          | counter   |
+| agones_k8s_client_workqueue_longest_running_processor         | How long the longest running workqueue processor has been running in microseconds  | gauge   |
+| agones_k8s_client_workqueue_unfinished_work_seconds         | How long unfinished work has been sitting in the workqueue in seconds    | gauge   |
 
 ## Dashboard
 
@@ -70,9 +83,11 @@ We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor
 
 - {{< ghlink href="/build/grafana/dashboard-autoscalers.yaml" branch="master" >}}Agones Autoscalers{{< /ghlink >}} allows you to monitor your current autoscalers replicas request as well as fleet replicas allocation and readyness statuses. You can only select one autoscaler at the time using the provided dropdown.
 
-- {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="master" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations , game servers statuses, fleets replicas) with optional fleet name filtering.
+- {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="master" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations, game servers statuses, fleets replicas) with optional fleet name filtering.
 
 - {{< ghlink href="/build/grafana/dashboard-allocations.yaml" branch="master" >}}Agones GameServer Allocations{{< /ghlink >}} displays Agones gameservers allocations rates and counts per fleet.
+
+- {{< ghlink href="/build/grafana/dashboard-allocator-usage.yaml" branch="master" >}}Agones Allocator Resource{{< /ghlink >}} displays Agones Allocators CPU, memory usage and also some useful Golang runtime metrics.
 
 - {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="master" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
 
