@@ -652,7 +652,7 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 	if !c.sidecarCPULimit.IsZero() {
 		limits[corev1.ResourceCPU] = c.sidecarCPULimit
 	}
-	if !c.sidecarCPULimit.IsZero() {
+	if !c.sidecarMemoryLimit.IsZero() {
 		limits[corev1.ResourceMemory] = c.sidecarMemoryLimit
 	}
 	sidecar.Resources.Limits = limits
