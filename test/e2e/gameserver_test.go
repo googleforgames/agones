@@ -496,16 +496,19 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{
-						Name:            firstContainerName,
-						Image:           framework.GameServerImage,
-						ImagePullPolicy: corev1.PullIfNotPresent,
-					},
+					Containers: []corev1.Container{
+						{
+							Name:            firstContainerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
 						{
 							Name:            secondContainerName,
 							Image:           framework.GameServerImage,
 							ImagePullPolicy: corev1.PullIfNotPresent,
-						}},
+							Args:            []string{"-port", "5000"},
+						},
+					},
 				},
 			},
 		},
