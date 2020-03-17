@@ -38,6 +38,7 @@ func main() {
 	port := flag.String("port", "7654", "The port to listen to udp traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
+	shutdownDelay := flag.Int("automaticShutdownDelayMin", 0, "If greater than zero, automatically shut down the server this many minutes after the server becomes allocated")
 	flag.Parse()
 	if ep := os.Getenv("PORT"); ep != "" {
 		port = &ep
@@ -84,6 +85,9 @@ func main() {
 		ready(s)
 	}
 
+	if *shutdownDelay > 0 {
+		shutdownAfterAllocation(s, *shutdownDelay)
+	}
 	readWriteLoop(conn, stop, s)
 }
 
@@ -93,6 +97,29 @@ func doSignal() {
 	<-stop
 	log.Println("Exit signal received. Shutting down.")
 	os.Exit(0)
+}
+
+// shutdownAfterAllocation creates a callback to automatically shut down
+// the server a specified number of minutes after the server becomes
+// allocated.
+func shutdownAfterAllocation(s *sdk.SDK, shutdownDelay int) {
+	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
+		if gs.Status.State == "Allocated" {
+			go func() {
+				time.Sleep(time.Duration(shutdownDelay) * time.Minute)
+				shutdownErr := s.Shutdown()
+				for shutdownErr != nil {
+					log.Printf("Could not shutdown: %v", shutdownErr)
+					// TODO: Add exponential backoff
+					time.Sleep(10 * time.Second)
+					shutdownErr = s.Shutdown()
+				}
+			}()
+		}
+	})
+	if err != nil {
+		log.Fatalf("Could not watch Game Server events, %v", err)
+	}
 }
 
 func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {

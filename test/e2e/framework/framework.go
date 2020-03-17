@@ -66,9 +66,26 @@ type Framework struct {
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
 func New(kubeconfig string) (*Framework, error) {
+	return newFramework(kubeconfig, 0, 0)
+}
+
+// NewForLoadTesting setups a testing framework using a kubeconfig path and the game server image
+// to use for load testing with QPS and Burst overwrites.
+func NewForLoadTesting(kubeconfig string, qps float32, burst int) (*Framework, error) {
+	return newFramework(kubeconfig, qps, burst)
+}
+
+func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
+	}
+
+	if qps > 0 {
+		config.QPS = qps
+	}
+	if burst > 0 {
+		config.Burst = burst
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(config)
