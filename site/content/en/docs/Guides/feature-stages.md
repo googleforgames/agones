@@ -28,6 +28,7 @@ The current set of `alpha` and `beta` feature gates are:
 |--------------|---------|---------|-------|-------|
 | Multicluster Allocation<sup>*</sup> | N/A | Enabled | `Alpha` | 0.11.0 |
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
+| [Port Allocations to Multiple Containers]({{< ref "/docs/Reference/gameserver.md" >}}) | `ContainerPortAllocation` | Disabled | `Alpha` | 1.5.0 |
 
 <sup>*</sup>Multicluster Allocation was started before this process was in place, and therefore is enabled by default,
  and will not have a feature flag.
