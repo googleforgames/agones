@@ -287,7 +287,7 @@ install: PING_SERVICE_TYPE := "LoadBalancer"
 install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
-install: FEATURE_GATES := "PlayerTracking=true"
+install: FEATURE_GATES := "PlayerTracking=true&ContainerPortAllocation=true"
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\

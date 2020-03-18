@@ -368,6 +368,7 @@ func TestGameServerValidate(t *testing.T) {
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
+	containerWithPort := "anotherTest"
 	gs = GameServer{
 		Spec: GameServerSpec{
 			Container: "",
@@ -375,6 +376,12 @@ func TestGameServerValidate(t *testing.T) {
 				Name:       "main",
 				HostPort:   5001,
 				PortPolicy: Dynamic,
+			}, {
+				Name:          "sidecar",
+				HostPort:      5002,
+				PortPolicy:    Static,
+				ContainerPort: 5002,
+				Container:     &containerWithPort,
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{Containers: []corev1.Container{
@@ -558,6 +565,45 @@ func TestGameServerPod(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 
+func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
+	assert.NoError(t, err)
+
+	fixture := defaultGameServer()
+	containerName := "authContainer"
+	fixture.Spec.Template.Spec.Containers = append(fixture.Spec.Template.Spec.Containers, corev1.Container{
+		Name: containerName,
+	})
+	fixture.Spec.Ports = append(fixture.Spec.Ports, GameServerPort{
+		Name:          "containerPort",
+		PortPolicy:    Dynamic,
+		Container:     &containerName,
+		ContainerPort: 5000,
+	})
+	fixture.Spec.Container = fixture.Spec.Template.Spec.Containers[0].Name
+	fixture.ApplyDefaults()
+
+	pod, err := fixture.Pod()
+	assert.NoError(t, err, "Pod should not return an error")
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
+	assert.Equal(t, fixture.ObjectMeta.Namespace, pod.ObjectMeta.Namespace)
+	assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
+	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[GameServerPodLabel])
+	assert.Equal(t, fixture.Spec.Container, pod.ObjectMeta.Annotations[GameServerContainerAnnotation])
+	assert.Equal(t, fixture.Spec.Ports[0].HostPort, pod.Spec.Containers[0].Ports[0].HostPort)
+	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
+	assert.Equal(t, *fixture.Spec.Ports[0].Container, pod.Spec.Containers[0].Name)
+	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
+	assert.True(t, metav1.IsControlledBy(pod, fixture))
+	assert.Equal(t, fixture.Spec.Ports[1].HostPort, pod.Spec.Containers[1].Ports[0].HostPort)
+	assert.Equal(t, fixture.Spec.Ports[1].ContainerPort, pod.Spec.Containers[1].Ports[0].ContainerPort)
+	assert.Equal(t, *fixture.Spec.Ports[1].Container, pod.Spec.Containers[1].Name)
+	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[1].Ports[0].Protocol)
+}
+
 func TestGameServerPodObjectMeta(t *testing.T) {
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "lucy"},
 		Spec: GameServerSpec{Container: "goat"}}
@@ -634,7 +680,8 @@ func TestGameServerDisableServiceAccount(t *testing.T) {
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Empty(t, pod.Spec.Containers[0].VolumeMounts)
 
-	gs.DisableServiceAccount(pod)
+	err = gs.DisableServiceAccount(pod)
+	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
 	assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
@@ -744,7 +791,7 @@ func TestGameServerIsBeforeReady(t *testing.T) {
 
 }
 
-func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
+func TestGameServerApplyToPodContainer(t *testing.T) {
 	t.Parallel()
 
 	name := "mycontainer"
@@ -762,18 +809,19 @@ func TestGameServerApplyToPodGameServerContainer(t *testing.T) {
 		},
 	}
 
-	p1 := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
+	pod := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
 
-	p2 := gs.ApplyToPodGameServerContainer(p1, func(c corev1.Container) corev1.Container {
+	err := gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		//  easy thing to change and test for
 		c.TTY = true
 
 		return c
 	})
 
-	assert.Len(t, p2.Spec.Containers, 2)
-	assert.True(t, p2.Spec.Containers[0].TTY)
-	assert.False(t, p2.Spec.Containers[1].TTY)
+	assert.NoError(t, err)
+	assert.Len(t, pod.Spec.Containers, 2)
+	assert.True(t, pod.Spec.Containers[0].TTY)
+	assert.False(t, pod.Spec.Containers[1].TTY)
 }
 
 func defaultGameServer() *GameServer {

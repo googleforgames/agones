@@ -559,10 +559,16 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 	// doing, and don't disable the gameserver container.
 	if pod.Spec.ServiceAccountName == "" {
 		pod.Spec.ServiceAccountName = c.sdkServiceAccount
-		gs.DisableServiceAccount(pod)
+		err = gs.DisableServiceAccount(pod)
+		if err != nil {
+			return gs, err
+		}
 	}
 
-	c.addGameServerHealthCheck(gs, pod)
+	err = c.addGameServerHealthCheck(gs, pod)
+	if err != nil {
+		return gs, err
+	}
 	c.addSDKServerEnvVars(gs, pod)
 
 	c.loggerForGameServer(gs).WithField("pod", pod).Debug("Creating Pod for GameServer")
@@ -658,12 +664,12 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 }
 
 // addGameServerHealthCheck adds the http health check to the GameServer container
-func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *corev1.Pod) {
+func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *corev1.Pod) error {
 	if gs.Spec.Health.Disabled {
-		return
+		return nil
 	}
 
-	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+	return gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		if c.LivenessProbe == nil {
 			c.LivenessProbe = &corev1.Probe{
 				Handler: corev1.Handler{

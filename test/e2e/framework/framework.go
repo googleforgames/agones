@@ -350,7 +350,22 @@ func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
-	address := fmt.Sprintf("%s:%d", gs.Status.Address, gs.Status.Ports[0].Port)
+	return SendGameServerUDPToPort(gs, gs.Status.Ports[0].Name, msg)
+}
+
+// SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
+// returns error if no Ports were allocated or a port of the specified name doesn't exist
+func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+	var port agonesv1.GameServerStatusPort
+	for _, p := range gs.Status.Ports {
+		if p.Name == portName {
+			port = p
+		}
+	}
+	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
 	return SendUDP(address, msg)
 }
 
