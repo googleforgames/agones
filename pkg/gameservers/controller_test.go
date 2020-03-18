@@ -1235,8 +1235,9 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	assert.False(t, fixture.Spec.Health.Disabled)
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Error: %v", err)
-	c.addGameServerHealthCheck(fixture, pod)
+	err = c.addGameServerHealthCheck(fixture, pod)
 
+	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	probe := pod.Spec.Containers[0].LivenessProbe
 	assert.NotNil(t, probe)

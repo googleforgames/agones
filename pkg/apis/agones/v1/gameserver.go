@@ -192,7 +192,11 @@ type GameServerPort struct {
 	// When `Static` portPolicy is specified, `HostPort` is required, to specify the port that game clients will
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
-	// ContainerPort is the port that is being opened on the game server process
+	// Container is the name of the container on which to open the port. Defaults to the game server container.
+	// This field is alpha-level and is only honored by servers that enable the "ContainerPortAllocation" feature.
+	// +optional
+	Container *string `json:"container,omitempty"`
+	// ContainerPort is the port that is being opened on the specified container's process
 	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
@@ -328,6 +332,10 @@ func (gss *GameServerSpec) applyPortDefaults() {
 		if p.Protocol == "" {
 			gss.Ports[i].Protocol = "UDP"
 		}
+
+		if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) && (p.Container == nil || *p.Container == "") {
+			gss.Ports[i].Container = &gss.Container
+		}
 	}
 }
 
@@ -390,6 +398,16 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			})
 		}
 
+		// make sure the container value points to a valid container
+		_, _, err := gss.FindContainer(gss.Container)
+		if err != nil {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "container",
+				Message: err.Error(),
+			})
+		}
+
 		// no host port when using dynamic PortPolicy
 		for _, p := range gss.Ports {
 			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
@@ -417,16 +435,17 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 					Message: ErrHostPortDynamic,
 				})
 			}
-		}
 
-		// make sure the container value points to a valid container
-		_, _, err := gss.FindGameServerContainer()
-		if err != nil {
-			causes = append(causes, metav1.StatusCause{
-				Type:    metav1.CauseTypeFieldValueInvalid,
-				Field:   "container",
-				Message: err.Error(),
-			})
+			if p.Container != nil && gss.Container != "" {
+				_, _, err := gss.FindContainer(*p.Container)
+				if err != nil {
+					causes = append(causes, metav1.StatusCause{
+						Type:    metav1.CauseTypeFieldValueInvalid,
+						Field:   fmt.Sprintf("%s.container", p.Name),
+						Message: ErrContainerNameInvalid,
+					})
+				}
+			}
 		}
 	}
 	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
@@ -490,37 +509,44 @@ func (gs *GameServer) IsBeforeReady() bool {
 	return false
 }
 
-// FindGameServerContainer returns the container that is specified in
-// gameServer.Spec.Container. Returns the index and the value.
-// Returns an error if not found
-func (gss *GameServerSpec) FindGameServerContainer() (int, corev1.Container, error) {
+// FindContainer returns the container specified by the name parameter. Returns the index and the value.
+// Returns an error if not found.
+func (gss *GameServerSpec) FindContainer(name string) (int, corev1.Container, error) {
 	for i, c := range gss.Template.Spec.Containers {
-		if c.Name == gss.Container {
+		if c.Name == name {
 			return i, c, nil
 		}
 	}
 
-	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", gss.Container)
+	return -1, corev1.Container{}, errors.Errorf("Could not find a container named %s", name)
 }
 
 // FindGameServerContainer returns the container that is specified in
 // gameServer.Spec.Container. Returns the index and the value.
 // Returns an error if not found
 func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
-	return gs.Spec.FindGameServerContainer()
+	return gs.Spec.FindContainer(gs.Spec.Container)
 }
 
-// ApplyToPodGameServerContainer applies func(v1.Container) to the pod's gameserver container
-func (gs *GameServer) ApplyToPodGameServerContainer(pod *corev1.Pod, f func(corev1.Container) corev1.Container) *corev1.Pod {
+// ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
+// Returns an error if the container is not found.
+func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
+	var container corev1.Container
+	containerIndex := -1
 	for i, c := range pod.Spec.Containers {
-		if c.Name == gs.Spec.Container {
-			c = f(c)
-			pod.Spec.Containers[i] = c
-			break
+		if c.Name == containerName {
+			container = c
+			containerIndex = i
 		}
 	}
+	if containerIndex == -1 {
+		return errors.Errorf("failed to find container named %q in pod spec", containerName)
+	}
 
-	return pod
+	container = f(container)
+	pod.Spec.Containers[containerIndex] = container
+
+	return nil
 }
 
 // Pod creates a new Pod from the PodTemplateSpec
@@ -532,23 +558,39 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
+	if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+		for _, p := range gs.Spec.Ports {
+			cp := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      p.Protocol,
+			}
+			err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+				c.Ports = append(c.Ports, cp)
 
-	i, gsContainer, err := gs.FindGameServerContainer()
-	// this shouldn't happen, but if it does.
-	if err != nil {
-		return pod, err
-	}
-
-	for _, p := range gs.Spec.Ports {
-		cp := corev1.ContainerPort{
-			ContainerPort: p.ContainerPort,
-			HostPort:      p.HostPort,
-			Protocol:      p.Protocol,
+				return c
+			})
+			if err != nil {
+				return nil, err
+			}
 		}
-		gsContainer.Ports = append(gsContainer.Ports, cp)
-	}
-	pod.Spec.Containers[i] = gsContainer
+	} else {
+		i, gsContainer, err := gs.FindGameServerContainer()
+		// this shouldn't happen, but if it does.
+		if err != nil {
+			return pod, err
+		}
 
+		for _, p := range gs.Spec.Ports {
+			cp := corev1.ContainerPort{
+				ContainerPort: p.ContainerPort,
+				HostPort:      p.HostPort,
+				Protocol:      p.Protocol,
+			}
+			gsContainer.Ports = append(gsContainer.Ports, cp)
+		}
+		pod.Spec.Containers[i] = gsContainer
+	}
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 
 	gs.podScheduling(pod)
@@ -620,13 +662,13 @@ func (gs *GameServer) podScheduling(pod *corev1.Pod) {
 }
 
 // DisableServiceAccount disables the service account for the gameserver container
-func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) {
+func (gs *GameServer) DisableServiceAccount(pod *corev1.Pod) error {
 	// gameservers don't get access to the k8s api.
 	emptyVol := corev1.Volume{Name: "empty", VolumeSource: corev1.VolumeSource{EmptyDir: &corev1.EmptyDirVolumeSource{}}}
 	pod.Spec.Volumes = append(pod.Spec.Volumes, emptyVol)
 	mount := corev1.VolumeMount{MountPath: "/var/run/secrets/kubernetes.io/serviceaccount", Name: emptyVol.Name, ReadOnly: true}
 
-	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+	return gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		c.VolumeMounts = append(c.VolumeMounts, mount)
 
 		return c

@@ -586,9 +586,10 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Len(t, statusErr.Status().Details.Causes, 2)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
+	assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
 
 	flt.Spec.Template.Spec.Container = ""
 	_, err = client.Fleets(defaultNs).Create(flt)
