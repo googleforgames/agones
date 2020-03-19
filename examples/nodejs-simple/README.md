@@ -63,7 +63,7 @@ $ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --help
 $ npm start -- --help
 ```
 
-You can optionally specify how long the server will stay up once the basic tests are complete with the --timeout option.
+You can optionally specify how long the server will stay up once the basic tests are complete with the `--timeout` option.
 To do this pass arguments through, e.g. to increase the shutdown duration to 120 seconds:
 ```
 $ make args="--timeout=120" run
