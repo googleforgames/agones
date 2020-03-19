@@ -19,15 +19,15 @@ const sleep = util.promisify(setTimeout);
 
 const agonesSDK = new AgonesSDK();
 
-const DEFAULT_SHUTDOWN_DURATION = 60;
-const MAX_SHUTDOWN_DURATION = 2147483;
+const DEFAULT_TIMEOUT = 60;
+const MAX_TIMEOUT = 2147483;
 
-const connect = async (shutdownDuration) => {
+const connect = async (timeout) => {
 	let lifetimeInterval;
 	let healthInterval;
 	
 	try {
-		console.log(`Started with shutdown duration of ${shutdownDuration} seconds. Connecting to the SDK server...`);
+		console.log(`Connecting to the SDK server...`);
 		await agonesSDK.connect();
 		console.log('...connected to SDK server');
 
@@ -65,8 +65,14 @@ const connect = async (shutdownDuration) => {
 		await agonesSDK.reserve(10);
 		await sleep(20000);
 
-		console.log(`Shutting down after ${shutdownDuration} seconds...`);
-		await sleep(shutdownDuration * 1000);
+		if (timeout === 0) {
+			do {
+				await sleep(MAX_TIMEOUT);
+			} while (true);
+		}
+
+		console.log(`Shutting down after timeout of ${timeout} seconds...`);
+		await sleep(timeout * 1000);
 		console.log('Shutting down...');
 		agonesSDK.shutdown();
 
@@ -89,18 +95,27 @@ const connect = async (shutdownDuration) => {
 };
 
 let args = process.argv.slice(2);
-let shutdownDuration = DEFAULT_SHUTDOWN_DURATION;
-if (args.length > 0) {
-	if (args[0] === '--help') {
-		console.log(`After the tests are complete will shutdown after a duration of ${DEFAULT_SHUTDOWN_DURATION/1000} seconds.\nOverride this by passing an argument for the number of seconds or <= 0 for as long as possible`);
+let timeout = DEFAULT_TIMEOUT;
+
+for (let arg of args) {
+	let [argName, argValue] = arg.split('=');
+	if (argName === '--help') {
+		console.log(`Example to call each SDK feature in turn. Once complete will call shutdown and close after a default timeout of ${DEFAULT_TIMEOUT} seconds.\n\nOptions:\n\t--timeout=...\t\tshutdown timeout in seconds. Use 0 to never shut down`);
 		return;
 	}
-	shutdownDuration = Number(args[0]);
-	if (Number.isNaN(shutdownDuration)) {
-		shutdownDuration = DEFAULT_SHUTDOWN_DURATION;
-	} else if (shutdownDuration <= 0 || shutdownDuration > MAX_SHUTDOWN_DURATION) {
-		shutdownDuration = MAX_SHUTDOWN_DURATION;
+	if (argName === '--timeout') {
+		timeout = Number(argValue);
+		if (Number.isNaN(timeout)) {
+			timeout = DEFAULT_TIMEOUT;
+		} else if (timeout < 0 || timeout > MAX_TIMEOUT) {
+			timeout = 0;
+		}
+		if (timeout === 0) {
+			console.log(`Using shutdown timeout of never`);
+		} else {
+			console.log(`Using shutdown timeout of ${timeout} seconds`);
+		}
 	}
 }
 
-connect(shutdownDuration);
+connect(timeout);

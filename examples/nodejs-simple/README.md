@@ -10,6 +10,7 @@ It will:
 - Every 10 seconds, write a log showing how long it has been running for
 - Every 20 seconds, mark as healthy
 - After the shutdown duration (default 60 seconds), shut the server down
+- Parse options to get help or set the shutdown timeout duration
 
 To learn how to deploy this example service to GKE, please see the tutorial [Build and Run a Simple Gameserver (node.js)](https://agones.dev/site/docs/tutorials/simple-gameserver-nodejs/).
 
@@ -35,105 +36,44 @@ $ make build
 $ make run
 ```
 
+The example can also be run via docker:
+```
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4
+```
+Or directly via npm:
+```
+$ npm start
+```
+
 You will see the output like the following:
 ```
-docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.1
+docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4
 
 > @ start /home/server/examples/nodejs-simple
 > node src/index.js
 
-Started with shutdown duration of 60 seconds. Connecting to the SDK server...
+Connecting to the SDK server...
 ...connected to SDK server
-Running for 10 seconds
-Setting a label
-GameServer Update:
-        name: local
-        state: Ready
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: annotation,true
-Health ping sent
-Running for 20 seconds
-Setting an annotation
-GameServer Update:   
-        name: local
-        state: Ready
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Running for 30 seconds
-Marking server as ready...
-GameServer Update:
-        name: local
-        state: Ready
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Health ping sent
-Running for 40 seconds
-Allocating
-GameServer Update:
-        name: local
-        state: Allocated
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Running for 50 seconds
-Reserving for 10 seconds
-GameServer Update:
-        name: local
-        state: Reserved
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Health ping sent
-Running for 60 seconds
-GameServer Update:
-        name: local
-        state: Ready
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Running for 70 seconds
-Shutting down after 60 seconds...
-Health ping sent
-Running for 80 seconds
-Running for 90 seconds
-Health ping sent
-Running for 100 seconds
-Running for 110 seconds
-Health ping sent
-Running for 120 seconds
-Running for 130 seconds
-Shutting down...
-GameServer Update:
-        name: local
-        state: Shutdown
-        labels: agones.dev/sdk-test-label,test-value & islocal,true
-        annotations: agones.dev/sdk-test-annotation,test value & annotation,true
-Health ping sent
-Running for 140 seconds
-Closing connection to SDK server
-Running for 150 seconds
-Exiting
-
 ```
 
-You can optionally specify how long the server will stay up once the basic tests are complete.
-To do this pass arguments through, e.g. to increase the shutdown duration to 120 seconds:
-```
-$ make args="120" run
-```
-
-Please note that there is a max sleep time in Node.js of 2,147,483 seconds (~24 days). Values will be capped at this and negative values or zero will also be set to this.
-So to keep the server alive for a long time you could use the following:
-```
-$ make args="0" run
-```
-
-To see help pass `--help` as the argument:
+To see help, pass `--help` as the argument (all are equivalent):
 ```
 $ make args="--help" run
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --help
+$ npm start -- --help
 ```
 
-If you are not using make and running directly then the equivalent commands are:
+You can optionally specify how long the server will stay up once the basic tests are complete with the --timeout option.
+To do this pass arguments through, e.g. to increase the shutdown duration to 120 seconds:
 ```
-node start
-node start -- 120
-node start -- 0
-node start -- --help
+$ make args="--timeout=120" run
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --timeout=120
+$ npm start -- --timeout=120
+```
+
+To make run indefinitely use the special timeout value of 0:
+```
+$ make args="--timeout=0" run
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --timeout=0
+$ npm start -- --timeout=0
 ```
