@@ -67,6 +67,8 @@ type Controller struct {
 	alwaysPullSidecarImage bool
 	sidecarCPURequest      resource.Quantity
 	sidecarCPULimit        resource.Quantity
+	sidecarMemoryRequest   resource.Quantity
+	sidecarMemoryLimit     resource.Quantity
 	sdkServiceAccount      string
 	crdGetter              v1beta1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
@@ -97,6 +99,8 @@ func NewController(
 	alwaysPullSidecarImage bool,
 	sidecarCPURequest resource.Quantity,
 	sidecarCPULimit resource.Quantity,
+	sidecarMemoryRequest resource.Quantity,
+	sidecarMemoryLimit resource.Quantity,
 	sdkServiceAccount string,
 	kubeClient kubernetes.Interface,
 	kubeInformerFactory informers.SharedInformerFactory,
@@ -112,6 +116,8 @@ func NewController(
 		sidecarImage:           sidecarImage,
 		sidecarCPULimit:        sidecarCPULimit,
 		sidecarCPURequest:      sidecarCPURequest,
+		sidecarMemoryLimit:     sidecarMemoryLimit,
+		sidecarMemoryRequest:   sidecarMemoryRequest,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
 		sdkServiceAccount:      sdkServiceAccount,
 		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
@@ -553,10 +559,16 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 	// doing, and don't disable the gameserver container.
 	if pod.Spec.ServiceAccountName == "" {
 		pod.Spec.ServiceAccountName = c.sdkServiceAccount
-		gs.DisableServiceAccount(pod)
+		err = gs.DisableServiceAccount(pod)
+		if err != nil {
+			return gs, err
+		}
 	}
 
-	c.addGameServerHealthCheck(gs, pod)
+	err = c.addGameServerHealthCheck(gs, pod)
+	if err != nil {
+		return gs, err
+	}
 	c.addSDKServerEnvVars(gs, pod)
 
 	c.loggerForGameServer(gs).WithField("pod", pod).Debug("Creating Pod for GameServer")
@@ -627,13 +639,23 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 		sidecar.Args = append(sidecar.Args, fmt.Sprintf("--http-port=%d", gs.Spec.SdkServer.HTTPPort))
 	}
 
+	requests := corev1.ResourceList{}
 	if !c.sidecarCPURequest.IsZero() {
-		sidecar.Resources.Requests = corev1.ResourceList{corev1.ResourceCPU: c.sidecarCPURequest}
+		requests[corev1.ResourceCPU] = c.sidecarCPURequest
 	}
+	if !c.sidecarMemoryRequest.IsZero() {
+		requests[corev1.ResourceMemory] = c.sidecarMemoryRequest
+	}
+	sidecar.Resources.Requests = requests
 
+	limits := corev1.ResourceList{}
 	if !c.sidecarCPULimit.IsZero() {
-		sidecar.Resources.Limits = corev1.ResourceList{corev1.ResourceCPU: c.sidecarCPULimit}
+		limits[corev1.ResourceCPU] = c.sidecarCPULimit
 	}
+	if !c.sidecarCPULimit.IsZero() {
+		limits[corev1.ResourceMemory] = c.sidecarMemoryLimit
+	}
+	sidecar.Resources.Limits = limits
 
 	if c.alwaysPullSidecarImage {
 		sidecar.ImagePullPolicy = corev1.PullAlways
@@ -642,12 +664,12 @@ func (c *Controller) sidecar(gs *agonesv1.GameServer) corev1.Container {
 }
 
 // addGameServerHealthCheck adds the http health check to the GameServer container
-func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *corev1.Pod) {
+func (c *Controller) addGameServerHealthCheck(gs *agonesv1.GameServer, pod *corev1.Pod) error {
 	if gs.Spec.Health.Disabled {
-		return
+		return nil
 	}
 
-	gs.ApplyToPodGameServerContainer(pod, func(c corev1.Container) corev1.Container {
+	return gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
 		if c.LivenessProbe == nil {
 			c.LivenessProbe = &corev1.Probe{
 				Handler: corev1.Handler{

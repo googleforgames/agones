@@ -22,6 +22,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	e2eframework "agones.dev/agones/test/e2e/framework"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -475,6 +476,65 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 }
 
+func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
+	t.Parallel()
+	firstContainerName := "udp-server"
+	secondContainerName := "second-udp-server"
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
+		Spec: agonesv1.GameServerSpec{
+			Container: firstContainerName,
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+			}, {
+				ContainerPort: 5000,
+				Name:          "second-gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      corev1.ProtocolUDP,
+				Container:     &secondContainerName,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name:            firstContainerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+						{
+							Name:            secondContainerName,
+							Image:           framework.GameServerImage,
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Args:            []string{"-port", "5000"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if err != nil {
+		t.Fatalf("Could not get a GameServer ready: %v", err)
+	}
+	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	firstContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "gameport", "Ping 1")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	assert.Contains(t, firstContainerReply, "Ping 1")
+
+	secondContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "second-gameport", "Ping 2")
+	if err != nil {
+		t.Fatalf("Could not message GameServer: %v", err)
+	}
+	assert.Contains(t, secondContainerReply, "Ping 2")
+}
+
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
 	logger := logrus.WithField("test", t.Name())
@@ -495,38 +555,58 @@ func TestGameServerReserve(t *testing.T) {
 	logger.Info("Received response")
 	assert.Equal(t, "ACK: RESERVE\n", reply)
 
-	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReserved, time.Minute)
-	assert.NoError(t, err, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
-	assert.Equal(t, agonesv1.GameServerStateReserved, gs.Status.State, fmt.Sprintf("GameServer Name: %s", gs.ObjectMeta.Name))
+	// might as well Sleep, nothing else going to happen for at least 10 seconds. Let other things work.
+	logger.Info("Waiting for 10 seconds")
+	time.Sleep(10 * time.Second)
 
-	// it should go back after 10 seconds
-	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReady, 15*time.Second)
+	// Since polling the backing GameServer can sometimes pause for longer than 10 seconds,
+	// we are instead going to look at the event stream for the GameServer to determine that the requisite change to
+	// Reserved and back to Ready has taken place.
+	//
+	// There is a possibility that Events may get dropped if the Kubernetes cluster gets overwhelmed, or
+	// time out after a period. So if this test becomes flaky because due to these potential issues, we will
+	// need to find an alternate approach. At this stage through, it seems to be working consistently.
+	err = wait.PollImmediate(time.Second, 2*time.Minute, func() (bool, error) {
+		logger.Info("checking gameserver events")
+		list, err := framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, gs)
+		if err != nil {
+			return false, err
+		}
+
+		var readyEvent corev1.Event
+		var reserverdEvent corev1.Event
+
+		for _, e := range list.Items {
+			if e.Reason == string(agonesv1.GameServerStateReady) {
+				readyEvent = e
+			}
+			if e.Reason == string(agonesv1.GameServerStateReserved) {
+				reserverdEvent = e
+			}
+		}
+		if readyEvent.Reason == "" || reserverdEvent.Reason == "" {
+			return false, nil
+		}
+
+		// debug once we have both a Ready and Reserved event
+		for _, e := range list.Items {
+			logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
+				WithField("last-time", e.LastTimestamp).
+				WithField("name", e.Name).
+				WithField("reason", e.Reason).WithField("message", e.Message).Info("gs event details")
+		}
+
+		if readyEvent.Count != 2 {
+			return false, nil
+		}
+		diff := readyEvent.LastTimestamp.Sub(reserverdEvent.FirstTimestamp.Time).Seconds()
+		// allow for some variation
+		if diff >= 10 && diff <= 20 {
+			return true, nil
+		}
+		return true, errors.Errorf("difference of %v seconds was not between 10 and 20", diff)
+	})
 	assert.NoError(t, err)
-	assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-
-	list, err := framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, gs)
-	assert.NoError(t, err)
-
-	for _, e := range list.Items {
-		logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
-			WithField("last-time", e.LastTimestamp).
-			WithField("name", e.Name).
-			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs event details")
-	}
-
-	pod, err := framework.KubeClient.CoreV1().Pods(defaultNs).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
-	assert.NoError(t, err)
-	logger.WithField("status", pod.Status).Info("Pod Status")
-
-	list, err = framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, pod)
-	assert.NoError(t, err)
-
-	for _, e := range list.Items {
-		logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
-			WithField("last-time", e.LastTimestamp).
-			WithField("name", e.Name).
-			WithField("reason", e.Reason).WithField("message", e.Message).Info("gs pod details")
-	}
 }
 
 func TestGameServerShutdown(t *testing.T) {

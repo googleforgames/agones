@@ -295,26 +295,12 @@ func isDeletionDup(a, b *Delta) *Delta {
 	return b
 }
 
-// willObjectBeDeletedLocked returns true only if the last delta for the
-// given object is Delete. Caller must lock first.
-func (f *DeltaFIFO) willObjectBeDeletedLocked(id string) bool {
-	deltas := f.items[id]
-	return len(deltas) > 0 && deltas[len(deltas)-1].Type == Deleted
-}
-
 // queueActionLocked appends to the delta list for the object.
 // Caller must lock first.
 func (f *DeltaFIFO) queueActionLocked(actionType DeltaType, obj interface{}) error {
 	id, err := f.KeyOf(obj)
 	if err != nil {
 		return KeyError{obj, err}
-	}
-
-	// If object is supposed to be deleted (last event is Deleted),
-	// then we should ignore Sync events, because it would result in
-	// recreation of this object.
-	if actionType == Sync && f.willObjectBeDeletedLocked(id) {
-		return nil
 	}
 
 	newDeltas := append(f.items[id], Delta{actionType, obj})
@@ -466,6 +452,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 	if f.knownObjects == nil {
 		// Do deletion detection against our own list.
+		queuedDeletions := 0
 		for k, oldItem := range f.items {
 			if keys.Has(k) {
 				continue
@@ -474,6 +461,7 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 			if n := oldItem.Newest(); n != nil {
 				deletedObj = n.Object
 			}
+			queuedDeletions++
 			if err := f.queueActionLocked(Deleted, DeletedFinalStateUnknown{k, deletedObj}); err != nil {
 				return err
 			}
@@ -481,7 +469,9 @@ func (f *DeltaFIFO) Replace(list []interface{}, resourceVersion string) error {
 
 		if !f.populated {
 			f.populated = true
-			f.initialPopulationCount = len(list)
+			// While there shouldn't be any queued deletions in the initial
+			// population of the queue, it's better to be on the safe side.
+			f.initialPopulationCount = len(list) + queuedDeletions
 		}
 
 		return nil

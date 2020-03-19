@@ -828,6 +828,8 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
 			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
+			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Memory(), &c.sidecarMemoryLimit)
+			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Memory(), &c.sidecarMemoryRequest)
 			assert.Len(t, pod.Spec.Containers[1].Env, 3, "3 env vars")
 			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
@@ -1233,8 +1235,9 @@ func TestControllerAddGameServerHealthCheck(t *testing.T) {
 	assert.False(t, fixture.Spec.Health.Disabled)
 	pod, err := fixture.Pod()
 	assert.Nil(t, err, "Error: %v", err)
-	c.addGameServerHealthCheck(fixture, pod)
+	err = c.addGameServerHealthCheck(fixture, pod)
 
+	assert.NoError(t, err)
 	assert.Len(t, pod.Spec.Containers, 1)
 	probe := pod.Spec.Containers[0].LivenessProbe
 	assert.NotNil(t, probe)
@@ -1466,7 +1469,8 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	wh := webhooks.NewWebHook(http.NewServeMux())
 	c := NewController(wh, healthcheck.NewHandler(),
 		10, 20, "sidecar:dev", false,
-		resource.MustParse("0.05"), resource.MustParse("0.1"), "sdk-service-account",
+		resource.MustParse("0.05"), resource.MustParse("0.1"),
+		resource.MustParse("50Mi"), resource.MustParse("100Mi"), "sdk-service-account",
 		m.KubeClient, m.KubeInformerFactory, m.ExtClient, m.AgonesClient, m.AgonesInformerFactory)
 	c.recorder = m.FakeRecorder
 	return c, m
