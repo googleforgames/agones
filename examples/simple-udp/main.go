@@ -105,16 +105,11 @@ func doSignal() {
 func shutdownAfterAllocation(s *sdk.SDK, shutdownDelay int) {
 	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
 		if gs.Status.State == "Allocated" {
-			go func() {
-				time.Sleep(time.Duration(shutdownDelay) * time.Minute)
-				shutdownErr := s.Shutdown()
-				for shutdownErr != nil {
-					log.Printf("Could not shutdown: %v", shutdownErr)
-					// TODO: Add exponential backoff
-					time.Sleep(10 * time.Second)
-					shutdownErr = s.Shutdown()
-				}
-			}()
+			time.Sleep(time.Duration(shutdownDelay) * time.Minute)
+			shutdownErr := s.Shutdown()
+			if shutdownErr != nil {
+				log.Fatalf("Could not shutdown: %v", shutdownErr)
+			}
 		}
 	})
 	if err != nil {

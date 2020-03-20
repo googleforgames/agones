@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +50,7 @@ func main() {
 		TimestampFormat:           "2006-01-02 15:04:05.000",
 	})
 
-	framework, err := e2eframework.NewForLoadTesting(*kubeconfig, float32(*qps), *burst)
+	framework, err := e2eframework.NewWithRates(*kubeconfig, float32(*qps), *burst)
 	if err != nil {
 		logrus.Fatalf("Failed to setup framework: %v", err)
 	}

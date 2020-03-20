@@ -32,7 +32,7 @@ import (
 const (
 	gameServerImage = "GAMESERVER_IMAGE"
 
-	defaultImage = "gcr.io/agones-images/udp-server:0.18"
+	defaultImage = "gcr.io/agones-images/udp-server:0.19"
 )
 
 func main() {
