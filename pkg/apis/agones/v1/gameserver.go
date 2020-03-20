@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -454,6 +455,24 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 	}
 
 	return causes, len(causes) == 0
+}
+
+// ValidateResource validates limit or Memory CPU resources used for containers in pods
+// If a GameServer is invalid there will be > 0 values in
+// the returned array
+func ValidateResource(request resource.Quantity, limit resource.Quantity, resourceName corev1.ResourceName) []error {
+	validationErrors := make([]error, 0)
+	if !limit.IsZero() && request.Cmp(limit) > 0 {
+		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Request must be less than or equal to %s limit", resourceName)))
+	}
+	if request.Cmp(resource.Quantity{}) < 0 {
+		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s request value must be non negative", resourceName)))
+	}
+	if limit.Cmp(resource.Quantity{}) < 0 {
+		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s limit value must be non negative", resourceName)))
+	}
+
+	return validationErrors
 }
 
 // Validate validates the GameServer configuration.
