@@ -17,4 +17,4 @@
 set -e
 set +x
 
-./wrapper -i "./supertuxkart/run_game.sh --server-config=$(pwd)/server_config.xml"
+./wrapper -i "./cmake_build/bin/supertuxkart --server-config=$(pwd)/server_config.xml"
