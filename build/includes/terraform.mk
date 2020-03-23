@@ -70,4 +70,4 @@ endif
 
 gcloud-terraform-destroy-cluster:
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
-	 terraform destroy -auto-approve'
+	 terraform destroy -target module.helm_agones.helm_release.agones -auto-approve && sleep 60 && terraform destroy -auto-approve'
