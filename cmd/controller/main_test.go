@@ -55,6 +55,7 @@ func errorsContainString(t *testing.T, errs []error, expected string) {
 	for _, v := range errs {
 		if expected == v.Error() {
 			found = true
+			break
 		}
 	}
 	assert.True(t, found, "Was not able to find '%s'", expected)
