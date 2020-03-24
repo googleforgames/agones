@@ -17,7 +17,9 @@ provider "azuread" {
 }
 
 provider "azurerm" {
-  version = "=1.44.0"
+  version = "=2.2.0"
+
+  features {}
 }
 
 provider "random" {
@@ -87,6 +89,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "system" {
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
   node_taints           = ["agones.dev/agones-system=true:NoExecute"]
+  node_labels           = {
+    "agones.dev/agones-system":"true"
+  }
 }
 
 resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
@@ -97,6 +102,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
   node_taints           = ["agones.dev/agones-metrics=true:NoExecute"]
+  node_labels           = {
+    "agones.dev/agones-metrics":"true"
+  }
 }
 
 resource "azurerm_network_security_group" "agones_sg" {

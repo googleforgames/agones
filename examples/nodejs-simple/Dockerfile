@@ -22,7 +22,9 @@ WORKDIR /home/server
 
 COPY ./examples/nodejs-simple examples/nodejs-simple
 RUN cd examples/nodejs-simple && \
-    npm install
+    npm install && npm rebuild
 RUN chown -R server /home/server
 USER 1000
-ENTRYPOINT cd /home/server/examples/nodejs-simple && npm start
+
+WORKDIR /home/server/examples/nodejs-simple
+ENTRYPOINT ["npm", "start", "--"]
