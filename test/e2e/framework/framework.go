@@ -66,9 +66,26 @@ type Framework struct {
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
 func New(kubeconfig string) (*Framework, error) {
+	return newFramework(kubeconfig, 0, 0)
+}
+
+// NewWithRates setups a testing framework using a kubeconfig path and the game server image
+// to use for load testing with QPS and Burst overwrites.
+func NewWithRates(kubeconfig string, qps float32, burst int) (*Framework, error) {
+	return newFramework(kubeconfig, qps, burst)
+}
+
+func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "build config from flags failed")
+	}
+
+	if qps > 0 {
+		config.QPS = qps
+	}
+	if burst > 0 {
+		config.Burst = burst
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(config)
@@ -92,8 +109,8 @@ func NewFromFlags() (*Framework, error) {
 	usr, _ := user.Current()
 	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
 		"kube config path, e.g. $HOME/.kube/config")
-	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.18",
-		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.18")
+	gsimage := flag.String("gameserver-image", "gcr.io/agones-images/udp-server:0.19",
+		"gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.19")
 	pullSecret := flag.String("pullsecret", "",
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")

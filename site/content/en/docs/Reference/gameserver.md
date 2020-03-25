@@ -77,7 +77,7 @@ spec:
     spec:
       containers:
       - name: simple-udp
-        image:  gcr.io/agones-images/udp-server:0.18
+        image:  gcr.io/agones-images/udp-server:0.19
         imagePullPolicy: Always
 ```
 {{% /feature %}}

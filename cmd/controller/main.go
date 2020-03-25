@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg"
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/fleetautoscalers"
@@ -44,6 +45,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
+	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/informers"
@@ -119,8 +121,11 @@ func main() {
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting gameServer operator...")
 
-	if err := ctlConf.validate(); err != nil {
-		logger.WithError(err).Fatal("Could not create controller from environment or flags")
+	if errs := ctlConf.validate(); len(errs) != 0 {
+		for _, err := range errs {
+			logger.WithError(err)
+		}
+		logger.Fatal("Could not create controller from environment or flags")
 	}
 
 	// if the kubeconfig fails BuildConfigFromFlags will try in cluster config
@@ -382,14 +387,19 @@ type config struct {
 }
 
 // validate ensures the ctlConfig data is valid.
-func (c *config) validate() error {
+func (c *config) validate() []error {
+	validationErrors := make([]error, 0)
 	if c.MinPort <= 0 || c.MaxPort <= 0 {
-		return errors.New("min Port and Max Port values are required")
+		validationErrors = append(validationErrors, errors.New("min Port and Max Port values are required"))
 	}
 	if c.MaxPort < c.MinPort {
-		return errors.New("max Port cannot be set less that the Min Port")
+		validationErrors = append(validationErrors, errors.New("max Port cannot be set less that the Min Port"))
 	}
-	return nil
+	resourceErrors := agonesv1.ValidateResource(c.SidecarCPURequest, c.SidecarCPULimit, corev1.ResourceCPU)
+	validationErrors = append(validationErrors, resourceErrors...)
+	resourceErrors = agonesv1.ValidateResource(c.SidecarMemoryRequest, c.SidecarMemoryLimit, corev1.ResourceMemory)
+	validationErrors = append(validationErrors, resourceErrors...)
+	return validationErrors
 }
 
 type runner interface {
