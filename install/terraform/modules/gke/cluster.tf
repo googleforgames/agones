@@ -37,7 +37,7 @@ resource "google_container_cluster" "primary" {
   project  = var.cluster["project"]
   network  = var.cluster["network"]
 
-  min_master_version = "1.14"
+  min_master_version = var.cluster["min_cluster_version"]
 
   node_pool {
     name       = "default"

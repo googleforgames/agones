@@ -25,11 +25,13 @@ variable "cluster" {
   type        = map
 
   default = {
-    "zone"             = "us-west1-c"
-    "name"             = "test-cluster"
-    "machineType"      = "n1-standard-4"
-    "initialNodeCount" = "4"
-    "project"          = "agones"
-    "network"          = "default"
+    "zone"                = "us-west1-c"
+    "name"                = "test-cluster"
+    "machineType"         = "n1-standard-4"
+    "initialNodeCount"    = "4"
+    "project"             = "agones"
+    "network"             = "default"
+    "min_cluster_version" = "latest"
+
   }
 }
