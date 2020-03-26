@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The GKE development cluster name
+GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
+
 ### Deploy cluster with Terraform
 terraform-init:
 terraform-init: $(ensure-build-image)
@@ -27,19 +30,19 @@ terraform-clean:
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
-gcloud-terraform-cluster: GCP_CLUSTER_NAME ?= test-cluster
+gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: $(ensure-build-image)
 gcloud-terraform-cluster:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
-		 terraform apply -auto-approve  -var agones_version="$(AGONES_VERSION)" \
-		-var name=$(GCP_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
+		 terraform apply -auto-approve -var agones_version="$(AGONES_VERSION)" \
+		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
 		-var values_file="" \
 		-var zone="$(GCP_CLUSTER_ZONE)" -var project="$(GCP_PROJECT)" \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
-	GCP_CLUSTER_NAME=$(GCP_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
+	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
 # Creates a cluster and install current version of Agones controller
 # Set all necessary variables as `make install` does
@@ -50,7 +53,7 @@ gcloud-terraform-install: ALWAYS_PULL_SIDECAR := true
 gcloud-terraform-install: IMAGE_PULL_POLICY := "Always"
 gcloud-terraform-install: PING_SERVICE_TYPE := "LoadBalancer"
 gcloud-terraform-install: CRD_CLEANUP := true
-gcloud-terraform-install: GCP_CLUSTER_NAME ?= test-cluster
+gcloud-terraform-install: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-install:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
@@ -63,10 +66,10 @@ endif
 		-var ping_service_type="$(PING_SERVICE_TYPE)" \
 		-var crd_cleanup="$(CRD_CLEANUP)" \
 		-var chart="../../../install/helm/agones/" \
-		-var name=$(GCP_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
+		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
 		-var zone=$(GCP_CLUSTER_ZONE) -var project=$(GCP_PROJECT) \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
-	GCP_CLUSTER_NAME=$(GCP_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
+	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
 gcloud-terraform-destroy-cluster:
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
