@@ -28,10 +28,6 @@ variable "project" {
   default = ""
 }
 
-variable "name" {
-  default = "agones-terraform-example"
-}
-
 // Install latest version of agones
 variable "agones_version" {
   default = ""
@@ -41,10 +37,29 @@ variable "machine_type" {
   default = "n1-standard-4"
 }
 
+variable "name" {
+  default = "agones-tf-cluster"
+}
+
+variable "values_file" {
+  default = "../../../install/helm/agones/values.yaml"
+}
+
 // Note: This is the number of gameserver nodes. The Agones module will automatically create an additional
 // two node pools with 1 node each for "agones-system" and "agones-metrics".
 variable "node_count" {
   default = "4"
+}
+variable "chart" {
+  default = "agones"
+}
+
+variable "crd_cleanup" {
+  default = "true"
+}
+
+variable "ping_service_type" {
+  default = "LoadBalancer"
 }
 
 variable "zone" {
@@ -56,6 +71,23 @@ variable "network" {
   default     = "default"
   description = "The name of the VPC network to attach the cluster and firewall rule to"
 }
+
+variable "pull_policy" {
+  default = "Always"
+}
+
+variable "image_registry" {
+  default = "gcr.io/agones-images"
+}
+
+variable "always_pull_sidecar" {
+  default = "true"
+}
+
+variable "image_pull_secret" {
+  default = ""
+}
+
 
 module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
@@ -74,11 +106,15 @@ module "helm_agones" {
   source = "../../../install/terraform/modules/helm"
 
   agones_version         = var.agones_version
-  values_file            = ""
-  chart                  = "agones"
+  values_file            = var.values_file
+  chart                  = var.chart
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token
   cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
+  image_registry         = var.image_registry
+  image_pull_secret      = var.image_pull_secret
+  crd_cleanup            = var.crd_cleanup
+  ping_service_type      = var.ping_service_type
 }
 
 output "host" {
