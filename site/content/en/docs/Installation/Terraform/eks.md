@@ -64,9 +64,9 @@ kubectl get nodes
 
 ### Uninstall the Agones and delete EKS cluster
 
-Run the following commands to delete all Terraform provisioned resources if you choose helm:
+Run the following commands to delete all Terraform provisioned resources:
 ```
-helm delete --purge agones
+terraform destroy -target module.helm_agones.helm_release.agones -auto-approve && sleep 60
 terraform destroy
 ```
 
