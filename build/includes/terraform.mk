@@ -27,12 +27,14 @@ terraform-clean:
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
+# All Feature gates are disabled
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
 gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
 gcloud-terraform-cluster: $(ensure-build-image)
+gcloud-terraform-cluster: FEATURE_GATES := ""
 gcloud-terraform-cluster:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
@@ -41,6 +43,7 @@ endif
 		 terraform apply -auto-approve -var agones_version="$(AGONES_VERSION)" \
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
 		-var values_file="" \
+		-var feature_gates=$(FEATURE_GATES) \
 		-var zone="$(GCP_CLUSTER_ZONE)" -var project="$(GCP_PROJECT)" \
 		-var log_level="$(LOG_LEVEL)" \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
@@ -57,6 +60,7 @@ gcloud-terraform-install: PING_SERVICE_TYPE := "LoadBalancer"
 gcloud-terraform-install: CRD_CLEANUP := true
 gcloud-terraform-install: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-install: LOG_LEVEL ?= debug
+gcloud-terraform-install: FEATURE_GATES := "PlayerTracking=true&ContainerPortAllocation=true"
 gcloud-terraform-install:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
@@ -72,6 +76,7 @@ endif
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
 		-var zone=$(GCP_CLUSTER_ZONE) -var project=$(GCP_PROJECT) \
 		-var log_level=$(LOG_LEVEL) \
+		-var feature_gates=$(FEATURE_GATES) \
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 

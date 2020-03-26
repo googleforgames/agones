@@ -36,7 +36,6 @@ variable "disk_size" {
 variable "client_id" {
   default = ""
 }
-
 variable "client_secret" {
   default = ""
 }
@@ -45,6 +44,10 @@ variable "machine_type" { default = "Standard_D2_v2" }
 
 variable "log_level" {
   default = "info"
+}
+
+variable "feature_gates" {
+  default = ""
 }
 
 module "aks_cluster" {
@@ -64,6 +67,7 @@ module "helm_agones" {
   agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
+  feature_gates          = var.feature_gates
   host                   = module.aks_cluster.host
   token                  = module.aks_cluster.token
   cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate

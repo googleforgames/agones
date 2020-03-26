@@ -32,11 +32,13 @@ By editing `modules.tf` you can change the parameters that you need to. For inst
 
 Configurable parameters:
 
-- cluster_name - the name of the GKE cluster (default is "agones-terraform-example")
-- agones_version - the version of agones to install (default is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- cluster_name - the name of the EKS cluster (default is "agones-terraform-example")
+- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
 - machine_type - EC2 instance type for hosting game servers (default is "t2.large")
+- region - the location of the cluster (default is "us-west2")
 - node_count - count of game server nodes for the default node pool (default is "4")
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
+- feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
 
 Now you can create an EKS cluster and deploy Agones on EKS:
 ```

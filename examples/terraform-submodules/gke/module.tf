@@ -61,6 +61,10 @@ variable "log_level" {
   default = "info"
 }
 
+variable "feature_gates" {
+  default = ""
+}
+
 module "gke_cluster" {
   // ***************************************************************************************************
   // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
@@ -88,6 +92,7 @@ module "helm_agones" {
   agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
+  feature_gates          = var.feature_gates
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token
   cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
