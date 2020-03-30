@@ -43,6 +43,10 @@ variable "client_secret" {
 
 variable "machine_type" { default = "Standard_D2_v2" }
 
+variable "log_level" {
+  default = "info"
+}
+
 module "aks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=master"
 
@@ -63,6 +67,7 @@ module "helm_agones" {
   host                   = module.aks_cluster.host
   token                  = module.aks_cluster.token
   cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
+  log_level              = var.log_level
 }
 
 output "host" {

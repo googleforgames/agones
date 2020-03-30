@@ -139,6 +139,11 @@ resource "helm_release" "agones" {
     value = var.ping_service_type
   }
 
+  set {
+    name  = "agones.controller.logLevel"
+    value = var.log_level
+  }
+
   version   = var.agones_version
   namespace = "agones-system"
 

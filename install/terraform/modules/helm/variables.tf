@@ -26,6 +26,10 @@ variable "udp_expose" {
   default = "true"
 }
 
+variable "log_level" {
+  default = "info"
+}
+
 variable "host" {}
 
 variable "token" {}

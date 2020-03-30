@@ -57,6 +57,10 @@ variable "network" {
   description = "The name of the VPC network to attach the cluster and firewall rule to"
 }
 
+variable "log_level" {
+  default = "info"
+}
+
 module "gke_cluster" {
   // ***************************************************************************************************
   // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
@@ -87,6 +91,7 @@ module "helm_agones" {
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token
   cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
+  log_level              = var.log_level
 }
 
 output "host" {

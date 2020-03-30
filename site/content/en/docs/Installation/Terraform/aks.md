@@ -40,6 +40,9 @@ Check that you have access to the Kubernetes cluster:
 kubectl get nodes
 ```
 
+Configurable parameters:
+- log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
+
 ## Uninstall the Agones and delete AKS cluster
 
 Run next command to delete all Terraform provisioned resources:

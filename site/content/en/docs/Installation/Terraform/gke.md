@@ -90,6 +90,7 @@ Configurable parameters:
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
   created in. (default is "us-west1-c")
 - network - the name of the VPC network you want your cluster and firewall rules be connected to (default is "default")
+- log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"`

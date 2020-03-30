@@ -40,6 +40,10 @@ provider "aws" {
 
 variable "machine_type" { default = "t2.large" }
 
+variable "log_level" {
+  default = "info"
+}
+
 module "eks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=master"
 
@@ -65,6 +69,7 @@ module "helm_agones" {
   host                   = module.eks_cluster.host
   token                  = data.aws_eks_cluster_auth.example.token
   cluster_ca_certificate = module.eks_cluster.cluster_ca_certificate
+  log_level              = var.log_level
 }
 
 output "host" {
