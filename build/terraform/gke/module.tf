@@ -88,6 +88,10 @@ variable "image_pull_secret" {
   default = ""
 }
 
+variable "log_level" {
+  default = "info"
+}
+
 
 module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
@@ -115,6 +119,7 @@ module "helm_agones" {
   image_pull_secret      = var.image_pull_secret
   crd_cleanup            = var.crd_cleanup
   ping_service_type      = var.ping_service_type
+  log_level              = var.log_level
 }
 
 output "host" {
