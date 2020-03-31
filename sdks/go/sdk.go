@@ -36,6 +36,7 @@ type SDK struct {
 	client sdk.SDKClient
 	ctx    context.Context
 	health sdk.SDK_HealthClient
+	alpha  *Alpha
 }
 
 // NewSDK starts a new SDK instance, and connects to
@@ -59,7 +60,13 @@ func NewSDK() (*SDK, error) {
 	}
 	s.client = sdk.NewSDKClient(conn)
 	s.health, err = s.client.Health(s.ctx)
+	s.alpha = newAlpha(conn)
 	return s, errors.Wrap(err, "could not set up health check")
+}
+
+// Alpha returns the Alpha SDK
+func (s *SDK) Alpha() *Alpha {
+	return s.alpha
 }
 
 // Ready marks the Game Server as ready to

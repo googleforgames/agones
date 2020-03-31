@@ -19,9 +19,9 @@ option go_package = "alpha";
 
 import "google/api/annotations.proto";
 
-// SDK service to be used in the GameServer SDK to the Pod Sidecar
+// SDK service to be used in the GameServer SDK to the Pod Sidecar.
 service SDK {
-    // Call when a player has connected
+    // Call when a player has connected.
     rpc PlayerConnect (PlayerId) returns (Empty) {
         option (google.api.http) = {
             post: "/alpha/player/connect"
@@ -29,7 +29,7 @@ service SDK {
         };
     }
 
-    // Call when a player has disconnected
+    // Call when a player has disconnected.
     rpc PlayerDisconnect (PlayerId) returns (Empty) {
         option (google.api.http) = {
             post: "/alpha/player/disconnect"
@@ -37,7 +37,7 @@ service SDK {
         };
     }
 
-    // change the player capacity to a new value
+    // Change the player capacity to a new value.
     rpc SetPlayerCapacity (Count) returns (Empty) {
         option (google.api.http) = {
             post: "/alpha/player/capacity"
@@ -45,7 +45,8 @@ service SDK {
         };
     }
 
-    // get the current player capacity
+    // Get the last player capacity that was set through the SDK.
+    // If the player capacity is set from outside the SDK, use SDK.GameServer() instead.
     rpc GetPlayerCapacity(Empty) returns (Count) {
         option (google.api.http) = {
             get: "/alpha/player/capacity"
@@ -64,12 +65,12 @@ service SDK {
 message Empty {
 }
 
-// Store a count variable
+// Store a count variable.
 message Count {
     int64 count = 1;
 }
 
-// The unique identifier for a given player
+// The unique identifier for a given player.
 message PlayerId {
     string playerId = 1;
 }

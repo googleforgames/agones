@@ -25,6 +25,8 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/sdk/beta"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -33,7 +35,9 @@ import (
 )
 
 var (
-	_ sdk.SDKServer = &LocalSDKServer{}
+	_ sdk.SDKServer   = &LocalSDKServer{}
+	_ alpha.SDKServer = &LocalSDKServer{}
+	_ beta.SDKServer  = &LocalSDKServer{}
 
 	defaultGs = &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
@@ -352,6 +356,41 @@ func (l *LocalSDKServer) stopReserveTimer() {
 		l.reserveTimer.Stop()
 	}
 	l.gsReserveDuration = nil
+}
+
+// PlayerConnect should be called when a player connects.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+	panic("implement me")
+}
+
+// PlayerDisconnect should be called when a player disconnects.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+	panic("implement me")
+}
+
+// SetPlayerCapacity to change the game server's player capacity.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) SetPlayerCapacity(ctx context.Context, count *alpha.Count) (*alpha.Empty, error) {
+	panic("implement me")
+}
+
+// GetPlayerCapacity returns the current player capacity.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	panic("implement me")
+}
+
+// GetPlayerCount returns the current player count.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	panic("implement me")
 }
 
 // Close tears down all the things
