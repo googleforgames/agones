@@ -105,7 +105,6 @@ namespace Agones.Dev.Sdk {
     }
 
     /// <summary>Base class for server-side implementations of SDK</summary>
-    [grpc::BindServiceMethod(typeof(SDK), "BindService")]
     public abstract partial class SDKBase
     {
       /// <summary>
@@ -215,7 +214,7 @@ namespace Agones.Dev.Sdk {
     {
       /// <summary>Creates a new client for SDK</summary>
       /// <param name="channel">The channel to use to make remote calls.</param>
-      public SDKClient(grpc::ChannelBase channel) : base(channel)
+      public SDKClient(grpc::Channel channel) : base(channel)
       {
       }
       /// <summary>Creates a new client for SDK that uses a custom <c>CallInvoker</c>.</summary>

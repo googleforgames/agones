@@ -35,8 +35,7 @@ func newAlpha(conn *grpc.ClientConn) *Alpha {
 }
 
 // GetPlayerCapacity gets the last player capacity that was set through the SDK.
-// If the player capacity is set from outside the SDK, use SDK.Alpha.GameServer() instead.
-// TODO: SDK.Alpha.GameServer() has yet to be implemented, and the design may change upon further exploration.
+// If the player capacity is set from outside the SDK, use SDK.GameServer() instead.
 func (a *Alpha) GetPlayerCapacity() (int64, error) {
 	c, err := a.client.GetPlayerCapacity(context.Background(), &alpha.Empty{})
 	return c.Count, errors.Wrap(err, "could not get player capacity")
