@@ -586,22 +586,24 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	if assert.Len(t, statusErr.Status().Details.Causes, 2) {
+		assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
+	}
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
-	assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
 
 	flt.Spec.Template.Spec.Container = ""
 	_, err = client.Fleets(defaultNs).Create(flt)
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	assert.Len(t, statusErr.Status().Details.Causes, 2)
 	CausesMessages := []string{agonesv1.ErrContainerRequired, "Could not find a container named "}
+	if assert.Len(t, statusErr.Status().Details.Causes, 2) {
+		assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
+		assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[1].Message)
+	}
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[0].Message)
-	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[1].Type)
-	assert.Contains(t, CausesMessages, statusErr.Status().Details.Causes[1].Message)
 
 	// use valid name for a container, one of two defined above
 	flt.Spec.Template.Spec.Container = containerName
