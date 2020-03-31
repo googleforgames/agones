@@ -93,6 +93,6 @@ $ curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "C
 $ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
 {"object_meta":{"creation_timestamp":"-62135596800"},"spec":{"health":{}},"status":{"state":"Ready"}}
 $ curl -X PUT "http://localhost:9358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
-$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"}"
+$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
 ```
