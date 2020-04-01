@@ -15,6 +15,7 @@
 package sdkserver
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -24,8 +25,9 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/sdk/alpha"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -273,6 +275,50 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	case <-time.After(10 * time.Second):
 		assert.Fail(t, "timeout getting watch")
 	}
+}
+
+func TestLocalSDKServerPlayerCapacity(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+
+	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "stuff"}}
+
+	e := &alpha.Empty{}
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path)
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+
+	c, err := l.GetPlayerCapacity(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), c.Count)
+
+	_, err = l.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 10})
+	assert.NoError(t, err)
+
+	select {
+	case msg := <-stream.msgs:
+		assert.Equal(t, int64(10), msg.Status.Players.Capacity)
+	case <-time.After(10 * time.Second):
+		assert.Fail(t, "timeout getting watch")
+	}
+
+	c, err = l.GetPlayerCapacity(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(10), c.Count)
+
+	gs, err := l.GetGameServer(context.Background(), &sdk.Empty{})
+	assert.NoError(t, err)
+	assert.Equal(t, int64(10), gs.Status.Players.Capacity)
 }
 
 func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
