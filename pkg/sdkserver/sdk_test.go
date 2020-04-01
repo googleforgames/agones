@@ -88,12 +88,6 @@ func TestConvert(t *testing.T) {
 		eq(t, fixture, sdkGs)
 		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
 		assert.Nil(t, sdkGs.Status.Players)
-
-		now := metav1.Now()
-		gs.DeletionTimestamp = &now
-		sdkGs = convert(gs)
-		eq(t, gs, sdkGs)
-		assert.Equal(t, gs.ObjectMeta.DeletionTimestamp.Unix(), sdkGs.ObjectMeta.DeletionTimestamp)
 	})
 
 	t.Run(string(runtime.FeaturePlayerTracking)+" enabled", func(t *testing.T) {
@@ -107,5 +101,15 @@ func TestConvert(t *testing.T) {
 		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
 		assert.Equal(t, gs.Status.Players.Capacity, sdkGs.Status.Players.Capacity)
 		assert.Equal(t, gs.Status.Players.Count, sdkGs.Status.Players.Count)
+	})
+
+	t.Run("DeletionTimestamp", func(t *testing.T) {
+		gs := fixture.DeepCopy()
+
+		now := metav1.Now()
+		gs.DeletionTimestamp = &now
+		sdkGs := convert(gs)
+		eq(t, gs, sdkGs)
+		assert.Equal(t, gs.ObjectMeta.DeletionTimestamp.Unix(), sdkGs.ObjectMeta.DeletionTimestamp)
 	})
 }

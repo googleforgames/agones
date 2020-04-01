@@ -68,10 +68,11 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 	}
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		result.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 		if gs.Status.Players != nil {
-			result.Status.Players.Count = gs.Status.Players.Count
-			result.Status.Players.Capacity = gs.Status.Players.Capacity
+			result.Status.Players = &sdk.GameServer_Status_PlayerStatus{
+				Count:    gs.Status.Players.Count,
+				Capacity: gs.Status.Players.Capacity,
+			}
 		}
 	}
 
