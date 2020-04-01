@@ -19,12 +19,16 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestConvert(t *testing.T) {
 	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
 
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
@@ -75,13 +79,37 @@ func TestConvert(t *testing.T) {
 		}
 	}
 
-	sdkGs := convert(fixture)
-	eq(t, fixture, sdkGs)
-	assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
+	t.Run(string(runtime.FeaturePlayerTracking)+" disabled", func(t *testing.T) {
+		assert.NoError(t, runtime.ParseFeatures(""))
 
-	now := metav1.Now()
-	fixture.DeletionTimestamp = &now
-	sdkGs = convert(fixture)
-	eq(t, fixture, sdkGs)
-	assert.Equal(t, fixture.ObjectMeta.DeletionTimestamp.Unix(), sdkGs.ObjectMeta.DeletionTimestamp)
+		gs := fixture.DeepCopy()
+
+		sdkGs := convert(gs)
+		eq(t, fixture, sdkGs)
+		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
+		assert.Nil(t, sdkGs.Status.Players)
+	})
+
+	t.Run(string(runtime.FeaturePlayerTracking)+" enabled", func(t *testing.T) {
+		assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+
+		gs := fixture.DeepCopy()
+		gs.Status.Players = &agonesv1.PlayerStatus{Capacity: 10, Count: 5}
+
+		sdkGs := convert(gs)
+		eq(t, fixture, sdkGs)
+		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
+		assert.Equal(t, gs.Status.Players.Capacity, sdkGs.Status.Players.Capacity)
+		assert.Equal(t, gs.Status.Players.Count, sdkGs.Status.Players.Count)
+	})
+
+	t.Run("DeletionTimestamp", func(t *testing.T) {
+		gs := fixture.DeepCopy()
+
+		now := metav1.Now()
+		gs.DeletionTimestamp = &now
+		sdkGs := convert(gs)
+		eq(t, gs, sdkGs)
+		assert.Equal(t, gs.ObjectMeta.DeletionTimestamp.Unix(), sdkGs.ObjectMeta.DeletionTimestamp)
+	})
 }

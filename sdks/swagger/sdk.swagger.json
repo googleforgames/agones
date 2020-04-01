@@ -306,6 +306,10 @@
           "items": {
             "$ref": "#/definitions/StatusPort"
           }
+        },
+        "Players": {
+          "$ref": "#/definitions/StatusPlayerStatus",
+          "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTesting]"
         }
       }
     },
@@ -329,6 +333,20 @@
           "format": "int32"
         }
       }
+    },
+    "StatusPlayerStatus": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64"
+        },
+        "capacity": {
+          "type": "string",
+          "format": "int64"
+        }
+      },
+      "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTesting]"
     },
     "StatusPort": {
       "type": "object",

@@ -27,7 +27,7 @@ namespace Agones.Dev.Sdk {
             "CglzZGsucHJvdG8SDmFnb25lcy5kZXYuc2RrGhxnb29nbGUvYXBpL2Fubm90",
             "YXRpb25zLnByb3RvIgcKBUVtcHR5IiYKCEtleVZhbHVlEgsKA2tleRgBIAEo",
             "CRINCgV2YWx1ZRgCIAEoCSIbCghEdXJhdGlvbhIPCgdzZWNvbmRzGAEgASgD",
-            "IvUGCgpHYW1lU2VydmVyEjoKC29iamVjdF9tZXRhGAEgASgLMiUuYWdvbmVz",
+            "IucHCgpHYW1lU2VydmVyEjoKC29iamVjdF9tZXRhGAEgASgLMiUuYWdvbmVz",
             "LmRldi5zZGsuR2FtZVNlcnZlci5PYmplY3RNZXRhEi0KBHNwZWMYAiABKAsy",
             "Hy5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlNwZWMSMQoGc3RhdHVzGAMg",
             "ASgLMiEuYWdvbmVzLmRldi5zZGsuR2FtZVNlcnZlci5TdGF0dXMakwMKCk9i",
@@ -43,28 +43,30 @@ namespace Agones.Dev.Sdk {
             "cGVjEjYKBmhlYWx0aBgBIAEoCzImLmFnb25lcy5kZXYuc2RrLkdhbWVTZXJ2",
             "ZXIuU3BlYy5IZWFsdGgabAoGSGVhbHRoEhAKCGRpc2FibGVkGAEgASgIEhYK",
             "DnBlcmlvZF9zZWNvbmRzGAIgASgFEhkKEWZhaWx1cmVfdGhyZXNob2xkGAMg",
-            "ASgFEh0KFWluaXRpYWxfZGVsYXlfc2Vjb25kcxgEIAEoBRqDAQoGU3RhdHVz",
+            "ASgFEh0KFWluaXRpYWxfZGVsYXlfc2Vjb25kcxgEIAEoBRr1AQoGU3RhdHVz",
             "Eg0KBXN0YXRlGAEgASgJEg8KB2FkZHJlc3MYAiABKAkSNQoFcG9ydHMYAyAD",
-            "KAsyJi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0YXR1cy5Qb3J0GiIK",
-            "BFBvcnQSDAoEbmFtZRgBIAEoCRIMCgRwb3J0GAIgASgFMoYGCgNTREsSSAoF",
-            "UmVhZHkSFS5hZ29uZXMuZGV2LnNkay5FbXB0eRoVLmFnb25lcy5kZXYuc2Rr",
-            "LkVtcHR5IhGC0+STAgsiBi9yZWFkeToBKhJOCghBbGxvY2F0ZRIVLmFnb25l",
-            "cy5kZXYuc2RrLkVtcHR5GhUuYWdvbmVzLmRldi5zZGsuRW1wdHkiFILT5JMC",
-            "DiIJL2FsbG9jYXRlOgEqEk4KCFNodXRkb3duEhUuYWdvbmVzLmRldi5zZGsu",
-            "RW1wdHkaFS5hZ29uZXMuZGV2LnNkay5FbXB0eSIUgtPkkwIOIgkvc2h1dGRv",
-            "d246ASoSTAoGSGVhbHRoEhUuYWdvbmVzLmRldi5zZGsuRW1wdHkaFS5hZ29u",
-            "ZXMuZGV2LnNkay5FbXB0eSISgtPkkwIMIgcvaGVhbHRoOgEqKAESVwoNR2V0",
-            "R2FtZVNlcnZlchIVLmFnb25lcy5kZXYuc2RrLkVtcHR5GhouYWdvbmVzLmRl",
-            "di5zZGsuR2FtZVNlcnZlciITgtPkkwINEgsvZ2FtZXNlcnZlchJhCg9XYXRj",
-            "aEdhbWVTZXJ2ZXISFS5hZ29uZXMuZGV2LnNkay5FbXB0eRoaLmFnb25lcy5k",
-            "ZXYuc2RrLkdhbWVTZXJ2ZXIiGYLT5JMCExIRL3dhdGNoL2dhbWVzZXJ2ZXIw",
-            "ARJXCghTZXRMYWJlbBIYLmFnb25lcy5kZXYuc2RrLktleVZhbHVlGhUuYWdv",
-            "bmVzLmRldi5zZGsuRW1wdHkiGoLT5JMCFBoPL21ldGFkYXRhL2xhYmVsOgEq",
-            "EmEKDVNldEFubm90YXRpb24SGC5hZ29uZXMuZGV2LnNkay5LZXlWYWx1ZRoV",
-            "LmFnb25lcy5kZXYuc2RrLkVtcHR5Ih+C0+STAhkaFC9tZXRhZGF0YS9hbm5v",
-            "dGF0aW9uOgEqEk8KB1Jlc2VydmUSGC5hZ29uZXMuZGV2LnNkay5EdXJhdGlv",
-            "bhoVLmFnb25lcy5kZXYuc2RrLkVtcHR5IhOC0+STAg0iCC9yZXNlcnZlOgEq",
-            "QgVaA3Nka2IGcHJvdG8z"));
+            "KAsyJi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0YXR1cy5Qb3J0Ej8K",
+            "B1BsYXllcnMYBCABKAsyLi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0",
+            "YXR1cy5QbGF5ZXJTdGF0dXMaIgoEUG9ydBIMCgRuYW1lGAEgASgJEgwKBHBv",
+            "cnQYAiABKAUaLwoMUGxheWVyU3RhdHVzEg0KBWNvdW50GAEgASgDEhAKCGNh",
+            "cGFjaXR5GAIgASgDMoYGCgNTREsSSAoFUmVhZHkSFS5hZ29uZXMuZGV2LnNk",
+            "ay5FbXB0eRoVLmFnb25lcy5kZXYuc2RrLkVtcHR5IhGC0+STAgsiBi9yZWFk",
+            "eToBKhJOCghBbGxvY2F0ZRIVLmFnb25lcy5kZXYuc2RrLkVtcHR5GhUuYWdv",
+            "bmVzLmRldi5zZGsuRW1wdHkiFILT5JMCDiIJL2FsbG9jYXRlOgEqEk4KCFNo",
+            "dXRkb3duEhUuYWdvbmVzLmRldi5zZGsuRW1wdHkaFS5hZ29uZXMuZGV2LnNk",
+            "ay5FbXB0eSIUgtPkkwIOIgkvc2h1dGRvd246ASoSTAoGSGVhbHRoEhUuYWdv",
+            "bmVzLmRldi5zZGsuRW1wdHkaFS5hZ29uZXMuZGV2LnNkay5FbXB0eSISgtPk",
+            "kwIMIgcvaGVhbHRoOgEqKAESVwoNR2V0R2FtZVNlcnZlchIVLmFnb25lcy5k",
+            "ZXYuc2RrLkVtcHR5GhouYWdvbmVzLmRldi5zZGsuR2FtZVNlcnZlciITgtPk",
+            "kwINEgsvZ2FtZXNlcnZlchJhCg9XYXRjaEdhbWVTZXJ2ZXISFS5hZ29uZXMu",
+            "ZGV2LnNkay5FbXB0eRoaLmFnb25lcy5kZXYuc2RrLkdhbWVTZXJ2ZXIiGYLT",
+            "5JMCExIRL3dhdGNoL2dhbWVzZXJ2ZXIwARJXCghTZXRMYWJlbBIYLmFnb25l",
+            "cy5kZXYuc2RrLktleVZhbHVlGhUuYWdvbmVzLmRldi5zZGsuRW1wdHkiGoLT",
+            "5JMCFBoPL21ldGFkYXRhL2xhYmVsOgEqEmEKDVNldEFubm90YXRpb24SGC5h",
+            "Z29uZXMuZGV2LnNkay5LZXlWYWx1ZRoVLmFnb25lcy5kZXYuc2RrLkVtcHR5",
+            "Ih+C0+STAhkaFC9tZXRhZGF0YS9hbm5vdGF0aW9uOgEqEk8KB1Jlc2VydmUS",
+            "GC5hZ29uZXMuZGV2LnNkay5EdXJhdGlvbhoVLmFnb25lcy5kZXYuc2RrLkVt",
+            "cHR5IhOC0+STAg0iCC9yZXNlcnZlOgEqQgVaA3Nka2IGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -73,7 +75,8 @@ namespace Agones.Dev.Sdk {
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.Duration), global::Agones.Dev.Sdk.Duration.Parser, new[]{ "Seconds" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer), global::Agones.Dev.Sdk.GameServer.Parser, new[]{ "ObjectMeta", "Spec", "Status" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta), global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta.Parser, new[]{ "Name", "Namespace", "Uid", "ResourceVersion", "Generation", "CreationTimestamp", "DeletionTimestamp", "Annotations", "Labels" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec), global::Agones.Dev.Sdk.GameServer.Types.Spec.Parser, new[]{ "Health" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health), global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health.Parser, new[]{ "Disabled", "PeriodSeconds", "FailureThreshold", "InitialDelaySeconds" }, null, null, null)}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status), global::Agones.Dev.Sdk.GameServer.Types.Status.Parser, new[]{ "State", "Address", "Ports" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port.Parser, new[]{ "Name", "Port_" }, null, null, null)})})
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status), global::Agones.Dev.Sdk.GameServer.Types.Status.Parser, new[]{ "State", "Address", "Ports", "Players" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port.Parser, new[]{ "Name", "Port_" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus.Parser, new[]{ "Count", "Capacity" }, null, null, null)})})
           }));
     }
     #endregion
@@ -1415,6 +1418,7 @@ namespace Agones.Dev.Sdk {
           state_ = other.state_;
           address_ = other.address_;
           ports_ = other.ports_.Clone();
+          players_ = other.players_ != null ? other.players_.Clone() : null;
           _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
         }
 
@@ -1455,6 +1459,21 @@ namespace Agones.Dev.Sdk {
           get { return ports_; }
         }
 
+        /// <summary>Field number for the "Players" field.</summary>
+        public const int PlayersFieldNumber = 4;
+        private global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus players_;
+        /// <summary>
+        /// [Stage:Alpha]
+        /// [FeatureFlag:PlayerTesting]
+        /// </summary>
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+        public global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus Players {
+          get { return players_; }
+          set {
+            players_ = value;
+          }
+        }
+
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public override bool Equals(object other) {
           return Equals(other as Status);
@@ -1471,6 +1490,7 @@ namespace Agones.Dev.Sdk {
           if (State != other.State) return false;
           if (Address != other.Address) return false;
           if(!ports_.Equals(other.ports_)) return false;
+          if (!object.Equals(Players, other.Players)) return false;
           return Equals(_unknownFields, other._unknownFields);
         }
 
@@ -1480,6 +1500,7 @@ namespace Agones.Dev.Sdk {
           if (State.Length != 0) hash ^= State.GetHashCode();
           if (Address.Length != 0) hash ^= Address.GetHashCode();
           hash ^= ports_.GetHashCode();
+          if (players_ != null) hash ^= Players.GetHashCode();
           if (_unknownFields != null) {
             hash ^= _unknownFields.GetHashCode();
           }
@@ -1502,6 +1523,10 @@ namespace Agones.Dev.Sdk {
             output.WriteString(Address);
           }
           ports_.WriteTo(output, _repeated_ports_codec);
+          if (players_ != null) {
+            output.WriteRawTag(34);
+            output.WriteMessage(Players);
+          }
           if (_unknownFields != null) {
             _unknownFields.WriteTo(output);
           }
@@ -1517,6 +1542,9 @@ namespace Agones.Dev.Sdk {
             size += 1 + pb::CodedOutputStream.ComputeStringSize(Address);
           }
           size += ports_.CalculateSize(_repeated_ports_codec);
+          if (players_ != null) {
+            size += 1 + pb::CodedOutputStream.ComputeMessageSize(Players);
+          }
           if (_unknownFields != null) {
             size += _unknownFields.CalculateSize();
           }
@@ -1535,6 +1563,12 @@ namespace Agones.Dev.Sdk {
             Address = other.Address;
           }
           ports_.Add(other.ports_);
+          if (other.players_ != null) {
+            if (players_ == null) {
+              Players = new global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus();
+            }
+            Players.MergeFrom(other.Players);
+          }
           _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
         }
 
@@ -1556,6 +1590,13 @@ namespace Agones.Dev.Sdk {
               }
               case 26: {
                 ports_.AddEntriesFrom(input, _repeated_ports_codec);
+                break;
+              }
+              case 34: {
+                if (players_ == null) {
+                  Players = new global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus();
+                }
+                input.ReadMessage(Players);
                 break;
               }
             }
@@ -1715,6 +1756,167 @@ namespace Agones.Dev.Sdk {
                   }
                   case 16: {
                     Port_ = input.ReadInt32();
+                    break;
+                  }
+                }
+              }
+            }
+
+          }
+
+          /// <summary>
+          /// [Stage:Alpha]
+          /// [FeatureFlag:PlayerTesting]
+          /// </summary>
+          public sealed partial class PlayerStatus : pb::IMessage<PlayerStatus> {
+            private static readonly pb::MessageParser<PlayerStatus> _parser = new pb::MessageParser<PlayerStatus>(() => new PlayerStatus());
+            private pb::UnknownFieldSet _unknownFields;
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public static pb::MessageParser<PlayerStatus> Parser { get { return _parser; } }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public static pbr::MessageDescriptor Descriptor {
+              get { return global::Agones.Dev.Sdk.GameServer.Types.Status.Descriptor.NestedTypes[1]; }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            pbr::MessageDescriptor pb::IMessage.Descriptor {
+              get { return Descriptor; }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public PlayerStatus() {
+              OnConstruction();
+            }
+
+            partial void OnConstruction();
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public PlayerStatus(PlayerStatus other) : this() {
+              count_ = other.count_;
+              capacity_ = other.capacity_;
+              _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public PlayerStatus Clone() {
+              return new PlayerStatus(this);
+            }
+
+            /// <summary>Field number for the "count" field.</summary>
+            public const int CountFieldNumber = 1;
+            private long count_;
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public long Count {
+              get { return count_; }
+              set {
+                count_ = value;
+              }
+            }
+
+            /// <summary>Field number for the "capacity" field.</summary>
+            public const int CapacityFieldNumber = 2;
+            private long capacity_;
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public long Capacity {
+              get { return capacity_; }
+              set {
+                capacity_ = value;
+              }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public override bool Equals(object other) {
+              return Equals(other as PlayerStatus);
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public bool Equals(PlayerStatus other) {
+              if (ReferenceEquals(other, null)) {
+                return false;
+              }
+              if (ReferenceEquals(other, this)) {
+                return true;
+              }
+              if (Count != other.Count) return false;
+              if (Capacity != other.Capacity) return false;
+              return Equals(_unknownFields, other._unknownFields);
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public override int GetHashCode() {
+              int hash = 1;
+              if (Count != 0L) hash ^= Count.GetHashCode();
+              if (Capacity != 0L) hash ^= Capacity.GetHashCode();
+              if (_unknownFields != null) {
+                hash ^= _unknownFields.GetHashCode();
+              }
+              return hash;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public override string ToString() {
+              return pb::JsonFormatter.ToDiagnosticString(this);
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public void WriteTo(pb::CodedOutputStream output) {
+              if (Count != 0L) {
+                output.WriteRawTag(8);
+                output.WriteInt64(Count);
+              }
+              if (Capacity != 0L) {
+                output.WriteRawTag(16);
+                output.WriteInt64(Capacity);
+              }
+              if (_unknownFields != null) {
+                _unknownFields.WriteTo(output);
+              }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public int CalculateSize() {
+              int size = 0;
+              if (Count != 0L) {
+                size += 1 + pb::CodedOutputStream.ComputeInt64Size(Count);
+              }
+              if (Capacity != 0L) {
+                size += 1 + pb::CodedOutputStream.ComputeInt64Size(Capacity);
+              }
+              if (_unknownFields != null) {
+                size += _unknownFields.CalculateSize();
+              }
+              return size;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public void MergeFrom(PlayerStatus other) {
+              if (other == null) {
+                return;
+              }
+              if (other.Count != 0L) {
+                Count = other.Count;
+              }
+              if (other.Capacity != 0L) {
+                Capacity = other.Capacity;
+              }
+              _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public void MergeFrom(pb::CodedInputStream input) {
+              uint tag;
+              while ((tag = input.ReadTag()) != 0) {
+                switch(tag) {
+                  default:
+                    _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+                    break;
+                  case 8: {
+                    Count = input.ReadInt64();
+                    break;
+                  }
+                  case 16: {
+                    Capacity = input.ReadInt64();
                     break;
                   }
                 }
