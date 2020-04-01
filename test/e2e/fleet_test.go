@@ -843,8 +843,8 @@ func TestScaleUpAndDownInParallelStressTest(t *testing.T) {
 
 	var fleets []*agonesv1.Fleet
 
-	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize))
-	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize))
+	scaleUpStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_up", fleetSize), framework.Version)
+	scaleDownStats := framework.NewStatsCollector(fmt.Sprintf("fleet_%v_scale_down", fleetSize), framework.Version)
 
 	defer scaleUpStats.Report()
 	defer scaleDownStats.Report()

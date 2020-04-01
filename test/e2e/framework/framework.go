@@ -62,6 +62,7 @@ type Framework struct {
 	PullSecret      string
 	StressTestLevel int
 	PerfOutputDir   string
+	Version         string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
@@ -115,6 +116,7 @@ func NewFromFlags() (*Framework, error) {
 		"optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
 	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directory")
+	version := flag.String("version", "", "agones controller version that was tested in the release version plus the short hash of the latest commit")
 
 	flag.Parse()
 
@@ -127,6 +129,7 @@ func NewFromFlags() (*Framework, error) {
 	framework.PullSecret = *pullSecret
 	framework.StressTestLevel = *stressTestLevel
 	framework.PerfOutputDir = *perfOutputDir
+	framework.Version = *version
 
 	return framework, nil
 }
@@ -304,11 +307,11 @@ func (f *Framework) WaitForFleetGameServerListCondition(flt *agonesv1.Fleet,
 
 // NewStatsCollector returns new instance of statistics collector,
 // which can be used to emit performance statistics for load tests and stress tests.
-func (f *Framework) NewStatsCollector(name string) *StatsCollector {
+func (f *Framework) NewStatsCollector(name, version string) *StatsCollector {
 	if f.StressTestLevel > 0 {
 		name = fmt.Sprintf("stress_%v_%v", f.StressTestLevel, name)
 	}
-	return &StatsCollector{name: name, outputDir: f.PerfOutputDir}
+	return &StatsCollector{name: name, outputDir: f.PerfOutputDir, version: version}
 }
 
 // CleanUp Delete all Agones resources in a given namespace.
