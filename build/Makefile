@@ -59,6 +59,8 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.19
 
+FEATURE_GATES ?= "PlayerTracking=true&ContainerPortAllocation=true"
+
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 build_path := $(dir $(mkfile_path))
@@ -246,7 +248,8 @@ test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
-		--pullsecret=$(IMAGE_PULL_SECRET)
+		--pullsecret=$(IMAGE_PULL_SECRET) \
+		--featuregates=$(FEATURE_GATES)
 	echo "Finishing e2e integration test!"
 
 test-e2e-failure: $(ensure-build-image)
@@ -288,7 +291,6 @@ install: PING_SERVICE_TYPE := "LoadBalancer"
 install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
-install: FEATURE_GATES := "PlayerTracking=true&ContainerPortAllocation=true"
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\

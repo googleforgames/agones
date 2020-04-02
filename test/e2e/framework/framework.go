@@ -63,6 +63,7 @@ type Framework struct {
 	StressTestLevel int
 	PerfOutputDir   string
 	Version         string
+	FeatureGates    string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
@@ -117,6 +118,7 @@ func NewFromFlags() (*Framework, error) {
 	stressTestLevel := flag.Int("stress", 0, "enable stress test at given level 0-100")
 	perfOutputDir := flag.String("perf-output", "", "write performance statistics to the specified directory")
 	version := flag.String("version", "", "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
+	featureGates := flag.String("featuregates", "", "list of feature gates to be tested in the test run")
 
 	flag.Parse()
 
@@ -130,6 +132,7 @@ func NewFromFlags() (*Framework, error) {
 	framework.StressTestLevel = *stressTestLevel
 	framework.PerfOutputDir = *perfOutputDir
 	framework.Version = *version
+	framework.FeatureGates = *featureGates
 
 	return framework, nil
 }

@@ -19,6 +19,7 @@ import (
 	"os"
 	"testing"
 
+	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 )
@@ -50,6 +51,12 @@ func TestMain(m *testing.M) {
 		log.Printf("failed to cleanup resources: %v\n", err)
 	}
 
+	// run tests cases only for those features that are passed in a flag
+	err = runtime.ParseFeatures(framework.FeatureGates)
+	if err != nil {
+		log.Fatalf("Unable to parse feature gates: %s", framework.FeatureGates)
+	}
+
 	defer func() {
 		err = framework.CleanUp(defaultNs)
 		if err != nil {
@@ -58,5 +65,4 @@ func TestMain(m *testing.M) {
 		os.Exit(exitCode)
 	}()
 	exitCode = m.Run()
-
 }
