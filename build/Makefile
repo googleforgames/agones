@@ -265,7 +265,8 @@ stress-test-e2e: $(ensure-build-image)
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--stress $(STRESS_TEST_LEVEL) \
-		--perf-output $(PERF_OUTPUT_DIR)
+		--perf-output $(PERF_OUTPUT_DIR) \
+		--version $(VERSION)
 
 # Run test on install yaml - make sure there is no change
 # mostly this is for CI
