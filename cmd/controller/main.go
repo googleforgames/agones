@@ -123,7 +123,7 @@ func main() {
 
 	if errs := ctlConf.validate(); len(errs) != 0 {
 		for _, err := range errs {
-			logger.WithError(err)
+			logger.Error(err)
 		}
 		logger.Fatal("Could not create controller from environment or flags")
 	}
