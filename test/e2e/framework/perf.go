@@ -2,6 +2,7 @@ package framework
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +21,7 @@ import (
 type StatsCollector struct {
 	name      string
 	outputDir string
+	version   string
 
 	mu              sync.Mutex
 	samples         []time.Duration
@@ -76,8 +78,8 @@ func (p *StatsCollector) Report() {
 
 	var rr fhttp.HTTPRunnerResults
 	rr.RunType = "HTTP"
-	rr.Labels = "Agones " + p.name
-	rr.StartTime = time.Now()
+	rr.Labels = fmt.Sprintf("Agones %s_%s", p.name, p.version)
+	rr.StartTime = time.Now().UTC()
 	rr.ActualDuration = p.lastSampleTime.Sub(p.firstSampleTime)
 	rr.DurationHistogram = h.Export()
 	rr.DurationHistogram.CalcPercentiles([]float64{50, 90, 95, 99, 99.9})
@@ -98,18 +100,29 @@ func (p *StatsCollector) Report() {
 		Info(p.name)
 
 	if p.outputDir != "" {
-		os.MkdirAll(p.outputDir, 0755) //nolint:errcheck
-
-		fname := filepath.Join(p.outputDir, p.name+"_"+rr.StartTime.UTC().Format("2006-01-02_1504")+".json")
-		f, err := os.Create(fname)
+		err := os.MkdirAll(p.outputDir, 0755)
 		if err != nil {
-			logrus.WithError(err).Error("unable to create performance log")
+			logrus.WithError(err).Errorf("unable to create a folder: %s", p.outputDir)
 			return
 		}
-		defer f.Close() //nolint:errcheck
+
+		fname := filepath.Join(p.outputDir, fmt.Sprintf("%s_%s_%s.json", p.name, p.version, rr.StartTime.Format("2006-01-02_1504")))
+		f, err := os.Create(fname)
+		if err != nil {
+			logrus.WithError(err).Errorf("unable to create performance log: %s", fname)
+			return
+		}
+		defer func() {
+			if cerr := f.Close(); cerr != nil {
+				logrus.Error(cerr)
+			}
+		}()
 
 		e := json.NewEncoder(f)
 		e.SetIndent("", "  ")
-		e.Encode(rr) //nolint:errcheck
+		err = e.Encode(rr)
+		if err != nil {
+			logrus.Error(err)
+		}
 	}
 }
