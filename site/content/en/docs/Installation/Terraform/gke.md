@@ -84,13 +84,14 @@ Configurable parameters:
 
 - project - your Google Cloud Project ID (required)
 - name - the name of the GKE cluster (default is "agones-terraform-example")
-- agones_version - the version of agones to install (default is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
 - machine_type - machine type for hosting game servers (default is "n1-standard-4")
 - node_count - count of game server nodes for the default node pool (default is "4")
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
-  created in. (default is "us-west1-c")
+  created in (default is "us-west1-c")
 - network - the name of the VPC network you want your cluster and firewall rules be connected to (default is "default")
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
+- feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"`

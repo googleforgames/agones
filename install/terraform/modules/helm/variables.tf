@@ -30,6 +30,10 @@ variable "log_level" {
   default = "info"
 }
 
+variable "feature_gates" {
+  default = ""
+}
+
 variable "host" {}
 
 variable "token" {}

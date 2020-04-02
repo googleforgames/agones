@@ -44,6 +44,10 @@ variable "log_level" {
   default = "info"
 }
 
+variable "feature_gates" {
+  default = ""
+}
+
 module "eks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=master"
 
@@ -66,6 +70,7 @@ module "helm_agones" {
   agones_version         = var.agones_version
   values_file            = ""
   chart                  = "agones"
+  feature_gates          = var.feature_gates
   host                   = module.eks_cluster.host
   token                  = data.aws_eks_cluster_auth.example.token
   cluster_ca_certificate = module.eks_cluster.cluster_ca_certificate

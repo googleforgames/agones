@@ -143,6 +143,11 @@ resource "helm_release" "agones" {
     name  = "agones.controller.logLevel"
     value = var.log_level
   }
+  
+  set {
+    name  = "agones.featureGates"
+    value = var.feature_gates
+  }
 
   version   = var.agones_version
   namespace = "agones-system"
