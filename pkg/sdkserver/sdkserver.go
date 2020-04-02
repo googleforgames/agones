@@ -53,10 +53,12 @@ import (
 type Operation string
 
 const (
-	updateState          Operation = "updateState"
-	updateLabel          Operation = "updateLabel"
-	updateAnnotation     Operation = "updateAnnotation"
-	updatePlayerCapacity Operation = "updatePlayerCapacity"
+	updateState             Operation     = "updateState"
+	updateLabel             Operation     = "updateLabel"
+	updateAnnotation        Operation     = "updateAnnotation"
+	updatePlayerCapacity    Operation     = "updatePlayerCapacity"
+	updatePlayerCount       Operation     = "updatePlayerCount"
+	playerCountUpdatePeriod time.Duration = time.Second
 )
 
 var (
@@ -96,6 +98,8 @@ type SDKServer struct {
 	reserveTimer       *time.Timer
 	gsReserveDuration  *time.Duration
 	gsPlayerCapacity   int64
+	gsPlayerCount      int64
+	connectedPlayers   map[string]bool
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -129,6 +133,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsAnnotations:      map[string]string{},
 		gsUpdateMutex:      sync.RWMutex{},
 		gsWaitForSync:      sync.WaitGroup{},
+		connectedPlayers:   map[string]bool{},
 	}
 
 	s.informerFactory = factory
@@ -230,11 +235,12 @@ func (s *SDKServer) Run(stop <-chan struct{}) error {
 		go wait.Until(s.runHealth, s.healthTimeout, stop)
 	}
 
-	// populate player capacity value
+	// populate player tracking values
 	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		s.gsUpdateMutex.Lock()
 		if gs.Status.Players != nil {
 			s.gsPlayerCapacity = gs.Status.Players.Capacity
+			s.gsPlayerCount = gs.Status.Players.Count
 		}
 		s.gsUpdateMutex.Unlock()
 	}
@@ -272,6 +278,8 @@ func (s *SDKServer) syncGameServer(key string) error {
 		return s.updateAnnotations()
 	case updatePlayerCapacity:
 		return s.updatePlayerCapacity()
+	case updatePlayerCount:
+		return s.updatePlayerCount()
 	}
 
 	return errors.Errorf("could not sync game server key: %s", key)
@@ -547,21 +555,68 @@ func (s *SDKServer) stopReserveTimer() {
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
 func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
-	panic("implement me")
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.logger.WithField("PlayerId", id).Debug("Player Connected")
+
+	s.gsUpdateMutex.RLock()
+	// check if the player id is in the player map
+	_, ok := s.connectedPlayers[id.PlayerId]
+	s.gsUpdateMutex.RUnlock()
+
+	// this player has already connected, so exit
+	if ok {
+		return &alpha.Empty{}, nil
+	}
+
+	s.gsUpdateMutex.Lock()
+	s.gsPlayerCount++
+	s.connectedPlayers[id.PlayerId] = true
+	s.gsUpdateMutex.Unlock()
+	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updatePlayerCount)), playerCountUpdatePeriod)
+
+	return &alpha.Empty{}, nil
 }
 
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
 func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
-	panic("implement me")
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.logger.WithField("PlayerId", id).Debug("Player Disconnected")
+
+	s.gsUpdateMutex.RLock()
+	// check if the player id is in the player map
+	_, ok := s.connectedPlayers[id.PlayerId]
+	s.gsUpdateMutex.RUnlock()
+
+	// this player has already disconnected, so exit
+	if !ok {
+		return &alpha.Empty{}, nil
+	}
+
+	s.gsUpdateMutex.Lock()
+	s.gsPlayerCount--
+	delete(s.connectedPlayers, id.PlayerId)
+	s.gsUpdateMutex.Unlock()
+	s.workerqueue.EnqueueAfter(cache.ExplicitKey(string(updatePlayerCount)), playerCountUpdatePeriod)
+
+	return &alpha.Empty{}, nil
 }
 
 // GetPlayerCount returns the current player count.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
 func (s *SDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
-	panic("implement me")
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.gsUpdateMutex.RLock()
+	defer s.gsUpdateMutex.RUnlock()
+	return &alpha.Count{Count: s.gsPlayerCount}, nil
 }
 
 // SetPlayerCapacity to change the game server's player capacity.
@@ -673,6 +728,33 @@ func (s *SDKServer) updatePlayerCapacity() error {
 	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
 	s.gsUpdateMutex.RUnlock()
 
+	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+	return err
+}
+
+// updatePlayerCount updates the Player Count field in the GameServer's Status.
+func (s *SDKServer) updatePlayerCount() error {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	s.logger.WithField("count", s.gsPlayerCount).Debug("updating player count")
+	gs, err := s.gameServer()
+	if err != nil {
+		return err
+	}
+
+	gsCopy := gs.DeepCopy()
+	same := false
+	s.gsUpdateMutex.RLock()
+	same = gsCopy.Status.Players.Count == s.gsPlayerCount
+	gsCopy.Status.Players.Count = s.gsPlayerCount
+	s.gsUpdateMutex.RUnlock()
+	// if there is no change, then don't update
+	// since it's possible this could fire quite a lot, let's reduce the
+	// amount of requests as much as possible.
+	if same {
+		return nil
+	}
 	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
 	return err
 }
