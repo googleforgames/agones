@@ -29,6 +29,7 @@ func TestFeatures(t *testing.T) {
 	FeatureTestMutex.Lock()
 	defer FeatureTestMutex.Unlock()
 
+	orig := featureDefaults
 	// stable feature flag state
 	featureDefaults = map[Feature]bool{
 		FeatureExample:  true,
@@ -76,4 +77,33 @@ func TestFeatures(t *testing.T) {
 		assert.True(t, FeatureEnabled(Feature("Test")))
 		assert.True(t, FeatureEnabled(FeatureExample))
 	})
+
+	// reset things back the way they were
+	featureDefaults = orig
+}
+
+func TestEnableAllFeatures(t *testing.T) {
+	t.Parallel()
+	FeatureTestMutex.Lock()
+	defer FeatureTestMutex.Unlock()
+
+	orig := featureDefaults
+	// stable feature flag state
+	featureDefaults = map[Feature]bool{
+		FeatureExample:  true,
+		Feature("Test"): false,
+	}
+
+	err := ParseFeatures("Example=0&Test=0")
+	assert.NoError(t, err)
+	assert.False(t, FeatureEnabled("Example"))
+	assert.False(t, FeatureEnabled("Test"))
+
+	EnableAllFeatures()
+
+	assert.True(t, FeatureEnabled("Example"))
+	assert.True(t, FeatureEnabled("Test"))
+
+	// reset things back the way they were
+	featureDefaults = orig
 }
