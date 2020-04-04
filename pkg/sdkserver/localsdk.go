@@ -27,6 +27,7 @@ import (
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -177,6 +178,8 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 			fieldVal = strconv.FormatInt(l.gs.ObjectMeta.CreationTimestamp, 10)
 		case "UID":
 			fieldVal = l.gs.ObjectMeta.Uid
+		case "PlayerCapacity":
+			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		default:
 			fmt.Printf("Error: Unexpected Field to compare")
 		}
@@ -375,15 +378,47 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 // SetPlayerCapacity to change the game server's player capacity.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (l *LocalSDKServer) SetPlayerCapacity(ctx context.Context, count *alpha.Count) (*alpha.Empty, error) {
-	panic("implement me")
+func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+
+	logrus.WithField("capacity", count.Count).Info("Setting Player Capacity")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
+	}
+
+	l.gs.Status.Players.Capacity = count.Count
+
+	l.update <- struct{}{}
+	l.recordRequestWithValue("setplayercapacity", strconv.FormatInt(count.Count, 10), "PlayerCapacity")
+	return &alpha.Empty{}, nil
 }
 
 // GetPlayerCapacity returns the current player capacity.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (l *LocalSDKServer) GetPlayerCapacity(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
-	panic("implement me")
+func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	logrus.Info("Getting Player Capacity")
+	l.recordRequest("getplayercapacity")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
+
+	// SDK.GetPlayerCapacity() has a contract of always return a number,
+	// so if we're nil, then let's always return a value, and
+	// remove lots of special cases upstream.
+	result := &alpha.Count{}
+	if l.gs.Status.Players != nil {
+		result.Count = l.gs.Status.Players.Capacity
+	}
+
+	return result, nil
 }
 
 // GetPlayerCount returns the current player count.

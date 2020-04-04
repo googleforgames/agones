@@ -33,6 +33,9 @@ examples_folder = ../examples/
 SDK_FOLDER ?= go
 COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
+DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity
+
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -133,13 +136,14 @@ run-sdk-conformance-local: ensure-agones-sdk-image
 run-sdk-conformance-no-build: TIMEOUT ?= 30
 run-sdk-conformance-no-build: RANDOM := $(shell bash -c 'echo $$RANDOM')
 run-sdk-conformance-no-build: DELAY ?= $(shell bash -c "echo $$[ ($(RANDOM) % 5 ) + 1 ]")
-run-sdk-conformance-no-build: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+run-sdk-conformance-no-build: TESTS ?= $(DEFAULT_CONFORMANCE_TESTS)
 run-sdk-conformance-no-build: GRPC_PORT ?= 9357
 run-sdk-conformance-no-build: HTTP_PORT ?= 9358
+run-sdk-conformance-no-build: FEATURE_GATES ?=
 run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
-	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
-	docker run -p $(GRPC_PORT):$(GRPC_PORT) -p $(HTTP_PORT):$(HTTP_PORT) -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
+	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) -e FEATURE_GATES=$(FEATURE_GATES) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
+	docker run -p $(GRPC_PORT):$(GRPC_PORT) -p $(HTTP_PORT):$(HTTP_PORT) -e "FEATURE_GATES=$(FEATURE_GATES)" -e "ADDRESS=" -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
 	--net=host $(sidecar_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
 
 # Run SDK conformance test for a specific SDK_FOLDER
@@ -155,7 +159,10 @@ run-sdk-conformance-test-node:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=node GRPC_PORT=9002 HTTP_PORT=9102
 
 run-sdk-conformance-test-go:
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go   GRPC_PORT=9001 HTTP_PORT=9101
+	# run without feature flags
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101
+	# run with feature flags enabled
+	$(MAKE) run-sdk-conformance-no-build SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rust:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
