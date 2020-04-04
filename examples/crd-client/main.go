@@ -15,8 +15,10 @@
 package main
 
 import (
-	"fmt"
 	"strings"
+	"time"
+
+	"github.com/sirupsen/logrus"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -30,19 +32,30 @@ import (
 )
 
 const (
-	gameServerImage = "GAMESERVER_IMAGE"
+	gameServerImage      = "GAMESERVER_IMAGE"
+	isHelmTest           = "IS_HELM_TEST"
+	gameserversNamespace = "GAMESERVERS_NAMESPACE"
 
 	defaultImage = "gcr.io/agones-images/udp-server:0.19"
+	defaultNs    = "default"
 )
 
 func main() {
 	viper.AllowEmptyEnv(true)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	pflag.String(gameServerImage, viper.GetString(gameServerImage), "The Address to bind the server grpcPort to. Defaults to 'localhost'")
+	pflag.String(gameServerImage, defaultImage, "The Address to bind the server grpcPort to. Defaults to 'localhost'")
 	viper.SetDefault(gameServerImage, defaultImage)
 	runtime.Must(viper.BindEnv(gameServerImage))
-	viper.GetString(gameServerImage)
+
+	pflag.Bool(isHelmTest, false, "Is helm test - shutdown GameServer at the end of test. Defaults to false")
+	viper.SetDefault(isHelmTest, false)
+	runtime.Must(viper.BindEnv(isHelmTest))
+
+	pflag.String(gameserversNamespace, defaultNs, "Namespace where GameServers are created. Defaults to default")
+	viper.SetDefault(gameserversNamespace, defaultNs)
+	runtime.Must(viper.BindEnv(gameserversNamespace))
+
 	config, err := rest.InClusterConfig()
 	logger := runtime.NewLoggerWithSource("main")
 	if err != nil {
@@ -66,8 +79,17 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
+	gsName := "helm-test-server-"
+
 	// Create a GameServer
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: "default"},
+	gs := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: gsName,
+			Namespace:    viper.GetString(gameserversNamespace),
+			Labels: map[string]string{
+				labelKey: labelValue,
+			},
+		},
 		Spec: agonesv1.GameServerSpec{
 			Container: "udp-server",
 			Ports: []agonesv1.GameServerPort{{
@@ -79,15 +101,27 @@ func main() {
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "udp-server", Image: viper.GetString(gameServerImage)}},
+					Containers: []corev1.Container{
+						{
+							Name:  "udp-server",
+							Image: viper.GetString(gameServerImage),
+						},
+					},
 				},
 			},
 		},
 	}
-	newGS, err := agonesClient.AgonesV1().GameServers("default").Create(gs)
+	newGS, err := agonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
 	if err != nil {
 		panic(err)
 	}
+	logrus.Infof("New GameServer name is: %s", newGS.ObjectMeta.Name)
 
-	fmt.Printf("New game servers' name is: %s", newGS.ObjectMeta.Name)
+	if viper.GetBool(isHelmTest) {
+		time.Sleep(1 * time.Second)
+		err = agonesClient.AgonesV1().GameServers(defaultNs).Delete(newGS.ObjectMeta.Name, nil) // nolint: errcheck
+		if err != nil {
+			panic(err)
+		}
+	}
 }
