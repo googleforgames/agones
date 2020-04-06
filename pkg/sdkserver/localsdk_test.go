@@ -298,6 +298,17 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 		assert.Nil(t, err)
 	}()
 
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
 	c, err := l.GetPlayerCapacity(context.Background(), e)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(0), c.Count)
