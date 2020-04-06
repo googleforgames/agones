@@ -115,6 +115,23 @@ func ParseFeatures(queryString string) error {
 	return nil
 }
 
+// EnableAllFeatures turns on all feature flags.
+// This is useful for libraries/processes/tests that want to
+// enable all Alpha/Beta features without having to track all
+// the current feature flags.
+func EnableAllFeatures() {
+	featureMutex.Lock()
+	defer featureMutex.Unlock()
+
+	features := map[Feature]bool{}
+	// copy the defaults into this map
+	for k := range featureDefaults {
+		features[k] = true
+	}
+
+	featureGates = features
+}
+
 // FeatureEnabled returns if a Feature is enabled or not
 func FeatureEnabled(feature Feature) bool {
 	featureMutex.RLock()
