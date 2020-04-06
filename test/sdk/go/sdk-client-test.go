@@ -17,15 +17,27 @@ package main
 import (
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	pkgSdk "agones.dev/agones/pkg/sdk"
+	"agones.dev/agones/pkg/util/runtime"
 	goSdk "agones.dev/agones/sdks/go"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 func main() {
+	viper.AllowEmptyEnv(true)
+	runtime.FeaturesBindFlags()
+	pflag.Parse()
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(runtime.FeaturesBindEnv())
+	runtime.Must(runtime.ParseFeaturesFromEnv())
+
 	log.SetFlags(log.Lshortfile)
 	log.Println("Client is starting")
+	log.Printf("Feature Flags: %s\n", runtime.EncodeFeatures())
 	time.Sleep(100 * time.Millisecond)
 	sdk, err := goSdk.NewSDK()
 	if err != nil {
@@ -80,6 +92,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not set annotation: %s", err)
 	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		capacity := int64(10)
+		if err = sdk.Alpha().SetPlayerCapacity(capacity); err != nil {
+			log.Fatalf("Error setting player capacity: %s", err)
+		}
+
+		c, err := sdk.Alpha().GetPlayerCapacity()
+		if err != nil {
+			log.Fatalf("Error getting player capacity: %s", err)
+		}
+		if c != capacity {
+			log.Fatalf("Player Capacity should be %d, but is %d", capacity, c)
+		}
+	}
+
 	err = sdk.Shutdown()
 	if err != nil {
 		log.Fatalf("Could not shutdown GameServer: %s", err)
