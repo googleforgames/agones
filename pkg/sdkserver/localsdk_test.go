@@ -67,19 +67,21 @@ func TestLocal(t *testing.T) {
 }
 
 func TestLocalSDKWithTestMode(t *testing.T) {
+	l, err := NewLocalSDKServer("")
+	assert.NoError(t, err, "Should be able to create local SDK server")
 	a := []string{"ready", "allocate", "setlabel", "setannotation", "gameserver", "health", "shutdown", "watch"}
 	b := []string{"ready", "health", "ready", "watch", "allocate", "gameserver", "setlabel", "setannotation", "health", "health", "shutdown"}
-	assert.True(t, EqualSets(a, a))
-	assert.True(t, EqualSets(a, b))
-	assert.True(t, EqualSets(b, a))
-	assert.True(t, EqualSets(b, b))
+	assert.True(t, l.EqualSets(a, a))
+	assert.True(t, l.EqualSets(a, b))
+	assert.True(t, l.EqualSets(b, a))
+	assert.True(t, l.EqualSets(b, b))
 	a[0] = "rady"
-	assert.False(t, EqualSets(a, b))
-	assert.False(t, EqualSets(b, a))
+	assert.False(t, l.EqualSets(a, b))
+	assert.False(t, l.EqualSets(b, a))
 	a[0] = "ready"
 	b[1] = "halth"
-	assert.False(t, EqualSets(a, b))
-	assert.False(t, EqualSets(b, a))
+	assert.False(t, l.EqualSets(a, b))
+	assert.False(t, l.EqualSets(b, a))
 }
 
 func TestLocalSDKWithGameServer(t *testing.T) {

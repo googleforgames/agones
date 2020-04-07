@@ -82,6 +82,7 @@ type LocalSDKServer struct {
 	gsReserveDuration *time.Duration
 	reserveTimer      *time.Timer
 	testMode          bool
+	testSdkName       string
 }
 
 // NewLocalSDKServer returns the default LocalSDKServer
@@ -94,6 +95,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		testMutex:       sync.Mutex{},
 		requestSequence: make([]string, 0),
 		testMode:        false,
+		testSdkName:     "",
 		gsState:         agonesv1.GameServerStateScheduled,
 	}
 
@@ -163,12 +165,20 @@ func (l *LocalSDKServer) SetExpectedSequence(sequence []string) {
 	l.expectedSequence = sequence
 }
 
+// SetSdkName set SDK name to be added to the logs
+func (l *LocalSDKServer) SetSdkName(sdkName string) {
+	l.testSdkName = sdkName
+}
+
 // recordRequest append request name to slice
 func (l *LocalSDKServer) recordRequest(request string) {
 	if l.testMode {
 		l.testMutex.Lock()
 		defer l.testMutex.Unlock()
 		l.requestSequence = append(l.requestSequence, request)
+	}
+	if l.testSdkName != "" {
+		logrus.WithField("SDK Name", l.testSdkName).Debugf("Received %s requets", request)
 	}
 }
 
@@ -443,36 +453,38 @@ func (l *LocalSDKServer) Close() {
 	l.compare()
 }
 
-// EqualSets tells whether a and b contain the same elements.
+// EqualSets tells whether expected and received slices contain the same elements.
 // A nil argument is equivalent to an empty slice.
-func EqualSets(a, b []string) bool {
+func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 	aSet := make(map[string]bool)
 	bSet := make(map[string]bool)
-	for _, v := range a {
+	for _, v := range expected {
 		aSet[v] = true
 	}
-	for _, v := range b {
+	for _, v := range received {
 		if _, ok := aSet[v]; !ok {
+			logrus.WithField("SDK Name", l.testSdkName).Infof("Found an element which was not expected %s", v)
 			return false
 		}
 		bSet[v] = true
 	}
-	for _, v := range a {
+	for _, v := range expected {
 		if _, ok := bSet[v]; !ok {
+			logrus.WithField("SDK Name", l.testSdkName).Infof("Could not find an element which was expected %s", v)
 			return false
 		}
 	}
 	return true
 }
 
-// Close tears down all the things
+// compare the results of a test run
 func (l *LocalSDKServer) compare() {
-	logrus.Info("Compare")
-
 	if l.testMode {
-		if !EqualSets(l.expectedSequence, l.requestSequence) {
-			logrus.Info(fmt.Sprintf("Testing Failed %v %v", l.expectedSequence, l.requestSequence))
+		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
+			logrus.WithField("SDK Name", l.testSdkName).Infof("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
 			os.Exit(1)
+		} else {
+			logrus.WithField("SDK Name", l.testSdkName).Info("Received requests match expected list. Test run was successful")
 		}
 	}
 }
