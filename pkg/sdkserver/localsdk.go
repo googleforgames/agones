@@ -73,6 +73,7 @@ var (
 type LocalSDKServer struct {
 	gsMutex           sync.RWMutex
 	gs                *sdk.GameServer
+	logger            *logrus.Entry
 	update            chan struct{}
 	updateObservers   sync.Map
 	testMutex         sync.Mutex
@@ -98,6 +99,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		testSdkName:     "",
 		gsState:         agonesv1.GameServerStateScheduled,
 	}
+	l.logger = runtime.NewLoggerWithType(l)
 
 	if filePath != "" {
 		err := l.setGameServerFromFilePath(filePath)
@@ -115,26 +117,26 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 				if event.Op != fsnotify.Write {
 					continue
 				}
-				logrus.WithField("event", event).Info("File has been changed!")
+				l.logger.WithField("event", event).Info("File has been changed!")
 				err := l.setGameServerFromFilePath(filePath)
 				if err != nil {
-					logrus.WithError(err).Error("error setting GameServer from file")
+					l.logger.WithError(err).Error("error setting GameServer from file")
 					continue
 				}
-				logrus.Info("Sending watched GameServer!")
+				l.logger.Info("Sending watched GameServer!")
 				l.update <- struct{}{}
 			}
 		}()
 
 		err = watcher.Add(filePath)
 		if err != nil {
-			logrus.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
+			l.logger.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
 		}
 	}
 
 	go func() {
 		for value := range l.update {
-			logrus.Info("Gameserver update received")
+			l.logger.Info("Gameserver update received")
 			l.updateObservers.Range(func(observer, _ interface{}) bool {
 				observer.(chan struct{}) <- value
 				return true
@@ -168,6 +170,7 @@ func (l *LocalSDKServer) SetExpectedSequence(sequence []string) {
 // SetSdkName set SDK name to be added to the logs
 func (l *LocalSDKServer) SetSdkName(sdkName string) {
 	l.testSdkName = sdkName
+	l.logger = l.logger.WithField("SDK Name", l.testSdkName)
 }
 
 // recordRequest append request name to slice
@@ -178,7 +181,7 @@ func (l *LocalSDKServer) recordRequest(request string) {
 		l.requestSequence = append(l.requestSequence, request)
 	}
 	if l.testSdkName != "" {
-		logrus.WithField("SDK Name", l.testSdkName).Debugf("Received %s requets", request)
+		l.logger.Debugf("Received %s requets", request)
 	}
 }
 
@@ -215,7 +218,7 @@ func (l *LocalSDKServer) updateState(newState agonesv1.GameServerState) {
 
 // Ready logs that the Ready request has been received
 func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Ready request has been received!")
+	l.logger.Info("Ready request has been received!")
 	l.recordRequest("ready")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -229,7 +232,7 @@ func (l *LocalSDKServer) Ready(context.Context, *sdk.Empty) (*sdk.Empty, error) 
 
 // Allocate logs that an allocate request has been received
 func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Allocate request has been received!")
+	l.logger.Info("Allocate request has been received!")
 	l.recordRequest("allocate")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -242,7 +245,7 @@ func (l *LocalSDKServer) Allocate(context.Context, *sdk.Empty) (*sdk.Empty, erro
 
 // Shutdown logs that the shutdown request has been received
 func (l *LocalSDKServer) Shutdown(context.Context, *sdk.Empty) (*sdk.Empty, error) {
-	logrus.Info("Shutdown request has been received!")
+	l.logger.Info("Shutdown request has been received!")
 	l.recordRequest("shutdown")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -257,20 +260,20 @@ func (l *LocalSDKServer) Health(stream sdk.SDK_HealthServer) error {
 	for {
 		_, err := stream.Recv()
 		if err == io.EOF {
-			logrus.Info("Health stream closed.")
+			l.logger.Info("Health stream closed.")
 			return stream.SendAndClose(&sdk.Empty{})
 		}
 		if err != nil {
 			return errors.Wrap(err, "Error with Health check")
 		}
 		l.recordRequest("health")
-		logrus.Info("Health Ping Received!")
+		l.logger.Info("Health Ping Received!")
 	}
 }
 
 // SetLabel applies a Label to the backing GameServer metadata
 func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	logrus.WithField("values", kv).Info("Setting label")
+	l.logger.WithField("values", kv).Info("Setting label")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -289,7 +292,7 @@ func (l *LocalSDKServer) SetLabel(_ context.Context, kv *sdk.KeyValue) (*sdk.Emp
 
 // SetAnnotation applies a Annotation to the backing GameServer metadata
 func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sdk.Empty, error) {
-	logrus.WithField("values", kv).Info("Setting annotation")
+	l.logger.WithField("values", kv).Info("Setting annotation")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -308,7 +311,7 @@ func (l *LocalSDKServer) SetAnnotation(_ context.Context, kv *sdk.KeyValue) (*sd
 
 // GetGameServer returns current GameServer configuration.
 func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer, error) {
-	logrus.Info("Getting GameServer details")
+	l.logger.Info("Getting GameServer details")
 	l.recordRequest("gameserver")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -317,7 +320,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 
 // WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
-	logrus.Info("Connected to watch GameServer...")
+	l.logger.Info("Connected to watch GameServer...")
 	observer := make(chan struct{})
 
 	defer func() {
@@ -332,7 +335,7 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 		err := stream.Send(l.gs)
 		l.gsMutex.RUnlock()
 		if err != nil {
-			logrus.WithError(err).Error("error sending gameserver")
+			l.logger.WithError(err).Error("error sending gameserver")
 			return err
 		}
 	}
@@ -342,7 +345,7 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 
 // Reserve moves this GameServer to the Reserved state for the Duration specified
 func (l *LocalSDKServer) Reserve(ctx context.Context, d *sdk.Duration) (*sdk.Empty, error) {
-	logrus.WithField("duration", d).Info("Reserve request has been received!")
+	l.logger.WithField("duration", d).Info("Reserve request has been received!")
 	l.recordRequest("reserve")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
@@ -365,7 +368,7 @@ func (l *LocalSDKServer) resetReserveAfter(ctx context.Context, duration time.Du
 
 	l.reserveTimer = time.AfterFunc(duration, func() {
 		if _, err := l.Ready(ctx, &sdk.Empty{}); err != nil {
-			logrus.WithError(err).Error("error returning to Ready after reserved ")
+			l.logger.WithError(err).Error("error returning to Ready after reserved ")
 		}
 	})
 }
@@ -399,7 +402,7 @@ func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count
 		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
 	}
 
-	logrus.WithField("capacity", count.Count).Info("Setting Player Capacity")
+	l.logger.WithField("capacity", count.Count).Info("Setting Player Capacity")
 	l.gsMutex.Lock()
 	defer l.gsMutex.Unlock()
 
@@ -421,7 +424,7 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
 	}
-	logrus.Info("Getting Player Capacity")
+	l.logger.Info("Getting Player Capacity")
 	l.recordRequest("getplayercapacity")
 	l.gsMutex.RLock()
 	defer l.gsMutex.RUnlock()
@@ -463,14 +466,14 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 	}
 	for _, v := range received {
 		if _, ok := aSet[v]; !ok {
-			logrus.WithField("SDK Name", l.testSdkName).Infof("Found an element which was not expected %s", v)
+			l.logger.Infof("Found an element which was not expected %s", v)
 			return false
 		}
 		bSet[v] = true
 	}
 	for _, v := range expected {
 		if _, ok := bSet[v]; !ok {
-			logrus.WithField("SDK Name", l.testSdkName).Infof("Could not find an element which was expected %s", v)
+			l.logger.Infof("Could not find an element which was expected %s", v)
 			return false
 		}
 	}
@@ -481,16 +484,16 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 func (l *LocalSDKServer) compare() {
 	if l.testMode {
 		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
-			logrus.WithField("SDK Name", l.testSdkName).Infof("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
+			l.logger.Infof("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
 			os.Exit(1)
 		} else {
-			logrus.WithField("SDK Name", l.testSdkName).Info("Received requests match expected list. Test run was successful")
+			l.logger.Info("Received requests match expected list. Test run was successful")
 		}
 	}
 }
 
 func (l *LocalSDKServer) setGameServerFromFilePath(filePath string) error {
-	logrus.WithField("filePath", filePath).Info("Reading GameServer configuration")
+	l.logger.WithField("filePath", filePath).Info("Reading GameServer configuration")
 
 	reader, err := os.Open(filePath) // nolint: gosec
 	defer reader.Close()             // nolint: megacheck,errcheck
