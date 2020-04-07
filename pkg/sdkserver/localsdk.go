@@ -170,7 +170,7 @@ func (l *LocalSDKServer) SetExpectedSequence(sequence []string) {
 // SetSdkName set SDK name to be added to the logs
 func (l *LocalSDKServer) SetSdkName(sdkName string) {
 	l.testSdkName = sdkName
-	l.logger = l.logger.WithField("SDK Name", l.testSdkName)
+	l.logger = l.logger.WithField("sdkName", l.testSdkName)
 }
 
 // recordRequest append request name to slice
@@ -181,7 +181,7 @@ func (l *LocalSDKServer) recordRequest(request string) {
 		l.requestSequence = append(l.requestSequence, request)
 	}
 	if l.testSdkName != "" {
-		l.logger.Debugf("Received %s requets", request)
+		l.logger.Debugf("Received %s request", request)
 	}
 }
 
@@ -198,7 +198,7 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		case "PlayerCapacity":
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		default:
-			fmt.Printf("Error: Unexpected Field to compare")
+			l.logger.Error("unexpected Field to compare")
 		}
 
 		if value == fieldVal {
@@ -206,7 +206,7 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 			defer l.testMutex.Unlock()
 			l.requestSequence = append(l.requestSequence, request)
 		} else {
-			fmt.Printf("Error: we expected to receive '%s' as value for '%s' request but received '%s'. \n", fieldVal, request, value)
+			l.logger.Errorf("expected to receive '%s' as value for '%s' request but received '%s'", fieldVal, request, value)
 		}
 	}
 }
@@ -466,14 +466,14 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 	}
 	for _, v := range received {
 		if _, ok := aSet[v]; !ok {
-			l.logger.Infof("Found an element which was not expected %s", v)
+			l.logger.WithField("request", v).Error("Found a request which was not expected")
 			return false
 		}
 		bSet[v] = true
 	}
 	for _, v := range expected {
 		if _, ok := bSet[v]; !ok {
-			l.logger.Infof("Could not find an element which was expected %s", v)
+			l.logger.WithField("request", v).Error("Could not find a request which was expected")
 			return false
 		}
 	}
@@ -484,7 +484,7 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 func (l *LocalSDKServer) compare() {
 	if l.testMode {
 		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
-			l.logger.Infof("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
+			l.logger.Errorf("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
 			os.Exit(1)
 		} else {
 			l.logger.Info("Received requests match expected list. Test run was successful")

@@ -416,6 +416,6 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	wg.Wait()
 
 	l.SetExpectedSequence(expected)
-	b := EqualSets(l.expectedSequence, l.requestSequence)
+	b := l.EqualSets(l.expectedSequence, l.requestSequence)
 	assert.True(t, b, "we should receive strings from all go routines %v %v", l.expectedSequence, l.requestSequence)
 }
