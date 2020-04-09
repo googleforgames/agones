@@ -38,27 +38,26 @@ steps:
 - name: "make-docker" # build production version of the site
   dir: "build"
   args: ["site-static", "site-gen-app-yaml", "ENV=HUGO_ENV=production"]
-- name: "ubuntu" # fake a new gopath
-  args: ["bash", "-c", "mkdir -p ./go/src && cp -r ./site ./go/src && cp -r ./vendor/gopkg.in ./go/src && ls -a ./go/src/site"]
 - name: "gcr.io/cloud-builders/gcloud" # deploy the website
-  dir: "go/src/site"
+  dir: "site"
   args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
+    - GO111MODULE=on
 
 #
 # Build development site and deploy
 #
 
+
 - name: "make-docker" # build a preview of the website
   dir: "build"
   args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=development"]
-- name: "ubuntu" # fake a new gopath
-  args: ["bash", "-c", "rm -r ./go/src && mkdir -p ./go/src && cp -r ./site ./go/src && cp -r ./vendor/gopkg.in ./go/src && ls -a ./go/src/site"]
 - name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
-  dir: "go/src/site"
+  dir: "site"
   args: ["app", "deploy", ".app.yaml", "--promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
+    - GO111MODULE=on
 
 tags: ["site"]

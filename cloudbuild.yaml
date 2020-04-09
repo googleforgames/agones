@@ -216,19 +216,15 @@ steps:
     - tests
   dir: "build"
   args: ["site-static-preview", "site-gen-app-yaml", "SERVICE=preview"]
-- name: "ubuntu" # fake a new gopath
-  id: site-gopath
-  waitFor:
-    - site-static
-  args: ["bash", "-c", "mkdir -p ./go/src && mv ./site ./go/src && cp -r ./vendor/gopkg.in ./go/src && ls -a ./go/src/site"]
 - name: "gcr.io/cloud-builders/gcloud" # deploy the preview of the website
   id: "deploy-site-static"
   waitFor:
-    - site-gopath
-  dir: "go/src/site"
+    - site-static
+  dir: "site"
   args: ["app", "deploy", ".app.yaml", "--no-promote", "--version=$SHORT_SHA"]
   env:
     - GOPATH=/workspace/go
+    - GO111MODULE=on
 
 #
 # Run the e2e tests
