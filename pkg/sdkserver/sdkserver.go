@@ -560,17 +560,13 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alp
 	}
 	s.logger.WithField("PlayerId", id).Debug("Player Connected")
 
-	s.gsUpdateMutex.RLock()
-	// check if the player id is in the player map
-	_, ok := s.connectedPlayers[id.PlayerId]
-	s.gsUpdateMutex.RUnlock()
-
+	s.gsUpdateMutex.Lock()
 	// this player has already connected, so exit
-	if ok {
+	if _, ok := s.connectedPlayers[id.PlayerId]; ok {
+		s.gsUpdateMutex.Unlock()
 		return &alpha.Empty{}, nil
 	}
 
-	s.gsUpdateMutex.Lock()
 	s.gsPlayerCount++
 	s.connectedPlayers[id.PlayerId] = true
 	s.gsUpdateMutex.Unlock()
@@ -588,17 +584,13 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*
 	}
 	s.logger.WithField("PlayerId", id).Debug("Player Disconnected")
 
-	s.gsUpdateMutex.RLock()
-	// check if the player id is in the player map
-	_, ok := s.connectedPlayers[id.PlayerId]
-	s.gsUpdateMutex.RUnlock()
-
+	s.gsUpdateMutex.Lock()
 	// this player has already disconnected, so exit
-	if !ok {
+	if _, ok := s.connectedPlayers[id.PlayerId]; !ok {
+		s.gsUpdateMutex.Unlock()
 		return &alpha.Empty{}, nil
 	}
 
-	s.gsUpdateMutex.Lock()
 	s.gsPlayerCount--
 	delete(s.connectedPlayers, id.PlayerId)
 	s.gsUpdateMutex.Unlock()
