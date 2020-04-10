@@ -249,7 +249,7 @@ test-e2e-integration: $(ensure-build-image)
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
-		--featuregates=$(FEATURE_GATES)
+		--feature-gates=$(FEATURE_GATES)
 	echo "Finishing e2e integration test!"
 
 test-e2e-failure: $(ensure-build-image)

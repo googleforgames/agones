@@ -15,12 +15,12 @@
 package controller
 
 import (
-	"log"
 	"os"
 	"testing"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const defaultNs = "default"
@@ -40,20 +40,20 @@ func TestMain(m *testing.M) {
 	)
 
 	if framework, err = e2eframework.NewFromFlags(); err != nil {
-		log.Printf("failed to setup framework: %v\n", err)
+		log.Errorf("failed to setup framework: %v", err)
 		os.Exit(1)
 	}
 
 	// run cleanup before tests, to ensure no resources from previous runs exist.
 	err = framework.CleanUp(defaultNs)
 	if err != nil {
-		log.Printf("failed to cleanup resources: %v\n", err)
+		log.Errorf("failed to cleanup resources: %v\n", err)
 	}
 
 	defer func() {
 		err = framework.CleanUp(defaultNs)
 		if err != nil {
-			log.Printf("failed to cleanup resources: %v\n", err)
+			log.Errorf("failed to cleanup resources: %v", err)
 		}
 		os.Exit(exitCode)
 	}()
