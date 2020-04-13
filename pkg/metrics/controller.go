@@ -27,6 +27,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
@@ -62,6 +63,7 @@ type Controller struct {
 	fasSynced        cache.InformerSynced
 	nodeSynced       cache.InformerSynced
 	lock             sync.Mutex
+	stateLock        sync.Mutex
 	gsCount          GameServerCount
 	faCount          map[string]int64
 }
@@ -82,7 +84,11 @@ func NewController(
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
-	//events := kubeClient.CoreV1().Events(defaultNs)
+	lruCache, err := lru.New(1 << 24)
+	if err != nil {
+		logger.Error("Could not create LRU cache ", err)
+	}
+	GameServerStateLastChange = lruCache
 
 	c := &Controller{
 		gameServerLister: gameServer.Lister(),
@@ -270,8 +276,42 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 			c.logger.Info("Time taken to become ready", diff)
 			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 				tag.Upsert(keyFleetName, fleetName)}, gsReadyDuration.M(diff*1000.))
+			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
+
+		// Calculate the duration from the start of the GameServer
+		c.stateLock.Lock()
+		defer c.stateLock.Unlock()
+		err := calcDuration(newGs, oldGs)
+		if err != nil {
+			c.logger.Info(err.Error())
 		}
 	}
+}
+
+func calcDuration(newGs, oldGs *agonesv1.GameServer) error {
+	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
+	diff := time.Now().Sub(newGs.ObjectMeta.CreationTimestamp.Local()).Seconds()
+	key := newGs.ObjectMeta.Name + "/" + string(newGs.Status.State)
+	oldKey := oldGs.ObjectMeta.Name + "/" + string(oldGs.Status.State)
+	if !GameServerStateLastChange.Contains(key) {
+		GameServerStateLastChange.Add(key, diff)
+		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
+			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(diff*1000.))
+	} else {
+		val, ok := GameServerStateLastChange.Get(key)
+		if !ok {
+			return errors.New("Could not find expected key")
+		}
+		duration := diff - val.(float64)
+		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
+			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(duration*1000.))
+		GameServerStateLastChange.Add(key, diff)
+		GameServerStateLastChange.Remove(oldKey)
+	}
+	if newGs.Status.State == agonesv1.GameServerStateShutdown {
+		GameServerStateLastChange.Remove(oldKey)
+	}
+	return nil
 }
 
 // Run the Metrics controller. Will block until stop is closed.

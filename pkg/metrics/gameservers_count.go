@@ -18,6 +18,7 @@ import (
 	"context"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	lru "github.com/hashicorp/golang-lru"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"k8s.io/apimachinery/pkg/util/errors"
@@ -31,10 +32,10 @@ type fleetKey struct {
 	namespace string
 }
 
-// GameServerState Calculate the duration of the GameServer in each state
-// GameServerName ->  seconds of a previous State change, calculated from the CreationTimeStamp
+// GameServerStateLastChange Contains the time when the GameServer
+// changed its state last time
 // on delete remove GameServerName key
-type GameServerState map[string]map[agonesv1.GameServerState]float64
+var GameServerStateLastChange *lru.Cache
 
 // increment adds the count of gameservers for a given fleetName and state
 func (c GameServerCount) increment(fleetName, fleetNamespace string, state agonesv1.GameServerState) {
@@ -64,12 +65,9 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	// Otherwise OpenCensus will write the last value recorded to the prom endpoint.
 	// TL;DR we can't remove a gauge
 	c.reset()
-
-	if len(gameservers) != 0 {
-		// counts gameserver per state and fleet
-		for _, g := range gameservers {
-			c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
-		}
+	// counts gameserver per state and fleet
+	for _, g := range gameservers {
+		c.increment(g.Labels[agonesv1.FleetNameLabel], g.Status.State)
 	}
 
 	errs := []error{}

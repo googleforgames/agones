@@ -24,7 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type metricExporter struct {
@@ -282,4 +285,23 @@ func TestControllerGameServersNodeState(t *testing.T) {
 		{labels: []string{"true"}, val: int64(1)},
 		{labels: []string{"false"}, val: int64(2)},
 	})
+}
+
+func TestCalcDuration(t *testing.T) {
+	lruCache, err := lru.New(16)
+	GameServerStateLastChange = lruCache
+	assert.NoError(t, err, "Not able to create a cache")
+	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
+	gs1.ObjectMeta.CreationTimestamp = metav1.Now()
+	gs2 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateReady)
+	gs2.ObjectMeta.CreationTimestamp = metav1.Now()
+	diff := gs2.ObjectMeta.CreationTimestamp.Local().Sub(gs1.ObjectMeta.CreationTimestamp.Local()).Seconds()
+	t.Log("Time of a diff ", diff)
+	calcDuration(gs1, gs2)
+	keys := GameServerStateLastChange.Keys()
+	assert.Len(t, keys, 1)
+	val, ok := GameServerStateLastChange.Get(keys[0])
+	if assert.True(t, ok, "Error in Get") {
+		assert.True(t, val.(float64) > diff, "Time diff should be calculated properly")
+	}
 }

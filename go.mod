@@ -18,7 +18,7 @@ require (
 	github.com/google/uuid v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
-	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
 	github.com/json-iterator/go v1.1.5 // indirect
