@@ -141,7 +141,7 @@ For resiliency it is recommended to run Prometheus on a dedicated node which is 
 are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="master" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
 tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones.dev/agones-metrics=true` if available.
 
-As an example, to set up dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
+As an example, to set up a dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
 
 ```
 gcloud container node-pools create agones-metrics --cluster=... --zone=... \
@@ -184,7 +184,7 @@ Grafana is a open source time series analytics platform which supports Prometheu
 First we will install [Agones dashboard](#grafana-dashboards) as [config maps](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) in our cluster.
 
 ```bash
-kubectl apply -f ../build/grafana/
+kubectl apply -f ./build/grafana/
 ```
 
 Now we can install [grafana chart](https://github.com/helm/charts/tree/master/stable/grafana) from stable repository. (Replace `<your-admin-password>` with the admin password of your choice)

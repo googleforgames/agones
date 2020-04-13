@@ -89,7 +89,7 @@ You can see the status (able to scale, not limited), the last time the fleet was
 and the current and desired fleet size. 
 
 The autoscaler works by changing the desired size, and the fleet creates/deletes game server instances
-to achieve to that number. The convergence is achieved in time, which is usually measured in seconds.
+to achieve that number. The convergence is achieved in time, which is usually measured in seconds.
 
 ### 3. Allocate a Game Server from the Fleet 
 
@@ -260,10 +260,10 @@ If you want to update a `Fleet` which has `RollingUpdate` replacement strategy a
 1. With `kubectl apply`: you should omit `replicas` parameter in a `Fleet` Spec before re-applying the `Fleet` configuration.
 1. With `kubectl edit`: you should not change the `replicas` parameter in the `Fleet` Spec when updating other field parameters.
 
-If you follow the rules above, then `maxSurge` and `maxUnavaiable` parameters will be used as the RollingUpdate strategy updates your Fleet.
-Otherwise the Fleet would be scaled according to Fleet `replicas` parameter first and only after certain amount of time it would be rescaled to fit `FleetAutoscaler` `BufferSize` parameter.
+If you follow the rules above, then the `maxSurge` and `maxUnavailable` parameters will be used as the RollingUpdate strategy updates your Fleet.
+Otherwise the Fleet would be scaled according to Fleet `replicas` parameter first and only after a certain amount of time it would be rescaled to fit `FleetAutoscaler` `BufferSize` parameter.
 
-You could also check the behaviour of the Fleet with Fleetautoscaler on a test `Fleet` to preview what would occur on your production environment.
+You could also check the behaviour of the Fleet with Fleetautoscaler on a test `Fleet` to preview what would occur in your production environment.
 {{< /alert >}}
 
 ## Next Steps

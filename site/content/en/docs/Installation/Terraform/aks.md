@@ -15,7 +15,7 @@ The example of AKS submodule configuration could be found here:
 
 Copy `module.tf` file into a separate folder.
 
-Login to Azure CLI:
+Log in to Azure CLI:
 ```
 az login
 ```
