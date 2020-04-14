@@ -53,7 +53,7 @@ The full list of available tags is [here](https://console.cloud.google.com/gcr/i
 
 ## Namespaces
 
-By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use other namespace you can configure Agones via the parameter `gameservers.namespaces`.
+By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use another namespace you can configure Agones via the parameter `gameservers.namespaces`.
 
 For example to use `default` **and** `xbox` namespaces:
 
@@ -75,7 +75,7 @@ $ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agon
 
 ## RBAC
 
-By default, `agones.rbacEnabled` is set to true. This enable RBAC support in Agones and must be true if RBAC is enabled in your cluster.
+By default, `agones.rbacEnabled` is set to true. This enables RBAC support in Agones and must be true if RBAC is enabled in your cluster.
 
 The chart will take care of creating the required service accounts and roles for Agones.
 

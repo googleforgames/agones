@@ -27,16 +27,16 @@ Also complete the "Enabling creation of RBAC resources" and "Installing Agones" 
 ### Modify the simple-udp example source code
 Modify the main.go file. For example:
 
-Change main.go line 92:
+Change the following line in `main.go`:
 
 From:
 ```go
-ack := "ACK: " + txt + "\n"
+		respond(conn, sender, "ACK: "+txt+"\n")
 ```
 
 To:
 ```go
-ack := "ACK: Echo says " + txt + "\n"
+		respond(conn, sender, "ACK: Echo says "+txt+"\n")
 ```
 
 ### Build Server
@@ -81,7 +81,7 @@ Modify the following line from gameserver.yaml to use the new configuration.
 ```
 
 ### If using GKE, deploy Server to GKE
-Apply the latest settings to kubernetes container.
+Apply the latest settings to the Kubernetes container.
 
 ```bash
 >> gcloud config set container/cluster [CLUSTER_NAME]

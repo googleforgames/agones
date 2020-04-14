@@ -18,7 +18,7 @@ The following are strategies for safely upgrading Agones from one version to ano
 your particular game architecture but should provide a solid foundation for updating Agones safely.
 
 The recommended approach is to use [multiple clusters](#upgrading-agones-multiple-clusters), such that the upgrade can be tested
-gradually with production load and easily rolled back if need arises.
+gradually with production load and easily rolled back if the need arises.
 
 ### Upgrading Agones: Multiple Clusters
 
@@ -81,7 +81,7 @@ The following are strategies for safely upgrading the underlying Kubernetes clus
 They may require adjustment to your particular game architecture but should provide a solid foundation for updating your cluster safely.
 
 The recommended approach is to use [multiple clusters](#multiple-clusters), such that the upgrade can be tested
-gradually with production load and easily rolled back if need arises.
+gradually with production load and easily rolled back if the need arises.
 
 Agones currently has only a [single supported Kubernetes version]({{< relref "_index.md#usage-requirements" >}}) for each version,
 so it is recommended to do supported minor (e.g. 1.12.1 ➡ 1.13.2) Kubernetes version upgrades at the same time as a matching Agones upgrades.

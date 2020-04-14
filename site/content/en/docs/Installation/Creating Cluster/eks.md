@@ -35,7 +35,7 @@ EKS does not use the normal Kubernetes networking since it is [incompatible with
 
 For Agones to work correctly, we need to allow UDP traffic to pass through to our EKS cluster worker nodes. To achieve this, we must update the workers' nodepool SG (Security Group) with the proper rule. A simple way to do that is:
 
-* Login to the AWS Management Console
+* Log in to the AWS Management Console
 * Go to the VPC Dashboard and select **Security Groups**
 * Find the Security Group for the workers nodepool, which will be named something like `eksctl-[cluster-name]-nodegroup-[cluster-name]-workers/SG`
 * Select **Inbound Rules**
