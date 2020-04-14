@@ -19,13 +19,11 @@ import (
 	"strings"
 	"testing"
 
+	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	agtesting "agones.dev/agones/pkg/testing"
+	"github.com/stretchr/testify/assert"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricexport"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
-	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	lru "github.com/hashicorp/golang-lru"
-	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -288,19 +286,23 @@ func TestControllerGameServersNodeState(t *testing.T) {
 }
 
 func TestCalcDuration(t *testing.T) {
-	lruCache, err := lru.New(16)
-	GameServerStateLastChange = lruCache
-	assert.NoError(t, err, "Not able to create a cache")
+	m := agtesting.NewMocks()
+	c := NewController(
+		m.KubeClient,
+		m.AgonesClient,
+		m.KubeInformerFactory,
+		m.AgonesInformerFactory)
 	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
 	gs1.ObjectMeta.CreationTimestamp = metav1.Now()
 	gs2 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateReady)
 	gs2.ObjectMeta.CreationTimestamp = metav1.Now()
 	diff := gs2.ObjectMeta.CreationTimestamp.Local().Sub(gs1.ObjectMeta.CreationTimestamp.Local()).Seconds()
 	t.Log("Time of a diff ", diff)
-	calcDuration(gs1, gs2)
-	keys := GameServerStateLastChange.Keys()
+	err := c.calcDuration(gs1, gs2)
+	assert.NoError(t, err, "Unable to caculate duration of a particular state")
+	keys := c.gameServerStateLastChange.Keys()
 	assert.Len(t, keys, 1)
-	val, ok := GameServerStateLastChange.Get(keys[0])
+	val, ok := c.gameServerStateLastChange.Get(keys[0])
 	if assert.True(t, ok, "Error in Get") {
 		assert.True(t, val.(float64) > diff, "Time diff should be calculated properly")
 	}

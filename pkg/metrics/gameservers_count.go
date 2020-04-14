@@ -18,11 +18,12 @@ import (
 	"context"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	lru "github.com/hashicorp/golang-lru"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"k8s.io/apimachinery/pkg/util/errors"
 )
+
+const defaultFleetTag = "none"
 
 // GameServerCount  is the count of gameserver per current state and per fleet name
 type GameServerCount map[agonesv1.GameServerState]map[fleetKey]int64
@@ -31,11 +32,6 @@ type fleetKey struct {
 	name      string
 	namespace string
 }
-
-// GameServerStateLastChange Contains the time when the GameServer
-// changed its state last time
-// on delete remove GameServerName key
-var GameServerStateLastChange *lru.Cache
 
 // increment adds the count of gameservers for a given fleetName and state
 func (c GameServerCount) increment(fleetName, fleetNamespace string, state agonesv1.GameServerState) {

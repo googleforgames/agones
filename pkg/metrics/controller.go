@@ -55,17 +55,18 @@ func init() {
 
 // Controller is a metrics controller collecting Agones state metrics
 type Controller struct {
-	logger           *logrus.Entry
-	gameServerLister listerv1.GameServerLister
-	nodeLister       v1.NodeLister
-	gameServerSynced cache.InformerSynced
-	fleetSynced      cache.InformerSynced
-	fasSynced        cache.InformerSynced
-	nodeSynced       cache.InformerSynced
-	lock             sync.Mutex
-	stateLock        sync.Mutex
-	gsCount          GameServerCount
-	faCount          map[string]int64
+	logger                    *logrus.Entry
+	gameServerLister          listerv1.GameServerLister
+	nodeLister                v1.NodeLister
+	gameServerSynced          cache.InformerSynced
+	fleetSynced               cache.InformerSynced
+	fasSynced                 cache.InformerSynced
+	nodeSynced                cache.InformerSynced
+	lock                      sync.Mutex
+	stateLock                 sync.Mutex
+	gsCount                   GameServerCount
+	faCount                   map[string]int64
+	gameServerStateLastChange *lru.Cache
 }
 
 // NewController returns a new metrics controller
@@ -84,21 +85,25 @@ func NewController(
 	fasInformer := fas.Informer()
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
-	lruCache, err := lru.New(1 << 24)
+
+	// GameServerStateLastChange Contains the time when the GameServer
+	// changed its state last time
+	// on delete remove GameServerName key
+	lruCache, err := lru.New(1 << 12)
 	if err != nil {
 		logger.Error("Could not create LRU cache ", err)
 	}
-	GameServerStateLastChange = lruCache
 
 	c := &Controller{
-		gameServerLister: gameServer.Lister(),
-		nodeLister:       node.Lister(),
-		gameServerSynced: gsInformer.HasSynced,
-		fleetSynced:      fInformer.HasSynced,
-		fasSynced:        fasInformer.HasSynced,
-		nodeSynced:       nodeInformer.HasSynced,
-		gsCount:          GameServerCount{},
-		faCount:          map[string]int64{},
+		gameServerLister:          gameServer.Lister(),
+		nodeLister:                node.Lister(),
+		gameServerSynced:          gsInformer.HasSynced,
+		fleetSynced:               fInformer.HasSynced,
+		fasSynced:                 fasInformer.HasSynced,
+		nodeSynced:                nodeInformer.HasSynced,
+		gsCount:                   GameServerCount{},
+		faCount:                   map[string]int64{},
+		gameServerStateLastChange: lruCache,
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -279,37 +284,45 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
 
 		// Calculate the duration from the start of the GameServer
-		c.stateLock.Lock()
-		defer c.stateLock.Unlock()
-		err := calcDuration(newGs, oldGs)
+		err := c.calcDuration(newGs, oldGs)
 		if err != nil {
 			c.logger.Info(err.Error())
 		}
 	}
 }
 
-func calcDuration(newGs, oldGs *agonesv1.GameServer) error {
+func (c *Controller) calcDuration(newGs, oldGs *agonesv1.GameServer) error {
+	c.stateLock.Lock()
+	defer c.stateLock.Unlock()
 	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
-	diff := time.Now().Sub(newGs.ObjectMeta.CreationTimestamp.Local()).Seconds()
+	if fleetName == "" {
+		fleetName = defaultFleetTag
+	}
+	diff := time.Now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
+	//TODO: add namespace here, remove status to the value
 	key := newGs.ObjectMeta.Name + "/" + string(newGs.Status.State)
 	oldKey := oldGs.ObjectMeta.Name + "/" + string(oldGs.Status.State)
-	if !GameServerStateLastChange.Contains(key) {
-		GameServerStateLastChange.Add(key, diff)
+	//TODO: here we should check if we loose part of messages and old state was load_or_store
+	//Switch from structure in key to a structure
+	if !c.gameServerStateLastChange.Contains(key) {
+		c.gameServerStateLastChange.Add(key, diff)
+		c.logger.Infof("Adding new key %s, %f", key, diff)
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(diff*1000.))
+			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(diff))
 	} else {
-		val, ok := GameServerStateLastChange.Get(key)
+		val, ok := c.gameServerStateLastChange.Get(key)
 		if !ok {
 			return errors.New("Could not find expected key")
 		}
 		duration := diff - val.(float64)
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(duration*1000.))
-		GameServerStateLastChange.Add(key, diff)
-		GameServerStateLastChange.Remove(oldKey)
+			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(duration))
+		c.logger.Infof("Recording new metric %s, %f", key, duration)
+		c.gameServerStateLastChange.Add(key, diff)
+		c.gameServerStateLastChange.Remove(oldKey)
 	}
 	if newGs.Status.State == agonesv1.GameServerStateShutdown {
-		GameServerStateLastChange.Remove(oldKey)
+		c.gameServerStateLastChange.Remove(oldKey)
 	}
 	return nil
 }
