@@ -121,6 +121,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
 | `agones.image.sdk.cpuRequest`                       | The [cpu request][cpu-constraints] for sdk server container                                     | `30m`                  |
 | `agones.image.sdk.cpuLimit`                         | The [cpu limit][cpu-constraints] for the sdk server container                                   | `0` (none)             |
+| `agones.image.sdk.memoryRequest`                    | The [memory request][memory-constraints] for sdk server container                               | `0` (none)             |
+| `agones.image.sdk.memoryLimit`                      | The [memory limit][memory-constraints] for the sdk server container                             | `0` (none)             |
 | `agones.image.sdk.alwaysPull`                       | Tells if the sdk image should always be pulled                                                  | `false`                |
 | `agones.image.ping.name`                            | Image name for the ping service                                                                 | `agones-ping`          |
 | `agones.image.ping.pullPolicy`                      | Image pull policy for the ping service                                                          | `IfNotPresent`         |
@@ -169,13 +171,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="1.5.0" %}}
+{{% feature publishVersion="1.6.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.image.sdk.memoryRequest`                    | The [memory request][memory-constraints] for sdk server container                               | `0` (none)             |
-| `agones.image.sdk.memoryLimit`                      | The [memory limit][memory-constraints] for the sdk server container                             | `0` (none)             |
 
 {{% /feature %}}
 
