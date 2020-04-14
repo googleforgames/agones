@@ -23,9 +23,14 @@ spec:
     - name: default
       portPolicy: Dynamic
       containerPort: 7654
+  health:
+    # waits for 30 seconds before checking health
+    initialDelaySeconds: 30
+    # health ping sends every 20 seconds, so let's give it 5 seconds buffer
+    periodSeconds: 25
   template:
     spec:
       containers:
       - name: nodejs-simple
-        image: gcr.io/agones-images/nodejs-simple-server:0.2
-        imagePullPolicy: Always
+        image: gcr.io/agones-images/nodejs-simple-server:0.4
+        # args: ["--timeout=0"] # Change the timeout here, if you like the nodejs server to run longer.
