@@ -5,10 +5,10 @@ This is the release issue template. Make a copy of the markdown in this page
 and copy it into a release issue. Fill in relevant values, found inside {}
 !-->
 
-- [ ] Review closed issues have appropriate tags.
 - [ ] Review closed issues have been applied to the current milestone.
-- [ ] Review closed PRs have appropriate tags.
+- [ ] Review closed issues have appropriate tags.
 - [ ] Review closed PRs have been applied to the current milestone.
+- [ ] Review closed PRs have appropriate tags.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
@@ -23,13 +23,13 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Create a *draft* release with the [release template][release-template]
   - [ ] Make a `tag` with the release version.
 - [ ] Site updated
+  - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
   - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
   - [ ] If full release, review and remove all instances of the `feature` shortcode
   - [ ] If full release, update to the new release branch {version}.
   - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}
   - [ ] If full release, update documentation with updated example images tags
   - [ ] If full release, add link to previous version's documentation to nav dropdown
-  - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
 - [ ] Create PR with these changes, and merge them with approval
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
