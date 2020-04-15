@@ -4,10 +4,10 @@ linkTitle: "Create a Webhook Fleetautoscaler"
 date: 2019-01-02T06:42:44Z
 weight: 40
 description: >
-  This guide covers how you can create webhook fleet autoscaler policy.
+  This guide covers how you can create a webhook fleet autoscaler policy.
 ---
 
-In some cases, your game servers may need to use custom logic for scaling your fleet that is more complex that what
+In some cases, your game servers may need to use custom logic for scaling your fleet that is more complex than what
 can be expressed using the Buffer policy in the fleetautoscaler. This guide shows how you can extend Agones
 with an autoscaler webhook to implement a custom autoscaling policy.
 
@@ -20,8 +20,7 @@ period (currently 30s) with a JSON body, and scale the target fleet based on the
 
 ### Prerequisites
 
-It is assumed that you have read the instructions to [Create a Game Server Fleet]({{< relref "./create-fleet.md" >}})
-and you have a running fleet of game servers or you could run command from Step #1.
+It is assumed that you have completed the instructions to [Create a Game Server Fleet]({{< relref "./create-fleet.md" >}}) and have a running fleet of game servers.
 
 ### Objectives
 
@@ -40,7 +39,7 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 
 #### 2. Deploy a Webhook service for autoscaling
 
-In this step we would deploy an example webhook which will control the size of the fleet based on allocated gameservers
+In this step we would deploy an example webhook that will control the size of the fleet based on allocated gameservers
 portion in a fleet. You can see the source code for this example webhook server {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
 The fleetautoscaler would trigger this endpoint every 30 seconds. More details could be found {{< ghlink href="examples/autoscaler-webhook/" >}}also here{{< /ghlink >}}.
 We need to create a pod which will handle HTTP requests with json payload
@@ -138,7 +137,7 @@ Events:              <none>
 
 You can see the status (able to scale, not limited), the last time the fleet was scaled (nil for never), current and desired fleet size.
 
-The autoscaler make a query to a webhoook service deployed on step 1 and on response changing the target Replica size, and the fleet creates/deletes game server instances
+The autoscaler makes a query to a webhoook service deployed on step 1 and on response changing the target Replica size, and the fleet creates/deletes game server instances
 to achieve that number. The convergence is achieved in time, which is usually measured in seconds.
 
 #### 5. Allocate Game Servers from the Fleet to trigger scale up
@@ -222,11 +221,11 @@ simple-udp-dmkp4-r4qtt   Allocated   35.247.13.175   7220     minikube     5m
 simple-udp-dmkp4-rsr6n   Ready       35.247.13.175   7297     minikube     5m
 ```
 
-#### 7. Check down scaling using Webhook Autoscaler policy
+#### 7. Check downscaling using Webhook Autoscaler policy
 
-Based on our custom webhook deployed earlier, if the fraction of allocated replicas in whole Replicas count would be less that threshold (0.3) than fleet would scale down by scaleFactor, in our example by 2.
+Based on our custom webhook deployed earlier, if the fraction of allocated replicas in whole Replicas count would be less than threshold (0.3) then the fleet would scale down by scaleFactor, in our example by 2.
 
-Note that example webhook server have a limitation that it would not decrease fleet replica count under `minReplicasCount`, which is equal to 2.
+Note that the example webhook server has a limitation that it would not decrease fleet replica count under `minReplicasCount`, which is equal to 2.
 
 We need to run EXIT command on one gameserver (Use IP address and port of the allocated gameserver from the previous step) in order to decrease the number of allocated gameservers in a fleet (<0.3).
 ```
@@ -276,7 +275,7 @@ kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< re
 ### Objectives
 
 Using TLS and a certificate authority (CA) bundle we can establish trusted communication between Fleetautoscaler and
-an HTTPS server running the autoscaling webhook that controls size of the fleet (Replicas count). The certificate of the
+an HTTPS server running the autoscaling webhook that controls the size of the fleet (Replicas count). The certificate of the
 autoscaling webhook must be signed by the CA provided in fleetautoscaler yaml configuration file. Using TLS eliminates
 the possibility of a man-in-the-middle attack between the fleetautoscaler and the autoscaling webhook.
 
@@ -289,7 +288,7 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 
 #### 2. Create X509 Root and Webhook certificates
 
-The procedure of generating Self-signed CA certificate taken from [here](https://datacenteroverlords.com/2012/03/01/creating-your-own-ssl-certificate-authority/)
+The procedure of generating a Self-signed CA certificate taken from [here](https://datacenteroverlords.com/2012/03/01/creating-your-own-ssl-certificate-authority/)
 
 The first step is to create the private root key:
 ```
@@ -301,7 +300,7 @@ The next step is to self-sign this certificate:
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.pem
 ```
 
-This will start an interactive script which will ask you for various bits of information. Fill it out as you see fit.
+This will start an interactive script that will ask you for various bits of information. Fill it out as you see fit.
 
 Every webhook that you wish to install a trusted certificate will need to go through this process. First, just like with the root CA step, you’ll need to create a private key (different from the root CA):
 ```
@@ -462,7 +461,7 @@ Error calculating desired fleet size on FleetAutoscaler simple-fleet-r7fdv-autos
 ```
 
 If you are using a hostname other than `autoscaler-tls-service.default.svc` as the
-`Common Name (eg, fully qualified host name)` when creating certificate using `openssl` tool you will see a
+`Common Name (eg, fully qualified host name)` when creating a certificate using `openssl` tool you will see a
 message like
 ```
 Post https://autoscaler-tls-service.default.svc:8000/scale: x509: certificate is not valid for any names, but wanted to match autoscaler-tls-service.default.svc

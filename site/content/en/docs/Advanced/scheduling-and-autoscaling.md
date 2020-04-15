@@ -40,7 +40,7 @@ and the [Fleet Autoscaler Specification]({{< relref "../Reference/fleetautoscale
 
 ## Autoscaling Concepts
 
-To facilitate autoscaling, we need to combine several piece of concepts and functionality, described below.
+To facilitate autoscaling, we need to combine several concepts and functionality, as described below.
 
 ### Allocation Scheduling
 

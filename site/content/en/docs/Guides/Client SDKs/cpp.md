@@ -170,7 +170,7 @@ Following options are available:
 
 (Windows only):
 
-- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisities. Option is not used if you already have built gRPC.
+- **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
 - **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL.md)). Used only if OpenSSL and gRPC is built by Agones.
 
 ## Linux / MacOS
@@ -206,4 +206,4 @@ If **AGONES_ZLIB_STATIC** is set to OFF, ensure that you have installed zlib. Fo
 
 ### Using SDK
 In CMake-based projects it's enough to specify a folder where SDK is installed with `CMAKE_PREFIX_PATH` and use `find_package(agones CONFIG REQUIRED)` command. For example: {{< ghlink href="examples/cpp-simple" >}}cpp-simple{{< / >}}.
-It maybe useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
+It may be useful to disable some [protobuf warnings](https://github.com/protocolbuffers/protobuf/blob/master/cmake/README.md#notes-on-compiler-warnings) in your project.
