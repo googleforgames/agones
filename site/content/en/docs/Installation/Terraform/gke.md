@@ -89,7 +89,7 @@ Configurable parameters:
 - node_count - count of game server nodes for the default node pool (default is "4")
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
   created in (default is "us-west1-c")
-- network - the name of the VPC network you want your cluster and firewall rules be connected to (default is "default")
+- network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 - feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
 
@@ -110,10 +110,10 @@ In the directory where you created `module.tf`, run:
 terraform init
 ```
 
-This will cause terraform to clone the Agones repository and use the `./install/terraform` folder as starting point of
+This will cause terraform to clone the Agones repository and use the `./install/terraform` folder as a starting point of
 Agones submodule, which contains all necessary Terraform configuration files.
 
-Next make sure that you can authenticate using gcloud:
+Next, make sure that you can authenticate using gcloud:
 ```
 gcloud auth application-default login
 ```

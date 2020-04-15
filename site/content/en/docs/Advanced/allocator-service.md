@@ -112,4 +112,4 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --cacert ${TLS_CERT_FILE}
 ```
 
-If your matchmaker is external to the cluster on which your game servers are hosted, agones-allocator provides the gRPC API to allocate game services using mTLS authentication, which can scale independent to agones controller.
+If your matchmaker is external to the cluster on which your game servers are hosted, the `agones-allocator` provides the gRPC API to allocate game services using mTLS authentication, which can scale independently to the Agones controller.

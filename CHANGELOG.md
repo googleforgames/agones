@@ -1,5 +1,31 @@
 # Changelog
 
+## [v1.5.0](https://github.com/googleforgames/agones/tree/v1.5.0) (2020-04-14)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.5.0-rc...v1.5.0)
+
+**Implemented enhancements:**
+
+- FAQ for Agones [\#1460](https://github.com/googleforgames/agones/pull/1460) ([markmandel](https://github.com/markmandel))
+
+**Fixed bugs:**
+
+- Flaky: TestGameServerWithPortsMappedToMultipleContainers [\#1450](https://github.com/googleforgames/agones/issues/1450)
+- e2e image needs 1.14.10 kubectl [\#1470](https://github.com/googleforgames/agones/pull/1470) ([markmandel](https://github.com/markmandel))
+- Working Node.js example gameserver.yaml [\#1469](https://github.com/googleforgames/agones/pull/1469) ([markmandel](https://github.com/markmandel))
+- Fixed flaky TestGameServerWithPortsMappedToMultipleContainers [\#1458](https://github.com/googleforgames/agones/pull/1458) ([akremsa](https://github.com/akremsa))
+
+**Closed issues:**
+
+- Release 1.5.0-rc [\#1454](https://github.com/googleforgames/agones/issues/1454)
+- Move /site to go.mod and Go 1.12/1.13 [\#1295](https://github.com/googleforgames/agones/issues/1295)
+
+**Merged pull requests:**
+
+- Website: A number of corrections in the docs [\#1466](https://github.com/googleforgames/agones/pull/1466) ([aLekSer](https://github.com/aLekSer))
+- Website: Fix path in swagger command [\#1462](https://github.com/googleforgames/agones/pull/1462) ([aLekSer](https://github.com/aLekSer))
+- Use go modules for a website and update go version [\#1457](https://github.com/googleforgames/agones/pull/1457) ([aLekSer](https://github.com/aLekSer))
+
 ## [v1.5.0-rc](https://github.com/googleforgames/agones/tree/v1.5.0-rc) (2020-04-07)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.4.0...v1.5.0-rc)
@@ -57,6 +83,7 @@
 
 **Merged pull requests:**
 
+- Release 1.5.0-rc [\#1455](https://github.com/googleforgames/agones/pull/1455) ([markmandel](https://github.com/markmandel))
 - Fix wrong function usage [\#1442](https://github.com/googleforgames/agones/pull/1442) ([aLekSer](https://github.com/aLekSer))
 - Index out of range error in e2e TestFleetGSSpecValidation [\#1439](https://github.com/googleforgames/agones/pull/1439) ([akremsa](https://github.com/akremsa))
 - Added log\_level parameter to Terraform deployment [\#1438](https://github.com/googleforgames/agones/pull/1438) ([akremsa](https://github.com/akremsa))

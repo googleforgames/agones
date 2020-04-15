@@ -29,7 +29,7 @@ This means you can use OpenAPI/Swagger tooling to generate clients as well, if y
 
 For example, to create a cpp client for the stable sdk endpoints (to be run in the `agones` home directory):
 ```bash
-docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdk.swagger.json  -l cpprest -o /local/out/cpp
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -i /local/sdks/swagger/sdk.swagger.json  -l cpprest -o /local/out/cpp
 ```
 
 The same could be run for `alpha.swagger.json` and `beta.swagger.json` as required.

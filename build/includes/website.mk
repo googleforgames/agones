@@ -49,9 +49,9 @@ site-gen-app-yaml:
 
 site-deploy: site-gen-app-yaml site-static
 	docker run -t --rm $(common_mounts) --workdir=$(mount_path) $(DOCKER_RUN_ARGS) \
-	 -e GOPATH=/tmp/go -e GO111MODULE=off -e SHORT_SHA=$(shell git rev-parse --short=7 HEAD) $(build_tag) bash -c \
-	'printenv && mkdir -p $$GOPATH/src && cp -r ./site $$GOPATH/src && cp -r ./vendor/gopkg.in $$GOPATH/src && \
-	cd $$GOPATH/src/site && gcloud app deploy .app.yaml --no-promote --quiet --version=$$SHORT_SHA'
+	-e GO111MODULE=on -e SHORT_SHA=$(shell git rev-parse --short=7 HEAD) $(build_tag) bash -c \
+	'printenv && cd  ./site && \
+    gcloud app deploy .app.yaml --no-promote --quiet --version=$$SHORT_SHA'
 
 site-static-preview:
 	$(MAKE) site-static ARGS="-F" ENV="RELEASE_VERSION=$(base_version) RELEASE_BRANCH=master"
