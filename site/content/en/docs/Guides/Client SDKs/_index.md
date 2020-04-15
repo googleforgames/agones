@@ -99,14 +99,14 @@ record that is stored in Kubernetes. To maintain isolation, the `key` value is a
 There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 {{< /alert >}}
 
-This can be useful if you want to information from your running game server process to be observable or searchable through the Kubernetes API.  
+This can be useful if you want information from your running game server process to be observable or searchable through the Kubernetes API.  
 
 ### SetAnnotation(key, value)
 
 This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
 `Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
 
-This can be useful if you want to information from your running game server process to be observable through the Kubernetes API.
+This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
 
 ### GameServer()
 

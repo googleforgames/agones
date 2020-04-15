@@ -17,6 +17,7 @@ package sdkserver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -66,19 +67,21 @@ func TestLocal(t *testing.T) {
 }
 
 func TestLocalSDKWithTestMode(t *testing.T) {
+	l, err := NewLocalSDKServer("")
+	assert.NoError(t, err, "Should be able to create local SDK server")
 	a := []string{"ready", "allocate", "setlabel", "setannotation", "gameserver", "health", "shutdown", "watch"}
 	b := []string{"ready", "health", "ready", "watch", "allocate", "gameserver", "setlabel", "setannotation", "health", "health", "shutdown"}
-	assert.True(t, EqualSets(a, a))
-	assert.True(t, EqualSets(a, b))
-	assert.True(t, EqualSets(b, a))
-	assert.True(t, EqualSets(b, b))
+	assert.True(t, l.EqualSets(a, a))
+	assert.True(t, l.EqualSets(a, b))
+	assert.True(t, l.EqualSets(b, a))
+	assert.True(t, l.EqualSets(b, b))
 	a[0] = "rady"
-	assert.False(t, EqualSets(a, b))
-	assert.False(t, EqualSets(b, a))
+	assert.False(t, l.EqualSets(a, b))
+	assert.False(t, l.EqualSets(b, a))
 	a[0] = "ready"
 	b[1] = "halth"
-	assert.False(t, EqualSets(a, b))
-	assert.False(t, EqualSets(b, a))
+	assert.False(t, l.EqualSets(a, b))
+	assert.False(t, l.EqualSets(b, a))
 }
 
 func TestLocalSDKWithGameServer(t *testing.T) {
@@ -379,4 +382,40 @@ func TestLocalSDKServerStateUpdates(t *testing.T) {
 	gs, err = l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 	assert.Equal(t, gs.Status.State, string(agonesv1.GameServerStateShutdown))
+}
+
+// TestSDKConformanceFunctionality - run a number of record requests in parallel
+func TestSDKConformanceFunctionality(t *testing.T) {
+	t.Parallel()
+
+	l, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
+	l.testMode = true
+	l.recordRequest("")
+	l.gs = &sdk.GameServer{ObjectMeta: &sdk.GameServer_ObjectMeta{Name: "empty"}}
+	exampleUID := "052fb0f4-3d50-11e5-b066-42010af0d7b6"
+	// field which is tested
+	setAnnotation := "setannotation"
+	l.gs.ObjectMeta.Uid = exampleUID
+
+	expected := []string{}
+	expected = append(expected, "", setAnnotation)
+
+	wg := sync.WaitGroup{}
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		str := fmt.Sprintf("%d", i)
+		expected = append(expected, str)
+
+		go func() {
+			l.recordRequest(str)
+			l.recordRequestWithValue(setAnnotation, exampleUID, "UID")
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	l.SetExpectedSequence(expected)
+	b := l.EqualSets(l.expectedSequence, l.requestSequence)
+	assert.True(t, b, "we should receive strings from all go routines %v %v", l.expectedSequence, l.requestSequence)
 }

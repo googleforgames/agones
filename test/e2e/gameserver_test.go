@@ -17,6 +17,7 @@ package e2e
 import (
 	"fmt"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -480,17 +481,19 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	t.Parallel()
 	firstContainerName := "udp-server"
 	secondContainerName := "second-udp-server"
+	firstPort := "gameport"
+	secondPort := "second-gameport"
 	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: defaultNs},
 		Spec: agonesv1.GameServerSpec{
 			Container: firstContainerName,
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
-				Name:          "gameport",
+				Name:          firstPort,
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}, {
 				ContainerPort: 5000,
-				Name:          "second-gameport",
+				Name:          secondPort,
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 				Container:     &secondContainerName,
@@ -522,17 +525,31 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
-	firstContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "gameport", "Ping 1")
-	if err != nil {
-		t.Fatalf("Could not message GameServer: %v", err)
-	}
-	assert.Contains(t, firstContainerReply, "Ping 1")
+	interval := 2 * time.Second
+	timeOut := 60 * time.Second
 
-	secondContainerReply, err := e2eframework.SendGameServerUDPToPort(readyGs, "second-gameport", "Ping 2")
-	if err != nil {
-		t.Fatalf("Could not message GameServer: %v", err)
+	expectedMsg1 := "Ping 1"
+	errPoll := wait.PollImmediate(interval, timeOut, func() (done bool, err error) {
+		res, err := e2eframework.SendGameServerUDPToPort(readyGs, firstPort, expectedMsg1)
+		if err != nil {
+			t.Logf("Could not message GameServer on %s: %v. Will try again...", firstPort, err)
+		}
+		return err == nil && strings.Contains(res, expectedMsg1), nil
+	})
+	if errPoll != nil {
+		assert.FailNow(t, errPoll.Error(), "expected no errors after polling a port: %s", firstPort)
 	}
-	assert.Contains(t, secondContainerReply, "Ping 2")
+
+	expectedMsg2 := "Ping 2"
+	errPoll = wait.PollImmediate(interval, timeOut, func() (done bool, err error) {
+		res, err := e2eframework.SendGameServerUDPToPort(readyGs, secondPort, expectedMsg2)
+		if err != nil {
+			t.Logf("Could not message GameServer on %s: %v. Will try again...", secondPort, err)
+		}
+		return err == nil && strings.Contains(res, expectedMsg2), nil
+	})
+
+	assert.NoError(t, errPoll, "expected no errors after polling a port: %s", secondPort)
 }
 
 func TestGameServerReserve(t *testing.T) {
@@ -681,4 +698,35 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	}
 
 	assert.Equal(t, "ACK: Hello World !\n", reply)
+}
+
+// TestGameServerResourceValidation - check that we are not able to use
+// invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
+func TestGameServerResourceValidation(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(defaultNs)
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("64Mi")
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
+
+	_, valid := gs.Validate()
+	assert.False(t, valid)
+
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
+
+	_, err := gsClient.Create(gs.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = resource.MustParse("-50m")
+	_, err = gsClient.Create(gs.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
 }

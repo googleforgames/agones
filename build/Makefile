@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.5.0
+base_version = 1.6.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -449,7 +449,7 @@ setup-grafana: PASSWORD ?= admin
 setup-grafana:
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait grafana stable/grafana --version=3.12.0  --namespace metrics \
+		helm upgrade --install --wait grafana stable/grafana --version=5.0.11  --namespace metrics \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
