@@ -1148,6 +1148,80 @@ func TestFleetRecreateGameServers(t *testing.T) {
 	}
 }
 
+// TestFleetResourceValidation - check that we are not able to use
+// invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
+func TestFleetResourceValidation(t *testing.T) {
+	t.Parallel()
+	client := framework.AgonesClient.AgonesV1()
+
+	// check two Containers in Gameserver Spec Template validation
+	flt := defaultFleet(defaultNs)
+	containerName := "container2"
+	resources := corev1.ResourceRequirements{
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("30m"),
+			corev1.ResourceMemory: resource.MustParse("32Mi"),
+		},
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    resource.MustParse("30m"),
+			corev1.ResourceMemory: resource.MustParse("32Mi"),
+		},
+	}
+	flt.Spec.Template.Spec.Template =
+		corev1.PodTemplateSpec{
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{Name: "container", Image: framework.GameServerImage, Resources: *(resources.DeepCopy())},
+					{Name: containerName, Image: framework.GameServerImage, Resources: *(resources.DeepCopy())},
+				},
+			},
+		}
+	flt.Spec.Template.Spec.Container = containerName
+	containers := flt.Spec.Template.Spec.Template.Spec.Containers
+	containers[1].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("64Mi")
+	containers[1].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
+
+	_, err := client.Fleets(defaultNs).Create(flt.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+
+	containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("-50m")
+	_, err = client.Fleets(defaultNs).Create(flt.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+
+	assert.Len(t, statusErr.Status().Details.Causes, 3)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+	causes := statusErr.Status().Details.Causes
+	assertCausesContainsString(t, causes, "Request must be less than or equal to cpu limit")
+	assertCausesContainsString(t, causes, "Resource cpu limit value must be non negative")
+	assertCausesContainsString(t, causes, "Request must be less than or equal to memory limit")
+
+	containers[1].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("128Mi")
+	containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("50m")
+	flt, err = client.Fleets(defaultNs).Create(flt.DeepCopy())
+	if assert.Nil(t, err) {
+		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
+	}
+}
+
+func assertCausesContainsString(t *testing.T, causes []metav1.StatusCause, expected string) {
+	found := false
+	for _, v := range causes {
+		if expected == v.Message {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Was not able to find '%s'", expected)
+}
+
 func listGameServers(flt *agonesv1.Fleet, getter typedagonesv1.GameServersGetter) (*agonesv1.GameServerList, error) {
 	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 	return getter.GameServers(defaultNs).List(metav1.ListOptions{LabelSelector: selector.String()})
