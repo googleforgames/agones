@@ -75,6 +75,7 @@ type LocalSDKServer struct {
 	gs                *sdk.GameServer
 	update            chan struct{}
 	updateObservers   sync.Map
+	testMutex         sync.Mutex
 	requestSequence   []string
 	expectedSequence  []string
 	gsState           agonesv1.GameServerState
@@ -90,6 +91,7 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		gs:              defaultGs,
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
+		testMutex:       sync.Mutex{},
 		requestSequence: make([]string, 0),
 		testMode:        false,
 		gsState:         agonesv1.GameServerStateScheduled,
@@ -164,6 +166,8 @@ func (l *LocalSDKServer) SetExpectedSequence(sequence []string) {
 // recordRequest append request name to slice
 func (l *LocalSDKServer) recordRequest(request string) {
 	if l.testMode {
+		l.testMutex.Lock()
+		defer l.testMutex.Unlock()
 		l.requestSequence = append(l.requestSequence, request)
 	}
 }
@@ -185,6 +189,8 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		}
 
 		if value == fieldVal {
+			l.testMutex.Lock()
+			defer l.testMutex.Unlock()
 			l.requestSequence = append(l.requestSequence, request)
 		} else {
 			fmt.Printf("Error: we expected to receive '%s' as value for '%s' request but received '%s'. \n", fieldVal, request, value)
