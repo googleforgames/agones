@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	// FeatureGateFlag is a name of a command line flag
+	// FeatureGateFlag is a name of a command line flag, which turns on specific tests for FeatureGates
 	FeatureGateFlag = "feature-gates"
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes

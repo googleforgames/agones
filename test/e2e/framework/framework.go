@@ -21,8 +21,10 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -117,13 +119,27 @@ const (
 	versionFlag         = "version"
 )
 
+// ParseTestFlags Parses go test flags separately because pflag package ignores flags with '-test.' prefix
+// Related issues:
+// https://github.com/spf13/pflag/issues/63
+// https://github.com/spf13/pflag/issues/238
+func ParseTestFlags() error {
+	var testFlags []string
+	for _, f := range os.Args[1:] {
+		if strings.HasPrefix(f, "-test.") {
+			testFlags = append(testFlags, f)
+		}
+	}
+	return flag.CommandLine.Parse(testFlags)
+}
+
 // NewFromFlags sets up the testing framework with the standard command line flags.
 func NewFromFlags() (*Framework, error) {
 	usr, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
+
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, "/.kube/config"))
 	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/udp-server:0.19")
 	viper.SetDefault(pullSecretFlag, "")

@@ -39,21 +39,26 @@ func TestMain(m *testing.M) {
 		exitCode int
 	)
 
+	if err = e2eframework.ParseTestFlags(); err != nil {
+		log.WithError(err).Error("failed to parse go test flags")
+		os.Exit(1)
+	}
+
 	if framework, err = e2eframework.NewFromFlags(); err != nil {
-		log.Errorf("failed to setup framework: %v", err)
+		log.WithError(err).Error("failed to setup framework")
 		os.Exit(1)
 	}
 
 	// run cleanup before tests, to ensure no resources from previous runs exist.
 	err = framework.CleanUp(defaultNs)
 	if err != nil {
-		log.Errorf("failed to cleanup resources: %v\n", err)
+		log.WithError(err).Error("failed to cleanup resources")
 	}
 
 	defer func() {
 		err = framework.CleanUp(defaultNs)
 		if err != nil {
-			log.Errorf("failed to cleanup resources: %v\n", err)
+			log.WithError(err).Error("failed to cleanup resources")
 		}
 		os.Exit(exitCode)
 	}()
