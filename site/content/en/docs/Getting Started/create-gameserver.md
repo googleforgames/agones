@@ -24,7 +24,7 @@ The following prerequisites are required to create a GameServer :
 
 If you don't have a Kubernetes cluster you can follow [these instructions]({{< ref "/docs/Installation/_index.md" >}}) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
 
-For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
+For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
 
 ### 1. Create a GameServer
 

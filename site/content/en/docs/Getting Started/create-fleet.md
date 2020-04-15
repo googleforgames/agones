@@ -18,14 +18,14 @@ The following prerequisites are required to create a GameServer:
 
 If you don't have a Kubernetes cluster you can follow [these instructions]({{< ref "/docs/Installation/_index.md" >}}) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
 
-For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
+For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
 
 While not required, you may wish to go through the [Create a Game Server]({{< relref "create-gameserver.md" >}}) quickstart before this one.
 
 ## Objectives
 
 - Create a Fleet in Kubernetes using Agones custom resource.
-- Scale the Fleet up from it's initial configuration.
+- Scale the Fleet up from its initial configuration.
 - Request a GameServer allocation from the Fleet to play on.
 - Connect to the allocated GameServer.
 - Deploy a new GameServer configuration to the Fleet
@@ -44,8 +44,8 @@ You should see a successful output similar to this :
 fleet "simple-udp" created
 ```
 
-This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}}) to
-be available to being allocated for usage for a game session.
+This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
+that are available to be allocated for a game session.
 
 ```
 kubectl get fleet
@@ -154,7 +154,7 @@ players access it (and therefore, it should not be deleted until they are finish
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 {{< /alert >}}
 
-We can do allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
+We can do the allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
 which demarcates that it has players on it, and should not be removed until `SDK.Shutdown()` is called, or it is manually deleted.
 
@@ -251,7 +251,7 @@ simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   7226   minikube    52m
 
 Not only can we scale our fleet up, but we can scale it down as well.
 
-The nice thing about Agones, is that it is smart enough to know when `GameServers` have been moved to `Allocated`
+The nice thing about Agones is that it is smart enough to know when `GameServers` have been moved to `Allocated`
 and will automatically leave them running on scale down -- as we assume that players are playing on this game server,
 and we shouldn't disconnect them!
 
