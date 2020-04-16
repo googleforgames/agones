@@ -23,7 +23,8 @@ description: >
 
 {{< alert title="Warning" color="warning">}}
 Later versions of Kubernetes may work, but this project is tested against 1.14, and is therefore the supported version.
-Agones will update its support to n-1 version of what is available across all major cloud providers - GKE, EKS and AKS
+Agones will update its support to n-1 version of what is available across the majority of major cloud providers - GKE, EKS and
+AKS, while also ensuring that all Cloud providers can support that version.
 {{< /alert >}}
 
 {{< alert title="Note" color="info">}}
