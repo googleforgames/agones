@@ -158,12 +158,9 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, gs.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
 
-			select {
-			case msg := <-stream.msgs:
-				assert.Equal(t, msg.ObjectMeta.Labels[metadataPrefix+"foo"], "bar")
-			case <-time.After(10 * time.Second):
-				assert.Fail(t, "timeout on receiving messages")
-			}
+			assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) interface{} {
+				return gs.ObjectMeta.Labels[metadataPrefix+"foo"]
+			})
 
 			l.Close()
 			wg.Wait()
@@ -229,12 +226,9 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, gs.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
 
-			select {
-			case msg := <-stream.msgs:
-				assert.Equal(t, msg.ObjectMeta.Annotations[metadataPrefix+"bar"], "foo")
-			case <-time.After(10 * time.Second):
-				assert.FailNow(t, "timeout on receiving messages")
-			}
+			assertWatchUpdate(t, stream, "foo", func(gs *sdk.GameServer) interface{} {
+				return gs.ObjectMeta.Annotations[metadataPrefix+"bar"]
+			})
 
 			l.Close()
 			wg.Wait()
@@ -259,12 +253,7 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 		assert.Nil(t, err)
 	}()
 
-	select {
-	case <-stream.msgs:
-		assert.Fail(t, "should not get a message")
-	case <-time.After(time.Second):
-	}
-
+	assertNoWatchUpdate(t, stream)
 	fixture.ObjectMeta.Annotations = map[string]string{"foo": "bar"}
 	j, err := json.Marshal(fixture)
 	assert.Nil(t, err)
@@ -272,12 +261,9 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 	err = ioutil.WriteFile(path, j, os.ModeDevice)
 	assert.Nil(t, err)
 
-	select {
-	case msg := <-stream.msgs:
-		assert.Equal(t, "bar", msg.ObjectMeta.Annotations["foo"])
-	case <-time.After(10 * time.Second):
-		assert.Fail(t, "timeout getting watch")
-	}
+	assertWatchUpdate(t, stream, "bar", func(gs *sdk.GameServer) interface{} {
+		return gs.ObjectMeta.Annotations["foo"]
+	})
 }
 
 func TestLocalSDKServerPlayerCapacity(t *testing.T) {
@@ -333,16 +319,6 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	gs, err := l.GetGameServer(context.Background(), &sdk.Empty{})
 	assert.NoError(t, err)
 	assert.Equal(t, int64(10), gs.Status.Players.Capacity)
-}
-
-func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
-	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
-	if err != nil {
-		return file.Name(), err
-	}
-
-	err = json.NewEncoder(file).Encode(gs)
-	return file.Name(), err
 }
 
 // TestLocalSDKServerStateUpdates verify that SDK functions changes the state of the
@@ -418,4 +394,33 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	l.SetExpectedSequence(expected)
 	b := l.EqualSets(l.expectedSequence, l.requestSequence)
 	assert.True(t, b, "we should receive strings from all go routines %v %v", l.expectedSequence, l.requestSequence)
+}
+
+func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {
+	file, err := ioutil.TempFile(os.TempDir(), "gameserver-")
+	if err != nil {
+		return file.Name(), err
+	}
+
+	err = json.NewEncoder(file).Encode(gs)
+	return file.Name(), err
+}
+
+// assertWatchUpdate checks the values of an update message when a GameServer value has been changed
+func assertWatchUpdate(t *testing.T, stream *gameServerMockStream, expected interface{}, actual func(gs *sdk.GameServer) interface{}) {
+	select {
+	case msg := <-stream.msgs:
+		assert.Equal(t, expected, actual(msg))
+	case <-time.After(10 * time.Second):
+		assert.Fail(t, "timeout on receiving messages")
+	}
+}
+
+// assertNoWatchUpdate checks that no update message has been sent for changes to the GameServer
+func assertNoWatchUpdate(t *testing.T, stream *gameServerMockStream) {
+	select {
+	case <-stream.msgs:
+		assert.Fail(t, "should not get a message")
+	case <-time.After(time.Second):
+	}
 }
