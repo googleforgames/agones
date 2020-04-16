@@ -101,6 +101,6 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
-    --cacert ${TLS_CERT_FILE} \
+    --cacert ${TLS_CA_FILE} \
     --multicluster true
 ```
