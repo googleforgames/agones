@@ -8,7 +8,6 @@
 **What type of PR is this?**
 > Uncomment only one ` /kind <>` line, hit enter to put that in a new line, and remove leading whitespace from that line:
 >
-> /kind api-change
 > /kind breaking
 > /kind bug
 > /kind cleanup
