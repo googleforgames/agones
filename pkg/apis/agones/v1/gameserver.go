@@ -25,7 +25,6 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -160,8 +159,7 @@ type GameServerSpec struct {
 // PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
 // connection/disconnection events.
 type PlayersSpec struct {
-	InitialCapacity int64                          `json:"initialCapacity,omitempty"`
-	Webhook         *admregv1b.WebhookClientConfig `json:"webhook,omitempty"`
+	InitialCapacity int64 `json:"initialCapacity,omitempty"`
 }
 
 // GameServerState is the state for the GameServer
@@ -241,8 +239,9 @@ type GameServerStatusPort struct {
 
 // PlayerStatus stores the current player capacity values
 type PlayerStatus struct {
-	Count    int64 `json:"count"`
-	Capacity int64 `json:"capacity"`
+	Count    int64    `json:"count"`
+	Capacity int64    `json:"capacity"`
+	IDs      []string `json:"IDs"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated
