@@ -699,3 +699,34 @@ func TestGameServerPassthroughPort(t *testing.T) {
 
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
+
+// TestGameServerResourceValidation - check that we are not able to use
+// invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
+func TestGameServerResourceValidation(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(defaultNs)
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("64Mi")
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
+
+	_, valid := gs.Validate()
+	assert.False(t, valid)
+
+	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
+
+	_, err := gsClient.Create(gs.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok := err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = resource.MustParse("-50m")
+	_, err = gsClient.Create(gs.DeepCopy())
+	assert.NotNil(t, err)
+	statusErr, ok = err.(*k8serrors.StatusError)
+	assert.True(t, ok)
+	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
+	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+}

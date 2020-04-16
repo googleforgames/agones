@@ -10,7 +10,8 @@ description: >
 This feature is in a pre-release state and might change.
 {{< /alert >}}
 
-There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost saving and availability. For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
+There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost-saving and availability. 
+For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
 
 The remainder of this article describes how to enable multi-cluster allocation.
 
@@ -100,6 +101,6 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
-    --cacert ${TLS_CERT_FILE} \
+    --cacert ${TLS_CA_FILE} \
     --multicluster true
 ```

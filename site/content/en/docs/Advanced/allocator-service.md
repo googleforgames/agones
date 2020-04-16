@@ -33,36 +33,50 @@ agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b> 
 
 ## Server TLS certificate
 
-Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate, including using CA. The following provides an example of generating a self-signed certificate using openssl and storing it in allocator-tls Kubernetes secret.
+Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management. 
+
+In order to use cert-manager solution, first, [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster. Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and last configure a `Certificate` resource to manage allocator-tls `Secret`. 
+
+Here is an example of using a self-signed `ClusterIssuer` for configuring allocator-tls `Secret`:
 
 ```bash
 #!/bin/bash
+# Create a self-signed ClusterIssuer
+cat <<EOF | kubectl apply -f - 
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+EOF
+
 EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
-TLS_KEY_FILE=tls.key
-TLS_CERT_FILE=tls.crt
+# Create a Certificate with IP for the allocator-tls secret
+cat <<EOF | kubectl apply -f - 
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: allocator-selfsigned-cert
+  namespace: agones-system
+spec:
+  commonName: ${EXTERNAL_IP}
+  ipAddresses:
+    - ${EXTERNAL_IP}
+  secretName: allocator-tls
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+EOF
 
-cat /etc/ssl/openssl.cnf <(printf "\n[SAN]\nsubjectAltName=IP:${EXTERNAL_IP}") > openssl.cnf
+# Optional: Store the secret ca.crt in a file to be used by the client for the server authentication
+TLS_CA_FILE=ca.crt
+TLS_CA_VALUE=`kubectl get secret allocator-tls -n agones-system -ojsonpath='{.data.ca\.crt}'`
+echo ${TLS_CA_VALUE} | base64 -d > ${TLS_CA_FILE}
 
-openssl req -nodes -new -newkey rsa:2048 \
-    -keyout ${TLS_KEY_FILE} \
-    -out tls.csr \
-    -subj "/CN=${EXTERNAL_IP}/O=${EXTERNAL_IP}" \
-    -reqexts SAN \
-    -config openssl.cnf
-
-openssl x509 -req -days 365 -in tls.csr \
-    -signkey ${TLS_KEY_FILE} \
-    -out ${TLS_CERT_FILE} \
-    -extensions SAN \
-    -extfile openssl.cnf
-
-# After having the TLS certificates ready, run the following command to store the certificate as a Kubernetes TLS secret.
-kubectl create secret --save-config=true tls allocator-tls -n agones-system --key=${TLS_KEY_FILE} --cert=${TLS_CERT_FILE} --dry-run -o yaml | kubectl apply -f -
-
-# Optional: Add the TLS signing CA to allocator-tls-ca
-TLS_CERT_FILE_VALUE=`cat ${TLS_CERT_FILE} | base64 -w 0`
-kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CERT_FILE_VALUE}'"' | kubectl apply -f -
+# Add ca.crt to the allocator-tls-ca Secret
+kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CA_VALUE}'"' | kubectl apply -f -
 ```
 
 ## Client Certificate
@@ -109,7 +123,7 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
-    --cacert ${TLS_CERT_FILE}
+    --cacert ${TLS_CA_FILE}
 ```
 
-If your matchmaker is external to the cluster on which your game servers are hosted, agones-allocator provides the gRPC API to allocate game services using mTLS authentication, which can scale independent to agones controller.
+If your matchmaker is external to the cluster on which your game servers are hosted, the `agones-allocator` provides the gRPC API to allocate game services using mTLS authentication, which can scale independently to the Agones controller.

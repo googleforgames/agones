@@ -15,8 +15,8 @@
 # limitations under the License.
 
 cd /go/src/agones.dev/agones/test/sdk/nodejs
-npm install
-npm rebuild
+npm install --quiet
+npm rebuild --quiet
 
 # If first 'npm install' attempt fails, which could occur for a variety of reasons,
 # do one more attempt
@@ -27,6 +27,6 @@ then
     rm -rf /go/src/agones.dev/agones/test/sdk/nodejs/node_modules
     rm /go/src/agones.dev/agones/test/sdk/nodejs/package-lock.json
     npm cache clean
-    npm rebuild
-    npm install
+    npm rebuild --quiet
+    npm install --quiet
 fi

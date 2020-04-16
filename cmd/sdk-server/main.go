@@ -51,14 +51,15 @@ const (
 	podNamespaceEnv   = "POD_NAMESPACE"
 
 	// Flags (that can also be env vars)
-	localFlag    = "local"
-	fileFlag     = "file"
-	testFlag     = "test"
-	addressFlag  = "address"
-	delayFlag    = "delay"
-	timeoutFlag  = "timeout"
-	grpcPortFlag = "grpc-port"
-	httpPortFlag = "http-port"
+	localFlag       = "local"
+	fileFlag        = "file"
+	testFlag        = "test"
+	testSdkNameFlag = "sdk-name"
+	addressFlag     = "address"
+	delayFlag       = "delay"
+	timeoutFlag     = "timeout"
+	grpcPortFlag    = "grpc-port"
+	httpPortFlag    = "http-port"
 )
 
 var (
@@ -208,6 +209,7 @@ func registerTestSdkServer(grpcServer *grpc.Server, ctlConf config) (func(), err
 	s.GenerateUID()
 	expectedFuncs := strings.Split(ctlConf.Test, ",")
 	s.SetExpectedSequence(expectedFuncs)
+	s.SetSdkName(ctlConf.TestSdkName)
 
 	sdk.RegisterSDKServer(grpcServer, s)
 	sdkalpha.RegisterSDKServer(grpcServer, s)
@@ -258,6 +260,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(localFlag, false)
 	viper.SetDefault(fileFlag, "")
 	viper.SetDefault(testFlag, "")
+	viper.SetDefault(testSdkNameFlag, "")
 	viper.SetDefault(addressFlag, "localhost")
 	viper.SetDefault(delayFlag, 0)
 	viper.SetDefault(timeoutFlag, 0)
@@ -272,6 +275,7 @@ func parseEnvFlags() config {
 	pflag.Int(delayFlag, viper.GetInt(delayFlag), "Time to delay (in seconds) before starting to execute main. Useful for tests")
 	pflag.Int(timeoutFlag, viper.GetInt(timeoutFlag), "Time of execution (in seconds) before close. Useful for tests")
 	pflag.String(testFlag, viper.GetString(testFlag), "List functions which should be called during the SDK Conformance test run.")
+	pflag.String(testSdkNameFlag, viper.GetString(testSdkNameFlag), "SDK name which is tested by this SDK Conformance test.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -279,6 +283,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(localFlag))
 	runtime.Must(viper.BindEnv(addressFlag))
 	runtime.Must(viper.BindEnv(testFlag))
+	runtime.Must(viper.BindEnv(testSdkNameFlag))
 	runtime.Must(viper.BindEnv(gameServerNameEnv))
 	runtime.Must(viper.BindEnv(podNamespaceEnv))
 	runtime.Must(viper.BindEnv(delayFlag))
@@ -291,25 +296,27 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		IsLocal:   viper.GetBool(localFlag),
-		Address:   viper.GetString(addressFlag),
-		LocalFile: viper.GetString(fileFlag),
-		Delay:     viper.GetInt(delayFlag),
-		Timeout:   viper.GetInt(timeoutFlag),
-		Test:      viper.GetString(testFlag),
-		GRPCPort:  viper.GetInt(grpcPortFlag),
-		HTTPPort:  viper.GetInt(httpPortFlag),
+		IsLocal:     viper.GetBool(localFlag),
+		Address:     viper.GetString(addressFlag),
+		LocalFile:   viper.GetString(fileFlag),
+		Delay:       viper.GetInt(delayFlag),
+		Timeout:     viper.GetInt(timeoutFlag),
+		Test:        viper.GetString(testFlag),
+		TestSdkName: viper.GetString(testSdkNameFlag),
+		GRPCPort:    viper.GetInt(grpcPortFlag),
+		HTTPPort:    viper.GetInt(httpPortFlag),
 	}
 }
 
 // config is all the configuration for this program
 type config struct {
-	Address   string
-	IsLocal   bool
-	LocalFile string
-	Delay     int
-	Timeout   int
-	Test      string
-	GRPCPort  int
-	HTTPPort  int
+	Address     string
+	IsLocal     bool
+	LocalFile   string
+	Delay       int
+	Timeout     int
+	Test        string
+	TestSdkName string
+	GRPCPort    int
+	HTTPPort    int
 }
