@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.34.0
+	contrib.go.opencensus.io/exporter/prometheus v0.1.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.8.0
 	fortio.org/fortio v1.3.1
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.1
@@ -12,7 +13,6 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-openapi/spec v0.19.0
 	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/groupcache v0.0.0-20171101203131-84a468cf14b4 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/google/gofuzz v1.0.0 // indirect
 	github.com/google/uuid v1.1.0 // indirect
@@ -33,10 +33,9 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.3.0
-	go.opencensus.io v0.18.0
-	golang.org/x/net v0.0.0-20190311183353-d8887717615a
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
+	github.com/stretchr/testify v1.4.0
+	go.opencensus.io v0.22.3
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
 	google.golang.org/api v0.0.0-20190117000611-43037ff31f69 // indirect
