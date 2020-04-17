@@ -406,22 +406,6 @@ spec:
                               type: integer
                               title: The initial player capacity of this Game Server
                               minimum: 0
-                            webhook:
-                              type: object
-                              title: webhook to call when a player connects or disconnects
-                              properties:
-                                service:
-                                  properties:
-                                    name:
-                                      type: string
-                                    namespace:
-                                      type: string
-                                    path:
-                                      type: string
-                                url:
-                                  type: string
-                                caBundle:
-                                  type: string
   subresources:
     # status enables the status subresource.
     status: {}
@@ -720,22 +704,6 @@ spec:
                       type: integer
                       title: The initial player capacity of this Game Server
                       minimum: 0
-                    webhook:
-                      type: object
-                      title: webhook to call when a player connects or disconnects
-                      properties:
-                        service:
-                          properties:
-                            name:
-                              type: string
-                            namespace:
-                              type: string
-                            path:
-                              type: string
-                        url:
-                          type: string
-                        caBundle:
-                          type: string
 
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml
@@ -1050,22 +1018,6 @@ spec:
                               type: integer
                               title: The initial player capacity of this Game Server
                               minimum: 0
-                            webhook:
-                              type: object
-                              title: webhook to call when a player connects or disconnects
-                              properties:
-                                service:
-                                  properties:
-                                    name:
-                                      type: string
-                                    namespace:
-                                      type: string
-                                    path:
-                                      type: string
-                                url:
-                                  type: string
-                                caBundle:
-                                  type: string
   subresources:
     # status enables the status subresource.
     status: {}
