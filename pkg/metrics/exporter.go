@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"cloud.google.com/go/compute/metadata"
+	"contrib.go.opencensus.io/exporter/prometheus"
 	"contrib.go.opencensus.io/exporter/stackdriver"
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
-	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats/view"
 	"google.golang.org/genproto/googleapis/api/monitoredres"
 )

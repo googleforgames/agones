@@ -1,4 +1,4 @@
-// Copyright 2018, OpenCensus Authors
+// Copyright 2019, OpenCensus Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,32 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trace
+package metricexport
 
 import (
 	"context"
-	"encoding/hex"
 
-	"go.opencensus.io/exemplar"
+	"go.opencensus.io/metric/metricdata"
 )
 
-func init() {
-	exemplar.RegisterAttachmentExtractor(attachSpanContext)
-}
-
-func attachSpanContext(ctx context.Context, a exemplar.Attachments) exemplar.Attachments {
-	span := FromContext(ctx)
-	if span == nil {
-		return a
-	}
-	sc := span.SpanContext()
-	if !sc.IsSampled() {
-		return a
-	}
-	if a == nil {
-		a = make(exemplar.Attachments)
-	}
-	a[exemplar.KeyTraceID] = hex.EncodeToString(sc.TraceID[:])
-	a[exemplar.KeySpanID] = hex.EncodeToString(sc.SpanID[:])
-	return a
+// Exporter is an interface that exporters implement to export the metric data.
+type Exporter interface {
+	ExportMetrics(ctx context.Context, data []*metricdata.Metric) error
 }
