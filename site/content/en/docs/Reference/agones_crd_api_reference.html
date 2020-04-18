@@ -3,7 +3,7 @@ title="Agones Kubernetes API"
 description="Detailed list of Agones Custom Resource Definitions available"
 +++
 
-{{% feature expiryVersion="1.5.0" %}}
+{{% feature expiryVersion="1.6.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -611,13 +611,26 @@ connect to</p>
 </tr>
 <tr>
 <td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container is the name of the container on which to open the port. Defaults to the game server container.
+This field is alpha-level and is only honored by servers that enable the &ldquo;ContainerPortAllocation&rdquo; feature.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>containerPort</code></br>
 <em>
 int32
 </em>
 </td>
 <td>
-<p>ContainerPort is the port that is being opened on the game server process</p>
+<p>ContainerPort is the port that is being opened on the specified container&rsquo;s process</p>
 </td>
 </tr>
 <tr>
@@ -977,7 +990,8 @@ PlayerStatus
 </td>
 <td>
 <em>(Optional)</em>
-<p>(Alpha, PlayerTracking feature flag)</p>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTesting]</p>
 </td>
 </tr>
 </tbody>
@@ -2672,7 +2686,7 @@ ClusterConnectionInfo
 Generated with <code>gen-crd-api-reference-docs</code>.
 </em></p>
 {{% /feature %}}
-{{% feature publishVersion="1.5.0" %}}
+{{% feature publishVersion="1.6.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -3945,6 +3959,16 @@ int64
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>IDs</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="PlayersSpec">PlayersSpec
@@ -3970,18 +3994,6 @@ connection/disconnection events.</p>
 <code>initialCapacity</code></br>
 <em>
 int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>webhook</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#webhookclientconfig-v1beta1-admissionregistration">
-Kubernetes admissionregistration/v1beta1.WebhookClientConfig
-</a>
 </em>
 </td>
 <td>

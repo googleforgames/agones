@@ -184,19 +184,21 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	t.Parallel()
 	nodes, err := framework.KubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
 	assert.Nil(t, err)
-
-	// gate
 	assert.True(t, len(nodes.Items) > 0)
 
 	gs := framework.DefaultGameServer(defaultNs)
-	gs.Spec.Ports[0].HostPort = 7515
+	// choose port out of the minport/maxport range
+	gs.Spec.Ports[0].HostPort = 5555
 	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
 
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 
-	for range nodes.Items {
-		_, err := gameServers.Create(gs.DeepCopy())
-		assert.Nil(t, err)
+	for _, n := range nodes.Items {
+		// using only gameserver node pool with no taints
+		if len(n.Spec.Taints) == 0 {
+			_, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs.DeepCopy())
+			assert.Nil(t, err)
+		}
 	}
 
 	newGs, err := gameServers.Create(gs.DeepCopy())
