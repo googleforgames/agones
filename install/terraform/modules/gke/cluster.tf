@@ -19,6 +19,12 @@ terraform {
 
 data "google_client_config" "default" {}
 
+data "google_container_engine_versions" "kubernetes" {
+  project        = var.cluster["project"]
+  location       = var.cluster["zone"]
+  version_prefix = var.cluster["kubernetesVersion"]
+}
+
 # echo command used for debugging purpose
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
@@ -27,9 +33,9 @@ resource "null_resource" "test-setting-variables" {
     ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s",
     var.cluster["name"], var.cluster["project"],
     var.cluster["machineType"], var.cluster["initialNodeCount"], var.cluster["network"],
-    var.cluster["zone"])}
+var.cluster["zone"])}
     EOT
-  }
+}
 }
 
 resource "google_container_cluster" "primary" {
@@ -38,7 +44,9 @@ resource "google_container_cluster" "primary" {
   project  = var.cluster["project"]
   network  = var.cluster["network"]
 
-  min_master_version = "1.14"
+  min_master_version = data.google_container_engine_versions.kubernetes.latest_master_version
+
+  node_version = data.google_container_engine_versions.kubernetes.latest_node_version
 
   node_pool {
     name       = "default"
