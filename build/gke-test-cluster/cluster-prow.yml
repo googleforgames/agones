@@ -19,7 +19,7 @@ resources:
     cluster:
       name: prow-build-cluster
       description: Prow cluster to run tests for Agones
-      initialClusterVersion: "1.14"
+      initialClusterVersion: "1.15"
       nodePools:
         - name: "default"
           initialNodeCount: 8
