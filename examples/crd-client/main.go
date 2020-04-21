@@ -18,15 +18,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/util/runtime"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -36,25 +36,28 @@ const (
 	isHelmTest           = "IS_HELM_TEST"
 	gameserversNamespace = "GAMESERVERS_NAMESPACE"
 
-	defaultImage = "gcr.io/agones-images/udp-server:0.19"
-	defaultNs    = "default"
+	defaultNs = "default"
 )
 
 func main() {
 	viper.AllowEmptyEnv(true)
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 
-	pflag.String(gameServerImage, defaultImage, "The Address to bind the server grpcPort to. Defaults to 'localhost'")
-	viper.SetDefault(gameServerImage, defaultImage)
+	pflag.String(gameServerImage, "", "The Address to bind the server grpcPort to. Defaults to 'localhost'")
+	viper.SetDefault(gameServerImage, "")
 	runtime.Must(viper.BindEnv(gameServerImage))
 
-	pflag.Bool(isHelmTest, false, "Is helm test - shutdown GameServer at the end of test. Defaults to false")
+	pflag.Bool(isHelmTest, false,
+		"Is Helm test - defines whether GameServer should be shut down at the end of the test or not. Defaults to false")
 	viper.SetDefault(isHelmTest, false)
 	runtime.Must(viper.BindEnv(isHelmTest))
 
 	pflag.String(gameserversNamespace, defaultNs, "Namespace where GameServers are created. Defaults to default")
 	viper.SetDefault(gameserversNamespace, defaultNs)
 	runtime.Must(viper.BindEnv(gameserversNamespace))
+
+	pflag.Parse()
+	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 
 	config, err := rest.InClusterConfig()
 	logger := runtime.NewLoggerWithSource("main")
@@ -79,16 +82,11 @@ func main() {
 		logger.WithError(err).Fatal("Could not create the agones api clientset")
 	}
 
-	gsName := "helm-test-server-"
-
 	// Create a GameServer
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: gsName,
+			GenerateName: "helm-test-server-",
 			Namespace:    viper.GetString(gameserversNamespace),
-			Labels: map[string]string{
-				labelKey: labelValue,
-			},
 		},
 		Spec: agonesv1.GameServerSpec{
 			Container: "udp-server",
@@ -111,17 +109,39 @@ func main() {
 			},
 		},
 	}
-	newGS, err := agonesClient.AgonesV1().GameServers(defaultNs).Create(gs)
+	newGS, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Create(gs)
 	if err != nil {
-		panic(err)
+		logrus.Fatal("Unable to create GameServer: %v", err)
 	}
 	logrus.Infof("New GameServer name is: %s", newGS.ObjectMeta.Name)
 
 	if viper.GetBool(isHelmTest) {
-		time.Sleep(1 * time.Second)
-		err = agonesClient.AgonesV1().GameServers(defaultNs).Delete(newGS.ObjectMeta.Name, nil) // nolint: errcheck
+		err = wait.PollImmediate(1*time.Second, 60*time.Second, func() (bool, error) {
+			checkGs, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Get(newGS.Name, metav1.GetOptions{})
+
+			if err != nil {
+				logrus.WithError(err).Warn("error retrieving gameserver")
+				return false, nil
+			}
+
+			state := agonesv1.GameServerStateReady
+			logger.WithField("gs", checkGs.ObjectMeta.Name).
+				WithField("currentState", checkGs.Status.State).
+				WithField("awaitingState", state).Info("Waiting for states to match")
+
+			if checkGs.Status.State == state {
+				return true, nil
+			}
+
+			return false, nil
+		})
 		if err != nil {
-			panic(err)
+			logrus.Fatalf("Wait GameServer to become Ready failed: %v", err)
+		}
+
+		err = agonesClient.AgonesV1().GameServers(gs.Namespace).Delete(newGS.ObjectMeta.Name, nil)
+		if err != nil {
+			logrus.Fatalf("Unable to delete GameServer: %v", err)
 		}
 	}
 }
