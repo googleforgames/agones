@@ -75,6 +75,9 @@ TLS_CA_FILE=ca.crt
 TLS_CA_VALUE=`kubectl get secret allocator-tls -n agones-system -ojsonpath='{.data.ca\.crt}'`
 echo ${TLS_CA_VALUE} | base64 -d > ${TLS_CA_FILE}
 
+# In case of MacOS
+# echo ${TLS_CA_VALUE} | base64 -D > ${TLS_CA_FILE}
+
 # Add ca.crt to the allocator-tls-ca Secret
 kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CA_VALUE}'"' | kubectl apply -f -
 ```
@@ -118,6 +121,10 @@ Now the service is ready to accept requests from the client with the generated c
 #!/bin/bash
 
 NAMESPACE=default # replace with any namespace
+EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
 
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
