@@ -22,6 +22,7 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -480,6 +481,9 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+		t.SkipNow()
+	}
 	t.Parallel()
 	firstContainerName := "udp-server"
 	secondContainerName := "second-udp-server"

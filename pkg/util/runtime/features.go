@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	featureGateFlag = "feature-gates"
+	// FeatureGateFlag is a name of a command line flag, which turns on specific tests for FeatureGates
+	FeatureGateFlag = "feature-gates"
 
 	// FeatureExample is an example feature gate flag, used for testing and demonstrative purposes
 	FeatureExample Feature = "Example"
@@ -64,20 +65,20 @@ type Feature string
 
 // FeaturesBindFlags does the Viper arguments configuration. Call before running pflag.Parse()
 func FeaturesBindFlags() {
-	viper.SetDefault(featureGateFlag, "")
-	pflag.String(featureGateFlag, viper.GetString(featureGateFlag), "Flag to pass in the url query list of feature flags to enable or disable")
+	viper.SetDefault(FeatureGateFlag, "")
+	pflag.String(FeatureGateFlag, viper.GetString(FeatureGateFlag), "Flag to pass in the url query list of feature flags to enable or disable")
 }
 
 // FeaturesBindEnv binds the environment variables, based on the flags provided.
 // call after viper.SetEnvKeyReplacer(...) if it is being set.
 func FeaturesBindEnv() error {
-	return viper.BindEnv(featureGateFlag)
+	return viper.BindEnv(FeatureGateFlag)
 }
 
 // ParseFeaturesFromEnv will parse the feature flags from the Viper args
 // configured by FeaturesBindFlags() and FeaturesBindEnv()
 func ParseFeaturesFromEnv() error {
-	return ParseFeatures(viper.GetString(featureGateFlag))
+	return ParseFeatures(viper.GetString(FeatureGateFlag))
 }
 
 // ParseFeatures parses the url encoded query string of features and stores the value
