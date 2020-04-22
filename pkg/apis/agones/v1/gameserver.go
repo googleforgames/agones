@@ -572,22 +572,13 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
 // Returns an error if the container is not found.
 func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
-	var container corev1.Container
-	containerIndex := -1
 	for i, c := range pod.Spec.Containers {
 		if c.Name == containerName {
-			container = c
-			containerIndex = i
+			pod.Spec.Containers[i] = f(c)
+			return nil
 		}
 	}
-	if containerIndex == -1 {
-		return errors.Errorf("failed to find container named %q in pod spec", containerName)
-	}
-
-	container = f(container)
-	pod.Spec.Containers[containerIndex] = container
-
-	return nil
+	return errors.Errorf("failed to find container named %s in pod spec", containerName)
 }
 
 // Pod creates a new Pod from the PodTemplateSpec

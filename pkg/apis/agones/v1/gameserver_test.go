@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
@@ -25,6 +26,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 )
@@ -32,6 +34,74 @@ import (
 const (
 	ipFixture = "127.1.1.1"
 )
+
+func TestStatus(t *testing.T) {
+	name := "test-name"
+	port := int32(7788)
+	p := GameServerPort{Name: name, HostPort: port}
+
+	res := p.Status()
+	assert.Equal(t, name, res.Name)
+	assert.Equal(t, port, res.Port)
+}
+
+func TestIsBeingDeleted(t *testing.T) {
+	deletionTimestamp := metav1.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
+	var testCases = []struct {
+		description string
+		gs          *GameServer
+		expected    bool
+	}{
+		{
+			description: "ready gs, is not being deleted",
+			gs: &GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: nil,
+				},
+				Status: GameServerStatus{State: GameServerStateReady},
+			},
+			expected: false,
+		},
+		{
+			description: "DeletionTimestamp is set, gs is being deleted",
+			gs: &GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &deletionTimestamp,
+				},
+				Status: GameServerStatus{State: GameServerStateReady},
+			},
+			expected: true,
+		},
+		{
+			description: "gs status is GameServerStateShutdown, gs is being deleted",
+			gs: &GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: nil,
+				},
+				Status: GameServerStatus{State: GameServerStateShutdown},
+			},
+			expected: true,
+		},
+		{
+			description: "gs status is GameServerStateShutdown and DeletionTimestamp is set, gs is being deleted",
+			gs: &GameServer{
+				ObjectMeta: metav1.ObjectMeta{
+					DeletionTimestamp: &deletionTimestamp,
+				},
+				Status: GameServerStatus{State: GameServerStateShutdown},
+			},
+			expected: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			result := tc.gs.IsBeingDeleted()
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+
+}
 
 func TestGameServerFindGameServerContainer(t *testing.T) {
 	t.Parallel()
@@ -358,13 +428,18 @@ func TestGameServerApplyDefaults(t *testing.T) {
 }
 
 func TestGameServerValidate(t *testing.T) {
-	gs := GameServer{
+	var fields []string
+	var gs GameServer
+	var causes []metav1.StatusCause
+	var ok bool
+
+	gs = GameServer{
 		Spec: GameServerSpec{
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{Containers: []corev1.Container{{Name: "testing", Image: "testing/image"}}}}},
 	}
 	gs.ApplyDefaults()
-	causes, ok := gs.Validate()
+	causes, ok = gs.Validate()
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
@@ -390,7 +465,6 @@ func TestGameServerValidate(t *testing.T) {
 				}}}},
 	}
 	causes, ok = gs.Validate()
-	var fields []string
 	for _, f := range causes {
 		fields = append(fields, f.Field)
 	}
@@ -505,6 +579,342 @@ func TestGameServerValidate(t *testing.T) {
 	assert.Contains(t, fields, "one.containerPort")
 	assert.Contains(t, fields, "two.hostPort")
 
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "dev-game",
+			Namespace:   "default",
+			Annotations: map[string]string{DevAddressAnnotation: ipFixture},
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				HostPort:      5002,
+				ContainerPort: 7777,
+				PortPolicy:    Passthrough}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, ErrPortPolicyStatic)
+	}
+	assert.Contains(t, fields, "main.portPolicy")
+
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: -4,
+				PortPolicy:    Dynamic}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "testing", Image: "testing/image"},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, ErrContainerPortRequired)
+	}
+	assert.Contains(t, fields, "main.containerPort")
+
+	// container was not found
+	portContainerName := "another-container"
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{
+				{
+					Name:          "main",
+					ContainerPort: 7777,
+					PortPolicy:    Dynamic,
+					Container:     &portContainerName,
+				},
+			},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{Name: "testing", Image: "testing/image"},
+				}}},
+		},
+	}
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, ErrContainerNameInvalid)
+	}
+	assert.Contains(t, fields, "main.container")
+
+	// CPU Request > Limit
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("50m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, "Request must be less than or equal to cpu limit")
+	}
+	assert.Contains(t, fields, "container")
+
+	// CPU negative request
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("-30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, "Resource cpu request value must be non negative")
+	}
+	assert.Contains(t, fields, "container")
+
+	// CPU negative limit
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("-30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 2) {
+		assert.Equal(t, causes[1].Message, "Resource cpu limit value must be non negative")
+	}
+	assert.Contains(t, fields, "container")
+
+	// Memory Request > Limit
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("55Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, "Request must be less than or equal to memory limit")
+	}
+	assert.Contains(t, fields, "container")
+
+	// Memory negative request
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("-32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 1) {
+		assert.Equal(t, causes[0].Message, "Resource memory request value must be non negative")
+	}
+	assert.Contains(t, fields, "container")
+
+	// Memory negative limit
+	gs = GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "dev-game",
+			Namespace: "default",
+		},
+		Spec: GameServerSpec{
+			Ports: []GameServerPort{{Name: "main",
+				ContainerPort: 7777,
+				PortPolicy:    Dynamic,
+			}},
+			Container: "testing",
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{Containers: []corev1.Container{
+					{
+						Name:  "testing",
+						Image: "testing/image",
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("-32Mi"),
+							},
+						},
+					},
+				}}},
+		},
+	}
+	gs.ApplyDefaults()
+	causes, ok = gs.Validate()
+	for _, f := range causes {
+		fields = append(fields, f.Field)
+	}
+	assert.False(t, ok)
+	if assert.Len(t, causes, 2) {
+		assert.Equal(t, causes[1].Message, "Resource memory limit value must be non negative")
+	}
+	assert.Contains(t, fields, "container")
+
 	t.Run("validation of "+string(runtime.FeaturePlayerTracking), func(t *testing.T) {
 		gs := GameServer{
 			Spec: GameServerSpec{
@@ -536,7 +946,8 @@ func TestGameServerValidate(t *testing.T) {
 	})
 }
 
-func TestGameServerPod(t *testing.T) {
+func TestGameServerPod_NoErrors(t *testing.T) {
+	t.Parallel()
 	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
 
@@ -552,10 +963,73 @@ func TestGameServerPod(t *testing.T) {
 	assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, pod.Spec.Containers[0].Ports[0].ContainerPort)
 	assert.Equal(t, corev1.Protocol("UDP"), pod.Spec.Containers[0].Ports[0].Protocol)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
+}
+
+func TestGameServerPod_ContainerNotFound_ErrReturned(t *testing.T) {
+	t.Parallel()
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	containerName1 := "Container1"
+	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
+		Spec: GameServerSpec{
+			Container: "can-not-find-this-name",
+			Ports: []GameServerPort{
+				{
+					Container:     &containerName1,
+					ContainerPort: 7777,
+					HostPort:      9999,
+					PortPolicy:    Static,
+				},
+			},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{Name: "Container2", Image: "container/image"}},
+				},
+			},
+		}, Status: GameServerStatus{State: GameServerStateCreating}}
+
+	var testCases = []struct {
+		errExpected                    string
+		сontainerPortAllocationEnabled bool
+	}{
+		{
+			errExpected:                    "failed to find container named Container1 in pod spec",
+			сontainerPortAllocationEnabled: true,
+		},
+		{
+			errExpected:                    "Could not find a container named can-not-find-this-name",
+			сontainerPortAllocationEnabled: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("сontainerPortAllocationEnabled: %t", tc.сontainerPortAllocationEnabled), func(t *testing.T) {
+			if tc.сontainerPortAllocationEnabled {
+				err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
+				assert.NoError(t, err)
+			} else {
+				err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=false")
+				assert.NoError(t, err)
+			}
+
+			_, err := fixture.Pod()
+			if assert.NotNil(t, err, "Pod should return an error") {
+				assert.Equal(t, tc.errExpected, err.Error())
+			}
+		})
+	}
+
+}
+
+func TestGameServerPod_WithSidecar_NoErrros(t *testing.T) {
+	t.Parallel()
+	fixture := defaultGameServer()
+	fixture.ApplyDefaults()
 
 	sidecar := corev1.Container{Name: "sidecar", Image: "container/sidecar"}
 	fixture.Spec.Template.Spec.ServiceAccountName = "other-agones-sdk"
-	pod, err = fixture.Pod(sidecar)
+	pod, err := fixture.Pod(sidecar)
 	assert.Nil(t, err, "Pod should not return an error")
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
@@ -794,34 +1268,66 @@ func TestGameServerIsBeforeReady(t *testing.T) {
 func TestGameServerApplyToPodContainer(t *testing.T) {
 	t.Parallel()
 
-	name := "mycontainer"
-	gs := &GameServer{
-		Spec: GameServerSpec{
-			Container: name,
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{Name: name, Image: "foo/mycontainer"},
-						{Name: "notmycontainer", Image: "foo/notmycontainer"},
+	var testCases = []struct {
+		description string
+		gs          *GameServer
+		errExpected string
+		ttyExpected bool
+	}{
+		{
+			description: "OK, no error",
+			gs: &GameServer{
+				Spec: GameServerSpec{
+					Container: "mycontainer",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{Name: "mycontainer", Image: "foo/mycontainer"},
+								{Name: "notmycontainer", Image: "foo/notmycontainer"},
+							},
+						},
 					},
 				},
 			},
+			errExpected: "",
+			ttyExpected: true,
+		},
+		{
+			description: "container not found, error is returned",
+			gs: &GameServer{
+				Spec: GameServerSpec{
+					Container: "mycontainer-WRONG-NAME",
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{Name: "mycontainer", Image: "foo/mycontainer"},
+								{Name: "notmycontainer", Image: "foo/notmycontainer"},
+							},
+						},
+					},
+				},
+			},
+			errExpected: "failed to find container named mycontainer-WRONG-NAME in pod spec",
+			ttyExpected: false,
 		},
 	}
 
-	pod := &corev1.Pod{Spec: *gs.Spec.Template.Spec.DeepCopy()}
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			pod := &corev1.Pod{Spec: *tc.gs.Spec.Template.Spec.DeepCopy()}
+			result := tc.gs.ApplyToPodContainer(pod, tc.gs.Spec.Container, func(c corev1.Container) corev1.Container {
+				//  easy thing to change and test for
+				c.TTY = true
+				return c
+			})
 
-	err := gs.ApplyToPodContainer(pod, gs.Spec.Container, func(c corev1.Container) corev1.Container {
-		//  easy thing to change and test for
-		c.TTY = true
-
-		return c
-	})
-
-	assert.NoError(t, err)
-	assert.Len(t, pod.Spec.Containers, 2)
-	assert.True(t, pod.Spec.Containers[0].TTY)
-	assert.False(t, pod.Spec.Containers[1].TTY)
+			if tc.errExpected != "" && assert.NotNil(t, result) {
+				assert.Equal(t, tc.errExpected, result.Error())
+			}
+			assert.Equal(t, tc.ttyExpected, pod.Spec.Containers[0].TTY)
+			assert.False(t, pod.Spec.Containers[1].TTY)
+		})
+	}
 }
 
 func defaultGameServer() *GameServer {
