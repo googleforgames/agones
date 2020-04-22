@@ -26,6 +26,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -586,9 +587,13 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	if assert.Len(t, statusErr.Status().Details.Causes, 2) {
+
+	if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) && assert.Len(t, statusErr.Status().Details.Causes, 2) {
 		assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
+	} else {
+		assert.Len(t, statusErr.Status().Details.Causes, 1)
 	}
+
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
 
