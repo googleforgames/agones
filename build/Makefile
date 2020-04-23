@@ -457,6 +457,9 @@ setup-grafana:
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
+helm-repo-update:
+	$(DOCKER_RUN) helm repo update
+
 setup-test-cluster: DOCKER_RUN_ARGS+=--network=host
 setup-test-cluster: $(ensure-build-image)
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/helm.yaml
