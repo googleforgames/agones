@@ -100,7 +100,6 @@ func TestIsBeingDeleted(t *testing.T) {
 			assert.Equal(t, tc.expected, result)
 		})
 	}
-
 }
 
 func TestGameServerFindGameServerContainer(t *testing.T) {
@@ -428,6 +427,7 @@ func TestGameServerApplyDefaults(t *testing.T) {
 }
 
 func TestGameServerValidate(t *testing.T) {
+	t.Parallel()
 	var fields []string
 	var gs GameServer
 	var causes []metav1.StatusCause
@@ -443,7 +443,6 @@ func TestGameServerValidate(t *testing.T) {
 	assert.True(t, ok)
 	assert.Empty(t, causes)
 
-	containerWithPort := "anotherTest"
 	gs = GameServer{
 		Spec: GameServerSpec{
 			Container: "",
@@ -456,7 +455,6 @@ func TestGameServerValidate(t *testing.T) {
 				HostPort:      5002,
 				PortPolicy:    Static,
 				ContainerPort: 5002,
-				Container:     &containerWithPort,
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{Containers: []corev1.Container{
@@ -629,39 +627,6 @@ func TestGameServerValidate(t *testing.T) {
 		assert.Equal(t, causes[0].Message, ErrContainerPortRequired)
 	}
 	assert.Contains(t, fields, "main.containerPort")
-
-	// container was not found
-	portContainerName := "another-container"
-	gs = GameServer{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "dev-game",
-			Namespace: "default",
-		},
-		Spec: GameServerSpec{
-			Ports: []GameServerPort{
-				{
-					Name:          "main",
-					ContainerPort: 7777,
-					PortPolicy:    Dynamic,
-					Container:     &portContainerName,
-				},
-			},
-			Container: "testing",
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{Containers: []corev1.Container{
-					{Name: "testing", Image: "testing/image"},
-				}}},
-		},
-	}
-	causes, ok = gs.Validate()
-	for _, f := range causes {
-		fields = append(fields, f.Field)
-	}
-	assert.False(t, ok)
-	if assert.Len(t, causes, 1) {
-		assert.Equal(t, causes[0].Message, ErrContainerNameInvalid)
-	}
-	assert.Contains(t, fields, "main.container")
 
 	// CPU Request > Limit
 	gs = GameServer{
@@ -914,9 +879,63 @@ func TestGameServerValidate(t *testing.T) {
 		assert.Equal(t, causes[1].Message, "Resource memory limit value must be non negative")
 	}
 	assert.Contains(t, fields, "container")
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	t.Run("validation of "+string(runtime.FeatureContainerPortAllocation), func(t *testing.T) {
+		err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
+		assert.NoError(t, err)
+
+		// container was not found
+		portContainerName := "another-container"
+		gs = GameServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dev-game",
+				Namespace: "default",
+			},
+			Spec: GameServerSpec{
+				Ports: []GameServerPort{
+					{
+						Name:          "main",
+						ContainerPort: 7777,
+						PortPolicy:    Dynamic,
+						Container:     &portContainerName,
+					},
+				},
+				Container: "testing",
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{Containers: []corev1.Container{
+						{Name: "testing", Image: "testing/image"},
+					}}},
+			},
+		}
+		causes, ok = gs.Validate()
+		for _, f := range causes {
+			fields = append(fields, f.Field)
+		}
+		assert.False(t, ok)
+		if assert.Len(t, causes, 1) {
+			assert.Equal(t, causes[0].Message, ErrContainerNameInvalid)
+		}
+		assert.Contains(t, fields, "main.container")
+
+		// Port fileld Container should not be set if FeatureContainerPortAllocation is not enabled
+		err = runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=false")
+		assert.NoError(t, err)
+
+		causes, ok = gs.Validate()
+		for _, f := range causes {
+			fields = append(fields, f.Field)
+		}
+		assert.False(t, ok)
+		if assert.Len(t, causes, 1) {
+			assert.Equal(t, causes[0].Message, "Value cannot be set unless feature flag ContainerPortAllocation is enabled")
+		}
+		assert.Contains(t, fields, "main.container")
+	})
 
 	t.Run("validation of "+string(runtime.FeaturePlayerTracking), func(t *testing.T) {
-		gs := GameServer{
+		gs = GameServer{
 			Spec: GameServerSpec{
 				Players: &PlayersSpec{InitialCapacity: 10},
 				Template: corev1.PodTemplateSpec{
@@ -933,6 +952,7 @@ func TestGameServerValidate(t *testing.T) {
 
 		err := runtime.ParseFeatures(string(runtime.FeaturePlayerTracking) + "=true")
 		assert.NoError(t, err)
+
 		gs = GameServer{
 			Spec: GameServerSpec{
 				Players: &PlayersSpec{InitialCapacity: 10},
@@ -943,6 +963,9 @@ func TestGameServerValidate(t *testing.T) {
 		causes, ok = gs.Validate()
 		assert.True(t, ok)
 		assert.Empty(t, causes)
+
+		err = runtime.ParseFeatures(string(runtime.FeaturePlayerTracking) + "=false")
+		assert.NoError(t, err)
 	})
 }
 

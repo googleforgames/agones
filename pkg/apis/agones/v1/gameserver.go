@@ -360,8 +360,20 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "players",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled,", runtime.FeaturePlayerTracking),
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
 			})
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+		for _, p := range gss.Ports {
+			if p.Container != nil {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueNotSupported,
+					Field:   fmt.Sprintf("%s.container", p.Name),
+					Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureContainerPortAllocation),
+				})
+			}
 		}
 	}
 
@@ -439,7 +451,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 
-			if p.Container != nil && gss.Container != "" {
+			if p.Container != nil && gss.Container != "" && runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
 				_, _, err := gss.FindContainer(*p.Container)
 				if err != nil {
 					causes = append(causes, metav1.StatusCause{
