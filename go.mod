@@ -33,7 +33,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.0
 	go.opencensus.io v0.22.3
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
@@ -45,7 +45,6 @@ require (
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0-20170531160350-a96e63847dc3
-	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b // kubernetes-1.14.10
 	k8s.io/apiextensions-apiserver v0.0.0-20191212015246-8fe0c124fb40 // kubernetes-1.14.10
 	k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689 // kubernetes-1.14.10
