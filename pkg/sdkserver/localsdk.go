@@ -383,14 +383,28 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // PlayerConnect should be called when a player connects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+// IsPlayerConnected returns if the player ID is connected or not
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+// GetConnectedPlayers returns if the players are connected or not
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (l *LocalSDKServer) GetConnectedPlayers(ctx context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	panic("implement me")
 }
 

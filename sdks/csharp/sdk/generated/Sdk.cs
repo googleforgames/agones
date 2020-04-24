@@ -27,7 +27,7 @@ namespace Agones.Dev.Sdk {
             "CglzZGsucHJvdG8SDmFnb25lcy5kZXYuc2RrGhxnb29nbGUvYXBpL2Fubm90",
             "YXRpb25zLnByb3RvIgcKBUVtcHR5IiYKCEtleVZhbHVlEgsKA2tleRgBIAEo",
             "CRINCgV2YWx1ZRgCIAEoCSIbCghEdXJhdGlvbhIPCgdzZWNvbmRzGAEgASgD",
-            "IucHCgpHYW1lU2VydmVyEjoKC29iamVjdF9tZXRhGAEgASgLMiUuYWdvbmVz",
+            "IvQHCgpHYW1lU2VydmVyEjoKC29iamVjdF9tZXRhGAEgASgLMiUuYWdvbmVz",
             "LmRldi5zZGsuR2FtZVNlcnZlci5PYmplY3RNZXRhEi0KBHNwZWMYAiABKAsy",
             "Hy5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlNwZWMSMQoGc3RhdHVzGAMg",
             "ASgLMiEuYWdvbmVzLmRldi5zZGsuR2FtZVNlcnZlci5TdGF0dXMakwMKCk9i",
@@ -43,30 +43,31 @@ namespace Agones.Dev.Sdk {
             "cGVjEjYKBmhlYWx0aBgBIAEoCzImLmFnb25lcy5kZXYuc2RrLkdhbWVTZXJ2",
             "ZXIuU3BlYy5IZWFsdGgabAoGSGVhbHRoEhAKCGRpc2FibGVkGAEgASgIEhYK",
             "DnBlcmlvZF9zZWNvbmRzGAIgASgFEhkKEWZhaWx1cmVfdGhyZXNob2xkGAMg",
-            "ASgFEh0KFWluaXRpYWxfZGVsYXlfc2Vjb25kcxgEIAEoBRr1AQoGU3RhdHVz",
+            "ASgFEh0KFWluaXRpYWxfZGVsYXlfc2Vjb25kcxgEIAEoBRqCAgoGU3RhdHVz",
             "Eg0KBXN0YXRlGAEgASgJEg8KB2FkZHJlc3MYAiABKAkSNQoFcG9ydHMYAyAD",
             "KAsyJi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0YXR1cy5Qb3J0Ej8K",
             "B1BsYXllcnMYBCABKAsyLi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0",
             "YXR1cy5QbGF5ZXJTdGF0dXMaIgoEUG9ydBIMCgRuYW1lGAEgASgJEgwKBHBv",
-            "cnQYAiABKAUaLwoMUGxheWVyU3RhdHVzEg0KBWNvdW50GAEgASgDEhAKCGNh",
-            "cGFjaXR5GAIgASgDMoYGCgNTREsSSAoFUmVhZHkSFS5hZ29uZXMuZGV2LnNk",
-            "ay5FbXB0eRoVLmFnb25lcy5kZXYuc2RrLkVtcHR5IhGC0+STAgsiBi9yZWFk",
-            "eToBKhJOCghBbGxvY2F0ZRIVLmFnb25lcy5kZXYuc2RrLkVtcHR5GhUuYWdv",
-            "bmVzLmRldi5zZGsuRW1wdHkiFILT5JMCDiIJL2FsbG9jYXRlOgEqEk4KCFNo",
-            "dXRkb3duEhUuYWdvbmVzLmRldi5zZGsuRW1wdHkaFS5hZ29uZXMuZGV2LnNk",
-            "ay5FbXB0eSIUgtPkkwIOIgkvc2h1dGRvd246ASoSTAoGSGVhbHRoEhUuYWdv",
-            "bmVzLmRldi5zZGsuRW1wdHkaFS5hZ29uZXMuZGV2LnNkay5FbXB0eSISgtPk",
-            "kwIMIgcvaGVhbHRoOgEqKAESVwoNR2V0R2FtZVNlcnZlchIVLmFnb25lcy5k",
-            "ZXYuc2RrLkVtcHR5GhouYWdvbmVzLmRldi5zZGsuR2FtZVNlcnZlciITgtPk",
-            "kwINEgsvZ2FtZXNlcnZlchJhCg9XYXRjaEdhbWVTZXJ2ZXISFS5hZ29uZXMu",
-            "ZGV2LnNkay5FbXB0eRoaLmFnb25lcy5kZXYuc2RrLkdhbWVTZXJ2ZXIiGYLT",
-            "5JMCExIRL3dhdGNoL2dhbWVzZXJ2ZXIwARJXCghTZXRMYWJlbBIYLmFnb25l",
-            "cy5kZXYuc2RrLktleVZhbHVlGhUuYWdvbmVzLmRldi5zZGsuRW1wdHkiGoLT",
-            "5JMCFBoPL21ldGFkYXRhL2xhYmVsOgEqEmEKDVNldEFubm90YXRpb24SGC5h",
-            "Z29uZXMuZGV2LnNkay5LZXlWYWx1ZRoVLmFnb25lcy5kZXYuc2RrLkVtcHR5",
-            "Ih+C0+STAhkaFC9tZXRhZGF0YS9hbm5vdGF0aW9uOgEqEk8KB1Jlc2VydmUS",
-            "GC5hZ29uZXMuZGV2LnNkay5EdXJhdGlvbhoVLmFnb25lcy5kZXYuc2RrLkVt",
-            "cHR5IhOC0+STAg0iCC9yZXNlcnZlOgEqQgVaA3Nka2IGcHJvdG8z"));
+            "cnQYAiABKAUaPAoMUGxheWVyU3RhdHVzEg0KBWNvdW50GAEgASgDEhAKCGNh",
+            "cGFjaXR5GAIgASgDEgsKA0lEcxgDIAMoCTKGBgoDU0RLEkgKBVJlYWR5EhUu",
+            "YWdvbmVzLmRldi5zZGsuRW1wdHkaFS5hZ29uZXMuZGV2LnNkay5FbXB0eSIR",
+            "gtPkkwILIgYvcmVhZHk6ASoSTgoIQWxsb2NhdGUSFS5hZ29uZXMuZGV2LnNk",
+            "ay5FbXB0eRoVLmFnb25lcy5kZXYuc2RrLkVtcHR5IhSC0+STAg4iCS9hbGxv",
+            "Y2F0ZToBKhJOCghTaHV0ZG93bhIVLmFnb25lcy5kZXYuc2RrLkVtcHR5GhUu",
+            "YWdvbmVzLmRldi5zZGsuRW1wdHkiFILT5JMCDiIJL3NodXRkb3duOgEqEkwK",
+            "BkhlYWx0aBIVLmFnb25lcy5kZXYuc2RrLkVtcHR5GhUuYWdvbmVzLmRldi5z",
+            "ZGsuRW1wdHkiEoLT5JMCDCIHL2hlYWx0aDoBKigBElcKDUdldEdhbWVTZXJ2",
+            "ZXISFS5hZ29uZXMuZGV2LnNkay5FbXB0eRoaLmFnb25lcy5kZXYuc2RrLkdh",
+            "bWVTZXJ2ZXIiE4LT5JMCDRILL2dhbWVzZXJ2ZXISYQoPV2F0Y2hHYW1lU2Vy",
+            "dmVyEhUuYWdvbmVzLmRldi5zZGsuRW1wdHkaGi5hZ29uZXMuZGV2LnNkay5H",
+            "YW1lU2VydmVyIhmC0+STAhMSES93YXRjaC9nYW1lc2VydmVyMAESVwoIU2V0",
+            "TGFiZWwSGC5hZ29uZXMuZGV2LnNkay5LZXlWYWx1ZRoVLmFnb25lcy5kZXYu",
+            "c2RrLkVtcHR5IhqC0+STAhQaDy9tZXRhZGF0YS9sYWJlbDoBKhJhCg1TZXRB",
+            "bm5vdGF0aW9uEhguYWdvbmVzLmRldi5zZGsuS2V5VmFsdWUaFS5hZ29uZXMu",
+            "ZGV2LnNkay5FbXB0eSIfgtPkkwIZGhQvbWV0YWRhdGEvYW5ub3RhdGlvbjoB",
+            "KhJPCgdSZXNlcnZlEhguYWdvbmVzLmRldi5zZGsuRHVyYXRpb24aFS5hZ29u",
+            "ZXMuZGV2LnNkay5FbXB0eSITgtPkkwINIggvcmVzZXJ2ZToBKkIFWgNzZGti",
+            "BnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -76,7 +77,7 @@ namespace Agones.Dev.Sdk {
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer), global::Agones.Dev.Sdk.GameServer.Parser, new[]{ "ObjectMeta", "Spec", "Status" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta), global::Agones.Dev.Sdk.GameServer.Types.ObjectMeta.Parser, new[]{ "Name", "Namespace", "Uid", "ResourceVersion", "Generation", "CreationTimestamp", "DeletionTimestamp", "Annotations", "Labels" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, }),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec), global::Agones.Dev.Sdk.GameServer.Types.Spec.Parser, new[]{ "Health" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health), global::Agones.Dev.Sdk.GameServer.Types.Spec.Types.Health.Parser, new[]{ "Disabled", "PeriodSeconds", "FailureThreshold", "InitialDelaySeconds" }, null, null, null)}),
             new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status), global::Agones.Dev.Sdk.GameServer.Types.Status.Parser, new[]{ "State", "Address", "Ports", "Players" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.Port.Parser, new[]{ "Name", "Port_" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus.Parser, new[]{ "Count", "Capacity" }, null, null, null)})})
+            new pbr::GeneratedClrTypeInfo(typeof(global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus), global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus.Parser, new[]{ "Count", "Capacity", "IDs" }, null, null, null)})})
           }));
     }
     #endregion
@@ -1795,6 +1796,7 @@ namespace Agones.Dev.Sdk {
             public PlayerStatus(PlayerStatus other) : this() {
               count_ = other.count_;
               capacity_ = other.capacity_;
+              iDs_ = other.iDs_.Clone();
               _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
             }
 
@@ -1825,6 +1827,16 @@ namespace Agones.Dev.Sdk {
               }
             }
 
+            /// <summary>Field number for the "IDs" field.</summary>
+            public const int IDsFieldNumber = 3;
+            private static readonly pb::FieldCodec<string> _repeated_iDs_codec
+                = pb::FieldCodec.ForString(26);
+            private readonly pbc::RepeatedField<string> iDs_ = new pbc::RepeatedField<string>();
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+            public pbc::RepeatedField<string> IDs {
+              get { return iDs_; }
+            }
+
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public override bool Equals(object other) {
               return Equals(other as PlayerStatus);
@@ -1840,6 +1852,7 @@ namespace Agones.Dev.Sdk {
               }
               if (Count != other.Count) return false;
               if (Capacity != other.Capacity) return false;
+              if(!iDs_.Equals(other.iDs_)) return false;
               return Equals(_unknownFields, other._unknownFields);
             }
 
@@ -1848,6 +1861,7 @@ namespace Agones.Dev.Sdk {
               int hash = 1;
               if (Count != 0L) hash ^= Count.GetHashCode();
               if (Capacity != 0L) hash ^= Capacity.GetHashCode();
+              hash ^= iDs_.GetHashCode();
               if (_unknownFields != null) {
                 hash ^= _unknownFields.GetHashCode();
               }
@@ -1869,6 +1883,7 @@ namespace Agones.Dev.Sdk {
                 output.WriteRawTag(16);
                 output.WriteInt64(Capacity);
               }
+              iDs_.WriteTo(output, _repeated_iDs_codec);
               if (_unknownFields != null) {
                 _unknownFields.WriteTo(output);
               }
@@ -1883,6 +1898,7 @@ namespace Agones.Dev.Sdk {
               if (Capacity != 0L) {
                 size += 1 + pb::CodedOutputStream.ComputeInt64Size(Capacity);
               }
+              size += iDs_.CalculateSize(_repeated_iDs_codec);
               if (_unknownFields != null) {
                 size += _unknownFields.CalculateSize();
               }
@@ -1900,6 +1916,7 @@ namespace Agones.Dev.Sdk {
               if (other.Capacity != 0L) {
                 Capacity = other.Capacity;
               }
+              iDs_.Add(other.iDs_);
               _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
             }
 
@@ -1917,6 +1934,10 @@ namespace Agones.Dev.Sdk {
                   }
                   case 16: {
                     Capacity = input.ReadInt64();
+                    break;
+                  }
+                  case 26: {
+                    iDs_.AddEntriesFrom(input, _repeated_iDs_codec);
                     break;
                   }
                 }
