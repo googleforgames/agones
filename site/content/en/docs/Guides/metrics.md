@@ -190,7 +190,7 @@ kubectl apply -f ./build/grafana/
 Now we can install [grafana chart](https://github.com/helm/charts/tree/master/stable/grafana) from stable repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash
-helm install --wait --name grafana stable/grafana --version=5.0.11 --namespace metrics \
+helm install --wait --name grafana stable/grafana --version=5.0.13 --namespace metrics \
   --set adminPassword=<your-admin-password> -f ./build/grafana.yaml
 ```
 
