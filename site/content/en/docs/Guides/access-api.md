@@ -116,13 +116,14 @@ func main() {
 }
 ```
 In order to create GS using provided example, you can run it as a Kubernetes Job:
-```
+```bash
 $ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/crd-client/create-gs.yaml --namespace agones-system
 $ kubectl get pods --namespace agones-system
 NAME                                 READY   STATUS      RESTARTS   AGE
-pi-with-timeout-8qvfj                0/1     Completed   0          6s
-$ kubectl logs pi-with-timeout-8qvfj  --namespace agones-syste
-{"message":"\u0026{0xc000243e00 default}","severity":"info","source":"main","time":"2019-12-06T14:36:54.265857671Z"}
+create-gs-6wz86-7qsm5                0/1     Completed   0          6s
+$ kubectl logs create-gs-6wz86-7qsm5  --namespace agones-system
+{"message":"\u0026{0xc0001dde00 default}","severity":"info","source":"main","time":"2020-04-21T11:14:00.477576428Z"}
+{"message":"New GameServer name is: helm-test-server-fxfgg","severity":"info","time":"2020-04-21T11:14:00.516024697Z"}
 ```
 You have just created a GameServer using Kubernetes Go Client.
 
