@@ -47,7 +47,7 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 func request_SDK_PlayerConnect_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerId
+	var protoReq PlayerID
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -64,7 +64,7 @@ func request_SDK_PlayerConnect_0(ctx context.Context, marshaler runtime.Marshale
 }
 
 func local_request_SDK_PlayerConnect_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerId
+	var protoReq PlayerID
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -81,7 +81,7 @@ func local_request_SDK_PlayerConnect_0(ctx context.Context, marshaler runtime.Ma
 }
 
 func request_SDK_PlayerDisconnect_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerId
+	var protoReq PlayerID
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -98,7 +98,7 @@ func request_SDK_PlayerDisconnect_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func local_request_SDK_PlayerDisconnect_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq PlayerId
+	var protoReq PlayerID
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -184,6 +184,78 @@ func local_request_SDK_GetPlayerCount_0(ctx context.Context, marshaler runtime.M
 
 }
 
+func request_SDK_IsPlayerConnected_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PlayerID
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["playerID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "playerID")
+	}
+
+	protoReq.PlayerID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "playerID", err)
+	}
+
+	msg, err := client.IsPlayerConnected(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_SDK_IsPlayerConnected_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PlayerID
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["playerID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "playerID")
+	}
+
+	protoReq.PlayerID, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "playerID", err)
+	}
+
+	msg, err := server.IsPlayerConnected(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_SDK_GetConnectedPlayers_0(ctx context.Context, marshaler runtime.Marshaler, client SDKClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Empty
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.GetConnectedPlayers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_SDK_GetConnectedPlayers_0(ctx context.Context, marshaler runtime.Marshaler, server SDKServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq Empty
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetConnectedPlayers(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 // RegisterSDKHandlerServer registers the http handlers for service SDK to "mux".
 // UnaryRPC     :call SDKServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -229,7 +301,7 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 
 	})
 
-	mux.Handle("POST", pattern_SDK_SetPlayerCapacity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SDK_SetPlayerCapacity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -286,6 +358,46 @@ func RegisterSDKHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		}
 
 		forward_SDK_GetPlayerCount_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SDK_IsPlayerConnected_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_SDK_IsPlayerConnected_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SDK_IsPlayerConnected_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SDK_GetConnectedPlayers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_SDK_GetConnectedPlayers_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SDK_GetConnectedPlayers_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -370,7 +482,7 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
-	mux.Handle("POST", pattern_SDK_SetPlayerCapacity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_SDK_SetPlayerCapacity_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -430,6 +542,46 @@ func RegisterSDKHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
+	mux.Handle("GET", pattern_SDK_IsPlayerConnected_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_SDK_IsPlayerConnected_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SDK_IsPlayerConnected_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_SDK_GetConnectedPlayers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_SDK_GetConnectedPlayers_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_SDK_GetConnectedPlayers_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -443,6 +595,10 @@ var (
 	pattern_SDK_GetPlayerCapacity_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"alpha", "player", "capacity"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_SDK_GetPlayerCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"alpha", "player", "count"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_SDK_IsPlayerConnected_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"alpha", "player", "connected", "playerID"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_SDK_GetConnectedPlayers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"alpha", "player", "connected"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -455,4 +611,8 @@ var (
 	forward_SDK_GetPlayerCapacity_0 = runtime.ForwardResponseMessage
 
 	forward_SDK_GetPlayerCount_0 = runtime.ForwardResponseMessage
+
+	forward_SDK_IsPlayerConnected_0 = runtime.ForwardResponseMessage
+
+	forward_SDK_GetConnectedPlayers_0 = runtime.ForwardResponseMessage
 )

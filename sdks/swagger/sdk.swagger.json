@@ -344,6 +344,12 @@
         "capacity": {
           "type": "string",
           "format": "int64"
+        },
+        "IDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTesting]"

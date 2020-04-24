@@ -207,6 +207,28 @@ $ helm install --name my-release --namespace agones-system -f values.yaml agones
 You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
 {{< /alert >}}
 
+{{% feature publishVersion="1.6.0" %}}
+Check the Agones installation by running the following command:
+```bash
+$ helm test my-release --cleanup                     
+RUNNING: agones-test
+PASSED: agones-test
+```
+
+This test would create a `GameServer` resource and delete it afterwards.
+
+{{< alert title="Tip" color="info">}}
+If you receive the following error:
+```
+RUNNING: agones-test
+ERROR: pods "agones-test" already exists
+Error: 1 test(s) failed
+```
+That mean that you skiped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
+{{< /alert >}}
+
+{{% /feature %}}
+
 ## TLS Certificates
 
 By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.

@@ -238,7 +238,7 @@ if (goog.DEBUG && !COMPILED) {
  * @constructor
  */
 proto.agones.dev.sdk.GameServer.Status.PlayerStatus = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.agones.dev.sdk.GameServer.Status.PlayerStatus.repeatedFields_, null);
 };
 goog.inherits(proto.agones.dev.sdk.GameServer.Status.PlayerStatus, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -1779,6 +1779,13 @@ proto.agones.dev.sdk.GameServer.Status.Port.prototype.setPort = function(value) 
 
 
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.agones.dev.sdk.GameServer.Status.PlayerStatus.repeatedFields_ = [3];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -1809,7 +1816,8 @@ proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.toObject = functio
 proto.agones.dev.sdk.GameServer.Status.PlayerStatus.toObject = function(includeInstance, msg) {
   var obj = {
     count: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    capacity: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    capacity: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    idsList: jspb.Message.getRepeatedField(msg, 3)
   };
 
   if (includeInstance) {
@@ -1854,6 +1862,10 @@ proto.agones.dev.sdk.GameServer.Status.PlayerStatus.deserializeBinaryFromReader 
       var value = /** @type {number} */ (reader.readInt64());
       msg.setCapacity(value);
       break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addIds(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -1897,6 +1909,13 @@ proto.agones.dev.sdk.GameServer.Status.PlayerStatus.serializeBinaryToWriter = fu
       f
     );
   }
+  f = message.getIdsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -1927,6 +1946,38 @@ proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.getCapacity = func
 /** @param {number} value */
 proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.setCapacity = function(value) {
   jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * repeated string IDs = 3;
+ * @return {!Array<string>}
+ */
+proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.getIdsList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 3));
+};
+
+
+/** @param {!Array<string>} value */
+proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.setIdsList = function(value) {
+  jspb.Message.setField(this, 3, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ */
+proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.addIds = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ */
+proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.clearIdsList = function() {
+  this.setIdsList([]);
 };
 
 

@@ -12,21 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Pod
 metadata:
-  generateName: create-gs-
+  name: "{{ .Release.Name }}-test"
+  namespace: agones-system
+  annotations:
+    "helm.sh/hook": test-success
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
-  backoffLimit: 5
-  activeDeadlineSeconds: 100
-  template:
-    spec:
-      serviceAccountName: agones-controller
-      containers:
-      - name: create-gameserver
-        image: gcr.io/agones-images/crd-client:0.3
-        imagePullPolicy: Always
-        env:
-        - name: GAMESERVER_IMAGE
-          value: "gcr.io/agones-images/udp-server:0.19"
-      restartPolicy: Never
+  serviceAccountName: agones-controller
+  containers:
+  - name: create-gameserver
+    image: gcr.io/agones-images/crd-client:0.3
+    imagePullPolicy: Always
+    env:
+    - name: GAMESERVER_IMAGE
+      value: "gcr.io/agones-images/udp-server:0.19"
+    - name: IS_HELM_TEST
+      value: "true"
+    - name: GAMESERVERS_NAMESPACE
+      value: "{{ index .Values.gameservers.namespaces 0 }}"
+  restartPolicy: Never
