@@ -1322,6 +1322,45 @@ data:
   tls-ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
 
 ---
+# Source: agones/templates/tests/test-runner.yaml
+# Copyright 2020 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "agones-manual-test"
+  namespace: agones-system
+  annotations:
+    "helm.sh/hook": test-success
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  serviceAccountName: agones-controller
+  containers:
+  - name: create-gameserver
+    image: gcr.io/agones-images/crd-client:0.3
+    imagePullPolicy: Always
+    env:
+    - name: GAMESERVER_IMAGE
+      value: "gcr.io/agones-images/udp-server:0.19"
+    - name: IS_HELM_TEST
+      value: "true"
+    - name: GAMESERVERS_NAMESPACE
+      value: "default"
+  restartPolicy: Never
+
+---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
 #
