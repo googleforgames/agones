@@ -366,6 +366,7 @@ const ::google::protobuf::uint32 TableStruct_sdk_2eproto::offsets[] PROTOBUF_SEC
   ~0u,  // no _weak_field_map_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_PlayerStatus, count_),
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_PlayerStatus, capacity_),
+  PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status_PlayerStatus, ids_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::agones::dev::sdk::GameServer_Status, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -395,8 +396,8 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] PROTOBUF_SE
   { 59, -1, sizeof(::agones::dev::sdk::GameServer_Spec)},
   { 65, -1, sizeof(::agones::dev::sdk::GameServer_Status_Port)},
   { 72, -1, sizeof(::agones::dev::sdk::GameServer_Status_PlayerStatus)},
-  { 79, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
-  { 88, -1, sizeof(::agones::dev::sdk::GameServer)},
+  { 80, -1, sizeof(::agones::dev::sdk::GameServer_Status)},
+  { 89, -1, sizeof(::agones::dev::sdk::GameServer)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -424,7 +425,7 @@ const char descriptor_table_protodef_sdk_2eproto[] =
   "\n\tsdk.proto\022\016agones.dev.sdk\032\034google/api/"
   "annotations.proto\"\007\n\005Empty\"&\n\010KeyValue\022\013"
   "\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t\"\033\n\010Duration\022\017"
-  "\n\007seconds\030\001 \001(\003\"\347\007\n\nGameServer\022:\n\013object"
+  "\n\007seconds\030\001 \001(\003\"\364\007\n\nGameServer\022:\n\013object"
   "_meta\030\001 \001(\0132%.agones.dev.sdk.GameServer."
   "ObjectMeta\022-\n\004spec\030\002 \001(\0132\037.agones.dev.sd"
   "k.GameServer.Spec\0221\n\006status\030\003 \001(\0132!.agon"
@@ -443,38 +444,38 @@ const char descriptor_table_protodef_sdk_2eproto[] =
   "eServer.Spec.Health\032l\n\006Health\022\020\n\010disable"
   "d\030\001 \001(\010\022\026\n\016period_seconds\030\002 \001(\005\022\031\n\021failu"
   "re_threshold\030\003 \001(\005\022\035\n\025initial_delay_seco"
-  "nds\030\004 \001(\005\032\365\001\n\006Status\022\r\n\005state\030\001 \001(\t\022\017\n\007a"
+  "nds\030\004 \001(\005\032\202\002\n\006Status\022\r\n\005state\030\001 \001(\t\022\017\n\007a"
   "ddress\030\002 \001(\t\0225\n\005ports\030\003 \003(\0132&.agones.dev"
   ".sdk.GameServer.Status.Port\022\?\n\007Players\030\004"
   " \001(\0132..agones.dev.sdk.GameServer.Status."
   "PlayerStatus\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004po"
-  "rt\030\002 \001(\005\032/\n\014PlayerStatus\022\r\n\005count\030\001 \001(\003\022"
-  "\020\n\010capacity\030\002 \001(\0032\206\006\n\003SDK\022H\n\005Ready\022\025.ago"
-  "nes.dev.sdk.Empty\032\025.agones.dev.sdk.Empty"
-  "\"\021\202\323\344\223\002\013\"\006/ready:\001*\022N\n\010Allocate\022\025.agones"
-  ".dev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202"
-  "\323\344\223\002\016\"\t/allocate:\001*\022N\n\010Shutdown\022\025.agones"
-  ".dev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\024\202"
-  "\323\344\223\002\016\"\t/shutdown:\001*\022L\n\006Health\022\025.agones.d"
-  "ev.sdk.Empty\032\025.agones.dev.sdk.Empty\"\022\202\323\344"
-  "\223\002\014\"\007/health:\001*(\001\022W\n\rGetGameServer\022\025.ago"
-  "nes.dev.sdk.Empty\032\032.agones.dev.sdk.GameS"
-  "erver\"\023\202\323\344\223\002\r\022\013/gameserver\022a\n\017WatchGameS"
-  "erver\022\025.agones.dev.sdk.Empty\032\032.agones.de"
-  "v.sdk.GameServer\"\031\202\323\344\223\002\023\022\021/watch/gameser"
-  "ver0\001\022W\n\010SetLabel\022\030.agones.dev.sdk.KeyVa"
-  "lue\032\025.agones.dev.sdk.Empty\"\032\202\323\344\223\002\024\032\017/met"
-  "adata/label:\001*\022a\n\rSetAnnotation\022\030.agones"
-  ".dev.sdk.KeyValue\032\025.agones.dev.sdk.Empty"
-  "\"\037\202\323\344\223\002\031\032\024/metadata/annotation:\001*\022O\n\007Res"
-  "erve\022\030.agones.dev.sdk.Duration\032\025.agones."
-  "dev.sdk.Empty\"\023\202\323\344\223\002\r\"\010/reserve:\001*B\005Z\003sd"
-  "kb\006proto3"
+  "rt\030\002 \001(\005\032<\n\014PlayerStatus\022\r\n\005count\030\001 \001(\003\022"
+  "\020\n\010capacity\030\002 \001(\003\022\013\n\003IDs\030\003 \003(\t2\206\006\n\003SDK\022H"
+  "\n\005Ready\022\025.agones.dev.sdk.Empty\032\025.agones."
+  "dev.sdk.Empty\"\021\202\323\344\223\002\013\"\006/ready:\001*\022N\n\010Allo"
+  "cate\022\025.agones.dev.sdk.Empty\032\025.agones.dev"
+  ".sdk.Empty\"\024\202\323\344\223\002\016\"\t/allocate:\001*\022N\n\010Shut"
+  "down\022\025.agones.dev.sdk.Empty\032\025.agones.dev"
+  ".sdk.Empty\"\024\202\323\344\223\002\016\"\t/shutdown:\001*\022L\n\006Heal"
+  "th\022\025.agones.dev.sdk.Empty\032\025.agones.dev.s"
+  "dk.Empty\"\022\202\323\344\223\002\014\"\007/health:\001*(\001\022W\n\rGetGam"
+  "eServer\022\025.agones.dev.sdk.Empty\032\032.agones."
+  "dev.sdk.GameServer\"\023\202\323\344\223\002\r\022\013/gameserver\022"
+  "a\n\017WatchGameServer\022\025.agones.dev.sdk.Empt"
+  "y\032\032.agones.dev.sdk.GameServer\"\031\202\323\344\223\002\023\022\021/"
+  "watch/gameserver0\001\022W\n\010SetLabel\022\030.agones."
+  "dev.sdk.KeyValue\032\025.agones.dev.sdk.Empty\""
+  "\032\202\323\344\223\002\024\032\017/metadata/label:\001*\022a\n\rSetAnnota"
+  "tion\022\030.agones.dev.sdk.KeyValue\032\025.agones."
+  "dev.sdk.Empty\"\037\202\323\344\223\002\031\032\024/metadata/annotat"
+  "ion:\001*\022O\n\007Reserve\022\030.agones.dev.sdk.Durat"
+  "ion\032\025.agones.dev.sdk.Empty\"\023\202\323\344\223\002\r\"\010/res"
+  "erve:\001*B\005Z\003sdkb\006proto3"
   ;
 ::google::protobuf::internal::DescriptorTable descriptor_table_sdk_2eproto = {
   false, InitDefaults_sdk_2eproto, 
   descriptor_table_protodef_sdk_2eproto,
-  "sdk.proto", &assign_descriptors_table_sdk_2eproto, 1929,
+  "sdk.proto", &assign_descriptors_table_sdk_2eproto, 1942,
 };
 
 void AddDescriptors_sdk_2eproto() {
@@ -3417,6 +3418,7 @@ class GameServer_Status_PlayerStatus::HasBitSetters {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int GameServer_Status_PlayerStatus::kCountFieldNumber;
 const int GameServer_Status_PlayerStatus::kCapacityFieldNumber;
+const int GameServer_Status_PlayerStatus::kIDsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 GameServer_Status_PlayerStatus::GameServer_Status_PlayerStatus()
@@ -3426,7 +3428,8 @@ GameServer_Status_PlayerStatus::GameServer_Status_PlayerStatus()
 }
 GameServer_Status_PlayerStatus::GameServer_Status_PlayerStatus(const GameServer_Status_PlayerStatus& from)
   : ::google::protobuf::Message(),
-      _internal_metadata_(nullptr) {
+      _internal_metadata_(nullptr),
+      ids_(from.ids_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&count_, &from.count_,
     static_cast<size_t>(reinterpret_cast<char*>(&capacity_) -
@@ -3435,6 +3438,8 @@ GameServer_Status_PlayerStatus::GameServer_Status_PlayerStatus(const GameServer_
 }
 
 void GameServer_Status_PlayerStatus::SharedCtor() {
+  ::google::protobuf::internal::InitSCC(
+      &scc_info_GameServer_Status_PlayerStatus_sdk_2eproto.base);
   ::memset(&count_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&capacity_) -
       reinterpret_cast<char*>(&count_)) + sizeof(capacity_));
@@ -3463,6 +3468,7 @@ void GameServer_Status_PlayerStatus::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  ids_.Clear();
   ::memset(&count_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&capacity_) -
       reinterpret_cast<char*>(&count_)) + sizeof(capacity_));
@@ -3496,6 +3502,25 @@ const char* GameServer_Status_PlayerStatus::_InternalParse(const char* begin, co
         GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
         break;
       }
+      // repeated string IDs = 3;
+      case 3: {
+        if (static_cast<::google::protobuf::uint8>(tag) != 26) goto handle_unusual;
+        do {
+          ptr = ::google::protobuf::io::ReadSize(ptr, &size);
+          GOOGLE_PROTOBUF_PARSER_ASSERT(ptr);
+          ctx->extra_parse_data().SetFieldName("agones.dev.sdk.GameServer.Status.PlayerStatus.IDs");
+          object = msg->add_ids();
+          if (size > end - ptr + ::google::protobuf::internal::ParseContext::kSlopBytes) {
+            parser_till_end = ::google::protobuf::internal::GreedyStringParserUTF8;
+            goto string_till_end;
+          }
+          GOOGLE_PROTOBUF_PARSER_ASSERT(::google::protobuf::internal::StringCheckUTF8(ptr, size, ctx));
+          ::google::protobuf::internal::InlineGreedyStringParser(object, ptr, size, ctx);
+          ptr += size;
+          if (ptr >= end) break;
+        } while ((::google::protobuf::io::UnalignedLoad<::google::protobuf::uint64>(ptr) & 255) == 26 && (ptr += 1));
+        break;
+      }
       default: {
       handle_unusual:
         if ((tag & 7) == 4 || tag == 0) {
@@ -3511,6 +3536,13 @@ const char* GameServer_Status_PlayerStatus::_InternalParse(const char* begin, co
     }  // switch
   }  // while
   return ptr;
+string_till_end:
+  static_cast<::std::string*>(object)->clear();
+  static_cast<::std::string*>(object)->reserve(size);
+  goto len_delim_till_end;
+len_delim_till_end:
+  return ctx->StoreAndTailCall(ptr, end, {_InternalParse, msg},
+                               {parser_till_end, object}, size);
 }
 #else  // GOOGLE_PROTOBUF_ENABLE_EXPERIMENTAL_PARSER
 bool GameServer_Status_PlayerStatus::MergePartialFromCodedStream(
@@ -3543,6 +3575,22 @@ bool GameServer_Status_PlayerStatus::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &capacity_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated string IDs = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) == (26 & 0xFF)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_ids()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->ids(this->ids_size() - 1).data(),
+            static_cast<int>(this->ids(this->ids_size() - 1).length()),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "agones.dev.sdk.GameServer.Status.PlayerStatus.IDs"));
         } else {
           goto handle_unusual;
         }
@@ -3586,6 +3634,16 @@ void GameServer_Status_PlayerStatus::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->capacity(), output);
   }
 
+  // repeated string IDs = 3;
+  for (int i = 0, n = this->ids_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->ids(i).data(), static_cast<int>(this->ids(i).length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "agones.dev.sdk.GameServer.Status.PlayerStatus.IDs");
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      3, this->ids(i), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -3609,6 +3667,16 @@ void GameServer_Status_PlayerStatus::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->capacity(), target);
   }
 
+  // repeated string IDs = 3;
+  for (int i = 0, n = this->ids_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->ids(i).data(), static_cast<int>(this->ids(i).length()),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "agones.dev.sdk.GameServer.Status.PlayerStatus.IDs");
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(3, this->ids(i), target);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields(), target);
@@ -3629,6 +3697,14 @@ size_t GameServer_Status_PlayerStatus::ByteSizeLong() const {
   ::google::protobuf::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // repeated string IDs = 3;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->ids_size());
+  for (int i = 0, n = this->ids_size(); i < n; i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->ids(i));
+  }
 
   // int64 count = 1;
   if (this->count() != 0) {
@@ -3671,6 +3747,7 @@ void GameServer_Status_PlayerStatus::MergeFrom(const GameServer_Status_PlayerSta
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  ids_.MergeFrom(from.ids_);
   if (from.count() != 0) {
     set_count(from.count());
   }
@@ -3704,6 +3781,7 @@ void GameServer_Status_PlayerStatus::Swap(GameServer_Status_PlayerStatus* other)
 void GameServer_Status_PlayerStatus::InternalSwap(GameServer_Status_PlayerStatus* other) {
   using std::swap;
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  ids_.InternalSwap(CastToBase(&other->ids_));
   swap(count_, other->count_);
   swap(capacity_, other->capacity_);
 }
