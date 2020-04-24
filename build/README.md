@@ -502,6 +502,10 @@ You can use this to collect Agones [Metrics](../site/content/en/docs/Guides/metr
 
 See [`make minikube-setup-prometheus`](#make-minikube-setup-prometheus) and [`make kind-setup-prometheus`](#make-kind-setup-prometheus) to run the installation on Minikube or Kind.
 
+#### make helm-repo-update
+
+Run helm repo update to get the mose recent charts.
+
 #### `make setup-grafana`
 
 Install Gafrana server using [stable/grafana](https://github.com/helm/charts/tree/master/stable/grafana) chart into the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).

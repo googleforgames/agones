@@ -453,9 +453,12 @@ setup-grafana: PASSWORD ?= admin
 setup-grafana:
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait grafana stable/grafana --version=5.0.11  --namespace metrics \
+		helm upgrade --install --wait grafana stable/grafana --version=5.0.13  --namespace metrics \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
+
+helm-repo-update:
+	$(DOCKER_RUN) helm repo update
 
 setup-test-cluster: DOCKER_RUN_ARGS+=--network=host
 setup-test-cluster: $(ensure-build-image)

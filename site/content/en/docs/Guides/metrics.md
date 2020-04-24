@@ -179,7 +179,7 @@ Now let's install some Grafana dashboards.
 
 ### Grafana installation
 
-Grafana is a open source time series analytics platform which supports Prometheus data source. We can also install easily import pre-built dashboards.
+Grafana is a open source time series analytics platform which supports Prometheus data source. We can also easily import pre-built dashboards.
 
 First we will install [Agones dashboard](#grafana-dashboards) as [config maps](https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/) in our cluster.
 
@@ -190,8 +190,8 @@ kubectl apply -f ./build/grafana/
 Now we can install [grafana chart](https://github.com/helm/charts/tree/master/stable/grafana) from stable repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash
-helm install --wait --name grafana stable/grafana --namespace metrics \
-  --set adminPassword=<your-admin-password> -f ../build/grafana.yaml
+helm install --wait --name grafana stable/grafana --version=5.0.13 --namespace metrics \
+  --set adminPassword=<your-admin-password> -f ./build/grafana.yaml
 ```
 
 This will install Grafana with our prepopulated dashboards and prometheus datasource [previously installed](#prometheus-installation)
