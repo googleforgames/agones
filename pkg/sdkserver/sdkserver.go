@@ -61,8 +61,8 @@ const (
 
 var (
 	_ sdk.SDKServer   = &SDKServer{}
-	_ alpha.SDKServer = &LocalSDKServer{}
-	_ beta.SDKServer  = &LocalSDKServer{}
+	_ alpha.SDKServer = &SDKServer{}
+	_ beta.SDKServer  = &SDKServer{}
 )
 
 // SDKServer is a gRPC server, that is meant to be a sidecar
@@ -546,14 +546,28 @@ func (s *SDKServer) stopReserveTimer() {
 // PlayerConnect should be called when a player connects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTesting]
-func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerId) (*alpha.Empty, error) {
+func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+// IsPlayerConnected returns if the player ID is connected or not
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+// GetConnectedPlayers returns if the players are connected or not
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTesting]
+func (s *SDKServer) GetConnectedPlayers(ctx context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	panic("implement me")
 }
 

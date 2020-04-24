@@ -42,11 +42,19 @@ type alphaMock struct {
 	capacity int64
 }
 
-func (a *alphaMock) PlayerConnect(ctx context.Context, in *alpha.PlayerId, opts ...grpc.CallOption) (*alpha.Empty, error) {
+func (a *alphaMock) PlayerConnect(ctx context.Context, in *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
-func (a *alphaMock) PlayerDisconnect(ctx context.Context, in *alpha.PlayerId, opts ...grpc.CallOption) (*alpha.Empty, error) {
+func (a *alphaMock) PlayerDisconnect(ctx context.Context, in *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+func (a *alphaMock) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+	panic("implement me")
+}
+
+func (a *alphaMock) GetConnectedPlayers(ctx context.Context, id *alpha.Empty, opts ...grpc.CallOption) (*alpha.PlayerIDList, error) {
 	panic("implement me")
 }
 
