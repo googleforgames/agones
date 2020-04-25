@@ -383,7 +383,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   fmt.Sprintf("annotations.%s", DevAddressAnnotation),
-				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address.", DevAddressAnnotation, devAddress),
+				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address", devAddress, DevAddressAnnotation),
 			})
 		}
 
@@ -392,7 +392,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueRequired,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with %s", DevAddressAnnotation),
+					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with '%s'", DevAddressAnnotation),
 				})
 			}
 			if p.PortPolicy != Static {
