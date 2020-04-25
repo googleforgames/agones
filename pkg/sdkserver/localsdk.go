@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -197,6 +198,8 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 			fieldVal = l.gs.ObjectMeta.Uid
 		case "PlayerCapacity":
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
+		case "PlayerIDs":
+			fieldVal = strings.Join(l.gs.Status.Players.IDs, ",")
 		default:
 			l.logger.Error("unexpected Field to compare")
 		}
@@ -384,28 +387,139 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
-	panic("implement me")
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	l.logger.WithField("playerID", id.PlayerID).Info("Player Connected")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
+	}
+
+	// the player is already connected, return false.
+	for _, playerID := range l.gs.Status.Players.IDs {
+		if playerID == id.PlayerID {
+			return &alpha.Bool{Bool: false}, nil
+		}
+	}
+
+	if l.gs.Status.Players.Count >= l.gs.Status.Players.Capacity {
+		return &alpha.Bool{}, errors.New("Players are already at capacity")
+	}
+
+	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs, id.PlayerID)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+
+	l.update <- struct{}{}
+	l.recordRequestWithValue("playerconnect", "1234", "PlayerIDs")
+	return &alpha.Bool{Bool: true}, nil
 }
 
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
-	panic("implement me")
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	l.logger.WithField("playerID", id.PlayerID).Info("Player Disconnected")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	if l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
+	}
+
+	found := -1
+	for i, playerID := range l.gs.Status.Players.IDs {
+		if playerID == id.PlayerID {
+			found = i
+			break
+		}
+	}
+	if found == -1 {
+		return &alpha.Bool{Bool: false}, nil
+	}
+
+	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs[:found], l.gs.Status.Players.IDs[found+1:]...)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+
+	l.update <- struct{}{}
+	l.recordRequestWithValue("playerdisconnect", "", "PlayerIDs")
+	return &alpha.Bool{Bool: true}, nil
 }
 
-// IsPlayerConnected returns if the player ID is connected or not
+// IsPlayerConnected returns if the playerID is currently connected to the GameServer.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *LocalSDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
-	panic("implement me")
+func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+
+	result := &alpha.Bool{Bool: false}
+	l.logger.WithField("playerID", id.PlayerID).Info("Is a Player Connected?")
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+
+	l.recordRequestWithValue("isplayerconnected", id.PlayerID, "PlayerIDs")
+
+	if l.gs.Status.Players == nil {
+		return result, nil
+	}
+
+	for _, playerID := range l.gs.Status.Players.IDs {
+		if id.PlayerID == playerID {
+			result.Bool = true
+			break
+		}
+	}
+
+	return result, nil
 }
 
-// GetConnectedPlayers returns if the players are connected or not
+// GetConnectedPlayers returns the list of the currently connected player ids.
 // [Stage:Alpha]
 // [FeatureFlag:PlayerTracking]
-func (l *LocalSDKServer) GetConnectedPlayers(ctx context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
-	panic("implement me")
+func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	l.logger.Info("Getting Connected Players")
+
+	result := &alpha.PlayerIDList{List: []string{}}
+
+	l.gsMutex.Lock()
+	defer l.gsMutex.Unlock()
+	l.recordRequest("getconnectedplayers")
+
+	if l.gs.Status.Players == nil {
+		return result, nil
+	}
+	result.List = l.gs.Status.Players.IDs
+	return result, nil
+}
+
+// GetPlayerCount returns the current player count.
+// [Stage:Alpha]
+// [FeatureFlag:PlayerTracking]
+func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+	}
+	l.logger.Info("Getting Player Count")
+	l.recordRequest("getplayercount")
+	l.gsMutex.RLock()
+	defer l.gsMutex.RUnlock()
+
+	result := &alpha.Count{}
+	if l.gs.Status.Players != nil {
+		result.Count = l.gs.Status.Players.Count
+	}
+
+	return result, nil
 }
 
 // SetPlayerCapacity to change the game server's player capacity.
@@ -454,13 +568,6 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 	return result, nil
 }
 
-// GetPlayerCount returns the current player count.
-// [Stage:Alpha]
-// [FeatureFlag:PlayerTracking]
-func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
-	panic("implement me")
-}
-
 // Close tears down all the things
 func (l *LocalSDKServer) Close() {
 	l.updateObservers.Range(func(observer, _ interface{}) bool {
@@ -498,7 +605,7 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 func (l *LocalSDKServer) compare() {
 	if l.testMode {
 		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
-			l.logger.Errorf("Testing Failed %v %v", l.expectedSequence, l.requestSequence)
+			l.logger.WithField("expected", l.expectedSequence).WithField("received", l.requestSequence).Info("Testing Failed")
 			os.Exit(1)
 		} else {
 			l.logger.Info("Received requests match expected list. Test run was successful")
