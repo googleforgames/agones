@@ -1036,7 +1036,7 @@ func TestGameServerValidate(t *testing.T) {
 	}
 }
 
-func TestGameServerValidate_Features(t *testing.T) {
+func TestGameServerValidateFeatures(t *testing.T) {
 	t.Parallel()
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -1177,7 +1177,7 @@ func TestGameServerValidate_Features(t *testing.T) {
 	}
 }
 
-func TestGameServerPod_NoErrors(t *testing.T) {
+func TestGameServerPodNoErrors(t *testing.T) {
 	t.Parallel()
 	fixture := defaultGameServer()
 	fixture.ApplyDefaults()
@@ -1498,12 +1498,15 @@ func TestGameServerIsBeforeReady(t *testing.T) {
 
 func TestGameServerApplyToPodContainer(t *testing.T) {
 	t.Parallel()
+	type expected struct {
+		err string
+		tty bool
+	}
 
 	var testCases = []struct {
 		description string
 		gs          *GameServer
-		errExpected string
-		ttyExpected bool
+		expected    expected
 	}{
 		{
 			description: "OK, no error",
@@ -1520,8 +1523,10 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 					},
 				},
 			},
-			errExpected: "",
-			ttyExpected: true,
+			expected: expected{
+				err: "",
+				tty: true,
+			},
 		},
 		{
 			description: "container not found, error is returned",
@@ -1538,8 +1543,10 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 					},
 				},
 			},
-			errExpected: "failed to find container named mycontainer-WRONG-NAME in pod spec",
-			ttyExpected: false,
+			expected: expected{
+				err: "failed to find container named mycontainer-WRONG-NAME in pod spec",
+				tty: false,
+			},
 		},
 	}
 
@@ -1552,10 +1559,10 @@ func TestGameServerApplyToPodContainer(t *testing.T) {
 				return c
 			})
 
-			if tc.errExpected != "" && assert.NotNil(t, result) {
-				assert.Equal(t, tc.errExpected, result.Error())
+			if tc.expected.err != "" && assert.NotNil(t, result) {
+				assert.Equal(t, tc.expected.err, result.Error())
 			}
-			assert.Equal(t, tc.ttyExpected, pod.Spec.Containers[0].TTY)
+			assert.Equal(t, tc.expected.tty, pod.Spec.Containers[0].TTY)
 			assert.False(t, pod.Spec.Containers[1].TTY)
 		})
 	}

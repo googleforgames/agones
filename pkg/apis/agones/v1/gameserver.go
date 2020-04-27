@@ -447,7 +447,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: ErrHostPortDynamic,
+					Message: ErrHostPort,
 				})
 			}
 
