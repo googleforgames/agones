@@ -360,8 +360,20 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueNotSupported,
 				Field:   "players",
-				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled,", runtime.FeaturePlayerTracking),
+				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
 			})
+		}
+	}
+
+	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+		for _, p := range gss.Ports {
+			if p.Container != nil {
+				causes = append(causes, metav1.StatusCause{
+					Type:    metav1.CauseTypeFieldValueNotSupported,
+					Field:   fmt.Sprintf("%s.container", p.Name),
+					Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureContainerPortAllocation),
+				})
+			}
 		}
 	}
 
@@ -371,7 +383,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Field:   fmt.Sprintf("annotations.%s", DevAddressAnnotation),
-				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address.", DevAddressAnnotation, devAddress),
+				Message: fmt.Sprintf("Value '%s' of annotation '%s' must be a valid IP address", devAddress, DevAddressAnnotation),
 			})
 		}
 
@@ -380,7 +392,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueRequired,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with %s", DevAddressAnnotation),
+					Message: fmt.Sprintf("HostPort is required if GameServer is annotated with '%s'", DevAddressAnnotation),
 				})
 			}
 			if p.PortPolicy != Static {
@@ -435,11 +447,11 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
-					Message: ErrHostPortDynamic,
+					Message: ErrHostPort,
 				})
 			}
 
-			if p.Container != nil && gss.Container != "" {
+			if p.Container != nil && gss.Container != "" && runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
 				_, _, err := gss.FindContainer(*p.Container)
 				if err != nil {
 					causes = append(causes, metav1.StatusCause{
@@ -572,22 +584,13 @@ func (gs *GameServer) FindGameServerContainer() (int, corev1.Container, error) {
 // ApplyToPodContainer applies func(v1.Container) to the specified container in the pod.
 // Returns an error if the container is not found.
 func (gs *GameServer) ApplyToPodContainer(pod *corev1.Pod, containerName string, f func(corev1.Container) corev1.Container) error {
-	var container corev1.Container
-	containerIndex := -1
 	for i, c := range pod.Spec.Containers {
 		if c.Name == containerName {
-			container = c
-			containerIndex = i
+			pod.Spec.Containers[i] = f(c)
+			return nil
 		}
 	}
-	if containerIndex == -1 {
-		return errors.Errorf("failed to find container named %q in pod spec", containerName)
-	}
-
-	container = f(container)
-	pod.Spec.Containers[containerIndex] = container
-
-	return nil
+	return errors.Errorf("failed to find container named %s in pod spec", containerName)
 }
 
 // Pod creates a new Pod from the PodTemplateSpec
