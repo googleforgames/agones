@@ -687,6 +687,10 @@ func (s *SDKServer) updatePlayerCapacity() error {
 	gsCopy.Status.Players.Capacity = s.gsPlayerCapacity
 	s.gsUpdateMutex.RUnlock()
 
-	_, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
-	return err
+	gs, err = s.gameServerGetter.GameServers(s.namespace).Update(gsCopy)
+	if err != nil {
+		return err
+	}
+	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCapacity", fmt.Sprintf("Set to %d", gs.Status.Players.Capacity))
+	return nil
 }

@@ -627,7 +627,7 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
-	assert.Equal(t, agonesv1.ErrHostPortDynamic, statusErr.Status().Details.Causes[0].Message)
+	assert.Equal(t, agonesv1.ErrHostPort, statusErr.Status().Details.Causes[0].Message)
 
 	fltPort.Spec.Template.Spec.Ports[0].PortPolicy = agonesv1.Static
 	fltPort.Spec.Template.Spec.Ports[0].HostPort = 0
