@@ -72,6 +72,7 @@ func convert(gs *agonesv1.GameServer) *sdk.GameServer {
 			result.Status.Players = &sdk.GameServer_Status_PlayerStatus{
 				Count:    gs.Status.Players.Count,
 				Capacity: gs.Status.Players.Capacity,
+				IDs:      gs.Status.Players.IDs,
 			}
 		}
 	}
