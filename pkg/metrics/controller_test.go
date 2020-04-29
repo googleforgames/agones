@@ -292,18 +292,28 @@ func TestCalcDuration(t *testing.T) {
 		m.AgonesClient,
 		m.KubeInformerFactory,
 		m.AgonesInformerFactory)
-	gs1 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
+	gs1 := gameServerWithFleetAndState("test-fleet", "")
 	gs1.ObjectMeta.CreationTimestamp = metav1.Now()
-	gs2 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateReady)
-	gs2.ObjectMeta.CreationTimestamp = metav1.Now()
-	diff := gs2.ObjectMeta.CreationTimestamp.Local().Sub(gs1.ObjectMeta.CreationTimestamp.Local()).Seconds()
-	t.Log("Time of a diff ", diff)
-	err := c.calcDuration(gs1, gs2)
+	gs2 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
+	gs2.ObjectMeta.CreationTimestamp = gs1.ObjectMeta.CreationTimestamp
+	duration, err := c.calcDuration(gs1, gs2)
 	assert.NoError(t, err, "Unable to caculate duration of a particular state")
-	keys := c.gameServerStateLastChange.Keys()
-	assert.Len(t, keys, 1)
-	val, ok := c.gameServerStateLastChange.Get(keys[0])
-	if assert.True(t, ok, "Error in Get") {
-		assert.True(t, val.(float64) > diff, "Time diff should be calculated properly")
-	}
+	assert.True(t, duration > 0., "Time diff should be calculated properly")
+	gs3 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateRequestReady)
+	gs3.ObjectMeta.CreationTimestamp = gs1.ObjectMeta.CreationTimestamp
+	duration, err = c.calcDuration(gs2, gs3)
+	assert.NoError(t, err, "Unable to caculate duration of a particular state")
+	assert.True(t, duration > 0., "Time diff should be calculated properly")
+
+	// gs1 state should already be deleted, error should be generated
+	// emulation of evicted key for gs1
+	duration, err = c.calcDuration(gs1, gs3)
+	assert.Error(t, err, "We should receive an error, metric should not be measured")
+	assert.True(t, duration == 0., "Time diff should be calculated properly")
+
+	gs4 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateShutdown)
+	duration, err = c.calcDuration(gs3, gs4)
+	assert.NoError(t, err, "Unable to caculate duration of a particular state")
+	assert.True(t, duration > 0., "Time diff should be calculated properly")
+	assert.Len(t, c.gameServerStateLastChange.Keys(), 0, "We should not have any keys after the test")
 }

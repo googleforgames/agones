@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	distributionSeconds       = []float64{0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3}
 	fleetsReplicasCountStats  = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
 	fasBufferLimitsCountStats = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
 	fasBufferSizeStats        = stats.Int64("fas/buffer_size", "The buffer size value of autoscalers", "1")
@@ -32,7 +33,7 @@ var (
 	gameServerTotalStats      = stats.Int64("gameservers/total", "The total of gameservers", "1")
 	nodesCountStats           = stats.Int64("nodes/count", "The count of nodes in the cluster", "1")
 	gsPerNodesCountStats      = stats.Int64("gameservers_node/count", "The count of gameservers per node in the cluster", "1")
-	gsStateDuration           = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitMilliseconds)
+	gsStateDurationSec        = stats.Float64("gameservers_state/duration", "The duration of gameservers to be in a particular state", stats.UnitSeconds)
 
 	stateViews = []*view.View{
 		&view.View{
@@ -113,9 +114,9 @@ var (
 		},
 		&view.View{
 			Name:        "gameserver_state_duration",
-			Measure:     gsStateDuration,
+			Measure:     gsStateDurationSec,
 			Description: "The time gameserver exist in the current state in seconds",
-			Aggregation: view.Distribution(2.0),
+			Aggregation: view.Distribution(distributionSeconds...),
 			TagKeys:     []tag.Key{keyType, keyFleetName},
 		},
 	}

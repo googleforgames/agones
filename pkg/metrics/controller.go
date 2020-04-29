@@ -16,6 +16,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -283,48 +284,53 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 				tag.Upsert(keyFleetName, fleetName)}, gsReadyDuration.M(diff*1000.))
 			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
 
-		// Calculate the duration from the start of the GameServer
-		err := c.calcDuration(newGs, oldGs)
+		// Calculate the duration of the current state
+		duration, err := c.calcDuration(oldGs, newGs)
 		if err != nil {
-			c.logger.Info(err.Error())
+			c.logger.Debug(err.Error())
+		} else {
+			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
+				tag.Upsert(keyFleetName, fleetName)}, gsStateDurationSec.M(duration))
 		}
 	}
 }
 
-func (c *Controller) calcDuration(newGs, oldGs *agonesv1.GameServer) error {
+// calcDuration - calculate duration between state changes
+// store current time from creationTimestamp for each update received
+// Assumptions: there is a possibility that one of the previous state change timestamps would be evicted,
+// this measure would be skipped
+func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
+	duration = 0.
+	// currentTime - GameServer time from its start
+	currentTime := time.Now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
+
+	newGSKey := fmt.Sprintf("%s/%s/%s", newGs.ObjectMeta.Namespace, newGs.ObjectMeta.Name, string(newGs.Status.State))
+	oldGSKey := fmt.Sprintf("%s/%s/%s", oldGs.ObjectMeta.Namespace, oldGs.ObjectMeta.Name, string(oldGs.Status.State))
+
 	c.stateLock.Lock()
 	defer c.stateLock.Unlock()
-	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
-	if fleetName == "" {
-		fleetName = defaultFleetTag
-	}
-	diff := time.Now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
-	//TODO: add namespace here, remove status to the value
-	key := newGs.ObjectMeta.Name + "/" + string(newGs.Status.State)
-	oldKey := oldGs.ObjectMeta.Name + "/" + string(oldGs.Status.State)
-	//TODO: here we should check if we loose part of messages and old state was load_or_store
-	//Switch from structure in key to a structure
-	if !c.gameServerStateLastChange.Contains(key) {
-		c.gameServerStateLastChange.Add(key, diff)
-		c.logger.Infof("Adding new key %s, %f", key, diff)
-		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(diff))
-	} else {
-		val, ok := c.gameServerStateLastChange.Get(key)
+	switch {
+	case newGs.Status.State == agonesv1.GameServerStateCreating || newGs.Status.State == agonesv1.GameServerStatePortAllocation:
+		duration = currentTime
+	case !c.gameServerStateLastChange.Contains(oldGSKey):
+		c.logger.Debugf("Was not able to find timestamp of a previous state change %s", oldGSKey)
+		err = errors.New(fmt.Sprintf("Was not able to calculate '%s' state duration for GameServer %s", oldGs.Status.State, oldGs.ObjectMeta.Name))
+	default:
+		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
 		if !ok {
-			return errors.New("Could not find expected key")
+			err = errors.New("Could not find expected key")
+			return
 		}
-		duration := diff - val.(float64)
-		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gsStateDuration.M(duration))
-		c.logger.Infof("Recording new metric %s, %f", key, duration)
-		c.gameServerStateLastChange.Add(key, diff)
-		c.gameServerStateLastChange.Remove(oldKey)
+		c.gameServerStateLastChange.Remove(oldGSKey)
+		duration = currentTime - val.(float64)
 	}
-	if newGs.Status.State == agonesv1.GameServerStateShutdown {
-		c.gameServerStateLastChange.Remove(oldKey)
+
+	// Assuming that no State changes would occur after Shutdown
+	if newGs.Status.State != agonesv1.GameServerStateShutdown {
+		c.gameServerStateLastChange.Add(newGSKey, currentTime)
+		c.logger.Debugf("Adding new key %s, %f", newGSKey, currentTime)
 	}
-	return nil
+	return duration, err
 }
 
 // Run the Metrics controller. Will block until stop is closed.
