@@ -92,7 +92,7 @@ func NewController(
 	// on delete remove GameServerName key
 	lruCache, err := lru.New(1 << 12)
 	if err != nil {
-		logger.Error("Could not create LRU cache ", err)
+		logger.WithError(err).Fatal("Unable to create LRU cache")
 	}
 
 	c := &Controller{
@@ -313,12 +313,11 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 	case newGs.Status.State == agonesv1.GameServerStateCreating || newGs.Status.State == agonesv1.GameServerStatePortAllocation:
 		duration = currentTime
 	case !c.gameServerStateLastChange.Contains(oldGSKey):
-		c.logger.Debugf("Was not able to find timestamp of a previous state change %s", oldGSKey)
-		err = errors.New(fmt.Sprintf("Was not able to calculate '%s' state duration for GameServer %s", oldGs.Status.State, oldGs.ObjectMeta.Name))
+		err = errors.New(fmt.Sprintf("Unable to calculate '%s' state duration of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name))
 	default:
 		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
 		if !ok {
-			err = errors.New("Could not find expected key")
+			err = errors.New(fmt.Sprintf("Could not find expected key %s", oldGSKey))
 			return
 		}
 		c.gameServerStateLastChange.Remove(oldGSKey)
@@ -328,7 +327,10 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 	// Assuming that no State changes would occur after Shutdown
 	if newGs.Status.State != agonesv1.GameServerStateShutdown {
 		c.gameServerStateLastChange.Add(newGSKey, currentTime)
-		c.logger.Debugf("Adding new key %s, %f", newGSKey, currentTime)
+		c.logger.Debugf("Adding new key %s, relative time: %f", newGSKey, currentTime)
+	}
+	if duration <= 0. {
+		err = errors.New(fmt.Sprintf("Negative duration for '%s' state of '%s' GameServer ", oldGs.Status.State, oldGs.ObjectMeta.Name))
 	}
 	return duration, err
 }
