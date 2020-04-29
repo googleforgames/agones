@@ -981,6 +981,8 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	case <-time.After(time.Minute):
 		assert.Fail(t, "Should have been updated")
 	}
+
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCapacity Set to 20")
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
