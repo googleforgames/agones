@@ -382,35 +382,35 @@ func (l *LocalSDKServer) stopReserveTimer() {
 
 // PlayerConnect should be called when a player connects.
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
 // PlayerDisconnect should be called when a player disconnects.
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
 // IsPlayerConnected returns if the player ID is connected or not
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	panic("implement me")
 }
 
 // GetConnectedPlayers returns if the players are connected or not
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetConnectedPlayers(ctx context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	panic("implement me")
 }
 
 // SetPlayerCapacity to change the game server's player capacity.
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
@@ -433,7 +433,7 @@ func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count
 
 // GetPlayerCapacity returns the current player capacity.
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
@@ -456,7 +456,7 @@ func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*
 
 // GetPlayerCount returns the current player count.
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	panic("implement me")
 }

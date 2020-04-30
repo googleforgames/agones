@@ -1465,7 +1465,7 @@ namespace Agones.Dev.Sdk {
         private global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus players_;
         /// <summary>
         /// [Stage:Alpha]
-        /// [FeatureFlag:PlayerTesting]
+        /// [FeatureFlag:PlayerTracking]
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus Players {
@@ -1767,7 +1767,7 @@ namespace Agones.Dev.Sdk {
 
           /// <summary>
           /// [Stage:Alpha]
-          /// [FeatureFlag:PlayerTesting]
+          /// [FeatureFlag:PlayerTracking]
           /// </summary>
           public sealed partial class PlayerStatus : pb::IMessage<PlayerStatus> {
             private static readonly pb::MessageParser<PlayerStatus> _parser = new pb::MessageParser<PlayerStatus>(() => new PlayerStatus());

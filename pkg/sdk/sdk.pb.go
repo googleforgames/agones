@@ -427,7 +427,7 @@ type GameServer_Status struct {
 	Address string                    `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 	Ports   []*GameServer_Status_Port `protobuf:"bytes,3,rep,name=ports,proto3" json:"ports,omitempty"`
 	// [Stage:Alpha]
-	// [FeatureFlag:PlayerTesting]
+	// [FeatureFlag:PlayerTracking]
 	Players              *GameServer_Status_PlayerStatus `protobuf:"bytes,4,opt,name=Players,proto3" json:"Players,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
 	XXX_unrecognized     []byte                          `json:"-"`
@@ -533,7 +533,7 @@ func (m *GameServer_Status_Port) GetPort() int32 {
 }
 
 // [Stage:Alpha]
-// [FeatureFlag:PlayerTesting]
+// [FeatureFlag:PlayerTracking]
 type GameServer_Status_PlayerStatus struct {
 	Count                int64    `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
 	Capacity             int64    `protobuf:"varint,2,opt,name=capacity,proto3" json:"capacity,omitempty"`

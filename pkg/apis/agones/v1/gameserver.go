@@ -225,7 +225,7 @@ type GameServerStatus struct {
 	NodeName      string                 `json:"nodeName"`
 	ReservedUntil *metav1.Time           `json:"reservedUntil"`
 	// [Stage:Alpha]
-	// [FeatureFlag:PlayerTesting]
+	// [FeatureFlag:PlayerTracking]
 	// +optional
 	Players *PlayerStatus `json:"players"`
 }
