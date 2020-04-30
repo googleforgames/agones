@@ -309,7 +309,7 @@
         },
         "Players": {
           "$ref": "#/definitions/StatusPlayerStatus",
-          "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTesting]"
+          "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
         }
       }
     },
@@ -352,7 +352,7 @@
           }
         }
       },
-      "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTesting]"
+      "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
     },
     "StatusPort": {
       "type": "object",
