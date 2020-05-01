@@ -28,8 +28,6 @@ import (
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/resource"
-
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	autoscaling "agones.dev/agones/pkg/apis/autoscaling/v1"
@@ -42,6 +40,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	types "k8s.io/apimachinery/pkg/types"
@@ -124,6 +123,13 @@ const (
 // https://github.com/spf13/pflag/issues/63
 // https://github.com/spf13/pflag/issues/238
 func ParseTestFlags() error {
+	// if we have a "___" in the arguments path, then this is IntelliJ running the test, so ignore this, as otherwise
+	// it breaks.
+	if strings.Contains(os.Args[0], "___") {
+		logrus.Info("Running test via Intellij. Skipping Test Flag Parsing")
+		return nil
+	}
+
 	var testFlags []string
 	for _, f := range os.Args[1:] {
 		if strings.HasPrefix(f, "-test.") {
@@ -157,6 +163,7 @@ func NewFromFlags() (*Framework, error) {
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(gsimageFlag))
 	runtime.Must(viper.BindEnv(pullSecretFlag))
@@ -176,6 +183,14 @@ func NewFromFlags() (*Framework, error) {
 	framework.StressTestLevel = *stressTestLevel
 	framework.PerfOutputDir = *perfOutputDir
 	framework.Version = *version
+
+	logrus.WithField("gameServerImage", framework.GameServerImage).
+		WithField("pullSecret", framework.PullSecret).
+		WithField("stressTestLevel", framework.StressTestLevel).
+		WithField("perfOutputDir", framework.PerfOutputDir).
+		WithField("version", framework.Version).
+		WithField("featureGates", runtime.EncodeFeatures()).
+		Info("Starting e2e test(s)")
 
 	return framework, nil
 }
