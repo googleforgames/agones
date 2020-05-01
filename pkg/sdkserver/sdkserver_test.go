@@ -16,6 +16,7 @@ package sdkserver
 
 import (
 	"net/http"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -983,6 +984,186 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	}
 
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCapacity Set to 20")
+}
+
+func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeaturePlayerTracking) + "=true")
+	assert.NoError(t, err)
+
+	m := agtesting.NewMocks()
+	stop := make(chan struct{})
+	defer close(stop)
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	capacity := int64(3)
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test", Namespace: "default",
+			},
+			Spec: agonesv1.GameServerSpec{
+				SdkServer: agonesv1.SdkServer{
+					LogLevel: "Debug",
+				},
+				// this is here to give us a reference, so we know when sc.Run() has completed.
+				Players: &agonesv1.PlayersSpec{
+					InitialCapacity: capacity,
+				},
+			},
+		}
+		gs.ApplyDefaults()
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+	updated := make(chan *agonesv1.PlayerStatus, 10)
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gs := ua.GetObject().(*agonesv1.GameServer)
+		updated <- gs.Status.Players
+		return true, gs, nil
+	})
+
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+	go func() {
+		err = sc.Run(stop)
+		assert.NoError(t, err)
+	}()
+
+	// check initial value comes through
+	// async, so check after a period
+	e := &alpha.Empty{}
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		count, err := sc.GetPlayerCapacity(context.Background(), e)
+		return count.Count == capacity, err
+	})
+	assert.NoError(t, err)
+
+	count, err := sc.GetPlayerCount(context.Background(), e)
+	assert.Equal(t, int64(0), count.Count)
+
+	list, err := sc.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Empty(t, list.List)
+
+	ok, err := sc.IsPlayerConnected(context.Background(), &alpha.PlayerID{PlayerID: "1"})
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool, "no player connected yet")
+
+	// sdk value should always be correct, even if we send more than one update per second.
+	for i := int64(0); i < capacity; i++ {
+		token := strconv.FormatInt(i, 10)
+		id := &alpha.PlayerID{PlayerID: token}
+		ok, err := sc.PlayerConnect(context.Background(), id)
+		assert.NoError(t, err)
+		assert.True(t, ok.Bool, "Player "+token+" should not yet be connected")
+
+		ok, err = sc.IsPlayerConnected(context.Background(), id)
+		assert.NoError(t, err)
+		assert.True(t, ok.Bool, "Player "+token+" should be connected")
+	}
+	count, err = sc.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, capacity, count.Count)
+
+	list, err = sc.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"0", "1", "2"}, list.List)
+
+	// on an update, confirm that the update hits the K8s api, only once
+	select {
+	case value := <-updated:
+		assert.Equal(t, capacity, value.Count)
+		assert.Equal(t, []string{"0", "1", "2"}, value.IDs)
+	case <-time.After(5 * time.Second):
+		assert.Fail(t, "Should have been updated")
+	}
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCount Set to 3")
+
+	// confirm there was only one update
+	select {
+	case <-updated:
+		assert.Fail(t, "There should be only one update for the player connections")
+	case <-time.After(2 * time.Second):
+	}
+
+	// should return an error if we try and add another, since we're at capacity
+	nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
+	_, err = sc.PlayerConnect(context.Background(), nopePlayer)
+	assert.EqualError(t, err, "players are already at capacity")
+
+	// sdk value should always be correct, even if we send more than one update per second.
+	// let's leave one player behind
+	for i := int64(0); i < capacity-1; i++ {
+		token := strconv.FormatInt(i, 10)
+		id := &alpha.PlayerID{PlayerID: token}
+		ok, err := sc.PlayerDisconnect(context.Background(), id)
+		assert.NoError(t, err)
+		assert.Truef(t, ok.Bool, "Player %s should be disconnected", token)
+
+		ok, err = sc.IsPlayerConnected(context.Background(), id)
+		assert.NoError(t, err)
+		assert.Falsef(t, ok.Bool, "Player %s should be connected", token)
+	}
+	count, err = sc.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count.Count)
+
+	list, err = sc.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"2"}, list.List)
+
+	// on an update, confirm that the update hits the K8s api, only once
+	select {
+	case value := <-updated:
+		assert.Equal(t, int64(1), value.Count)
+		assert.Equal(t, []string{"2"}, value.IDs)
+	case <-time.After(5 * time.Second):
+		assert.Fail(t, "Should have been updated")
+	}
+	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCount Set to 1")
+
+	// confirm there was only one update
+	select {
+	case <-updated:
+		assert.Fail(t, "There should be only one update for the player disconnections")
+	case <-time.After(2 * time.Second):
+	}
+
+	// last player is still there
+	ok, err = sc.IsPlayerConnected(context.Background(), &alpha.PlayerID{PlayerID: "2"})
+	assert.NoError(t, err)
+	assert.True(t, ok.Bool, "Player 2 should be connected")
+
+	// finally, check idempotency of connect and disconnect
+	id := &alpha.PlayerID{PlayerID: "2"} // only one left behind
+	ok, err = sc.PlayerConnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool, "Player 2 should already be connected")
+	count, err = sc.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count.Count)
+
+	// no longer there.
+	id.PlayerID = "0"
+	ok, err = sc.PlayerDisconnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool, "Player 2 should already be disconnected")
+	count, err = sc.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count.Count)
+
+	agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+
+	list, err = sc.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"2"}, list.List)
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
