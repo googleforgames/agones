@@ -29,7 +29,7 @@ namespace Agones.Model
         /// </summary>
         public SpecHealth(IReadOnlyDictionary<string, object> data)
         {
-            this.Disabled = data.TryGetValue("disabled", out var disabled) && bool.Parse((string)disabled);
+            this.Disabled = data.TryGetValue("disabled", out var disabled) && (bool)disabled;
             if (!this.Disabled)
             {
                 this.PeriodSeconds = (Int64)data["period_seconds"];
