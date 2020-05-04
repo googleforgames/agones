@@ -17,7 +17,7 @@
 # Base images for SDKs Bump: 1
 #
 
-FROM debian:stretch
+FROM debian:buster
 
 RUN apt-get update && apt-get install -y \
   build-essential autoconf libtool git pkg-config curl \

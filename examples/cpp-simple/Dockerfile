@@ -34,12 +34,10 @@ RUN cd cpp-simple && mkdir -p .build && \
     cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
     cmake --build . --target install
 
-FROM debian:stretch
+FROM debian:buster
 RUN useradd -u 1000 -m server
 
-COPY --from=builder /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple
-RUN chown -R server /home/server && \
-    chmod o+x /home/server/cpp-simple
+COPY --from=builder --chown=server:server /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple
 
 USER 1000
 ENTRYPOINT /home/server/cpp-simple
