@@ -96,9 +96,9 @@ func TestAllocator(t *testing.T) {
 		defer conn.Close() // nolint: errcheck
 
 		grpcClient := pb.NewAllocationServiceClient(conn)
-		response, err := grpcClient.PostAllocate(context.Background(), request)
+		response, err := grpcClient.Allocate(context.Background(), request)
 		if err != nil {
-			logrus.WithError(err).Info("failing PostAllocate request")
+			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
 		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)
@@ -178,9 +178,9 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		defer conn.Close() // nolint: errcheck
 
 		grpcClient := pb.NewAllocationServiceClient(conn)
-		response, err := grpcClient.PostAllocate(context.Background(), request)
+		response, err := grpcClient.Allocate(context.Background(), request)
 		if err != nil {
-			logrus.WithError(err).Info("failing PostAllocate request")
+			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
 		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)

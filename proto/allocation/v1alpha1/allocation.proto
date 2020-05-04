@@ -19,7 +19,7 @@ package v1alpha1;
 import "google/api/annotations.proto";
 
 service AllocationService {
- rpc PostAllocate(AllocationRequest) returns (AllocationResponse) {
+ rpc Allocate(AllocationRequest) returns (AllocationResponse) {
    option (google.api.http) = {
      post: "/v1alpha1/gameserverallocation"
      body: "*"

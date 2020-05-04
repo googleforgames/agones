@@ -258,8 +258,8 @@ type serviceHandler struct {
 	caCertPool         *x509.CertPool
 }
 
-// PostAllocate implements the PostAllocate gRPC method definition
-func (h *serviceHandler) PostAllocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+// Allocate implements the Allocate gRPC method definition
+func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
 	gsa := converters.ConvertAllocationRequestV1Alpha1ToGSAV1(in)
 	resultObj, err := h.allocationCallback(gsa)

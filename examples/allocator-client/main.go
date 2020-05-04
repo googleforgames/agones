@@ -70,7 +70,7 @@ func main() {
 	defer conn.Close()
 
 	grpcClient := pb.NewAllocationServiceClient(conn)
-	response, err := grpcClient.PostAllocate(context.Background(), request)
+	response, err := grpcClient.Allocate(context.Background(), request)
 	if err != nil {
 		panic(err)
 	}
