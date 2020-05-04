@@ -174,7 +174,8 @@ func main() {
 func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 	filePath := ""
 	if ctlConf.LocalFile != "" {
-		filePath, err := filepath.Abs(ctlConf.LocalFile)
+		var err error
+		filePath, err = filepath.Abs(ctlConf.LocalFile)
 		if err != nil {
 			return nil, err
 		}
