@@ -16,7 +16,7 @@
   "paths": {
     "/v1alpha1/gameserverallocation": {
       "post": {
-        "operationId": "PostAllocate",
+        "operationId": "Allocate",
         "responses": {
           "200": {
             "description": "A successful response.",

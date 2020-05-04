@@ -54,7 +54,7 @@ func TestAllocateHandler(t *testing.T) {
 		},
 	}
 
-	response, err := h.PostAllocate(context.Background(), request)
+	response, err := h.Allocate(context.Background(), request)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -71,7 +71,7 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if assert.Error(t, err) {
 		assert.Equal(t, "error", err.Error())
 	}
@@ -97,7 +97,7 @@ func TestHandlingStatus(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if !assert.Error(t, err, "expecting failure") {
 		return
 	}
@@ -120,7 +120,7 @@ func TestBadReturnType(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if !assert.Error(t, err, "expecting failure") {
 		return
 	}

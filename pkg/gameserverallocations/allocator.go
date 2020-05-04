@@ -139,7 +139,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			defer conn.Close() // nolint: errcheck
 
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.PostAllocate(context.Background(), request)
+			return grpcClient.Allocate(context.Background(), request)
 		},
 	}
 
