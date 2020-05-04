@@ -92,7 +92,6 @@ Configurable parameters:
 - network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 - feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
-- kubernetes_version - a Kubernetes version of the GKE cluster
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"`
@@ -140,7 +139,7 @@ You should have 6 nodes in `Ready` state.
 
 To delete all resources provisioned by Terraform:
 ```
-terraform destroy
+terraform destroy -var project="<YOUR_GCP_ProjectID>"
 ```
 
 ## Next Steps

@@ -64,10 +64,6 @@ variable "feature_gates" {
   default = ""
 }
 
-variable "kubernetes_version" {
-  default = "1.15"
-}
-
 module "gke_cluster" {
   // ***************************************************************************************************
   // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
@@ -76,13 +72,12 @@ module "gke_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"
 
   cluster = {
-    "name"              = var.name
-    "zone"              = var.zone
-    "machineType"       = var.machine_type
-    "initialNodeCount"  = var.node_count
-    "project"           = var.project
-    "network"           = var.network
-    "kubernetesVersion" = var.kubernetes_version
+    "name"             = var.name
+    "zone"             = var.zone
+    "machineType"      = var.machine_type
+    "initialNodeCount" = var.node_count
+    "project"          = var.project
+    "network"          = var.network
   }
 }
 
