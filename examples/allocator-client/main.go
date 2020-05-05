@@ -34,7 +34,7 @@ func main() {
 	cacertFile := flag.String("cacert", "missing cacert", "the CA cert file for server signing certificate in PEM format")
 	externalIP := flag.String("ip", "missing external IP", "the external IP for allocator server")
 	namespace := flag.String("namespace", "default", "the game server kubernetes namespace")
-	multicluster := flag.Bool("multicluster", false, "enabling")
+	multicluster := flag.Bool("multicluster", false, "set to true to enable the multi-cluster allocation")
 
 	flag.Parse()
 

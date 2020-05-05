@@ -15,6 +15,8 @@ package main
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -135,6 +137,38 @@ func TestBadReturnType(t *testing.T) {
 	}
 	assert.Equal(t, codes.Internal, st.Code())
 	assert.Contains(t, st.Message(), "internal server error")
+}
+
+func TestVerifyClientCertificateSucceeds(t *testing.T) {
+	t.Parallel()
+
+	crt := []byte(clientCert)
+	certPool := x509.NewCertPool()
+	assert.True(t, certPool.AppendCertsFromPEM(crt))
+
+	h := serviceHandler{
+		caCertPool: certPool,
+	}
+
+	block, _ := pem.Decode(crt)
+	input := [][]byte{block.Bytes}
+	assert.Nil(t, h.verifyClientCertificate(input, nil),
+		"verifyClientCertificate failed.")
+}
+
+func TestVerifyClientCertificateFails(t *testing.T) {
+	t.Parallel()
+
+	crt := []byte(clientCert)
+	certPool := x509.NewCertPool()
+	h := serviceHandler{
+		caCertPool: certPool,
+	}
+
+	block, _ := pem.Decode(crt)
+	input := [][]byte{block.Bytes}
+	assert.Error(t, h.verifyClientCertificate(input, nil),
+		"verifyClientCertificate() succeeded, expected error.")
 }
 
 func TestGettingCaCert(t *testing.T) {
