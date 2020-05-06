@@ -101,13 +101,11 @@ func TestAllocator(t *testing.T) {
 			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
-		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)
+		validateAllocatorResponse(t, response)
 		return true, nil
 	})
 
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "Http test failed")
-	}
+	assert.NoError(t, err)
 }
 
 // Tests multi-cluster allocation by reusing the same cluster but across namespace.
@@ -172,7 +170,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 
 		conn, err := grpc.Dial(requestURL, dialOpts)
 		if err != nil {
-			logrus.WithError(err).Info("failing http request")
+			logrus.WithError(err).Info("failing grpc.Dial")
 			return false, nil
 		}
 		defer conn.Close() // nolint: errcheck
@@ -183,13 +181,11 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 			logrus.WithError(err).Info("failing Allocate request")
 			return false, nil
 		}
-		assert.Equal(t, pb.AllocationResponse_Allocated, response.State)
+		validateAllocatorResponse(t, response)
 		return true, nil
 	})
 
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "Http test failed")
-	}
+	assert.NoError(t, err)
 }
 
 func createAllocationPolicy(t *testing.T, p *multiclusterv1.GameServerAllocationPolicy) {
@@ -392,4 +388,15 @@ func generateTLSCertPair(t *testing.T, host string) ([]byte, []byte) {
 	pemPrivBytes := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
 
 	return pemPubBytes, pemPrivBytes
+}
+
+func validateAllocatorResponse(t *testing.T, resp *pb.AllocationResponse) {
+	t.Helper()
+	if !assert.NotNil(t, resp) {
+		return
+	}
+	assert.Greater(t, len(resp.Ports), 0)
+	assert.NotEmpty(t, resp.GameServerName)
+	assert.NotEmpty(t, resp.Address)
+	assert.NotEmpty(t, resp.NodeName)
 }

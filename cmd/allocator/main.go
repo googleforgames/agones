@@ -277,8 +277,8 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 		logger.Errorf("internal server error - Bad GSA format %v", resultObj)
 		return nil, status.Errorf(codes.Internal, "internal server error- Bad GSA format %v", resultObj)
 	}
-	response := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
-	logger.WithField("response", response).Infof("allocation response is being sent")
+	response, err := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
+	logger.WithField("response", response).WithError(err).Infof("allocation response is being sent")
 
-	return response, nil
+	return response, err
 }
