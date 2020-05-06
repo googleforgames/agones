@@ -388,7 +388,7 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Connected")
 	l.gsMutex.Lock()
@@ -422,7 +422,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Disconnected")
 	l.gsMutex.Lock()
@@ -456,7 +456,7 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 
 	result := &alpha.Bool{Bool: false}
@@ -485,7 +485,7 @@ func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Connected Players")
 
@@ -507,7 +507,7 @@ func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Emp
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Player Count")
 	l.recordRequest("getplayercount")
@@ -527,7 +527,7 @@ func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*a
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 
 	l.logger.WithField("capacity", count.Count).Info("Setting Player Capacity")
@@ -550,7 +550,7 @@ func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Player Capacity")
 	l.recordRequest("getplayercapacity")
