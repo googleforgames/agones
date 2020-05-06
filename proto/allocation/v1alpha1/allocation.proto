@@ -54,19 +54,6 @@ message AllocationRequest {
 }
 
 message AllocationResponse {
-  GameServerAllocationState state = 1;
-
-  // The allocation state
-  enum GameServerAllocationState {
-    Unknown = 0;
-    // Allocated is for successful allocation
-    Allocated = 1;
-    // UnAllocated is for unsuccessful allocation due to lack of gameserver resources
-    UnAllocated = 2;
-    // Contention is for unsuccessful allocation due to contention
-    Contention = 3;
-  }
-
   string gameServerName = 2;
   repeated GameServerStatusPort ports = 3;
   string address = 4;
