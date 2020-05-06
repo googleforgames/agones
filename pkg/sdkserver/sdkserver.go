@@ -755,7 +755,7 @@ func (s *SDKServer) healthy() bool {
 // updatePlayerCapacity updates the Player Capacity field in the GameServer's Status.
 func (s *SDKServer) updatePlayerCapacity() error {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.logger.WithField("capacity", s.gsPlayerCapacity).Debug("updating player capacity")
 	gs, err := s.gameServer()
@@ -780,7 +780,7 @@ func (s *SDKServer) updatePlayerCapacity() error {
 // updateConnectedPlayers updates the Player IDs and Count fields in the GameServer's Status.
 func (s *SDKServer) updateConnectedPlayers() error {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	gs, err := s.gameServer()
 	if err != nil {
