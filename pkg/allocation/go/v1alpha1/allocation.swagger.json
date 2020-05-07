@@ -50,18 +50,6 @@
       ],
       "default": "Packed"
     },
-    "AllocationResponseGameServerAllocationState": {
-      "type": "string",
-      "enum": [
-        "Unknown",
-        "Allocated",
-        "UnAllocated",
-        "Contention"
-      ],
-      "default": "Unknown",
-      "description": "- Allocated: Allocated is for successful allocation\n - UnAllocated: UnAllocated is for unsuccessful allocation due to lack of gameserver resources\n - Contention: Contention is for unsuccessful allocation due to contention",
-      "title": "The allocation state"
-    },
     "AllocationResponseGameServerStatusPort": {
       "type": "object",
       "properties": {
@@ -110,9 +98,6 @@
     "v1alpha1AllocationResponse": {
       "type": "object",
       "properties": {
-        "state": {
-          "$ref": "#/definitions/AllocationResponseGameServerAllocationState"
-        },
         "gameServerName": {
           "type": "string"
         },

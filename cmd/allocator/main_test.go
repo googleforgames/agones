@@ -55,10 +55,14 @@ func TestAllocateHandler(t *testing.T) {
 	}
 
 	response, err := h.Allocate(context.Background(), request)
-	if !assert.NoError(t, err) {
+	if !assert.Nil(t, response) {
 		return
 	}
-	assert.Equal(t, pb.AllocationResponse_Contention, response.State)
+	st, ok := status.FromError(err)
+	if !assert.True(t, ok) {
+		return
+	}
+	assert.Equal(t, st.Code(), codes.Aborted)
 }
 
 func TestAllocateHandlerReturnsError(t *testing.T) {
