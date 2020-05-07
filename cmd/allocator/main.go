@@ -185,20 +185,40 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 	}
 
 	cfg := &tls.Config{
-		Certificates: []tls.Certificate{tlsCer},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
-			h.certMutex.RLock()
-			defer h.certMutex.RUnlock()
-			return &tls.Config{
-				Certificates: []tls.Certificate{tlsCer},
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				ClientCAs:    h.caCertPool,
-			}, nil
-		},
+		Certificates:          []tls.Certificate{tlsCer},
+		ClientAuth:            tls.RequireAnyClientCert,
+		VerifyPeerCertificate: h.verifyClientCertificate,
 	}
 	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
 	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
+}
+
+// verifyClientCertificate verifies that the client certificate is accepted
+// This method is used as GetConfigForClient is cross lang incompatible.
+func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	opts := x509.VerifyOptions{
+		Roots:         h.caCertPool,
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+
+	for _, cert := range rawCerts[1:] {
+		opts.Intermediates.AppendCertsFromPEM(cert)
+	}
+
+	c, err := x509.ParseCertificate(rawCerts[0])
+	if err != nil {
+		return errors.New("bad client certificate: " + err.Error())
+	}
+
+	h.certMutex.RLock()
+	defer h.certMutex.RUnlock()
+	_, err = c.Verify(opts)
+	if err != nil {
+		return errors.New("failed to verify client certificate: " + err.Error())
+	}
+	return nil
 }
 
 // Set up our client which we will use to call the API
