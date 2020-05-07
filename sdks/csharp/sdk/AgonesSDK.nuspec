@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>AgonesSDK</id>
+    <version>1.0.4</version>
+    <authors>Google LLC</authors>
+    <owners>Google LLC</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://agones.dev/</projectUrl>
+    <description>Game Server SDK for Agones, the open source project for hosting dedicated game servers on Kubernetes</description>
+    <tags>agones, googleforgames, kubernetes</tags>
+    <repository url="https://github.com/googleforgames/agones" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Google.Api.CommonProtos" version="1.7.0" exclude="Build,Analyzers" />
+        <dependency id="Google.Protobuf" version="3.11.2" exclude="Build,Analyzers" />
+        <dependency id="Grpc" version="2.26.0" exclude="Build,Analyzers" />
+        <dependency id="Grpc.Core" version="2.26.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>

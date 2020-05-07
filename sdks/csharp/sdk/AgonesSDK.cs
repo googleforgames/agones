@@ -11,60 +11,56 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+using Agones.Dev.Sdk;
+using Grpc.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
-using Agones.Dev.Sdk;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Agones.Test")]
 namespace Agones
 {
-	public sealed class AgonesSDK : IDisposable
+	public sealed class AgonesSDK : IAgonesSDK
 	{
 		public string Host { get; } = Environment.GetEnvironmentVariable("AGONES_SDK_GRPC_HOST") ?? "localhost";
-		public int Port { get; } = Convert.ToInt32((Environment.GetEnvironmentVariable("AGONES_SDK_GRPC_PORT") ?? "9357"));
+		public int Port { get; } = Convert.ToInt32(Environment.GetEnvironmentVariable("AGONES_SDK_GRPC_PORT") ?? "9357");
 
 		/// <summary>
 		/// The timeout for gRPC calls.
 		/// </summary>
 		public double RequestTimeout { get; set; }
-		
-		/// <summary>
-		/// Interval between Health pings in seconds.
-		/// </summary>
-		public int HealthInterval { get; set; } 
-		
-		/// <summary>
-		/// Set to true when you want health pings to occur periodically.
-		/// </summary>
-		public bool HealthEnabled { get; set; } 
 
-		internal SDK.SDKClient client;
-		internal Channel channel;
-		internal IClientStreamWriter<Empty> healthStream;
-		internal CancellationTokenSource cts = new CancellationTokenSource();
-		internal CancellationToken ctoken => cts.Token;
-		internal volatile bool isWatchingGameServer = false;
+		internal readonly SDK.SDKClient client;
+		internal readonly Channel channel;
+		internal readonly IClientStreamWriter<Empty> healthStream;
+		internal readonly CancellationTokenSource cts;
+		internal CancellationToken ctoken;
+		internal volatile bool isWatchingGameServer;
 		internal AsyncServerStreamingCall<GameServer> watchStreamingCall;
 
 		/// <summary>
-		/// Fired everytime the GameServer k8s data is updated.
+		/// Fired every time the GameServer k8s data is updated.
 		/// A more efficient way to emulate WatchGameServer behavior
-		/// without starting a new task for every subscrbtion request.
+		/// without starting a new task for every subscription request.
 		/// </summary>
 		private event Action<GameServer> GameServerUpdated;
 		internal Delegate[] GameServerUpdatedCallbacks => GameServerUpdated.GetInvocationList();
+		private readonly ILogger _logger;
 
-		public AgonesSDK(int healthInterval = 5, bool healthEnabled = true, double requestTimeout = 15)
+		public AgonesSDK(
+			double requestTimeout = 15,
+			SDK.SDKClient sdkClient = null,
+			CancellationTokenSource cancellationTokenSource = null,
+			ILogger logger = null)
 		{
-			this.HealthInterval = healthInterval;
-			this.HealthEnabled = healthEnabled;
-			this.RequestTimeout = requestTimeout;
-			this.channel = new Channel(Host, Port, ChannelCredentials.Insecure);
-			this.client = new SDK.SDKClient(channel);
-			this.healthStream = client.Health().RequestStream;
+			_logger = logger;
+			RequestTimeout = requestTimeout;
+			cts = cancellationTokenSource ?? new CancellationTokenSource();
+			ctoken = cts.Token;
+			channel = new Channel(Host, Port, ChannelCredentials.Insecure);
+			client = sdkClient ?? new SDK.SDKClient(channel);
+			healthStream = client.Health().RequestStream;
 		}
 
 		/// <summary>
@@ -73,12 +69,13 @@ namespace Agones
 		/// <returns>True if successful</returns>
 		public async Task<bool> ConnectAsync()
 		{
-			await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(30));
-			if (channel.State != ChannelState.Ready){
-				Console.Error.WriteLine($"Could not connect to the sidecar at {Host}:{Port}. Exited with connection state: {channel.State}");
-				return false;
+			await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(RequestTimeout));
+			if (channel.State == ChannelState.Ready)
+			{
+				return true;
 			}
-			return true;
+			LogError(null, $"Could not connect to the sidecar at {Host}:{Port}. Exited with connection state: {channel.State}.");
+			return false;
 		}
 
 		/// <summary>
@@ -94,7 +91,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, "Unable to mark GameServer to 'Ready' state.");
 				return ex.Status;
 			}
 		}
@@ -107,19 +104,21 @@ namespace Agones
 		{
 			try
 			{
-				await client.AllocateAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				await client.AllocateAsync(new Empty(),
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					cancellationToken: ctoken);
 				return new Status(StatusCode.OK, "Allocate request successful.");
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, "Unable to mark the GameServer to 'Allocated' state.");
 				return ex.Status;
 			}
 		}
 
 		/// <summary>
-		/// Reserve(seconds) will move the GameServer into the Reserved state for the specified number of seconds (0 is forever), 
-		/// and then it will be moved back to Ready state. While in Reserved state, 
+		/// Reserve(seconds) will move the GameServer into the Reserved state for the specified number of seconds (0 is forever),
+		/// and then it will be moved back to Ready state. While in Reserved state,
 		/// the GameServer will not be deleted on scale down or Fleet update, and also it could not be Allocated using GameServerAllocation.
 		/// </summary>
 		/// <param name="seconds">Amount of seconds to reserve.</param>
@@ -128,20 +127,20 @@ namespace Agones
 		{
 			try
 			{
-				await client.ReserveAsync(new Duration() {
-					Seconds = seconds
-				}, deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				await client.ReserveAsync(new Duration { Seconds = seconds},
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					cancellationToken: ctoken);
 				return new Status(StatusCode.OK, $"Reserve({seconds}) request successful.");
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, "Unable to mark the GameServer to 'Reserved' state.");
 				return ex.Status;
 			}
 		}
 
 		/// <summary>
-		/// This returns most of the backing GameServer configuration and Status. 
+		/// This returns most of the backing GameServer configuration and Status.
 		/// This can be useful for instances where you may want to know Health check configuration, or the IP and Port the GameServer is currently allocated to.
 		/// </summary>
 		/// <returns>A GameServer object containing this GameServer's configuration data</returns>
@@ -149,13 +148,14 @@ namespace Agones
 		{
 			try
 			{
-				return await client.GetGameServerAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				return await client.GetGameServerAsync(new Empty(),
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					cancellationToken: ctoken);
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
-				//Should I rethrow the exception?
-				return null;
+				LogError(ex, "Unable to get GameServer configuration and status.");
+				throw;
 			}
 		}
 
@@ -179,27 +179,26 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
-				throw ex;
+				LogError(ex, "Unable to subscribe to GameServer events.");
+				throw;
 			}
 		}
 
 		/// <summary>
-		/// This executes the passed in callback with the current GameServer details whenever the underlying GameServer configuration is updated. 
+		/// This executes the passed in callback with the current GameServer details whenever the underlying GameServer configuration is updated.
 		/// This can be useful to track GameServer > Status > State changes, metadata changes, such as labels and annotations, and more.
 		/// </summary>
 		/// <param name="callback">The action to be called when the underlying GameServer metadata changes.</param>
 		public void WatchGameServer(Action<GameServer> callback)
 		{
 			GameServerUpdated += callback;
-			if (!isWatchingGameServer)
-			{
-				isWatchingGameServer = true;
-				//Ignoring this warning as design is intentional.
-				#pragma warning disable 4014
-				BeginInternalWatch().ContinueWith((t)=> { this.Dispose(); }, TaskContinuationOptions.OnlyOnFaulted);
-				#pragma warning restore 4014
-			}
+			if (isWatchingGameServer) return;
+			isWatchingGameServer = true;
+			//Ignoring this warning as design is intentional.
+			#pragma warning disable 4014
+			BeginInternalWatch().ContinueWith((t)=> { Dispose(); },
+				TaskContinuationOptions.OnlyOnFaulted);
+			#pragma warning restore 4014
 		}
 
 		/// <summary>
@@ -215,7 +214,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, "Unable to mark the GameServer to 'Shutdown' state.");
 				return ex.Status;
 			}
 		}
@@ -239,7 +238,7 @@ namespace Agones
 			}
 			catch(RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, $"Unable to set the GameServer label '{key}' to '{value}'.");
 				return ex.Status;
 			}
 		}
@@ -263,7 +262,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, $"Unable to set the GameServer annotation '{key}' to '{value}'.");
 				return ex.Status;
 			}
 		}
@@ -272,7 +271,7 @@ namespace Agones
 		/// Sends a single ping to designate that the Game Server is alive and healthy.
 		/// </summary>
 		/// <returns>gRPC Status of the request</returns>
-		internal async Task<Status> HealthAsync()
+		public async Task<Status> HealthAsync()
 		{
 			try
 			{
@@ -281,18 +280,8 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				Console.Error.WriteLine(ex.Message);
+				LogError(ex, "Unable to invoke the GameServer health check.");
 				return ex.Status;
-			}
-		}
-
-		private async Task HealthCheckLoop()
-		{
-			while(!cts.IsCancellationRequested)
-			{
-				if(HealthEnabled)
-					await HealthAsync();
-				await Task.Delay(HealthInterval * 1000);
 			}
 		}
 
@@ -303,7 +292,12 @@ namespace Agones
 
 		~AgonesSDK()
 		{
-			this.Dispose();
+			Dispose();
+		}
+
+		private void LogError(Exception ex, string message)
+		{
+			_logger?.LogError(ex, message);
 		}
 	}
 }
