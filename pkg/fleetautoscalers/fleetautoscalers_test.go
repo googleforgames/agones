@@ -167,40 +167,92 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func TestApplyWebhookPolicy(t *testing.T) {
 	t.Parallel()
-
-	fas, f := defaultWebhookFixtures()
-	w := fas.Spec.Policy.Webhook
-	w.Service = nil
-
 	ts := testServer{}
 	server := httptest.NewServer(ts)
 	defer server.Close()
-	w.URL = &(server.URL)
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 10
-	f.Status.ReadyReplicas = 40
 
-	replicas, limited, err := applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, f.Spec.Replicas, replicas)
-	assert.Equal(t, limited, false)
+	_, f := defaultWebhookFixtures()
 
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, f.Status.Replicas*scaleFactor, replicas)
-	assert.Equal(t, limited, false)
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
 
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 35
-	f.Status.ReadyReplicas = 15
-	replicas, limited, err = applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, f.Spec.Replicas)
-	assert.Equal(t, limited, false)
+	var testCases = []struct {
+		description             string
+		webhookPolicy           *autoscalingv1.WebhookPolicy
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		expected                expected
+	}{
+		{
+			description: "Allocated replicas per cent < 70%, no scaling",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 10,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description: "Allocated replicas per cent == 70%, no scaling",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 35,
+			statusReadyReplicas:     15,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description: "Allocated replicas per cent 80% > 70%, scale up",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			expected: expected{
+				replicas: 50 * scaleFactor,
+				limited:  false,
+				err:      "",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			}
+			assert.Equal(t, tc.expected.replicas, replicas)
+			assert.Equal(t, tc.expected.limited, limited)
+		})
+	}
+
 }
