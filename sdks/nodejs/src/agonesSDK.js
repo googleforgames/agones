@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const grpc = require('grpc');
+const grpc = require('@grpc/grpc-js');
 
 const messages = require('../lib/sdk_pb');
-const services = require('../lib/sdk_grpc_pb');
+const servicesPackageDefinition = require('../lib/sdk_grpc_pb');
 
 class AgonesSDK {
 	constructor() {
-		this.client = new services.SDKClient('localhost:'+this.port, grpc.credentials.createInsecure());
+		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
+		this.client = new services.agones.dev.sdk.SDK(`localhost:${this.port}`, grpc.credentials.createInsecure());
 		this.healthStream = undefined;
-		this.emitters = [];
+		this.streams = [];
 	}
 
 	get port() {
@@ -44,7 +45,7 @@ class AgonesSDK {
 		if (this.healthStream !== undefined) {
 			this.healthStream.end();
 		}
-		this.emitters.forEach(emitter => emitter.call.cancel());
+		this.streams.forEach(stream => stream.destroy());
 		this.client.close();
 	}
 
@@ -112,18 +113,18 @@ class AgonesSDK {
 
 	watchGameServer(callback) {
 		const request = new messages.Empty();
-		const emitter = this.client.watchGameServer(request);
-		emitter.on('data', (data) => {
+		const stream = this.client.watchGameServer(request);
+		stream.on('data', (data) => {
 			callback(data.toObject());
 		});
-		emitter.on('error', (error) => {
+		stream.on('error', (error) => {
 			if (error.code === grpc.status.CANCELLED) {
 				// Capture error when call is cancelled
 				return;
 			}
 			throw error;
 		});
-		this.emitters.push(emitter);
+		this.streams.push(stream);
 	}
 
 	async setLabel(key, value) {
