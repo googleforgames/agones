@@ -31,6 +31,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
@@ -53,6 +54,70 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 }
 
 func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int32, bool, error) {
+	if w == nil {
+		return 0, false, errors.New("nil WebhookPolicy passed")
+	}
+
+	if f == nil {
+		return 0, false, errors.New("nil Fleet passed")
+	}
+
+	if w.URL != nil && w.Service != nil {
+		return 0, false, errors.New("service and url cannot be used simultaneously")
+	}
+
+	var u *url.URL
+	var err error
+
+	if w.URL != nil {
+		if *w.URL == "" {
+			return 0, false, errors.New("URL was not provided")
+		}
+		u, err = url.Parse(*w.URL)
+		if err != nil {
+			return 0, false, err
+		}
+	} else {
+		if w.Service.Name == "" {
+			return 0, false, errors.New("service name was not provided")
+		}
+
+		if w.Service.Namespace == "" {
+			return 0, false, errors.New("service namespace was not provided")
+		}
+
+		var servicePath string
+		if w.Service.Path != nil {
+			servicePath = *w.Service.Path
+		}
+
+		if w.Service.Namespace == "" {
+			w.Service.Namespace = "default"
+		}
+
+		scheme := "http"
+		if w.CABundle != nil {
+			scheme = "https"
+
+			// We can have multiple fleetautoscalers with different CABundles defined,
+			// so we switch client.Transport before each POST request
+			rootCAs := x509.NewCertPool()
+			if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
+				return 0, false, errors.New("no certs were appended from caBundle")
+			}
+			client.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs: rootCAs,
+				},
+			}
+		}
+
+		u = &url.URL{
+			Scheme: scheme,
+			Host:   fmt.Sprintf("%s%s.%s.svc:8000/%s", scheme, w.Service.Name, w.Service.Namespace, servicePath),
+		}
+	}
+
 	faReq := autoscalingv1.FleetAutoscaleReview{
 		Request: &autoscalingv1.FleetAutoscaleRequest{
 			UID:       uuid.NewUUID(),
@@ -62,73 +127,40 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 		},
 		Response: nil,
 	}
+
 	b, err := json.Marshal(faReq)
-	urlStr := ""
-	if w.URL != nil {
-		urlStr = *w.URL
-	}
-	var faResp autoscalingv1.FleetAutoscaleReview
-	servicePath := ""
-	if w.Service != nil {
-		if w.Service.Path != nil {
-			servicePath = *w.Service.Path
-		}
-		if err != nil {
-			return f.Status.Replicas, false, err
-		}
-
-		if w.Service.Namespace == "" {
-			w.Service.Namespace = "default"
-		}
-		scheme := "http://"
-		if w.CABundle != nil {
-			scheme = "https://"
-		}
-		urlStr = fmt.Sprintf("%s%s.%s.svc:8000/%s", scheme, w.Service.Name, w.Service.Namespace, servicePath)
-	}
-	if urlStr == "" {
-		return f.Status.Replicas, false, errors.New("URL was not provided")
-	}
-
-	u, err := url.Parse(urlStr)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
 
-	// We could have multiple fleetautoscalers with different CABundles defined,
-	// so we switch client.Transport before each POST request
-	if u.Scheme == "https" {
-		rootCAs := x509.NewCertPool()
-		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
-			return f.Status.Replicas, false, errors.New("no certs were appended from caBundle")
-		}
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: rootCAs,
-			},
-		}
-		client.Transport = tr
-	}
 	res, err := client.Post(
-		urlStr,
+		u.String(),
 		"application/json",
 		strings.NewReader(string(b)),
 	)
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil {
+			log.Error(cerr)
+		}
+	}()
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
-	defer res.Body.Close() // nolint: errcheck
+
 	if res.StatusCode != http.StatusOK {
-		return f.Status.Replicas, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, urlStr)
+		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
+
+	var faResp autoscalingv1.FleetAutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
+
 	if faResp.Response.Scale {
 		return faResp.Response.Replicas, false, nil
 	}
