@@ -56,7 +56,7 @@ func (in *Fleet) DeepCopyObject() runtime.Object {
 func (in *FleetList) DeepCopyInto(out *FleetList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]Fleet, len(*in))
@@ -151,7 +151,7 @@ func (in *GameServer) DeepCopyObject() runtime.Object {
 func (in *GameServerList) DeepCopyInto(out *GameServerList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]GameServer, len(*in))
@@ -233,7 +233,7 @@ func (in *GameServerSet) DeepCopyObject() runtime.Object {
 func (in *GameServerSetList) DeepCopyInto(out *GameServerSetList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]GameServerSet, len(*in))
