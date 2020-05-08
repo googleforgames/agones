@@ -38,6 +38,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -968,7 +970,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			assert.Equal(t, endpoint+":443", e)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
-				State:          pb.AllocationResponse_Allocated,
 			}
 			return &serverResponse, nil
 		}
@@ -979,7 +980,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		}
 	})
 
-	t.Run("Remote server returns unallocated and then error", func(t *testing.T) {
+	t.Run("Remote server returns conflict and then random error", func(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
@@ -992,7 +993,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			if count == 0 {
 				serverResponse := pb.AllocationResponse{}
 				count++
-				return &serverResponse, nil
+				return &serverResponse, status.Error(codes.Aborted, "conflict")
 			}
 
 			retry++
@@ -1090,7 +1091,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			assert.Equal(t, healthyEndpoint, endpoint)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
-				State:          pb.AllocationResponse_Allocated,
 			}
 			return &serverResponse, nil
 		}

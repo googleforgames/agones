@@ -94,13 +94,14 @@ func TestConvert(t *testing.T) {
 		assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 
 		gs := fixture.DeepCopy()
-		gs.Status.Players = &agonesv1.PlayerStatus{Capacity: 10, Count: 5}
+		gs.Status.Players = &agonesv1.PlayerStatus{Capacity: 10, Count: 5, IDs: []string{"one", "two"}}
 
 		sdkGs := convert(gs)
 		eq(t, fixture, sdkGs)
 		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
 		assert.Equal(t, gs.Status.Players.Capacity, sdkGs.Status.Players.Capacity)
 		assert.Equal(t, gs.Status.Players.Count, sdkGs.Status.Players.Count)
+		assert.Equal(t, gs.Status.Players.IDs, sdkGs.Status.Players.IDs)
 	})
 
 	t.Run("DeletionTimestamp", func(t *testing.T) {

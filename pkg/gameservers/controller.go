@@ -573,21 +573,24 @@ func (c *Controller) createGameServerPod(gs *agonesv1.GameServer) (*agonesv1.Gam
 
 	c.loggerForGameServer(gs).WithField("pod", pod).Debug("Creating Pod for GameServer")
 	pod, err = c.podGetter.Pods(gs.ObjectMeta.Namespace).Create(pod)
-	if k8serrors.IsAlreadyExists(err) {
-		c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Pod already exists, reused")
-		return gs, nil
-	}
 	if err != nil {
-		if k8serrors.IsInvalid(err) {
+		switch {
+		case k8serrors.IsAlreadyExists(err):
+			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Pod already exists, reused")
+			return gs, nil
+		case k8serrors.IsInvalid(err):
 			c.loggerForGameServer(gs).WithField("pod", pod).Errorf("Pod created is invalid")
 			gs, err = c.moveToErrorState(gs, err.Error())
 			return gs, err
-		} else if k8serrors.IsForbidden(err) {
+		case k8serrors.IsForbidden(err):
 			c.loggerForGameServer(gs).WithField("pod", pod).Errorf("Pod created is forbidden")
 			gs, err = c.moveToErrorState(gs, err.Error())
 			return gs, err
+		default:
+			c.loggerForGameServer(gs).WithField("pod", pod).WithError(err)
+			c.recorder.Eventf(gs, corev1.EventTypeWarning, string(gs.Status.State), "error creating Pod for GameServer %s", gs.Name)
+			return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 		}
-		return gs, errors.Wrapf(err, "error creating Pod for GameServer %s", gs.Name)
 	}
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State),
 		fmt.Sprintf("Pod %s created", pod.ObjectMeta.Name))
