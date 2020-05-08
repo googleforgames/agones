@@ -16,13 +16,7 @@
 
 set -x
 
-# k8s.io/code-generator/generate-groups is not module-ready so it breaks things.
-export GO111MODULE=off
-rm -r $GOPATH/src/agones.dev/agones/pkg/client
-rsync -r /go/src/agones.dev/agones/vendor/k8s.io/ /go/src/k8s.io/
-cd /go/src/k8s.io/code-generator
-./generate-groups.sh "all" \
+bash /go/src/k8s.io/code-generator/generate-groups.sh "all" \
     agones.dev/agones/pkg/client \
     agones.dev/agones/pkg/apis "allocation:v1 agones:v1 multicluster:v1 autoscaling:v1" \
     --go-header-file=/go/src/agones.dev/agones/build/boilerplate.go.txt
-

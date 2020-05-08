@@ -20,14 +20,12 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
-	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
-	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2
 	github.com/sirupsen/logrus v1.2.0
@@ -35,7 +33,7 @@ require (
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.5.0
 	go.opencensus.io v0.22.3
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc
 	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
 	golang.org/x/tools v0.0.0-20190328211700-ab21143f2384
 	google.golang.org/api v0.0.0-20190117000611-43037ff31f69 // indirect
@@ -45,11 +43,10 @@ require (
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0-20170531160350-a96e63847dc3
-	k8s.io/api v0.0.0-20191004102349-159aefb8556b // kubernetes-1.14.10
-	k8s.io/apiextensions-apiserver v0.0.0-20191212015246-8fe0c124fb40 // kubernetes-1.14.10
-	k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689 // kubernetes-1.14.10
-	k8s.io/client-go v11.0.1-0.20191029005444-8e4128053008+incompatible // kubernetes-1.14.10
+	k8s.io/api v0.15.11
+	k8s.io/apiextensions-apiserver v0.0.0-20200318010201-8546efc3bc75 // kubernetes-1.15.11
+	k8s.io/apimachinery v0.15.11
+	k8s.io/client-go v0.15.11
 	k8s.io/kube-openapi v0.0.0-20190709113604-33be087ad058 // indirect
 	k8s.io/utils v0.0.0-20200124190032-861946025e34 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )
