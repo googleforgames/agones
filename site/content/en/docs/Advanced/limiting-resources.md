@@ -44,7 +44,7 @@ spec:
             cpu: "250m" #this is our limit here
 ```
 
-If you do not set a limit or request, the default is set my Kubernetes at a 100m CPU request. 
+If you do not set a limit or request, the default is set by Kubernetes at a 100m CPU request. 
 
 ## SDK GameServer sidecar
 
