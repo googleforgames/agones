@@ -25,7 +25,6 @@ googleapis=/go/src/agones.dev/agones/proto/googleapis
 
 cd /go/src/agones.dev/agones
 
-npm install --unsafe-perm --global grpc-tools
 grpc_tools_node_protoc --proto_path=${googleapis} --proto_path=${sdk} --js_out=import_style=commonjs,binary:./sdks/nodejs/lib google/api/annotations.proto google/api/http.proto
 grpc_tools_node_protoc --proto_path=${googleapis} --proto_path=${sdk} --grpc_out=generate_package_definition:./sdks/nodejs/lib --js_out=import_style=commonjs,binary:./sdks/nodejs/lib sdk.proto
 

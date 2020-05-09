@@ -17,6 +17,8 @@ FROM $BASE_IMAGE
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs
 
+RUN npm install --unsafe-perm --global grpc-tools@1.8.1
+
 # code generation scripts
 COPY *.sh /root/
 RUN chmod +x /root/*.sh
