@@ -73,17 +73,13 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 		if *w.URL == "" {
 			return 0, false, errors.New("URL was not provided")
 		}
-		u, err = url.Parse(*w.URL)
+		u, err = url.ParseRequestURI(*w.URL)
 		if err != nil {
 			return 0, false, err
 		}
 	} else {
 		if w.Service.Name == "" {
 			return 0, false, errors.New("service name was not provided")
-		}
-
-		if w.Service.Namespace == "" {
-			return 0, false, errors.New("service namespace was not provided")
 		}
 
 		var servicePath string
@@ -114,7 +110,8 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 
 		u = &url.URL{
 			Scheme: scheme,
-			Host:   fmt.Sprintf("%s%s.%s.svc:8000/%s", scheme, w.Service.Name, w.Service.Namespace, servicePath),
+			Host:   fmt.Sprintf("%s.%s.svc:8000", w.Service.Name, w.Service.Namespace),
+			Path:   servicePath,
 		}
 	}
 
@@ -138,14 +135,14 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 		"application/json",
 		strings.NewReader(string(b)),
 	)
+	if err != nil {
+		return 0, false, err
+	}
 	defer func() {
 		if cerr := res.Body.Close(); cerr != nil {
 			log.Error(cerr)
 		}
 	}()
-	if err != nil {
-		return 0, false, err
-	}
 
 	if res.StatusCode != http.StatusOK {
 		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())

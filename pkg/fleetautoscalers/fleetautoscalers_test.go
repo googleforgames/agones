@@ -18,6 +18,7 @@ package fleetautoscalers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +27,7 @@ import (
 
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/stretchr/testify/assert"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -126,6 +128,7 @@ func TestApplyBufferPolicy(t *testing.T) {
 type testServer struct{}
 
 func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r == nil {
 		http.Error(w, "Empty request", http.StatusInternalServerError)
 		return
@@ -141,6 +144,20 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	// return different errors for tests
+	if faRequest.Request.Status.AllocatedReplicas == -10 {
+		http.Error(w, "Wrong Status Replicas Parameter", http.StatusInternalServerError)
+		return
+	}
+
+	if faRequest.Request.Status.AllocatedReplicas == -20 {
+		_, err = io.WriteString(w, "invalid data")
+		if err != nil {
+			http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
+		}
+	}
+
 	faReq := faRequest.Request
 	faResp := autoscalingv1.FleetAutoscaleResponse{
 		Scale:    false,
@@ -152,12 +169,16 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		faResp.Scale = true
 		faResp.Replicas = faReq.Status.Replicas * scaleFactor
 	}
-	w.Header().Set("Content-Type", "application/json")
+
 	review := &autoscalingv1.FleetAutoscaleReview{
 		Request:  faReq,
 		Response: &faResp,
 	}
-	result, _ := json.Marshal(&review)
+
+	result, err := json.Marshal(&review)
+	if err != nil {
+		http.Error(w, "Error marshaling json", http.StatusInternalServerError)
+	}
 
 	_, err = io.WriteString(w, string(result))
 	if err != nil {
@@ -172,6 +193,10 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	defer server.Close()
 
 	_, f := defaultWebhookFixtures()
+	url := "/scale"
+	emptyString := ""
+	invalidURL := ")1golang.org/"
+	wrongServerURL := "http://127.0.0.1:1"
 
 	type expected struct {
 		replicas int32
@@ -236,6 +261,131 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				err:      "",
 			},
 		},
+		{
+			description:   "nil WebhookPolicy, error returned",
+			webhookPolicy: nil,
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "nil WebhookPolicy passed",
+			},
+		},
+		{
+			description: "URL and Service are not nil",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
+				URL: &(server.URL),
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service and url cannot be used simultaneously",
+			},
+		},
+		{
+			description: "URL not nil but empty",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &emptyString,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "URL was not provided",
+			},
+		},
+		{
+			description: "Invalid URL",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &invalidURL,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "parse )1golang.org/: invalid URI for request",
+			},
+		},
+		{
+			description: "Service name is empty",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "",
+					Namespace: "default",
+					Path:      &url,
+				},
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service name was not provided",
+			},
+		},
+		{
+			description: "No certs",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
+				CABundle: []byte("invalid-value"),
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "no certs were appended from caBundle",
+			},
+		},
+		{
+			description: "Wrong server URL",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &wrongServerURL,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "Post http://127.0.0.1:1: dial tcp 127.0.0.1:1: connect: connection refused",
+			},
+		},
+		{
+			description: "Handle server error",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:   50,
+			statusReplicas: 50,
+			// hardcoded value in a server implementation
+			statusAllocatedReplicas: -10,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      fmt.Sprintf("bad status code %d from the server: %s", http.StatusInternalServerError, server.URL),
+			},
+		},
+		{
+			description: "Handle invalid response from the server",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: -20,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "invalid character 'i' looking for beginning of value",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -249,10 +399,32 @@ func TestApplyWebhookPolicy(t *testing.T) {
 
 			if tc.expected.err != "" && assert.NotNil(t, err) {
 				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+				assert.Nil(t, err)
 			}
-			assert.Equal(t, tc.expected.replicas, replicas)
-			assert.Equal(t, tc.expected.limited, limited)
 		})
 	}
 
+}
+
+func TestApplyWebhookPolicy_NilFleet(t *testing.T) {
+	url := "/scale"
+	w := &autoscalingv1.WebhookPolicy{
+		Service: &admregv1b.ServiceReference{
+			Name:      "service1",
+			Namespace: "default",
+			Path:      &url,
+		},
+	}
+
+	replicas, limited, err := applyWebhookPolicy(w, nil)
+
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "nil Fleet passed", err.Error())
+	}
+
+	assert.False(t, limited)
+	assert.Zero(t, replicas)
 }
