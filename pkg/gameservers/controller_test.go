@@ -669,7 +669,7 @@ func TestControllerSyncGameServerCreatingState(t *testing.T) {
 			return true, gs, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+		_, cancel := agtesting.StartInformers(m, c.podSynced)
 		defer cancel()
 
 		gs, err := c.syncGameServerCreatingState(fixture)
