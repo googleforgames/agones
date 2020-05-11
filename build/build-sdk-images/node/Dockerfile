@@ -17,7 +17,8 @@ FROM $BASE_IMAGE
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs
 
-RUN npm install --unsafe-perm --global grpc-tools@1.8.1
+# Installing request is to address a bug with node-pre-gyp
+RUN npm install --unsafe-perm --global request@2.88.2 grpc-tools@1.8.1
 
 # code generation scripts
 COPY *.sh /root/
