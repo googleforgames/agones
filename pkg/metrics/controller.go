@@ -68,6 +68,7 @@ type Controller struct {
 	gsCount                   GameServerCount
 	faCount                   map[string]int64
 	gameServerStateLastChange *lru.Cache
+	now                       func() time.Time
 }
 
 // NewController returns a new metrics controller
@@ -105,6 +106,9 @@ func NewController(
 		gsCount:                   GameServerCount{},
 		faCount:                   map[string]int64{},
 		gameServerStateLastChange: lruCache,
+		now: func() time.Time {
+			return time.Now()
+		},
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -302,10 +306,10 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
 	duration = 0.
 	// currentTime - GameServer time from its start
-	currentTime := time.Now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
+	currentTime := c.now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
 
-	newGSKey := fmt.Sprintf("%s/%s/%s", newGs.ObjectMeta.Namespace, newGs.ObjectMeta.Name, string(newGs.Status.State))
-	oldGSKey := fmt.Sprintf("%s/%s/%s", oldGs.ObjectMeta.Namespace, oldGs.ObjectMeta.Name, string(oldGs.Status.State))
+	newGSKey := fmt.Sprintf("%s/%s/%s", newGs.ObjectMeta.Namespace, newGs.ObjectMeta.Name, newGs.Status.State)
+	oldGSKey := fmt.Sprintf("%s/%s/%s", oldGs.ObjectMeta.Namespace, oldGs.ObjectMeta.Name, oldGs.Status.State)
 
 	c.stateLock.Lock()
 	defer c.stateLock.Unlock()
@@ -314,6 +318,7 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 		duration = currentTime
 	case !c.gameServerStateLastChange.Contains(oldGSKey):
 		err = errors.New(fmt.Sprintf("Unable to calculate '%s' state duration of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name))
+		return 0, err
 	default:
 		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
 		if !ok {
@@ -329,8 +334,9 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 		c.gameServerStateLastChange.Add(newGSKey, currentTime)
 		c.logger.Debugf("Adding new key %s, relative time: %f", newGSKey, currentTime)
 	}
-	if duration <= 0. {
-		err = errors.New(fmt.Sprintf("Negative duration for '%s' state of '%s' GameServer ", oldGs.Status.State, oldGs.ObjectMeta.Name))
+	if duration < 0. {
+		duration = 0
+		err = errors.New(fmt.Sprintf("Negative duration for '%s' state of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name))
 	}
 	return duration, err
 }

@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	distributionSeconds       = []float64{0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3}
+	distributionSeconds       = []float64{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384}
 	fleetsReplicasCountStats  = stats.Int64("fleets/replicas_count", "The count of replicas per fleet", "1")
 	fasBufferLimitsCountStats = stats.Int64("fas/buffer_limits", "The buffer limits of autoscalers", "1")
 	fasBufferSizeStats        = stats.Int64("fas/buffer_size", "The buffer size value of autoscalers", "1")

@@ -18,9 +18,11 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricexport"
@@ -292,28 +294,102 @@ func TestCalcDuration(t *testing.T) {
 		m.AgonesClient,
 		m.KubeInformerFactory,
 		m.AgonesInformerFactory)
-	gs1 := gameServerWithFleetAndState("test-fleet", "")
-	gs1.ObjectMeta.CreationTimestamp = metav1.Now()
-	gs2 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateCreating)
-	gs2.ObjectMeta.CreationTimestamp = gs1.ObjectMeta.CreationTimestamp
-	duration, err := c.calcDuration(gs1, gs2)
-	assert.NoError(t, err, "Unable to caculate duration of a particular state")
-	assert.True(t, duration > 0., "Time diff should be calculated properly")
-	gs3 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateRequestReady)
-	gs3.ObjectMeta.CreationTimestamp = gs1.ObjectMeta.CreationTimestamp
-	duration, err = c.calcDuration(gs2, gs3)
-	assert.NoError(t, err, "Unable to caculate duration of a particular state")
-	assert.True(t, duration > 0., "Time diff should be calculated properly")
+	creationTimestamp := metav1.Now()
+	futureTimestamp := metav1.Time{time.Now().Add(24 * time.Hour)}
+	gsName := "gameServer"
+	currentTime := creationTimestamp.Local()
+	// Add one second each time Duration is calculated
+	c.now = func() time.Time {
+		currentTime = currentTime.Add(1 * time.Second)
+		return currentTime
+	}
+	type result struct {
+		duration float64
+		err      error
+	}
+	var testCases = []struct {
+		description string
+		gs1         *agonesv1.GameServer
+		gs2         *agonesv1.GameServer
+		expected    result
+	}{
+		{
+			description: "GameServer creating - first measurement",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, "", creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateCreating, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 1,
+			},
+		},
+		{
+			description: "Test state change of a GameServer",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateCreating, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 1,
+			},
+		},
+		{
+			description: "gs1 state should already be deleted, error should be generated (emulation of evicted key for gs1)",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, "", creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			expected: result{
+				err:      errors.New("Unable to calculate '' state duration of 'gameServer' GameServer"),
+				duration: 0,
+			},
+		},
+		{
+			description: "Shutdown state should remove the key in LRU cache",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateShutdown, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 2,
+			},
+		},
+		{
+			description: "Cache miss, no key in LRU cache",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateShutdown, creationTimestamp),
+			expected: result{
+				err:      errors.New("Unable to calculate 'RequestReady' state duration of 'gameServer' GameServer"),
+				duration: 0,
+			},
+		},
+		{
+			description: "Future timestamp was used",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, "", futureTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateCreating, futureTimestamp),
+			expected: result{
+				err:      errors.New("Negative duration for '' state of 'gameServer' GameServer"),
+				duration: 0,
+			},
+		},
+		{
+			description: "Shutdown state - remove a key from the LRU",
+			gs1:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateCreating, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp("test-fleet", gsName, agonesv1.GameServerStateShutdown, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 4,
+			},
+		},
+	}
 
-	// gs1 state should already be deleted, error should be generated
-	// emulation of evicted key for gs1
-	duration, err = c.calcDuration(gs1, gs3)
-	assert.Error(t, err, "We should receive an error, metric should not be measured")
-	assert.True(t, duration == 0., "Time diff should be calculated properly")
-
-	gs4 := gameServerWithFleetAndState("test-fleet", agonesv1.GameServerStateShutdown)
-	duration, err = c.calcDuration(gs3, gs4)
-	assert.NoError(t, err, "Unable to caculate duration of a particular state")
-	assert.True(t, duration > 0., "Time diff should be calculated properly")
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			// Do not use t.Parallel(), because test cases should be executed as serial tests
+			// Test case 3 depends on key eviction in test case 2
+			duration, err := c.calcDuration(tc.gs1, tc.gs2)
+			if tc.expected.err != nil {
+				assert.EqualError(t, err, tc.expected.err.Error(), "We should receive an error, metric should not be measured")
+			} else {
+				assert.NoError(t, err, "Unable to caculate duration of a particular state")
+			}
+			assert.Equal(t, tc.expected.duration, duration, "Time diff should be calculated properly")
+		})
+	}
 	assert.Len(t, c.gameServerStateLastChange.Keys(), 0, "We should not have any keys after the test")
 }
