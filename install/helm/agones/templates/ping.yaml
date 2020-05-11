@@ -95,6 +95,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.agones.ping.http.annotations }}
+  annotations:
+{{ toYaml .Values.agones.ping.http.annotations | indent 4 }}
+{{- end }}
 spec:
   selector:
     agones.dev/role: ping
@@ -119,6 +123,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.agones.ping.udp.annotations }}
+  annotations:
+{{ toYaml .Values.agones.ping.udp.annotations | indent 4 }}
+{{- end }}
 spec:
   selector:
     agones.dev/role: ping
