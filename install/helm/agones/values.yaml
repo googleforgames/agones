@@ -124,6 +124,7 @@ agones:
     http:
       port: 443
       serviceType: LoadBalancer
+      annotations: {}
     generateTLS: true
   image:
     registry: gcr.io/agones-images
