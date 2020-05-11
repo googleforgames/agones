@@ -406,10 +406,11 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestApplyWebhookPolicy_NilFleet(t *testing.T) {
+	t.Parallel()
+
 	url := "/scale"
 	w := &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
@@ -427,4 +428,52 @@ func TestApplyWebhookPolicy_NilFleet(t *testing.T) {
 
 	assert.False(t, limited)
 	assert.Zero(t, replicas)
+}
+
+func TestBuildURL(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		description string
+		scheme      string
+		name        string
+		namespace   string
+		path        string
+		expected    string
+	}{
+		{
+			description: "OK, path not empty",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "scale",
+			expected:    "http://service1.default.svc:8000/scale",
+		},
+		{
+			description: "OK, path not empty with slash",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "/scale",
+			expected:    "http://service1.default.svc:8000/scale",
+		},
+		{
+			description: "OK, path is empty",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "",
+			expected:    "http://service1.default.svc:8000",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			res := buildURL(tc.scheme, tc.name, tc.namespace, tc.path)
+
+			if assert.NotNil(t, res) {
+				assert.Equal(t, tc.expected, res.String())
+			}
+		})
+	}
 }

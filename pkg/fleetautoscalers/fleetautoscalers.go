@@ -108,11 +108,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 			}
 		}
 
-		u = &url.URL{
-			Scheme: scheme,
-			Host:   fmt.Sprintf("%s.%s.svc:8000", w.Service.Name, w.Service.Namespace),
-			Path:   servicePath,
-		}
+		u = buildURL(scheme, w.Service.Name, w.Service.Namespace, servicePath)
 	}
 
 	faReq := autoscalingv1.FleetAutoscaleReview{
@@ -162,6 +158,14 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 		return faResp.Response.Replicas, false, nil
 	}
 	return f.Status.Replicas, false, nil
+}
+
+func buildURL(scheme, name, namespace, path string) *url.URL {
+	return &url.URL{
+		Scheme: scheme,
+		Host:   fmt.Sprintf("%s.%s.svc:8000", name, namespace),
+		Path:   path,
+	}
 }
 
 func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32, bool, error) {
