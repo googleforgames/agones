@@ -36,26 +36,66 @@ func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
 	capacity, err := a.GetPlayerCapacity()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(15), capacity)
+
+	playerID := "one"
+	ok, err := a.PlayerConnect(playerID)
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, playerID, mock.playerConnected)
+
+	count, err := a.GetPlayerCount()
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count)
+
+	ok, err = a.PlayerDisconnect(playerID)
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, playerID, mock.playerDisconnected)
+
+	// put the player back in
+	ok, err = a.PlayerConnect(playerID)
+	assert.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, int64(1), count)
+
+	ok, err = a.IsPlayerConnected(playerID)
+	assert.NoError(t, err)
+	assert.True(t, ok, "Player should be connected")
+
+	ok, err = a.IsPlayerConnected("false")
+	assert.NoError(t, err)
+	assert.False(t, ok, "Player should not be connected")
+
+	list, err := a.GetConnectedPlayers()
+	assert.NoError(t, err)
+	assert.Equal(t, []string{playerID}, list)
 }
 
 type alphaMock struct {
-	capacity int64
+	capacity           int64
+	playerCount        int64
+	playerConnected    string
+	playerDisconnected string
 }
 
-func (a *alphaMock) PlayerConnect(ctx context.Context, in *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
-	panic("implement me")
+func (a *alphaMock) PlayerConnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+	a.playerConnected = id.PlayerID
+	a.playerCount++
+	return &alpha.Bool{Bool: true}, nil
 }
 
-func (a *alphaMock) PlayerDisconnect(ctx context.Context, in *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
-	panic("implement me")
+func (a *alphaMock) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
+	a.playerDisconnected = id.PlayerID
+	a.playerCount--
+	return &alpha.Bool{Bool: true}, nil
 }
 
 func (a *alphaMock) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID, opts ...grpc.CallOption) (*alpha.Bool, error) {
-	panic("implement me")
+	return &alpha.Bool{Bool: id.PlayerID == a.playerConnected}, nil
 }
 
-func (a *alphaMock) GetConnectedPlayers(ctx context.Context, id *alpha.Empty, opts ...grpc.CallOption) (*alpha.PlayerIDList, error) {
-	panic("implement me")
+func (a *alphaMock) GetConnectedPlayers(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.PlayerIDList, error) {
+	return &alpha.PlayerIDList{List: []string{a.playerConnected}}, nil
 }
 
 func (a *alphaMock) SetPlayerCapacity(ctx context.Context, in *alpha.Count, opts ...grpc.CallOption) (*alpha.Empty, error) {
@@ -68,5 +108,5 @@ func (a *alphaMock) GetPlayerCapacity(ctx context.Context, in *alpha.Empty, opts
 }
 
 func (a *alphaMock) GetPlayerCount(ctx context.Context, in *alpha.Empty, opts ...grpc.CallOption) (*alpha.Count, error) {
-	panic("implement me")
+	return &alpha.Count{Count: a.playerCount}, nil
 }

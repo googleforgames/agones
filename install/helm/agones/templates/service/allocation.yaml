@@ -25,6 +25,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.agones.allocator.http.annotations }}
+  annotations:
+{{ toYaml .Values.agones.allocator.http.annotations | indent 4 }}
+{{- end }}
 spec:
   selector:
     multicluster.agones.dev/role: allocator
