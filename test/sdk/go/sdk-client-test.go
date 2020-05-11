@@ -106,6 +106,37 @@ func main() {
 		if c != capacity {
 			log.Fatalf("Player Capacity should be %d, but is %d", capacity, c)
 		}
+
+		playerID := "1234"
+		if ok, err := sdk.Alpha().PlayerConnect(playerID); err != nil {
+			log.Fatalf("Error registering player as connected: %s", err)
+		} else if !ok {
+			log.Fatalf("PlayerConnect returned false")
+		}
+
+		if ok, err := sdk.Alpha().IsPlayerConnected(playerID); err != nil {
+			log.Fatalf("Error checking if player is connected: %s", err)
+		} else if !ok {
+			log.Fatalf("IsPlayerConnected returned false")
+		}
+
+		if list, err := sdk.Alpha().GetConnectedPlayers(); err != nil {
+			log.Fatalf("Error getting connected player: %s", err)
+		} else if len(list) == 0 {
+			log.Fatalf("No connected players returned")
+		}
+
+		if ok, err := sdk.Alpha().PlayerDisconnect(playerID); err != nil {
+			log.Fatalf("Error registering player as disconnected: %s", err)
+		} else if !ok {
+			log.Fatalf("PlayerDisconnect returned false")
+		}
+
+		if c, err = sdk.Alpha().GetPlayerCount(); err != nil {
+			log.Fatalf("Error retrieving player count: %s", err)
+		} else if c != int64(0) {
+			log.Fatalf("Player Count should be 0, but is %d", c)
+		}
 	}
 
 	err = sdk.Shutdown()
