@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 mkdir /go/src/agones.dev/agones/swagger
 wget -q https://repo1.maven.org/maven2/io/swagger/swagger-codegen-cli/2.4.10/swagger-codegen-cli-2.4.10.jar -O /tmp/swagger-codegen-cli.jar
 java -jar /tmp/swagger-codegen-cli.jar generate -i /go/src/agones.dev/agones/sdks/swagger/sdk.swagger.json  -l go -o /go/src/agones.dev/agones/test/sdk/restapi/swagger
+java -jar /tmp/swagger-codegen-cli.jar generate -i /go/src/agones.dev/agones/sdks/swagger/alpha.swagger.json  -l go -o /go/src/agones.dev/agones/test/sdk/restapi/alpha/swagger
