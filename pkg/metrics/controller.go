@@ -106,9 +106,7 @@ func NewController(
 		gsCount:                   GameServerCount{},
 		faCount:                   map[string]int64{},
 		gameServerStateLastChange: lruCache,
-		now: func() time.Time {
-			return time.Now()
-		},
+		now:                       time.Now,
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -304,12 +302,16 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 // Assumptions: there is a possibility that one of the previous state change timestamps would be evicted,
 // this measure would be skipped
 func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
-	duration = 0.
 	// currentTime - GameServer time from its start
 	currentTime := c.now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
 
-	newGSKey := fmt.Sprintf("%s/%s/%s", newGs.ObjectMeta.Namespace, newGs.ObjectMeta.Name, newGs.Status.State)
-	oldGSKey := fmt.Sprintf("%s/%s/%s", oldGs.ObjectMeta.Namespace, oldGs.ObjectMeta.Name, oldGs.Status.State)
+	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
+	if fleetName == "" {
+		fleetName = defaultFleetTag
+	}
+
+	newGSKey := fmt.Sprintf("%s/%s/%s/%s", newGs.ObjectMeta.Namespace, fleetName, newGs.ObjectMeta.Name, newGs.Status.State)
+	oldGSKey := fmt.Sprintf("%s/%s/%s/%s", oldGs.ObjectMeta.Namespace, fleetName, oldGs.ObjectMeta.Name, oldGs.Status.State)
 
 	c.stateLock.Lock()
 	defer c.stateLock.Unlock()
@@ -317,12 +319,12 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 	case newGs.Status.State == agonesv1.GameServerStateCreating || newGs.Status.State == agonesv1.GameServerStatePortAllocation:
 		duration = currentTime
 	case !c.gameServerStateLastChange.Contains(oldGSKey):
-		err = errors.New(fmt.Sprintf("Unable to calculate '%s' state duration of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name))
+		err = fmt.Errorf("unable to calculate '%s' state duration of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name)
 		return 0, err
 	default:
 		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
 		if !ok {
-			err = errors.New(fmt.Sprintf("Could not find expected key %s", oldGSKey))
+			err = fmt.Errorf("could not find expected key %s", oldGSKey)
 			return
 		}
 		c.gameServerStateLastChange.Remove(oldGSKey)
@@ -336,7 +338,7 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 	}
 	if duration < 0. {
 		duration = 0
-		err = errors.New(fmt.Sprintf("Negative duration for '%s' state of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name))
+		err = fmt.Errorf("negative duration for '%s' state of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name)
 	}
 	return duration, err
 }
