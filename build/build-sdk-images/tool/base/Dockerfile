@@ -27,12 +27,13 @@ RUN apt-get update && apt-get install -y \
 ARG GRPC_RELEASE_TAG
 # install protobuf first, then grpc
 RUN git clone -b $GRPC_RELEASE_TAG --depth=5 https://github.com/grpc/grpc /var/local/git/grpc && \
-		cd /var/local/git/grpc && \
+    cd /var/local/git/grpc && \
     git submodule update --init && \
     echo "--- installing protobuf ---" && \
     cd third_party/protobuf && \
     ./autogen.sh && ./configure --enable-shared && \
     make -j$(nproc) && make install && make clean && ldconfig && \
+    export CFLAGS=-Wno-error && export CXXFLAGS=-Wno-error && \
     echo "--- installing grpc ---" && \
     cd /var/local/git/grpc && \
     make -j$(nproc) && make install && make clean && ldconfig
