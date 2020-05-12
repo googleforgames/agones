@@ -167,7 +167,11 @@ run-sdk-conformance-test-rust:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
 
 run-sdk-conformance-test-rest:
+	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi HTTP_PORT=9050
+	# run with feature flags enabled
+	$(MAKE) run-sdk-conformance-no-build SDK_FOLDER=restapi GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
+
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
 # Run a conformance test for all SDKs supported
