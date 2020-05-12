@@ -313,7 +313,7 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 
 tags: ['ci']
-timeout: "1h"
+timeout: "2h"
 images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
