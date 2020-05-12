@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@google-cloud/agones-sdk": "1.4.0"
+    "@google-cloud/agones-sdk": "1.5.0"
   },
   "scripts": {
     "start": "node src/index.js"
