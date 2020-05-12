@@ -31,12 +31,6 @@ locals {
   kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.15")
 }
 
-data "google_container_engine_versions" "kubernetes" {
-  project        = local.project
-  location       = local.zone
-  version_prefix = local.kubernetesVersion
-}
-
 # echo command used for debugging purpose
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
@@ -56,9 +50,7 @@ resource "google_container_cluster" "primary" {
   project  = local.project
   network  = local.network
 
-  min_master_version = data.google_container_engine_versions.kubernetes.latest_master_version
-
-  node_version = data.google_container_engine_versions.kubernetes.latest_node_version
+  min_master_version = local.kubernetesVersion
 
   node_pool {
     name       = "default"
