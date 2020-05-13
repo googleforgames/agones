@@ -345,7 +345,7 @@ func getPlayerCapacity(s *sdk.SDK) string {
 	if err != nil {
 		log.Fatalf("could not get capacity: %v", err)
 	}
-	return strconv.FormatInt(capacity, 10)
+	return strconv.FormatInt(capacity, 10) + "\n"
 }
 
 // playerConnect connects a given player
@@ -373,7 +373,7 @@ func playerIsConnected(s *sdk.SDK, id string) string {
 		log.Fatalf("could not retrieve if player is connected: %v", err)
 	}
 
-	return strconv.FormatBool(connected)
+	return strconv.FormatBool(connected) + "\n"
 }
 
 // getConnectedPlayers returns a comma delimeted list of connected players
@@ -384,7 +384,7 @@ func getConnectedPlayers(s *sdk.SDK) string {
 		log.Fatalf("could not retrieve connected players: %s", err)
 	}
 
-	return strings.Join(list, ",")
+	return strings.Join(list, ",") + "\n"
 }
 
 // getPlayerCount returns the count of connected players as a string
@@ -394,7 +394,7 @@ func getPlayerCount(s *sdk.SDK) string {
 	if err != nil {
 		log.Fatalf("could not retrieve player count: %s", err)
 	}
-	return strconv.FormatInt(count, 10)
+	return strconv.FormatInt(count, 10) + "\n"
 }
 
 // doHealth sends the regular Health Pings
