@@ -23,11 +23,14 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	v1 "agones.dev/agones/pkg/apis/agones/v1"
+	agonesv1client "agones.dev/agones/pkg/client/listers/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/mattbaird/jsonpatch"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
@@ -35,6 +38,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
@@ -244,6 +248,105 @@ func TestControllerSyncFleet(t *testing.T) {
 		assert.True(t, created, "gameserverset should have been created")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
+	})
+
+	t.Run("error on getting list of GS", func(t *testing.T) {
+		f := defaultFixture()
+		c, m := newFakeController()
+		c.gameServerSetLister = &fakeGSListerWithErr{}
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.EqualError(t, err, "error listing gameserversets for fleet fleet-1: random-err")
+	})
+
+	t.Run("fleet not found", func(t *testing.T) {
+		c, _ := newFakeController()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.Nil(t, err)
+	})
+
+	t.Run("fleet invalid strategy type", func(t *testing.T) {
+		f := defaultFixture()
+		c, m := newFakeController()
+		f.Spec.Strategy.Type = "invalid-strategy-type"
+
+		gsSet := f.GameServerSet()
+		// make gsSet.Spec.Template and f.Spec.Template different in order to make 'rest' list not empty
+		gsSet.Spec.Template.ClusterName = "qqqqqqqqqqqqqqqqqqq"
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.EqualError(t, err, "unexpected deployment strategy type: invalid-strategy-type")
+	})
+
+	t.Run("error on deleteEmptyGameServerSets", func(t *testing.T) {
+		f := defaultFixture()
+		c, m := newFakeController()
+
+		gsSet := f.GameServerSet()
+		// make gsSet.Spec.Template and f.Spec.Template different in order to make 'rest' list not empty
+		gsSet.Spec.Template.ClusterName = "qqqqqqqqqqqqqqqqqqq"
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+
+		m.AgonesClient.AddReactor("delete", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, nil, errors.New("random-err")
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.EqualError(t, err, "error updating gameserverset : random-err")
+	})
+
+	t.Run("error on upsertGameServerSet", func(t *testing.T) {
+		f := defaultFixture()
+		c, m := newFakeController()
+
+		gsSet := f.GameServerSet()
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+
+		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, nil, errors.New("random-err")
+		})
+
+		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet("default/fleet-1")
+		assert.EqualError(t, err, "error creating gameserverset : random-err")
 	})
 }
 
@@ -921,4 +1024,15 @@ func defaultGSSpec() *agonesv1.GameServerTemplateSpec {
 			},
 		},
 	}
+}
+
+type fakeGSListerWithErr struct {
+}
+
+func (fgsl *fakeGSListerWithErr) List(selector labels.Selector) (ret []*v1.GameServerSet, err error) {
+	return nil, errors.New("random-err")
+}
+
+func (fgsl *fakeGSListerWithErr) GameServerSets(namespace string) agonesv1client.GameServerSetNamespaceLister {
+	return nil
 }
