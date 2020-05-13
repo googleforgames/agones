@@ -147,7 +147,7 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, "/.kube/config"))
-	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/udp-server:0.19")
+	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/udp-server:0.20")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")

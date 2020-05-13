@@ -176,6 +176,52 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 				respond(conn, sender, "ERROR: Invalid ANNOTATION command, must use zero or 2 arguments\n")
 				continue
 			}
+		case "PLAYER_CAPACITY":
+			switch len(parts) {
+			case 1:
+				respond(conn, sender, getPlayerCapacity(s))
+				continue
+			case 2:
+				if cap, err := strconv.Atoi(parts[1]); err != nil {
+					respond(conn, sender, err.Error()+"\n")
+					continue
+				} else {
+					setPlayerCapacity(s, int64(cap))
+				}
+			default:
+				respond(conn, sender, "ERROR: Invalid PLAYER_CAPACITY, should have 0 or 1 arguments\n")
+				continue
+			}
+
+		case "PLAYER_CONNECT":
+			if len(parts) < 2 {
+				respond(conn, sender, "ERROR: Invalid PLAYER_CONNECT, should have 1 arguments\n")
+				continue
+			}
+			playerConnect(s, parts[1])
+
+		case "PLAYER_DISCONNECT":
+			if len(parts) < 2 {
+				respond(conn, sender, "ERROR: Invalid PLAYER_CONNECT, should have 1 arguments\n")
+				continue
+			}
+			playerDisconnect(s, parts[1])
+
+		case "PLAYER_CONNECTED":
+			if len(parts) < 2 {
+				respond(conn, sender, "ERROR: Invalid PLAYER_CONNECTED, should have 1 arguments\n")
+				continue
+			}
+			respond(conn, sender, playerIsConnected(s, parts[1]))
+			continue
+
+		case "GET_PLAYERS":
+			respond(conn, sender, getConnectedPlayers(s))
+			continue
+
+		case "PLAYER_COUNT":
+			respond(conn, sender, getPlayerCount(s))
+			continue
 		}
 
 		respond(conn, sender, "ACK: "+txt+"\n")
@@ -282,6 +328,73 @@ func setLabel(s *sdk.SDK, key, value string) {
 	if err != nil {
 		log.Fatalf("could not set label: %v", err)
 	}
+}
+
+// setPlayerCapacity sets the player capacity to the given value
+func setPlayerCapacity(s *sdk.SDK, capacity int64) {
+	log.Printf("Setting Player Capacity to %d", capacity)
+	if err := s.Alpha().SetPlayerCapacity(capacity); err != nil {
+		log.Fatalf("could not set capacity: %v", err)
+	}
+}
+
+// getPlayerCapacity returns the current player capacity as a string
+func getPlayerCapacity(s *sdk.SDK) string {
+	log.Print("Getting Player Capacity")
+	capacity, err := s.Alpha().GetPlayerCapacity()
+	if err != nil {
+		log.Fatalf("could not get capacity: %v", err)
+	}
+	return strconv.FormatInt(capacity, 10)
+}
+
+// playerConnect connects a given player
+func playerConnect(s *sdk.SDK, id string) {
+	log.Printf("Connecting Player: %s", id)
+	if _, err := s.Alpha().PlayerConnect(id); err != nil {
+		log.Fatalf("could not connect player: %v", err)
+	}
+}
+
+// playerDisconnect disconnects a given player
+func playerDisconnect(s *sdk.SDK, id string) {
+	log.Printf("Disconnecting Player: %s", id)
+	if _, err := s.Alpha().PlayerDisconnect(id); err != nil {
+		log.Fatalf("could not disconnect player: %v", err)
+	}
+}
+
+// playerIsConnected returns a bool as a string if a player is connected
+func playerIsConnected(s *sdk.SDK, id string) string {
+	log.Printf("Checking if player %s is connected", id)
+
+	connected, err := s.Alpha().IsPlayerConnected(id)
+	if err != nil {
+		log.Fatalf("could not retrieve if player is connected: %v", err)
+	}
+
+	return strconv.FormatBool(connected)
+}
+
+// getConnectedPlayers returns a comma delimeted list of connected players
+func getConnectedPlayers(s *sdk.SDK) string {
+	log.Print("Retrieving connected player list")
+	list, err := s.Alpha().GetConnectedPlayers()
+	if err != nil {
+		log.Fatalf("could not retrieve connected players: %s", err)
+	}
+
+	return strings.Join(list, ",")
+}
+
+// getPlayerCount returns the count of connected players as a string
+func getPlayerCount(s *sdk.SDK) string {
+	log.Print("Retrieving connected player count")
+	count, err := s.Alpha().GetPlayerCount()
+	if err != nil {
+		log.Fatalf("could not retrieve player count: %s", err)
+	}
+	return strconv.FormatInt(count, 10)
 }
 
 // doHealth sends the regular Health Pings
