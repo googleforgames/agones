@@ -174,7 +174,8 @@ func main() {
 func registerLocal(grpcServer *grpc.Server, ctlConf config) (func(), error) {
 	filePath := ""
 	if ctlConf.LocalFile != "" {
-		filePath, err := filepath.Abs(ctlConf.LocalFile)
+		var err error
+		filePath, err = filepath.Abs(ctlConf.LocalFile)
 		if err != nil {
 			return nil, err
 		}
@@ -239,8 +240,11 @@ func runGateway(ctx context.Context, grpcEndpoint string, mux *gwruntime.ServeMu
 		logger.WithError(err).Fatal("Could not dial grpc server...")
 	}
 
-	if err = sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
-		logger.WithError(err).Fatal("Could not register grpc-gateway")
+	if err := sdk.RegisterSDKHandler(ctx, mux, conn); err != nil {
+		logger.WithError(err).Fatal("Could not register sdk grpc-gateway")
+	}
+	if err := sdkalpha.RegisterSDKHandler(ctx, mux, conn); err != nil {
+		logger.WithError(err).Fatal("Could not register alpha sdk grpc-gateway")
 	}
 
 	logger.WithField("httpEndpoint", httpServer.Addr).Info("Starting SDKServer grpc-gateway...")

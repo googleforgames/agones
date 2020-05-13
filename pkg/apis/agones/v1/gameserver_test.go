@@ -1196,7 +1196,7 @@ func TestGameServerPodNoErrors(t *testing.T) {
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 
-func TestGameServerPod_ContainerNotFound_ErrReturned(t *testing.T) {
+func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 	t.Parallel()
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
@@ -1253,7 +1253,7 @@ func TestGameServerPod_ContainerNotFound_ErrReturned(t *testing.T) {
 
 }
 
-func TestGameServerPod_WithSidecar_NoErrros(t *testing.T) {
+func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 	t.Parallel()
 	fixture := defaultGameServer()
 	fixture.ApplyDefaults()

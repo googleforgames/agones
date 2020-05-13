@@ -108,7 +108,7 @@ func (wq *WorkerQueue) EnqueueImmediately(obj interface{}) {
 	wq.queue.Add(key)
 }
 
-// EnqueueAfter delays an enqueuee operation by duration
+// EnqueueAfter delays an enqueue operation by duration
 func (wq *WorkerQueue) EnqueueAfter(obj interface{}, duration time.Duration) {
 	var key string
 	var err error

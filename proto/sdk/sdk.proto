@@ -144,7 +144,7 @@ message GameServer {
             int32 port = 2;
         }
         // [Stage:Alpha]
-        // [FeatureFlag:PlayerTesting]
+        // [FeatureFlag:PlayerTracking]
         message PlayerStatus {
             int64 count = 1;
             int64 capacity = 2;
@@ -156,7 +156,7 @@ message GameServer {
         repeated Port ports = 3;
 
         // [Stage:Alpha]
-        // [FeatureFlag:PlayerTesting]
+        // [FeatureFlag:PlayerTracking]
         PlayerStatus Players = 4;
     }
 }

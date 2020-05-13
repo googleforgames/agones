@@ -256,6 +256,34 @@ func TestConnectionInfoIterator(t *testing.T) {
 			in:   nil,
 			want: nil,
 		},
+		{
+			name: "Same clusters and same priorities",
+			in: []*GameServerAllocationPolicy{
+				{
+					Spec: GameServerAllocationPolicySpec{
+						Priority: 1,
+						Weight:   100,
+						ConnectionInfo: ClusterConnectionInfo{
+							ClusterName: "cluster-name",
+						},
+					},
+				},
+				{
+					Spec: GameServerAllocationPolicySpec{
+						Priority: 1,
+						Weight:   300,
+						ConnectionInfo: ClusterConnectionInfo{
+							ClusterName: "cluster-name",
+						},
+					},
+				},
+			},
+			want: []ClusterConnectionInfo{
+				{
+					ClusterName: "cluster-name",
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -275,5 +303,39 @@ func TestConnectionInfoIterator(t *testing.T) {
 				assert.Equal(t, tc.want, results, "Failed test \"%s\"", tc.name)
 			}
 		})
+	}
+}
+
+func TestConnectionInfoIterator_SameClustersAndPriorities(t *testing.T) {
+	in := []*GameServerAllocationPolicy{
+		{
+			Spec: GameServerAllocationPolicySpec{
+				Priority: 444,
+				Weight:   100,
+				ConnectionInfo: ClusterConnectionInfo{
+					ClusterName: "cluster-name",
+				},
+			},
+		},
+		{
+			Spec: GameServerAllocationPolicySpec{
+				Priority: 444,
+				Weight:   300,
+				ConnectionInfo: ClusterConnectionInfo{
+					ClusterName: "cluster-name",
+				},
+			},
+		},
+	}
+
+	iterator := NewConnectionInfoIterator(in)
+	res := iterator.priorityToCluster[444]["cluster-name"]
+
+	// check an internal slice of policies
+	if assert.Equal(t, 2, len(res)) {
+		assert.Equal(t, "cluster-name", res[0].Spec.ConnectionInfo.ClusterName)
+		assert.Equal(t, int32(444), res[0].Spec.Priority)
+		assert.Equal(t, "cluster-name", res[1].Spec.ConnectionInfo.ClusterName)
+		assert.Equal(t, int32(444), res[1].Spec.Priority)
 	}
 }

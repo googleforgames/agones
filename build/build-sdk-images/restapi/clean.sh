@@ -16,4 +16,5 @@
 
 set -ex
 rm -rf /go/src/agones.dev/agones/test/sdk/restapi/swagger
+rm -rf /go/src/agones.dev/agones/test/sdk/restapi/alpha/swagger
 rm /go/src/agones.dev/agones/test/sdk/restapi/http-api-test.go || true

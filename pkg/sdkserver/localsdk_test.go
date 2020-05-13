@@ -321,6 +321,134 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	assert.Equal(t, int64(10), gs.Status.Players.Capacity)
 }
 
+func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
+	t.Parallel()
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+		Status: agonesv1.GameServerStatus{
+			Players: &agonesv1.PlayerStatus{
+				Capacity: 1,
+			},
+		},
+	}
+
+	e := &alpha.Empty{}
+	path, err := gsToTmpFile(fixture)
+	assert.NoError(t, err)
+	l, err := NewLocalSDKServer(path)
+	assert.Nil(t, err)
+
+	stream := newGameServerMockStream()
+	go func() {
+		err := l.WatchGameServer(&sdk.Empty{}, stream)
+		assert.Nil(t, err)
+	}()
+
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
+
+	count, err := l.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), count.Count)
+
+	list, err := l.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Empty(t, list.List)
+
+	id := &alpha.PlayerID{PlayerID: "one"}
+	// connect a player
+	ok, err := l.PlayerConnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.True(t, ok.Bool, "Player should not exist yet")
+
+	count, err = l.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count.Count)
+
+	expected := &sdk.GameServer_Status_PlayerStatus{
+		Count:    1,
+		Capacity: 1,
+		IDs:      []string{id.PlayerID},
+	}
+	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+		return gs.Status.Players
+	})
+
+	ok, err = l.IsPlayerConnected(context.Background(), id)
+	assert.NoError(t, err)
+	assert.True(t, ok.Bool, "player should be connected")
+
+	list, err = l.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{id.PlayerID}, list.List)
+
+	// add same player
+	ok, err = l.PlayerConnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool, "Player already exists")
+
+	count, err = l.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), count.Count)
+	assertNoWatchUpdate(t, stream)
+
+	list, err = l.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, []string{id.PlayerID}, list.List)
+
+	// should return an error if we try to add another, since we're at capacity
+	nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
+	_, err = l.PlayerConnect(context.Background(), nopePlayer)
+	assert.EqualError(t, err, "Players are already at capacity")
+
+	ok, err = l.IsPlayerConnected(context.Background(), nopePlayer)
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool)
+
+	// disconnect a player
+	ok, err = l.PlayerDisconnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.True(t, ok.Bool, "Player should be removed")
+	count, err = l.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), count.Count)
+
+	expected = &sdk.GameServer_Status_PlayerStatus{
+		Count:    0,
+		Capacity: 1,
+		IDs:      []string{},
+	}
+	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+		return gs.Status.Players
+	})
+
+	list, err = l.GetConnectedPlayers(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Empty(t, list.List)
+
+	// remove same player
+	ok, err = l.PlayerDisconnect(context.Background(), id)
+	assert.NoError(t, err)
+	assert.False(t, ok.Bool, "Player already be gone")
+	count, err = l.GetPlayerCount(context.Background(), e)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), count.Count)
+	assertNoWatchUpdate(t, stream)
+}
+
 // TestLocalSDKServerStateUpdates verify that SDK functions changes the state of the
 // GameServer object
 func TestLocalSDKServerStateUpdates(t *testing.T) {
@@ -374,7 +502,7 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	setAnnotation := "setannotation"
 	l.gs.ObjectMeta.Uid = exampleUID
 
-	expected := []string{}
+	var expected []string
 	expected = append(expected, "", setAnnotation)
 
 	wg := sync.WaitGroup{}

@@ -38,7 +38,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -139,7 +141,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			defer conn.Close() // nolint: errcheck
 
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.PostAllocate(context.Background(), request)
+			return grpcClient.Allocate(context.Background(), request)
 		},
 	}
 
@@ -181,7 +183,7 @@ func (c *Allocator) Sync(stop <-chan struct{}) error {
 func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (k8sruntime.Object, error) {
 	// server side validation
 	if causes, ok := gsa.Validate(); !ok {
-		status := &metav1.Status{
+		s := &metav1.Status{
 			Status:  metav1.StatusFailure,
 			Message: fmt.Sprintf("GameServerAllocation is invalid: Invalid value: %#v", gsa),
 			Reason:  metav1.StatusReasonInvalid,
@@ -194,14 +196,14 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 		}
 
 		var gvks []schema.GroupVersionKind
-		gvks, _, err := apiserver.Scheme.ObjectKinds(status)
+		gvks, _, err := apiserver.Scheme.ObjectKinds(s)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find objectkinds for status")
 		}
 		c.loggerForGameServerAllocation(gsa).Debug("GameServerAllocation is invalid")
 
-		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
-		return status, nil
+		s.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
+		return s, nil
 	}
 
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
@@ -321,7 +323,6 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
 	var allocationResponse *pb.AllocationResponse
 
-	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
 	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo.SecretName)
 	if err != nil {
@@ -357,6 +358,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		}
 		return nil
 	})
+
 	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(allocationResponse), err
 }
 
@@ -545,6 +547,14 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 	var lastConflictErr error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		err := fn()
+
+		st, ok := status.FromError(err)
+		if ok {
+			if st.Code() == codes.ResourceExhausted {
+				return true, err
+			}
+		}
+
 		switch {
 		case err == nil:
 			return true, nil

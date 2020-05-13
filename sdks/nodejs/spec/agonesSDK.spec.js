@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const EventEmitter = require('events');
+const stream = require('stream');
 
-const grpc = require('grpc');
+const grpc = require('@grpc/grpc-js');
 
 const messages = require('../lib/sdk_pb');
 const AgonesSDK = require('../src/agonesSDK');
@@ -36,12 +36,14 @@ describe('agones', () => {
 			process.env.AGONES_SDK_GRPC_PORT = '6789';
 			let port = agonesSDK.port;
 			expect(port).toEqual('6789');
+			delete process.env.AGONES_SDK_GRPC_PORT;
 		});
 
 		it('returns an invalid port set in $AGONES_SDK_GRPC_PORT', async () => {
 			process.env.AGONES_SDK_GRPC_PORT = 'foo';
 			let port = agonesSDK.port;
 			expect(port).toEqual('foo');
+			delete process.env.AGONES_SDK_GRPC_PORT;
 		});
 	});
 
@@ -229,9 +231,9 @@ describe('agones', () => {
 
 	describe('watchGameServer', () => {
 		it('calls the server and passes events to the callback', async () => {
-			let serverEmitter = new EventEmitter();
+			let serverStream = stream.Readable({read: () => undefined});
 			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
-				return serverEmitter;
+				return serverStream;
 			});
 
 			let callback = jasmine.createSpy('callback');
@@ -242,7 +244,7 @@ describe('agones', () => {
 			status.setState('up');
 			let gameServer = new messages.GameServer();
 			gameServer.setStatus(status);
-			serverEmitter.emit('data', gameServer);
+			serverStream.emit('data', gameServer);
 
 			expect(callback).toHaveBeenCalled();
 			let result = callback.calls.argsFor(0)[0];
@@ -250,16 +252,16 @@ describe('agones', () => {
 			expect(result.status.state).toEqual('up');
 		});
 		it('captures CANCELLED errors only', async() => {
-			let serverEmitter = new EventEmitter();
+			let serverStream = stream.Readable({read: () => undefined});
 			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
-				return serverEmitter;
+				return serverStream;
 			});
 
 			let callback = jasmine.createSpy('callback');
 			agonesSDK.watchGameServer(callback);
 
 			try {
-				serverEmitter.emit('error', {
+				serverStream.emit('error', {
 					code: grpc.status.CANCELLED
 				});
 			} catch (error) {
@@ -267,7 +269,7 @@ describe('agones', () => {
 			}
 
 			try {
-				serverEmitter.emit('error', {
+				serverStream.emit('error', {
 					code: grpc.status.ABORTED
 				});
 				fail();
@@ -372,10 +374,10 @@ describe('agones', () => {
 			expect(stream.end).toHaveBeenCalled();
 		});
 		it('cancels any watchers', async () => {
-			let serverEmitter = new EventEmitter();
-			serverEmitter.call = jasmine.createSpyObj('call', ['cancel']);
+			let serverStream = stream.Readable({read: () => undefined});
+			spyOn(serverStream, 'destroy').and.callThrough();
 			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
-				return serverEmitter;
+				return serverStream;
 			});
 
 			let callback = jasmine.createSpy('callback');
@@ -383,7 +385,7 @@ describe('agones', () => {
 
 			spyOn(agonesSDK.client, 'close');
 			await agonesSDK.close();
-			expect(serverEmitter.call.cancel).toHaveBeenCalled();
+			expect(serverStream.destroy).toHaveBeenCalled();
 		});
 	});
 

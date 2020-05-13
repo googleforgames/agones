@@ -16,7 +16,6 @@
 // limitations under the License.
 //
 'use strict';
-var grpc = require('grpc');
 var sdk_pb = require('./sdk_pb.js');
 var google_api_annotations_pb = require('./google/api/annotations_pb.js');
 
@@ -66,9 +65,9 @@ function deserialize_agones_dev_sdk_KeyValue(buffer_arg) {
 
 
 // SDK service to be used in the GameServer SDK to the Pod Sidecar
-var SDKService = exports.SDKService = {
+var SDKService = exports['agones.dev.sdk.SDK'] = {
   // Call when the GameServer is ready
-  ready: {
+ready: {
     path: '/agones.dev.sdk.SDK/Ready',
     requestStream: false,
     responseStream: false,
@@ -80,7 +79,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Call to self Allocation the GameServer
-  allocate: {
+allocate: {
     path: '/agones.dev.sdk.SDK/Allocate',
     requestStream: false,
     responseStream: false,
@@ -92,7 +91,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Call when the GameServer is shutting down
-  shutdown: {
+shutdown: {
     path: '/agones.dev.sdk.SDK/Shutdown',
     requestStream: false,
     responseStream: false,
@@ -104,7 +103,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Send a Empty every d Duration to declare that this GameSever is healthy
-  health: {
+health: {
     path: '/agones.dev.sdk.SDK/Health',
     requestStream: true,
     responseStream: false,
@@ -116,7 +115,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Retrieve the current GameServer data
-  getGameServer: {
+getGameServer: {
     path: '/agones.dev.sdk.SDK/GetGameServer',
     requestStream: false,
     responseStream: false,
@@ -128,7 +127,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_GameServer,
   },
   // Send GameServer details whenever the GameServer is updated
-  watchGameServer: {
+watchGameServer: {
     path: '/agones.dev.sdk.SDK/WatchGameServer',
     requestStream: false,
     responseStream: true,
@@ -140,7 +139,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_GameServer,
   },
   // Apply a Label to the backing GameServer metadata
-  setLabel: {
+setLabel: {
     path: '/agones.dev.sdk.SDK/SetLabel',
     requestStream: false,
     responseStream: false,
@@ -152,7 +151,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Apply a Annotation to the backing GameServer metadata
-  setAnnotation: {
+setAnnotation: {
     path: '/agones.dev.sdk.SDK/SetAnnotation',
     requestStream: false,
     responseStream: false,
@@ -164,7 +163,7 @@ var SDKService = exports.SDKService = {
     responseDeserialize: deserialize_agones_dev_sdk_Empty,
   },
   // Marks the GameServer as the Reserved state for Duration
-  reserve: {
+reserve: {
     path: '/agones.dev.sdk.SDK/Reserve',
     requestStream: false,
     responseStream: false,
@@ -177,4 +176,3 @@ var SDKService = exports.SDKService = {
   },
 };
 
-exports.SDKClient = grpc.makeGenericClientConstructor(SDKService);
