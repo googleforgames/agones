@@ -629,6 +629,14 @@ Run `terraform destroy` on your cluster.
 #### `make terraform-clean`
 Remove .terraform directory with configs as well as tfstate files.
 
+#### `make terraform-test`
+Run Golang test which emulates and verifies successful execution of next two steps:
+```
+make gcloud-terraform-cluster
+make gcloud-terraform-destroy-cluster
+```
+`make terraform-init` should be invoked first.
+
 ### Minikube
 
 A set of utilities for setting up and running a [Minikube](https://github.com/kubernetes/minikube) instance, 
