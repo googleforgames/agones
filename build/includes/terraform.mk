@@ -26,6 +26,7 @@ terraform-init: $(ensure-build-image)
 terraform-clean:
 	rm -r ../build/terraform/gke/.terraform || true
 	rm ../build/terraform/gke/terraform.tfstate* || true
+	rm ../build/terraform/gke/kubeconfig || true
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
