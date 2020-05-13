@@ -67,7 +67,7 @@ var (
 const (
 	secretClientCertName = "tls.crt"
 	secretClientKeyName  = "tls.key"
-	secretCaCertName     = "ca.crt"
+	secretCACertName     = "ca.crt"
 	allocatorPort        = "443"
 
 	// Instead of selecting the top one, controller selects a random one
@@ -324,7 +324,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	var allocationResponse *pb.AllocationResponse
 
 	// TODO: cache the client
-	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo.SecretName)
+	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -363,13 +363,13 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
-func (c *Allocator) createRemoteClusterDialOption(namespace, secretName string) (grpc.DialOption, error) {
-	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, secretName)
+func (c *Allocator) createRemoteClusterDialOption(namespace string, connectionInfo *multiclusterv1.ClusterConnectionInfo) (grpc.DialOption, error) {
+	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, connectionInfo.SecretName)
 	if err != nil {
 		return nil, err
 	}
 	if clientCert == nil || clientKey == nil {
-		return nil, fmt.Errorf("missing client certificate key pair in secret %s", secretName)
+		return nil, fmt.Errorf("missing client certificate key pair in secret %s", connectionInfo.SecretName)
 	}
 
 	// Load client cert
@@ -379,12 +379,16 @@ func (c *Allocator) createRemoteClusterDialOption(namespace, secretName string) 
 	}
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
-	if len(caCert) != 0 {
+	if len(connectionInfo.ServerCA) != 0 || len(caCert) != 0 {
 		// Load CA cert, if provided and trust the server certificate.
 		// This is required for self-signed certs.
 		tlsConfig.RootCAs = x509.NewCertPool()
-		if !tlsConfig.RootCAs.AppendCertsFromPEM(caCert) {
+		if len(connectionInfo.ServerCA) != 0 && !tlsConfig.RootCAs.AppendCertsFromPEM(connectionInfo.ServerCA) {
 			return nil, errors.New("only PEM format is accepted for server CA")
+		}
+		// Add client CA cert, added for backward compatibility
+		if len(caCert) != 0 {
+			_ = tlsConfig.RootCAs.AppendCertsFromPEM(caCert)
 		}
 	}
 
@@ -404,7 +408,7 @@ func (c *Allocator) getClientCertificates(namespace, secretName string) (clientC
 	// Create http client using cert
 	clientCert = secret.Data[secretClientCertName]
 	clientKey = secret.Data[secretClientKeyName]
-	caCert = secret.Data[secretCaCertName]
+	caCert = secret.Data[secretCACertName]
 	return clientCert, clientKey, caCert, nil
 }
 
