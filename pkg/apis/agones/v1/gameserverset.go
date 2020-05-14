@@ -116,7 +116,7 @@ func (gsSet *GameServerSet) GetGameServerSpec() *GameServerSpec {
 }
 
 // GameServer returns a single GameServer derived
-// from the GameSever template
+// from the GameServer template
 func (gsSet *GameServerSet) GameServer() *GameServer {
 	gs := &GameServer{
 		ObjectMeta: *gsSet.Spec.Template.ObjectMeta.DeepCopy(),
