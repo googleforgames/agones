@@ -441,7 +441,7 @@ func (c *Allocator) ListenAndAllocate(updateWorkerCount int, stop <-chan struct{
 	// Once we have 1 or more requests in c.pendingRequests (which is buffered to 100), we can start the batch process.
 
 	// Assuming this is the first run (either entirely, or for a while), list will be nil, and therefore the first
-	// thing that will be done is retrieving the Ready GameSerers and sorting them for this batch via
+	// thing that will be done is retrieving the Ready GameServers and sorting them for this batch via
 	// c.listSortedReadyGameServers(). This list is maintained as we flow through the batch.
 
 	// We then use findGameServerForAllocation to loop around the sorted list of Ready GameServers to look for matches

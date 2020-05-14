@@ -234,7 +234,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 
 	newGS, err := json.Marshal(gs)
 	if err != nil {
-		return review, errors.Wrapf(err, "error marshalling default applied GameSever %s to json", gs.ObjectMeta.Name)
+		return review, errors.Wrapf(err, "error marshalling default applied GameServer %s to json", gs.ObjectMeta.Name)
 	}
 
 	patch, err := jsonpatch.CreatePatch(obj.Raw, newGS)

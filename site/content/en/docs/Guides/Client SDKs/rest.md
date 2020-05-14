@@ -53,7 +53,7 @@ $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AG
 ```
 
 ### Health
-Send a Empty every d Duration to declare that this GameSever is healthy
+Send a Empty every d Duration to declare that this GameServer is healthy
 
 - Path: `/health`
 - Method: `POST`
