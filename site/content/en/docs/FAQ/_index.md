@@ -84,8 +84,8 @@ server binary at Allocation time, through Agones functionality.
 The Agones game server SDK allows you to set custom 
 [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) 
 and [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) through 
-the [SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/rest.md#setlabel-key-value" >}}) 
-and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/rest.md#setannotation-key-value" >}}) functionality
+the [SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/rest.md#set-label-key-value" >}}) 
+and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/rest.md#set-annotation-key-value" >}}) functionality
 respectively.
 
 This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}), 
@@ -94,8 +94,8 @@ and can be used for game specific, custom integrations.
 ### If my game server requires more states than what Agones provides (e.g. Ready, Allocated, Shutdown, etc), can I add my own? 
 
 If you want to track custom game server states, then you can utilise the game server client SDK
-[SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/rest.md#setlabel-key-value" >}}) 
-and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/rest.md#setannotation-key-value" >}}) functionality to
+[SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/rest.md#set-label" >}}) 
+and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/rest.md#set-annotation" >}}) functionality to
 expose these custom states to outside systems via your own labels and annotations.
 
 This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}), and 
