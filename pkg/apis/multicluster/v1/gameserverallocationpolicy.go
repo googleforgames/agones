@@ -42,6 +42,8 @@ type ClusterConnectionInfo struct {
 	SecretName string `json:"secretName"`
 	// The cluster namespace from which to allocate gameservers
 	Namespace string `json:"namespace"`
+	// The PEM encoded server CA, used by the allocator client to authenticate the remote server.
+	ServerCA []byte `json:"serverCa,omitempty"`
 }
 
 // +genclient
