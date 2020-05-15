@@ -1722,7 +1722,7 @@ pub struct GameServer_Status {
     pub state: ::std::string::String,
     pub address: ::std::string::String,
     pub ports: ::protobuf::RepeatedField<GameServer_Status_Port>,
-    pub Players: ::protobuf::SingularPtrField<GameServer_Status_PlayerStatus>,
+    pub players: ::protobuf::SingularPtrField<GameServer_Status_PlayerStatus>,
     // special fields
     unknown_fields: ::protobuf::UnknownFields,
     cached_size: ::protobuf::CachedSize,
@@ -1810,37 +1810,37 @@ impl GameServer_Status {
         &self.ports
     }
 
-    // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+    // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
 
-    pub fn clear_Players(&mut self) {
-        self.Players.clear();
+    pub fn clear_players(&mut self) {
+        self.players.clear();
     }
 
-    pub fn has_Players(&self) -> bool {
-        self.Players.is_some()
+    pub fn has_players(&self) -> bool {
+        self.players.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_Players(&mut self, v: GameServer_Status_PlayerStatus) {
-        self.Players = ::protobuf::SingularPtrField::some(v);
+    pub fn set_players(&mut self, v: GameServer_Status_PlayerStatus) {
+        self.players = ::protobuf::SingularPtrField::some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_Players(&mut self) -> &mut GameServer_Status_PlayerStatus {
-        if self.Players.is_none() {
-            self.Players.set_default();
+    pub fn mut_players(&mut self) -> &mut GameServer_Status_PlayerStatus {
+        if self.players.is_none() {
+            self.players.set_default();
         }
-        self.Players.as_mut().unwrap()
+        self.players.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_Players(&mut self) -> GameServer_Status_PlayerStatus {
-        self.Players.take().unwrap_or_else(|| GameServer_Status_PlayerStatus::new())
+    pub fn take_players(&mut self) -> GameServer_Status_PlayerStatus {
+        self.players.take().unwrap_or_else(|| GameServer_Status_PlayerStatus::new())
     }
 
-    pub fn get_Players(&self) -> &GameServer_Status_PlayerStatus {
-        self.Players.as_ref().unwrap_or_else(|| GameServer_Status_PlayerStatus::default_instance())
+    pub fn get_players(&self) -> &GameServer_Status_PlayerStatus {
+        self.players.as_ref().unwrap_or_else(|| GameServer_Status_PlayerStatus::default_instance())
     }
 }
 
@@ -1851,7 +1851,7 @@ impl ::protobuf::Message for GameServer_Status {
                 return false;
             }
         };
-        for v in &self.Players {
+        for v in &self.players {
             if !v.is_initialized() {
                 return false;
             }
@@ -1873,7 +1873,7 @@ impl ::protobuf::Message for GameServer_Status {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.ports)?;
                 },
                 4 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.Players)?;
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.players)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -1897,7 +1897,7 @@ impl ::protobuf::Message for GameServer_Status {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
-        if let Some(ref v) = self.Players.as_ref() {
+        if let Some(ref v) = self.players.as_ref() {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
@@ -1918,7 +1918,7 @@ impl ::protobuf::Message for GameServer_Status {
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
-        if let Some(ref v) = self.Players.as_ref() {
+        if let Some(ref v) = self.players.as_ref() {
             os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
@@ -1981,9 +1981,9 @@ impl ::protobuf::Message for GameServer_Status {
                     |m: &mut GameServer_Status| { &mut m.ports },
                 ));
                 fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<GameServer_Status_PlayerStatus>>(
-                    "Players",
-                    |m: &GameServer_Status| { &m.Players },
-                    |m: &mut GameServer_Status| { &mut m.Players },
+                    "players",
+                    |m: &GameServer_Status| { &m.players },
+                    |m: &mut GameServer_Status| { &mut m.players },
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<GameServer_Status>(
                     "GameServer_Status",
@@ -2010,7 +2010,7 @@ impl ::protobuf::Clear for GameServer_Status {
         self.clear_state();
         self.clear_address();
         self.clear_ports();
-        self.clear_Players();
+        self.clear_players();
         self.unknown_fields.clear();
     }
 }
@@ -2486,9 +2486,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     al_delay_seconds\x18\x04\x20\x01(\x05R\x13initialDelaySeconds\x1a\xc4\
     \x02\n\x06Status\x12\x14\n\x05state\x18\x01\x20\x01(\tR\x05state\x12\x18\
     \n\x07address\x18\x02\x20\x01(\tR\x07address\x12<\n\x05ports\x18\x03\x20\
-    \x03(\x0b2&.agones.dev.sdk.GameServer.Status.PortR\x05ports\x12H\n\x07Pl\
+    \x03(\x0b2&.agones.dev.sdk.GameServer.Status.PortR\x05ports\x12H\n\x07pl\
     ayers\x18\x04\x20\x01(\x0b2..agones.dev.sdk.GameServer.Status.PlayerStat\
-    usR\x07Players\x1a.\n\x04Port\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04n\
+    usR\x07players\x1a.\n\x04Port\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04n\
     ame\x12\x12\n\x04port\x18\x02\x20\x01(\x05R\x04port\x1aR\n\x0cPlayerStat\
     us\x12\x14\n\x05count\x18\x01\x20\x01(\x03R\x05count\x12\x1a\n\x08capaci\
     ty\x18\x02\x20\x01(\x03R\x08capacity\x12\x10\n\x03ids\x18\x03\x20\x03(\t\

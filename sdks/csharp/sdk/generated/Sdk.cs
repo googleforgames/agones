@@ -46,7 +46,7 @@ namespace Agones.Dev.Sdk {
             "ASgFEh0KFWluaXRpYWxfZGVsYXlfc2Vjb25kcxgEIAEoBRqCAgoGU3RhdHVz",
             "Eg0KBXN0YXRlGAEgASgJEg8KB2FkZHJlc3MYAiABKAkSNQoFcG9ydHMYAyAD",
             "KAsyJi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0YXR1cy5Qb3J0Ej8K",
-            "B1BsYXllcnMYBCABKAsyLi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0",
+            "B3BsYXllcnMYBCABKAsyLi5hZ29uZXMuZGV2LnNkay5HYW1lU2VydmVyLlN0",
             "YXR1cy5QbGF5ZXJTdGF0dXMaIgoEUG9ydBIMCgRuYW1lGAEgASgJEgwKBHBv",
             "cnQYAiABKAUaPAoMUGxheWVyU3RhdHVzEg0KBWNvdW50GAEgASgDEhAKCGNh",
             "cGFjaXR5GAIgASgDEgsKA2lkcxgDIAMoCTKGBgoDU0RLEkgKBVJlYWR5EhUu",
@@ -1460,7 +1460,7 @@ namespace Agones.Dev.Sdk {
           get { return ports_; }
         }
 
-        /// <summary>Field number for the "Players" field.</summary>
+        /// <summary>Field number for the "players" field.</summary>
         public const int PlayersFieldNumber = 4;
         private global::Agones.Dev.Sdk.GameServer.Types.Status.Types.PlayerStatus players_;
         /// <summary>

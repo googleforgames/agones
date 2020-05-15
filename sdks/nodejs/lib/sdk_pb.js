@@ -1991,7 +1991,7 @@ proto.agones.dev.sdk.GameServer.Status.prototype.clearPortsList = function() {
 
 
 /**
- * optional PlayerStatus Players = 4;
+ * optional PlayerStatus players = 4;
  * @return {?proto.agones.dev.sdk.GameServer.Status.PlayerStatus}
  */
 proto.agones.dev.sdk.GameServer.Status.prototype.getPlayers = function() {

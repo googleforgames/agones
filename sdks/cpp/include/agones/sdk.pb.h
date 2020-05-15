@@ -1405,7 +1405,7 @@ class AGONES_EXPORT GameServer_Status final :
   ::std::string* release_address();
   void set_allocated_address(::std::string* address);
 
-  // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+  // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
   bool has_players() const;
   void clear_players();
   static const int kPlayersFieldNumber = 4;
@@ -2429,7 +2429,7 @@ GameServer_Status::ports() const {
   return ports_;
 }
 
-// .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+// .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
 inline bool GameServer_Status::has_players() const {
   return this != internal_default_instance() && players_ != nullptr;
 }
@@ -2441,12 +2441,12 @@ inline void GameServer_Status::clear_players() {
 }
 inline const ::agones::dev::sdk::GameServer_Status_PlayerStatus& GameServer_Status::players() const {
   const ::agones::dev::sdk::GameServer_Status_PlayerStatus* p = players_;
-  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.players)
   return p != nullptr ? *p : *reinterpret_cast<const ::agones::dev::sdk::GameServer_Status_PlayerStatus*>(
       &::agones::dev::sdk::_GameServer_Status_PlayerStatus_default_instance_);
 }
 inline ::agones::dev::sdk::GameServer_Status_PlayerStatus* GameServer_Status::release_players() {
-  // @@protoc_insertion_point(field_release:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_release:agones.dev.sdk.GameServer.Status.players)
   
   ::agones::dev::sdk::GameServer_Status_PlayerStatus* temp = players_;
   players_ = nullptr;
@@ -2458,7 +2458,7 @@ inline ::agones::dev::sdk::GameServer_Status_PlayerStatus* GameServer_Status::mu
     auto* p = CreateMaybeMessage<::agones::dev::sdk::GameServer_Status_PlayerStatus>(GetArenaNoVirtual());
     players_ = p;
   }
-  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.players)
   return players_;
 }
 inline void GameServer_Status::set_allocated_players(::agones::dev::sdk::GameServer_Status_PlayerStatus* players) {
@@ -2477,7 +2477,7 @@ inline void GameServer_Status::set_allocated_players(::agones::dev::sdk::GameSer
     
   }
   players_ = players;
-  // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.GameServer.Status.players)
 }
 
 // -------------------------------------------------------------------
