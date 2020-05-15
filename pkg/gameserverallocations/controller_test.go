@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"

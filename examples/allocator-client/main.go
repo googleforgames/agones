@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

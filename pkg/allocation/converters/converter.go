@@ -16,7 +16,7 @@
 package converters
 
 import (
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -25,8 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ConvertAllocationRequestV1Alpha1ToGSAV1 converts AllocationRequest to GameServerAllocation V1 (GSA)
-func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocationv1.GameServerAllocation {
+// ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
+func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameServerAllocation {
 	if in == nil {
 		return nil
 	}
@@ -37,7 +37,7 @@ func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocati
 		},
 		Spec: allocationv1.GameServerAllocationSpec{
 			Preferred:  convertLabelSelectorsToInternalLabelSelectors(in.GetPreferredGameServerSelectors()),
-			Scheduling: convertAllocationSchedulingV1Alpha1ToSchedulingStrategyV1(in.GetScheduling()),
+			Scheduling: convertAllocationSchedulingToGSASchedulingStrategy(in.GetScheduling()),
 		},
 	}
 
@@ -63,8 +63,8 @@ func ConvertAllocationRequestV1Alpha1ToGSAV1(in *pb.AllocationRequest) *allocati
 	return gsa
 }
 
-// ConvertGSAV1ToAllocationRequestV1Alpha1 converts AllocationRequest to GameServerAllocation V1 (GSA)
-func ConvertGSAV1ToAllocationRequestV1Alpha1(in *allocationv1.GameServerAllocation) *pb.AllocationRequest {
+// ConvertGSAToAllocationRequest converts AllocationRequest to GameServerAllocation V1 (GSA)
+func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.AllocationRequest {
 	if in == nil {
 		return nil
 	}
@@ -72,7 +72,7 @@ func ConvertGSAV1ToAllocationRequestV1Alpha1(in *allocationv1.GameServerAllocati
 	out := &pb.AllocationRequest{
 		Namespace:                    in.GetNamespace(),
 		PreferredGameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Preferred),
-		Scheduling:                   convertSchedulingStrategyV1ToAllocationSchedulingV1Alpha1(in.Spec.Scheduling),
+		Scheduling:                   convertGSASchedulingStrategyToAllocationScheduling(in.Spec.Scheduling),
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
@@ -90,8 +90,8 @@ func ConvertGSAV1ToAllocationRequestV1Alpha1(in *allocationv1.GameServerAllocati
 	return out
 }
 
-// convertAllocationSchedulingV1Alpha1ToSchedulingStrategyV1 converts AllocationRequest_SchedulingStrategy to apis.SchedulingStrategy
-func convertAllocationSchedulingV1Alpha1ToSchedulingStrategyV1(in pb.AllocationRequest_SchedulingStrategy) apis.SchedulingStrategy {
+// convertAllocationSchedulingToGSASchedulingStrategy converts AllocationRequest_SchedulingStrategy to apis.SchedulingStrategy
+func convertAllocationSchedulingToGSASchedulingStrategy(in pb.AllocationRequest_SchedulingStrategy) apis.SchedulingStrategy {
 	switch in {
 	case pb.AllocationRequest_Packed:
 		return apis.Packed
@@ -101,8 +101,8 @@ func convertAllocationSchedulingV1Alpha1ToSchedulingStrategyV1(in pb.AllocationR
 	return apis.Packed
 }
 
-// convertSchedulingStrategyV1ToAllocationSchedulingV1Alpha1 converts  apis.SchedulingStrategy to pb.AllocationRequest_SchedulingStrategy
-func convertSchedulingStrategyV1ToAllocationSchedulingV1Alpha1(in apis.SchedulingStrategy) pb.AllocationRequest_SchedulingStrategy {
+// convertGSASchedulingStrategyToAllocationScheduling converts  apis.SchedulingStrategy to pb.AllocationRequest_SchedulingStrategy
+func convertGSASchedulingStrategyToAllocationScheduling(in apis.SchedulingStrategy) pb.AllocationRequest_SchedulingStrategy {
 	switch in {
 	case apis.Packed:
 		return pb.AllocationRequest_Packed
@@ -146,8 +146,8 @@ func convertLabelSelectorsToInternalLabelSelectors(in []*pb.LabelSelector) []met
 	return result
 }
 
-// ConvertGSAV1ToAllocationResponseV1Alpha1 converts GameServerAllocation V1 (GSA) to AllocationResponse
-func ConvertGSAV1ToAllocationResponseV1Alpha1(in *allocationv1.GameServerAllocation) (*pb.AllocationResponse, error) {
+// ConvertGSAToAllocationResponse converts GameServerAllocation V1 (GSA) to AllocationResponse
+func ConvertGSAToAllocationResponse(in *allocationv1.GameServerAllocation) (*pb.AllocationResponse, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -160,12 +160,12 @@ func ConvertGSAV1ToAllocationResponseV1Alpha1(in *allocationv1.GameServerAllocat
 		GameServerName: in.Status.GameServerName,
 		Address:        in.Status.Address,
 		NodeName:       in.Status.NodeName,
-		Ports:          convertAgonesPortsV1ToAllocationPortsV1Alpha1(in.Status.Ports),
+		Ports:          convertGSAAgonesPortsToAllocationPorts(in.Status.Ports),
 	}, nil
 }
 
-// ConvertAllocationResponseV1Alpha1ToGSAV1 converts AllocationResponse to GameServerAllocation V1 (GSA)
-func ConvertAllocationResponseV1Alpha1ToGSAV1(in *pb.AllocationResponse) *allocationv1.GameServerAllocation {
+// ConvertAllocationResponseToGSA converts AllocationResponse to GameServerAllocation V1 (GSA)
+func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.GameServerAllocation {
 	if in == nil {
 		return nil
 	}
@@ -176,15 +176,15 @@ func ConvertAllocationResponseV1Alpha1ToGSAV1(in *pb.AllocationResponse) *alloca
 			GameServerName: in.GameServerName,
 			Address:        in.Address,
 			NodeName:       in.NodeName,
-			Ports:          convertAllocationPortsV1Alpha1ToAgonesPortsV1(in.Ports),
+			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
 		},
 	}
 
 	return out
 }
 
-// convertAgonesPortsV1ToAllocationPortsV1Alpha1 converts GameServerStatusPort V1 (GSA) to AllocationResponse_GameServerStatusPort
-func convertAgonesPortsV1ToAllocationPortsV1Alpha1(in []agonesv1.GameServerStatusPort) []*pb.AllocationResponse_GameServerStatusPort {
+// convertGSAAgonesPortsToAllocationPorts converts GameServerStatusPort V1 (GSA) to AllocationResponse_GameServerStatusPort
+func convertGSAAgonesPortsToAllocationPorts(in []agonesv1.GameServerStatusPort) []*pb.AllocationResponse_GameServerStatusPort {
 	var pbPorts []*pb.AllocationResponse_GameServerStatusPort
 	for _, port := range in {
 		pbPort := &pb.AllocationResponse_GameServerStatusPort{
@@ -196,8 +196,8 @@ func convertAgonesPortsV1ToAllocationPortsV1Alpha1(in []agonesv1.GameServerStatu
 	return pbPorts
 }
 
-// convertAllocationPortsV1Alpha1ToAgonesPortsV1 converts AllocationResponse_GameServerStatusPort to GameServerStatusPort V1 (GSA)
-func convertAllocationPortsV1Alpha1ToAgonesPortsV1(in []*pb.AllocationResponse_GameServerStatusPort) []agonesv1.GameServerStatusPort {
+// convertAllocationPortsToGSAAgonesPorts converts AllocationResponse_GameServerStatusPort to GameServerStatusPort V1 (GSA)
+func convertAllocationPortsToGSAAgonesPorts(in []*pb.AllocationResponse_GameServerStatusPort) []agonesv1.GameServerStatusPort {
 	var out []agonesv1.GameServerStatusPort
 	for _, port := range in {
 		p := &agonesv1.GameServerStatusPort{
@@ -209,7 +209,7 @@ func convertAllocationPortsV1Alpha1ToAgonesPortsV1(in []*pb.AllocationResponse_G
 	return out
 }
 
-// convertStateV1ToAllocationStateV1Alpha1 converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
+// convertStateV1ToError converts GameServerAllocationState V1 (GSA) to AllocationResponse_GameServerAllocationState
 func convertStateV1ToError(in allocationv1.GameServerAllocationState) error {
 	switch in {
 	case allocationv1.GameServerAllocationAllocated:

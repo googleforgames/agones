@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
 using Grpc.Core;
-using V1Alpha1;
+using Allocation;
 using System.Net.Http;
 
 namespace AllocatorClient
@@ -30,7 +30,7 @@ namespace AllocatorClient
            try {
                 var response = await client.AllocateAsync(new AllocationRequest { 
                     Namespace = namespaceArg,
-                    MultiClusterSetting = new V1Alpha1.MultiClusterSetting {
+                    MultiClusterSetting = new Allocation.MultiClusterSetting {
                         Enabled = multicluster,
                     }
                 });
