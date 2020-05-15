@@ -381,7 +381,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	expected := &sdk.GameServer_Status_PlayerStatus{
 		Count:    1,
 		Capacity: 1,
-		IDs:      []string{id.PlayerID},
+		Ids:      []string{id.PlayerID},
 	}
 	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
 		return gs.Status.Players
@@ -429,7 +429,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	expected = &sdk.GameServer_Status_PlayerStatus{
 		Count:    0,
 		Capacity: 1,
-		IDs:      []string{},
+		Ids:      []string{},
 	}
 	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
 		return gs.Status.Players
