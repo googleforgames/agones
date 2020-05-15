@@ -307,7 +307,7 @@
             "$ref": "#/definitions/StatusPort"
           }
         },
-        "Players": {
+        "players": {
           "$ref": "#/definitions/StatusPlayerStatus",
           "title": "[Stage:Alpha]\n[FeatureFlag:PlayerTracking]"
         }

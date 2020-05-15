@@ -157,6 +157,6 @@ message GameServer {
 
         // [Stage:Alpha]
         // [FeatureFlag:PlayerTracking]
-        PlayerStatus Players = 4;
+        PlayerStatus players = 4;
     }
 }

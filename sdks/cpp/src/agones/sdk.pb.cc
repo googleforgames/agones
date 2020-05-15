@@ -446,7 +446,7 @@ const char descriptor_table_protodef_sdk_2eproto[] =
   "re_threshold\030\003 \001(\005\022\035\n\025initial_delay_seco"
   "nds\030\004 \001(\005\032\202\002\n\006Status\022\r\n\005state\030\001 \001(\t\022\017\n\007a"
   "ddress\030\002 \001(\t\0225\n\005ports\030\003 \003(\0132&.agones.dev"
-  ".sdk.GameServer.Status.Port\022\?\n\007Players\030\004"
+  ".sdk.GameServer.Status.Port\022\?\n\007players\030\004"
   " \001(\0132..agones.dev.sdk.GameServer.Status."
   "PlayerStatus\032\"\n\004Port\022\014\n\004name\030\001 \001(\t\022\014\n\004po"
   "rt\030\002 \001(\005\032<\n\014PlayerStatus\022\r\n\005count\030\001 \001(\003\022"
@@ -3945,7 +3945,7 @@ const char* GameServer_Status::_InternalParse(const char* begin, const char* end
         } while ((::google::protobuf::io::UnalignedLoad<::google::protobuf::uint64>(ptr) & 255) == 26 && (ptr += 1));
         break;
       }
-      // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+      // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
       case 4: {
         if (static_cast<::google::protobuf::uint8>(tag) != 34) goto handle_unusual;
         ptr = ::google::protobuf::io::ReadSize(ptr, &size);
@@ -4033,7 +4033,7 @@ bool GameServer_Status::MergePartialFromCodedStream(
         break;
       }
 
-      // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+      // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) == (34 & 0xFF)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
@@ -4100,7 +4100,7 @@ void GameServer_Status::SerializeWithCachedSizes(
       output);
   }
 
-  // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+  // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
   if (this->has_players()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
       4, HasBitSetters::players(this), output);
@@ -4149,7 +4149,7 @@ void GameServer_Status::SerializeWithCachedSizes(
         3, this->ports(static_cast<int>(i)), target);
   }
 
-  // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+  // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
   if (this->has_players()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
@@ -4202,7 +4202,7 @@ size_t GameServer_Status::ByteSizeLong() const {
         this->address());
   }
 
-  // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+  // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
   if (this->has_players()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
