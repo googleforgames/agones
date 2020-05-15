@@ -24,7 +24,7 @@
 apiVersion: "agones.dev/v1"
 kind: GameServer
 # GameServer Metadata
-# https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#objectmeta-v1-meta
+# https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -77,7 +77,7 @@ spec:
     grpcPort: 9357
     httpPort: 9358
   # Pod template configuration
-  # https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#podtemplate-v1-core
+  # https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplate-v1-core
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:
