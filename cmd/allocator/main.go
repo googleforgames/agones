@@ -29,7 +29,7 @@ import (
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
@@ -281,7 +281,7 @@ type serviceHandler struct {
 // Allocate implements the Allocate gRPC method definition
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
-	gsa := converters.ConvertAllocationRequestV1Alpha1ToGSAV1(in)
+	gsa := converters.ConvertAllocationRequestToGSA(in)
 	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")
@@ -297,7 +297,7 @@ func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest)
 		logger.Errorf("internal server error - Bad GSA format %v", resultObj)
 		return nil, status.Errorf(codes.Internal, "internal server error- Bad GSA format %v", resultObj)
 	}
-	response, err := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
+	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa)
 	logger.WithField("response", response).WithError(err).Infof("allocation response is being sent")
 
 	return response, err

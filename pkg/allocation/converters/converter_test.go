@@ -17,7 +17,7 @@ package converters
 import (
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -153,13 +153,13 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationRequestV1Alpha1ToGSAV1(tc.in)
+			out := ConvertAllocationRequestToGSA(tc.in)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}
 
 			if !tc.skipConvertFromGSA {
-				gsa := ConvertGSAV1ToAllocationRequestV1Alpha1(tc.want)
+				gsa := ConvertGSAToAllocationRequest(tc.want)
 				if !assert.Equal(t, tc.in, gsa) {
 					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
 				}
@@ -168,7 +168,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 	}
 }
 
-func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
+func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 	tests := []struct {
 		name string
 		in   *allocationv1.GameServerAllocation
@@ -212,7 +212,7 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			gsa := ConvertGSAV1ToAllocationRequestV1Alpha1(tc.in)
+			gsa := ConvertGSAToAllocationRequest(tc.in)
 			if !assert.Equal(t, tc.want, gsa) {
 				t.Errorf("mismatch with want after conversion \"%s\"", tc.name)
 			}
@@ -220,7 +220,7 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 	}
 }
 
-func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
+func TestConvertGSAToAllocationResponse(t *testing.T) {
 	tests := []struct {
 		name             string
 		in               *allocationv1.GameServerAllocation
@@ -321,7 +321,7 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out, err := ConvertGSAV1ToAllocationResponseV1Alpha1(tc.in)
+			out, err := ConvertGSAToAllocationResponse(tc.in)
 			if tc.wantErrCode != 0 {
 				st, ok := status.FromError(err)
 				if !assert.True(t, ok) {
@@ -334,7 +334,7 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 			}
 
 			if !tc.skipConvertToGSA {
-				gsa := ConvertAllocationResponseV1Alpha1ToGSAV1(tc.want)
+				gsa := ConvertAllocationResponseToGSA(tc.want)
 				if !assert.Equal(t, tc.in, gsa) {
 					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
 				}
@@ -343,7 +343,7 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 	}
 }
 
-func TestConvertAllocationResponseV1Alpha1ToGSAV1(t *testing.T) {
+func TestConvertAllocationResponseToGSA(t *testing.T) {
 	tests := []struct {
 		name string
 		in   *pb.AllocationResponse
@@ -366,7 +366,7 @@ func TestConvertAllocationResponseV1Alpha1ToGSAV1(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationResponseV1Alpha1ToGSAV1(tc.in)
+			out := ConvertAllocationResponseToGSA(tc.in)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -332,7 +332,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	// Forward the game server allocation request to another cluster,
 	// and disable multicluster settings to avoid the target cluster
 	// forward the allocation request again.
-	request := converters.ConvertGSAV1ToAllocationRequestV1Alpha1(gsa)
+	request := converters.ConvertGSAToAllocationRequest(gsa)
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
 
@@ -359,7 +359,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		return nil
 	})
 
-	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(allocationResponse), err
+	return converters.ConvertAllocationResponseToGSA(allocationResponse), err
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.

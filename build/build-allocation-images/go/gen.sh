@@ -25,8 +25,8 @@ cd /go/src/agones.dev/agones
 go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 go install -mod=vendor github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-outputpath=pkg/allocation/go/v1alpha1
-protopath=proto/allocation/v1alpha1
+outputpath=pkg/allocation/go
+protopath=proto/allocation
 googleapis=/go/src/agones.dev/agones/proto/googleapis
 protofile=${protopath}/allocation.proto
 
