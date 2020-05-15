@@ -768,6 +768,9 @@ spec:
               properties:
                 secretName:
                   type: string
+                serverCa:
+                  type: string
+                  format: byte
                 allocationEndpoints:
                   items:
                     type: string

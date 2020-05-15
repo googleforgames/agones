@@ -32,6 +32,11 @@ func (in *ClusterConnectionInfo) DeepCopyInto(out *ClusterConnectionInfo) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ServerCA != nil {
+		in, out := &in.ServerCA, &out.ServerCA
+		*out = make([]byte, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
