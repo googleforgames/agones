@@ -241,7 +241,7 @@ type GameServerStatusPort struct {
 type PlayerStatus struct {
 	Count    int64    `json:"count"`
 	Capacity int64    `json:"capacity"`
-	IDs      []string `json:"IDs"`
+	IDs      []string `json:"ids"`
 }
 
 // ApplyDefaults applies default values to the GameServer if they are not already populated

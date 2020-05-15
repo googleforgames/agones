@@ -3114,6 +3114,46 @@ GameServerSetStatus
 </tr>
 </tbody>
 </table>
+<h3 id="AggregatedPlayerStatus">AggregatedPlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#FleetStatus">FleetStatus</a>, 
+<a href="#GameServerSetStatus">GameServerSetStatus</a>)
+</p>
+<p>
+<p>AggregatedPlayerStatus stores total player tracking values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="FleetSpec">FleetSpec
 </h3>
 <p>
@@ -3242,6 +3282,22 @@ int32
 </td>
 <td>
 <p>AllocatedReplicas are the number of Allocated GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players are the current total player capacity and count for this Fleet</p>
 </td>
 </tr>
 </tbody>
@@ -3466,6 +3522,22 @@ int32
 </td>
 <td>
 <p>ShutdownReplicas are the number of Shutdown GameServers replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players are the current total player capacity and count for this GameServerSet</p>
 </td>
 </tr>
 </tbody>
@@ -3961,7 +4033,7 @@ int64
 </tr>
 <tr>
 <td>
-<code>IDs</code></br>
+<code>ids</code></br>
 <em>
 []string
 </em>
