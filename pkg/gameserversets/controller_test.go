@@ -25,6 +25,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
+	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
@@ -265,6 +266,8 @@ func TestComputeReconciliationAction(t *testing.T) {
 }
 
 func TestComputeStatus(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		list       []*agonesv1.GameServer
 		wantStatus agonesv1.GameServerSetStatus
@@ -293,6 +296,37 @@ func TestComputeStatus(t *testing.T) {
 	for _, tc := range cases {
 		assert.Equal(t, tc.wantStatus, computeStatus(tc.list))
 	}
+
+	t.Run("player tracking", func(t *testing.T) {
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+
+		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+
+		var list []*agonesv1.GameServer
+		gs1 := gsWithState(agonesv1.GameServerStateAllocated)
+		gs1.Status.Players = &agonesv1.PlayerStatus{Count: 5, Capacity: 10}
+		gs2 := gsWithState(agonesv1.GameServerStateReserved)
+		gs2.Status.Players = &agonesv1.PlayerStatus{Count: 10, Capacity: 15}
+		gs3 := gsWithState(agonesv1.GameServerStateCreating)
+		gs3.Status.Players = &agonesv1.PlayerStatus{Count: 20, Capacity: 30}
+		gs4 := gsWithState(agonesv1.GameServerStateReady)
+		gs4.Status.Players = &agonesv1.PlayerStatus{Count: 15, Capacity: 30}
+		list = append(list, gs1, gs2, gs3, gs4)
+
+		expected := agonesv1.GameServerSetStatus{
+			Replicas:          4,
+			ReadyReplicas:     1,
+			ReservedReplicas:  1,
+			AllocatedReplicas: 1,
+			Players: &agonesv1.AggregatedPlayerStatus{
+				Count:    30,
+				Capacity: 55,
+			},
+		}
+
+		assert.Equal(t, expected, computeStatus(list))
+	})
 }
 
 func TestControllerWatchGameServers(t *testing.T) {

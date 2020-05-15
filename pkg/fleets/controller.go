@@ -531,6 +531,19 @@ func (c *Controller) updateFleetStatus(fleet *agonesv1.Fleet) error {
 		fCopy.Status.ReservedReplicas += gsSet.Status.ReservedReplicas
 		fCopy.Status.AllocatedReplicas += gsSet.Status.AllocatedReplicas
 	}
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		// to make this code simpler, while the feature gate is in place,
+		// we will loop around the gsSet list twice.
+		fCopy.Status.Players = &agonesv1.AggregatedPlayerStatus{}
+		// TODO: integrate this extra loop into the above for loop when PlayerTracking moves to GA
+		for _, gsSet := range list {
+			if gsSet.Status.Players != nil {
+				fCopy.Status.Players.Count += gsSet.Status.Players.Count
+				fCopy.Status.Players.Capacity += gsSet.Status.Players.Capacity
+			}
+		}
+	}
+
 	_, err = c.fleetGetter.Fleets(fCopy.ObjectMeta.Namespace).UpdateStatus(fCopy)
 	return errors.Wrapf(err, "error updating status of fleet %s", fCopy.ObjectMeta.Name)
 }
