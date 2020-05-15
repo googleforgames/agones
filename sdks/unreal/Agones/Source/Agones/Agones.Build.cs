@@ -28,6 +28,7 @@ public class Agones : ModuleRules
 			new string[]
 			{
 				"Core",
+				"Http",
 			});
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -37,7 +38,6 @@ public class Agones : ModuleRules
 				"Json",
 				"JsonUtilities",
 				"Engine",
-				"Http",
 			});
 	}
 }
