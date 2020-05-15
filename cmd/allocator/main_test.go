@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
