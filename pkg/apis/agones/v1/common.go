@@ -35,6 +35,12 @@ const (
 	ErrContainerNameInvalid     = "Container must be empty or the name of a container in the pod template"
 )
 
+// AggregatedPlayerStatus stores total player tracking values
+type AggregatedPlayerStatus struct {
+	Count    int64 `json:"count"`
+	Capacity int64 `json:"capacity"`
+}
+
 // crd is an interface to get Name and Kind of CRD
 type crd interface {
 	GetName() string

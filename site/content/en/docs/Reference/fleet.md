@@ -16,7 +16,7 @@ A full `Fleet` specification is available below and in the {{< ghlink href="exam
 apiVersion: "agones.dev/v1"
 kind: Fleet
 # Fleet Metadata
-# https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#objectmeta-v1-meta
+# https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
 metadata:
   name: fleet-example
 spec:

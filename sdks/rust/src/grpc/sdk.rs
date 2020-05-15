@@ -2230,7 +2230,7 @@ pub struct GameServer_Status_PlayerStatus {
     // message fields
     pub count: i64,
     pub capacity: i64,
-    pub IDs: ::protobuf::RepeatedField<::std::string::String>,
+    pub ids: ::protobuf::RepeatedField<::std::string::String>,
     // special fields
     unknown_fields: ::protobuf::UnknownFields,
     cached_size: ::protobuf::CachedSize,
@@ -2271,29 +2271,29 @@ impl GameServer_Status_PlayerStatus {
         self.capacity
     }
 
-    // repeated string IDs = 3;
+    // repeated string ids = 3;
 
-    pub fn clear_IDs(&mut self) {
-        self.IDs.clear();
+    pub fn clear_ids(&mut self) {
+        self.ids.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_IDs(&mut self, v: ::protobuf::RepeatedField<::std::string::String>) {
-        self.IDs = v;
+    pub fn set_ids(&mut self, v: ::protobuf::RepeatedField<::std::string::String>) {
+        self.ids = v;
     }
 
     // Mutable pointer to the field.
-    pub fn mut_IDs(&mut self) -> &mut ::protobuf::RepeatedField<::std::string::String> {
-        &mut self.IDs
+    pub fn mut_ids(&mut self) -> &mut ::protobuf::RepeatedField<::std::string::String> {
+        &mut self.ids
     }
 
     // Take field
-    pub fn take_IDs(&mut self) -> ::protobuf::RepeatedField<::std::string::String> {
-        ::std::mem::replace(&mut self.IDs, ::protobuf::RepeatedField::new())
+    pub fn take_ids(&mut self) -> ::protobuf::RepeatedField<::std::string::String> {
+        ::std::mem::replace(&mut self.ids, ::protobuf::RepeatedField::new())
     }
 
-    pub fn get_IDs(&self) -> &[::std::string::String] {
-        &self.IDs
+    pub fn get_ids(&self) -> &[::std::string::String] {
+        &self.ids
     }
 }
 
@@ -2321,7 +2321,7 @@ impl ::protobuf::Message for GameServer_Status_PlayerStatus {
                     self.capacity = tmp;
                 },
                 3 => {
-                    ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.IDs)?;
+                    ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.ids)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -2341,7 +2341,7 @@ impl ::protobuf::Message for GameServer_Status_PlayerStatus {
         if self.capacity != 0 {
             my_size += ::protobuf::rt::value_size(2, self.capacity, ::protobuf::wire_format::WireTypeVarint);
         }
-        for value in &self.IDs {
+        for value in &self.ids {
             my_size += ::protobuf::rt::string_size(3, &value);
         };
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -2356,7 +2356,7 @@ impl ::protobuf::Message for GameServer_Status_PlayerStatus {
         if self.capacity != 0 {
             os.write_int64(2, self.capacity)?;
         }
-        for v in &self.IDs {
+        for v in &self.ids {
             os.write_string(3, &v)?;
         };
         os.write_unknown_fields(self.get_unknown_fields())?;
@@ -2412,9 +2412,9 @@ impl ::protobuf::Message for GameServer_Status_PlayerStatus {
                     |m: &mut GameServer_Status_PlayerStatus| { &mut m.capacity },
                 ));
                 fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                    "IDs",
-                    |m: &GameServer_Status_PlayerStatus| { &m.IDs },
-                    |m: &mut GameServer_Status_PlayerStatus| { &mut m.IDs },
+                    "ids",
+                    |m: &GameServer_Status_PlayerStatus| { &m.ids },
+                    |m: &mut GameServer_Status_PlayerStatus| { &mut m.ids },
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<GameServer_Status_PlayerStatus>(
                     "GameServer_Status_PlayerStatus",
@@ -2440,7 +2440,7 @@ impl ::protobuf::Clear for GameServer_Status_PlayerStatus {
     fn clear(&mut self) {
         self.clear_count();
         self.clear_capacity();
-        self.clear_IDs();
+        self.clear_ids();
         self.unknown_fields.clear();
     }
 }
@@ -2491,8 +2491,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     usR\x07Players\x1a.\n\x04Port\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04n\
     ame\x12\x12\n\x04port\x18\x02\x20\x01(\x05R\x04port\x1aR\n\x0cPlayerStat\
     us\x12\x14\n\x05count\x18\x01\x20\x01(\x03R\x05count\x12\x1a\n\x08capaci\
-    ty\x18\x02\x20\x01(\x03R\x08capacity\x12\x10\n\x03IDs\x18\x03\x20\x03(\t\
-    R\x03IDs2\x86\x06\n\x03SDK\x12H\n\x05Ready\x12\x15.agones.dev.sdk.Empty\
+    ty\x18\x02\x20\x01(\x03R\x08capacity\x12\x10\n\x03ids\x18\x03\x20\x03(\t\
+    R\x03ids2\x86\x06\n\x03SDK\x12H\n\x05Ready\x12\x15.agones.dev.sdk.Empty\
     \x1a\x15.agones.dev.sdk.Empty\"\x11\x82\xd3\xe4\x93\x02\x0b\"\x06/ready:\
     \x01*\x12N\n\x08Allocate\x12\x15.agones.dev.sdk.Empty\x1a\x15.agones.dev\
     .sdk.Empty\"\x14\x82\xd3\xe4\x93\x02\x0e\"\t/allocate:\x01*\x12N\n\x08Sh\
@@ -2509,7 +2509,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     lue\x1a\x15.agones.dev.sdk.Empty\"\x1f\x82\xd3\xe4\x93\x02\x19\x1a\x14/m\
     etadata/annotation:\x01*\x12O\n\x07Reserve\x12\x18.agones.dev.sdk.Durati\
     on\x1a\x15.agones.dev.sdk.Empty\"\x13\x82\xd3\xe4\x93\x02\r\"\x08/reserv\
-    e:\x01*B\x05Z\x03sdkJ\xf1(\n\x07\x12\x05\x0e\0\xa1\x01\x01\n\xd1\x04\n\
+    e:\x01*B\x05Z\x03sdkJ\xf3(\n\x07\x12\x05\x0e\0\xa1\x01\x01\n\xd1\x04\n\
     \x01\x0c\x12\x03\x0e\0\x122\xc6\x04\x20Copyright\x202017\x20Google\x20LL\
     C\x20All\x20Rights\x20Reserved.\n\n\x20Licensed\x20under\x20the\x20Apach\
     e\x20License,\x20Version\x202.0\x20(the\x20\"License\");\n\x20you\x20may\
@@ -2680,9 +2680,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x02\x01\x04\x12\x06\x8f\x01\x0c\x8e\x01\x1c\n\x11\n\t\x04\x03\x03\x02\
     \x03\0\x02\x01\x05\x12\x04\x8f\x01\x0c\x11\n\x11\n\t\x04\x03\x03\x02\x03\
     \0\x02\x01\x01\x12\x04\x8f\x01\x12\x16\n\x11\n\t\x04\x03\x03\x02\x03\0\
-    \x02\x01\x03\x12\x04\x8f\x01\x19\x1a\n>\n\x06\x04\x03\x03\x02\x03\x01\
-    \x12\x06\x93\x01\x08\x97\x01\t\x1a,\x20[Stage:Alpha]\n\x20[FeatureFlag:P\
-    layerTesting]\n\n\x0f\n\x07\x04\x03\x03\x02\x03\x01\x01\x12\x04\x93\x01\
+    \x02\x01\x03\x12\x04\x8f\x01\x19\x1a\n?\n\x06\x04\x03\x03\x02\x03\x01\
+    \x12\x06\x93\x01\x08\x97\x01\t\x1a-\x20[Stage:Alpha]\n\x20[FeatureFlag:P\
+    layerTracking]\n\n\x0f\n\x07\x04\x03\x03\x02\x03\x01\x01\x12\x04\x93\x01\
     \x10\x1c\n\x10\n\x08\x04\x03\x03\x02\x03\x01\x02\0\x12\x04\x94\x01\x0c\
     \x1c\n\x13\n\t\x04\x03\x03\x02\x03\x01\x02\0\x04\x12\x06\x94\x01\x0c\x93\
     \x01\x1e\n\x11\n\t\x04\x03\x03\x02\x03\x01\x02\0\x05\x12\x04\x94\x01\x0c\
@@ -2711,7 +2711,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x04\x12\x04\x9b\x01\x08\x10\n\x0f\n\x07\x04\x03\x03\x02\x02\x02\x06\x12\
     \x04\x9b\x01\x11\x15\n\x0f\n\x07\x04\x03\x03\x02\x02\x02\x01\x12\x04\x9b\
     \x01\x16\x1b\n\x0f\n\x07\x04\x03\x03\x02\x02\x02\x03\x12\x04\x9b\x01\x1e\
-    \x1f\n<\n\x06\x04\x03\x03\x02\x02\x03\x12\x04\x9f\x01\x08!\x1a,\x20[Stag\
+    \x1f\n=\n\x06\x04\x03\x03\x02\x02\x03\x12\x04\x9f\x01\x08!\x1a-\x20[Stag\
     e:Alpha]\n\x20[FeatureFlag:PlayerTracking]\n\n\x11\n\x07\x04\x03\x03\x02\
     \x02\x03\x04\x12\x06\x9f\x01\x08\x9b\x01\x20\n\x0f\n\x07\x04\x03\x03\x02\
     \x02\x03\x06\x12\x04\x9f\x01\x08\x14\n\x0f\n\x07\x04\x03\x03\x02\x02\x03\

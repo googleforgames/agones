@@ -36,12 +36,17 @@ spec:
     clusterName: "clusterB"
     namespace: cluster-B-ns
     secretName: allocator-client-to-cluster-B
+    sercerCA: c2VydmVyQ0E=
   priority: 1
   weight: 100
 EOF
 ```
 
 To define the local cluster priority, similarly, an allocation rule should be defined, while leaving allocationEndpoints unset. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
+
+{{% feature publishVersion="1.6.0" %}}
+`sercerCA` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed).
+{{% /feature %}}
 
 ## Establish trust
 
@@ -68,7 +73,7 @@ EOF
 
 The certificates are base 64 string of the certificate file e.g. `cat ${CERT_FILE} | base64 -w 0`
 
-`ca.crt` is the server TLS public certificate if it is self-signed. For simplicity, it is recommended to use one client secret per cluster and make `ca.crt` bundle of server certificates.
+Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for generating client certificates. 
 
 2.Add client CA to the list of authorized client certificates by agones-allocator in the targeted cluster.
 
