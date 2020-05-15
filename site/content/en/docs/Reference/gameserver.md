@@ -13,7 +13,7 @@ A full GameServer specification is available below and in the {{< ghlink href="e
 apiVersion: "agones.dev/v1"
 kind: GameServer
 # GameServer Metadata
-# https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#objectmeta-v1-meta
+# https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -66,7 +66,7 @@ spec:
     grpcPort: 9357
     httpPort: 9358
   # Pod template configuration
-  # https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#podtemplate-v1-core
+  # https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplate-v1-core
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:
@@ -107,7 +107,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
     - "Error" The SDK server will only output error messages
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
-- `template` the [pod spec template](https://v1-14.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.14/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+- `template` the [pod spec template](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram
 
