@@ -1901,7 +1901,7 @@ proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.setCapacity = func
 
 
 /**
- * repeated string IDs = 3;
+ * repeated string ids = 3;
  * @return {!Array<string>}
  */
 proto.agones.dev.sdk.GameServer.Status.PlayerStatus.prototype.getIdsList = function() {

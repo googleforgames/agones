@@ -345,7 +345,7 @@
           "type": "string",
           "format": "int64"
         },
-        "IDs": {
+        "ids": {
           "type": "array",
           "items": {
             "type": "string"
