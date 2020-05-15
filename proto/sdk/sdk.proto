@@ -148,7 +148,7 @@ message GameServer {
         message PlayerStatus {
             int64 count = 1;
             int64 capacity = 2;
-            repeated string IDs = 3;
+            repeated string ids = 3;
         }
 
         string state = 1;
