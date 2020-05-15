@@ -199,7 +199,7 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		case "PlayerCapacity":
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		case "PlayerIDs":
-			fieldVal = strings.Join(l.gs.Status.Players.IDs, ",")
+			fieldVal = strings.Join(l.gs.Status.Players.Ids, ",")
 		default:
 			l.logger.Error("unexpected Field to compare")
 		}
@@ -399,7 +399,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 	}
 
 	// the player is already connected, return false.
-	for _, playerID := range l.gs.Status.Players.IDs {
+	for _, playerID := range l.gs.Status.Players.Ids {
 		if playerID == id.PlayerID {
 			return &alpha.Bool{Bool: false}, nil
 		}
@@ -409,8 +409,8 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 		return &alpha.Bool{}, errors.New("Players are already at capacity")
 	}
 
-	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs, id.PlayerID)
-	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+	l.gs.Status.Players.Ids = append(l.gs.Status.Players.Ids, id.PlayerID)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.Ids))
 
 	l.update <- struct{}{}
 	l.recordRequestWithValue("playerconnect", "1234", "PlayerIDs")
@@ -433,7 +433,7 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 	}
 
 	found := -1
-	for i, playerID := range l.gs.Status.Players.IDs {
+	for i, playerID := range l.gs.Status.Players.Ids {
 		if playerID == id.PlayerID {
 			found = i
 			break
@@ -443,8 +443,8 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 		return &alpha.Bool{Bool: false}, nil
 	}
 
-	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs[:found], l.gs.Status.Players.IDs[found+1:]...)
-	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+	l.gs.Status.Players.Ids = append(l.gs.Status.Players.Ids[:found], l.gs.Status.Players.Ids[found+1:]...)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.Ids))
 
 	l.update <- struct{}{}
 	l.recordRequestWithValue("playerdisconnect", "", "PlayerIDs")
@@ -470,7 +470,7 @@ func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID
 		return result, nil
 	}
 
-	for _, playerID := range l.gs.Status.Players.IDs {
+	for _, playerID := range l.gs.Status.Players.Ids {
 		if id.PlayerID == playerID {
 			result.Bool = true
 			break
@@ -498,7 +498,7 @@ func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Emp
 	if l.gs.Status.Players == nil {
 		return result, nil
 	}
-	result.List = l.gs.Status.Players.IDs
+	result.List = l.gs.Status.Players.Ids
 	return result, nil
 }
 

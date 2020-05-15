@@ -1220,10 +1220,10 @@ class AGONES_EXPORT GameServer_Status_PlayerStatus final :
 
   // accessors -------------------------------------------------------
 
-  // repeated string IDs = 3;
+  // repeated string ids = 3;
   int ids_size() const;
   void clear_ids();
-  static const int kIDsFieldNumber = 3;
+  static const int kIdsFieldNumber = 3;
   const ::std::string& ids(int index) const;
   ::std::string* mutable_ids(int index);
   void set_ids(int index, const ::std::string& value);
@@ -2220,7 +2220,7 @@ inline void GameServer_Status_PlayerStatus::set_capacity(::google::protobuf::int
   // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.capacity)
 }
 
-// repeated string IDs = 3;
+// repeated string ids = 3;
 inline int GameServer_Status_PlayerStatus::ids_size() const {
   return ids_.size();
 }
@@ -2228,64 +2228,64 @@ inline void GameServer_Status_PlayerStatus::clear_ids() {
   ids_.Clear();
 }
 inline const ::std::string& GameServer_Status_PlayerStatus::ids(int index) const {
-  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Get(index);
 }
 inline ::std::string* GameServer_Status_PlayerStatus::mutable_ids(int index) {
-  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Mutable(index);
 }
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const ::std::string& value) {
-  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   ids_.Mutable(index)->assign(value);
 }
 #if LANG_CXX11
 inline void GameServer_Status_PlayerStatus::set_ids(int index, ::std::string&& value) {
-  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   ids_.Mutable(index)->assign(std::move(value));
 }
 #endif
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   ids_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set_char:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const char* value, size_t size) {
   ids_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline ::std::string* GameServer_Status_PlayerStatus::add_ids() {
-  // @@protoc_insertion_point(field_add_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Add();
 }
 inline void GameServer_Status_PlayerStatus::add_ids(const ::std::string& value) {
   ids_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 #if LANG_CXX11
 inline void GameServer_Status_PlayerStatus::add_ids(::std::string&& value) {
   ids_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 #endif
 inline void GameServer_Status_PlayerStatus::add_ids(const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   ids_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_char:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline void GameServer_Status_PlayerStatus::add_ids(const char* value, size_t size) {
   ids_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline const ::google::protobuf::RepeatedPtrField<::std::string>&
 GameServer_Status_PlayerStatus::ids() const {
-  // @@protoc_insertion_point(field_list:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_list:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_;
 }
 inline ::google::protobuf::RepeatedPtrField<::std::string>*
 GameServer_Status_PlayerStatus::mutable_ids() {
-  // @@protoc_insertion_point(field_mutable_list:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_mutable_list:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return &ids_;
 }
 
