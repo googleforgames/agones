@@ -18,6 +18,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -144,7 +145,16 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 			allocate(s)
 
 		case "RESERVE":
-			reserve(s)
+			if len(parts) != 2 {
+				respond(conn, sender, "ERROR: Invalid RESERVE, should have 1 argument\n")
+				continue
+			}
+			if dur, err := time.ParseDuration(parts[1]); err != nil {
+				respond(conn, sender, fmt.Sprintf("ERROR: %s\n", err))
+				continue
+			} else {
+				reserve(s, dur)
+			}
 
 		case "WATCH":
 			watchGameServerEvents(s)
@@ -183,7 +193,7 @@ func readWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 				continue
 			case 2:
 				if cap, err := strconv.Atoi(parts[1]); err != nil {
-					respond(conn, sender, err.Error()+"\n")
+					respond(conn, sender, fmt.Sprintf("ERROR: %s\n", err))
 					continue
 				} else {
 					setPlayerCapacity(s, int64(cap))
@@ -245,8 +255,8 @@ func allocate(s *sdk.SDK) {
 }
 
 // reserve for 10 seconds
-func reserve(s *sdk.SDK) {
-	if err := s.Reserve(10 * time.Second); err != nil {
+func reserve(s *sdk.SDK, duration time.Duration) {
+	if err := s.Reserve(duration); err != nil {
 		log.Fatalf("could not reserve gameserver: %v", err)
 	}
 }
