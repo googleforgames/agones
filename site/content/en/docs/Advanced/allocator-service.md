@@ -1,6 +1,7 @@
 ---
 title: "Allocator Service"
 date: 2020-05-19T05:45:05Z
+publishDate: 2019-10-25T05:45:05Z
 description: >
   Agones provides an mTLS based allocator service that is accessible from outside the cluster using a load balancer. The service is deployed and scales independent to Agones controller.
 ---
