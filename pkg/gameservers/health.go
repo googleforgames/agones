@@ -162,7 +162,7 @@ func (hc *HealthController) loggerForGameServer(gs *agonesv1.GameServer) *logrus
 	return hc.loggerForGameServerKey(gsName).WithField("gs", gs)
 }
 
-// syncGameServer sets the GameSerer to Unhealthy, if its state is Ready
+// syncGameServer sets the GameServer to Unhealthy, if its state is Ready
 func (hc *HealthController) syncGameServer(key string) error {
 	hc.loggerForGameServerKey(key).Debug("Synchronising")
 

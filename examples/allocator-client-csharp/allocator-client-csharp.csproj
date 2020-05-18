@@ -14,6 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="allocation.proto" ProtoRoot="../../proto/allocation/v1alpha1;../../proto/googleapis" GrpcServices="Client"/>
+    <Protobuf Include="allocation.proto" ProtoRoot="../../proto/allocation;../../proto/googleapis" GrpcServices="Client"/>
   </ItemGroup>
 </Project>

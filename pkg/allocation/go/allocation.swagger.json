@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "proto/allocation/v1alpha1/allocation.proto",
+    "title": "proto/allocation/allocation.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -14,14 +14,14 @@
     "application/json"
   ],
   "paths": {
-    "/v1alpha1/gameserverallocation": {
+    "/gameserverallocation": {
       "post": {
         "operationId": "Allocate",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/v1alpha1AllocationResponse"
+              "$ref": "#/definitions/allocationAllocationResponse"
             }
           }
         },
@@ -31,7 +31,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1alpha1AllocationRequest"
+              "$ref": "#/definitions/allocationAllocationRequest"
             }
           }
         ],
@@ -63,7 +63,7 @@
       },
       "description": "The gameserver port info that is allocated."
     },
-    "v1alpha1AllocationRequest": {
+    "allocationAllocationRequest": {
       "type": "object",
       "properties": {
         "namespace": {
@@ -71,17 +71,17 @@
           "title": "The k8s namespace that is hosting the targeted fleet of gameservers to be allocated"
         },
         "multiClusterSetting": {
-          "$ref": "#/definitions/v1alpha1MultiClusterSetting",
+          "$ref": "#/definitions/allocationMultiClusterSetting",
           "description": "If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally."
         },
         "requiredGameServerSelector": {
-          "$ref": "#/definitions/v1alpha1LabelSelector",
+          "$ref": "#/definitions/allocationLabelSelector",
           "description": "The required allocation. Defaults to all GameServers."
         },
         "preferredGameServerSelectors": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/v1alpha1LabelSelector"
+            "$ref": "#/definitions/allocationLabelSelector"
           },
           "description": "The ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
         },
@@ -90,12 +90,12 @@
           "description": "Scheduling strategy. Defaults to \"Packed\"."
         },
         "metaPatch": {
-          "$ref": "#/definitions/v1alpha1MetaPatch",
+          "$ref": "#/definitions/allocationMetaPatch",
           "title": "MetaPatch is optional custom metadata that is added to the game server at\nallocation You can use this to tell the server necessary session data"
         }
       }
     },
-    "v1alpha1AllocationResponse": {
+    "allocationAllocationResponse": {
       "type": "object",
       "properties": {
         "gameServerName": {
@@ -115,7 +115,7 @@
         }
       }
     },
-    "v1alpha1LabelSelector": {
+    "allocationLabelSelector": {
       "type": "object",
       "properties": {
         "matchLabels": {
@@ -128,7 +128,7 @@
       },
       "description": "LabelSelector used for finding a GameServer with matching labels."
     },
-    "v1alpha1MetaPatch": {
+    "allocationMetaPatch": {
       "type": "object",
       "properties": {
         "labels": {
@@ -146,7 +146,7 @@
       },
       "title": "MetaPatch is the metadata used to patch the GameServer metadata on allocation"
     },
-    "v1alpha1MultiClusterSetting": {
+    "allocationMultiClusterSetting": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -155,7 +155,7 @@
           "description": "If set to true, multi-cluster allocation is enabled."
         },
         "policySelector": {
-          "$ref": "#/definitions/v1alpha1LabelSelector",
+          "$ref": "#/definitions/allocationLabelSelector",
           "description": "Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied."
         }
       },

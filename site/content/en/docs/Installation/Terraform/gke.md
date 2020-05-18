@@ -139,7 +139,7 @@ You should have 6 nodes in `Ready` state.
 
 To delete all resources provisioned by Terraform:
 ```
-terraform destroy
+terraform destroy -var project="<YOUR_GCP_ProjectID>"
 ```
 
 ## Next Steps

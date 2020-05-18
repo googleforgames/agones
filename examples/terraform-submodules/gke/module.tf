@@ -46,7 +46,6 @@ variable "machine_type" {
 variable "node_count" {
   default = "4"
 }
-
 variable "zone" {
   default     = "us-west1-c"
   description = "The GCP zone to create the cluster in"

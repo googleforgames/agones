@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
 	e2e "agones.dev/agones/test/e2e/framework"
@@ -51,7 +51,6 @@ const (
 	allocatorClientCAName = "allocator-client-ca"
 	tlsCrtTag             = "tls.crt"
 	tlsKeyTag             = "tls.key"
-	serverCATag           = "ca.crt"
 	allocatorReqURLFmt    = "%s:%d"
 )
 
@@ -65,7 +64,7 @@ func TestAllocator(t *testing.T) {
 	defer framework.DeleteNamespace(t, namespace)
 
 	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, tlsCA, namespace, clientSecretName)
+	genClientSecret(t, namespace, clientSecretName)
 
 	flt, err := createFleet(namespace)
 	if !assert.Nil(t, err) {
@@ -83,7 +82,7 @@ func TestAllocator(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(namespace, clientSecretName)
+		dialOpts, err := createRemoteClusterDialOption(namespace, clientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -127,7 +126,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 
 	// Create client secret A, B is receiver of the request and does not need client secret
 	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, tlsCA, namespaceA, clientSecretNameA)
+	genClientSecret(t, namespaceA, clientSecretNameA)
 
 	policyName := fmt.Sprintf("a-to-b-%s", uuid.NewUUID())
 	p := &multiclusterv1.GameServerAllocationPolicy{
@@ -142,6 +141,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 				SecretName:          clientSecretNameA,
 				Namespace:           namespaceB,
 				AllocationEndpoints: []string{ip},
+				ServerCA:            tlsCA,
 			},
 		},
 	}
@@ -163,7 +163,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(namespaceA, clientSecretNameA)
+		dialOpts, err := createRemoteClusterDialOption(namespaceA, clientSecretNameA, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -220,7 +220,7 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
-func createRemoteClusterDialOption(namespace, clientSecretName string) (grpc.DialOption, error) {
+func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
 	if err != nil {
@@ -230,7 +230,6 @@ func createRemoteClusterDialOption(namespace, clientSecretName string) (grpc.Dia
 	// Create http client using cert
 	clientCert := clientSecret.Data[tlsCrtTag]
 	clientKey := clientSecret.Data[tlsKeyTag]
-	tlsCA := clientSecret.Data[serverCATag]
 	if clientCert == nil || clientKey == nil {
 		return nil, errors.New("missing certificate")
 	}
@@ -279,7 +278,7 @@ func restartAllocator(t *testing.T) {
 	}
 }
 
-func genClientSecret(t *testing.T, serverCA []byte, namespace, secretName string) {
+func genClientSecret(t *testing.T, namespace, secretName string) {
 	t.Helper()
 
 	pub, priv := generateTLSCertPair(t, "")
@@ -291,9 +290,8 @@ func genClientSecret(t *testing.T, serverCA []byte, namespace, secretName string
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			tlsCrtTag:   pub,
-			tlsKeyTag:   priv,
-			serverCATag: serverCA,
+			tlsCrtTag: pub,
+			tlsKeyTag: priv,
 		},
 	}
 	if _, err := kubeCore.Secrets(namespace).Create(s); err != nil {
@@ -306,7 +304,7 @@ func genClientSecret(t *testing.T, serverCA []byte, namespace, secretName string
 	if err != nil {
 		t.Fatalf("getting secret %s/%s failed: %s", agonesSystemNamespace, allocatorClientCAName, err)
 	}
-	s.Data["ca.crt"] = serverCA
+
 	s.Data["client-ca.crt"] = pub
 	clientCASecret, err := kubeCore.Secrets(agonesSystemNamespace).Update(s)
 	if err != nil {

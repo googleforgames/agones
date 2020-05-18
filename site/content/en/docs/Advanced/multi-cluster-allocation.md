@@ -1,14 +1,15 @@
 ---
 title: "Multi-cluster Allocation"
 date: 2019-10-25T05:45:05Z
-version: "alpha"
 description: >
   In order to allow allocation from multiple clusters, Agones provides a mechanism to set redirect rules for allocation requests to the right cluster.
 ---
 
+{{% feature expiryVersion="1.6.0" %}}
 {{< alert title="Alpha" color="warning">}}
 This feature is in a pre-release state and might change.
 {{< /alert >}}
+{{% /feature %}}
 
 There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost-saving and availability. 
 For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
@@ -35,12 +36,17 @@ spec:
     clusterName: "clusterB"
     namespace: cluster-B-ns
     secretName: allocator-client-to-cluster-B
+    sercerCA: c2VydmVyQ0E=
   priority: 1
   weight: 100
 EOF
 ```
 
 To define the local cluster priority, similarly, an allocation rule should be defined, while leaving allocationEndpoints unset. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
+
+{{% feature publishVersion="1.6.0" %}}
+`sercerCA` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed).
+{{% /feature %}}
 
 ## Establish trust
 
@@ -67,7 +73,7 @@ EOF
 
 The certificates are base 64 string of the certificate file e.g. `cat ${CERT_FILE} | base64 -w 0`
 
-`ca.crt` is the server TLS public certificate if it is self-signed. For simplicity, it is recommended to use one client secret per cluster and make `ca.crt` bundle of server certificates.
+Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for generating client certificates. 
 
 2.Add client CA to the list of authorized client certificates by agones-allocator in the targeted cluster.
 
@@ -89,7 +95,13 @@ EOF
 
 ## Allocate multi-cluster
 
+{{% feature expiryVersion="1.6.0" %}}
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/v1alpha1/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
+{{% /feature %}}
+
+{{% feature publishVersion="1.6.0" %}}
+To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
+{{% /feature %}}
 
 ```bash
 #!/bin/bash

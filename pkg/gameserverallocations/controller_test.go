@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -808,6 +808,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 								ClusterName: "multicluster",
 								SecretName:  "localhostsecret",
 								Namespace:   defaultNs,
+								ServerCA:    []byte("not-used"),
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -927,6 +928,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 								Namespace:           targetedNamespace,
+								ServerCA:            clientCert,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -939,7 +941,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		m.KubeClient.AddReactor("list", "secrets",
 			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
-				return true, getTestSecret(secretName, clientCert), nil
+				return true, getTestSecret(secretName, nil), nil
 			})
 
 		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
@@ -1013,6 +1015,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 								AllocationEndpoints: []string{endpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
+								ServerCA:            clientCert,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -1028,6 +1031,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 								AllocationEndpoints: []string{endpoint},
 								ClusterName:         "remotecluster2",
 								SecretName:          secretName,
+								ServerCA:            clientCert,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -1108,6 +1112,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 								AllocationEndpoints: []string{unhealthyEndpoint, healthyEndpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
+								ServerCA:            clientCert,
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -1158,7 +1163,11 @@ func TestCreateRestClientError(t *testing.T) {
 	t.Parallel()
 	t.Run("Missing secret", func(t *testing.T) {
 		c, _ := newFakeController()
-		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
+
+		connectionInfo := &multiclusterv1.ClusterConnectionInfo{
+			SecretName: "secret-name",
+		}
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, connectionInfo)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "secret-name")
 	})
@@ -1182,7 +1191,10 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
+		connectionInfo := &multiclusterv1.ClusterConnectionInfo{
+			SecretName: "secret-name",
+		}
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, connectionInfo)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "missing client certificate key pair in secret secret-name")
 	})
@@ -1207,11 +1219,33 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
+		connectionInfo := &multiclusterv1.ClusterConnectionInfo{
+			SecretName: "secret-name",
+		}
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, connectionInfo)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to find any PEM data in certificate input")
 	})
 	t.Run("Bad CA cert", func(t *testing.T) {
+		c, m := newFakeController()
+
+		m.KubeClient.AddReactor("list", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				return true, getTestSecret("secret-name", clientCert), nil
+			})
+
+		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
+		defer cancel()
+
+		connectionInfo := &multiclusterv1.ClusterConnectionInfo{
+			SecretName: "secret-name",
+			ServerCA:   []byte("XXX"),
+		}
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, connectionInfo)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "PEM format")
+	})
+	t.Run("Bad client CA cert", func(t *testing.T) {
 		c, m := newFakeController()
 
 		m.KubeClient.AddReactor("list", "secrets",
@@ -1222,9 +1256,11 @@ func TestCreateRestClientError(t *testing.T) {
 		_, cancel := agtesting.StartInformers(m, c.allocator.secretSynced)
 		defer cancel()
 
-		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, "secret-name")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "PEM format")
+		connectionInfo := &multiclusterv1.ClusterConnectionInfo{
+			SecretName: "secret-name",
+		}
+		_, err := c.allocator.createRemoteClusterDialOption(defaultNs, connectionInfo)
+		assert.Nil(t, err)
 	})
 }
 
