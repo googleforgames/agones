@@ -24,7 +24,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	e2eframework "agones.dev/agones/test/e2e/framework"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
 const (
@@ -560,7 +558,15 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
-	logger := logrus.WithField("test", t.Name())
+
+	// We are deliberately not trying to test the transition between Reserved -> Ready.
+	//
+	// We have found that trying to catch the GameServer in the Reserved state can be flaky,
+	// as we can't control the speed in which the Kubernetes API is going to reply to request,
+	// and we could sometimes miss when the GameServer is in the Reserved State before it goes to Ready.
+	//
+	// Therefore we are going to test for concrete states that we don't need to catch while
+	// in a transitive state.
 
 	gs := framework.DefaultGameServer(defaultNs)
 	gs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
@@ -570,65 +576,34 @@ func TestGameServerReserve(t *testing.T) {
 	defer framework.AgonesClient.AgonesV1().GameServers(defaultNs).Delete(gs.ObjectMeta.Name, nil) // nolint: errcheck
 	assert.Equal(t, gs.Status.State, agonesv1.GameServerStateReady)
 
-	logger.Info("sending RESERVE command")
-	reply, err := e2eframework.SendGameServerUDP(gs, "RESERVE")
+	reply, err := e2eframework.SendGameServerUDP(gs, "RESERVE 0")
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "Could not message GameServer")
 	}
-	logger.Info("Received response")
-	assert.Equal(t, "ACK: RESERVE\n", reply)
+	assert.Equal(t, "ACK: RESERVE 0\n", reply)
 
-	// might as well Sleep, nothing else going to happen for at least 10 seconds. Let other things work.
-	logger.Info("Waiting for 10 seconds")
-	time.Sleep(10 * time.Second)
+	gs, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateReserved, 3*time.Minute)
+	assert.NoError(t, err)
 
-	// Since polling the backing GameServer can sometimes pause for longer than 10 seconds,
-	// we are instead going to look at the event stream for the GameServer to determine that the requisite change to
-	// Reserved and back to Ready has taken place.
-	//
-	// There is a possibility that Events may get dropped if the Kubernetes cluster gets overwhelmed, or
-	// time out after a period. So if this test becomes flaky because due to these potential issues, we will
-	// need to find an alternate approach. At this stage through, it seems to be working consistently.
-	err = wait.PollImmediate(time.Second, 2*time.Minute, func() (bool, error) {
-		logger.Info("checking gameserver events")
-		list, err := framework.KubeClient.CoreV1().Events(defaultNs).Search(scheme.Scheme, gs)
-		if err != nil {
-			return false, err
-		}
+	reply, err = e2eframework.SendGameServerUDP(gs, "ALLOCATE")
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not message GameServer")
+	}
+	assert.Equal(t, "ACK: ALLOCATE\n", reply)
 
-		var readyEvent corev1.Event
-		var reserverdEvent corev1.Event
+	// put it in a totally different state, just to reset things.
+	gs, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateAllocated, 3*time.Minute)
+	assert.NoError(t, err)
 
-		for _, e := range list.Items {
-			if e.Reason == string(agonesv1.GameServerStateReady) {
-				readyEvent = e
-			}
-			if e.Reason == string(agonesv1.GameServerStateReserved) {
-				reserverdEvent = e
-			}
-		}
-		if readyEvent.Reason == "" || reserverdEvent.Reason == "" {
-			return false, nil
-		}
+	reply, err = e2eframework.SendGameServerUDP(gs, "RESERVE 5s")
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not message GameServer")
+	}
+	assert.Equal(t, "ACK: RESERVE 5s\n", reply)
 
-		// debug once we have both a Ready and Reserved event
-		for _, e := range list.Items {
-			logger.WithField("first-time", e.FirstTimestamp).WithField("count", e.Count).
-				WithField("last-time", e.LastTimestamp).
-				WithField("name", e.Name).
-				WithField("reason", e.Reason).WithField("message", e.Message).Info("gs event details")
-		}
-
-		if readyEvent.Count != 2 {
-			return false, nil
-		}
-		diff := readyEvent.LastTimestamp.Sub(reserverdEvent.FirstTimestamp.Time).Seconds()
-		// allow for some variation
-		if diff >= 10 && diff <= 20 {
-			return true, nil
-		}
-		return true, errors.Errorf("difference of %v seconds was not between 10 and 20", diff)
-	})
+	// sleep, since we're going to wait for the Ready response.
+	time.Sleep(5 * time.Second)
+	_, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateReady, 3*time.Minute)
 	assert.NoError(t, err)
 }
 
