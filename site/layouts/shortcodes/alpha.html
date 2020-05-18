@@ -1,0 +1,9 @@
+{{- $gate := .Get "gate" }}
+{{- $title := .Get "title" }}
+<div class="alert alert-warning" role="alert">
+    <h4 class="alert-heading">Warning</h4>
+    <p>The {{ $title }} feature is currently <strong><a href="{{ ref . "/docs/Guides/feature-stages.md#alpha" }}">Alpha</a></strong>,
+        not enabled by default, and may change in the future.</p>
+    <p>Use the Feature Gate <code>{{- $gate }}</code> to enable and test this feature.</p>
+    <p>See the <a href="{{ ref . "/docs/Guides/feature-stages.md#feature-gates" }}">Feature Gate documentation</a> for details on how to enable features.</p>
+</div>

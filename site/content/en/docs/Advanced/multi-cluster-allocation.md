@@ -36,7 +36,7 @@ spec:
     clusterName: "clusterB"
     namespace: cluster-B-ns
     secretName: allocator-client-to-cluster-B
-    sercerCA: c2VydmVyQ0E=
+    serverCa: c2VydmVyQ0E=
   priority: 1
   weight: 100
 EOF
@@ -45,7 +45,7 @@ EOF
 To define the local cluster priority, similarly, an allocation rule should be defined, while leaving allocationEndpoints unset. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
 
 {{% feature publishVersion="1.6.0" %}}
-`sercerCA` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed).
+`serverCa` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed).
 {{% /feature %}}
 
 ## Establish trust
