@@ -156,8 +156,7 @@ type GameServerSpec struct {
 	Players *PlayersSpec `json:"players,omitempty"`
 }
 
-// PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
-// connection/disconnection events.
+// PlayersSpec tracks the initial player capacity
 type PlayersSpec struct {
 	InitialCapacity int64 `json:"initialCapacity,omitempty"`
 }
