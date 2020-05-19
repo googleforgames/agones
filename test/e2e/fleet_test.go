@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
@@ -1214,6 +1215,69 @@ func TestFleetResourceValidation(t *testing.T) {
 	if assert.Nil(t, err) {
 		defer client.Fleets(defaultNs).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
+}
+
+func TestFleetAggregatedPlayerStatus(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	client := framework.AgonesClient.AgonesV1()
+
+	flt := defaultFleet(defaultNs)
+	flt.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{
+		InitialCapacity: 10,
+	}
+
+	flt, err := client.Fleets(defaultNs).Create(flt.DeepCopy())
+	assert.NoError(t, err)
+
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+		if fleet.Status.Players == nil {
+			logrus.WithField("status", fleet.Status).Info("No Players")
+			return false
+		}
+
+		logrus.WithField("status", fleet.Status).Info("Checking Capacity")
+		return fleet.Status.Players.Capacity == 30
+	})
+
+	list, err := framework.ListGameServersFromFleet(flt)
+	assert.NoError(t, err)
+	// set 3 random capacities, and connect a random number of players
+	totalCapacity := 0
+	totalPlayers := 0
+	for i := range list {
+		// Do this, otherwise scopelint complains about "using a reference for the variable on range scope"
+		gs := &list[i]
+		capacity := rand.IntnRange(1, 100)
+		totalCapacity += capacity
+
+		msg := fmt.Sprintf("PLAYER_CAPACITY %d", capacity)
+		reply, err := e2e.SendGameServerUDP(gs, msg)
+		if err != nil {
+			t.Fatalf("Could not message GameServer: %v", err)
+		}
+		assert.Equal(t, fmt.Sprintf("ACK: %s\n", msg), reply)
+
+		players := rand.IntnRange(1, 5)
+		totalPlayers += players
+		for i := 1; i <= players; i++ {
+			msg := "PLAYER_CONNECT " + fmt.Sprintf("%d", i)
+			logrus.WithField("msg", msg).WithField("gs", gs.ObjectMeta.Name).Info("Sending Player Connect")
+			reply, err := e2e.SendGameServerUDP(gs, msg)
+			if err != nil {
+				t.Fatalf("Could not message GameServer: %v", err)
+			}
+			assert.Equal(t, fmt.Sprintf("ACK: %s\n", msg), reply)
+		}
+	}
+
+	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+		logrus.WithField("players", fleet.Status.Players).WithField("totalCapacity", totalCapacity).
+			WithField("totalPlayers", totalPlayers).Info("Checking Capacity")
+		return (fleet.Status.Players.Capacity == int64(totalCapacity)) && (fleet.Status.Players.Count == int64(totalPlayers))
+	})
 }
 
 func assertCausesContainsString(t *testing.T, causes []metav1.StatusCause, expected string) {
