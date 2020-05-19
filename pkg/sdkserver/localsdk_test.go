@@ -337,7 +337,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
 		Status: agonesv1.GameServerStatus{
 			Players: &agonesv1.PlayerStatus{
-				Capacity: 0,
+				Capacity: 1,
 			},
 		},
 	}
@@ -352,39 +352,36 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}{
 		"test mode on, gs with Status.Players": {
 			testMode: true,
-			gs:       fixture,
+			gs:       fixture.DeepCopy(),
 			useFile:  true,
 		},
 		"test mode off, gs with Status.Players": {
 			testMode: false,
-			gs:       fixture,
+			gs:       fixture.DeepCopy(),
 			useFile:  true,
 		},
 		"test mode on, gs without Status.Players": {
 			testMode: true,
-			gs:       &agonesv1.GameServer{},
 			useFile:  true,
 		},
 		"test mode off, gs without Status.Players": {
 			testMode: false,
-			gs:       &agonesv1.GameServer{},
 			useFile:  true,
 		},
 		"test mode on, no filePath": {
 			testMode: true,
-			gs:       &agonesv1.GameServer{},
 			useFile:  false,
 		},
-		"test mode off, no filePath": {
+		"test mode off, use filePath": {
 			testMode: false,
-			gs:       &agonesv1.GameServer{},
-			useFile:  false,
+			useFile:  true,
 		},
 	}
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
 			t.Parallel()
+
 			var l *LocalSDKServer
 			var err error
 			if v.useFile {
@@ -397,11 +394,19 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.Nil(t, err)
 			l.SetTestMode(v.testMode)
 
+			if !v.useFile {
+				_, err := l.SetPlayerCapacity(context.Background(), &alpha.Count{
+					Count: 1,
+				})
+				assert.NoError(t, err)
+			}
+
 			stream := newGameServerMockStream()
 			go func() {
 				err := l.WatchGameServer(&sdk.Empty{}, stream)
 				assert.Nil(t, err)
 			}()
+
 			// wait for watching to begin
 			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 				found := false
@@ -412,16 +417,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				return found, nil
 			})
 			assert.NoError(t, err)
-
-			// Update PlayerCapacity, initial could be empty or have 1 in it
-			_, err = l.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 1})
-			assert.NoError(t, err)
-			expected := &sdk.GameServer_Status_PlayerStatus{
-				Capacity: 1,
-			}
-			assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
-				return gs.Status.Players
-			})
 
 			id := &alpha.PlayerID{PlayerID: "one"}
 			ok, err := l.IsPlayerConnected(context.Background(), id)
@@ -445,7 +440,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, int64(1), count.Count)
 
-			expected = &sdk.GameServer_Status_PlayerStatus{
+			expected := &sdk.GameServer_Status_PlayerStatus{
 				Count:    1,
 				Capacity: 1,
 				Ids:      []string{id.PlayerID},
