@@ -126,9 +126,10 @@ ensure-build-sdk-image:
 # SDK client test against it. Useful for test development
 run-sdk-conformance-local: TIMEOUT ?= 30
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+run-sdk-conformance-local: FEATURE_GATES ?=
 run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 9357:9357 -p 9358:9358 \
-	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
+	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "FEATURE_GATES=$(FEATURE_GATES)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 # Sleeps the start of the sidecar to test that the SDK blocks on connection correctly

@@ -40,8 +40,10 @@ var (
 	_ sdk.SDKServer   = &LocalSDKServer{}
 	_ alpha.SDKServer = &LocalSDKServer{}
 	_ beta.SDKServer  = &LocalSDKServer{}
+)
 
-	defaultGs = &sdk.GameServer{
+func defaultGs() *sdk.GameServer {
+	return &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -66,7 +68,7 @@ var (
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
 		},
 	}
-)
+}
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
@@ -91,7 +93,7 @@ type LocalSDKServer struct {
 func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
-		gs:              defaultGs,
+		gs:              defaultGs(),
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
 		testMutex:       sync.Mutex{},
@@ -133,6 +135,9 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		if err != nil {
 			l.logger.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
 		}
+	}
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
 
 	go func() {
@@ -197,8 +202,14 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		case "UID":
 			fieldVal = l.gs.ObjectMeta.Uid
 		case "PlayerCapacity":
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		case "PlayerIDs":
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
 			fieldVal = strings.Join(l.gs.Status.Players.Ids, ",")
 		default:
 			l.logger.Error("unexpected Field to compare")
