@@ -395,13 +395,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.Nil(t, err)
 			l.SetTestMode(v.testMode)
 
-			if !v.useFile || v.gs == nil {
-				_, err := l.SetPlayerCapacity(context.Background(), &alpha.Count{
-					Count: 1,
-				})
-				assert.NoError(t, err)
-			}
-
 			stream := newGameServerMockStream()
 			go func() {
 				err := l.WatchGameServer(&sdk.Empty{}, stream)
@@ -418,6 +411,19 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				return found, nil
 			})
 			assert.NoError(t, err)
+
+			if !v.useFile || v.gs == nil {
+				_, err := l.SetPlayerCapacity(context.Background(), &alpha.Count{
+					Count: 1,
+				})
+				assert.NoError(t, err)
+				expected := &sdk.GameServer_Status_PlayerStatus{
+					Capacity: 1,
+				}
+				assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+					return gs.Status.Players
+				})
+			}
 
 			id := &alpha.PlayerID{PlayerID: "one"}
 			ok, err := l.IsPlayerConnected(context.Background(), id)

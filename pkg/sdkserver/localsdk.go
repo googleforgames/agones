@@ -91,10 +91,9 @@ type LocalSDKServer struct {
 
 // NewLocalSDKServer returns the default LocalSDKServer
 func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
-	gs := defaultGs()
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
-		gs:              gs,
+		gs:              defaultGs(),
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
 		testMutex:       sync.Mutex{},
