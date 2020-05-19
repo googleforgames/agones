@@ -373,9 +373,9 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			testMode: true,
 			useFile:  false,
 		},
-		"test mode off, use filePath": {
+		"test mode off, no filePath": {
 			testMode: false,
-			useFile:  true,
+			useFile:  false,
 		},
 	}
 
@@ -395,7 +395,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.Nil(t, err)
 			l.SetTestMode(v.testMode)
 
-			if !v.useFile {
+			if !v.useFile || v.gs == nil {
 				_, err := l.SetPlayerCapacity(context.Background(), &alpha.Count{
 					Count: 1,
 				})
