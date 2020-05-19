@@ -333,13 +333,14 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	defer runtime.FeatureTestMutex.Unlock()
 	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
 
-	fixture := &agonesv1.GameServer{
-		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
-		Status: agonesv1.GameServerStatus{
-			Players: &agonesv1.PlayerStatus{
-				Capacity: 1,
-			},
-		},
+	gs := func() *agonesv1.GameServer {
+		return &agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
+			Status: agonesv1.GameServerStatus{
+				Players: &agonesv1.PlayerStatus{
+					Capacity: 1,
+				},
+			}}
 	}
 
 	e := &alpha.Empty{}
@@ -352,12 +353,12 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}{
 		"test mode on, gs with Status.Players": {
 			testMode: true,
-			gs:       fixture.DeepCopy(),
+			gs:       gs(),
 			useFile:  true,
 		},
 		"test mode off, gs with Status.Players": {
 			testMode: false,
-			gs:       fixture.DeepCopy(),
+			gs:       gs(),
 			useFile:  true,
 		},
 		"test mode on, gs without Status.Players": {
