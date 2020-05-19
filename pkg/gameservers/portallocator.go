@@ -121,6 +121,9 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 	// Also the return gives an escape from the double loop
 	findOpenPorts := func(amount int) []pn {
 		var ports []pn
+		if amount == 0 {
+			return ports
+		}
 		for _, n := range pa.portAllocations {
 			for p, taken := range n {
 				if !taken {

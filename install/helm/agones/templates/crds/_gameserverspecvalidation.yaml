@@ -64,17 +64,20 @@ properties:
             portPolicy:
               title: the port policy that will be applied to the game server
               description: |
-                  portPolicy has three options:
+                  portPolicy has four options:
                   - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
                   - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
                   port is available. When static is the policy specified, `hostPort` is required to be populated
                   - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
                   This will mean that users will need to lookup what port has been opened through the server side SDK.
+                  - "Internal" means that the system won't allocate a hostPort for this port. The onus is on the user to find a way
+                  to connect players to that port, whether it be through a custom proxy or otherwise.
               type: string
               enum:
               - Dynamic
               - Static
               - Passthrough
+              - Internal
             protocol:
               title: Protocol being used. Defaults to UDP. TCP is the only other option
               type: string

@@ -28,7 +28,7 @@ import (
 // Block of const Error messages
 const (
 	ErrContainerRequired        = "Container is required when using multiple containers in the pod template"
-	ErrHostPort                 = "HostPort cannot be specified with a Dynamic or Passthrough PortPolicy"
+	ErrHostPort                 = "HostPort cannot be specified with a Dynamic, Internal or Passthrough PortPolicy"
 	ErrPortPolicyStatic         = "PortPolicy must be Static"
 	ErrContainerPortRequired    = "ContainerPort must be defined for Dynamic and Static PortPolicies"
 	ErrContainerPortPassthrough = "ContainerPort cannot be specified with Passthrough PortPolicy"

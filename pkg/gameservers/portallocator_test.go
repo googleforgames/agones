@@ -106,6 +106,15 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[0].ContainerPort)
 		assert.Nil(t, err)
 		assert.Equal(t, 11, countTotalAllocatedPorts(pa))
+
+		// single port, internal
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "internal", PortPolicy: agonesv1.Internal}
+		assert.Len(t, gsCopy.Spec.Ports, 1)
+		pa.Allocate(gsCopy)
+		assert.Empty(t, gsCopy.Spec.Ports[0].HostPort)
+		assert.Nil(t, err)
+		assert.Equal(t, 11, countTotalAllocatedPorts(pa))
 	})
 
 	t.Run("ports are all allocated", func(t *testing.T) {

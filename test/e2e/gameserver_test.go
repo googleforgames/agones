@@ -681,6 +681,27 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
+func TestGameServerInternalPort(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(defaultNs)
+	gs.Spec.Ports[0] = agonesv1.GameServerPort{PortPolicy: agonesv1.Internal, ContainerPort: 999}
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "INTERNAL", Value: "TRUE"}}
+
+	_, valid := gs.Validate()
+	assert.True(t, valid)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	if !assert.NoError(t, err) {
+		assert.FailNow(t, "Could not get a GameServer ready")
+	}
+
+	port := readyGs.Spec.Ports[0]
+	assert.Equal(t, agonesv1.Internal, port.PortPolicy)
+	assert.NotEmpty(t, port.HostPort)
+
+	// TODO How to test this? Try pinging server externally and check for fail?
+}
+
 // TestGameServerResourceValidation - check that we are not able to use
 // invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
 func TestGameServerResourceValidation(t *testing.T) {

@@ -70,6 +70,9 @@ const (
 	// Passthrough dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
+	// Internal PortPolicy means that the system will never allocate a hostPort to the container, expecting users
+	// to use their own internal load balancer/proxy solution to direct players to the container
+	Internal PortPolicy = "Internal"
 
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
 	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
@@ -424,7 +427,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 
 		// no host port when using dynamic PortPolicy
 		for _, p := range gss.Ports {
-			if p.PortPolicy == Dynamic || p.PortPolicy == Static {
+			if p.PortPolicy == Dynamic || p.PortPolicy == Static || p.PortPolicy == Internal { //nolint: gocyclo
 				if p.ContainerPort <= 0 {
 					causes = append(causes, metav1.StatusCause{
 						Type:    metav1.CauseTypeFieldValueInvalid,
@@ -442,7 +445,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 
-			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough) {
+			if p.HostPort > 0 && (p.PortPolicy == Dynamic || p.PortPolicy == Passthrough || p.PortPolicy == Internal) { //nolint: gocyclo
 				causes = append(causes, metav1.StatusCause{
 					Type:    metav1.CauseTypeFieldValueInvalid,
 					Field:   fmt.Sprintf("%s.hostPort", p.Name),
