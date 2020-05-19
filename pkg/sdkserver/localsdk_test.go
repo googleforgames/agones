@@ -64,7 +64,11 @@ func TestLocal(t *testing.T) {
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
-	assert.Equal(t, defaultGs, gs)
+	assert.Equal(t, defaultGs().GetObjectMeta(), gs.GetObjectMeta())
+	assert.Equal(t, defaultGs().GetSpec(), gs.GetSpec())
+	gsStatus := defaultGs().GetStatus()
+	gsStatus.State = "Shutdown"
+	assert.Equal(t, gsStatus, gs.GetStatus())
 }
 
 func TestLocalSDKWithTestMode(t *testing.T) {
@@ -333,7 +337,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "stuff"},
 		Status: agonesv1.GameServerStatus{
 			Players: &agonesv1.PlayerStatus{
-				Capacity: 1,
+				Capacity: 0,
 			},
 		},
 	}
@@ -398,7 +402,6 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				err := l.WatchGameServer(&sdk.Empty{}, stream)
 				assert.Nil(t, err)
 			}()
-
 			// wait for watching to begin
 			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 				found := false
@@ -409,6 +412,16 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				return found, nil
 			})
 			assert.NoError(t, err)
+
+			// Update PlayerCapacity, initial could be empty or have 1 in it
+			_, err = l.SetPlayerCapacity(context.Background(), &alpha.Count{Count: 1})
+			assert.NoError(t, err)
+			expected := &sdk.GameServer_Status_PlayerStatus{
+				Capacity: 1,
+			}
+			assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+				return gs.Status.Players
+			})
 
 			id := &alpha.PlayerID{PlayerID: "one"}
 			ok, err := l.IsPlayerConnected(context.Background(), id)
@@ -432,7 +445,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, int64(1), count.Count)
 
-			expected := &sdk.GameServer_Status_PlayerStatus{
+			expected = &sdk.GameServer_Status_PlayerStatus{
 				Count:    1,
 				Capacity: 1,
 				Ids:      []string{id.PlayerID},

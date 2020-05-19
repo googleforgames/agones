@@ -40,8 +40,10 @@ var (
 	_ sdk.SDKServer   = &LocalSDKServer{}
 	_ alpha.SDKServer = &LocalSDKServer{}
 	_ beta.SDKServer  = &LocalSDKServer{}
+)
 
-	defaultGs = &sdk.GameServer{
+func defaultGs() *sdk.GameServer {
+	return &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -66,7 +68,7 @@ var (
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
 		},
 	}
-)
+}
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
@@ -89,9 +91,10 @@ type LocalSDKServer struct {
 
 // NewLocalSDKServer returns the default LocalSDKServer
 func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
+	gs := defaultGs()
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
-		gs:              defaultGs,
+		gs:              gs,
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
 		testMutex:       sync.Mutex{},
