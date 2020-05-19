@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -338,115 +339,170 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 
 	e := &alpha.Empty{}
-	path, err := gsToTmpFile(fixture)
-	assert.NoError(t, err)
-	l, err := NewLocalSDKServer(path)
-	assert.Nil(t, err)
 
-	stream := newGameServerMockStream()
-	go func() {
-		err := l.WatchGameServer(&sdk.Empty{}, stream)
-		assert.Nil(t, err)
-	}()
+	// nolint: maligned
+	fixtures := map[string]struct {
+		testMode bool
+		gs       *agonesv1.GameServer
+		useFile  bool
+	}{
+		"test mode on, gs with Status.Players": {
+			testMode: true,
+			gs:       fixture,
+			useFile:  true,
+		},
+		"test mode off, gs with Status.Players": {
+			testMode: false,
+			gs:       fixture,
+			useFile:  true,
+		},
+		"test mode on, gs without Status.Players": {
+			testMode: true,
+			gs:       &agonesv1.GameServer{},
+			useFile:  true,
+		},
+		"test mode off, gs without Status.Players": {
+			testMode: false,
+			gs:       &agonesv1.GameServer{},
+			useFile:  true,
+		},
+		"test mode on, no filePath": {
+			testMode: true,
+			gs:       &agonesv1.GameServer{},
+			useFile:  false,
+		},
+		"test mode off, no filePath": {
+			testMode: false,
+			gs:       &agonesv1.GameServer{},
+			useFile:  false,
+		},
+	}
 
-	// wait for watching to begin
-	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
-		found := false
-		l.updateObservers.Range(func(_, _ interface{}) bool {
-			found = true
-			return false
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			t.Parallel()
+			var l *LocalSDKServer
+			var err error
+			if v.useFile {
+				path, pathErr := gsToTmpFile(v.gs)
+				assert.NoError(t, pathErr)
+				l, err = NewLocalSDKServer(path)
+			} else {
+				l, err = NewLocalSDKServer("")
+			}
+			assert.Nil(t, err)
+			l.SetTestMode(v.testMode)
+
+			stream := newGameServerMockStream()
+			go func() {
+				err := l.WatchGameServer(&sdk.Empty{}, stream)
+				assert.Nil(t, err)
+			}()
+
+			// wait for watching to begin
+			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+				found := false
+				l.updateObservers.Range(func(_, _ interface{}) bool {
+					found = true
+					return false
+				})
+				return found, nil
+			})
+			assert.NoError(t, err)
+
+			id := &alpha.PlayerID{PlayerID: "one"}
+			ok, err := l.IsPlayerConnected(context.Background(), id)
+			assert.NoError(t, err)
+			assert.False(t, ok.Bool, "player should not be connected")
+
+			count, err := l.GetPlayerCount(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, int64(0), count.Count)
+
+			list, err := l.GetConnectedPlayers(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Empty(t, list.List)
+
+			// connect a player
+			ok, err = l.PlayerConnect(context.Background(), id)
+			assert.NoError(t, err)
+			assert.True(t, ok.Bool, "Player should not exist yet")
+
+			count, err = l.GetPlayerCount(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, int64(1), count.Count)
+
+			expected := &sdk.GameServer_Status_PlayerStatus{
+				Count:    1,
+				Capacity: 1,
+				Ids:      []string{id.PlayerID},
+			}
+			assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+				return gs.Status.Players
+			})
+
+			ok, err = l.IsPlayerConnected(context.Background(), id)
+			assert.NoError(t, err)
+			assert.True(t, ok.Bool, "player should be connected")
+
+			list, err = l.GetConnectedPlayers(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, []string{id.PlayerID}, list.List)
+
+			// add same player
+			ok, err = l.PlayerConnect(context.Background(), id)
+			assert.NoError(t, err)
+			assert.False(t, ok.Bool, "Player already exists")
+
+			count, err = l.GetPlayerCount(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, int64(1), count.Count)
+			assertNoWatchUpdate(t, stream)
+
+			list, err = l.GetConnectedPlayers(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, []string{id.PlayerID}, list.List)
+
+			// should return an error if we try to add another, since we're at capacity
+			nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
+			_, err = l.PlayerConnect(context.Background(), nopePlayer)
+			assert.EqualError(t, err, "Players are already at capacity")
+
+			ok, err = l.IsPlayerConnected(context.Background(), nopePlayer)
+			assert.NoError(t, err)
+			assert.False(t, ok.Bool)
+
+			// disconnect a player
+			ok, err = l.PlayerDisconnect(context.Background(), id)
+			assert.NoError(t, err)
+			assert.True(t, ok.Bool, "Player should be removed")
+			count, err = l.GetPlayerCount(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, int64(0), count.Count)
+
+			expected = &sdk.GameServer_Status_PlayerStatus{
+				Count:    0,
+				Capacity: 1,
+				Ids:      []string{},
+			}
+			assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
+				return gs.Status.Players
+			})
+
+			list, err = l.GetConnectedPlayers(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Empty(t, list.List)
+
+			// remove same player
+			ok, err = l.PlayerDisconnect(context.Background(), id)
+			assert.NoError(t, err)
+			assert.False(t, ok.Bool, "Player already be gone")
+			count, err = l.GetPlayerCount(context.Background(), e)
+			assert.NoError(t, err)
+			assert.Equal(t, int64(0), count.Count)
+			assertNoWatchUpdate(t, stream)
 		})
-		return found, nil
-	})
-	assert.NoError(t, err)
-
-	count, err := l.GetPlayerCount(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(0), count.Count)
-
-	list, err := l.GetConnectedPlayers(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Empty(t, list.List)
-
-	id := &alpha.PlayerID{PlayerID: "one"}
-	// connect a player
-	ok, err := l.PlayerConnect(context.Background(), id)
-	assert.NoError(t, err)
-	assert.True(t, ok.Bool, "Player should not exist yet")
-
-	count, err = l.GetPlayerCount(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), count.Count)
-
-	expected := &sdk.GameServer_Status_PlayerStatus{
-		Count:    1,
-		Capacity: 1,
-		Ids:      []string{id.PlayerID},
 	}
-	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
-		return gs.Status.Players
-	})
-
-	ok, err = l.IsPlayerConnected(context.Background(), id)
-	assert.NoError(t, err)
-	assert.True(t, ok.Bool, "player should be connected")
-
-	list, err = l.GetConnectedPlayers(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, []string{id.PlayerID}, list.List)
-
-	// add same player
-	ok, err = l.PlayerConnect(context.Background(), id)
-	assert.NoError(t, err)
-	assert.False(t, ok.Bool, "Player already exists")
-
-	count, err = l.GetPlayerCount(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), count.Count)
-	assertNoWatchUpdate(t, stream)
-
-	list, err = l.GetConnectedPlayers(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, []string{id.PlayerID}, list.List)
-
-	// should return an error if we try to add another, since we're at capacity
-	nopePlayer := &alpha.PlayerID{PlayerID: "nope"}
-	_, err = l.PlayerConnect(context.Background(), nopePlayer)
-	assert.EqualError(t, err, "Players are already at capacity")
-
-	ok, err = l.IsPlayerConnected(context.Background(), nopePlayer)
-	assert.NoError(t, err)
-	assert.False(t, ok.Bool)
-
-	// disconnect a player
-	ok, err = l.PlayerDisconnect(context.Background(), id)
-	assert.NoError(t, err)
-	assert.True(t, ok.Bool, "Player should be removed")
-	count, err = l.GetPlayerCount(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(0), count.Count)
-
-	expected = &sdk.GameServer_Status_PlayerStatus{
-		Count:    0,
-		Capacity: 1,
-		Ids:      []string{},
-	}
-	assertWatchUpdate(t, stream, expected, func(gs *sdk.GameServer) interface{} {
-		return gs.Status.Players
-	})
-
-	list, err = l.GetConnectedPlayers(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Empty(t, list.List)
-
-	// remove same player
-	ok, err = l.PlayerDisconnect(context.Background(), id)
-	assert.NoError(t, err)
-	assert.False(t, ok.Bool, "Player already be gone")
-	count, err = l.GetPlayerCount(context.Background(), e)
-	assert.NoError(t, err)
-	assert.Equal(t, int64(0), count.Count)
-	assertNoWatchUpdate(t, stream)
 }
 
 // TestLocalSDKServerStateUpdates verify that SDK functions changes the state of the
@@ -522,6 +578,26 @@ func TestSDKConformanceFunctionality(t *testing.T) {
 	l.SetExpectedSequence(expected)
 	b := l.EqualSets(l.expectedSequence, l.requestSequence)
 	assert.True(t, b, "we should receive strings from all go routines %v %v", l.expectedSequence, l.requestSequence)
+}
+
+func TestAlphaSDKConformanceFunctionality(t *testing.T) {
+	t.Parallel()
+	lStable, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
+	v := int64(0)
+	lStable.recordRequestWithValue("setplayercapacity", strconv.FormatInt(v, 10), "PlayerCapacity")
+	lStable.recordRequestWithValue("isplayerconnected", "", "PlayerIDs")
+
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=true"))
+	l, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
+	l.testMode = true
+	l.recordRequestWithValue("setplayercapacity", strconv.FormatInt(v, 10), "PlayerCapacity")
+	l.recordRequestWithValue("isplayerconnected", "", "PlayerIDs")
+
 }
 
 func gsToTmpFile(gs *agonesv1.GameServer) (string, error) {

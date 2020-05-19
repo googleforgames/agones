@@ -134,6 +134,9 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 			l.logger.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
 		}
 	}
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
+	}
 
 	go func() {
 		for value := range l.update {
@@ -197,8 +200,14 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		case "UID":
 			fieldVal = l.gs.ObjectMeta.Uid
 		case "PlayerCapacity":
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		case "PlayerIDs":
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
 			fieldVal = strings.Join(l.gs.Status.Players.Ids, ",")
 		default:
 			l.logger.Error("unexpected Field to compare")
