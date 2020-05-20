@@ -9,7 +9,7 @@ description: >
 
 A full GameServer specification is available below and in the {{< ghlink href="examples/gameserver.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{% feature expiryVersion="1.5.0" %}}
+{{% feature expiryVersion="1.6.0" %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -171,7 +171,7 @@ The length of the `name` field of the Gameserver should not exceed 63 characters
 
 The `spec` field is the actual GameServer specification and it is composed as follow:
 
-{{% feature expiryVersion="1.5.0" %}}
+{{% feature expiryVersion="1.6.0" %}}
 - `container` is the name of container running the GameServer in case you have more than one container defined in the [pod](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/). If you do,  this is a mandatory field. For instance this is useful if you want to run a sidecar to ship logs.
 - `ports` are an array of ports that can be exposed as direct connections to the game server container
   - `name` is an optional descriptive name for a port
