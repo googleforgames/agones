@@ -130,6 +130,7 @@ message Bool {
 // The unique identifier for a given player.
 message PlayerID {
     string playerID = 1;
+    string playerName = 2;
 }
 
 // List of Player IDs
