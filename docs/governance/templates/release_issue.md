@@ -3,6 +3,8 @@
 <!--
 This is the release issue template. Make a copy of the markdown in this page
 and copy it into a release issue. Fill in relevant values, found inside {}
+
+*** VERSION SHOULD BE IN THE FORMAT OF 1.x.x NOT v1.x.x ***
 !-->
 
 - [ ] Review closed issues have been applied to the current milestone.
