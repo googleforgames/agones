@@ -105,18 +105,21 @@ bool FAgonesHook::IsTickableWhenPaused() const
 
 void FAgonesHook::Ready()
 {
-	SendRequest(SidecarAddress + ReadySuffix, TEXT("{}"), FHttpVerb::POST, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + ReadySuffix, TEXT("{}"), FHttpVerb::POST, true);
+	SendRequest(Req);
 }
 
 void FAgonesHook::Health()
 {
 	// Health requests are sent repeatedly, don't retry if request fails.
-	SendRequest(SidecarAddress + HealthSuffix, TEXT("{}"), FHttpVerb::POST, false);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + HealthSuffix, TEXT("{}"), FHttpVerb::POST, false);
+	SendRequest(Req);
 }
 
 void FAgonesHook::Shutdown()
 {
-	SendRequest(SidecarAddress + ShutdownSuffix, TEXT("{}"), FHttpVerb::POST, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + ShutdownSuffix, TEXT("{}"), FHttpVerb::POST, true);
+	SendRequest(Req);
 }
 
 void FAgonesHook::SetLabel(const FString& Key, const FString& Value)
@@ -129,7 +132,8 @@ void FAgonesHook::SetLabel(const FString& Key, const FString& Value)
 		return;
 	}
 
-	SendRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + SetLabelSuffix, Json, FHttpVerb::PUT, true);
+	SendRequest(Req);
 }
 
 void FAgonesHook::SetAnnotation(const FString& Key, const FString& Value)
@@ -142,12 +146,13 @@ void FAgonesHook::SetAnnotation(const FString& Key, const FString& Value)
 		return;
 	}
 
-	SendRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + SetAnnotationSuffix, Json, FHttpVerb::PUT, true);
+	SendRequest(Req);
 }
 
 void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delegate)
 {
-	TSharedRef<IHttpRequest> Req = SendRequest(SidecarAddress + GetGameServerSuffix, TEXT(""), FHttpVerb::GET, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + GetGameServerSuffix, TEXT(""), FHttpVerb::GET, true);
 	Req->OnProcessRequestComplete().BindLambda([&Delegate](FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 	{
 		TSharedPtr<FGameServer> GameServer;
@@ -171,11 +176,13 @@ void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delega
 		GameServer = MakeShared<FGameServer>(FGameServer(JsonObject));
 		Delegate.ExecuteIfBound(GameServer, true);
 	});
+	SendRequest(Req);
 }
 
 void FAgonesHook::Allocate()
 {
-	SendRequest(SidecarAddress + AllocateSuffix, TEXT("{}"), FHttpVerb::POST, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + AllocateSuffix, TEXT("{}"), FHttpVerb::POST, true);
+	SendRequest(Req);
 }
 
 void FAgonesHook::Reserve(const int64 Seconds)
@@ -188,7 +195,8 @@ void FAgonesHook::Reserve(const int64 Seconds)
 		return;
 	}
 
-	SendRequest(SidecarAddress + ReserveSuffix, Json, FHttpVerb::POST, true);
+	TSharedRef<IHttpRequest> Req = MakeRequest(SidecarAddress + ReserveSuffix, Json, FHttpVerb::POST, true);
+	SendRequest(Req);
 }
 
 TSharedRef<IHttpRequest> FAgonesHook::MakeRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure)
@@ -204,10 +212,10 @@ TSharedRef<IHttpRequest> FAgonesHook::MakeRequest(const FString& URL, const FStr
 	return Req;
 }
 
-TSharedRef<IHttpRequest> FAgonesHook::SendRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure)
+TSharedRef<IHttpRequest> FAgonesHook::SendRequest(TSharedRef<IHttpRequest> Req)
 {
-	TSharedRef<IHttpRequest> Req = MakeRequest(URL, JsonContent, Verb, bRetryOnFailure);
 	bool bSuccess = Req->ProcessRequest();
+	FString URL = Req->GetURL();
 	if (bSuccess)
 	{
 		UE_LOG(LogAgonesHook, Verbose, TEXT("Send: %s"), *URL);
