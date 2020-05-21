@@ -158,7 +158,14 @@ void FAgonesHook::GetGameServer(const FGameServerRequestCompleteDelegate& Delega
 		TSharedPtr<FGameServer> GameServer;
 		if (!bWasSuccessful)
 		{
-			UE_LOG(LogAgonesHook, Error, TEXT("Failed to get game server details"));
+			UE_LOG(LogAgonesHook, Error, TEXT("Failed to request game server details"));
+			Delegate.ExecuteIfBound(GameServer, false);
+			return;
+		}
+		
+		if (!EHttpResponseCodes::IsOk(Response->GetResponseCode()))
+		{
+			UE_LOG(LogAgonesHook, Error, TEXT("Failed to get game server details (ResponseCode: %s )"), *FString::FromInt(Response->GetResponseCode()));
 			Delegate.ExecuteIfBound(GameServer, false);
 			return;
 		}
