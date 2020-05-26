@@ -646,7 +646,7 @@ func assertWatchUpdate(t *testing.T, stream *gameServerMockStream, expected inte
 	select {
 	case msg := <-stream.msgs:
 		assert.Equal(t, expected, actual(msg))
-	case <-time.After(10 * time.Second):
+	case <-time.After(20 * time.Second):
 		assert.Fail(t, "timeout on receiving messages")
 	}
 }
