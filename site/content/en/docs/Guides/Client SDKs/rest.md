@@ -198,7 +198,6 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 $ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
-{{% feature publishVersion="1.6.0" %}}
 ### Player Tracking
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
@@ -312,5 +311,3 @@ Response:
 ```
 
 [playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}
-
-{{% /feature %}}

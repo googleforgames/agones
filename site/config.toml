@@ -86,12 +86,12 @@ github_repo = "https://github.com/googleforgames/agones"
 gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch - could be rc
-release_branch = "release-1.5.0"
+release_branch = "release-1.6.0"
 # the main version. Never is rc.
-release_version = "1.5.0"
+release_version = "1.6.0"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/udp-server:0.19"
+example_image_tag = "gcr.io/agones-images/udp-server:0.21"
 
 # User interface configuration
 [params.ui]
