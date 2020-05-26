@@ -104,7 +104,7 @@ private:
 	/** Helper function to create requests */
 	TSharedRef<class IHttpRequest> MakeRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure);
 	/** Helper function to send requests with default debug output */
-	TSharedRef<class IHttpRequest> SendRequest(const FString& URL, const FString& JsonContent, const FHttpVerb Verb, const bool bRetryOnFailure);
+	TSharedRef<class IHttpRequest> SendRequest(TSharedRef<IHttpRequest> Req);
 	/** Retry manager to retry failed http requests */
 	TSharedPtr<class FHttpRetrySystem::FManager> HttpRetryManager;
 
