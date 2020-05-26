@@ -31,6 +31,7 @@ var (
 	logger = runtime.NewLoggerWithSource("metrics")
 
 	keyName       = MustTagKey("name")
+	keyNamespace  = MustTagKey("namespace")
 	keyFleetName  = MustTagKey("fleet_name")
 	keyType       = MustTagKey("type")
 	keyStatusCode = MustTagKey("status_code")

@@ -211,7 +211,7 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, f.Status.Replicas, f.Status.AllocatedReplicas,
+	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
 		f.Status.ReadyReplicas, f.Spec.Replicas)
 }
 
@@ -221,12 +221,12 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, 0, 0, 0, 0)
+	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0)
 }
 
-func (c *Controller) recordFleetReplicas(fleetName string, total, allocated, ready, desired int32) {
+func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired int32) {
 
-	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName))
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
 		fleetsReplicasCountStats.M(int64(total)))
