@@ -125,6 +125,9 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
+		// pin variables here, see scopelint for details
+		k := k
+		v := v
 		t.Run(k, func(t *testing.T) {
 			ctx := context.Background()
 			e := &sdk.Empty{}
@@ -257,6 +260,16 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 		err := l.WatchGameServer(e, stream)
 		assert.Nil(t, err)
 	}()
+	// wait for watching to begin
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		found := false
+		l.updateObservers.Range(func(_, _ interface{}) bool {
+			found = true
+			return false
+		})
+		return found, nil
+	})
+	assert.NoError(t, err)
 
 	assertNoWatchUpdate(t, stream)
 	fixture.ObjectMeta.Annotations = map[string]string{"foo": "bar"}
@@ -380,9 +393,10 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	}
 
 	for k, v := range fixtures {
+		// pin variables here, see https://github.com/kyoh86/scopelint for the details
+		k := k
+		v := v
 		t.Run(k, func(t *testing.T) {
-			t.Parallel()
-
 			var l *LocalSDKServer
 			var err error
 			if v.useFile {
@@ -428,7 +442,9 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 			id := &alpha.PlayerID{PlayerID: "one"}
 			ok, err := l.IsPlayerConnected(context.Background(), id)
 			assert.NoError(t, err)
-			assert.False(t, ok.Bool, "player should not be connected")
+			if assert.NotNil(t, ok) {
+				assert.False(t, ok.Bool, "player should not be connected")
+			}
 
 			count, err := l.GetPlayerCount(context.Background(), e)
 			assert.NoError(t, err)
@@ -630,7 +646,7 @@ func assertWatchUpdate(t *testing.T, stream *gameServerMockStream, expected inte
 	select {
 	case msg := <-stream.msgs:
 		assert.Equal(t, expected, actual(msg))
-	case <-time.After(10 * time.Second):
+	case <-time.After(20 * time.Second):
 		assert.Fail(t, "timeout on receiving messages")
 	}
 }
