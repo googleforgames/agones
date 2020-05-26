@@ -1,8 +1,25 @@
 # Changelog
 
-## [vv1.6.0-rc](https://github.com/googleforgames/agones/tree/vv1.6.0-rc) (2020-05-19)
+## [v1.6.0](https://github.com/googleforgames/agones/tree/v1.6.0) (2020-05-26)
 
-[Full Changelog](https://github.com/googleforgames/agones/compare/v1.5.0...vv1.6.0-rc)
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.6.0-rc...v1.6.0)
+
+**Fixed bugs:**
+
+- Fix the Unreal Plugin's GetGameServer [\#1581](https://github.com/googleforgames/agones/pull/1581) ([dotcom](https://github.com/dotcom))
+
+**Closed issues:**
+
+- Release v1.6.0-rc [\#1573](https://github.com/googleforgames/agones/issues/1573)
+
+**Merged pull requests:**
+
+- Fix flaky Local SDK test [\#1586](https://github.com/googleforgames/agones/pull/1586) ([aLekSer](https://github.com/aLekSer))
+- Warning to release checklist. [\#1580](https://github.com/googleforgames/agones/pull/1580) ([markmandel](https://github.com/markmandel))
+
+## [v1.6.0-rc](https://github.com/googleforgames/agones/tree/v1.6.0-rc) (2020-05-20)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.5.0...v1.6.0-rc)
 
 **Breaking changes:**
 
@@ -83,6 +100,7 @@
 
 **Merged pull requests:**
 
+- Release 1.6.0-rc [\#1574](https://github.com/googleforgames/agones/pull/1574) ([markmandel](https://github.com/markmandel))
 - Fix Local SDK nil Players with test [\#1572](https://github.com/googleforgames/agones/pull/1572) ([aLekSer](https://github.com/aLekSer))
 - Fixed a typo sercerCA -\> serverCa [\#1567](https://github.com/googleforgames/agones/pull/1567) ([pooneh-m](https://github.com/pooneh-m))
 - Player Tracking Proto: Players =\> players [\#1560](https://github.com/googleforgames/agones/pull/1560) ([markmandel](https://github.com/markmandel))
@@ -219,7 +237,6 @@
 - Preparation for 1.5.0 Release [\#1391](https://github.com/googleforgames/agones/pull/1391) ([markmandel](https://github.com/markmandel))
 - Update terraform EKS module to 1.14 version [\#1386](https://github.com/googleforgames/agones/pull/1386) ([aLekSer](https://github.com/aLekSer))
 - AKS use supported version of Kubernetes 1.14 [\#1385](https://github.com/googleforgames/agones/pull/1385) ([aLekSer](https://github.com/aLekSer))
-- Removed dockerfile from build-allocation-images [\#1382](https://github.com/googleforgames/agones/pull/1382) ([akremsa](https://github.com/akremsa))
 - Fix for AKS recent provider change [\#1380](https://github.com/googleforgames/agones/pull/1380) ([aLekSer](https://github.com/aLekSer))
 - Terraform make targets: Switch from the plane structure to module terraform config [\#1375](https://github.com/googleforgames/agones/pull/1375) ([aLekSer](https://github.com/aLekSer))
 - Separate e2e tests in build Makefile [\#1371](https://github.com/googleforgames/agones/pull/1371) ([drichardson](https://github.com/drichardson))
@@ -246,11 +263,13 @@
 **Merged pull requests:**
 
 - Release 1.4.0 [\#1388](https://github.com/googleforgames/agones/pull/1388) ([markmandel](https://github.com/markmandel))
+- Removed dockerfile from build-allocation-images [\#1382](https://github.com/googleforgames/agones/pull/1382) ([akremsa](https://github.com/akremsa))
 - Fix the link to cert.sh [\#1381](https://github.com/googleforgames/agones/pull/1381) ([pooneh-m](https://github.com/pooneh-m))
 - Add crd-client image to release template [\#1378](https://github.com/googleforgames/agones/pull/1378) ([aLekSer](https://github.com/aLekSer))
 - Fix for 404 in OpenSSL Install link [\#1374](https://github.com/googleforgames/agones/pull/1374) ([markmandel](https://github.com/markmandel))
 - Main page, gameserver lifecycle page - typos [\#1369](https://github.com/googleforgames/agones/pull/1369) ([burningalchemist](https://github.com/burningalchemist))
 - Documented an approach of log levels usage [\#1368](https://github.com/googleforgames/agones/pull/1368) ([akremsa](https://github.com/akremsa))
+- UE4 readme to communicate development information [\#1360](https://github.com/googleforgames/agones/pull/1360) ([drichardson](https://github.com/drichardson))
 
 ## [v1.4.0-rc](https://github.com/googleforgames/agones/tree/v1.4.0-rc) (2020-02-26)
 
@@ -317,7 +336,6 @@
 **Merged pull requests:**
 
 - Release 1.4.0 Release Candidate [\#1367](https://github.com/googleforgames/agones/pull/1367) ([markmandel](https://github.com/markmandel))
-- UE4 readme to communicate development information [\#1360](https://github.com/googleforgames/agones/pull/1360) ([drichardson](https://github.com/drichardson))
 - Update Feature Stage: New CRD attributes section [\#1355](https://github.com/googleforgames/agones/pull/1355) ([markmandel](https://github.com/markmandel))
 - Fix Kubernetes terraform provider version [\#1353](https://github.com/googleforgames/agones/pull/1353) ([aLekSer](https://github.com/aLekSer))
 - Update the kind make targets to work with kind 0.6.0 and later. [\#1349](https://github.com/googleforgames/agones/pull/1349) ([roberthbailey](https://github.com/roberthbailey))
@@ -479,7 +497,6 @@
 - Implementation of GameServer\(\) for Unity [\#1169](https://github.com/googleforgames/agones/pull/1169) ([markmandel](https://github.com/markmandel))
 - Add Spec and Health data to default local sdk GameServer [\#1166](https://github.com/googleforgames/agones/pull/1166) ([markmandel](https://github.com/markmandel))
 - Refresh client CA certificate if changed [\#1145](https://github.com/googleforgames/agones/pull/1145) ([pooneh-m](https://github.com/pooneh-m))
-- Use an environment variable to dynamically set the grpc port in the nodejs sdk [\#1093](https://github.com/googleforgames/agones/pull/1093) ([roberthbailey](https://github.com/roberthbailey))
 
 **Fixed bugs:**
 
@@ -582,6 +599,7 @@
 - Added dynamic configuration of http port in the unity sdk [\#1121](https://github.com/googleforgames/agones/pull/1121) ([roberthbailey](https://github.com/roberthbailey))
 - Implement converters between the GameServerAllocation API and allocation.proto [\#1117](https://github.com/googleforgames/agones/pull/1117) ([pooneh-m](https://github.com/pooneh-m))
 - Add AltaVR logo to companies using Agones [\#1103](https://github.com/googleforgames/agones/pull/1103) ([TimoSchmechel](https://github.com/TimoSchmechel))
+- Use an environment variable to dynamically set the grpc port in the nodejs sdk [\#1093](https://github.com/googleforgames/agones/pull/1093) ([roberthbailey](https://github.com/roberthbailey))
 - Set the port to connect to the sdkserver based on the AGONES\_SDK\_GRPC\_PORT environment variable [\#1092](https://github.com/googleforgames/agones/pull/1092) ([roberthbailey](https://github.com/roberthbailey))
 - Use environment variables to dynamically set the grpc port in the golang sdk. [\#1086](https://github.com/googleforgames/agones/pull/1086) ([roberthbailey](https://github.com/roberthbailey))
 - Add mcmahan.games to the companies using agones list. [\#1085](https://github.com/googleforgames/agones/pull/1085) ([benmcmahan](https://github.com/benmcmahan))

@@ -60,7 +60,7 @@ site-deploy-preview: site-static-preview
 	$(MAKE) site-deploy SERVICE=preview
 
 hugo-test: site-static-preview
-	for i in {1..5}; \
+	for i in 1 2 3 4 5; \
 		do echo "Html Test: Attempt $$i" && \
 		  docker run --rm -t -e "TERM=xterm-256color" $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 			"mkdir -p /tmp/website && cp -r $(mount_path)/site/public /tmp/website/site && htmltest -c $(mount_path)/site/htmltest.yaml /tmp/website" && \

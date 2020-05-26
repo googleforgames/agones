@@ -171,7 +171,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 
-{{% feature publishVersion="1.6.0" %}}
+{{% feature publishVersion="1.7.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
@@ -207,7 +207,6 @@ $ helm install --name my-release --namespace agones-system -f values.yaml agones
 You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
 {{< /alert >}}
 
-{{% feature publishVersion="1.6.0" %}}
 Check the Agones installation by running the following command:
 ```bash
 $ helm test my-release --cleanup                     
@@ -226,8 +225,6 @@ Error: 1 test(s) failed
 ```
 That mean that you skiped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
 {{< /alert >}}
-
-{{% /feature %}}
 
 ## TLS Certificates
 
