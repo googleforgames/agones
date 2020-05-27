@@ -34,7 +34,7 @@ gcloud-terraform-cluster: AGONES_VERSION ?= ''
 gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
 gcloud-terraform-cluster: $(ensure-build-image)
-gcloud-terraform-cluster: FEATURE_GATES := "ContainerPortAllocation=true"
+gcloud-terraform-cluster: FEATURE_GATES := ""
 gcloud-terraform-cluster:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
