@@ -140,7 +140,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 	}
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-		tag.Upsert(keyFleetName, fas.Spec.FleetName))
+		tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
 
 	ableToScale := 0
 	limited := 0
@@ -189,7 +189,7 @@ func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
 		return
 	}
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-		tag.Upsert(keyFleetName, fas.Spec.FleetName))
+		tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
 
 	// recording status
 	stats.Record(ctx,
@@ -261,7 +261,7 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 			fleetName = "none"
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
+			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
 	}
 }
 
