@@ -6,17 +6,7 @@ description: >
   Agones provides an mTLS based allocator service that is accessible from outside the cluster using a load balancer. The service is deployed and scales independent to Agones controller.
 ---
 
-{{% feature expiryVersion="1.6.0" %}}
-{{< alert title="Alpha" color="warning">}}
-This feature is in a pre-release state and might change.
-{{< /alert >}}
-
-To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC service with mTLS authentication, called agones-allocator, which is on {{< ghlink href="proto/allocation/v1alpha1" >}}v1alpha1 version{{< /ghlink >}}, starting on agones v1.1.
-{{% /feature %}}
-
-{{% feature publishVersion="1.6.0" %}}
 To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC service with mTLS authentication, called agones-allocator, which is on {{< ghlink href="proto/allocation" >}}stable version{{< /ghlink >}}, starting on agones v1.6.
-{{% /feature %}}
 
 The gRPC service is accessible through a Kubernetes service that is externalized using a load balancer. For the gRPC request to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 
@@ -121,14 +111,7 @@ kubectl get pods -n agones-system -o=name | grep agones-allocator | xargs kubect
 
 ## Send allocation request
 
-{{% feature expiryVersion="1.6.0" %}}
-Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet](https://agones.dev/site/docs/getting-started/create-fleet/#1-create-a-fleet) and send a gRPC request to agones-allocator by providing the namespace to which the fleet is deployed. You can find the gRPC sample for sending allocation request at {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}.
-{{% /feature %}}
-
-{{% feature publishVersion="1.6.0" %}}
 Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet](https://agones.dev/site/docs/getting-started/create-fleet/#1-create-a-fleet) and send a gRPC request to agones-allocator. To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the default namespace.
-{{% /feature %}}
-
 
 ```bash
 #!/bin/bash

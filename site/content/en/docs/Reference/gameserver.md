@@ -65,6 +65,13 @@ spec:
     # conflict with other TCP connections.
     grpcPort: 9357
     httpPort: 9358
+  # [Stage:Alpha]
+  # [FeatureFlag:PlayerTracking]
+  # Players provides the configuration for player tracking features.
+  # Commented out since Alpha, and disabled by default
+  # players:
+  #   # set this GameServer's initial player capacity
+  #   initialCapacity: 10
   # Pod template configuration
   # https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplate-v1-core
   template:
@@ -76,7 +83,7 @@ spec:
     spec:
       containers:
       - name: simple-udp
-        image:  gcr.io/agones-images/udp-server:0.19
+        image:  gcr.io/agones-images/udp-server:0.21
         imagePullPolicy: Always
 ```
 
@@ -107,6 +114,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
     - "Error" The SDK server will only output error messages
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
+- `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
 - `template` the [pod spec template](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram

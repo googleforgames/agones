@@ -66,11 +66,9 @@ Functions which changes GameServer state or settings are:
 1. SetAnnotation()
 1. Allocate()
 1. Reserve() 
-{{% feature publishVersion="1.6.0" %}}
 1. Alpha().SetCapacity()
 1. Alpha().PlayerConnect()
 1. Alpha().PlayerDisconnect()
-{{% /feature %}}
 
 ### Lifecycle Management
 
@@ -186,7 +184,6 @@ This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/workin
 This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
 
 
-{{% feature publishVersion="1.6.0" %}}
 ### Player Tracking
 
 {{< alpha title="Player Tracking" gate="PlayerTracking" >}}
@@ -281,8 +278,6 @@ or SDK.WatchGameServer() instead to list the connected players.
 {{< /alert >}}
 
 [playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}
-
-{{% /feature %}}
 
 ## Writing your own SDK
 
