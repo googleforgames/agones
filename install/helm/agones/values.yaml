@@ -146,10 +146,11 @@ agones:
       name: agones-allocator
       pullPolicy: IfNotPresent
 
-
 gameservers:
   namespaces:
   - default
   minPort: 7000
   maxPort: 8000
 
+helm:
+  installTests: false

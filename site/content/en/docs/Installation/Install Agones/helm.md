@@ -178,7 +178,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-
+| `helm.installTests`                               | Add an ability to run `helm test agones` to verify the installation                                                | `8000`                 |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -208,6 +208,14 @@ $ helm install --name my-release --namespace agones-system -f values.yaml agones
 {{< alert title="Tip" color="info">}}
 You can use the default {{< ghlink href="install/helm/agones/values.yaml" >}}values.yaml{{< /ghlink >}}
 {{< /alert >}}
+
+## Helm test
+
+{{% feature publishVersion="1.7.0" %}}
+{{< alert title="Tip" color="info">}}
+In order to use `helm test` command described in this section you need to set `helm.installTests` helm parameter to `true`.
+{{< /alert >}}
+{{% /feature %}}
 
 Check the Agones installation by running the following command:
 ```bash

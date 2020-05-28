@@ -1,3 +1,4 @@
+{{- if .Values.helm.installTests }}
 # Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,3 +35,4 @@ spec:
     - name: GAMESERVERS_NAMESPACE
       value: "{{ index .Values.gameservers.namespaces 0 }}"
   restartPolicy: Never
+{{- end }}
