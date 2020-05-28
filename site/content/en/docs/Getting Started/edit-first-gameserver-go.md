@@ -25,7 +25,7 @@ Also complete the "Enabling creation of RBAC resources" and "Installing Agones" 
 ## Modify the code and push another new image
 
 ### Modify the simple-udp example source code
-Modify the main.go file. For example:
+Modify the [main.go](https://github.com/googleforgames/agones/blob/master/examples/simple-udp/main.go) file. For example:
 
 Change the following line in `main.go`:
 
