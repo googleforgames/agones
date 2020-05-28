@@ -41,6 +41,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+const noneValue = "none"
+
 var (
 	// MetricResyncPeriod is the interval to re-synchronize metrics based on indexed cache.
 	MetricResyncPeriod = time.Second * 15
@@ -258,7 +260,7 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 	if newGs.Status.State != oldGs.Status.State {
 		fleetName := newGs.Labels[agonesv1.FleetNameLabel]
 		if fleetName == "" {
-			fleetName = "none"
+			fleetName = noneValue
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))

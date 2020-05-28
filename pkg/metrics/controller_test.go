@@ -16,7 +16,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -70,8 +69,6 @@ func assertMetricData(t *testing.T, exporter *metricExporter, metricName string,
 		}
 		e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
 		assert.True(t, ok, "no TimeSeries found with labels: %v", actualLabelValues)
-		fmt.Println("ACT", actualLabelValues)
-		fmt.Println("EXP", e.labels)
 		assert.Equal(t, actualLabelValues, e.labels, "label values don't match")
 		assert.Equal(t, len(tsd.Points), 1, "assertMetricDataValues can only handle a single Point in a TimeSeries")
 		assert.Equal(t, tsd.Points[0].Value, e.val, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)

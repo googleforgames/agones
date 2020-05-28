@@ -24,16 +24,23 @@ import (
 )
 
 // GameServerCount  is the count of gameserver per current state and per fleet name
-type GameServerCount map[agonesv1.GameServerState]map[string]int64
+type GameServerCount map[agonesv1.GameServerState]map[fleetKey]int64
+
+type fleetKey struct {
+	name      string
+	namespace string
+}
 
 // increment adds the count of gameservers for a given fleetName and state
-func (c GameServerCount) increment(fleetName string, state agonesv1.GameServerState) {
+func (c GameServerCount) increment(fleetName, fleetNamespace string, state agonesv1.GameServerState) {
+	key := fleetKey{name: fleetName, namespace: fleetNamespace}
+
 	fleets, ok := c[state]
 	if !ok {
-		fleets = map[string]int64{}
+		fleets = map[fleetKey]int64{}
 		c[state] = fleets
 	}
-	fleets[fleetName]++
+	fleets[key]++
 }
 
 // reset sets zero to the whole metrics set
@@ -53,23 +60,25 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	// TL;DR we can't remove a gauge
 	c.reset()
 
-	var namespace string
 	if len(gameservers) != 0 {
 		// counts gameserver per state and fleet
 		for _, g := range gameservers {
-			c.increment(g.Labels[agonesv1.FleetNameLabel], g.Status.State)
+			c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
 		}
-		namespace = gameservers[0].GetNamespace()
 	}
 
 	errs := []error{}
 	for state, fleets := range c {
 		for fleet, count := range fleets {
-			if fleet == "" {
-				fleet = "none"
+			if fleet.name == "" {
+				fleet.name = noneValue
 			}
+			if fleet.namespace == "" {
+				fleet.namespace = noneValue
+			}
+
 			if err := stats.RecordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(state)),
-				tag.Upsert(keyFleetName, fleet), tag.Upsert(keyNamespace, namespace)}, gameServerCountStats.M(count)); err != nil {
+				tag.Upsert(keyFleetName, fleet.name), tag.Upsert(keyNamespace, fleet.namespace)}, gameServerCountStats.M(count)); err != nil {
 				errs = append(errs, err)
 			}
 		}
