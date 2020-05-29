@@ -65,9 +65,14 @@ Functions which changes GameServer state or settings are:
 1. SetLabel()
 1. SetAnnotation()
 1. Allocate()
-1. Reserve()
+1. Reserve() 
+1. Alpha().SetCapacity()
+1. Alpha().PlayerConnect()
+1. Alpha().PlayerDisconnect()
 
-### Ready()
+### Lifecycle Management
+
+#### Ready()
 This tells Agones that the Game Server is ready to take player connections.
 Once a Game Server has specified that it is `Ready`, then the Kubernetes
 GameServer record will be moved to the `Ready` state, and the details
@@ -77,7 +82,7 @@ While Agones prefers that `Shutdown()` is run once a game has completed to delet
 if you want or need to move an `Allocated` `GameServer` back to `Ready` to be reused, you can call this SDK method again to do
 this.
 
-### Health()
+#### Health()
 This sends a single ping to designate that the Game Server is alive and
 healthy. Failure to send pings within the configured thresholds will result
 in the GameServer being marked as `Unhealthy`. 
@@ -85,30 +90,43 @@ in the GameServer being marked as `Unhealthy`.
 See the {{< ghlink href="examples/gameserver.yaml" >}}gameserver.yaml{{< /ghlink >}} for all health checking
 configurations.
 
-### Shutdown()
+#### Reserve(seconds)
+
+With some matchmaking scenarios and systems it is important to be able to ensure that a `GameServer` is unable to be deleted,
+but doesn't trigger a FleetAutoscaler scale up. This is where `Reserve(seconds)` is useful.
+
+`Reserve(seconds)` will move the `GameServer` into the Reserved state for the specified number of seconds (0 is forever), and then it will be
+moved back to `Ready` state. While in `Reserved` state, the `GameServer` will not be deleted on scale down or `Fleet` update,
+and also it could not be Allocated using [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
+
+This is often used when a game server process must register itself with an external system, such as a matchmaker,
+that requires it to designate itself as available for a game session for a certain period. Once a game session has started,
+it should call `SDK.Allocate()` to designate that players are currently active on it.
+
+Calling other state changing SDK commands such as `Ready` or `Allocate` will turn off the timer to reset the `GameServer` back
+to the `Ready` state or to promote it to an `Allocated` state accordingly.
+
+#### Allocate()
+
+With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
+For those scenarios, this SDK functionality exists.
+
+There is a chance that GameServer does not actually become `Allocated` after this call. Please refer to the general note in [Function Reference](#function-reference) above.
+
+{{< alert title="Note" color="info">}}
+Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
+as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
+relinquish control to an external service which likely doesn't have as much information as Agones.
+{{< /alert >}}
+
+#### Shutdown()
 This tells Agones to shut down the currently running game server.
 The GameServer state will be set `Shutdown` and the 
 backing Pod will be deleted, if they have not shut themselves down already. 
 
-### SetLabel(key, value)
+### Configuration Retrieval 
 
-This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
-record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
-
-{{< alert title="Warning" color="warning">}}
-There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
-{{< /alert >}}
-
-This can be useful if you want information from your running game server process to be observable or searchable through the Kubernetes API.  
-
-### SetAnnotation(key, value)
-
-This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
-`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
-
-This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
-
-### GameServer()
+#### GameServer()
 
 This returns most of the backing GameServer configuration and Status. This can be useful
 for instances where you may want to know Health check configuration, or the IP and Port
@@ -125,7 +143,7 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-### WatchGameServer(function(gameserver){...})
+#### WatchGameServer(function(gameserver){...})
 
 This executes the passed in callback with the current `GameServer` details whenever the underlying `GameServer` configuration is updated.
 This can be useful to track `GameServer > Status > State` changes, `metadata` changes, such as labels and annotations, and more.
@@ -145,34 +163,121 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-### Allocate()
+### Metadata Management
 
-With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
-For those scenarios, this SDK functionality exists.
+#### SetLabel(key, value)
 
-There is a chance that GameServer does not actually become `Allocated` after this call. Please refer to the general note in [Function Reference](#function-reference) above.
+This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
+record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
 
-{{< alert title="Note" color="info">}}
-Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
-as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
-relinquish control to an external service which likely doesn't have as much information as Agones.
+{{< alert title="Warning" color="warning">}}
+There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
 {{< /alert >}}
 
-### Reserve(seconds)
+This can be useful if you want information from your running game server process to be observable or searchable through the Kubernetes API.  
 
-With some matchmaking scenarios and systems it is important to be able to ensure that a `GameServer` is unable to be deleted,
-but doesn't trigger a FleetAutoscaler scale up. This is where `Reserve(seconds)` is useful.
+#### SetAnnotation(key, value)
 
-`Reserve(seconds)` will move the `GameServer` into the Reserved state for the specified number of seconds (0 is forever), and then it will be
-moved back to `Ready` state. While in `Reserved` state, the `GameServer` will not be deleted on scale down or `Fleet` update,
-and also it could not be Allocated using [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
+This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
+`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
 
-This is often used when a game server process must register itself with an external system, such as a matchmaker,
-that requires it to designate itself as available for a game session for a certain period. Once a game session has started,
-it should call `SDK.Allocate()` to designate that players are currently active on it.
+This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
 
-Calling other state changing SDK commands such as `Ready` or `Allocate` will turn off the timer to reset the `GameServer` back
-to the `Ready` state or to promote it to an `Allocated` state accordingly.
+
+### Player Tracking
+
+{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
+
+#### Alpha().PlayerConnect(playerID)
+
+This function increases the SDK’s stored player count by one, and appends this playerID to 
+`GameServer.Status.Players.IDs`.
+
+[`GameServer.Status.Players.Count` and `GameServer.Status.Players.IDs`][playerstatus]
+are then set to update the player count and id list a second from now,
+unless there is already an update pending, in which case the update joins that batch operation.
+
+`PlayerConnect()` returns true and adds the playerID to the list of playerIDs if this playerID was not already in the
+list of connected playerIDs.
+
+If the playerID exists within the list of connected playerIDs, `PlayerConnect()` will return false, and the list of
+connected playerIDs will be left unchanged.
+
+An error will be returned if the playerID was not already in the list of connected playerIDs but the player capacity for
+the server has been reached. The playerID will not be added to the list of playerIDs.
+
+{{< alert title="Note" color="info">}}
+Do not use this method if you are manually managing `GameServer.Status.Players.IDs` and `GameServer.Status.Players.Count`
+through the Kubernetes API, as indeterminate results will occur.  
+{{< /alert >}}
+    
+#### Alpha().PlayerDisconnect(playerID)
+
+This function decreases the SDK’s stored player count by one, and removes the playerID from 
+[`GameServer.Status.Players.IDs`][playerstatus].
+
+`GameServer.Status.Players.Count` and `GameServer.Status.Players.IDs` are then set to 
+update the player count and id list a second from now,
+unless there is already an update pending, in which case the update joins that batch operation.
+
+`PlayerDisconnect()` will return true and remove the supplied playerID from the list of connected playerIDs if the
+playerID value exists within the list.
+
+If the playerID was not in the list of connected playerIDs, the call will return false, and the connected playerID list
+will be left unchanged.
+
+{{< alert title="Note" color="info">}}
+Do not use this method if you are manually managing `GameServer.Status.Players.IDs` and `GameServer.Status.Players.Count`
+through the Kubernetes API, as indeterminate results will occur.  
+{{< /alert >}}
+
+#### Alpha().SetPlayerCapacity(count)
+
+Update the [`GameServer.Status.Players.Capacity`][playerstatus] value with a new capacity.
+
+#### Alpha().GetPlayerCapacity()
+
+This function retrieves the current player capacity. This is always accurate from what has been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+{{< alert title="Note" color="info">}}
+If `GameServer.Status.Players.Capacity` is set manually through the Kubernetes API, use `SDK.GameServer()` or 
+`SDK.WatchGameServer()` instead to view this value.
+{{< /alert >}}
+
+#### Alpha().GetPlayerCount()
+
+This function returns if the playerID is currently connected to the GameServer. 
+This is always accurate from what has been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+{{< alert title="Note" color="info">}}
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+or SDK.WatchGameServer() instead to retrieve the current player count.
+{{< /alert >}}
+
+#### Alpha().IsPlayerConnected(playerID)
+
+This function returns if the playerID is currently connected to the GameServer. This is always accurate from what has
+been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+{{< alert title="Note" color="info">}}
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+or SDK.WatchGameServer() instead to determine connected status.
+{{< /alert >}}
+
+#### Alpha().GetConnectedPlayers()
+
+This function returns the list of the currently connected player ids. This is always accurate from what has been set
+through this SDK, even if the value has yet to be updated on the GameServer status resource.
+
+{{< alert title="Note" color="info">}}
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+or SDK.WatchGameServer() instead to list the connected players.
+{{< /alert >}}
+
+[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}
 
 ## Writing your own SDK
 

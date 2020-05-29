@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -34,7 +34,7 @@ func main() {
 	cacertFile := flag.String("cacert", "missing cacert", "the CA cert file for server signing certificate in PEM format")
 	externalIP := flag.String("ip", "missing external IP", "the external IP for allocator server")
 	namespace := flag.String("namespace", "default", "the game server kubernetes namespace")
-	multicluster := flag.Bool("multicluster", false, "enabling")
+	multicluster := flag.Bool("multicluster", false, "set to true to enable the multi-cluster allocation")
 
 	flag.Parse()
 
@@ -70,7 +70,7 @@ func main() {
 	defer conn.Close()
 
 	grpcClient := pb.NewAllocationServiceClient(conn)
-	response, err := grpcClient.PostAllocate(context.Background(), request)
+	response, err := grpcClient.Allocate(context.Background(), request)
 	if err != nil {
 		panic(err)
 	}

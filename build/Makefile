@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.6.0
+base_version = 1.7.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -57,7 +57,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.19
+GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.21
 
 ALL_FEATURE_GATES ?= "PlayerTracking=true&ContainerPortAllocation=true"
 
@@ -340,22 +340,22 @@ build-controller-image: $(ensure-build-image) build-controller-binary build-lice
 push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
-# build the static binary for the gamesever sidecar
+# build the static binary for the gameserver sidecar
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
 
-# build the static binary for the gamesever sidecar for Linux
+# build the static binary for the gameserver sidecar for Linux
 build-agones-sdk-binary-linux: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 
-# build the static binary for the gamesever sidecar for Darwin (macOS)
+# build the static binary for the gameserver sidecar for Darwin (macOS)
 build-agones-sdk-binary-darwin: $(ensure-build-image)
 	$(GO_BUILD_DARWIN_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
-# build the windows binary for the gamesever sidecar for Windows
+# build the windows binary for the gameserver sidecar for Windows
 build-agones-sdk-binary-windows: $(ensure-build-image)
 	$(GO_BUILD_WINDOWS_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server

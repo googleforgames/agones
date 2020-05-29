@@ -1,0 +1,88 @@
+// Copyright 2020 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package allocation;
+
+import "google/api/annotations.proto";
+
+service AllocationService {
+ rpc Allocate(AllocationRequest) returns (AllocationResponse) {
+   option (google.api.http) = {
+     post: "/gameserverallocation"
+     body: "*"
+   };
+ }
+}
+
+message AllocationRequest {
+  // The k8s namespace that is hosting the targeted fleet of gameservers to be allocated
+  string namespace = 1;
+
+  // If specified, multi-cluster policies are applied. Otherwise, allocation will happen locally.
+  MultiClusterSetting multiClusterSetting = 2;
+
+  // The required allocation. Defaults to all GameServers.
+  LabelSelector requiredGameServerSelector = 3;
+
+  // The ordered list of preferred allocations out of the `required` set.
+  // If the first selector is not matched, the selection attempts the second selector, and so on.
+  repeated LabelSelector preferredGameServerSelectors = 4;
+
+  // Scheduling strategy. Defaults to "Packed".
+  SchedulingStrategy scheduling = 5;
+  enum SchedulingStrategy {
+    Packed = 0;
+    Distributed = 1;
+  }
+
+  // MetaPatch is optional custom metadata that is added to the game server at
+  // allocation You can use this to tell the server necessary session data
+  MetaPatch metaPatch = 6;
+}
+
+message AllocationResponse {
+  string gameServerName = 2;
+  repeated GameServerStatusPort ports = 3;
+  string address = 4;
+  string nodeName = 5;
+
+  // The gameserver port info that is allocated.
+  message GameServerStatusPort {
+    string name = 1;
+    int32 port = 2;
+  }
+}
+
+// Specifies settings for multi-cluster allocation.
+message MultiClusterSetting {
+    // If set to true, multi-cluster allocation is enabled.
+    bool enabled = 1;
+
+    // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
+    LabelSelector policySelector = 2;
+}
+   
+// MetaPatch is the metadata used to patch the GameServer metadata on allocation
+message MetaPatch {
+    map<string, string> labels = 1;
+    map<string, string> annotations = 2;
+}
+
+// LabelSelector used for finding a GameServer with matching labels.
+message LabelSelector {
+  // Labels to match.
+	map<string, string> matchLabels = 1;
+}

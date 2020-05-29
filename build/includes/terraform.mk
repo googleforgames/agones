@@ -81,5 +81,9 @@ endif
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
 gcloud-terraform-destroy-cluster:
+ifndef GCP_PROJECT
+	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
+endif
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
-	 terraform destroy -target module.helm_agones.helm_release.agones -auto-approve && sleep 60 && terraform destroy -auto-approve'
+	terraform destroy -var project=$(GCP_PROJECT) -target module.helm_agones.helm_release.agones -auto-approve && sleep 60 && \
+	terraform destroy -var project=$(GCP_PROJECT) -auto-approve'

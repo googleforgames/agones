@@ -19,37 +19,49 @@ terraform {
 
 data "google_client_config" "default" {}
 
+# A list of all parameters used in interpolation var.cluster
+# Set values to default if not key was not set in original map
+locals {
+  project           = lookup(var.cluster, "project", "agones")
+  zone              = lookup(var.cluster, "zone", "us-west1-c")
+  name              = lookup(var.cluster, "name", "test-cluster")
+  machineType       = lookup(var.cluster, "machineType", "n1-standard-4")
+  initialNodeCount  = lookup(var.cluster, "initialNodeCount", "4")
+  network           = lookup(var.cluster, "network", "default")
+  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.15")
+}
+
 # echo command used for debugging purpose
 # Run `terraform taint null_resource.test-setting-variables` before second execution
 resource "null_resource" "test-setting-variables" {
   provisioner "local-exec" {
     command = <<EOT
     ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s",
-    var.cluster["name"], var.cluster["project"],
-    var.cluster["machineType"], var.cluster["initialNodeCount"], var.cluster["network"],
-    var.cluster["zone"])}
+    local.name, local.project,
+    local.machineType, local.initialNodeCount, local.network,
+local.zone)}
     EOT
-  }
+}
 }
 
 resource "google_container_cluster" "primary" {
-  name     = var.cluster["name"]
-  location = var.cluster["zone"]
-  project  = var.cluster["project"]
-  network  = var.cluster["network"]
+  name     = local.name
+  location = local.zone
+  project  = local.project
+  network  = local.network
 
-  min_master_version = "1.14"
+  min_master_version = local.kubernetesVersion
 
   node_pool {
     name       = "default"
-    node_count = var.cluster["initialNodeCount"]
+    node_count = local.initialNodeCount
 
     management {
       auto_upgrade = false
     }
 
     node_config {
-      machine_type = var.cluster["machineType"]
+      machine_type = local.machineType
 
       oauth_scopes = [
         "https://www.googleapis.com/auth/devstorage.read_only",
@@ -132,9 +144,9 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_compute_firewall" "default" {
-  name    = "game-server-firewall-firewall-${var.cluster["name"]}"
-  project = var.cluster["project"]
-  network = var.cluster["network"]
+  name    = "game-server-firewall-firewall-${local.name}"
+  project = local.project
+  network = local.network
 
   allow {
     protocol = "udp"

@@ -17,11 +17,13 @@ package converters
 import (
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -151,13 +153,13 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationRequestV1Alpha1ToGSAV1(tc.in)
+			out := ConvertAllocationRequestToGSA(tc.in)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}
 
 			if !tc.skipConvertFromGSA {
-				gsa := ConvertGSAV1ToAllocationRequestV1Alpha1(tc.want)
+				gsa := ConvertGSAToAllocationRequest(tc.want)
 				if !assert.Equal(t, tc.in, gsa) {
 					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
 				}
@@ -166,7 +168,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 	}
 }
 
-func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
+func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 	tests := []struct {
 		name string
 		in   *allocationv1.GameServerAllocation
@@ -210,7 +212,7 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			gsa := ConvertGSAV1ToAllocationRequestV1Alpha1(tc.in)
+			gsa := ConvertGSAToAllocationRequest(tc.in)
 			if !assert.Equal(t, tc.want, gsa) {
 				t.Errorf("mismatch with want after conversion \"%s\"", tc.name)
 			}
@@ -218,15 +220,48 @@ func TestConvertGSAV1ToAllocationRequestV1Alpha1Empty(t *testing.T) {
 	}
 }
 
-func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
+func TestConvertGSAToAllocationResponse(t *testing.T) {
 	tests := []struct {
 		name             string
 		in               *allocationv1.GameServerAllocation
 		want             *pb.AllocationResponse
+		wantErrCode      codes.Code
 		skipConvertToGSA bool
 	}{
 		{
-			name: "status field is set",
+			name: "status state is set to allocated",
+			in: &allocationv1.GameServerAllocation{
+				Status: allocationv1.GameServerAllocationStatus{
+					State:          allocationv1.GameServerAllocationAllocated,
+					GameServerName: "GSN",
+					Ports: []agonesv1.GameServerStatusPort{
+						{
+							Port: 123,
+						},
+						{
+							Name: "port-name",
+						},
+					},
+					Address:  "address",
+					NodeName: "node-name",
+				},
+			},
+			want: &pb.AllocationResponse{
+				GameServerName: "GSN",
+				Address:        "address",
+				NodeName:       "node-name",
+				Ports: []*pb.AllocationResponse_GameServerStatusPort{
+					{
+						Port: 123,
+					},
+					{
+						Name: "port-name",
+					},
+				},
+			},
+		},
+		{
+			name: "status field is set to unallocated",
 			in: &allocationv1.GameServerAllocation{
 				Status: allocationv1.GameServerAllocationStatus{
 					State:          allocationv1.GameServerAllocationUnAllocated,
@@ -243,31 +278,8 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 					NodeName: "node-name",
 				},
 			},
-			want: &pb.AllocationResponse{
-				State:          pb.AllocationResponse_UnAllocated,
-				GameServerName: "GSN",
-				Address:        "address",
-				NodeName:       "node-name",
-				Ports: []*pb.AllocationResponse_GameServerStatusPort{
-					{
-						Port: 123,
-					},
-					{
-						Name: "port-name",
-					},
-				},
-			},
-		},
-		{
-			name: "status state is set to allocated",
-			in: &allocationv1.GameServerAllocation{
-				Status: allocationv1.GameServerAllocationStatus{
-					State: allocationv1.GameServerAllocationAllocated,
-				},
-			},
-			want: &pb.AllocationResponse{
-				State: pb.AllocationResponse_Allocated,
-			},
+			wantErrCode:      codes.ResourceExhausted,
+			skipConvertToGSA: true,
 		},
 		{
 			name: "status state is set to contention",
@@ -276,9 +288,8 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 					State: allocationv1.GameServerAllocationContention,
 				},
 			},
-			want: &pb.AllocationResponse{
-				State: pb.AllocationResponse_Contention,
-			},
+			wantErrCode:      codes.Aborted,
+			skipConvertToGSA: true,
 		},
 		{
 			name: "Empty fields",
@@ -287,14 +298,16 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 					Ports: []agonesv1.GameServerStatusPort{},
 				},
 			},
-			want: &pb.AllocationResponse{
-				State: pb.AllocationResponse_Unknown,
-			},
+			wantErrCode:      codes.Unknown,
 			skipConvertToGSA: true,
 		},
 		{
 			name: "Empty objects",
-			in:   &allocationv1.GameServerAllocation{},
+			in: &allocationv1.GameServerAllocation{
+				Status: allocationv1.GameServerAllocationStatus{
+					State: allocationv1.GameServerAllocationAllocated,
+				},
+			},
 			want: &pb.AllocationResponse{},
 		},
 		{
@@ -308,13 +321,20 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertGSAV1ToAllocationResponseV1Alpha1(tc.in)
+			out, err := ConvertGSAToAllocationResponse(tc.in)
+			if tc.wantErrCode != 0 {
+				st, ok := status.FromError(err)
+				if !assert.True(t, ok) {
+					return
+				}
+				assert.Equal(t, tc.wantErrCode, st.Code())
+			}
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}
 
 			if !tc.skipConvertToGSA {
-				gsa := ConvertAllocationResponseV1Alpha1ToGSAV1(tc.want)
+				gsa := ConvertAllocationResponseToGSA(tc.want)
 				if !assert.Equal(t, tc.in, gsa) {
 					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
 				}
@@ -323,7 +343,7 @@ func TestConvertGSAV1ToAllocationResponseV1Alpha1(t *testing.T) {
 	}
 }
 
-func TestConvertAllocationResponseV1Alpha1ToGSAV1(t *testing.T) {
+func TestConvertAllocationResponseToGSA(t *testing.T) {
 	tests := []struct {
 		name string
 		in   *pb.AllocationResponse
@@ -332,11 +352,12 @@ func TestConvertAllocationResponseV1Alpha1ToGSAV1(t *testing.T) {
 		{
 			name: "Empty fields",
 			in: &pb.AllocationResponse{
-				State: pb.AllocationResponse_Unknown,
 				Ports: []*pb.AllocationResponse_GameServerStatusPort{},
 			},
 			want: &allocationv1.GameServerAllocation{
-				Status: allocationv1.GameServerAllocationStatus{},
+				Status: allocationv1.GameServerAllocationStatus{
+					State: allocationv1.GameServerAllocationAllocated,
+				},
 			},
 		},
 	}
@@ -345,7 +366,7 @@ func TestConvertAllocationResponseV1Alpha1ToGSAV1(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationResponseV1Alpha1ToGSAV1(tc.in)
+			out := ConvertAllocationResponseToGSA(tc.in)
 			if !assert.Equal(t, tc.want, out) {
 				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
 			}

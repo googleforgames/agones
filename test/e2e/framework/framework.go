@@ -147,19 +147,19 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, "/.kube/config"))
-	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/udp-server:0.19")
+	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/udp-server:0.21")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
 	viper.SetDefault(versionFlag, "")
 	viper.SetDefault(runtime.FeatureGateFlag, "")
 
-	kubeconfig := pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
-	gsimage := pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.19")
-	pullSecret := pflag.String(pullSecretFlag, viper.GetString(pullSecretFlag), "optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
-	stressTestLevel := pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
-	perfOutputDir := pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
-	version := pflag.String(versionFlag, viper.GetString(versionFlag), "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
+	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
+	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.21")
+	pflag.String(pullSecretFlag, viper.GetString(pullSecretFlag), "optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
+	pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
+	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
+	pflag.String(versionFlag, viper.GetString(versionFlag), "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -174,15 +174,15 @@ func NewFromFlags() (*Framework, error) {
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
-	framework, err := New(*kubeconfig)
+	framework, err := New(viper.GetString(kubeconfigFlag))
 	if err != nil {
 		return framework, err
 	}
-	framework.GameServerImage = *gsimage
-	framework.PullSecret = *pullSecret
-	framework.StressTestLevel = *stressTestLevel
-	framework.PerfOutputDir = *perfOutputDir
-	framework.Version = *version
+	framework.GameServerImage = viper.GetString(gsimageFlag)
+	framework.PullSecret = viper.GetString(pullSecretFlag)
+	framework.StressTestLevel = viper.GetInt(stressTestLevelFlag)
+	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
+	framework.Version = viper.GetString(versionFlag)
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
 		WithField("pullSecret", framework.PullSecret).

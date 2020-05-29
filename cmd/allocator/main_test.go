@@ -15,12 +15,14 @@ package main
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
 
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -54,11 +56,15 @@ func TestAllocateHandler(t *testing.T) {
 		},
 	}
 
-	response, err := h.PostAllocate(context.Background(), request)
-	if !assert.NoError(t, err) {
+	response, err := h.Allocate(context.Background(), request)
+	if !assert.Nil(t, response) {
 		return
 	}
-	assert.Equal(t, pb.AllocationResponse_Contention, response.State)
+	st, ok := status.FromError(err)
+	if !assert.True(t, ok) {
+		return
+	}
+	assert.Equal(t, st.Code(), codes.Aborted)
 }
 
 func TestAllocateHandlerReturnsError(t *testing.T) {
@@ -71,7 +77,7 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if assert.Error(t, err) {
 		assert.Equal(t, "error", err.Error())
 	}
@@ -97,7 +103,7 @@ func TestHandlingStatus(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if !assert.Error(t, err, "expecting failure") {
 		return
 	}
@@ -120,7 +126,7 @@ func TestBadReturnType(t *testing.T) {
 	}
 
 	request := &pb.AllocationRequest{}
-	_, err := h.PostAllocate(context.Background(), request)
+	_, err := h.Allocate(context.Background(), request)
 	if !assert.Error(t, err, "expecting failure") {
 		return
 	}
@@ -131,6 +137,38 @@ func TestBadReturnType(t *testing.T) {
 	}
 	assert.Equal(t, codes.Internal, st.Code())
 	assert.Contains(t, st.Message(), "internal server error")
+}
+
+func TestVerifyClientCertificateSucceeds(t *testing.T) {
+	t.Parallel()
+
+	crt := []byte(clientCert)
+	certPool := x509.NewCertPool()
+	assert.True(t, certPool.AppendCertsFromPEM(crt))
+
+	h := serviceHandler{
+		caCertPool: certPool,
+	}
+
+	block, _ := pem.Decode(crt)
+	input := [][]byte{block.Bytes}
+	assert.Nil(t, h.verifyClientCertificate(input, nil),
+		"verifyClientCertificate failed.")
+}
+
+func TestVerifyClientCertificateFails(t *testing.T) {
+	t.Parallel()
+
+	crt := []byte(clientCert)
+	certPool := x509.NewCertPool()
+	h := serviceHandler{
+		caCertPool: certPool,
+	}
+
+	block, _ := pem.Decode(crt)
+	input := [][]byte{block.Bytes}
+	assert.Error(t, h.verifyClientCertificate(input, nil),
+		"verifyClientCertificate() succeeded, expected error.")
 }
 
 func TestGettingCaCert(t *testing.T) {

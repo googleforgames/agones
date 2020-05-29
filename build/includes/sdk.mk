@@ -34,8 +34,7 @@ SDK_FOLDER ?= go
 COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
-ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity
-
+ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -127,9 +126,10 @@ ensure-build-sdk-image:
 # SDK client test against it. Useful for test development
 run-sdk-conformance-local: TIMEOUT ?= 30
 run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
+run-sdk-conformance-local: FEATURE_GATES ?=
 run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 9357:9357 -p 9358:9358 \
-	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" $(sidecar_tag)
+	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "FEATURE_GATES=$(FEATURE_GATES)" $(sidecar_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 # Sleeps the start of the sidecar to test that the SDK blocks on connection correctly
@@ -168,7 +168,11 @@ run-sdk-conformance-test-rust:
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
 
 run-sdk-conformance-test-rest:
+	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=restapi HTTP_PORT=9050
+	# run with feature flags enabled
+	$(MAKE) run-sdk-conformance-no-build SDK_FOLDER=restapi GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
+
 	$(MAKE) run-sdk-command COMMAND=clean SDK_FOLDER=restapi
 
 # Run a conformance test for all SDKs supported

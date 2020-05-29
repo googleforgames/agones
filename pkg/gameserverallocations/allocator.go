@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -38,7 +38,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -65,7 +67,7 @@ var (
 const (
 	secretClientCertName = "tls.crt"
 	secretClientKeyName  = "tls.key"
-	secretCaCertName     = "ca.crt"
+	secretCACertName     = "ca.crt"
 	allocatorPort        = "443"
 
 	// Instead of selecting the top one, controller selects a random one
@@ -139,7 +141,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			defer conn.Close() // nolint: errcheck
 
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.PostAllocate(context.Background(), request)
+			return grpcClient.Allocate(context.Background(), request)
 		},
 	}
 
@@ -181,7 +183,7 @@ func (c *Allocator) Sync(stop <-chan struct{}) error {
 func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (k8sruntime.Object, error) {
 	// server side validation
 	if causes, ok := gsa.Validate(); !ok {
-		status := &metav1.Status{
+		s := &metav1.Status{
 			Status:  metav1.StatusFailure,
 			Message: fmt.Sprintf("GameServerAllocation is invalid: Invalid value: %#v", gsa),
 			Reason:  metav1.StatusReasonInvalid,
@@ -194,14 +196,14 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 		}
 
 		var gvks []schema.GroupVersionKind
-		gvks, _, err := apiserver.Scheme.ObjectKinds(status)
+		gvks, _, err := apiserver.Scheme.ObjectKinds(s)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not find objectkinds for status")
 		}
 		c.loggerForGameServerAllocation(gsa).Debug("GameServerAllocation is invalid")
 
-		status.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
-		return status, nil
+		s.TypeMeta = metav1.TypeMeta{Kind: gvks[0].Kind, APIVersion: gvks[0].Version}
+		return s, nil
 	}
 
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
@@ -321,9 +323,8 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAllocation, connectionInfo *multiclusterv1.ClusterConnectionInfo, namespace string) (*allocationv1.GameServerAllocation, error) {
 	var allocationResponse *pb.AllocationResponse
 
-	// TODO: handle converting error to apiserver error
 	// TODO: cache the client
-	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo.SecretName)
+	dialOpts, err := c.createRemoteClusterDialOption(namespace, connectionInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +332,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	// Forward the game server allocation request to another cluster,
 	// and disable multicluster settings to avoid the target cluster
 	// forward the allocation request again.
-	request := converters.ConvertGSAV1ToAllocationRequestV1Alpha1(gsa)
+	request := converters.ConvertGSAToAllocationRequest(gsa)
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
 
@@ -357,17 +358,18 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		}
 		return nil
 	})
-	return converters.ConvertAllocationResponseV1Alpha1ToGSAV1(allocationResponse), err
+
+	return converters.ConvertAllocationResponseToGSA(allocationResponse), err
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
-func (c *Allocator) createRemoteClusterDialOption(namespace, secretName string) (grpc.DialOption, error) {
-	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, secretName)
+func (c *Allocator) createRemoteClusterDialOption(namespace string, connectionInfo *multiclusterv1.ClusterConnectionInfo) (grpc.DialOption, error) {
+	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, connectionInfo.SecretName)
 	if err != nil {
 		return nil, err
 	}
 	if clientCert == nil || clientKey == nil {
-		return nil, fmt.Errorf("missing client certificate key pair in secret %s", secretName)
+		return nil, fmt.Errorf("missing client certificate key pair in secret %s", connectionInfo.SecretName)
 	}
 
 	// Load client cert
@@ -377,12 +379,16 @@ func (c *Allocator) createRemoteClusterDialOption(namespace, secretName string) 
 	}
 
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
-	if len(caCert) != 0 {
+	if len(connectionInfo.ServerCA) != 0 || len(caCert) != 0 {
 		// Load CA cert, if provided and trust the server certificate.
 		// This is required for self-signed certs.
 		tlsConfig.RootCAs = x509.NewCertPool()
-		if !tlsConfig.RootCAs.AppendCertsFromPEM(caCert) {
+		if len(connectionInfo.ServerCA) != 0 && !tlsConfig.RootCAs.AppendCertsFromPEM(connectionInfo.ServerCA) {
 			return nil, errors.New("only PEM format is accepted for server CA")
+		}
+		// Add client CA cert, added for backward compatibility
+		if len(caCert) != 0 {
+			_ = tlsConfig.RootCAs.AppendCertsFromPEM(caCert)
 		}
 	}
 
@@ -402,7 +408,7 @@ func (c *Allocator) getClientCertificates(namespace, secretName string) (clientC
 	// Create http client using cert
 	clientCert = secret.Data[secretClientCertName]
 	clientKey = secret.Data[secretClientKeyName]
-	caCert = secret.Data[secretCaCertName]
+	caCert = secret.Data[secretCACertName]
 	return clientCert, clientKey, caCert, nil
 }
 
@@ -439,7 +445,7 @@ func (c *Allocator) ListenAndAllocate(updateWorkerCount int, stop <-chan struct{
 	// Once we have 1 or more requests in c.pendingRequests (which is buffered to 100), we can start the batch process.
 
 	// Assuming this is the first run (either entirely, or for a while), list will be nil, and therefore the first
-	// thing that will be done is retrieving the Ready GameSerers and sorting them for this batch via
+	// thing that will be done is retrieving the Ready GameServers and sorting them for this batch via
 	// c.listSortedReadyGameServers(). This list is maintained as we flow through the batch.
 
 	// We then use findGameServerForAllocation to loop around the sorted list of Ready GameServers to look for matches
@@ -545,6 +551,14 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 	var lastConflictErr error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
 		err := fn()
+
+		st, ok := status.FromError(err)
+		if ok {
+			if st.Code() == codes.ResourceExhausted {
+				return true, err
+			}
+		}
+
 		switch {
 		case err == nil:
 			return true, nil

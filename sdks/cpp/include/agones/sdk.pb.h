@@ -1220,10 +1220,10 @@ class AGONES_EXPORT GameServer_Status_PlayerStatus final :
 
   // accessors -------------------------------------------------------
 
-  // repeated string IDs = 3;
+  // repeated string ids = 3;
   int ids_size() const;
   void clear_ids();
-  static const int kIDsFieldNumber = 3;
+  static const int kIdsFieldNumber = 3;
   const ::std::string& ids(int index) const;
   ::std::string* mutable_ids(int index);
   void set_ids(int index, const ::std::string& value);
@@ -1405,7 +1405,7 @@ class AGONES_EXPORT GameServer_Status final :
   ::std::string* release_address();
   void set_allocated_address(::std::string* address);
 
-  // .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+  // .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
   bool has_players() const;
   void clear_players();
   static const int kPlayersFieldNumber = 4;
@@ -2220,7 +2220,7 @@ inline void GameServer_Status_PlayerStatus::set_capacity(::google::protobuf::int
   // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.capacity)
 }
 
-// repeated string IDs = 3;
+// repeated string ids = 3;
 inline int GameServer_Status_PlayerStatus::ids_size() const {
   return ids_.size();
 }
@@ -2228,64 +2228,64 @@ inline void GameServer_Status_PlayerStatus::clear_ids() {
   ids_.Clear();
 }
 inline const ::std::string& GameServer_Status_PlayerStatus::ids(int index) const {
-  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Get(index);
 }
 inline ::std::string* GameServer_Status_PlayerStatus::mutable_ids(int index) {
-  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Mutable(index);
 }
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const ::std::string& value) {
-  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   ids_.Mutable(index)->assign(value);
 }
 #if LANG_CXX11
 inline void GameServer_Status_PlayerStatus::set_ids(int index, ::std::string&& value) {
-  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   ids_.Mutable(index)->assign(std::move(value));
 }
 #endif
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   ids_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set_char:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline void GameServer_Status_PlayerStatus::set_ids(int index, const char* value, size_t size) {
   ids_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_set_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline ::std::string* GameServer_Status_PlayerStatus::add_ids() {
-  // @@protoc_insertion_point(field_add_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_mutable:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_.Add();
 }
 inline void GameServer_Status_PlayerStatus::add_ids(const ::std::string& value) {
   ids_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 #if LANG_CXX11
 inline void GameServer_Status_PlayerStatus::add_ids(::std::string&& value) {
   ids_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 #endif
 inline void GameServer_Status_PlayerStatus::add_ids(const char* value) {
   GOOGLE_DCHECK(value != nullptr);
   ids_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_char:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline void GameServer_Status_PlayerStatus::add_ids(const char* value, size_t size) {
   ids_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_add_pointer:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
 }
 inline const ::google::protobuf::RepeatedPtrField<::std::string>&
 GameServer_Status_PlayerStatus::ids() const {
-  // @@protoc_insertion_point(field_list:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_list:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return ids_;
 }
 inline ::google::protobuf::RepeatedPtrField<::std::string>*
 GameServer_Status_PlayerStatus::mutable_ids() {
-  // @@protoc_insertion_point(field_mutable_list:agones.dev.sdk.GameServer.Status.PlayerStatus.IDs)
+  // @@protoc_insertion_point(field_mutable_list:agones.dev.sdk.GameServer.Status.PlayerStatus.ids)
   return &ids_;
 }
 
@@ -2429,7 +2429,7 @@ GameServer_Status::ports() const {
   return ports_;
 }
 
-// .agones.dev.sdk.GameServer.Status.PlayerStatus Players = 4;
+// .agones.dev.sdk.GameServer.Status.PlayerStatus players = 4;
 inline bool GameServer_Status::has_players() const {
   return this != internal_default_instance() && players_ != nullptr;
 }
@@ -2441,12 +2441,12 @@ inline void GameServer_Status::clear_players() {
 }
 inline const ::agones::dev::sdk::GameServer_Status_PlayerStatus& GameServer_Status::players() const {
   const ::agones::dev::sdk::GameServer_Status_PlayerStatus* p = players_;
-  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_get:agones.dev.sdk.GameServer.Status.players)
   return p != nullptr ? *p : *reinterpret_cast<const ::agones::dev::sdk::GameServer_Status_PlayerStatus*>(
       &::agones::dev::sdk::_GameServer_Status_PlayerStatus_default_instance_);
 }
 inline ::agones::dev::sdk::GameServer_Status_PlayerStatus* GameServer_Status::release_players() {
-  // @@protoc_insertion_point(field_release:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_release:agones.dev.sdk.GameServer.Status.players)
   
   ::agones::dev::sdk::GameServer_Status_PlayerStatus* temp = players_;
   players_ = nullptr;
@@ -2458,7 +2458,7 @@ inline ::agones::dev::sdk::GameServer_Status_PlayerStatus* GameServer_Status::mu
     auto* p = CreateMaybeMessage<::agones::dev::sdk::GameServer_Status_PlayerStatus>(GetArenaNoVirtual());
     players_ = p;
   }
-  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_mutable:agones.dev.sdk.GameServer.Status.players)
   return players_;
 }
 inline void GameServer_Status::set_allocated_players(::agones::dev::sdk::GameServer_Status_PlayerStatus* players) {
@@ -2477,7 +2477,7 @@ inline void GameServer_Status::set_allocated_players(::agones::dev::sdk::GameSer
     
   }
   players_ = players;
-  // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.GameServer.Status.Players)
+  // @@protoc_insertion_point(field_set_allocated:agones.dev.sdk.GameServer.Status.players)
 }
 
 // -------------------------------------------------------------------

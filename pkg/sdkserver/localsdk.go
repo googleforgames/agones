@@ -40,8 +40,10 @@ var (
 	_ sdk.SDKServer   = &LocalSDKServer{}
 	_ alpha.SDKServer = &LocalSDKServer{}
 	_ beta.SDKServer  = &LocalSDKServer{}
+)
 
-	defaultGs = &sdk.GameServer{
+func defaultGs() *sdk.GameServer {
+	return &sdk.GameServer{
 		ObjectMeta: &sdk.GameServer_ObjectMeta{
 			Name:              "local",
 			Namespace:         "default",
@@ -66,7 +68,7 @@ var (
 			Ports:   []*sdk.GameServer_Status_Port{{Name: "default", Port: 7777}},
 		},
 	}
-)
+}
 
 // LocalSDKServer type is the SDKServer implementation for when the sidecar
 // is being run for local development, and doesn't connect to the
@@ -91,7 +93,7 @@ type LocalSDKServer struct {
 func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 	l := &LocalSDKServer{
 		gsMutex:         sync.RWMutex{},
-		gs:              defaultGs,
+		gs:              defaultGs(),
 		update:          make(chan struct{}),
 		updateObservers: sync.Map{},
 		testMutex:       sync.Mutex{},
@@ -133,6 +135,9 @@ func NewLocalSDKServer(filePath string) (*LocalSDKServer, error) {
 		if err != nil {
 			l.logger.WithError(err).WithField("filePath", filePath).Error("error adding watcher")
 		}
+	}
+	if runtime.FeatureEnabled(runtime.FeaturePlayerTracking) && l.gs.Status.Players == nil {
+		l.gs.Status.Players = &sdk.GameServer_Status_PlayerStatus{}
 	}
 
 	go func() {
@@ -197,9 +202,15 @@ func (l *LocalSDKServer) recordRequestWithValue(request string, value string, ob
 		case "UID":
 			fieldVal = l.gs.ObjectMeta.Uid
 		case "PlayerCapacity":
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
 			fieldVal = strconv.FormatInt(l.gs.Status.Players.Capacity, 10)
 		case "PlayerIDs":
-			fieldVal = strings.Join(l.gs.Status.Players.IDs, ",")
+			if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+				return
+			}
+			fieldVal = strings.Join(l.gs.Status.Players.Ids, ",")
 		default:
 			l.logger.Error("unexpected Field to compare")
 		}
@@ -388,7 +399,7 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Connected")
 	l.gsMutex.Lock()
@@ -399,7 +410,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 	}
 
 	// the player is already connected, return false.
-	for _, playerID := range l.gs.Status.Players.IDs {
+	for _, playerID := range l.gs.Status.Players.Ids {
 		if playerID == id.PlayerID {
 			return &alpha.Bool{Bool: false}, nil
 		}
@@ -409,8 +420,8 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 		return &alpha.Bool{}, errors.New("Players are already at capacity")
 	}
 
-	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs, id.PlayerID)
-	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+	l.gs.Status.Players.Ids = append(l.gs.Status.Players.Ids, id.PlayerID)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.Ids))
 
 	l.update <- struct{}{}
 	l.recordRequestWithValue("playerconnect", "1234", "PlayerIDs")
@@ -422,7 +433,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Disconnected")
 	l.gsMutex.Lock()
@@ -433,7 +444,7 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 	}
 
 	found := -1
-	for i, playerID := range l.gs.Status.Players.IDs {
+	for i, playerID := range l.gs.Status.Players.Ids {
 		if playerID == id.PlayerID {
 			found = i
 			break
@@ -443,8 +454,8 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 		return &alpha.Bool{Bool: false}, nil
 	}
 
-	l.gs.Status.Players.IDs = append(l.gs.Status.Players.IDs[:found], l.gs.Status.Players.IDs[found+1:]...)
-	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.IDs))
+	l.gs.Status.Players.Ids = append(l.gs.Status.Players.Ids[:found], l.gs.Status.Players.Ids[found+1:]...)
+	l.gs.Status.Players.Count = int64(len(l.gs.Status.Players.Ids))
 
 	l.update <- struct{}{}
 	l.recordRequestWithValue("playerdisconnect", "", "PlayerIDs")
@@ -456,7 +467,7 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 
 	result := &alpha.Bool{Bool: false}
@@ -470,7 +481,7 @@ func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID
 		return result, nil
 	}
 
-	for _, playerID := range l.gs.Status.Players.IDs {
+	for _, playerID := range l.gs.Status.Players.Ids {
 		if id.PlayerID == playerID {
 			result.Bool = true
 			break
@@ -485,7 +496,7 @@ func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Empty) (*alpha.PlayerIDList, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Connected Players")
 
@@ -498,7 +509,7 @@ func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Emp
 	if l.gs.Status.Players == nil {
 		return result, nil
 	}
-	result.List = l.gs.Status.Players.IDs
+	result.List = l.gs.Status.Players.Ids
 	return result, nil
 }
 
@@ -507,7 +518,7 @@ func (l *LocalSDKServer) GetConnectedPlayers(c context.Context, empty *alpha.Emp
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Player Count")
 	l.recordRequest("getplayercount")
@@ -527,7 +538,7 @@ func (l *LocalSDKServer) GetPlayerCount(ctx context.Context, _ *alpha.Empty) (*a
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count) (*alpha.Empty, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 
 	l.logger.WithField("capacity", count.Count).Info("Setting Player Capacity")
@@ -550,7 +561,7 @@ func (l *LocalSDKServer) SetPlayerCapacity(_ context.Context, count *alpha.Count
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) GetPlayerCapacity(_ context.Context, _ *alpha.Empty) (*alpha.Count, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.New(string(runtime.FeaturePlayerTracking) + " not enabled")
+		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.Info("Getting Player Capacity")
 	l.recordRequest("getplayercapacity")

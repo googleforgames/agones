@@ -38,7 +38,9 @@ You can read more about OpenAPI/Swagger code generation in their [Command Line T
 
 ## Reference 
 
-### Ready
+### Lifecycle Management
+
+#### Ready
 
 Call when the GameServer is ready to accept connections
 
@@ -46,26 +48,57 @@ Call when the GameServer is ready to accept connections
 - Method: `POST`
 - Body: `{}`
 
-#### Example
+##### Example
 
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/ready
 ```
 
-### Health
-Send a Empty every d Duration to declare that this GameSever is healthy
+#### Health
+Send a Empty every d Duration to declare that this GameServer is healthy
 
 - Path: `/health`
 - Method: `POST`
 - Body: `{}`
 
-#### Example
+##### Example
 
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/health
 ```
 
-### Shutdown
+#### Reserve
+
+Move Gameserver into a Reserved state for a certain amount of seconds for the future allocation.
+
+- Path: `/reserve`
+- Method: `POST`
+- Body: `{"seconds": "5"}`
+
+##### Example
+
+```bash
+$ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/reserve
+```
+
+#### Allocate
+
+With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
+For those scenarios, this SDK functionality exists. 
+
+{{< alert title="Note" color="info">}}
+Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
+as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
+relinquish control to an external service which likely doesn't have as much information as Agones.
+{{< /alert >}}
+
+##### Example
+
+```bash
+$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/allocate
+```
+
+#### Shutdown
 
 Call when the GameServer session is over and it's time to shut down
 
@@ -73,35 +106,16 @@ Call when the GameServer session is over and it's time to shut down
 - Method: `POST`
 - Body: `{}`
 
-#### Example
+##### Example
 
 ```bash
 $ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/shutdown
 ```
 
-### Set Label
+### Configuration Retrieval 
 
-Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata. 
 
-See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) documentation for restrictions.
-
-#### Example
-
-```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/label
-```
-
-### Set Annotation
-
-Apply a Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata
-
-#### Example
-
-```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
-```
-
-### GameServer
+#### GameServer
 
 Call when you want to retrieve the backing `GameServer` configuration details
 
@@ -142,7 +156,7 @@ Response:
 }
 ```
 
-### Watch GameServer
+#### Watch GameServer
 
 Call this when you want to get updates of when the backing `GameServer` configuration is updated.
 
@@ -160,34 +174,140 @@ Response:
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 ```
+### Metadata Management
 
-### Reserve
+#### Set Label
 
-Move Gameserver into a Reserved state for a certain amount of seconds for the future allocation.
+Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata. 
 
-- Path: `/reserve`
-- Method: `POST`
-- Body: `{"seconds": "5"}`
+See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) documentation for restrictions.
 
-#### Example
-
-```bash
-$ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/reserve
-```
-
-### Allocate
-
-With some matchmakers and game matching strategies, it can be important for game servers to mark themselves as `Allocated`.
-For those scenarios, this SDK functionality exists. 
-
-{{< alert title="Note" color="info">}}
-Using a [GameServerAllocation]({{< ref "/docs/Reference/gameserverallocation.md" >}}) is preferred in all other scenarios, 
-as it gives Agones control over how packed `GameServers` are scheduled within a cluster, whereas with `Allocate()` you
-relinquish control to an external service which likely doesn't have as much information as Agones.
-{{< /alert >}}
-
-#### Example
+##### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/allocate
+$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/label
 ```
+
+#### Set Annotation
+
+Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata
+
+##### Example
+
+```bash
+$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
+```
+
+### Player Tracking
+
+{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
+
+#### Alpha: PlayerConnect
+
+This function increases the SDK’s stored player count by one, and appends this playerID to 
+`GameServer.Status.Players.IDs`.
+    
+##### Example    
+
+```bash
+$ curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connect
+```
+
+Response:
+```json
+{"bool":true}
+```
+    
+#### Alpha: PlayerDisconnect
+
+This function decreases the SDK’s stored player count by one, and removes the playerID from 
+[`GameServer.Status.Players.IDs`][playerstatus].
+
+##### Example
+
+```bash
+$ curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/disconnect
+```
+
+Response:
+```json
+{"bool":true}
+```
+
+#### Alpha: SetPlayerCapacity
+
+Update the [`GameServer.Status.Players.Capacity`][playerstatus] value with a new capacity.
+
+##### Example
+
+```bash
+$ curl -d '{"count": 5}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
+```
+
+#### Alpha: GetPlayerCapacity
+
+This function retrieves the current player capacity. This is always accurate from what has been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+##### Example
+
+```bash
+$ curl -d '{}' -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
+```
+
+Response:
+```json
+{"count":"5"}
+```
+
+#### Alpha: GetPlayerCount
+
+This function returns if the playerID is currently connected to the GameServer. 
+This is always accurate from what has been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+```bash
+$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count
+```
+
+Response:
+```json
+{"count":"2"}
+```
+
+##### Example
+
+#### Alpha: IsPlayerConnected
+
+This function returns if the playerID is currently connected to the GameServer. This is always accurate from what has
+been set through this SDK,
+even if the value has yet to be updated on the GameServer status resource.
+
+##### Example
+
+```bash
+$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected/uzh7i
+```
+
+Response:
+```json
+{"bool":true}
+```
+
+#### Alpha: GetConnectedPlayers
+
+This function returns the list of the currently connected player ids. This is always accurate from what has been set
+through this SDK, even if the value has yet to be updated on the GameServer status resource.
+
+##### Example
+
+```bash
+$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected
+```
+
+Response:
+```json
+{"list":["uzh7i","3zh7i"]}
+```
+
+[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}

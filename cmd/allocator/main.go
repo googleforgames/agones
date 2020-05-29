@@ -29,22 +29,17 @@ import (
 
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/allocation/converters"
-	pb "agones.dev/agones/pkg/allocation/go/v1alpha1"
+	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
-	prom "github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"go.opencensus.io/plugin/ocgrpc"
-	"go.opencensus.io/stats/view"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -65,16 +60,7 @@ const (
 	certDir = "/home/allocator/client-ca/"
 	tlsDir  = "/home/allocator/tls/"
 	sslPort = "8443"
-
-	enableStackdriverMetricsFlag = "stackdriver-exporter"
-	enablePrometheusMetricsFlag  = "prometheus-exporter"
-	projectIDFlag                = "gcp-project-id"
-	stackdriverLabels            = "stackdriver-labels"
 )
-
-func init() {
-	registerMetricViews()
-}
 
 func main() {
 	conf := parseEnvFlags()
@@ -199,20 +185,40 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 	}
 
 	cfg := &tls.Config{
-		Certificates: []tls.Certificate{tlsCer},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		GetConfigForClient: func(*tls.ClientHelloInfo) (*tls.Config, error) {
-			h.certMutex.RLock()
-			defer h.certMutex.RUnlock()
-			return &tls.Config{
-				Certificates: []tls.Certificate{tlsCer},
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				ClientCAs:    h.caCertPool,
-			}, nil
-		},
+		Certificates:          []tls.Certificate{tlsCer},
+		ClientAuth:            tls.RequireAnyClientCert,
+		VerifyPeerCertificate: h.verifyClientCertificate,
 	}
 	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
 	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
+}
+
+// verifyClientCertificate verifies that the client certificate is accepted
+// This method is used as GetConfigForClient is cross lang incompatible.
+func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	opts := x509.VerifyOptions{
+		Roots:         h.caCertPool,
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+		KeyUsages:     []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+
+	for _, cert := range rawCerts[1:] {
+		opts.Intermediates.AppendCertsFromPEM(cert)
+	}
+
+	c, err := x509.ParseCertificate(rawCerts[0])
+	if err != nil {
+		return errors.New("bad client certificate: " + err.Error())
+	}
+
+	h.certMutex.RLock()
+	defer h.certMutex.RUnlock()
+	_, err = c.Verify(opts)
+	if err != nil {
+		return errors.New("failed to verify client certificate: " + err.Error())
+	}
+	return nil
 }
 
 // Set up our client which we will use to call the API
@@ -272,10 +278,10 @@ type serviceHandler struct {
 	caCertPool         *x509.CertPool
 }
 
-// PostAllocate implements the PostAllocate gRPC method definition
-func (h *serviceHandler) PostAllocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+// Allocate implements the Allocate gRPC method definition
+func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
-	gsa := converters.ConvertAllocationRequestV1Alpha1ToGSAV1(in)
+	gsa := converters.ConvertAllocationRequestToGSA(in)
 	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")
@@ -291,82 +297,8 @@ func (h *serviceHandler) PostAllocate(ctx context.Context, in *pb.AllocationRequ
 		logger.Errorf("internal server error - Bad GSA format %v", resultObj)
 		return nil, status.Errorf(codes.Internal, "internal server error- Bad GSA format %v", resultObj)
 	}
-	response := converters.ConvertGSAV1ToAllocationResponseV1Alpha1(allocatedGsa)
-	logger.WithField("response", response).Infof("allocation response is being sent")
+	response, err := converters.ConvertGSAToAllocationResponse(allocatedGsa)
+	logger.WithField("response", response).WithError(err).Infof("allocation response is being sent")
 
-	return response, nil
-}
-
-type config struct {
-	PrometheusMetrics bool
-	Stackdriver       bool
-	GCPProjectID      string
-	StackdriverLabels string
-}
-
-func parseEnvFlags() config {
-
-	viper.SetDefault(enablePrometheusMetricsFlag, true)
-	viper.SetDefault(enableStackdriverMetricsFlag, false)
-	viper.SetDefault(projectIDFlag, "")
-	viper.SetDefault(stackdriverLabels, "")
-
-	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
-	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
-	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
-	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
-	runtime.FeaturesBindFlags()
-	pflag.Parse()
-
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
-	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
-	runtime.Must(viper.BindEnv(projectIDFlag))
-	runtime.Must(viper.BindEnv(stackdriverLabels))
-	runtime.Must(viper.BindPFlags(pflag.CommandLine))
-	runtime.Must(runtime.FeaturesBindEnv())
-
-	runtime.Must(runtime.ParseFeaturesFromEnv())
-
-	return config{
-		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:      viper.GetString(projectIDFlag),
-		StackdriverLabels: viper.GetString(stackdriverLabels),
-	}
-}
-
-func registerMetricViews() {
-	if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
-		logger.WithError(err).Error("could not register view")
-	}
-}
-
-func setupMetricsRecorder(conf config) (health healthcheck.Handler, closer func()) {
-	health = healthcheck.NewHandler()
-	closer = func() {}
-
-	// Stackdriver metrics
-	if conf.Stackdriver {
-		sd, err := metrics.RegisterStackdriverExporter(conf.GCPProjectID, conf.StackdriverLabels)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register stackdriver exporter")
-		}
-		// It is imperative to invoke flush before your main function exits
-		closer = func() { sd.Flush() }
-	}
-
-	// Prometheus metrics
-	if conf.PrometheusMetrics {
-		registry := prom.NewRegistry()
-		metricHandler, err := metrics.RegisterPrometheusExporter(registry)
-		if err != nil {
-			logger.WithError(err).Fatal("Could not register prometheus exporter")
-		}
-		http.Handle("/metrics", metricHandler)
-		health = healthcheck.NewMetricsHandler(registry, "agones")
-	}
-
-	metrics.SetReportingPeriod(conf.PrometheusMetrics, conf.Stackdriver)
-	return
+	return response, err
 }

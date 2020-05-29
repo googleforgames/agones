@@ -101,7 +101,7 @@ func TestConvert(t *testing.T) {
 		assert.Zero(t, sdkGs.ObjectMeta.DeletionTimestamp)
 		assert.Equal(t, gs.Status.Players.Capacity, sdkGs.Status.Players.Capacity)
 		assert.Equal(t, gs.Status.Players.Count, sdkGs.Status.Players.Count)
-		assert.Equal(t, gs.Status.Players.IDs, sdkGs.Status.Players.IDs)
+		assert.Equal(t, gs.Status.Players.IDs, sdkGs.Status.Players.Ids)
 	})
 
 	t.Run("DeletionTimestamp", func(t *testing.T) {
