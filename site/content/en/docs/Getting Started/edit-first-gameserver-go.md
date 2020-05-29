@@ -25,7 +25,7 @@ Also complete the "Enabling creation of RBAC resources" and "Installing Agones" 
 ## Modify the code and push another new image
 
 ### Modify the simple-udp example source code
-Modify the main.go file. For example:
+Modify the {{< ghlink href="examples/simple-udp/main.go" >}}main.go{{< /ghlink >}} file. For example:
 
 Change the following line in `main.go`:
 
