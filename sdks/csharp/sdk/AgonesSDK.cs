@@ -31,7 +31,7 @@ namespace Agones
 		/// </summary>
 		public double RequestTimeout { get; set; }
 
-		internal readonly SDK.SDKClient client;
+		internal SDK.SDKClient client;
 		internal readonly Channel channel;
 		internal readonly IClientStreamWriter<Empty> healthStream;
 		internal readonly CancellationTokenSource cts;
