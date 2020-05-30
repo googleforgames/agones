@@ -38,14 +38,19 @@ namespace Agones
         [Range(0.01f, 5)] public float healthIntervalSecond = 5.0f;
 
         /// <summary>
-        /// Whether the server sends a health ping to the Agones sidecar.
+        /// Whether to start sending health ping to the Agones sidecar.
         /// </summary>
-        public bool healthEnabled = true;
+        [SerializeField] private bool startHealthChecks = true;
 
         /// <summary>
         /// Debug Logging Enabled. Debug logging for development of this Plugin.
         /// </summary>
         public bool logEnabled = false;
+
+        /// <summary>
+        /// Indicates whether health checks are currently started.
+        /// </summary>
+        public bool HealthIsStarted { get; private set; }
 
         private string sidecarAddress;
         private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -54,20 +59,26 @@ namespace Agones
         {
             public string key;
             public string value;
-            public KeyValueMessage(string k, string v) => (key, value) = (k, v);
+
+            public KeyValueMessage(string key, string value)
+            {
+                this.key = key;
+                this.value = value;
+            }
         }
 
         #region Unity Methods
         // Use this for initialization.
         private void Awake()
         {
-            String port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
+            string port = Environment.GetEnvironmentVariable("AGONES_SDK_HTTP_PORT");
             sidecarAddress = "http://localhost:" + (port ?? "9358");
         }
 
         private void Start()
         {
-            HealthCheckAsync();
+            if (startHealthChecks)
+                StartHealthChecks();
         }
 
         private void OnApplicationQuit()
@@ -213,6 +224,26 @@ namespace Agones
         }
 
         /// <summary>
+        /// Start sending health ping to the Agones sidecar. 
+        /// </summary>
+        public void StartHealthChecks()
+        {
+            if (HealthIsStarted)
+                return;
+
+            HealthIsStarted = true;
+            HealthCheckAsync();
+        }
+        
+        /// <summary>
+        /// Stop sending health ping to the Agones sidecar. 
+        /// </summary>
+        public void StopHealthChecks()
+        {
+            HealthIsStarted = false;
+        }
+
+        /// <summary>
         /// WatchGameServerCallback is the callback that will be executed every time
         /// a GameServer is changed and WatchGameServer is notified
         /// </summary>
@@ -237,7 +268,7 @@ namespace Agones
 
         private async void HealthCheckAsync()
         {
-            while (healthEnabled)
+            while (HealthIsStarted)
             {
                 await Task.Delay(TimeSpan.FromSeconds(healthIntervalSecond));
 
