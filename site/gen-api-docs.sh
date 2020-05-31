@@ -21,12 +21,18 @@ cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
 go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
-go build
+go build -o /usr/local/bin/gen-crd-api-reference-docs
 
-cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
+cd /go/src/agones.dev/agones
 
 FILE=${FILE:-/go/src/agones.dev/agones/site/content/en/docs/Reference/agones_crd_api_reference.html}
 VERSION=${VERSION:-"0.9.0"}
+
+API_DIR="./pkg/apis/"
+TEMPLATE_DIR="/go/src/github.com/ahmetb/gen-crd-api-reference-docs/template/"
+CONFIG_FILE="/go/src/github.com/ahmetb/gen-crd-api-reference-docs/example-config.json"
+
+cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl $TEMPLATE_DIR
 
 # +++ Title section
 TITLE="/tmp/title.html"
@@ -39,7 +45,7 @@ RESULT="/tmp/agones_crd_api_reference.html"
 # Version to compare
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
+gen-crd-api-reference-docs --config $CONFIG_FILE --api-dir $API_DIR --template-dir $TEMPLATE_DIR --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 # Get the title lines from +++ till empty string
