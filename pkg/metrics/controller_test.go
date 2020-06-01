@@ -69,7 +69,6 @@ func assertMetricData(t *testing.T, exporter *metricExporter, metricName string,
 		}
 		e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
 		assert.True(t, ok, "no TimeSeries found with labels: %v", actualLabelValues)
-
 		assert.Equal(t, actualLabelValues, e.labels, "label values don't match")
 		assert.Equal(t, len(tsd.Points), 1, "assertMetricDataValues can only handle a single Point in a TimeSeries")
 		assert.Equal(t, tsd.Points[0].Value, e.val, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
@@ -110,9 +109,9 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.collect()
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "gameservers_count", []expectedMetricData{
-		{labels: []string{"test-fleet", "Ready"}, val: int64(0)},
-		{labels: []string{"test-fleet", "Shutdown"}, val: int64(1)},
-		{labels: []string{"none", "PortAllocation"}, val: int64(2)},
+		{labels: []string{"test-fleet", "default", "Ready"}, val: int64(0)},
+		{labels: []string{"test-fleet", "default", "Shutdown"}, val: int64(1)},
+		{labels: []string{"none", "default", "PortAllocation"}, val: int64(2)},
 	})
 }
 
@@ -141,14 +140,14 @@ func TestControllerGameServersTotal(t *testing.T) {
 	c.sync()
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "gameservers_total", []expectedMetricData{
-		{labels: []string{"test", "Creating"}, val: int64(16)},
-		{labels: []string{"test", "Scheduled"}, val: int64(15)},
-		{labels: []string{"test", "Starting"}, val: int64(10)},
-		{labels: []string{"test", "Unhealthy"}, val: int64(1)},
-		{labels: []string{"none", "Creating"}, val: int64(19)},
-		{labels: []string{"none", "Scheduled"}, val: int64(18)},
-		{labels: []string{"none", "Starting"}, val: int64(16)},
-		{labels: []string{"none", "Unhealthy"}, val: int64(1)},
+		{labels: []string{"test", "default", "Creating"}, val: int64(16)},
+		{labels: []string{"test", "default", "Scheduled"}, val: int64(15)},
+		{labels: []string{"test", "default", "Starting"}, val: int64(10)},
+		{labels: []string{"test", "default", "Unhealthy"}, val: int64(1)},
+		{labels: []string{"none", "default", "Creating"}, val: int64(19)},
+		{labels: []string{"none", "default", "Scheduled"}, val: int64(18)},
+		{labels: []string{"none", "default", "Starting"}, val: int64(16)},
+		{labels: []string{"none", "default", "Unhealthy"}, val: int64(1)},
 	})
 }
 
@@ -175,14 +174,14 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "fleets_replicas_count", []expectedMetricData{
-		{labels: []string{"fleet-deleted", "allocated"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "desired"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "ready"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "total"}, val: int64(0)},
-		{labels: []string{"fleet-test", "allocated"}, val: int64(2)},
-		{labels: []string{"fleet-test", "desired"}, val: int64(5)},
-		{labels: []string{"fleet-test", "ready"}, val: int64(1)},
-		{labels: []string{"fleet-test", "total"}, val: int64(8)},
+		{labels: []string{"fleet-deleted", "default", "allocated"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "default", "desired"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "default", "ready"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", "default", "total"}, val: int64(0)},
+		{labels: []string{"fleet-test", "default", "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", "default", "desired"}, val: int64(5)},
+		{labels: []string{"fleet-test", "default", "ready"}, val: int64(1)},
+		{labels: []string{"fleet-test", "default", "total"}, val: int64(8)},
 	})
 }
 
@@ -220,37 +219,37 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "fleet_autoscalers_able_to_scale", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch"}, val: int64(1)},
-		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_buffer_limits", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "max"}, val: int64(50)},
-		{labels: []string{"first-fleet", "name-switch", "min"}, val: int64(10)},
-		{labels: []string{"second-fleet", "name-switch", "max"}, val: int64(50)},
-		{labels: []string{"second-fleet", "name-switch", "min"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted", "max"}, val: int64(150)},
-		{labels: []string{"deleted-fleet", "deleted", "min"}, val: int64(15)},
+		{labels: []string{"first-fleet", "name-switch", "default", "max"}, val: int64(50)},
+		{labels: []string{"first-fleet", "name-switch", "default", "min"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", "default", "max"}, val: int64(50)},
+		{labels: []string{"second-fleet", "name-switch", "default", "min"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", "default", "max"}, val: int64(150)},
+		{labels: []string{"deleted-fleet", "deleted", "default", "min"}, val: int64(15)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_buffer_size", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "count"}, val: int64(10)},
-		{labels: []string{"second-fleet", "name-switch", "count"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted", "percentage"}, val: int64(50)},
+		{labels: []string{"first-fleet", "name-switch", "default", "count"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", "default", "count"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", "default", "percentage"}, val: int64(50)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_current_replicas_count", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch"}, val: int64(20)},
-		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(20)},
+		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_desired_replicas_count", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_limited", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch"}, val: int64(1)},
-		{labels: []string{"deleted-fleet", "deleted"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
 	})
 }
 
