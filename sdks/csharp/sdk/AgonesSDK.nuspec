@@ -13,10 +13,11 @@
     <repository url="https://github.com/googleforgames/agones" />
     <dependencies>
       <group targetFramework=".NETStandard2.0">
-        <dependency id="Google.Api.CommonProtos" version="1.7.0" exclude="Build,Analyzers" />
-        <dependency id="Google.Protobuf" version="3.11.2" exclude="Build,Analyzers" />
-        <dependency id="Grpc" version="2.26.0" exclude="Build,Analyzers" />
-        <dependency id="Grpc.Core" version="2.26.0" exclude="Build,Analyzers" />
+        <dependency id="Google.Api.CommonProtos" version="2.0.0" exclude="Build,Analyzers" />
+        <dependency id="Google.Protobuf" version="3.11.4" exclude="Build,Analyzers" />
+        <dependency id="Grpc" version="2.28.1" exclude="Build,Analyzers" />
+        <dependency id="Grpc.Core" version="2.28.1" exclude="Build,Analyzers" />
+        <dependency id="Grpc.Tools" version="2.28.1" exclude="Build,Analyzers" />
       </group>
     </dependencies>
   </metadata>
