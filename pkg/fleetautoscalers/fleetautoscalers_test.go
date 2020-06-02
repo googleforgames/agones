@@ -35,96 +35,6 @@ const (
 	scaleFactor = 2
 )
 
-func TestComputeDesiredFleetSize(t *testing.T) {
-	t.Parallel()
-
-	fas, f := defaultFixtures()
-
-	fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(20)
-	fas.Spec.Policy.Buffer.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-
-	replicas, limited, err := computeDesiredFleetSize(fas, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(60))
-	assert.Equal(t, limited, false)
-
-	// test empty Policy Type
-	f.Status.Replicas = 61
-	fas.Spec.Policy.Type = ""
-	replicas, limited, err = computeDesiredFleetSize(fas, f)
-	assert.NotNil(t, err)
-	assert.Equal(t, replicas, int32(61))
-	assert.Equal(t, limited, false)
-}
-
-func TestApplyBufferPolicy(t *testing.T) {
-	t.Parallel()
-
-	fas, f := defaultFixtures()
-	b := fas.Spec.Policy.Buffer
-
-	b.BufferSize = intstr.FromInt(20)
-	b.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-
-	replicas, limited, err := applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(60))
-	assert.Equal(t, limited, false)
-
-	b.MinReplicas = 65
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(65))
-	assert.Equal(t, limited, true)
-
-	b.MinReplicas = 0
-	b.MaxReplicas = 55
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(55))
-	assert.Equal(t, limited, true)
-
-	b.BufferSize = intstr.FromString("20%")
-	b.MinReplicas = 0
-	b.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 50
-	f.Status.ReadyReplicas = 0
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(63))
-	assert.Equal(t, limited, false)
-
-	b.BufferSize = intstr.FromString("10%")
-	b.MinReplicas = 0
-	b.MaxReplicas = 10
-	f.Spec.Replicas = 1
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 1
-	f.Status.ReadyReplicas = 0
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(2))
-	assert.Equal(t, limited, false)
-}
-
 type testServer struct{}
 
 func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -183,6 +93,230 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, err = io.WriteString(w, string(result))
 	if err != nil {
 		http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
+	}
+}
+
+func TestComputeDesiredFleetSize(t *testing.T) {
+	t.Parallel()
+
+	fas, f := defaultFixtures()
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	var testCases = []struct {
+		description             string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		policy                  autoscalingv1.FleetAutoscalerPolicy
+		expected                expected
+	}{
+		{
+			description:             "Increase replicas",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(20),
+					MaxReplicas: 100,
+				},
+			},
+			expected: expected{
+				replicas: 60,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "Wrong policy",
+			specReplicas:            50,
+			statusReplicas:          60,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: "",
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(20),
+					MaxReplicas: 100,
+				},
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "wrong policy type, should be one of: Buffer, Webhook",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			fas.Spec.Policy = tc.policy
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := computeDesiredFleetSize(fas, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+			}
+		})
+	}
+}
+
+func TestApplyBufferPolicy(t *testing.T) {
+	t.Parallel()
+
+	_, f := defaultFixtures()
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	var testCases = []struct {
+		description             string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		buffer                  *autoscalingv1.BufferPolicy
+		expected                expected
+	}{
+		{
+			description:             "Increase replicas",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 60,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "Min replicas set, limited == true",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MinReplicas: 65,
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 65,
+				limited:  true,
+				err:      "",
+			},
+		},
+		{
+			description:             "Replicas == max",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MinReplicas: 0,
+				MaxReplicas: 55,
+			},
+			expected: expected{
+				replicas: 55,
+				limited:  true,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size, scale up",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 50,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("20%"),
+				MinReplicas: 0,
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 63,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size, scale up twice",
+			specReplicas:            1,
+			statusReplicas:          1,
+			statusAllocatedReplicas: 1,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("10%"),
+				MinReplicas: 0,
+				MaxReplicas: 10,
+			},
+			expected: expected{
+				replicas: 2,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size is invalid, err received",
+			specReplicas:            1,
+			statusReplicas:          1,
+			statusAllocatedReplicas: 1,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("asd"),
+				MinReplicas: 0,
+				MaxReplicas: 10,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "invalid value for IntOrString: invalid value \"asd\": strconv.Atoi: parsing \"asd\": invalid syntax",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := applyBufferPolicy(tc.buffer, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+			}
+		})
 	}
 }
 
@@ -408,7 +542,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	}
 }
 
-func TestApplyWebhookPolicy_NilFleet(t *testing.T) {
+func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	t.Parallel()
 
 	url := "/scale"

@@ -31,7 +31,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 )
@@ -42,7 +41,6 @@ var client = http.Client{
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
 func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet) (int32, bool, error) {
-
 	switch fas.Spec.Policy.Type {
 	case autoscalingv1.BufferPolicyType:
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
@@ -50,10 +48,10 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
-	return f.Status.Replicas, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
+	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int32, bool, error) {
+func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
 	if w == nil {
 		return 0, false, errors.New("nil WebhookPolicy passed")
 	}
@@ -67,7 +65,6 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 	}
 
 	var u *url.URL
-	var err error
 
 	if w.URL != nil {
 		if *w.URL == "" {
@@ -136,7 +133,11 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 	}
 	defer func() {
 		if cerr := res.Body.Close(); cerr != nil {
-			log.Error(cerr)
+			if err != nil {
+				err = errors.Wrap(err, cerr.Error())
+			} else {
+				err = cerr
+			}
 		}
 	}()
 
@@ -183,7 +184,7 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32,
 		// it means that allocated must be 70% and adjust the fleet size to make that true.
 		bufferPercent, err := intstr.GetValueFromIntOrPercent(&b.BufferSize, 100, true)
 		if err != nil {
-			return f.Status.Replicas, false, err
+			return 0, false, err
 		}
 		// use Math.Ceil to round the result up
 		replicas = int32(math.Ceil(float64(f.Status.AllocatedReplicas*100) / float64(100-bufferPercent)))
