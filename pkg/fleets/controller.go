@@ -408,10 +408,10 @@ func (c *Controller) recreateDeployment(fleet *agonesv1.Fleet, rest []*agonesv1.
 func (c *Controller) rollingUpdateDeployment(fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) (int32, error) {
 	replicas, err := c.rollingUpdateActive(fleet, active, rest)
 	if err != nil {
-		return replicas, err
+		return 0, err
 	}
 	if err := c.rollingUpdateRest(fleet, rest); err != nil {
-		return replicas, err
+		return 0, err
 	}
 	return replicas, nil
 }
@@ -437,7 +437,7 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
 	if err != nil {
-		return replicas, errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
+		return 0, errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
 	}
 	surge := int32(r)
 
