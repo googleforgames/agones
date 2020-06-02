@@ -1250,7 +1250,8 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 	for i := range list {
 		// Do this, otherwise scopelint complains about "using a reference for the variable on range scope"
 		gs := &list[i]
-		capacity := rand.IntnRange(1, 100)
+		players := rand.IntnRange(1, 5)
+		capacity := rand.IntnRange(players, 100)
 		totalCapacity += capacity
 
 		msg := fmt.Sprintf("PLAYER_CAPACITY %d", capacity)
@@ -1260,23 +1261,29 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 		}
 		assert.Equal(t, fmt.Sprintf("ACK: %s\n", msg), reply)
 
-		players := rand.IntnRange(1, 5)
 		totalPlayers += players
 		for i := 1; i <= players; i++ {
 			msg := "PLAYER_CONNECT " + fmt.Sprintf("%d", i)
 			logrus.WithField("msg", msg).WithField("gs", gs.ObjectMeta.Name).Info("Sending Player Connect")
-			reply, err := e2e.SendGameServerUDP(gs, msg)
-			if err != nil {
-				t.Fatalf("Could not message GameServer: %v", err)
-			}
-			assert.Equal(t, fmt.Sprintf("ACK: %s\n", msg), reply)
+			// retry on failure. Will stop flakiness of UDP packets being sent/received.
+			err := wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
+				reply, err := e2e.SendGameServerUDP(gs, msg)
+				if err != nil {
+					logrus.WithError(err).Warn("error with udp packet")
+					return false, nil
+				}
+				assert.Equal(t, fmt.Sprintf("ACK: %s\n", msg), reply)
+				return true, nil
+			})
+			assert.NoError(t, err)
 		}
 	}
 
 	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		logrus.WithField("players", fleet.Status.Players).WithField("totalCapacity", totalCapacity).
 			WithField("totalPlayers", totalPlayers).Info("Checking Capacity")
-		return (fleet.Status.Players.Capacity == int64(totalCapacity)) && (fleet.Status.Players.Count == int64(totalPlayers))
+		// since UDP packets might fail, we might get an extra player, so we'll check for that.
+		return (fleet.Status.Players.Capacity == int64(totalCapacity)) && (fleet.Status.Players.Count >= int64(totalPlayers))
 	})
 }
 
