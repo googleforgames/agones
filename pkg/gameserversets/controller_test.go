@@ -58,6 +58,8 @@ const (
 )
 
 func TestComputeReconciliationAction(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		desc                   string
 		list                   []*agonesv1.GameServer
@@ -330,6 +332,8 @@ func TestComputeStatus(t *testing.T) {
 }
 
 func TestControllerWatchGameServers(t *testing.T) {
+	t.Parallel()
+
 	gsSet := defaultFixture()
 
 	c, m := newFakeController()
@@ -416,6 +420,8 @@ func TestControllerWatchGameServers(t *testing.T) {
 }
 
 func TestSyncGameServerSet(t *testing.T) {
+	t.Parallel()
+
 	t.Run("adding and deleting unhealthy gameservers", func(t *testing.T) {
 		gsSet := defaultFixture()
 		list := createGameServers(gsSet, 5)
@@ -488,6 +494,8 @@ func TestSyncGameServerSet(t *testing.T) {
 }
 
 func TestControllerSyncUnhealthyGameServers(t *testing.T) {
+	t.Parallel()
+
 	gsSet := defaultFixture()
 
 	gs1 := gsSet.GameServer()
@@ -527,6 +535,8 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 }
 
 func TestSyncMoreGameServers(t *testing.T) {
+	t.Parallel()
+
 	gsSet := defaultFixture()
 
 	c, m := newFakeController()

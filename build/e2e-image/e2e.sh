@@ -13,9 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+FEATURES=$1
+echo $FEATURES
 set -e
 echo "installing current release"
-DOCKER_RUN= make install
+DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"'
 echo "starting e2e test"
-DOCKER_RUN= make test-e2e ARGS=-parallel=64
+DOCKER_RUN= make test-e2e ARGS=-parallel=64 FEATURE_GATES='"'$FEATURES'"'
 echo "completed e2e test"
