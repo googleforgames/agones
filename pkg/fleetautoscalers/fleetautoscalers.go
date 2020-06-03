@@ -51,32 +51,22 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
-	if w == nil {
-		return 0, false, errors.New("nil WebhookPolicy passed")
-	}
-
-	if f == nil {
-		return 0, false, errors.New("nil Fleet passed")
-	}
-
-	if w.URL != nil && w.Service != nil {
-		return 0, false, errors.New("service and url cannot be used simultaneously")
-	}
-
+func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error) {
 	var u *url.URL
+	var err error
 
 	if w.URL != nil {
 		if *w.URL == "" {
-			return 0, false, errors.New("URL was not provided")
+			return nil, errors.New("URL was not provided")
 		}
+
 		u, err = url.ParseRequestURI(*w.URL)
 		if err != nil {
-			return 0, false, err
+			return nil, err
 		}
 	} else {
 		if w.Service.Name == "" {
-			return 0, false, errors.New("service name was not provided")
+			return nil, errors.New("service name was not provided")
 		}
 
 		var servicePath string
@@ -92,20 +82,57 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 		if w.CABundle != nil {
 			scheme = "https"
 
-			// We can have multiple fleetautoscalers with different CABundles defined,
-			// so we switch client.Transport before each POST request
-			rootCAs := x509.NewCertPool()
-			if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
-				return 0, false, errors.New("no certs were appended from caBundle")
-			}
-			client.Transport = &http.Transport{
-				TLSClientConfig: &tls.Config{
-					RootCAs: rootCAs,
-				},
+			err = setCABundle(w.CABundle)
+			if err != nil {
+				return nil, err
 			}
 		}
 
-		u = buildURL(scheme, w.Service.Name, w.Service.Namespace, servicePath)
+		u = createURL(scheme, w.Service.Name, w.Service.Namespace, servicePath)
+	}
+
+	return u, nil
+}
+
+func createURL(scheme, name, namespace, path string) *url.URL {
+	return &url.URL{
+		Scheme: scheme,
+		Host:   fmt.Sprintf("%s.%s.svc:8000", name, namespace),
+		Path:   path,
+	}
+}
+
+func setCABundle(CABundle []byte) error {
+	// We can have multiple fleetautoscalers with different CABundles defined,
+	// so we switch client.Transport before each POST request
+	rootCAs := x509.NewCertPool()
+	if ok := rootCAs.AppendCertsFromPEM(CABundle); !ok {
+		return errors.New("no certs were appended from caBundle")
+	}
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			RootCAs: rootCAs,
+		},
+	}
+	return nil
+}
+
+func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
+	if w == nil {
+		return 0, false, errors.New("nil WebhookPolicy passed")
+	}
+
+	if f == nil {
+		return 0, false, errors.New("nil Fleet passed")
+	}
+
+	if w.URL != nil && w.Service != nil {
+		return 0, false, errors.New("service and url cannot be used simultaneously")
+	}
+
+	url, err := buildURLFromWebhookPolicy(w)
+	if err != nil {
+		return 0, false, err
 	}
 
 	faReq := autoscalingv1.FleetAutoscaleReview{
@@ -124,7 +151,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	}
 
 	res, err := client.Post(
-		u.String(),
+		url.String(),
 		"application/json",
 		strings.NewReader(string(b)),
 	)
@@ -142,7 +169,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	}()
 
 	if res.StatusCode != http.StatusOK {
-		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
+		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, url.String())
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -159,14 +186,6 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 		return faResp.Response.Replicas, false, nil
 	}
 	return f.Status.Replicas, false, nil
-}
-
-func buildURL(scheme, name, namespace, path string) *url.URL {
-	return &url.URL{
-		Scheme: scheme,
-		Host:   fmt.Sprintf("%s.%s.svc:8000", name, namespace),
-		Path:   path,
-	}
 }
 
 func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32, bool, error) {

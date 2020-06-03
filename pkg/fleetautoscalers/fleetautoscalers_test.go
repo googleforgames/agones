@@ -520,6 +520,21 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				err:      "invalid character 'i' looking for beginning of value",
 			},
 		},
+		{
+			description: "Nil URL, empty namespace - default one should be used, no such host err is returned",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "",
+					Path:      &url,
+				},
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "Post http://service1.default.svc:8000/scale: dial tcp: lookup service1.default.svc: no such host",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -564,7 +579,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	assert.Zero(t, replicas)
 }
 
-func TestBuildURL(t *testing.T) {
+func TestCreateURL(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -603,7 +618,7 @@ func TestBuildURL(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			res := buildURL(tc.scheme, tc.name, tc.namespace, tc.path)
+			res := createURL(tc.scheme, tc.name, tc.namespace, tc.path)
 
 			if assert.NotNil(t, res) {
 				assert.Equal(t, tc.expected, res.String())
