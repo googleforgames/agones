@@ -32,11 +32,11 @@ RUN git clone -b $GRPC_RELEASE_TAG --depth=5 https://github.com/grpc/grpc /var/l
     echo "--- installing protobuf ---" && \
     cd third_party/protobuf && \
     ./autogen.sh && ./configure --enable-shared && \
-    make -j$(nproc) && make install && make clean && ldconfig && \
+    make install && make clean && ldconfig && \
     export CFLAGS=-Wno-error && export CXXFLAGS=-Wno-error && \
     echo "--- installing grpc ---" && \
     cd /var/local/git/grpc && \
-    make -j$(nproc) && make install && make clean && ldconfig
+    make install && make clean && ldconfig
 
 WORKDIR /go/src/agones.dev/agones
 
