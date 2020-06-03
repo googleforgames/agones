@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Gather dependencies and build the executable
-FROM golang:1.13.7 as builder
+FROM golang:1.14.4 as builder
 
 WORKDIR /go/src/agones.dev
 # TODO: Clone from the latest release branch instead of from the master branch.
