@@ -61,7 +61,7 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 | agones_fleet_autoscalers_limited                | The fleet autoscaler is capped (1)                                  | gauge     |
 | agones_gameservers_node_count                   | The distribution of gameservers per node                            | histogram |
 | agones_nodes_count                              | The count of nodes empty and with gameservers                       | gauge     |
-| agones_gameservers_state_duration  | The distribution of gameserver state duration in seconds. Note: this metric could have some missing samples by design. Do not use the `_total` counter the real value for state changes.     | histogram     |
+| agones_gameservers_state_duration  | The distribution of gameserver state duration in seconds. Note: this metric could have some missing samples by design. Do not use the `_total` counter as the real value for state changes.     | histogram     |
 | agones_k8s_client_http_request_total            | The total of HTTP requests to the Kubernetes API by status code       | counter   |
 | agones_k8s_client_http_request_duration_seconds | The distribution of HTTP requests latencies to the Kubernetes API by status code  | histogram   |
 | agones_k8s_client_cache_list_total              | The total number of list operations for client-go caches                         | counter   |

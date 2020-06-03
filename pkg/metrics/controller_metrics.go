@@ -115,9 +115,9 @@ var (
 		&view.View{
 			Name:        "gameserver_state_duration",
 			Measure:     gsStateDurationSec,
-			Description: "The time gameserver exist in the current state in seconds",
+			Description: "The time gameserver exists in the current state in seconds",
 			Aggregation: view.Distribution(distributionSeconds...),
-			TagKeys:     []tag.Key{keyType, keyFleetName},
+			TagKeys:     []tag.Key{keyType, keyFleetName, keyNamespace},
 		},
 	}
 )

@@ -298,15 +298,15 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 			c.logger.Warn(err.Error())
 		} else {
 			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
-				tag.Upsert(keyFleetName, fleetName)}, gsStateDurationSec.M(duration))
+				tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gsStateDurationSec.M(duration))
 		}
 	}
 }
 
-// calcDuration - calculate duration between state changes
+// calcDuration calculates the duration between state changes
 // store current time from creationTimestamp for each update received
 // Assumptions: there is a possibility that one of the previous state change timestamps would be evicted,
-// this measure would be skipped. This is a trade off between accuracy of distribution calculation and the performance.
+// this measurement would be skipped. This is a trade off between accuracy of distribution calculation and the performance.
 // Presumably occasional miss would not change the statistics too much.
 func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
 	// currentTime - GameServer time from its start
