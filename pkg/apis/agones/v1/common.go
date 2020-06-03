@@ -56,7 +56,7 @@ func validateName(c crd) []metav1.StatusCause {
 	if len(name) > validation.LabelValueMaxLength {
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   fmt.Sprintf("Name"),
+			Field:   "Name",
 			Message: fmt.Sprintf("Length of %s '%s' name should be no more than 63 characters.", kind, name),
 		})
 	}
