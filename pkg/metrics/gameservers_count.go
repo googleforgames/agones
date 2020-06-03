@@ -63,7 +63,7 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	c.reset()
 	// counts gameserver per state and fleet
 	for _, g := range gameservers {
-		c.increment(g.Labels[agonesv1.FleetNameLabel], g.Status.State)
+		c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
 	}
 
 	errs := []error{}

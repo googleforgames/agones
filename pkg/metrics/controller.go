@@ -43,7 +43,19 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-const noneValue = "none"
+const (
+	noneValue = "none"
+
+	// GameServersStateCount is the size of LRU cache and should contain all gameservers state changes
+	// Upper bound could be estimated as 10_000 of gameservers in total each moment, 10 state changes per each gameserver
+	// and about 10 minutes for a game session, and 6 gameservers per hour.
+	// For one hour 600k capacity would be enough, even if no records would be deleted.
+	// And calcDuration algorithm is removing those records, which already has been changed (old statuses).
+	// Key is Namespace, fleetName, GameServerName, State and float64 as value.
+	// Roughly 256 + 63 + 63 + 16 + 4 = 400 bytes per every record.
+	// In total we would have 229 MiB of space required to store GameServer State durations.
+	GameServersStateCount = 600_000
+)
 
 var (
 	// MetricResyncPeriod is the interval to re-synchronize metrics based on indexed cache.
@@ -90,8 +102,8 @@ func NewController(
 
 	// GameServerStateLastChange Contains the time when the GameServer
 	// changed its state last time
-	// on delete remove GameServerName key
-	lruCache, err := lru.New(1 << 12)
+	// on delete and state change remove GameServerName key
+	lruCache, err := lru.New(GameServersStateCount)
 	if err != nil {
 		logger.WithError(err).Fatal("Unable to create LRU cache")
 	}
@@ -279,17 +291,11 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
-		if newGs.Status.State == agonesv1.GameServerStateReady {
-			diff := time.Now().Sub(newGs.ObjectMeta.CreationTimestamp.Local()).Seconds()
-			c.logger.Info("Time taken to become ready", diff)
-			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
-				tag.Upsert(keyFleetName, fleetName)}, gsReadyDuration.M(diff*1000.))
-			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
 
 		// Calculate the duration of the current state
 		duration, err := c.calcDuration(oldGs, newGs)
 		if err != nil {
-			c.logger.Debug(err.Error())
+			c.logger.Warn(err.Error())
 		} else {
 			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
 				tag.Upsert(keyFleetName, fleetName)}, gsStateDurationSec.M(duration))
@@ -300,7 +306,8 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 // calcDuration - calculate duration between state changes
 // store current time from creationTimestamp for each update received
 // Assumptions: there is a possibility that one of the previous state change timestamps would be evicted,
-// this measure would be skipped
+// this measure would be skipped. This is a trade off between accuracy of distribution calculation and the performance.
+// Presumably occasional miss would not change the statistics too much.
 func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
 	// currentTime - GameServer time from its start
 	currentTime := c.now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
