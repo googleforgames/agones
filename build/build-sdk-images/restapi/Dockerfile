@@ -30,11 +30,9 @@ RUN echo '§' && apt-get -qy update
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -qq -y nodejs
 
-#RUN apt-get install -qq -y openjdk-8-jre
-RUN apt-get install -qq -y openjdk-8-jre > /dev/null
+RUN apt-get install -qq -y openjdk-11-jre > /dev/null
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
-
 
 # code generation scripts
 COPY *.sh /root/
