@@ -27,7 +27,7 @@ REPOSITORY ?= gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/rust-simple-server:0.7
+server_tag = $(REPOSITORY)/rust-simple-server:0.8
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -37,8 +37,8 @@ server_tag = $(REPOSITORY)/rust-simple-server:0.7
 #                 |___/
 
 # Build the example Gameserver
-# alias for 'build-server'
-build: build-server
+# alias for 'build-image'
+build: build-image
 
 # Build the server binary
 build-server:
