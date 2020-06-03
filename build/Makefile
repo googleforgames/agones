@@ -445,6 +445,10 @@ setup-prometheus:
 		$(HELM_ARGS) \
 		-f $(mount_path)/build/prometheus.yaml
 
+uninstall-prometheus: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm delete --purge prom
+
 # setup grafana in the current cluster with datasource and dashboards ready for use with agones
 # by default Persistent Volume Claims are requested.
 setup-grafana: PVC ?= true
@@ -456,6 +460,10 @@ setup-grafana:
 		helm upgrade --install --wait grafana stable/grafana --version=5.0.13  --namespace metrics \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
+
+uninstall-grafana: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm delete --purge grafana
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update
