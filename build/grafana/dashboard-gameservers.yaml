@@ -41,7 +41,7 @@ data:
     "editable": true,
     "gnetId": null,
     "graphTooltip": 0,
-    "iteration": 1586642951865,
+    "iteration": 1590749685767,
     "links": [],
     "panels": [
       {
@@ -98,9 +98,11 @@ data:
         "pluginVersion": "6.7.1",
         "targets": [
           {
-            "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\"}) by (type)",
+            "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
             "format": "time_series",
+            "hide": false,
             "instant": true,
+            "interval": "",
             "intervalFactor": 1,
             "legendFormat": "{{type}}",
             "refId": "A"
@@ -155,8 +157,9 @@ data:
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(rate(agones_gameservers_total{fleet_name=~\"$fleet\"}[$interval])) by (type)",
+            "expr": "sum(rate(agones_gameservers_total{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}[$interval])) by (type)",
             "format": "time_series",
+            "interval": "",
             "intervalFactor": 1,
             "legendFormat": "{{type}}",
             "refId": "A"
@@ -249,8 +252,9 @@ data:
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\"}) by (type)",
+            "expr": "sum(agones_gameservers_count{fleet_name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
             "format": "time_series",
+            "interval": "",
             "intervalFactor": 1,
             "legendFormat": "{{type}}",
             "refId": "A"
@@ -346,8 +350,9 @@ data:
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum(agones_fleets_replicas_count{name=~\"$fleet\"}) by (type)",
+            "expr": "sum(agones_fleets_replicas_count{name=~\"$fleet\", namespace=~\"$namespace\"}) by (type)",
             "format": "time_series",
+            "interval": "",
             "intervalFactor": 1,
             "legendFormat": "{{type}}",
             "refId": "A"
@@ -475,6 +480,7 @@ data:
           {
             "expr": "avg(delta(agones_gameservers_node_count_sum[1m]) / delta(agones_gameservers_node_count_count[1m]))",
             "format": "time_series",
+            "interval": "",
             "intervalFactor": 1,
             "legendFormat": "avg",
             "refId": "D"
@@ -500,6 +506,7 @@ data:
         },
         "yaxes": [
           {
+            "$$hashKey": "object:696",
             "format": "short",
             "label": null,
             "logBase": 1,
@@ -508,6 +515,7 @@ data:
             "show": true
           },
           {
+            "$$hashKey": "object:697",
             "format": "short",
             "label": null,
             "logBase": 1,
@@ -732,6 +740,34 @@ data:
           "refresh": 2,
           "skipUrlSync": false,
           "type": "interval"
+        },
+        {
+          "allValue": null,
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "datasource": "Prometheus",
+          "definition": "label_values(agones_gameservers_count, namespace)",
+          "hide": 0,
+          "includeAll": true,
+          "index": -1,
+          "label": null,
+          "multi": true,
+          "name": "namespace",
+          "options": [],
+          "query": "label_values(agones_gameservers_count, namespace)",
+          "refresh": 2,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "tagValuesQuery": "",
+          "tags": [],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
         }
       ]
     },

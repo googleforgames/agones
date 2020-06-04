@@ -227,11 +227,25 @@ steps:
     - GO111MODULE=on
 
 #
-# Run the e2e tests
+# Run the e2e tests with FeatureGates
 #
 
 - name: 'e2e-runner'
+  args: ['PlayerTracking=true&ContainerPortAllocation=true']
+  id: e2e-feature-gates
   waitFor:
+    - push-images
+    - build-e2e
+
+#
+# Run the e2e tests without FeatureGates
+#
+
+- name: 'e2e-runner'
+  args: ['']
+  id: e2e-stable
+  waitFor:
+    - e2e-feature-gates
     - push-images
     - build-e2e
 

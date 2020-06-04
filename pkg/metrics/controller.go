@@ -41,6 +41,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
+const noneValue = "none"
+
 var (
 	// MetricResyncPeriod is the interval to re-synchronize metrics based on indexed cache.
 	MetricResyncPeriod = time.Second * 15
@@ -140,7 +142,7 @@ func (c *Controller) recordFleetAutoScalerChanges(old, next interface{}) {
 	}
 
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-		tag.Upsert(keyFleetName, fas.Spec.FleetName))
+		tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
 
 	ableToScale := 0
 	limited := 0
@@ -189,7 +191,7 @@ func (c *Controller) recordFleetAutoScalerDeletion(obj interface{}) {
 		return
 	}
 	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fas.Name),
-		tag.Upsert(keyFleetName, fas.Spec.FleetName))
+		tag.Upsert(keyFleetName, fas.Spec.FleetName), tag.Upsert(keyNamespace, fas.Namespace))
 
 	// recording status
 	stats.Record(ctx,
@@ -211,7 +213,7 @@ func (c *Controller) recordFleetChanges(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, f.Status.Replicas, f.Status.AllocatedReplicas,
+	c.recordFleetReplicas(f.Name, f.Namespace, f.Status.Replicas, f.Status.AllocatedReplicas,
 		f.Status.ReadyReplicas, f.Spec.Replicas)
 }
 
@@ -221,12 +223,12 @@ func (c *Controller) recordFleetDeletion(obj interface{}) {
 		return
 	}
 
-	c.recordFleetReplicas(f.Name, 0, 0, 0, 0)
+	c.recordFleetReplicas(f.Name, f.Namespace, 0, 0, 0, 0)
 }
 
-func (c *Controller) recordFleetReplicas(fleetName string, total, allocated, ready, desired int32) {
+func (c *Controller) recordFleetReplicas(fleetName, fleetNamespace string, total, allocated, ready, desired int32) {
 
-	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName))
+	ctx, _ := tag.New(context.Background(), tag.Upsert(keyName, fleetName), tag.Upsert(keyNamespace, fleetNamespace))
 
 	recordWithTags(ctx, []tag.Mutator{tag.Upsert(keyType, "total")},
 		fleetsReplicasCountStats.M(int64(total)))
@@ -258,10 +260,10 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 	if newGs.Status.State != oldGs.Status.State {
 		fleetName := newGs.Labels[agonesv1.FleetNameLabel]
 		if fleetName == "" {
-			fleetName = "none"
+			fleetName = noneValue
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
-			tag.Upsert(keyFleetName, fleetName)}, gameServerTotalStats.M(1))
+			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
 	}
 }
 

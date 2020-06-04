@@ -39,6 +39,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -273,6 +274,10 @@ func restartAllocator(t *testing.T) {
 			continue
 		}
 		if err := kubeCore.Pods(agonesSystemNamespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
+			if k8serrors.IsNotFound(err) {
+				logrus.WithField("pod", pod.Name).WithError(err).Warn("Attempt at deletion failed")
+				continue
+			}
 			t.Fatalf("deleting pods failed: %s", err)
 		}
 	}
