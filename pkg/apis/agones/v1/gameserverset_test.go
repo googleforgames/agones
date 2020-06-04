@@ -125,7 +125,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	causes, ok = newGSS.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
-	assert.Equal(t, "labels", causes[0].Field)
+	assert.Equal(t, "spec.labels", causes[0].Field)
 
 	// Similar Annotations validation check
 	newGSS = gsSet.DeepCopy()
@@ -143,7 +143,7 @@ func TestGameServerSetValidateUpdate(t *testing.T) {
 	causes, ok = newGSS.Validate()
 	assert.False(t, ok)
 	assert.Len(t, causes, 1)
-	assert.Equal(t, "annotations", causes[0].Field)
+	assert.Equal(t, "spec.annotations", causes[0].Field)
 
 	gsSet.Spec.Template.Spec.Template =
 		corev1.PodTemplateSpec{

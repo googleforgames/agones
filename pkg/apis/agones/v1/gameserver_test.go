@@ -489,6 +489,10 @@ func TestGameServerValidate(t *testing.T) {
 				},
 				Spec: GameServerSpec{
 					Ports: []GameServerPort{{Name: "main", ContainerPort: 7777, PortPolicy: Static}},
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{Containers: []corev1.Container{
+							{Name: "testing", Image: "testing/image"},
+						}}},
 				},
 			},
 			applyDefaults: false,
@@ -508,11 +512,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 					},
@@ -536,11 +540,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 					},
@@ -560,11 +564,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -578,7 +582,7 @@ func TestGameServerValidate(t *testing.T) {
 			causesExpected: []metav1.StatusCause{
 				{
 					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("labels: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "labels",
+					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("spec.labels: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "spec.labels",
 				},
 			},
 		},
@@ -592,11 +596,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -610,7 +614,7 @@ func TestGameServerValidate(t *testing.T) {
 			causesExpected: []metav1.StatusCause{
 				{
 					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("labels: Invalid value: %q: must be no more than 63 characters", longNameLen64), Field: "labels",
+					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("spec.labels: Invalid value: %q: must be no more than 63 characters", longNameLen64), Field: "spec.labels",
 				},
 			},
 		},
@@ -624,11 +628,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -642,7 +646,7 @@ func TestGameServerValidate(t *testing.T) {
 			causesExpected: []metav1.StatusCause{
 				{
 					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("annotations: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "annotations",
+					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("spec.annotations: Invalid value: %q: name part must be no more than 63 characters", longNameLen64), Field: "spec.annotations",
 				},
 			},
 		},
@@ -656,11 +660,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -674,7 +678,7 @@ func TestGameServerValidate(t *testing.T) {
 			causesExpected: []metav1.StatusCause{
 				{
 					// error message is coming from k8s.io/apimachinery/pkg/apis/meta/v1/validation
-					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("annotations: Invalid value: %q: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')", "agones.dev/short±Name"), Field: "annotations",
+					Type: metav1.CauseTypeFieldValueInvalid, Message: fmt.Sprintf("spec.annotations: Invalid value: %q: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName',  or 'my.name',  or '123-abc', regex used for validation is '([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]')", "agones.dev/short±Name"), Field: "spec.annotations",
 				},
 			},
 		},
@@ -688,11 +692,11 @@ func TestGameServerValidate(t *testing.T) {
 					Kind: "test-kind",
 				},
 				Spec: GameServerSpec{
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 						ObjectMeta: metav1.ObjectMeta{
@@ -720,11 +724,11 @@ func TestGameServerValidate(t *testing.T) {
 						{PortPolicy: Passthrough, Name: "two", HostPort: 7890},
 						{PortPolicy: Dynamic, Name: "three", HostPort: 7890, ContainerPort: 1294},
 					},
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 					},
@@ -750,11 +754,11 @@ func TestGameServerValidate(t *testing.T) {
 					Ports: []GameServerPort{
 						{PortPolicy: Passthrough, Name: "main", HostPort: 7890, ContainerPort: 7777},
 					},
-					Container: "my_image",
+					Container: "my-image",
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
-								{Name: "my_image", Image: "foo/my_image"},
+								{Name: "my-image", Image: "foo/my_image"},
 							},
 						},
 					},
@@ -825,7 +829,7 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to cpu limit", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests: Invalid value: \"50m\": must be less than or equal to cpu limit", Field: "spec.spec.containers[0].resources.requests"},
 			},
 		},
 		{
@@ -863,7 +867,7 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource cpu request value must be non negative", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests[cpu]: Invalid value: \"-30m\": must be greater than or equal to 0", Field: "spec.spec.containers[0].resources.requests[cpu]"},
 			},
 		},
 		{
@@ -901,8 +905,8 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to cpu limit", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource cpu limit value must be non negative", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.limits[cpu]: Invalid value: \"-30m\": must be greater than or equal to 0", Field: "spec.spec.containers[0].resources.limits[cpu]"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests: Invalid value: \"30m\": must be less than or equal to cpu limit", Field: "spec.spec.containers[0].resources.requests"},
 			},
 		},
 		{
@@ -940,7 +944,7 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to memory limit", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests: Invalid value: \"55Mi\": must be less than or equal to memory limit", Field: "spec.spec.containers[0].resources.requests"},
 			},
 		},
 		{
@@ -978,7 +982,7 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource memory request value must be non negative", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests[memory]: Invalid value: \"-32Mi\": must be greater than or equal to 0", Field: "spec.spec.containers[0].resources.requests[memory]"},
 			},
 		},
 		{
@@ -1016,8 +1020,8 @@ func TestGameServerValidate(t *testing.T) {
 			applyDefaults: false,
 			isValid:       false,
 			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Request must be less than or equal to memory limit", Field: "container"},
-				{Type: metav1.CauseTypeFieldValueInvalid, Message: "Resource memory limit value must be non negative", Field: "container"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.requests: Invalid value: \"32Mi\": must be less than or equal to memory limit", Field: "spec.spec.containers[0].resources.requests"},
+				{Type: metav1.CauseTypeFieldValueInvalid, Message: "spec.spec.containers[0].resources.limits[memory]: Invalid value: \"-32Mi\": must be greater than or equal to 0", Field: "spec.spec.containers[0].resources.limits[memory]"},
 			},
 		},
 	}
@@ -1034,6 +1038,192 @@ func TestGameServerValidate(t *testing.T) {
 			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
 		})
 	}
+}
+
+func TestGameServerValidatePodTemplateSpec(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		description    string
+		gs             GameServer
+		applyDefaults  bool
+		isValid        bool
+		causesExpected []metav1.StatusCause
+	}{
+		{
+			description: "it should return valid without applying defaults",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+							DNSPolicy:     corev1.DNSDefault,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+									ImagePullPolicy:          corev1.PullIfNotPresent,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       true,
+		},
+		{
+			description: "it should return cause TerminationMessagePolicy required",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+							DNSPolicy:     corev1.DNSDefault,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									ImagePullPolicy: corev1.PullIfNotPresent,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueRequired, Message: "spec.spec.containers[0].terminationMessagePolicy: Required value: must be 'File' or 'FallbackToLogsOnError'", Field: "spec.spec.containers[0].terminationMessagePolicy"},
+			},
+		},
+		{
+			description: "it should return cause ImagePullPolicy required",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+							DNSPolicy:     corev1.DNSDefault,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueRequired, Message: "spec.spec.containers[0].imagePullPolicy: Required value", Field: "spec.spec.containers[0].imagePullPolicy"},
+			},
+		},
+		{
+			description: "it should return cause RestartPolicy required",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							DNSPolicy: corev1.DNSDefault,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+									ImagePullPolicy:          corev1.PullIfNotPresent,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueRequired, Message: "spec.spec.restartPolicy: Required value", Field: "spec.spec.restartPolicy"},
+			},
+		},
+		{
+			description: "it should return require DNSConfig",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+									ImagePullPolicy:          corev1.PullIfNotPresent,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueRequired, Message: "spec.spec.dnsPolicy: Required value", Field: "spec.spec.dnsPolicy"},
+			},
+		},
+		{
+			description: "it should return require DNSConfig cause when DNSPolicy is None",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							RestartPolicy: corev1.RestartPolicyOnFailure,
+							DNSPolicy:     corev1.DNSNone,
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+									TerminationMessagePolicy: corev1.TerminationMessageFallbackToLogsOnError,
+									ImagePullPolicy:          corev1.PullIfNotPresent,
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: false,
+			isValid:       false,
+			causesExpected: []metav1.StatusCause{
+				{Type: metav1.CauseTypeFieldValueRequired, Message: "spec.spec.dnsConfig: Required value: must provide `dnsConfig` when `dnsPolicy` is None", Field: "spec.spec.dnsConfig"},
+			},
+		},
+		{
+			description: "it should apply defaults and return valid",
+			gs: GameServer{
+				Spec: GameServerSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name: "testing", Image: "testing/image",
+								},
+							},
+						},
+					},
+				},
+			},
+			applyDefaults: true,
+			isValid:       true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			if tc.applyDefaults {
+				tc.gs.ApplyDefaults()
+			}
+
+			causes := ValidatePodTemplateSpec(&tc.gs.Spec.Template)
+			assert.ElementsMatch(t, tc.causesExpected, causes, "causes check")
+		})
+	}
+
 }
 
 func TestGameServerValidateFeatures(t *testing.T) {

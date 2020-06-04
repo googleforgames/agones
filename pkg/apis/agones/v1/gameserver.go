@@ -19,6 +19,11 @@ import (
 	"fmt"
 	"net"
 
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/kubernetes/pkg/apis/core"
+	k8s_api_v1 "k8s.io/kubernetes/pkg/apis/core/v1"
+	k8s_validation "k8s.io/kubernetes/pkg/apis/core/validation"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/apis"
 	"agones.dev/agones/pkg/apis/agones"
@@ -259,11 +264,23 @@ func (gs *GameServer) ApplyDefaults() {
 
 // ApplyDefaults applies default values to the GameServerSpec if they are not already populated
 func (gss *GameServerSpec) ApplyDefaults() {
+	gss.applySpecDefaults()
 	gss.applyContainerDefaults()
 	gss.applyPortDefaults()
 	gss.applyHealthDefaults()
 	gss.applySchedulingDefaults()
 	gss.applySdkServerDefaults()
+}
+
+// applySpecDefaults applies the PodTemplateSpec defaults
+func (gss *GameServerSpec) applySpecDefaults() {
+	if gss.Template.Spec.RestartPolicy == "" {
+		gss.Template.Spec.RestartPolicy = corev1.RestartPolicyAlways
+	}
+
+	if gss.Template.Spec.DNSPolicy == "" {
+		gss.Template.Spec.DNSPolicy = corev1.DNSDefault
+	}
 }
 
 // applySdkServerDefaults applies the default log level ("Info") for the sidecar
@@ -283,6 +300,16 @@ func (gss *GameServerSpec) applySdkServerDefaults() {
 func (gss *GameServerSpec) applyContainerDefaults() {
 	if len(gss.Template.Spec.Containers) == 1 {
 		gss.Container = gss.Template.Spec.Containers[0].Name
+	}
+
+	for idx, c := range gss.Template.Spec.Containers {
+		if c.TerminationMessagePolicy == "" {
+			gss.Template.Spec.Containers[idx].TerminationMessagePolicy = corev1.TerminationMessageFallbackToLogsOnError
+		}
+
+		if c.ImagePullPolicy == "" {
+			gss.Template.Spec.Containers[idx].ImagePullPolicy = corev1.PullIfNotPresent
+		}
 	}
 }
 
@@ -353,6 +380,7 @@ func (gss *GameServerSpec) applySchedulingDefaults() {
 // the returned array
 func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
+	gss.ApplyDefaults()
 
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		if gss.Players != nil {
@@ -461,23 +489,42 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				}
 			}
 		}
-		for _, c := range gss.Template.Spec.Containers {
-			validationErrors := validateResources(c)
-			for _, err := range validationErrors {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueInvalid,
-					Field:   "container",
-					Message: err.Error(),
-				})
-			}
-		}
 	}
-	objMetaCauses := validateObjectMeta(&gss.Template.ObjectMeta)
-	if len(objMetaCauses) > 0 {
-		causes = append(causes, objMetaCauses...)
+
+	podTemplateSpecCauses := ValidatePodTemplateSpec(&gss.Template)
+	if len(podTemplateSpecCauses) > 0 {
+		causes = append(causes, podTemplateSpecCauses...)
 	}
 
 	return causes, len(causes) == 0
+}
+
+// ValidatePodTemplateSpec validates the PodTemplateSpec of a GameServer
+func ValidatePodTemplateSpec(spec *corev1.PodTemplateSpec) []metav1.StatusCause {
+	causes := []metav1.StatusCause{}
+
+	// Before calling the validation, the pod template must be converted to the Core version
+	outPodTemplateSpec := core.PodTemplateSpec{}
+	if err := k8s_api_v1.Convert_v1_PodTemplateSpec_To_core_PodTemplateSpec(spec, &outPodTemplateSpec, nil); err != nil {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "template",
+			Message: err.Error(),
+		})
+
+		return causes
+	}
+
+	errList := k8s_validation.ValidatePodTemplateSpec(&outPodTemplateSpec, field.NewPath("spec"))
+	for _, err := range errList {
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseType(err.Type),
+			Field:   err.Field,
+			Message: err.Error(),
+		})
+	}
+
+	return causes
 }
 
 // ValidateResource validates limit or Memory CPU resources used for containers in pods
@@ -495,16 +542,6 @@ func ValidateResource(request resource.Quantity, limit resource.Quantity, resour
 		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s limit value must be non negative", resourceName)))
 	}
 
-	return validationErrors
-}
-
-// validateResources validate CPU and Memory resources
-func validateResources(container corev1.Container) []error {
-	validationErrors := make([]error, 0)
-	resourceErrors := ValidateResource(container.Resources.Requests[corev1.ResourceCPU], container.Resources.Limits[corev1.ResourceCPU], corev1.ResourceCPU)
-	validationErrors = append(validationErrors, resourceErrors...)
-	resourceErrors = ValidateResource(container.Resources.Requests[corev1.ResourceMemory], container.Resources.Limits[corev1.ResourceMemory], corev1.ResourceMemory)
-	validationErrors = append(validationErrors, resourceErrors...)
 	return validationErrors
 }
 
