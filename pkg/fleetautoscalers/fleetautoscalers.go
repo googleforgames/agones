@@ -52,48 +52,40 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 }
 
 func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error) {
-	var u *url.URL
-	var err error
-
 	if w.URL != nil {
 		if *w.URL == "" {
 			return nil, errors.New("URL was not provided")
 		}
 
-		u, err = url.ParseRequestURI(*w.URL)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if w.Service.Name == "" {
-			return nil, errors.New("service name was not provided")
-		}
-
-		var servicePath string
-		if w.Service.Path != nil {
-			servicePath = *w.Service.Path
-		}
-
-		if w.Service.Namespace == "" {
-			w.Service.Namespace = "default"
-		}
-
-		scheme := "http"
-		if w.CABundle != nil {
-			scheme = "https"
-
-			err = setCABundle(w.CABundle)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		u = createURL(scheme, w.Service.Name, w.Service.Namespace, servicePath)
+		return url.ParseRequestURI(*w.URL)
 	}
 
-	return u, nil
+	if w.Service.Name == "" {
+		return nil, errors.New("service name was not provided")
+	}
+
+	if w.Service.Path == nil {
+		empty := ""
+		w.Service.Path = &empty
+	}
+
+	if w.Service.Namespace == "" {
+		w.Service.Namespace = "default"
+	}
+
+	scheme := "http"
+	if w.CABundle != nil {
+		scheme = "https"
+
+		if err := setCABundle(w.CABundle); err != nil {
+			return nil, err
+		}
+	}
+
+	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path), nil
 }
 
+// moved to a separate method to cover it with unit tests and check that URL corresponds to a proper pattern
 func createURL(scheme, name, namespace, path string) *url.URL {
 	return &url.URL{
 		Scheme: scheme,
@@ -102,11 +94,11 @@ func createURL(scheme, name, namespace, path string) *url.URL {
 	}
 }
 
-func setCABundle(CABundle []byte) error {
+func setCABundle(caBundle []byte) error {
 	// We can have multiple fleetautoscalers with different CABundles defined,
 	// so we switch client.Transport before each POST request
 	rootCAs := x509.NewCertPool()
-	if ok := rootCAs.AppendCertsFromPEM(CABundle); !ok {
+	if ok := rootCAs.AppendCertsFromPEM(caBundle); !ok {
 		return errors.New("no certs were appended from caBundle")
 	}
 	client.Transport = &http.Transport{
@@ -130,7 +122,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 		return 0, false, errors.New("service and url cannot be used simultaneously")
 	}
 
-	url, err := buildURLFromWebhookPolicy(w)
+	u, err := buildURLFromWebhookPolicy(w)
 	if err != nil {
 		return 0, false, err
 	}
@@ -151,7 +143,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	}
 
 	res, err := client.Post(
-		url.String(),
+		u.String(),
 		"application/json",
 		strings.NewReader(string(b)),
 	)
@@ -169,7 +161,7 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (repl
 	}()
 
 	if res.StatusCode != http.StatusOK {
-		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, url.String())
+		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
