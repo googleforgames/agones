@@ -46,6 +46,7 @@ If you are installing a development build of Agones (i.e. not the {{< release-ve
 $ cd install/helm/
 $ helm install --name my-release --namespace agones-system agones --set agones.image.tag={{< release-version >}}-481970d
 ```
+where 481970d - is a short hash of the latest commit.
 
 The full list of available tags is [here](https://console.cloud.google.com/gcr/images/agones-images/)
 
@@ -194,10 +195,10 @@ Specify each parameter using the `--set key=value[,key=value]` argument to `helm
 
 ```bash
 $ helm install --name my-release --namespace agones-system \
-  --set agones.namespace=mynamespace,gameservers.minPort=1000,gameservers.maxPort=5000 agones
+  --set gameservers.minPort=1000,gameservers.maxPort=5000 agones
 ```
 
-The above command sets the namespace where Agones is deployed to `mynamespace`. Additionally Agones will use a dynamic port allocation range of 1000-5000.
+The above command will deploy Agones controllers to `agones-system` namespace. Additionally Agones will use a dynamic GameServers' port allocation range of 1000-5000.
 
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
@@ -231,10 +232,10 @@ That mean that you skiped `--cleanup` flag and you should either delete `agones-
 ## TLS Certificates
 
 By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
-For most used cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
+For most use cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
-You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generates them.
+You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
 
 ## Next Steps

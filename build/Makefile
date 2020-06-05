@@ -59,7 +59,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/udp-server:0.21
 
-ALL_FEATURE_GATES ?= "PlayerTracking=true&ContainerPortAllocation=true"
+ALPHA_FEATURE_GATES ?= "PlayerTracking=true"
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -244,7 +244,7 @@ test-e2e:
 	$(MAKE) test-e2e-integration
 	$(MAKE) test-e2e-failure
 
-test-e2e-integration: FEATURE_GATES ?= $(ALL_FEATURE_GATES)
+test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
@@ -292,7 +292,7 @@ install: PING_SERVICE_TYPE := "LoadBalancer"
 install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
-install: FEATURE_GATES ?= $(ALL_FEATURE_GATES)
+install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\
@@ -445,6 +445,10 @@ setup-prometheus:
 		$(HELM_ARGS) \
 		-f $(mount_path)/build/prometheus.yaml
 
+uninstall-prometheus: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm delete --purge prom
+
 # setup grafana in the current cluster with datasource and dashboards ready for use with agones
 # by default Persistent Volume Claims are requested.
 setup-grafana: PVC ?= true
@@ -456,6 +460,10 @@ setup-grafana:
 		helm upgrade --install --wait grafana stable/grafana --version=5.0.13  --namespace metrics \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
+
+uninstall-grafana: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm delete --purge grafana
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update

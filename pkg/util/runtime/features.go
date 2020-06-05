@@ -41,10 +41,11 @@ const (
 var (
 	// featureDefaults is a map of all Feature Gates that are
 	// operational in Agones, and what their default configuration is.
+	// alpha features are disabled
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                 true,
 		FeaturePlayerTracking:          false,
-		FeatureContainerPortAllocation: false,
+		FeatureContainerPortAllocation: true,
 	}
 
 	// featureGates is the storage of what features are enabled
