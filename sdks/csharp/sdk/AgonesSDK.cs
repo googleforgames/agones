@@ -29,7 +29,7 @@ namespace Agones
 		/// <summary>
 		/// The timeout for gRPC calls.
 		/// </summary>
-		public double RequestTimeout { get; set; }
+		public double RequestTimeoutSec { get; set; }
 
 		internal SDK.SDKClient client;
 		internal readonly Channel channel;
