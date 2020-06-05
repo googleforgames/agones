@@ -27,7 +27,7 @@ terraform-clean:
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
-# All Feature gates are disabled
+# Alpha Feature gates are disabled
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''

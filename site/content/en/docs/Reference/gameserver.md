@@ -31,7 +31,9 @@ spec:
     # - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
     portPolicy: Static
-    # (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
+    # [Stage:Beta]
+    # [FeatureFlag:ContainerPortAllocation]
+    # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
     container: simple-udp
     # the port that is being opened on the game server process
     containerPort: 7654

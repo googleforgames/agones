@@ -3,7 +3,7 @@ title="Agones Kubernetes API"
 description="Detailed list of Agones Custom Resource Definitions available"
 +++
 
-{{% feature expiryVersion="1.6.0" %}}
+{{% feature expiryVersion="1.7.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -431,6 +431,46 @@ GameServerSetStatus
 </tr>
 </tbody>
 </table>
+<h3 id="AggregatedPlayerStatus">AggregatedPlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#FleetStatus">FleetStatus</a>, 
+<a href="#GameServerSetStatus">GameServerSetStatus</a>)
+</p>
+<p>
+<p>AggregatedPlayerStatus stores total player tracking values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="FleetSpec">FleetSpec
 </h3>
 <p>
@@ -559,6 +599,22 @@ int32
 </td>
 <td>
 <p>AllocatedReplicas are the number of Allocated GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players are the current total player capacity and count for this Fleet</p>
 </td>
 </tr>
 </tbody>
@@ -783,6 +839,22 @@ int32
 </td>
 <td>
 <p>ShutdownReplicas are the number of Shutdown GameServers replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players are the current total player capacity and count for this GameServerSet</p>
 </td>
 </tr>
 </tbody>
@@ -1276,6 +1348,16 @@ int64
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>ids</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="PlayersSpec">PlayersSpec
@@ -1285,8 +1367,7 @@ int64
 <a href="#GameServerSpec">GameServerSpec</a>)
 </p>
 <p>
-<p>PlayersSpec tracks the initial player capacity, and what webhooks to send events to when there are
-connection/disconnection events.</p>
+<p>PlayersSpec tracks the initial player capacity</p>
 </p>
 <table>
 <thead>
@@ -1301,18 +1382,6 @@ connection/disconnection events.</p>
 <code>initialCapacity</code></br>
 <em>
 int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>webhook</code></br>
-<em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.13/#webhookclientconfig-v1beta1-admissionregistration">
-Kubernetes admissionregistration/v1beta1.WebhookClientConfig
-</a>
 </em>
 </td>
 <td>
@@ -2379,7 +2448,6 @@ Kubernetes admissionregistration/v1beta1.ServiceReference
 <p><code>service</code> is a reference to the service for this webhook. Either
 <code>service</code> or <code>url</code> must be specified.</p>
 <p>If the webhook is running within the cluster, then you should use <code>service</code>.</p>
-<p>Port 443 will be used if it is open, otherwise it is an error.</p>
 </td>
 </tr>
 <tr>
@@ -2567,6 +2635,17 @@ string
 <p>The cluster namespace from which to allocate gameservers</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>serverCa</code></br>
+<em>
+[]byte
+</em>
+</td>
+<td>
+<p>The PEM encoded server CA, used by the allocator client to authenticate the remote server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="ConnectionInfoIterator">ConnectionInfoIterator
@@ -2686,7 +2765,7 @@ ClusterConnectionInfo
 Generated with <code>gen-crd-api-reference-docs</code>.
 </em></p>
 {{% /feature %}}
-{{% feature publishVersion="1.6.0" %}}
+{{% feature publishVersion="1.7.0" %}}
 <p>Packages:</p>
 <ul>
 <li>
@@ -3358,7 +3437,7 @@ string
 <td>
 <em>(Optional)</em>
 <p>Container is the name of the container on which to open the port. Defaults to the game server container.
-This field is alpha-level and is only honored by servers that enable the &ldquo;ContainerPortAllocation&rdquo; feature.</p>
+This field is beta-level and is enabled by default, could be disabled by the &ldquo;ContainerPortAllocation&rdquo; feature.</p>
 </td>
 </tr>
 <tr>
