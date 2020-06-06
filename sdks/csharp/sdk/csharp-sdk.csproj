@@ -4,30 +4,31 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Agones</RootNamespace>
     <PackageId>AgonesSDK</PackageId>
-    <Authors>Karim Rizk</Authors>
+    <Authors>Google LLC</Authors>
     <Product>Agones C# SDK</Product>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Description></Description>
+    <Description>Game Server SDK for Agones, the open source project for hosting dedicated game servers on Kubernetes</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/googleforgames/agones</RepositoryUrl>
     <PackageProjectUrl>https://agones.dev</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <AssemblyName>AgonesSDK</AssemblyName>
-    <Version>1.0.2</Version>
+    <Version>1.7.0</Version>
     <PackageTags>agones, googleforgames, kuberenetes</PackageTags>
     <Company>agones.dev</Company>
     <Configurations>Debug;Release;DebugProtoGen</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Api.CommonProtos" Version="1.7.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.11.2" />
-    <PackageReference Include="Grpc" Version="2.26.0" />
-    <PackageReference Include="Grpc.Core" Version="2.26.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.26.0">
+    <PackageReference Include="Google.Api.CommonProtos" Version="2.0.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.11.4" />
+    <PackageReference Include="Grpc" Version="2.28.1" />
+    <PackageReference Include="Grpc.Core" Version="2.28.1" />
+    <PackageReference Include="Grpc.Tools" Version="2.28.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.4" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(Configuration)' == 'DebugProtoGen'">
