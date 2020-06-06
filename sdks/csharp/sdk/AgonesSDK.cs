@@ -49,13 +49,13 @@ namespace Agones
 		private readonly ILogger _logger;
 
 		public AgonesSDK(
-			double requestTimeout = 15,
+			double requestTimeoutSec = 15,
 			SDK.SDKClient sdkClient = null,
 			CancellationTokenSource cancellationTokenSource = null,
 			ILogger logger = null)
 		{
 			_logger = logger;
-			RequestTimeout = requestTimeout;
+			RequestTimeoutSec = requestTimeoutSec;
 			cts = cancellationTokenSource ?? new CancellationTokenSource();
 			ctoken = cts.Token;
 			channel = new Channel(Host, Port, ChannelCredentials.Insecure);
@@ -69,7 +69,7 @@ namespace Agones
 		/// <returns>True if successful</returns>
 		public async Task<bool> ConnectAsync()
 		{
-			await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(RequestTimeout));
+			await channel.ConnectAsync(DateTime.UtcNow.AddSeconds(RequestTimeoutSec));
 			if (channel.State == ChannelState.Ready)
 			{
 				return true;
@@ -86,7 +86,7 @@ namespace Agones
 		{
 			try
 			{
-				await client.ReadyAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				await client.ReadyAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
 				return new Status(StatusCode.OK, "Ready request successful.");
 			}
 			catch (RpcException ex)
@@ -105,7 +105,7 @@ namespace Agones
 			try
 			{
 				await client.AllocateAsync(new Empty(),
-					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec),
 					cancellationToken: ctoken);
 				return new Status(StatusCode.OK, "Allocate request successful.");
 			}
@@ -128,7 +128,7 @@ namespace Agones
 			try
 			{
 				await client.ReserveAsync(new Duration { Seconds = seconds},
-					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec),
 					cancellationToken: ctoken);
 				return new Status(StatusCode.OK, $"Reserve({seconds}) request successful.");
 			}
@@ -149,7 +149,7 @@ namespace Agones
 			try
 			{
 				return await client.GetGameServerAsync(new Empty(),
-					deadline: DateTime.UtcNow.AddSeconds(RequestTimeout),
+					deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec),
 					cancellationToken: ctoken);
 			}
 			catch (RpcException ex)
@@ -209,7 +209,7 @@ namespace Agones
 		{
 			try
 			{
-				await client.ShutdownAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeout));
+				await client.ShutdownAsync(new Empty(), deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec));
 				return new Status(StatusCode.OK, "Shutdown request successful.");
 			}
 			catch (RpcException ex)
@@ -233,7 +233,7 @@ namespace Agones
 				{
 					Key = key,
 					Value = value
-				}, deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				}, deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
 				return new Status(StatusCode.OK, $"SetLabel {key}:{value} request successful.");
 			}
 			catch(RpcException ex)
@@ -257,7 +257,7 @@ namespace Agones
 				{
 					Key = key,
 					Value = value
-				}, deadline: DateTime.UtcNow.AddSeconds(RequestTimeout), cancellationToken: ctoken);
+				}, deadline: DateTime.UtcNow.AddSeconds(RequestTimeoutSec), cancellationToken: ctoken);
 				return new Status(StatusCode.OK, $"SetAnnotation {key}:{value} request successful.");
 			}
 			catch (RpcException ex)
