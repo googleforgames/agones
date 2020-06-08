@@ -441,7 +441,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			expected: expected{
 				replicas: 0,
 				limited:  false,
-				err:      "parse )1golang.org/: invalid URI for request",
+				err:      "parse \")1golang.org/\": invalid URI for request",
 			},
 		},
 		{
@@ -484,7 +484,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			expected: expected{
 				replicas: 0,
 				limited:  false,
-				err:      "Post http://127.0.0.1:1: dial tcp 127.0.0.1:1: connect: connection refused",
+				err:      "Post \"http://127.0.0.1:1\": dial tcp 127.0.0.1:1: connect: connection refused",
 			},
 		},
 		{
@@ -518,21 +518,6 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				replicas: 50,
 				limited:  false,
 				err:      "invalid character 'i' looking for beginning of value",
-			},
-		},
-		{
-			description: "Nil URL, empty namespace - default one should be used, no such host err is returned",
-			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
-					Name:      "service1",
-					Namespace: "",
-					Path:      &url,
-				},
-			},
-			expected: expected{
-				replicas: 0,
-				limited:  false,
-				err:      "Post http://service1.default.svc:8000/scale: dial tcp: lookup service1.default.svc: no such host",
 			},
 		},
 	}
@@ -622,6 +607,63 @@ func TestCreateURL(t *testing.T) {
 
 			if assert.NotNil(t, res) {
 				assert.Equal(t, tc.expected, res.String())
+			}
+		})
+	}
+}
+
+func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
+	url := "/testurl"
+
+	type expected struct {
+		url string
+		err string
+	}
+
+	var testCases = []struct {
+		description   string
+		webhookPolicy *autoscalingv1.WebhookPolicy
+		expected      expected
+	}{
+		{
+			description: "No namespace provided, default should be used",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "",
+					Path:      &url,
+				},
+			},
+			expected: expected{
+				url: "http://service1.default.svc:8000/testurl",
+				err: "",
+			},
+		},
+		{
+			description: "No url provided, empty string should be used",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "test",
+					Path:      nil,
+				},
+			},
+			expected: expected{
+				url: "http://service1.test.svc:8000",
+				err: "",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			url, err := buildURLFromWebhookPolicy(tc.webhookPolicy)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.url, url.String())
 			}
 		})
 	}
