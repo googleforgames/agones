@@ -386,7 +386,7 @@ func (c *Allocator) createRemoteClusterDialOption(namespace string, connectionIn
 		if len(connectionInfo.ServerCA) != 0 && !tlsConfig.RootCAs.AppendCertsFromPEM(connectionInfo.ServerCA) {
 			return nil, errors.New("only PEM format is accepted for server CA")
 		}
-		// Add client CA cert, added for backward compatibility
+		// Add client CA cert, which can be used instead of / as well as the specified ServerCA cert
 		if len(caCert) != 0 {
 			_ = tlsConfig.RootCAs.AppendCertsFromPEM(caCert)
 		}
