@@ -327,7 +327,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 	defer server.Close()
 
 	_, f := defaultWebhookFixtures()
-	url := "/scale"
+	url := "scale"
 	emptyString := ""
 	invalidURL := ")1golang.org/"
 	wrongServerURL := "http://127.0.0.1:1"
@@ -401,7 +401,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			expected: expected{
 				replicas: 0,
 				limited:  false,
-				err:      "nil WebhookPolicy passed",
+				err:      "webhookPolicy parameter must not be nil",
 			},
 		},
 		{
@@ -417,7 +417,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 			expected: expected{
 				replicas: 0,
 				limited:  false,
-				err:      "service and url cannot be used simultaneously",
+				err:      "service and URL cannot be used simultaneously",
 			},
 		},
 		{
@@ -520,6 +520,18 @@ func TestApplyWebhookPolicy(t *testing.T) {
 				err:      "invalid character 'i' looking for beginning of value",
 			},
 		},
+		{
+			description: "Service and URL are nil",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     nil,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service was not provided, either URL or Service must be provided",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -545,7 +557,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	t.Parallel()
 
-	url := "/scale"
+	url := "scale"
 	w := &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      "service1",
@@ -557,7 +569,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 	replicas, limited, err := applyWebhookPolicy(w, nil)
 
 	if assert.NotNil(t, err) {
-		assert.Equal(t, "nil Fleet passed", err.Error())
+		assert.Equal(t, "fleet parameter must not be nil", err.Error())
 	}
 
 	assert.False(t, limited)
@@ -613,7 +625,7 @@ func TestCreateURL(t *testing.T) {
 }
 
 func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
-	url := "/testurl"
+	url := "testurl"
 
 	type expected struct {
 		url string

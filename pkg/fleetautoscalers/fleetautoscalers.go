@@ -52,12 +52,20 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 }
 
 func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error) {
+	if w.URL != nil && w.Service != nil {
+		return nil, errors.New("service and URL cannot be used simultaneously")
+	}
+
 	if w.URL != nil {
 		if *w.URL == "" {
 			return nil, errors.New("URL was not provided")
 		}
 
 		return url.ParseRequestURI(*w.URL)
+	}
+
+	if w.Service == nil {
+		return nil, errors.New("service was not provided, either URL or Service must be provided")
 	}
 
 	if w.Service.Name == "" {
@@ -111,15 +119,11 @@ func setCABundle(caBundle []byte) error {
 
 func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
 	if w == nil {
-		return 0, false, errors.New("nil WebhookPolicy passed")
+		return 0, false, errors.New("webhookPolicy parameter must not be nil")
 	}
 
 	if f == nil {
-		return 0, false, errors.New("nil Fleet passed")
-	}
-
-	if w.URL != nil && w.Service != nil {
-		return 0, false, errors.New("service and url cannot be used simultaneously")
+		return 0, false, errors.New("fleet parameter must not be nil")
 	}
 
 	u, err := buildURLFromWebhookPolicy(w)
