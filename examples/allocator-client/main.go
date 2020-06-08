@@ -33,12 +33,13 @@ func main() {
 	certFile := flag.String("cert", "missing cert", "the public key file for the client certificate in PEM format")
 	cacertFile := flag.String("cacert", "missing cacert", "the CA cert file for server signing certificate in PEM format")
 	externalIP := flag.String("ip", "missing external IP", "the external IP for allocator server")
+	port := flag.String("port", "443", "the port for allocator server")
 	namespace := flag.String("namespace", "default", "the game server kubernetes namespace")
 	multicluster := flag.Bool("multicluster", false, "set to true to enable the multi-cluster allocation")
 
 	flag.Parse()
 
-	endpoint := *externalIP + ":443"
+	endpoint := *externalIP + ":" + *port
 	cert, err := ioutil.ReadFile(*certFile)
 	if err != nil {
 		panic(err)

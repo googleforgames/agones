@@ -123,6 +123,7 @@ CERT_FILE=client.crt
 TLS_CA_FILE=ca.crt
 
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
+    --port 443 \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
