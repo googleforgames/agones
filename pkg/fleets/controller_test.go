@@ -264,7 +264,7 @@ func TestControllerSyncFleet(t *testing.T) {
 	t.Run("error on getting list of GS", func(t *testing.T) {
 		f := defaultFixture()
 		c, m := newFakeController()
-		c.gameServerSetLister = &fakeGSListerWithErr{}
+		c.gameServerSetLister = &fakeGSSListerWithErr{}
 
 		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
@@ -568,7 +568,7 @@ func TestControllerUpdateFleetStatus(t *testing.T) {
 	t.Run("list gameservers returns an error", func(t *testing.T) {
 		fleet := defaultFixture()
 		c, _ := newFakeController()
-		c.gameServerSetLister = &fakeGSListerWithErr{}
+		c.gameServerSetLister = &fakeGSSListerWithErr{}
 
 		err := c.updateFleetStatus(fleet)
 		assert.EqualError(t, err, "error listing gameserversets for fleet fleet-1: random-err")
@@ -989,11 +989,11 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 
 	// triggered inside rollingUpdateRest
 	m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, nil, errors.New("rndom-err")
+		return true, nil, errors.New("random-err")
 	})
 
 	_, err := c.rollingUpdateDeployment(f, active, []*agonesv1.GameServerSet{inactive})
-	assert.EqualError(t, err, "error updating gameserverset inactive: rndom-err")
+	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
 func TestControllerRollingUpdateDeployment(t *testing.T) {
@@ -1259,15 +1259,15 @@ func getAdmissionReview(raw []byte) admv1beta1.AdmissionReview {
 
 // MOCKS SECTION
 
-type fakeGSListerWithErr struct {
+type fakeGSSListerWithErr struct {
 }
 
 // GameServerSetLister interface implementation
-func (fgsl *fakeGSListerWithErr) List(selector labels.Selector) (ret []*v1.GameServerSet, err error) {
+func (fgsl *fakeGSSListerWithErr) List(selector labels.Selector) (ret []*v1.GameServerSet, err error) {
 	return nil, errors.New("random-err")
 }
 
-func (fgsl *fakeGSListerWithErr) GameServerSets(namespace string) agonesv1client.GameServerSetNamespaceLister {
+func (fgsl *fakeGSSListerWithErr) GameServerSets(namespace string) agonesv1client.GameServerSetNamespaceLister {
 	panic("not implemented")
 }
 
