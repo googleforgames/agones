@@ -4,7 +4,7 @@ linkTitle: "C#"
 date: 2020-2-25
 weight: 50
 description: "This is the C# version of the Agones Game Server Client SDK."
-publishDate: 2020-04-13
+publishDate: 2020-05-28
 ---
 
 {{< alert title="Note" color="info" >}}
@@ -46,6 +46,11 @@ async void SomeMethod()
 }
 ```
 
+To send `Health` pings, call the async method `HealthAsync()`
+```csharp
+await agones.HealthAsync();
+```
+
 To get the details on the [backing `GameServer`]({{< relref "_index.md#gameserver" >}}) call `GetGameServerAsync()`.
 
 Will return `null` if there is an error in retrieving the `GameServer` record.
@@ -70,8 +75,6 @@ var status = await agones.ShutdownAsync();
 
 Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, string value)` are async methods that perform an action & return a `Status` object.
 
-You can manage `Health` pings through `AgonesSDK.HealthInterval` & `AgonesSDK.HealthEnabled`, the rest is done automatically.
-
 To watch when 
 [the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserver-function-gameserver" >}})
 call `WatchGameServer(callback)`, where the delegate function `callback` of type `Action<GameServer>` will be executed every time the `GameServer` 
@@ -84,8 +87,6 @@ agonesSDK.WatchGameServer((gameServer) => { Console.WriteLine($"Server - Watch {
 
 
 ## Remarks
-
-- The `HealthInterval` & `HealthEnabled` properties can be set in the constructor.
 - All requests other than `ConnectAsync` will wait for up to 15 seconds before giving up, can also be set in the constructor.
 - Default host & port are `localhost:9357`
 - Methods that do not return a data object such as `GameServer` will return a gRPC `Status` object. To check the state of the request, check `Status.StatusCode` & `Status.Detail`.

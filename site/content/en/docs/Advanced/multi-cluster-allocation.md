@@ -42,7 +42,7 @@ EOF
 
 To define the local cluster priority, similarly, an allocation rule should be defined, while leaving allocationEndpoints unset. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
 
-`serverCa` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed).
+`serverCa` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed). If this field is not specified, the certificate can also be specified in the `ca.crt` field of the client secret (i.e. the secret referred to in the `secretName` field).
 
 ## Establish trust
 
