@@ -41,7 +41,6 @@ var client = http.Client{
 
 // computeDesiredFleetSize computes the new desired size of the given fleet
 func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet) (int32, bool, error) {
-
 	switch fas.Spec.Policy.Type {
 	case autoscalingv1.BufferPolicyType:
 		return applyBufferPolicy(fas.Spec.Policy.Buffer, f)
@@ -49,10 +48,89 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 		return applyWebhookPolicy(fas.Spec.Policy.Webhook, f)
 	}
 
-	return f.Status.Replicas, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
+	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int32, bool, error) {
+func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error) {
+	if w.URL != nil && w.Service != nil {
+		return nil, errors.New("service and URL cannot be used simultaneously")
+	}
+
+	if w.URL != nil {
+		if *w.URL == "" {
+			return nil, errors.New("URL was not provided")
+		}
+
+		return url.ParseRequestURI(*w.URL)
+	}
+
+	if w.Service == nil {
+		return nil, errors.New("service was not provided, either URL or Service must be provided")
+	}
+
+	if w.Service.Name == "" {
+		return nil, errors.New("service name was not provided")
+	}
+
+	if w.Service.Path == nil {
+		empty := ""
+		w.Service.Path = &empty
+	}
+
+	if w.Service.Namespace == "" {
+		w.Service.Namespace = "default"
+	}
+
+	scheme := "http"
+	if w.CABundle != nil {
+		scheme = "https"
+
+		if err := setCABundle(w.CABundle); err != nil {
+			return nil, err
+		}
+	}
+
+	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path), nil
+}
+
+// moved to a separate method to cover it with unit tests and check that URL corresponds to a proper pattern
+func createURL(scheme, name, namespace, path string) *url.URL {
+	return &url.URL{
+		Scheme: scheme,
+		Host:   fmt.Sprintf("%s.%s.svc:8000", name, namespace),
+		Path:   path,
+	}
+}
+
+func setCABundle(caBundle []byte) error {
+	// We can have multiple fleetautoscalers with different CABundles defined,
+	// so we switch client.Transport before each POST request
+	rootCAs := x509.NewCertPool()
+	if ok := rootCAs.AppendCertsFromPEM(caBundle); !ok {
+		return errors.New("no certs were appended from caBundle")
+	}
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			RootCAs: rootCAs,
+		},
+	}
+	return nil
+}
+
+func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (replicas int32, limited bool, err error) {
+	if w == nil {
+		return 0, false, errors.New("webhookPolicy parameter must not be nil")
+	}
+
+	if f == nil {
+		return 0, false, errors.New("fleet parameter must not be nil")
+	}
+
+	u, err := buildURLFromWebhookPolicy(w)
+	if err != nil {
+		return 0, false, err
+	}
+
 	faReq := autoscalingv1.FleetAutoscaleReview{
 		Request: &autoscalingv1.FleetAutoscaleRequest{
 			UID:       uuid.NewUUID(),
@@ -62,73 +140,44 @@ func applyWebhookPolicy(w *autoscalingv1.WebhookPolicy, f *agonesv1.Fleet) (int3
 		},
 		Response: nil,
 	}
+
 	b, err := json.Marshal(faReq)
-	urlStr := ""
-	if w.URL != nil {
-		urlStr = *w.URL
-	}
-	var faResp autoscalingv1.FleetAutoscaleReview
-	servicePath := ""
-	if w.Service != nil {
-		if w.Service.Path != nil {
-			servicePath = *w.Service.Path
-		}
-		if err != nil {
-			return f.Status.Replicas, false, err
-		}
-
-		if w.Service.Namespace == "" {
-			w.Service.Namespace = "default"
-		}
-		scheme := "http://"
-		if w.CABundle != nil {
-			scheme = "https://"
-		}
-		urlStr = fmt.Sprintf("%s%s.%s.svc:8000/%s", scheme, w.Service.Name, w.Service.Namespace, servicePath)
-	}
-	if urlStr == "" {
-		return f.Status.Replicas, false, errors.New("URL was not provided")
-	}
-
-	u, err := url.Parse(urlStr)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
 
-	// We could have multiple fleetautoscalers with different CABundles defined,
-	// so we switch client.Transport before each POST request
-	if u.Scheme == "https" {
-		rootCAs := x509.NewCertPool()
-		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
-			return f.Status.Replicas, false, errors.New("no certs were appended from caBundle")
-		}
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: rootCAs,
-			},
-		}
-		client.Transport = tr
-	}
 	res, err := client.Post(
-		urlStr,
+		u.String(),
 		"application/json",
 		strings.NewReader(string(b)),
 	)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
-	defer res.Body.Close() // nolint: errcheck
+	defer func() {
+		if cerr := res.Body.Close(); cerr != nil {
+			if err != nil {
+				err = errors.Wrap(err, cerr.Error())
+			} else {
+				err = cerr
+			}
+		}
+	}()
+
 	if res.StatusCode != http.StatusOK {
-		return f.Status.Replicas, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, urlStr)
+		return 0, false, fmt.Errorf("bad status code %d from the server: %s", res.StatusCode, u.String())
 	}
 	result, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
+
+	var faResp autoscalingv1.FleetAutoscaleReview
 	err = json.Unmarshal(result, &faResp)
 	if err != nil {
-		return f.Status.Replicas, false, err
+		return 0, false, err
 	}
+
 	if faResp.Response.Scale {
 		return faResp.Response.Replicas, false, nil
 	}
@@ -150,7 +199,7 @@ func applyBufferPolicy(b *autoscalingv1.BufferPolicy, f *agonesv1.Fleet) (int32,
 		// it means that allocated must be 70% and adjust the fleet size to make that true.
 		bufferPercent, err := intstr.GetValueFromIntOrPercent(&b.BufferSize, 100, true)
 		if err != nil {
-			return f.Status.Replicas, false, err
+			return 0, false, err
 		}
 		// use Math.Ceil to round the result up
 		replicas = int32(math.Ceil(float64(f.Status.AllocatedReplicas*100) / float64(100-bufferPercent)))

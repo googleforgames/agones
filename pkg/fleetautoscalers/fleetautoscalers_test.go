@@ -18,6 +18,7 @@ package fleetautoscalers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,6 +27,7 @@ import (
 
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/stretchr/testify/assert"
+	admregv1b "k8s.io/api/admissionregistration/v1beta1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -33,99 +35,10 @@ const (
 	scaleFactor = 2
 )
 
-func TestComputeDesiredFleetSize(t *testing.T) {
-	t.Parallel()
-
-	fas, f := defaultFixtures()
-
-	fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(20)
-	fas.Spec.Policy.Buffer.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-
-	replicas, limited, err := computeDesiredFleetSize(fas, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(60))
-	assert.Equal(t, limited, false)
-
-	// test empty Policy Type
-	f.Status.Replicas = 61
-	fas.Spec.Policy.Type = ""
-	replicas, limited, err = computeDesiredFleetSize(fas, f)
-	assert.NotNil(t, err)
-	assert.Equal(t, replicas, int32(61))
-	assert.Equal(t, limited, false)
-}
-
-func TestApplyBufferPolicy(t *testing.T) {
-	t.Parallel()
-
-	fas, f := defaultFixtures()
-	b := fas.Spec.Policy.Buffer
-
-	b.BufferSize = intstr.FromInt(20)
-	b.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-
-	replicas, limited, err := applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(60))
-	assert.Equal(t, limited, false)
-
-	b.MinReplicas = 65
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(65))
-	assert.Equal(t, limited, true)
-
-	b.MinReplicas = 0
-	b.MaxReplicas = 55
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(55))
-	assert.Equal(t, limited, true)
-
-	b.BufferSize = intstr.FromString("20%")
-	b.MinReplicas = 0
-	b.MaxReplicas = 100
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 50
-	f.Status.ReadyReplicas = 0
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(63))
-	assert.Equal(t, limited, false)
-
-	b.BufferSize = intstr.FromString("10%")
-	b.MinReplicas = 0
-	b.MaxReplicas = 10
-	f.Spec.Replicas = 1
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 1
-	f.Status.ReadyReplicas = 0
-	replicas, limited, err = applyBufferPolicy(b, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, int32(2))
-	assert.Equal(t, limited, false)
-}
-
 type testServer struct{}
 
 func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	if r == nil {
 		http.Error(w, "Empty request", http.StatusInternalServerError)
 		return
@@ -141,6 +54,20 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	// return different errors for tests
+	if faRequest.Request.Status.AllocatedReplicas == -10 {
+		http.Error(w, "Wrong Status Replicas Parameter", http.StatusInternalServerError)
+		return
+	}
+
+	if faRequest.Request.Status.AllocatedReplicas == -20 {
+		_, err = io.WriteString(w, "invalid data")
+		if err != nil {
+			http.Error(w, "Error writing json from /address", http.StatusInternalServerError)
+		}
+	}
+
 	faReq := faRequest.Request
 	faResp := autoscalingv1.FleetAutoscaleResponse{
 		Scale:    false,
@@ -152,12 +79,16 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		faResp.Scale = true
 		faResp.Replicas = faReq.Status.Replicas * scaleFactor
 	}
-	w.Header().Set("Content-Type", "application/json")
+
 	review := &autoscalingv1.FleetAutoscaleReview{
 		Request:  faReq,
 		Response: &faResp,
 	}
-	result, _ := json.Marshal(&review)
+
+	result, err := json.Marshal(&review)
+	if err != nil {
+		http.Error(w, "Error marshaling json", http.StatusInternalServerError)
+	}
 
 	_, err = io.WriteString(w, string(result))
 	if err != nil {
@@ -165,42 +96,587 @@ func (t testServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func TestApplyWebhookPolicy(t *testing.T) {
+func TestComputeDesiredFleetSize(t *testing.T) {
 	t.Parallel()
 
-	fas, f := defaultWebhookFixtures()
-	w := fas.Spec.Policy.Webhook
-	w.Service = nil
+	fas, f := defaultFixtures()
 
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	var testCases = []struct {
+		description             string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		policy                  autoscalingv1.FleetAutoscalerPolicy
+		expected                expected
+	}{
+		{
+			description:             "Increase replicas",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(20),
+					MaxReplicas: 100,
+				},
+			},
+			expected: expected{
+				replicas: 60,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "Wrong policy",
+			specReplicas:            50,
+			statusReplicas:          60,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: "",
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(20),
+					MaxReplicas: 100,
+				},
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "wrong policy type, should be one of: Buffer, Webhook",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			fas.Spec.Policy = tc.policy
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := computeDesiredFleetSize(fas, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+			}
+		})
+	}
+}
+
+func TestApplyBufferPolicy(t *testing.T) {
+	t.Parallel()
+
+	_, f := defaultFixtures()
+
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
+
+	var testCases = []struct {
+		description             string
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		buffer                  *autoscalingv1.BufferPolicy
+		expected                expected
+	}{
+		{
+			description:             "Increase replicas",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 60,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "Min replicas set, limited == true",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MinReplicas: 65,
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 65,
+				limited:  true,
+				err:      "",
+			},
+		},
+		{
+			description:             "Replicas == max",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromInt(20),
+				MinReplicas: 0,
+				MaxReplicas: 55,
+			},
+			expected: expected{
+				replicas: 55,
+				limited:  true,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size, scale up",
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 50,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("20%"),
+				MinReplicas: 0,
+				MaxReplicas: 100,
+			},
+			expected: expected{
+				replicas: 63,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size, scale up twice",
+			specReplicas:            1,
+			statusReplicas:          1,
+			statusAllocatedReplicas: 1,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("10%"),
+				MinReplicas: 0,
+				MaxReplicas: 10,
+			},
+			expected: expected{
+				replicas: 2,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:             "FromString buffer size is invalid, err received",
+			specReplicas:            1,
+			statusReplicas:          1,
+			statusAllocatedReplicas: 1,
+			statusReadyReplicas:     0,
+			buffer: &autoscalingv1.BufferPolicy{
+				BufferSize:  intstr.FromString("asd"),
+				MinReplicas: 0,
+				MaxReplicas: 10,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "invalid value for IntOrString: invalid value \"asd\": strconv.Atoi: parsing \"asd\": invalid syntax",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := applyBufferPolicy(tc.buffer, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+			}
+		})
+	}
+}
+
+func TestApplyWebhookPolicy(t *testing.T) {
+	t.Parallel()
 	ts := testServer{}
 	server := httptest.NewServer(ts)
 	defer server.Close()
-	w.URL = &(server.URL)
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 10
-	f.Status.ReadyReplicas = 40
 
-	replicas, limited, err := applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, f.Spec.Replicas, replicas)
-	assert.Equal(t, limited, false)
+	_, f := defaultWebhookFixtures()
+	url := "scale"
+	emptyString := ""
+	invalidURL := ")1golang.org/"
+	wrongServerURL := "http://127.0.0.1:1"
 
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 40
-	f.Status.ReadyReplicas = 10
-	replicas, limited, err = applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, f.Status.Replicas*scaleFactor, replicas)
-	assert.Equal(t, limited, false)
+	type expected struct {
+		replicas int32
+		limited  bool
+		err      string
+	}
 
-	f.Spec.Replicas = 50
-	f.Status.Replicas = f.Spec.Replicas
-	f.Status.AllocatedReplicas = 35
-	f.Status.ReadyReplicas = 15
-	replicas, limited, err = applyWebhookPolicy(w, f)
-	assert.Nil(t, err)
-	assert.Equal(t, replicas, f.Spec.Replicas)
-	assert.Equal(t, limited, false)
+	var testCases = []struct {
+		description             string
+		webhookPolicy           *autoscalingv1.WebhookPolicy
+		specReplicas            int32
+		statusReplicas          int32
+		statusAllocatedReplicas int32
+		statusReadyReplicas     int32
+		expected                expected
+	}{
+		{
+			description: "Allocated replicas per cent < 70%, no scaling",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 10,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description: "Allocated replicas per cent == 70%, no scaling",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 35,
+			statusReadyReplicas:     15,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description: "Allocated replicas per cent 80% > 70%, scale up",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: 40,
+			statusReadyReplicas:     10,
+			expected: expected{
+				replicas: 50 * scaleFactor,
+				limited:  false,
+				err:      "",
+			},
+		},
+		{
+			description:   "nil WebhookPolicy, error returned",
+			webhookPolicy: nil,
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "webhookPolicy parameter must not be nil",
+			},
+		},
+		{
+			description: "URL and Service are not nil",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
+				URL: &(server.URL),
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service and URL cannot be used simultaneously",
+			},
+		},
+		{
+			description: "URL not nil but empty",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &emptyString,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "URL was not provided",
+			},
+		},
+		{
+			description: "Invalid URL",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &invalidURL,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "parse \")1golang.org/\": invalid URI for request",
+			},
+		},
+		{
+			description: "Service name is empty",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "",
+					Namespace: "default",
+					Path:      &url,
+				},
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service name was not provided",
+			},
+		},
+		{
+			description: "No certs",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "default",
+					Path:      &url,
+				},
+				CABundle: []byte("invalid-value"),
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "no certs were appended from caBundle",
+			},
+		},
+		{
+			description: "Wrong server URL",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &wrongServerURL,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "Post \"http://127.0.0.1:1\": dial tcp 127.0.0.1:1: connect: connection refused",
+			},
+		},
+		{
+			description: "Handle server error",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:   50,
+			statusReplicas: 50,
+			// hardcoded value in a server implementation
+			statusAllocatedReplicas: -10,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      fmt.Sprintf("bad status code %d from the server: %s", http.StatusInternalServerError, server.URL),
+			},
+		},
+		{
+			description: "Handle invalid response from the server",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     &(server.URL),
+			},
+			specReplicas:            50,
+			statusReplicas:          50,
+			statusAllocatedReplicas: -20,
+			statusReadyReplicas:     40,
+			expected: expected{
+				replicas: 50,
+				limited:  false,
+				err:      "invalid character 'i' looking for beginning of value",
+			},
+		},
+		{
+			description: "Service and URL are nil",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: nil,
+				URL:     nil,
+			},
+			expected: expected{
+				replicas: 0,
+				limited:  false,
+				err:      "service was not provided, either URL or Service must be provided",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			f.Spec.Replicas = tc.specReplicas
+			f.Status.Replicas = tc.statusReplicas
+			f.Status.AllocatedReplicas = tc.statusAllocatedReplicas
+			f.Status.ReadyReplicas = tc.statusReadyReplicas
+
+			replicas, limited, err := applyWebhookPolicy(tc.webhookPolicy, f)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Equal(t, tc.expected.replicas, replicas)
+				assert.Equal(t, tc.expected.limited, limited)
+				assert.Nil(t, err)
+			}
+		})
+	}
+}
+
+func TestApplyWebhookPolicyNilFleet(t *testing.T) {
+	t.Parallel()
+
+	url := "scale"
+	w := &autoscalingv1.WebhookPolicy{
+		Service: &admregv1b.ServiceReference{
+			Name:      "service1",
+			Namespace: "default",
+			Path:      &url,
+		},
+	}
+
+	replicas, limited, err := applyWebhookPolicy(w, nil)
+
+	if assert.NotNil(t, err) {
+		assert.Equal(t, "fleet parameter must not be nil", err.Error())
+	}
+
+	assert.False(t, limited)
+	assert.Zero(t, replicas)
+}
+
+func TestCreateURL(t *testing.T) {
+	t.Parallel()
+
+	var testCases = []struct {
+		description string
+		scheme      string
+		name        string
+		namespace   string
+		path        string
+		expected    string
+	}{
+		{
+			description: "OK, path not empty",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "scale",
+			expected:    "http://service1.default.svc:8000/scale",
+		},
+		{
+			description: "OK, path not empty with slash",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "/scale",
+			expected:    "http://service1.default.svc:8000/scale",
+		},
+		{
+			description: "OK, path is empty",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "",
+			expected:    "http://service1.default.svc:8000",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			res := createURL(tc.scheme, tc.name, tc.namespace, tc.path)
+
+			if assert.NotNil(t, res) {
+				assert.Equal(t, tc.expected, res.String())
+			}
+		})
+	}
+}
+
+func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
+	url := "testurl"
+
+	type expected struct {
+		url string
+		err string
+	}
+
+	var testCases = []struct {
+		description   string
+		webhookPolicy *autoscalingv1.WebhookPolicy
+		expected      expected
+	}{
+		{
+			description: "No namespace provided, default should be used",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "",
+					Path:      &url,
+				},
+			},
+			expected: expected{
+				url: "http://service1.default.svc:8000/testurl",
+				err: "",
+			},
+		},
+		{
+			description: "No url provided, empty string should be used",
+			webhookPolicy: &autoscalingv1.WebhookPolicy{
+				Service: &admregv1b.ServiceReference{
+					Name:      "service1",
+					Namespace: "test",
+					Path:      nil,
+				},
+			},
+			expected: expected{
+				url: "http://service1.test.svc:8000",
+				err: "",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			url, err := buildURLFromWebhookPolicy(tc.webhookPolicy)
+
+			if tc.expected.err != "" && assert.NotNil(t, err) {
+				assert.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.expected.url, url.String())
+			}
+		})
+	}
 }
