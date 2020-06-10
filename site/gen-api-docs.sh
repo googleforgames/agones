@@ -62,8 +62,7 @@ function sedeasy {
 }
 
 # do we have changes in generated API docs compared to previous version
-diff $RESULT $OLD || true
-if [ $? -gt 0 ]
+if ! diff $RESULT $OLD;
 then 
   echo "Output to a file $FILE"
 
