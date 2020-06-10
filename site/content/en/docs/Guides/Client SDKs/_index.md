@@ -277,7 +277,7 @@ If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, u
 or SDK.WatchGameServer() instead to list the connected players.
 {{< /alert >}}
 
-[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}
+[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.PlayerStatus" >}}
 
 ## Writing your own SDK
 

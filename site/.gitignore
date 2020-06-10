@@ -4,3 +4,4 @@ resources/
 node_modules/
 tech-doc-hugo
 *.json
+!/assets/templates/crd-doc-config.json
