@@ -55,7 +55,7 @@ containers:
 
 ### 2. Create Firewall Rules
 
-Let's making some [firewall](https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/) rules that will be used by kubernetes health checks and the ingress which we will create shortly.
+Let's making some firewall rules that will be used by kubernetes health checks and the ingress which we will create shortly.
 
 First, we will make one for the HTTPS health checks that will be sent to our service by running:
 ```

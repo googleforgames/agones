@@ -5,21 +5,23 @@
 <ul>
     {{ range . }}
     <li>
-        <a href="#{{- packageDisplayName . -}}">{{ packageDisplayName . }}</a>
+        <a href="#{{- packageAnchorID . -}}">{{ packageDisplayName . }}</a>
     </li>
     {{ end }}
 </ul>
 {{ end}}
 
 {{ range .packages }}
-    <h2 id="{{- packageDisplayName . -}}">
+    <h2 id="{{- packageAnchorID . -}}">
         {{- packageDisplayName . -}}
     </h2>
 
-    {{ with .DocComments }}
-    <p>
-        {{ safe (renderComments .) }}
-    </p>
+    {{ with (index .GoPackages 0 )}}
+        {{ with .DocComments }}
+        <p>
+            {{ safe (renderComments .) }}
+        </p>
+        {{ end }}
     {{ end }}
 
     Resource Types:
@@ -27,7 +29,7 @@
     {{- range (visibleTypes (sortedTypes .Types)) -}}
         {{ if isExportedType . -}}
         <li>
-            <a href="#{{ typeIdentifier . }}">{{ typeIdentifier . }}</a>
+            <a href="{{ linkForType . }}">{{ typeDisplayName . }}</a>
         </li>
         {{- end }}
     {{- end -}}
