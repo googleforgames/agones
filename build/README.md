@@ -635,7 +635,6 @@ Run Golang test which emulates and verifies successful execution of next two ste
 make gcloud-terraform-cluster
 make gcloud-terraform-destroy-cluster
 ```
-`make terraform-init` should be invoked first.
 
 ### Minikube
 

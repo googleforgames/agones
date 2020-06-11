@@ -85,3 +85,11 @@ gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-destroy-cluster:
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
+terraform-test: $(ensure-build-image)
+ifndef GCP_PROJECT
+	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
+endif
+	$(MAKE) terraform-init
+	$(DOCKER_RUN) bash -c 'mkdir -p /go/src/terraform && \
+	cd /go/src/terraform && cp -r $(mount_path)/test/terraform /go/src/ && mv ./gke_test.go.nolint gke_test.go && go test -v -run TestTerraformGKEInstallConfig \
+	-timeout 1h -project $(GCP_PROJECT) $(ARGS)'
