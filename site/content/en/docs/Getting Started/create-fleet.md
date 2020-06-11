@@ -359,4 +359,4 @@ You have now deployed a new version of your game!
 - Have a look at the [GameServer Creation, Allocation and Shutdown Lifecycle]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) diagram,
     to give you a good overview of how all the pieces fit together - from creating to integrating with a matchmaker.
 - Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
-- If you would like to learn how to programmatically allocate a Game Server from the fleet using the Agones API, see the [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}) tutorial.
+- If you would like to learn how to programmatically allocate a Game Server from the fleet, see how to [Access Agones via the Kubernetes API]({{< relref "../Guides/access-api.md" >}}) or alternatively use the [Allocator Service]({{< relref "../Advanced/allocator-service.md" >}}), depending on your needs.
