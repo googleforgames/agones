@@ -23,8 +23,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const defaultNs = "default"
-
 var framework *e2eframework.Framework
 
 func TestMain(m *testing.M) {
@@ -50,13 +48,13 @@ func TestMain(m *testing.M) {
 	}
 
 	// run cleanup before tests, to ensure no resources from previous runs exist.
-	err = framework.CleanUp(defaultNs)
+	err = framework.CleanUp(framework.Namespace)
 	if err != nil {
 		log.WithError(err).Error("failed to cleanup resources")
 	}
 
 	defer func() {
-		err = framework.CleanUp(defaultNs)
+		err = framework.CleanUp(framework.Namespace)
 		if err != nil {
 			log.WithError(err).Error("failed to cleanup resources")
 		}
