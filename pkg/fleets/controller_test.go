@@ -198,6 +198,7 @@ func TestControllerSyncFleet(t *testing.T) {
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
+		f.Status.ReadyReplicas = 5
 		c, m := newFakeController()
 		gsSet := f.GameServerSet()
 		gsSet.ObjectMeta.Name = "gsSet1"
@@ -974,6 +975,7 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 
 	f := defaultFixture()
 	f.Spec.Replicas = 75
+	f.Status.ReadyReplicas = 75
 
 	active := f.GameServerSet()
 	active.ObjectMeta.Name = "active"
@@ -1127,6 +1129,10 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			mu := intstr.FromString("30%")
 			f.Spec.Strategy.RollingUpdate.MaxUnavailable = &mu
 			f.Spec.Replicas = v.fleetSpecReplicas
+
+			// Inactive GameServerSet is downscaled second time only after
+			// ReadyReplicas has raised.
+			f.Status.ReadyReplicas = v.fleetSpecReplicas
 
 			if v.nilMaxSurge {
 				f.Spec.Strategy.RollingUpdate.MaxSurge = nil

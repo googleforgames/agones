@@ -485,7 +485,8 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.G
 			break
 		}
 		gsSetCopy := gsSet.DeepCopy()
-		if gsSet.Status.ShutdownReplicas == 0 {
+		// Wait for new GameServers to become Ready before scaling down Inactive GameServerset
+		if gsSet.Status.ShutdownReplicas == 0 && fleet.Status.ReadyReplicas >= fleet.LowerBoundReplicas(fleet.Spec.Replicas-unavailable) {
 			gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 
 			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
