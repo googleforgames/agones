@@ -244,6 +244,8 @@ test-e2e:
 	$(MAKE) test-e2e-integration
 	$(MAKE) test-e2e-failure
 
+
+# If GAMESERVERS_NAMESPACE is empty - random namespace will be created
 test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 test-e2e-integration: GAMESERVERS_NAMESPACE ?= ""
 test-e2e-integration: $(ensure-build-image)

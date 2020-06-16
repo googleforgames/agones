@@ -494,7 +494,7 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 		}}
 }
 
-// CreateNamespace creates a namespace in the test cluster
+// CreateNamespace creates a namespace and a service account in the test cluster
 func (f *Framework) CreateNamespace(namespace string) error {
 	kubeCore := f.KubeClient.CoreV1()
 	ns := &corev1.Namespace{
