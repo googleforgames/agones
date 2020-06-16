@@ -302,4 +302,4 @@ section may also provide the more details on the API conventions that are used i
 
 ## Next Steps
 
-- Learn how to interact with Agones programmatically through the API while creating an [Allocator Service]({{< relref "../Tutorials/allocator-service-go.md" >}}).
+- Learn how to use [Allocator Service]({{< relref "../Advanced/allocator-service.md" >}}) for single and multi-cluster Allocation.

@@ -310,4 +310,4 @@ Response:
 {"list":["uzh7i","3zh7i"]}
 ```
 
-[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#PlayerStatus" >}}
+[playerstatus]: {{< ref "/docs/Reference/agones_crd_api_reference.html#agones.dev/v1.PlayerStatus" >}}

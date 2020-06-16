@@ -16,6 +16,7 @@ TestFilesConcurrently: false
 IgnoreInternalEmptyHash: true
 OutputDir: /go/src/agones.dev/agones/site/tmp
 OutputLogFile: .htmltest.log
+CheckExternal: true
 ExternalTimeout: 60
 IgnoreURLs:
   - http://localhost

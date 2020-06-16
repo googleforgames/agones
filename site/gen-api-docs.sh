@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -ex
+
 export GOPROXY=http://proxy.golang.org
 echo "using go proxy as a workaround for git.agache.org being down: $GOPROXY"
 
@@ -39,7 +41,7 @@ RESULT="/tmp/agones_crd_api_reference.html"
 # Version to compare
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ./example-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
+./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 # Get the title lines from +++ till empty string
@@ -60,8 +62,7 @@ function sedeasy {
 }
 
 # do we have changes in generated API docs compared to previous version
-diff $RESULT $OLD
-if [ $? -gt 0 ]
+if ! diff $RESULT $OLD;
 then 
   echo "Output to a file $FILE"
 
