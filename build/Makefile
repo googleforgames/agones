@@ -245,7 +245,7 @@ test-e2e:
 	$(MAKE) test-e2e-failure
 
 test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
-test-e2e-integration: GAMESERVERS_NAMESPACE ?= "default"
+test-e2e-integration: GAMESERVERS_NAMESPACE ?= ""
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
@@ -295,7 +295,6 @@ install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
-install: GAMESERVERS_NAMESPACES ?= {"default"}
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system\
@@ -307,7 +306,6 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
-		--set gameservers.namespaces=$(GAMESERVERS_NAMESPACES) \
 		agones $(mount_path)/install/helm/agones/
 
 uninstall: $(ensure-build-image)

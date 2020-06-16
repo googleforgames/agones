@@ -61,8 +61,17 @@ func TestAllocator(t *testing.T) {
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
 
 	namespace := fmt.Sprintf("allocator-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespace)
-	defer framework.DeleteNamespace(t, namespace)
+
+	err := framework.CreateNamespace(namespace)
+	if !assert.Nil(t, err) {
+		return
+	}
+
+	defer func() {
+		if derr := framework.DeleteNamespace(namespace); derr != nil {
+			t.Error(derr)
+		}
+	}()
 
 	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
 	genClientSecret(t, namespace, clientSecretName)
@@ -119,11 +128,26 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 
 	// Create namespaces A and B
 	namespaceA := fmt.Sprintf("allocator-a-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespaceA)
-	defer framework.DeleteNamespace(t, namespaceA)
+	err := framework.CreateNamespace(namespaceA)
+	if !assert.Nil(t, err) {
+		return
+	}
+	defer func() {
+		if derr := framework.DeleteNamespace(namespaceA); derr != nil {
+			t.Error(derr)
+		}
+	}()
+
 	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespaceB)
-	defer framework.DeleteNamespace(t, namespaceB)
+	err = framework.CreateNamespace(namespaceB)
+	if !assert.Nil(t, err) {
+		return
+	}
+	defer func() {
+		if derr := framework.DeleteNamespace(namespaceB); derr != nil {
+			t.Error(derr)
+		}
+	}()
 
 	// Create client secret A, B is receiver of the request and does not need client secret
 	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())

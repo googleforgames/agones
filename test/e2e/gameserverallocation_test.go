@@ -77,8 +77,15 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			t.Parallel()
 
 			namespace := fmt.Sprintf("gsa-multicluster-local-%s", uuid.NewUUID())
-			framework.CreateNamespace(t, namespace)
-			defer framework.DeleteNamespace(t, namespace)
+			err := framework.CreateNamespace(namespace)
+			if !assert.Nil(t, err) {
+				return
+			}
+			defer func() {
+				if derr := framework.DeleteNamespace(namespace); derr != nil {
+					t.Error(derr)
+				}
+			}()
 
 			fleets := framework.AgonesClient.AgonesV1().Fleets(namespace)
 			fleet := defaultFleet(namespace)
