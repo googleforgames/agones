@@ -4,15 +4,76 @@ linkTitle: "Helm"
 weight: 20
 description: >
   Install Agones on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
-
 ---
 
 ## Prerequisites
 
-- [Helm](https://docs.helm.sh/helm/) package manager 2.10.0+
+- [Helm](https://helm.sh/) package manager 2.10.0+, or 3.2.3+
 - [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
 
-## Installing the Chart
+{{% alert title="Note" color="info"%}}
+We are in the process of shifting our development platform to run on [Helm 3](https://helm.sh/blog/helm-3-released/),
+and recommend upgrading your Helm installs,
+as it will soon become the most tested platform.
+{{% /alert %}}
+
+## Helm 3
+
+### Installing the Chart
+
+To install the chart with the release name `my-release` using our stable helm repository:
+
+```bash
+$ helm repo add agones https://agones.dev/chart/stable
+$ helm install my-release --namespace agones-system --create-namespace agones/agones
+```
+
+_We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
+you can use the helm `--namespace` parameter to specify a different namespace._
+
+When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
+run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
+pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment.
+
+The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
+
+{{< alert title="Tip" color="info">}}
+List all releases using `helm list --all-namespaces`
+{{< /alert >}}
+
+### Namespaces
+
+By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use another namespace you can configure Agones via the parameter `gameservers.namespaces`.
+
+For example to use `default` **and** `xbox` namespaces:
+
+```bash
+$ kubectl create namespace xbox
+$ helm install my-release agones/agones --set "gameservers.namespaces={default,xbox}" --namespace agones-system
+```
+
+{{< alert title="Note" color="info">}}
+You need to create your namespaces before installing Agones.
+{{< /alert >}}
+
+If you want to add a new namespace afterward simply upgrade your release:
+
+```bash
+$ kubectl create namespace ps4
+$ helm upgrade my-release agones/agones --set "gameservers.namespaces={default,xbox,ps4}"
+```
+
+### Uninstalling the Chart
+
+To uninstall/delete the `my-release` deployment:
+
+```bash
+$ helm uninstall my-release --namespace=agones-system
+```
+
+## Helm 2
+
+### Installing the Chart
 
 {{< alert title="Note" color="info">}}
 If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
@@ -50,9 +111,7 @@ where 481970d - is a short hash of the latest commit.
 
 The full list of available tags is [here](https://console.cloud.google.com/gcr/images/agones-images/)
 
----
-
-## Namespaces
+### Namespaces
 
 By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use another namespace you can configure Agones via the parameter `gameservers.namespaces`.
 
@@ -74,15 +133,7 @@ $ kubectl create namespace ps4
 $ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones/agones
 ```
 
-## RBAC
-
-By default, `agones.rbacEnabled` is set to true. This enables RBAC support in Agones and must be true if RBAC is enabled in your cluster.
-
-The chart will take care of creating the required service accounts and roles for Agones.
-
-If you have RBAC disabled, or to put it another way, ABAC enabled, you should set this value to `false`.
-
-## Uninstalling the Chart
+### Uninstalling the Chart
 
 To uninstall/delete the `my-release` deployment:
 
@@ -91,6 +142,14 @@ $ helm delete my-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
+
+## RBAC
+
+By default, `agones.rbacEnabled` is set to true. This enables RBAC support in Agones and must be true if RBAC is enabled in your cluster.
+
+The chart will take care of creating the required service accounts and roles for Agones.
+
+If you have RBAC disabled, or to put it another way, ABAC enabled, you should set this value to `false`.
 
 ## Configuration
 
@@ -194,7 +253,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install --name my-release --namespace agones-system \
+$ helm install my-release --namespace agones-system \
   --set gameservers.minPort=1000,gameservers.maxPort=5000 agones
 ```
 
@@ -203,7 +262,7 @@ The above command will deploy Agones controllers to `agones-system` namespace. A
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install --name my-release --namespace agones-system -f values.yaml agones/agones
+$ helm install my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
 {{< alert title="Tip" color="info">}}
