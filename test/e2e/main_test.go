@@ -50,12 +50,12 @@ func TestMain(m *testing.M) {
 	}
 
 	if framework.Namespace == "" {
-		// use a random namespace
+		// use a custom namespace - Unix timestamp
 		framework.Namespace = strconv.Itoa(int(time.Now().Unix()))
-		log.Infof("Randomly generated namespace: %s", framework.Namespace)
+		log.Infof("Custom namespace is set: %s", framework.Namespace)
 
 		if err := framework.CreateNamespace(framework.Namespace); err != nil {
-			log.WithError(err).Error("failed to create a random namespace")
+			log.WithError(err).Error("failed to create a custom namespace")
 			os.Exit(1)
 		}
 

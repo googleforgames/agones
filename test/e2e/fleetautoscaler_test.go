@@ -58,7 +58,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt))
+	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt, framework.Namespace))
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
@@ -159,7 +159,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 
 	// Create FleetAutoScaler with 7 Buffer and MinReplicas
 	targetScale := 7
-	fas := defaultFleetAutoscaler(flt)
+	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(targetScale)
 	fas.Spec.Policy.Buffer.MinReplicas = int32(targetScale)
 	fas, err = fleetautoscalers.Create(fas)
@@ -259,7 +259,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
 	for i := 0; i < 5; i++ {
-		fas := defaultFleetAutoscaler(flt)
+		fas := defaultFleetAutoscaler(flt, framework.Namespace)
 		bufferSize := r.Int31n(5)
 		minReplicas := r.Int31n(5)
 		maxReplicas := r.Int31n(8)
@@ -333,9 +333,9 @@ func patchFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler, bufferSize intstr.
 }
 
 // defaultFleetAutoscaler returns a default fleet autoscaler configuration for a given fleet
-func defaultFleetAutoscaler(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
-		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: framework.Namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: namespace},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,
 			Policy: autoscalingv1.FleetAutoscalerPolicy{
@@ -353,7 +353,7 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 // scaling from Replicas equals to 1 to 2
 func TestAutoscalerWebhook(t *testing.T) {
 	t.Parallel()
-	pod, svc := defaultAutoscalerWebhook()
+	pod, svc := defaultAutoscalerWebhook(framework.Namespace)
 	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(pod)
 	if assert.Nil(t, err) {
 		defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
@@ -385,7 +385,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-	fas := defaultFleetAutoscaler(flt)
+	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
@@ -533,8 +533,12 @@ qrh1J4ZuqSJtnSXdwh3Zm9aoDxAd966dFXZgsoEg9/Au/C7PpyUx4JH5eTV9wBSy
 rteG9laTLeoJFDeCvc+pzWX+
 -----END CERTIFICATE-----`
 
-func TestTlsWebhook(t *testing.T) {
+func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	t.Parallel()
+
+	// we hardcode 'default' namespace here because certificates above are generated to use this one
+	defaultNS := "default"
+
 	secr := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "autoscalersecret-",
@@ -546,13 +550,13 @@ func TestTlsWebhook(t *testing.T) {
 	secr.Data[corev1.TLSCertKey] = []byte(webhookCrt)
 	secr.Data[corev1.TLSPrivateKeyKey] = []byte(webhookKey)
 
-	secrets := framework.KubeClient.CoreV1().Secrets(framework.Namespace)
+	secrets := framework.KubeClient.CoreV1().Secrets(defaultNS)
 	secr, err := secrets.Create(secr.DeepCopy())
 	if assert.Nil(t, err) {
 		defer secrets.Delete(secr.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	pod, svc := defaultAutoscalerWebhook()
+	pod, svc := defaultAutoscalerWebhook(defaultNS)
 	pod.Spec.Volumes = make([]corev1.Volume, 1)
 	pod.Spec.Volumes[0] = corev1.Volume{
 		Name: "secret-volume",
@@ -566,38 +570,38 @@ func TestTlsWebhook(t *testing.T) {
 		Name:      "secret-volume",
 		MountPath: "/home/service/certs",
 	}}
-	pod, err = framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(pod.DeepCopy())
+	pod, err = framework.KubeClient.CoreV1().Pods(defaultNS).Create(pod.DeepCopy())
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Pods(defaultNS).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the webhook, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestTlsWebhook")
 	}
 
 	// since we're using statically-named service, perform a best-effort delete of a previous service
-	err = framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(svc.ObjectMeta.Name, waitForDeletion)
+	err = framework.KubeClient.CoreV1().Services(defaultNS).Delete(svc.ObjectMeta.Name, waitForDeletion)
 	if err != nil {
 		assert.True(t, k8serrors.IsNotFound(err))
 	}
 
 	// making sure the service is really gone.
 	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
-		_, err := framework.KubeClient.CoreV1().Services(framework.Namespace).Get(svc.ObjectMeta.Name, metav1.GetOptions{})
+		_, err := framework.KubeClient.CoreV1().Services(defaultNS).Get(svc.ObjectMeta.Name, metav1.GetOptions{})
 		return k8serrors.IsNotFound(err), nil
 	})
 	assert.Nil(t, err)
 
-	svc, err = framework.KubeClient.CoreV1().Services(framework.Namespace).Create(svc.DeepCopy())
+	svc, err = framework.KubeClient.CoreV1().Services(defaultNS).Create(svc.DeepCopy())
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Services(defaultNS).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the service, there is no point going further
 		assert.FailNow(t, "Failed creating service, aborting TestTlsWebhook")
 	}
 
 	alpha1 := framework.AgonesClient.AgonesV1()
-	fleets := alpha1.Fleets(framework.Namespace)
-	flt := defaultFleet(framework.Namespace)
+	fleets := alpha1.Fleets(defaultNS)
+	flt := defaultFleet(defaultNS)
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(flt.DeepCopy())
@@ -607,8 +611,8 @@ func TestTlsWebhook(t *testing.T) {
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-	fas := defaultFleetAutoscaler(flt)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNS)
+	fas := defaultFleetAutoscaler(flt, defaultNS)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
@@ -616,7 +620,7 @@ func TestTlsWebhook(t *testing.T) {
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
-			Namespace: framework.Namespace,
+			Namespace: defaultNS,
 			Path:      &path,
 		},
 		CABundle: []byte(caPem),
@@ -638,7 +642,7 @@ func TestTlsWebhook(t *testing.T) {
 	})
 }
 
-func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
+func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
 	appName := fmt.Sprintf("autoscaler-webhook-%v", time.Now().UnixNano())
 	l["app"] = appName
@@ -646,7 +650,7 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "auto-webhook-",
-			Namespace:    framework.Namespace,
+			Namespace:    namespace,
 			Labels:       l,
 		},
 		Spec: corev1.PodSpec{
@@ -665,7 +669,7 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "autoscaler-tls-service",
-			Namespace: framework.Namespace,
+			Namespace: namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: m,
