@@ -104,6 +104,13 @@ func gameServerWithNode(nodeName string) *agonesv1.GameServer {
 	return gs
 }
 
+func gameServerWithFleetStateCreationTimestamp(fleetName string, gsName string, state agonesv1.GameServerState, t metav1.Time) *agonesv1.GameServer {
+	gs := gameServerWithFleetAndState(fleetName, state)
+	gs.ObjectMeta.CreationTimestamp = t
+	gs.ObjectMeta.Name = gsName
+	return gs
+}
+
 func gameServerWithFleetAndState(fleetName string, state agonesv1.GameServerState) *agonesv1.GameServer {
 	lbs := map[string]string{}
 	if fleetName != "" {

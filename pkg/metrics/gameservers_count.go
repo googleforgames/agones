@@ -23,6 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/errors"
 )
 
+const defaultFleetTag = "none"
+
 // GameServerCount  is the count of gameserver per current state and per fleet name
 type GameServerCount map[agonesv1.GameServerState]map[fleetKey]int64
 
@@ -59,12 +61,9 @@ func (c GameServerCount) record(gameservers []*agonesv1.GameServer) error {
 	// Otherwise OpenCensus will write the last value recorded to the prom endpoint.
 	// TL;DR we can't remove a gauge
 	c.reset()
-
-	if len(gameservers) != 0 {
-		// counts gameserver per state and fleet
-		for _, g := range gameservers {
-			c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
-		}
+	// counts gameserver per state and fleet
+	for _, g := range gameservers {
+		c.increment(g.Labels[agonesv1.FleetNameLabel], g.GetNamespace(), g.Status.State)
 	}
 
 	errs := []error{}

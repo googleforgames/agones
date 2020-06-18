@@ -18,13 +18,16 @@ import (
 	"context"
 	"strings"
 	"testing"
-
-	"go.opencensus.io/metric/metricdata"
-	"go.opencensus.io/metric/metricexport"
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	agtesting "agones.dev/agones/pkg/testing"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"go.opencensus.io/metric/metricdata"
+	"go.opencensus.io/metric/metricexport"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 type metricExporter struct {
@@ -282,4 +285,114 @@ func TestControllerGameServersNodeState(t *testing.T) {
 		{labels: []string{"true"}, val: int64(1)},
 		{labels: []string{"false"}, val: int64(2)},
 	})
+}
+
+func TestCalcDuration(t *testing.T) {
+	m := agtesting.NewMocks()
+	c := NewController(
+		m.KubeClient,
+		m.AgonesClient,
+		m.KubeInformerFactory,
+		m.AgonesInformerFactory)
+	creationTimestamp := metav1.Now()
+	futureTimestamp := metav1.NewTime(time.Now().Add(24 * time.Hour))
+	gsName1 := "exampleGameServer1"
+	gsName2 := "exampleGameServer2"
+	currentTime := creationTimestamp.Local()
+	// Add one second each time Duration is calculated
+	c.now = func() time.Time {
+		currentTime = currentTime.Add(1 * time.Second)
+		return currentTime
+	}
+	type result struct {
+		duration float64
+		err      error
+	}
+	fleet1 := "test-fleet"
+	fleet2 := ""
+	var testCases = []struct {
+		description string
+		gs1         *agonesv1.GameServer
+		gs2         *agonesv1.GameServer
+		expected    result
+	}{
+		{
+			description: "GameServer creating - first measurement",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, "", creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateCreating, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 1,
+			},
+		},
+		{
+			description: "Test state change of a GameServer",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateCreating, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 1,
+			},
+		},
+		{
+			description: "gs1 state should already be deleted, error should be generated (emulation of evicted key for gs1)",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, "", creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			expected: result{
+				err:      errors.Errorf("unable to calculate '' state duration of '%s' GameServer", gsName1),
+				duration: 0,
+			},
+		},
+		{
+			description: "Shutdown state should remove the key in LRU cache",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateShutdown, creationTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 2,
+			},
+		},
+		{
+			description: "Cache miss, no key in LRU cache",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateRequestReady, creationTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet1, gsName1, agonesv1.GameServerStateShutdown, creationTimestamp),
+			expected: result{
+				err:      errors.Errorf("unable to calculate 'RequestReady' state duration of '%s' GameServer", gsName1),
+				duration: 0,
+			},
+		},
+		{
+			description: "Future timestamp was used",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet2, gsName2, "", futureTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet2, gsName2, agonesv1.GameServerStateCreating, futureTimestamp),
+			expected: result{
+				err:      errors.Errorf("negative duration for '' state of '%s' GameServer", gsName2),
+				duration: 0,
+			},
+		},
+		{
+			description: "Shutdown state - remove a key from the LRU",
+			gs1:         gameServerWithFleetStateCreationTimestamp(fleet2, gsName2, agonesv1.GameServerStateCreating, futureTimestamp),
+			gs2:         gameServerWithFleetStateCreationTimestamp(fleet2, gsName2, agonesv1.GameServerStateShutdown, futureTimestamp),
+			expected: result{
+				err:      nil,
+				duration: 1,
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			// Do not use t.Parallel(), because test cases should be executed as serial tests
+			// Test case 3 depends on key eviction in test case 2
+			duration, err := c.calcDuration(tc.gs1, tc.gs2)
+			if tc.expected.err != nil {
+				assert.EqualError(t, err, tc.expected.err.Error(), "We should receive an error, metric should not be measured")
+			} else {
+				assert.NoError(t, err, "Unable to caculate duration of a particular state")
+			}
+			assert.Equal(t, tc.expected.duration, duration, "Time diff should be calculated properly")
+		})
+	}
+	assert.Len(t, c.gameServerStateLastChange.Keys(), 0, "We should not have any keys after the test")
 }
