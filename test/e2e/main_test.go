@@ -16,14 +16,14 @@ package e2e
 
 import (
 	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
-
-const defaultNs = "default"
 
 var framework *e2eframework.Framework
 
@@ -49,19 +49,38 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	// run cleanup before tests, to ensure no resources from previous runs exist.
-	err = framework.CleanUp(defaultNs)
-	if err != nil {
-		log.WithError(err).Error("failed to cleanup resources")
-	}
+	if framework.Namespace == "" {
+		// use a custom namespace - Unix timestamp
+		framework.Namespace = strconv.Itoa(int(time.Now().Unix()))
+		log.Infof("Custom namespace is set: %s", framework.Namespace)
 
-	defer func() {
-		err = framework.CleanUp(defaultNs)
+		if err := framework.CreateNamespace(framework.Namespace); err != nil {
+			log.WithError(err).Error("failed to create a custom namespace")
+			os.Exit(1)
+		}
+
+		defer func() {
+			if derr := framework.DeleteNamespace(framework.Namespace); derr != nil {
+				log.Error(derr)
+			}
+			os.Exit(exitCode)
+		}()
+	} else {
+		// use an already existing namespace
+		// run cleanup before tests to ensure no resources from previous runs exist
+		err = framework.CleanUp(framework.Namespace)
 		if err != nil {
 			log.WithError(err).Error("failed to cleanup resources")
 		}
-		os.Exit(exitCode)
-	}()
+
+		defer func() {
+			err = framework.CleanUp(framework.Namespace)
+			if err != nil {
+				log.WithError(err).Error("failed to cleanup resources")
+			}
+			os.Exit(exitCode)
+		}()
+	}
 
 	exitCode = m.Run()
 }

@@ -244,13 +244,17 @@ test-e2e:
 	$(MAKE) test-e2e-integration
 	$(MAKE) test-e2e-failure
 
+
+# If GAMESERVERS_NAMESPACE is empty - random namespace will be created
 test-e2e-integration: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+test-e2e-integration: GAMESERVERS_NAMESPACE ?= ""
 test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
-		--feature-gates=$(FEATURE_GATES)
+		--feature-gates=$(FEATURE_GATES) \
+		--namespace=$(GAMESERVERS_NAMESPACE) \
 	echo "Finishing e2e integration test!"
 
 test-e2e-failure: $(ensure-build-image)
