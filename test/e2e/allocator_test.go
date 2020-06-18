@@ -60,29 +60,16 @@ func TestAllocator(t *testing.T) {
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
 
-	namespace := fmt.Sprintf("allocator-%s", uuid.NewUUID())
-
-	err := framework.CreateNamespace(namespace)
-	if !assert.Nil(t, err) {
-		return
-	}
-
-	defer func() {
-		if derr := framework.DeleteNamespace(namespace); derr != nil {
-			t.Error(derr)
-		}
-	}()
-
 	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, namespace, clientSecretName)
+	genClientSecret(t, framework.Namespace, clientSecretName)
 
-	flt, err := createFleet(namespace)
+	flt, err := createFleet(framework.Namespace)
 	if !assert.Nil(t, err) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
-		Namespace:                    namespace,
+		Namespace:                    framework.Namespace,
 		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
@@ -92,7 +79,7 @@ func TestAllocator(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(namespace, clientSecretName, tlsCA)
+		dialOpts, err := createRemoteClusterDialOption(framework.Namespace, clientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -127,19 +114,10 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	restartAllocator(t)
 
 	// Create namespaces A and B
-	namespaceA := fmt.Sprintf("allocator-a-%s", uuid.NewUUID())
-	err := framework.CreateNamespace(namespaceA)
-	if !assert.Nil(t, err) {
-		return
-	}
-	defer func() {
-		if derr := framework.DeleteNamespace(namespaceA); derr != nil {
-			t.Error(derr)
-		}
-	}()
+	namespaceA := framework.Namespace // let's reuse an existing one
 
 	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
-	err = framework.CreateNamespace(namespaceB)
+	err := framework.CreateNamespace(namespaceB)
 	if !assert.Nil(t, err) {
 		return
 	}
