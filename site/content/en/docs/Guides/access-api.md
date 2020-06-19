@@ -133,7 +133,7 @@ If there isn't a client written in your preferred language, it is always possibl
 directly with Kubernetes API to interact with Agones.
 
 The Kubernetes API can be authenticated and exposed locally through the
-[`kubectl proxy`](https://kubernetes.io/docs/tasks/access-kubernetes-api/http-proxy-access-api/)
+[`kubectl proxy`](https://kubernetes.io/docs/tasks/extend-kubernetes/http-proxy-access-api/)
 
 
 For example:
