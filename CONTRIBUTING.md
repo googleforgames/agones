@@ -124,4 +124,4 @@ repository, we have a [community membership guide](./docs/governance/community_m
   - Info - should be used to document state changes in the application or some entity within the application. These logs provide the skeleton of what has happened. Examples: system started/stopped, remote API calls, a new user has been created/updated, etc.
   - Debug - diagnostic information goes here and everything that can help to troubleshoot an application. Examples: any values in business logic, detailed information about the data flow.
 
-  More details can be found here: https://reflectoring.io/logging-levels/
+  More details can be found in [this article](https://medium.com/@tom.hombergs/tip-use-logging-levels-consistently-913b7b8e9782).
