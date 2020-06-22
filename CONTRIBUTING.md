@@ -33,6 +33,7 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
   guide for details.
 - All submissions, including submissions by project members, will require review before being merged.
 - Once review has occurred, please rebase your PR down to a single commit. This will ensure a nice clean Git history.
+- If you are unable to access build errors from your PR, make sure that you have joined the [agones-discuss mailing list](https://groups.google.com/forum/#!forum/agones-discuss).
 - Please follow the code formatting instructions below.
 
 ### Additional Instructions for Unreal Plugin Pull Requests
