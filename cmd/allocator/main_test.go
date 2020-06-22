@@ -92,16 +92,16 @@ func TestGetTlsCert(t *testing.T) {
 	cert2, err := tls.X509KeyPair(serverCert2, serverKey2)
 	assert.Nil(t, err, "expected (serverCert2, serverKey2) to create a cert")
 
-	h := serviceHandler {
+	h := serviceHandler{
 		tlsCert: &cert1,
 	}
 
-	retrievedCert1, err := h.getTlsCert(nil)
+	retrievedCert1, err := h.getTLSCert(nil)
 	assert.Nil(t, err, "expected getTlsCert() to not fail")
 	assert.Equal(t, cert1.Certificate, retrievedCert1.Certificate, "expected the retrieved cert to be equal to the original one")
 
 	h.tlsCert = &cert2
-	retrievedCert2, err := h.getTlsCert(nil)
+	retrievedCert2, err := h.getTLSCert(nil)
 	assert.Nil(t, err, "expected getTlsCert() to not fail")
 	assert.Equal(t, cert2.Certificate, retrievedCert2.Certificate, "expected the retrieved cert to be equal to the original one")
 }

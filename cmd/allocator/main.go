@@ -97,9 +97,9 @@ func main() {
 		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
 	}
 
-	watcherTls, _ := fsnotify.NewWatcher()
-	defer watcherTls.Close() // nolint: errcheck
-	if err := watcherTls.Add(tlsDir); err != nil {
+	watcherTLS, _ := fsnotify.NewWatcher()
+	defer watcherTLS.Close() // nolint: errcheck
+	if err := watcherTLS.Add(tlsDir); err != nil {
 		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", tlsDir)
 	}
 
@@ -113,13 +113,13 @@ func main() {
 		for {
 			select {
 			// watch for events
-			case event := <-watcherTls.Events:
+			case event := <-watcherTLS.Events:
 				h.tlsMutex.Lock()
-				tlsCert, err := readTlsCert()
+				tlsCert, err := readTLSCert()
 				if err != nil {
 					logger.WithError(err).Infof("could load TLS cert; keeping old one")
 				} else {
-					h.tlsCert = tlsCert;
+					h.tlsCert = tlsCert
 				}
 				logger.Infof("Tls directory change event %v", event)
 				h.tlsMutex.Unlock()
@@ -189,7 +189,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 	}
 	h.caCertPool = caCertPool
 
-	tlsCert, err := readTlsCert()
+	tlsCert, err := readTLSCert()
 	if err != nil {
 		logger.WithError(err).Fatal("could not load TLS certs.")
 	}
@@ -198,7 +198,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 	return &h
 }
 
-func readTlsCert() (*tls.Certificate, error) {
+func readTLSCert() (*tls.Certificate, error) {
 	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
 	if err != nil {
 		logger.WithError(err).Infof("failed to generate credentials")
@@ -212,7 +212,7 @@ func readTlsCert() (*tls.Certificate, error) {
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 
 	cfg := &tls.Config{
-		GetCertificate:        h.getTlsCert,
+		GetCertificate:        h.getTLSCert,
 		ClientAuth:            tls.RequireAnyClientCert,
 		VerifyPeerCertificate: h.verifyClientCertificate,
 	}
@@ -220,7 +220,7 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
 }
 
-func (h *serviceHandler) getTlsCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
+func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	h.tlsMutex.RLock()
 	defer h.tlsMutex.RUnlock()
 	return h.tlsCert, nil
