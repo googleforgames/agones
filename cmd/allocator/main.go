@@ -117,7 +117,7 @@ func main() {
 				h.tlsMutex.Lock()
 				tlsCert, err := readTLSCert()
 				if err != nil {
-					logger.WithError(err).Infof("could load TLS cert; keeping old one")
+					logger.WithError(err).Error("could not load TLS cert; keeping old one")
 				} else {
 					h.tlsCert = tlsCert
 				}
@@ -127,9 +127,10 @@ func main() {
 				h.certMutex.Lock()
 				caCertPool, err := getCACertPool(certDir)
 				if err != nil {
-					logger.WithError(err).Error("could not load CA certs.")
+					logger.WithError(err).Error("could not load CA certs; keeping old ones")
+				} else {
+					h.caCertPool = caCertPool
 				}
-				h.caCertPool = caCertPool
 				logger.Infof("Certificate directory change event %v", event)
 				h.certMutex.Unlock()
 
