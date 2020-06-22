@@ -36,6 +36,9 @@ const (
 
 	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
 	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
+
+	// FeatureGameServerCaching is a feature flag to enable/disable game server caching
+	FeatureGameServerCaching Feature = "FeatureGameServerCaching"
 )
 
 var (
@@ -46,6 +49,7 @@ var (
 		FeatureExample:                 true,
 		FeaturePlayerTracking:          false,
 		FeatureContainerPortAllocation: true,
+		FeatureGameServerCaching:       false,
 	}
 
 	// featureGates is the storage of what features are enabled
