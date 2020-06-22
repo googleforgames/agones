@@ -28,8 +28,8 @@ $ helm repo add agones https://agones.dev/chart/stable
 $ helm install my-release --namespace agones-system --create-namespace agones/agones
 ```
 
-_We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
-you can use the helm `--namespace` parameter to specify a different namespace._
+_We recommend installing Agones in its own namespaces, such as `agones-system` as shown above.
+ If you want to use a different namespace, you can use the helm `--namespace` parameter to specify._
 
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
@@ -56,11 +56,11 @@ $ helm install my-release agones/agones --set "gameservers.namespaces={default,x
 You need to create your namespaces before installing Agones.
 {{< /alert >}}
 
-If you want to add a new namespace afterward simply upgrade your release:
+If you want to add a new namespace afterward upgrade your release:
 
 ```bash
 $ kubectl create namespace ps4
-$ helm upgrade my-release agones/agones --set "gameservers.namespaces={default,xbox,ps4}"
+$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}"
 ```
 
 ### Uninstalling the Chart
@@ -76,7 +76,7 @@ $ helm uninstall my-release --namespace=agones-system
 ### Installing the Chart
 
 {{< alert title="Note" color="info">}}
-If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://docs.helm.sh/using_helm/) documentation to get started.
+If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://v2.helm.sh/docs/using_helm/) documentation to get started.
 {{< /alert >}}
 
 To install the chart with the release name `my-release` using our stable helm repository:
@@ -86,8 +86,8 @@ $ helm repo add agones https://agones.dev/chart/stable
 $ helm install --name my-release --namespace agones-system agones/agones
 ```
 
-_We recommend to install Agones in its own namespaces (like `agones-system` as shown above)
-you can use the helm `--namespace` parameter to specify a different namespace._
+_We recommend installing Agones in its own namespaces, such as `agones-system` as shown above.
+ If you want to use a different namespace, you can use the helm `--namespace` parameter to specify._
 
 When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
 run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
@@ -98,18 +98,6 @@ The command deploys Agones on the Kubernetes cluster with the default configurat
 {{< alert title="Tip" color="info">}}
 List all releases using `helm list`
 {{< /alert >}}
-
-{{< alert title="Note" color="info">}}
-If you are installing a development build of Agones (i.e. not the {{< release-version >}} release), you will need to install Agones the following way:
-{{< /alert >}}
-
-```bash
-$ cd install/helm/
-$ helm install --name my-release --namespace agones-system agones --set agones.image.tag={{< release-version >}}-481970d
-```
-where 481970d - is a short hash of the latest commit.
-
-The full list of available tags is [here](https://console.cloud.google.com/gcr/images/agones-images/)
 
 ### Namespaces
 
@@ -126,11 +114,11 @@ $ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-
 You need to create your namespaces before installing Agones.
 {{< /alert >}}
 
-If you want to add a new namespace afterward simply upgrade your release:
+If you want to add a new namespace afterward upgrade your release:
 
 ```bash
 $ kubectl create namespace ps4
-$ helm upgrade --set "gameservers.namespaces={default,xbox,ps4}" my-release agones/agones
+$ helm upgrade --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" my-release agones/agones
 ```
 
 ### Uninstalling the Chart
