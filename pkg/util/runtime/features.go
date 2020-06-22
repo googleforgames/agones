@@ -38,7 +38,7 @@ const (
 	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
 
 	// FeatureGameServerCaching is a feature flag to enable/disable game server caching
-	FeatureGameServerCaching Feature = "FeatureGameServerCaching"
+	FeatureGameServerCaching Feature = "GameServerCaching"
 )
 
 var (
