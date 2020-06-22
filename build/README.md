@@ -477,6 +477,8 @@ These tests validate Agones flow from start to finish.
 
 It uses the KUBECONFIG to target a Kubernetes cluster.
 
+Use `GAMESERVERS_NAMESPACE` flag to provide a namespace or leave it empty in order to create and use a random one.
+
 See [`make minikube-test-e2e`](#make-minikube-test-e2e) to run end-to-end tests on Minikube.
 
 #### `make test-e2e-integration`

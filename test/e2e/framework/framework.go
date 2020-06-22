@@ -67,6 +67,7 @@ type Framework struct {
 	StressTestLevel int
 	PerfOutputDir   string
 	Version         string
+	Namespace       string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
@@ -116,6 +117,7 @@ const (
 	stressTestLevelFlag = "stress"
 	perfOutputDirFlag   = "perf-output"
 	versionFlag         = "version"
+	namespaceFlag       = "namespace"
 )
 
 // ParseTestFlags Parses go test flags separately because pflag package ignores flags with '-test.' prefix
@@ -153,6 +155,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetDefault(perfOutputDirFlag, "")
 	viper.SetDefault(versionFlag, "")
 	viper.SetDefault(runtime.FeatureGateFlag, "")
+	viper.SetDefault(namespaceFlag, "")
 
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
 	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/udp-server:0.21")
@@ -160,6 +163,7 @@ func NewFromFlags() (*Framework, error) {
 	pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
 	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
 	pflag.String(versionFlag, viper.GetString(versionFlag), "agones controller version to be tested, consists of release version plus a short hash of the latest commit")
+	pflag.String(namespaceFlag, viper.GetString(namespaceFlag), "namespace is used to isolate test runs to their own namespaces")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -170,6 +174,7 @@ func NewFromFlags() (*Framework, error) {
 	runtime.Must(viper.BindEnv(stressTestLevelFlag))
 	runtime.Must(viper.BindEnv(perfOutputDirFlag))
 	runtime.Must(viper.BindEnv(versionFlag))
+	runtime.Must(viper.BindEnv(namespaceFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 	runtime.Must(runtime.ParseFeaturesFromEnv())
@@ -183,12 +188,14 @@ func NewFromFlags() (*Framework, error) {
 	framework.StressTestLevel = viper.GetInt(stressTestLevelFlag)
 	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
 	framework.Version = viper.GetString(versionFlag)
+	framework.Namespace = viper.GetString(namespaceFlag)
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
 		WithField("pullSecret", framework.PullSecret).
 		WithField("stressTestLevel", framework.StressTestLevel).
 		WithField("perfOutputDir", framework.PerfOutputDir).
 		WithField("version", framework.Version).
+		WithField("namespace", framework.Namespace).
 		WithField("featureGates", runtime.EncodeFeatures()).
 		Info("Starting e2e test(s)")
 
@@ -487,10 +494,8 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 		}}
 }
 
-// CreateNamespace creates a namespace in the test cluster
-func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
-	t.Helper()
-
+// CreateNamespace creates a namespace and a service account in the test cluster
+func (f *Framework) CreateNamespace(namespace string) error {
 	kubeCore := f.KubeClient.CoreV1()
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
@@ -498,10 +503,11 @@ func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
 			Labels: map[string]string{"owner": "e2e-test"},
 		},
 	}
+
 	if _, err := kubeCore.Namespaces().Create(ns); err != nil {
-		t.Fatalf("creating namespace %s failed: %s", namespace, err)
+		return errors.Errorf("creating namespace %s failed: %s", namespace, err.Error())
 	}
-	t.Logf("Namespace %s is created", namespace)
+	logrus.Infof("Namespace %s is created", namespace)
 
 	saName := "agones-sdk"
 	if _, err := kubeCore.ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
@@ -511,9 +517,14 @@ func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
 			Labels:    map[string]string{"app": "agones"},
 		},
 	}); err != nil {
-		t.Fatalf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err)
+		err = errors.Errorf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err.Error())
+		derr := f.DeleteNamespace(namespace)
+		if derr != nil {
+			return errors.Wrap(err, derr.Error())
+		}
+		return err
 	}
-	t.Logf("ServiceAccount %s/%s is created", namespace, saName)
+	logrus.Infof("ServiceAccount %s/%s is created", namespace, saName)
 
 	rb := &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
@@ -535,21 +546,26 @@ func (f *Framework) CreateNamespace(t *testing.T, namespace string) {
 		},
 	}
 	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(rb); err != nil {
-		t.Fatalf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err)
+		err = errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err.Error())
+		derr := f.DeleteNamespace(namespace)
+		if derr != nil {
+			return errors.Wrap(err, derr.Error())
+		}
+		return err
 	}
-	t.Logf("RoleBinding %s/%s is created", namespace, rb.Name)
+	logrus.Infof("RoleBinding %s/%s is created", namespace, rb.Name)
+
+	return nil
 }
 
 // DeleteNamespace deletes a namespace from the test cluster
-func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
-	t.Helper()
-
+func (f *Framework) DeleteNamespace(namespace string) error {
 	kubeCore := f.KubeClient.CoreV1()
 
 	// Remove finalizers
 	pods, err := kubeCore.Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		t.Fatalf("listing pods in namespace %s failed: %s", namespace, err)
+		return errors.Errorf("listing pods in namespace %s failed: %s", namespace, err)
 	}
 	for i := range pods.Items {
 		pod := &pods.Items[i]
@@ -561,15 +577,16 @@ func (f *Framework) DeleteNamespace(t *testing.T, namespace string) {
 			}}
 			payloadBytes, _ := json.Marshal(payload)
 			if _, err := kubeCore.Pods(namespace).Patch(pod.Name, types.JSONPatchType, payloadBytes); err != nil {
-				t.Errorf("updating pod %s failed: %s", pod.GetName(), err)
+				return errors.Errorf("updating pod %s failed: %s", pod.GetName(), err)
 			}
 		}
 	}
 
 	if err := kubeCore.Namespaces().Delete(namespace, &metav1.DeleteOptions{}); err != nil {
-		t.Fatalf("deleting namespace %s failed: %s", namespace, err)
+		return errors.Errorf("deleting namespace %s failed: %s", namespace, err)
 	}
-	t.Logf("Namespace %s is deleted", namespace)
+	logrus.Infof("Namespace %s is deleted", namespace)
+	return nil
 }
 
 type patchRemoveNoValue struct {

@@ -16,6 +16,7 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
@@ -41,7 +43,19 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-const noneValue = "none"
+const (
+	noneValue = "none"
+
+	// GameServersStateCount is the size of LRU cache and should contain all gameservers state changes
+	// Upper bound could be estimated as 10_000 of gameservers in total each moment, 10 state changes per each gameserver
+	// and about 10 minutes for a game session, and 6 gameservers per hour.
+	// For one hour 600k capacity would be enough, even if no records would be deleted.
+	// And calcDuration algorithm is removing those records, which already has been changed (old statuses).
+	// Key is Namespace, fleetName, GameServerName, State and float64 as value.
+	// Roughly 256 + 63 + 63 + 16 + 4 = 400 bytes per every record.
+	// In total we would have 229 MiB of space required to store GameServer State durations.
+	GameServersStateCount = 600_000
+)
 
 var (
 	// MetricResyncPeriod is the interval to re-synchronize metrics based on indexed cache.
@@ -54,16 +68,19 @@ func init() {
 
 // Controller is a metrics controller collecting Agones state metrics
 type Controller struct {
-	logger           *logrus.Entry
-	gameServerLister listerv1.GameServerLister
-	nodeLister       v1.NodeLister
-	gameServerSynced cache.InformerSynced
-	fleetSynced      cache.InformerSynced
-	fasSynced        cache.InformerSynced
-	nodeSynced       cache.InformerSynced
-	lock             sync.Mutex
-	gsCount          GameServerCount
-	faCount          map[string]int64
+	logger                    *logrus.Entry
+	gameServerLister          listerv1.GameServerLister
+	nodeLister                v1.NodeLister
+	gameServerSynced          cache.InformerSynced
+	fleetSynced               cache.InformerSynced
+	fasSynced                 cache.InformerSynced
+	nodeSynced                cache.InformerSynced
+	lock                      sync.Mutex
+	stateLock                 sync.Mutex
+	gsCount                   GameServerCount
+	faCount                   map[string]int64
+	gameServerStateLastChange *lru.Cache
+	now                       func() time.Time
 }
 
 // NewController returns a new metrics controller
@@ -83,15 +100,25 @@ func NewController(
 	node := kubeInformerFactory.Core().V1().Nodes()
 	nodeInformer := node.Informer()
 
+	// GameServerStateLastChange Contains the time when the GameServer
+	// changed its state last time
+	// on delete and state change remove GameServerName key
+	lruCache, err := lru.New(GameServersStateCount)
+	if err != nil {
+		logger.WithError(err).Fatal("Unable to create LRU cache")
+	}
+
 	c := &Controller{
-		gameServerLister: gameServer.Lister(),
-		nodeLister:       node.Lister(),
-		gameServerSynced: gsInformer.HasSynced,
-		fleetSynced:      fInformer.HasSynced,
-		fasSynced:        fasInformer.HasSynced,
-		nodeSynced:       nodeInformer.HasSynced,
-		gsCount:          GameServerCount{},
-		faCount:          map[string]int64{},
+		gameServerLister:          gameServer.Lister(),
+		nodeLister:                node.Lister(),
+		gameServerSynced:          gsInformer.HasSynced,
+		fleetSynced:               fInformer.HasSynced,
+		fasSynced:                 fasInformer.HasSynced,
+		nodeSynced:                nodeInformer.HasSynced,
+		gsCount:                   GameServerCount{},
+		faCount:                   map[string]int64{},
+		gameServerStateLastChange: lruCache,
+		now:                       time.Now,
 	}
 
 	c.logger = runtime.NewLoggerWithType(c)
@@ -264,7 +291,63 @@ func (c *Controller) recordGameServerStatusChanges(old, next interface{}) {
 		}
 		recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(newGs.Status.State)),
 			tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gameServerTotalStats.M(1))
+
+		// Calculate the duration of the current state
+		duration, err := c.calcDuration(oldGs, newGs)
+		if err != nil {
+			c.logger.Warn(err.Error())
+		} else {
+			recordWithTags(context.Background(), []tag.Mutator{tag.Upsert(keyType, string(oldGs.Status.State)),
+				tag.Upsert(keyFleetName, fleetName), tag.Upsert(keyNamespace, newGs.GetNamespace())}, gsStateDurationSec.M(duration))
+		}
 	}
+}
+
+// calcDuration calculates the duration between state changes
+// store current time from creationTimestamp for each update received
+// Assumptions: there is a possibility that one of the previous state change timestamps would be evicted,
+// this measurement would be skipped. This is a trade off between accuracy of distribution calculation and the performance.
+// Presumably occasional miss would not change the statistics too much.
+func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration float64, err error) {
+	// currentTime - GameServer time from its start
+	currentTime := c.now().UTC().Sub(newGs.ObjectMeta.CreationTimestamp.Local().UTC()).Seconds()
+
+	fleetName := newGs.Labels[agonesv1.FleetNameLabel]
+	if fleetName == "" {
+		fleetName = defaultFleetTag
+	}
+
+	newGSKey := fmt.Sprintf("%s/%s/%s/%s", newGs.ObjectMeta.Namespace, fleetName, newGs.ObjectMeta.Name, newGs.Status.State)
+	oldGSKey := fmt.Sprintf("%s/%s/%s/%s", oldGs.ObjectMeta.Namespace, fleetName, oldGs.ObjectMeta.Name, oldGs.Status.State)
+
+	c.stateLock.Lock()
+	defer c.stateLock.Unlock()
+	switch {
+	case newGs.Status.State == agonesv1.GameServerStateCreating || newGs.Status.State == agonesv1.GameServerStatePortAllocation:
+		duration = currentTime
+	case !c.gameServerStateLastChange.Contains(oldGSKey):
+		err = fmt.Errorf("unable to calculate '%s' state duration of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name)
+		return 0, err
+	default:
+		val, ok := c.gameServerStateLastChange.Get(oldGSKey)
+		if !ok {
+			err = fmt.Errorf("could not find expected key %s", oldGSKey)
+			return
+		}
+		c.gameServerStateLastChange.Remove(oldGSKey)
+		duration = currentTime - val.(float64)
+	}
+
+	// Assuming that no State changes would occur after Shutdown
+	if newGs.Status.State != agonesv1.GameServerStateShutdown {
+		c.gameServerStateLastChange.Add(newGSKey, currentTime)
+		c.logger.Debugf("Adding new key %s, relative time: %f", newGSKey, currentTime)
+	}
+	if duration < 0. {
+		duration = 0
+		err = fmt.Errorf("negative duration for '%s' state of '%s' GameServer", oldGs.Status.State, oldGs.ObjectMeta.Name)
+	}
+	return duration, err
 }
 
 // Run the Metrics controller. Will block until stop is closed.

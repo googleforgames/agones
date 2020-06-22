@@ -60,20 +60,16 @@ func TestAllocator(t *testing.T) {
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
 
-	namespace := fmt.Sprintf("allocator-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespace)
-	defer framework.DeleteNamespace(t, namespace)
-
 	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, namespace, clientSecretName)
+	genClientSecret(t, framework.Namespace, clientSecretName)
 
-	flt, err := createFleet(namespace)
+	flt, err := createFleet(framework.Namespace)
 	if !assert.Nil(t, err) {
 		return
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
-		Namespace:                    namespace,
+		Namespace:                    framework.Namespace,
 		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
@@ -83,7 +79,7 @@ func TestAllocator(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(namespace, clientSecretName, tlsCA)
+		dialOpts, err := createRemoteClusterDialOption(framework.Namespace, clientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -118,12 +114,18 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	restartAllocator(t)
 
 	// Create namespaces A and B
-	namespaceA := fmt.Sprintf("allocator-a-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespaceA)
-	defer framework.DeleteNamespace(t, namespaceA)
+	namespaceA := framework.Namespace // let's reuse an existing one
+
 	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
-	framework.CreateNamespace(t, namespaceB)
-	defer framework.DeleteNamespace(t, namespaceB)
+	err := framework.CreateNamespace(namespaceB)
+	if !assert.Nil(t, err) {
+		return
+	}
+	defer func() {
+		if derr := framework.DeleteNamespace(namespaceB); derr != nil {
+			t.Error(derr)
+		}
+	}()
 
 	// Create client secret A, B is receiver of the request and does not need client secret
 	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())

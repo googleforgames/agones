@@ -49,16 +49,16 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	t.Parallel()
 
 	stable := framework.AgonesClient.AgonesV1()
-	fleets := stable.Fleets(defaultNs)
-	flt, err := fleets.Create(defaultFleet(defaultNs))
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(defaultFleet(framework.Namespace))
 	if assert.Nil(t, err) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
-	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt))
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+	fas, err := fleetautoscalers.Create(defaultFleetAutoscaler(flt, framework.Namespace))
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(fas.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
@@ -121,7 +121,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// delete the allocated GameServer and watch the fleet scale down
 	gp := int64(1)
-	err = stable.GameServers(defaultNs).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
+	err = stable.GameServers(framework.Namespace).Delete(gsa.Status.GameServerName, &metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
 	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
@@ -137,8 +137,8 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	t.Parallel()
 
 	stable := framework.AgonesClient.AgonesV1()
-	fleets := stable.Fleets(defaultNs)
-	flt := defaultFleet(defaultNs)
+	fleets := stable.Fleets(framework.Namespace)
+	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Replicas = 2
 	maxSurge := 1
 	rollingUpdateCount := intstr.FromInt(maxSurge)
@@ -155,11 +155,11 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
 	// Create FleetAutoScaler with 7 Buffer and MinReplicas
 	targetScale := 7
-	fas := defaultFleetAutoscaler(flt)
+	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(targetScale)
 	fas.Spec.Policy.Buffer.MinReplicas = int32(targetScale)
 	fas, err = fleetautoscalers.Create(fas)
@@ -183,7 +183,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	})
 
 	// Change ContainerPort to trigger creating a new GSSet
-	flt, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+	flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
 
 	assert.Nil(t, err, "Able to get the Fleet")
 	fltCopy := flt.DeepCopy()
@@ -195,13 +195,13 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	// Uncomment line below to break this test
 	//fltCopy.Spec.Replicas = 2
 
-	flt, err = framework.AgonesClient.AgonesV1().Fleets(defaultNs).Update(fltCopy)
+	flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Update(fltCopy)
 	assert.NoError(t, err)
 
 	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 	// Wait till new GSS is created
 	err = wait.PollImmediate(1*time.Second, 30*time.Second, func() (bool, error) {
-		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
+		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(
 			metav1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			return false, err
@@ -214,7 +214,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	// parameters (deleting no more than maxUnavailable servers at a time)
 	// Wait for old GSSet to be deleted
 	err = wait.PollImmediate(1*time.Second, 5*time.Minute, func() (bool, error) {
-		list, err := framework.AgonesClient.AgonesV1().GameServers(defaultNs).List(
+		list, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).List(
 			metav1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			return false, err
@@ -228,7 +228,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 		if err != nil {
 			return false, err
 		}
-		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(defaultNs).List(
+		gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(
 			metav1.ListOptions{LabelSelector: selector.String()})
 		if err != nil {
 			return false, err
@@ -246,8 +246,8 @@ func TestAutoscalerStressCreate(t *testing.T) {
 	t.Parallel()
 
 	alpha1 := framework.AgonesClient.AgonesV1()
-	fleets := alpha1.Fleets(defaultNs)
-	flt, err := fleets.Create(defaultFleet(defaultNs))
+	fleets := alpha1.Fleets(framework.Namespace)
+	flt, err := fleets.Create(defaultFleet(framework.Namespace))
 	if assert.Nil(t, err) {
 		defer fleets.Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
@@ -256,10 +256,10 @@ func TestAutoscalerStressCreate(t *testing.T) {
 
 	r := rand.New(rand.NewSource(1783))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
 
 	for i := 0; i < 5; i++ {
-		fas := defaultFleetAutoscaler(flt)
+		fas := defaultFleetAutoscaler(flt, framework.Namespace)
 		bufferSize := r.Int31n(5)
 		minReplicas := r.Int31n(5)
 		maxReplicas := r.Int31n(8)
@@ -327,15 +327,15 @@ func patchFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler, bufferSize intstr.
 		WithField("patch", patch).
 		Info("Patching fleetautoscaler")
 
-	fas, err := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
+	fas, err := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace).Patch(fas.ObjectMeta.Name, types.JSONPatchType, []byte(patch))
 	logrus.WithField("fleetautoscaler", fas).Info("Patched fleet autoscaler")
 	return fas, err
 }
 
 // defaultFleetAutoscaler returns a default fleet autoscaler configuration for a given fleet
-func defaultFleetAutoscaler(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
+func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.FleetAutoscaler {
 	return &autoscalingv1.FleetAutoscaler{
-		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: defaultNs},
+		ObjectMeta: metav1.ObjectMeta{Name: f.ObjectMeta.Name + "-autoscaler", Namespace: namespace},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,
 			Policy: autoscalingv1.FleetAutoscalerPolicy{
@@ -353,10 +353,10 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet) *autoscalingv1.FleetAutoscaler {
 // scaling from Replicas equals to 1 to 2
 func TestAutoscalerWebhook(t *testing.T) {
 	t.Parallel()
-	pod, svc := defaultAutoscalerWebhook()
-	pod, err := framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod)
+	pod, svc := defaultAutoscalerWebhook(framework.Namespace)
+	pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Create(pod)
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Pods(framework.Namespace).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the webhook pod, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestAutoscalerWebhook")
@@ -364,17 +364,17 @@ func TestAutoscalerWebhook(t *testing.T) {
 	svc.ObjectMeta.Name = ""
 	svc.ObjectMeta.GenerateName = "test-service-"
 
-	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc)
+	svc, err = framework.KubeClient.CoreV1().Services(framework.Namespace).Create(svc)
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Services(framework.Namespace).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the webhook service, there is no point going further
 		assert.FailNow(t, "Failed creating webhook service, aborting TestAutoscalerWebhook")
 	}
 
 	alpha1 := framework.AgonesClient.AgonesV1()
-	fleets := alpha1.Fleets(defaultNs)
-	flt := defaultFleet(defaultNs)
+	fleets := alpha1.Fleets(framework.Namespace)
+	flt := defaultFleet(framework.Namespace)
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(flt)
@@ -384,15 +384,15 @@ func TestAutoscalerWebhook(t *testing.T) {
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
-	fas := defaultFleetAutoscaler(flt)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+	fas := defaultFleetAutoscaler(flt, framework.Namespace)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
-			Namespace: defaultNs,
+			Namespace: framework.Namespace,
 			Path:      &path,
 		},
 	}
@@ -440,7 +440,7 @@ func TestAutoscalerWebhook(t *testing.T) {
 	// Error - net/http: request canceled while waiting for connection (Client.Timeout exceeded
 	// while awaiting headers)
 	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
-		events := framework.KubeClient.CoreV1().Events(defaultNs)
+		events := framework.KubeClient.CoreV1().Events(framework.Namespace)
 		l, err = events.List(metav1.ListOptions{FieldSelector: fields.AndSelectors(fields.OneTermEqualSelector("involvedObject.name", fas.ObjectMeta.Name), fields.OneTermEqualSelector("type", "Warning")).String()})
 		if err != nil {
 			return false, err
@@ -533,8 +533,12 @@ qrh1J4ZuqSJtnSXdwh3Zm9aoDxAd966dFXZgsoEg9/Au/C7PpyUx4JH5eTV9wBSy
 rteG9laTLeoJFDeCvc+pzWX+
 -----END CERTIFICATE-----`
 
-func TestTlsWebhook(t *testing.T) {
+func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 	t.Parallel()
+
+	// we hardcode 'default' namespace here because certificates above are generated to use this one
+	defaultNS := "default"
+
 	secr := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "autoscalersecret-",
@@ -546,13 +550,13 @@ func TestTlsWebhook(t *testing.T) {
 	secr.Data[corev1.TLSCertKey] = []byte(webhookCrt)
 	secr.Data[corev1.TLSPrivateKeyKey] = []byte(webhookKey)
 
-	secrets := framework.KubeClient.CoreV1().Secrets(defaultNs)
+	secrets := framework.KubeClient.CoreV1().Secrets(defaultNS)
 	secr, err := secrets.Create(secr.DeepCopy())
 	if assert.Nil(t, err) {
 		defer secrets.Delete(secr.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 
-	pod, svc := defaultAutoscalerWebhook()
+	pod, svc := defaultAutoscalerWebhook(defaultNS)
 	pod.Spec.Volumes = make([]corev1.Volume, 1)
 	pod.Spec.Volumes[0] = corev1.Volume{
 		Name: "secret-volume",
@@ -566,38 +570,38 @@ func TestTlsWebhook(t *testing.T) {
 		Name:      "secret-volume",
 		MountPath: "/home/service/certs",
 	}}
-	pod, err = framework.KubeClient.CoreV1().Pods(defaultNs).Create(pod.DeepCopy())
+	pod, err = framework.KubeClient.CoreV1().Pods(defaultNS).Create(pod.DeepCopy())
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Pods(defaultNs).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Pods(defaultNS).Delete(pod.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the webhook, there is no point going further
 		assert.FailNow(t, "Failed creating webhook pod, aborting TestTlsWebhook")
 	}
 
 	// since we're using statically-named service, perform a best-effort delete of a previous service
-	err = framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, waitForDeletion)
+	err = framework.KubeClient.CoreV1().Services(defaultNS).Delete(svc.ObjectMeta.Name, waitForDeletion)
 	if err != nil {
 		assert.True(t, k8serrors.IsNotFound(err))
 	}
 
 	// making sure the service is really gone.
 	err = wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
-		_, err := framework.KubeClient.CoreV1().Services(defaultNs).Get(svc.ObjectMeta.Name, metav1.GetOptions{})
+		_, err := framework.KubeClient.CoreV1().Services(defaultNS).Get(svc.ObjectMeta.Name, metav1.GetOptions{})
 		return k8serrors.IsNotFound(err), nil
 	})
 	assert.Nil(t, err)
 
-	svc, err = framework.KubeClient.CoreV1().Services(defaultNs).Create(svc.DeepCopy())
+	svc, err = framework.KubeClient.CoreV1().Services(defaultNS).Create(svc.DeepCopy())
 	if assert.Nil(t, err) {
-		defer framework.KubeClient.CoreV1().Services(defaultNs).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
+		defer framework.KubeClient.CoreV1().Services(defaultNS).Delete(svc.ObjectMeta.Name, nil) // nolint:errcheck
 	} else {
 		// if we could not create the service, there is no point going further
 		assert.FailNow(t, "Failed creating service, aborting TestTlsWebhook")
 	}
 
 	alpha1 := framework.AgonesClient.AgonesV1()
-	fleets := alpha1.Fleets(defaultNs)
-	flt := defaultFleet(defaultNs)
+	fleets := alpha1.Fleets(defaultNS)
+	flt := defaultFleet(defaultNS)
 	initialReplicasCount := int32(1)
 	flt.Spec.Replicas = initialReplicasCount
 	flt, err = fleets.Create(flt.DeepCopy())
@@ -607,8 +611,8 @@ func TestTlsWebhook(t *testing.T) {
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNs)
-	fas := defaultFleetAutoscaler(flt)
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(defaultNS)
+	fas := defaultFleetAutoscaler(flt, defaultNS)
 	fas.Spec.Policy.Type = autoscalingv1.WebhookPolicyType
 	fas.Spec.Policy.Buffer = nil
 	path := "scale"
@@ -616,7 +620,7 @@ func TestTlsWebhook(t *testing.T) {
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
 		Service: &admregv1b.ServiceReference{
 			Name:      svc.ObjectMeta.Name,
-			Namespace: defaultNs,
+			Namespace: defaultNS,
 			Path:      &path,
 		},
 		CABundle: []byte(caPem),
@@ -638,7 +642,7 @@ func TestTlsWebhook(t *testing.T) {
 	})
 }
 
-func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
+func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 	l := make(map[string]string)
 	appName := fmt.Sprintf("autoscaler-webhook-%v", time.Now().UnixNano())
 	l["app"] = appName
@@ -646,7 +650,7 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "auto-webhook-",
-			Namespace:    defaultNs,
+			Namespace:    namespace,
 			Labels:       l,
 		},
 		Spec: corev1.PodSpec{
@@ -665,7 +669,7 @@ func defaultAutoscalerWebhook() (*corev1.Pod, *corev1.Service) {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "autoscaler-tls-service",
-			Namespace: defaultNs,
+			Namespace: namespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Selector: m,
