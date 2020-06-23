@@ -665,6 +665,54 @@ func TestSDKServerWatchGameServer(t *testing.T) {
 	assert.Equal(t, stream, sc.connectedStreams[1])
 }
 
+func TestSDKServerWatchGameServer_FeatureGameServerCaching(t *testing.T) {
+	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
+
+	m := agtesting.NewMocks()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
+	})
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureGameServerCaching) + "=true")
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not parse FeatureGameServerCaching")
+	}
+
+	sc, err := defaultSidecar(m)
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not create sidecar")
+	}
+	assert.Empty(t, sc.connectedStreams)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+	assert.Equal(t, stream, sc.connectedStreams[0])
+
+	assert.Equal(t, fixture.ObjectMeta.Name, sc.cachedGameServer.ObjectMeta.Name)
+	assert.Equal(t, fixture.ObjectMeta.Namespace, sc.cachedGameServer.ObjectMeta.Namespace)
+	assert.Equal(t, string(fixture.Status.State), sc.cachedGameServer.Status.State)
+}
+
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()
