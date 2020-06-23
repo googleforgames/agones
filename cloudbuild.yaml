@@ -231,7 +231,7 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['PlayerTracking=true&ContainerPortAllocation=true']
+  args: ['PlayerTracking=true&ContainerPortAllocation=true', 'e2e-test-cluster']
   id: e2e-feature-gates
   waitFor:
     - push-images
@@ -242,10 +242,9 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['']
+  args: ['', 'e2e-test-cluster']
   id: e2e-stable
   waitFor:
-    - e2e-feature-gates
     - push-images
     - build-e2e
 
