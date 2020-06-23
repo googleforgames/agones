@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"strings"
 	"testing"
 	"time"
 
@@ -39,7 +38,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	corev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -111,7 +109,6 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	ip, port := getAllocatorEndpoint(t)
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
-	restartAllocator(t)
 
 	// Create namespaces A and B
 	namespaceA := framework.Namespace // let's reuse an existing one
@@ -262,29 +259,6 @@ func createFleet(namespace string) (*agonesv1.Fleet, error) {
 	return fleets.Create(fleet)
 }
 
-func restartAllocator(t *testing.T) {
-	t.Helper()
-
-	kubeCore := framework.KubeClient.CoreV1()
-	pods, err := kubeCore.Pods(agonesSystemNamespace).List(metav1.ListOptions{})
-	if err != nil {
-		t.Fatalf("listing pods failed: %s", err)
-	}
-	for i := range pods.Items {
-		pod := &pods.Items[i]
-		if !strings.HasPrefix(pod.Name, allocatorServiceName) {
-			continue
-		}
-		if err := kubeCore.Pods(agonesSystemNamespace).Delete(pod.Name, &metav1.DeleteOptions{}); err != nil {
-			if k8serrors.IsNotFound(err) {
-				logrus.WithField("pod", pod.Name).WithError(err).Warn("Attempt at deletion failed")
-				continue
-			}
-			t.Fatalf("deleting pods failed: %s", err)
-		}
-	}
-}
-
 func genClientSecret(t *testing.T, namespace, secretName string) {
 	t.Helper()
 
@@ -339,8 +313,6 @@ func refreshAllocatorTLSCerts(t *testing.T, host string) []byte {
 	if _, err := kubeCore.Secrets(agonesSystemNamespace).Update(s); err != nil {
 		t.Fatalf("updating secrets failed: %s", err)
 	}
-
-	restartAllocator(t)
 
 	t.Logf("Allocator TLS is refreshed with public CA: %s for endpoint %s", string(pub), host)
 	return pub
