@@ -101,6 +101,7 @@ kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["cli
 
 The last command creates a new entry in the secret data map called `client_trial.crt` for `allocator-client-ca` and stores it. You can also achieve this by `kubectl edit secret allocator-client-ca -n agones-system`, and then add the entry.
 
+{{% feature expiryVersion="1.7.0" %}}
 ## Restart pods
 
 Restart pods to get the new TLS certificate loaded to the agones-allocator service.
@@ -108,6 +109,7 @@ Restart pods to get the new TLS certificate loaded to the agones-allocator servi
 ```bash
 kubectl get pods -n agones-system -o=name | grep agones-allocator | xargs kubectl delete -n agones-system
 ```
+{{% /feature %}}
 
 ## Send allocation request
 

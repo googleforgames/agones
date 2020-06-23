@@ -97,6 +97,12 @@ func main() {
 		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
 	}
 
+	watcherTLS, _ := fsnotify.NewWatcher()
+	defer watcherTLS.Close() // nolint: errcheck
+	if err := watcherTLS.Add(tlsDir); err != nil {
+		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", tlsDir)
+	}
+
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", sslPort))
 	if err != nil {
 		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
@@ -107,13 +113,24 @@ func main() {
 		for {
 			select {
 			// watch for events
+			case event := <-watcherTLS.Events:
+				h.tlsMutex.Lock()
+				tlsCert, err := readTLSCert()
+				if err != nil {
+					logger.WithError(err).Error("could not load TLS cert; keeping old one")
+				} else {
+					h.tlsCert = tlsCert
+				}
+				logger.Infof("Tls directory change event %v", event)
+				h.tlsMutex.Unlock()
 			case event := <-watcher.Events:
 				h.certMutex.Lock()
 				caCertPool, err := getCACertPool(certDir)
 				if err != nil {
-					logger.WithError(err).Error("could not load CA certs.")
+					logger.WithError(err).Error("could not load CA certs; keeping old ones")
+				} else {
+					h.caCertPool = caCertPool
 				}
-				h.caCertPool = caCertPool
 				logger.Infof("Certificate directory change event %v", event)
 				h.certMutex.Unlock()
 
@@ -173,24 +190,41 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 	}
 	h.caCertPool = caCertPool
 
+	tlsCert, err := readTLSCert()
+	if err != nil {
+		logger.WithError(err).Fatal("could not load TLS certs.")
+	}
+	h.tlsCert = tlsCert
+
 	return &h
+}
+
+func readTLSCert() (*tls.Certificate, error) {
+	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
+	if err != nil {
+		logger.WithError(err).Infof("failed to generate credentials")
+		return nil, err
+	}
+	return &tlsCert, nil
 }
 
 // getServerOptions returns a list of GRPC server options.
 // Current options are TLS certs and opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	tlsCer, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
-	if err != nil {
-		logger.WithError(err).Fatal("failed to generate credentials")
-	}
 
 	cfg := &tls.Config{
-		Certificates:          []tls.Certificate{tlsCer},
+		GetCertificate:        h.getTLSCert,
 		ClientAuth:            tls.RequireAnyClientCert,
 		VerifyPeerCertificate: h.verifyClientCertificate,
 	}
 	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
 	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
+}
+
+func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	h.tlsMutex.RLock()
+	defer h.tlsMutex.RUnlock()
+	return h.tlsCert, nil
 }
 
 // verifyClientCertificate verifies that the client certificate is accepted
@@ -275,7 +309,9 @@ func getCACertPool(path string) (*x509.CertPool, error) {
 type serviceHandler struct {
 	allocationCallback func(*allocationv1.GameServerAllocation) (k8sruntime.Object, error)
 	certMutex          sync.RWMutex
+	tlsMutex           sync.RWMutex
 	caCertPool         *x509.CertPool
+	tlsCert            *tls.Certificate
 }
 
 // Allocate implements the Allocate gRPC method definition

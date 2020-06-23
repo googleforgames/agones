@@ -33,6 +33,7 @@ Participation in this project comes under the [Contributor Covenant Code of Cond
   guide for details.
 - All submissions, including submissions by project members, will require review before being merged.
 - Once review has occurred, please rebase your PR down to a single commit. This will ensure a nice clean Git history.
+- If you are unable to access build errors from your PR, make sure that you have joined the [agones-discuss mailing list](https://groups.google.com/forum/#!forum/agones-discuss).
 - Please follow the code formatting instructions below.
 
 ### Additional Instructions for Unreal Plugin Pull Requests
@@ -123,4 +124,4 @@ repository, we have a [community membership guide](./docs/governance/community_m
   - Info - should be used to document state changes in the application or some entity within the application. These logs provide the skeleton of what has happened. Examples: system started/stopped, remote API calls, a new user has been created/updated, etc.
   - Debug - diagnostic information goes here and everything that can help to troubleshoot an application. Examples: any values in business logic, detailed information about the data flow.
 
-  More details can be found here: https://reflectoring.io/logging-levels/
+  More details can be found in [this article](https://medium.com/@tom.hombergs/tip-use-logging-levels-consistently-913b7b8e9782).
