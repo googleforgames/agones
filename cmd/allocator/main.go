@@ -93,7 +93,7 @@ func main() {
 	// creates a new file watcher for client certificate folder
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.WithError(err).Fatalf("could not create watcher for client certs")
+		logger.WithError(err).Fatal("could not create watcher for client certs")
 	}
 	defer watcher.Close() // nolint: errcheck
 	if err := watcher.Add(certDir); err != nil {
@@ -102,7 +102,7 @@ func main() {
 
 	watcherTLS, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.WithError(err).Fatalf("could not create watcher for tls certs")
+		logger.WithError(err).Fatal("could not create watcher for tls certs")
 	}
 	defer watcherTLS.Close() // nolint: errcheck
 	if err := watcherTLS.Add(tlsDir); err != nil {
@@ -190,17 +190,21 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
+	h.certMutex.Lock()
 	caCertPool, err := getCACertPool(certDir)
 	if err != nil {
 		logger.WithError(err).Fatal("could not load CA certs.")
 	}
 	h.caCertPool = caCertPool
+	h.certMutex.Unlock()
 
+	h.tlsMutex.Lock()
 	tlsCert, err := readTLSCert()
 	if err != nil {
 		logger.WithError(err).Fatal("could not load TLS certs.")
 	}
 	h.tlsCert = tlsCert
+	h.tlsMutex.Unlock()
 
 	return &h
 }
