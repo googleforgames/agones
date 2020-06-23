@@ -190,19 +190,19 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
-	h.certMutex.Lock()
 	caCertPool, err := getCACertPool(certDir)
 	if err != nil {
 		logger.WithError(err).Fatal("could not load CA certs.")
 	}
+	h.certMutex.Lock()
 	h.caCertPool = caCertPool
 	h.certMutex.Unlock()
 
-	h.tlsMutex.Lock()
 	tlsCert, err := readTLSCert()
 	if err != nil {
 		logger.WithError(err).Fatal("could not load TLS certs.")
 	}
+	h.tlsMutex.Lock()
 	h.tlsCert = tlsCert
 	h.tlsMutex.Unlock()
 
