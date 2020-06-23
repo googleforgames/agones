@@ -91,13 +91,19 @@ func main() {
 	h := newServiceHandler(kubeClient, agonesClient, health)
 
 	// creates a new file watcher for client certificate folder
-	watcher, _ := fsnotify.NewWatcher()
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.WithError(err).Fatalf("could not create watcher for client certs")
+	}
 	defer watcher.Close() // nolint: errcheck
 	if err := watcher.Add(certDir); err != nil {
 		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
 	}
 
-	watcherTLS, _ := fsnotify.NewWatcher()
+	watcherTLS, err := fsnotify.NewWatcher()
+	if err != nil {
+		logger.WithError(err).Fatalf("could not create watcher for tls certs")
+	}
 	defer watcherTLS.Close() // nolint: errcheck
 	if err := watcherTLS.Add(tlsDir); err != nil {
 		logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", tlsDir)
@@ -114,15 +120,15 @@ func main() {
 			select {
 			// watch for events
 			case event := <-watcherTLS.Events:
-				h.tlsMutex.Lock()
 				tlsCert, err := readTLSCert()
 				if err != nil {
 					logger.WithError(err).Error("could not load TLS cert; keeping old one")
 				} else {
+					h.tlsMutex.Lock()
+					defer h.tlsMutex.Unlock()
 					h.tlsCert = tlsCert
 				}
 				logger.Infof("Tls directory change event %v", event)
-				h.tlsMutex.Unlock()
 			case event := <-watcher.Events:
 				h.certMutex.Lock()
 				caCertPool, err := getCACertPool(certDir)
@@ -202,7 +208,6 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 func readTLSCert() (*tls.Certificate, error) {
 	tlsCert, err := tls.LoadX509KeyPair(tlsDir+"tls.crt", tlsDir+"tls.key")
 	if err != nil {
-		logger.WithError(err).Infof("failed to generate credentials")
 		return nil, err
 	}
 	return &tlsCert, nil
@@ -308,10 +313,12 @@ func getCACertPool(path string) (*x509.CertPool, error) {
 
 type serviceHandler struct {
 	allocationCallback func(*allocationv1.GameServerAllocation) (k8sruntime.Object, error)
-	certMutex          sync.RWMutex
-	tlsMutex           sync.RWMutex
-	caCertPool         *x509.CertPool
-	tlsCert            *tls.Certificate
+
+	certMutex  sync.RWMutex
+	caCertPool *x509.CertPool
+
+	tlsMutex sync.RWMutex
+	tlsCert  *tls.Certificate
 }
 
 // Allocate implements the Allocate gRPC method definition
