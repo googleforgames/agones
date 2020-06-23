@@ -125,8 +125,8 @@ func main() {
 					logger.WithError(err).Error("could not load TLS cert; keeping old one")
 				} else {
 					h.tlsMutex.Lock()
-					defer h.tlsMutex.Unlock()
 					h.tlsCert = tlsCert
+					h.tlsMutex.Unlock()
 				}
 				logger.Infof("Tls directory change event %v", event)
 			case event := <-watcher.Events:
