@@ -163,6 +163,8 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
+You can use `GameServerCaching` feature passed as a feature gate if you want a `GameServer` to be returned right after `GameServerFeature` is called.
+
 ### Metadata Management
 
 #### SetLabel(key, value)
