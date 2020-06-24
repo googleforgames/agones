@@ -28,6 +28,7 @@ digraph {
     Scheduled -> RequestReady [ label="SDK.ready()", color="purple" ]
     RequestReady -> Ready [ label="ready to be allocated", color="blue" ]
     Reserved -> Ready [label="if seconds > 0  \land failed to call  \lSDK.allocate()  " color="purple"]
+    Allocated -> RequestReady [ label="SDK.ready()", color="purple" ]
 
     Ready -> Allocated [ label="allocated for use", color="orange" ]
     Ready -> Allocated [ label="SDK.allocate()   ", color="purple" ]

@@ -517,7 +517,12 @@ func (f *Framework) CreateNamespace(namespace string) error {
 			Labels:    map[string]string{"app": "agones"},
 		},
 	}); err != nil {
-		return errors.Errorf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err.Error())
+		err = errors.Errorf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err.Error())
+		derr := f.DeleteNamespace(namespace)
+		if derr != nil {
+			return errors.Wrap(err, derr.Error())
+		}
+		return err
 	}
 	logrus.Infof("ServiceAccount %s/%s is created", namespace, saName)
 
@@ -541,7 +546,12 @@ func (f *Framework) CreateNamespace(namespace string) error {
 		},
 	}
 	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(rb); err != nil {
-		return errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err)
+		err = errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err.Error())
+		derr := f.DeleteNamespace(namespace)
+		if derr != nil {
+			return errors.Wrap(err, derr.Error())
+		}
+		return err
 	}
 	logrus.Infof("RoleBinding %s/%s is created", namespace, rb.Name)
 

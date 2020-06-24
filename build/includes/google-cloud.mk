@@ -40,11 +40,12 @@ clean-gcloud-test-cluster: $(ensure-build-image)
 
 # Creates a gcloud cluster for end-to-end
 # it installs also a consul cluster to handle build system concurrency using a distributed lock
+gcloud-e2e-test-cluster: TEST_CLUSTER_NAME ?= e2e-test-cluster
 gcloud-e2e-test-cluster: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments create e2e-test-cluster \
+		deployment-manager deployments create $(TEST_CLUSTER_NAME) \
 		--config=$(mount_path)/build/gke-test-cluster/cluster-e2e.yml
-	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=e2e-test-cluster GCP_CLUSTER_ZONE=us-west1-c
+	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME) GCP_CLUSTER_ZONE=us-west1-c
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		kubectl apply -f $(mount_path)/build/helm.yaml
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
@@ -53,10 +54,11 @@ gcloud-e2e-test-cluster: $(ensure-build-image)
 		helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
+clean-gcloud-e2e-test-cluster: TEST_CLUSTER_NAME ?= e2e-test-cluster
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 	-docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		helm delete --purge consul && kubectl delete pvc -l component=consul-consul
-	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=e2e-test-cluster
+	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME)
 
 # Creates a gcloud cluster for prow
 gcloud-prow-build-cluster: $(ensure-build-image)

@@ -101,6 +101,7 @@ kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["cli
 
 The last command creates a new entry in the secret data map called `client_trial.crt` for `allocator-client-ca` and stores it. You can also achieve this by `kubectl edit secret allocator-client-ca -n agones-system`, and then add the entry.
 
+{{% feature expiryVersion="1.7.0" %}}
 ## Restart pods
 
 Restart pods to get the new TLS certificate loaded to the agones-allocator service.
@@ -108,10 +109,11 @@ Restart pods to get the new TLS certificate loaded to the agones-allocator servi
 ```bash
 kubectl get pods -n agones-system -o=name | grep agones-allocator | xargs kubectl delete -n agones-system
 ```
+{{% /feature %}}
 
 ## Send allocation request
 
-Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet](https://agones.dev/site/docs/getting-started/create-fleet/#1-create-a-fleet) and send a gRPC request to agones-allocator. To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the default namespace.
+Now the service is ready to accept requests from the client with the generated certificates. Create a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) and send a gRPC request to agones-allocator. To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the default namespace.
 
 ```bash
 #!/bin/bash
