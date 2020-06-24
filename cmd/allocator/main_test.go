@@ -48,6 +48,7 @@ func TestAllocateHandler(t *testing.T) {
 				},
 			}, nil
 		},
+		mTLSEnabled: true,
 	}
 
 	request := &pb.AllocationRequest{
@@ -75,6 +76,7 @@ func TestAllocateHandlerReturnsError(t *testing.T) {
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return nil, k8serror.NewBadRequest("error")
 		},
+		mTLSEnabled: true,
 	}
 
 	request := &pb.AllocationRequest{}
@@ -93,7 +95,8 @@ func TestGetTlsCert(t *testing.T) {
 	assert.Nil(t, err, "expected (serverCert2, serverKey2) to create a cert")
 
 	h := serviceHandler{
-		tlsCert: &cert1,
+		tlsCert:     &cert1,
+		mTLSEnabled: true,
 	}
 
 	retrievedCert1, err := h.getTLSCert(nil)
@@ -123,6 +126,7 @@ func TestHandlingStatus(t *testing.T) {
 				Code: http.StatusUnprocessableEntity,
 			}, nil
 		},
+		mTLSEnabled: true,
 	}
 
 	request := &pb.AllocationRequest{}
@@ -146,6 +150,7 @@ func TestBadReturnType(t *testing.T) {
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return &corev1.Secret{}, nil
 		},
+		mTLSEnabled: true,
 	}
 
 	request := &pb.AllocationRequest{}
@@ -170,7 +175,8 @@ func TestVerifyClientCertificateSucceeds(t *testing.T) {
 	assert.True(t, certPool.AppendCertsFromPEM(crt))
 
 	h := serviceHandler{
-		caCertPool: certPool,
+		caCertPool:  certPool,
+		mTLSEnabled: true,
 	}
 
 	block, _ := pem.Decode(crt)
@@ -185,7 +191,8 @@ func TestVerifyClientCertificateFails(t *testing.T) {
 	crt := []byte(clientCert)
 	certPool := x509.NewCertPool()
 	h := serviceHandler{
-		caCertPool: certPool,
+		caCertPool:  certPool,
+		mTLSEnabled: true,
 	}
 
 	block, _ := pem.Decode(crt)
