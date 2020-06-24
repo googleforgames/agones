@@ -62,11 +62,10 @@ module "aks_cluster" {
 }
 
 module "helm_agones" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
 
   agones_version         = var.agones_version
   values_file            = ""
-  chart                  = "agones"
   feature_gates          = var.feature_gates
   host                   = module.aks_cluster.host
   token                  = module.aks_cluster.token
