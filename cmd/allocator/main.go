@@ -177,11 +177,14 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		kubeClient,
 		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
 
+	mTLSEnabled := runtime.FeatureEnabled(runtime.FeatureMTLSEnabled)
+
 	stop := signals.NewStopChannel()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return allocator.Allocate(gsa, stop)
 		},
+		mTLSEnabled: mTLSEnabled,
 	}
 
 	kubeInformerFactory.Start(stop)
@@ -239,6 +242,10 @@ func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, 
 // verifyClientCertificate verifies that the client certificate is accepted
 // This method is used as GetConfigForClient is cross lang incompatible.
 func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+	if !h.mTLSEnabled {
+		return nil
+	}
+
 	opts := x509.VerifyOptions{
 		Roots:         h.caCertPool,
 		CurrentTime:   time.Now(),
@@ -323,6 +330,8 @@ type serviceHandler struct {
 
 	tlsMutex sync.RWMutex
 	tlsCert  *tls.Certificate
+
+	mTLSEnabled bool
 }
 
 // Allocate implements the Allocate gRPC method definition
