@@ -223,6 +223,9 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
 	mTLSEnabled := runtime.FeatureEnabled(runtime.FeatureMTLSEnabled)
+	if !mTLSEnabled {
+		return grpc.WithInsecure(), nil
+	}
 
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
@@ -249,9 +252,8 @@ func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []b
 	}
 
 	tlsConfig := &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		RootCAs:            rootCA,
-		InsecureSkipVerify: !mTLSEnabled,
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      rootCA,
 	}
 
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil

@@ -249,10 +249,6 @@ func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, 
 // verifyClientCertificate verifies that the client certificate is accepted
 // This method is used as GetConfigForClient is cross lang incompatible.
 func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	if !h.mTLSEnabled {
-		return nil
-	}
-
 	opts := x509.VerifyOptions{
 		Roots:         h.caCertPool,
 		CurrentTime:   time.Now(),
