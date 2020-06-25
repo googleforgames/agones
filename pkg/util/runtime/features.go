@@ -39,6 +39,9 @@ const (
 
 	// FeatureSDKWatchSendOnExecute is a feature flag to enable/disable immediate game server return after SDK.WatchGameServer is called
 	FeatureSDKWatchSendOnExecute Feature = "SDKWatchSendOnExecute"
+
+	// FeatureFixRollingUpdateRest is a feature flag to enable/disable rolling update fixes
+	FeatureFixRollingUpdateRest Feature = "FixRollingUpdate"
 )
 
 var (
@@ -50,6 +53,7 @@ var (
 		FeaturePlayerTracking:          false,
 		FeatureContainerPortAllocation: true,
 		FeatureSDKWatchSendOnExecute:   false,
+		FeatureFixRollingUpdateRest:    false,
 	}
 
 	// featureGates is the storage of what features are enabled

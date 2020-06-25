@@ -17,6 +17,7 @@ package fleets
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -999,6 +1000,118 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
+func TestFeatureFixRollingUpdateRest(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFixRollingUpdateRest)+"=true"))
+
+	type expected struct {
+		inactiveSpecReplicas int32
+		replicas             int32
+		updated              bool
+	}
+
+	fixtures := map[string]struct {
+		activeStatusReadyReplicas   int32
+		inactiveStatusReadyReplicas int32
+		allocatedReplicas           int32
+		expected                    expected
+	}{
+		"not enough Ready GameServers - do not scale down rest GameServerSet": {
+			activeStatusReadyReplicas:   10,
+			inactiveStatusReadyReplicas: 10,
+			expected: expected{
+				updated:              false,
+				inactiveSpecReplicas: 0,
+				replicas:             75,
+			},
+		},
+		"enough Ready GameServers - scale down rest GameServerSet to Allocated": {
+			activeStatusReadyReplicas:   70,
+			inactiveStatusReadyReplicas: 5,
+			allocatedReplicas:           5,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 0,
+				replicas:             70,
+			},
+		},
+		"enough Ready GameServers - scale down rest GameServerSet to 0": {
+			activeStatusReadyReplicas:   70,
+			inactiveStatusReadyReplicas: 10,
+			allocatedReplicas:           0,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 0,
+				replicas:             75,
+			},
+		},
+		"scale down rest GameServerSet to > 0": {
+			// 75 - 19 = 56 is minimum number of gameservers
+			// scaling 58 - 56 = -2 gameservers
+			// initial 10 - 2 = 8
+			activeStatusReadyReplicas:   50,
+			inactiveStatusReadyReplicas: 8,
+			allocatedReplicas:           0,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 8,
+				replicas:             75,
+			},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			c, m := newFakeController()
+
+			f := defaultFixture()
+			f.Spec.Replicas = 75
+			f.Status.ReadyReplicas = 0
+			fmt.Println("k")
+
+			active := f.GameServerSet()
+			active.ObjectMeta.Name = "active"
+			active.Spec.Replicas = 75
+			active.Status.Replicas = 75
+			active.Status.ReadyReplicas = v.activeStatusReadyReplicas
+
+			inactive := f.GameServerSet()
+			inactive.ObjectMeta.Name = "inactive"
+			inactive.Spec.Replicas = 10
+			inactive.Status.Replicas = 10
+			inactive.Status.ReadyReplicas = v.inactiveStatusReadyReplicas
+			inactive.Status.AllocatedReplicas = v.allocatedReplicas
+			updated := false
+			// triggered inside rollingUpdateRest
+			m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				updated = true
+				ua := action.(k8stesting.UpdateAction)
+				gsSet := ua.GetObject().(*agonesv1.GameServerSet)
+				assert.Equal(t, inactive.ObjectMeta.Name, gsSet.ObjectMeta.Name)
+				assert.Equal(t, v.expected.inactiveSpecReplicas, gsSet.Spec.Replicas)
+
+				return true, gsSet, nil
+			})
+
+			replicas, err := c.rollingUpdateDeployment(f, active, []*agonesv1.GameServerSet{inactive})
+			assert.Nil(t, err, "no error")
+
+			assert.Equal(t, v.expected.replicas, replicas)
+			assert.Equal(t, v.expected.updated, updated)
+			if updated {
+				agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
+			} else {
+				agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+			}
+		})
+	}
+
+}
+
 func TestControllerRollingUpdateDeployment(t *testing.T) {
 	t.Parallel()
 
@@ -1020,7 +1133,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 		nilMaxUnavailable                bool
 		expected                         expected
 	}{
-		"nil MaxUnavailable, err excpected": {
+		"nil MaxUnavailable, err expected": {
 			fleetSpecReplicas:      100,
 			activeSpecReplicas:     0,
 			activeStatusReplicas:   0,

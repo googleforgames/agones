@@ -48,6 +48,7 @@ import (
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/utils/integer"
 )
 
 // Controller is a the GameServerSet controller
@@ -410,10 +411,20 @@ func (c *Controller) rollingUpdateDeployment(fleet *agonesv1.Fleet, active *agon
 	if err != nil {
 		return 0, err
 	}
-	if err := c.rollingUpdateRest(fleet, rest); err != nil {
+	if err := c.rollingUpdateRest(fleet, active, rest); err != nil {
 		return 0, err
 	}
 	return replicas, nil
+}
+
+func getReadyReplicaCountForGameServerSets(gss []*agonesv1.GameServerSet) int32 {
+	totalReadyReplicas := int32(0)
+	for _, gss := range gss {
+		if gss != nil {
+			totalReadyReplicas += gss.Status.ReadyReplicas
+		}
+	}
+	return totalReadyReplicas
 }
 
 // rollingUpdateActive applies the rolling update to the active GameServerSet
@@ -423,14 +434,14 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	// always leave room for Allocated GameServers
 	sumAllocated := agonesv1.SumStatusAllocatedReplicas(rest)
 
-	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
-	// need to another rolling update upwards.
-	// Likewise if the active spec replicas don't equal the active status replicas, this means we are
+	// if the active spec replicas don't equal the active status replicas, this means we are
 	// in the middle of a rolling update, and should wait for it to complete.
-
 	if active.Spec.Replicas != active.Status.Replicas {
 		return replicas, nil
 	}
+
+	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
+	// need to another rolling update upwards.
 	if active.Spec.Replicas >= (fleet.Spec.Replicas - sumAllocated) {
 		return fleet.Spec.Replicas - sumAllocated, nil
 	}
@@ -461,18 +472,34 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 }
 
 // rollingUpdateRest applies the rolling update to the inactive GameServerSets
-func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.GameServerSet) error {
+func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) error {
 	if len(rest) == 0 {
 		return nil
 	}
+	allGSS := append(rest, active)
+	readyReplicasCount := getReadyReplicaCountForGameServerSets(allGSS)
 
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
+
 	if err != nil {
 		return errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
 	}
 	unavailable := int32(r)
 
+	totalScaledDown := int32(0)
+
+	// Check if we can scale down.
+	minAvailable := fleet.Spec.Replicas - unavailable
+	totalScaleDownCount := readyReplicasCount - minAvailable
+
 	for _, gsSet := range rest {
+		if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+			if totalScaledDown >= totalScaleDownCount {
+				// No further scaling required.
+				break
+			}
+		}
+
 		// if the status.Replicas are less than or equal to 0, then that means we are done
 		// scaling this GameServerSet down, and can therefore exit/move to the next one.
 		if gsSet.Status.Replicas <= 0 {
@@ -485,11 +512,27 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.G
 			break
 		}
 		gsSetCopy := gsSet.DeepCopy()
-		// Wait for new GameServers to become Ready before scaling down Inactive GameServerset
-		if gsSet.Status.ShutdownReplicas == 0 && fleet.Status.ReadyReplicas > fleet.LowerBoundReplicas(fleet.Spec.Replicas-1) {
-			gsSetCopy.Spec.Replicas = fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
+		newReplicasCount := fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
+		if gsSet.Status.ShutdownReplicas == 0 {
+			var scaleDownCount int32
+			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+				// Wait for new GameServers to become Ready before scaling down Inactive GameServerset
+				// Scale down.
+				scaleDownCount := int32(integer.IntMin(int(gsSet.Spec.Replicas), int(totalScaleDownCount-totalScaledDown)))
 
-			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Shutdownreplicas %d", gsSet.Status.ShutdownReplicas))
+				newReplicasCount = gsSet.Spec.Replicas - scaleDownCount
+				if newReplicasCount > gsSet.Spec.Replicas {
+					return fmt.Errorf("when scaling down old GameServerSet, got invalid request to scale down %s/%s %d -> %d", gsSet.Namespace, gsSet.Name, gsSet.Spec.Replicas, newReplicasCount)
+				}
+
+				// No updates on GameServerSet
+				if newReplicasCount == gsSet.Spec.Replicas {
+					continue
+				}
+			}
+
+			gsSetCopy.Spec.Replicas = newReplicasCount
+			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Replicas in a Shutdown state - %d", gsSet.Status.ShutdownReplicas))
 			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
 				Debug("applying rolling update to inactive gameserverset")
 
@@ -499,9 +542,13 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, rest []*agonesv1.G
 			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
 				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 
-			// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
-			// to make sure we don't overshoot the amount that is being shutdown at any given point and time
-			break
+			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+				totalScaledDown += scaleDownCount
+			} else {
+				// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
+				// to make sure we don't overshoot the amount that is being shutdown at any given point and time
+				break
+			}
 		}
 	}
 	return nil
