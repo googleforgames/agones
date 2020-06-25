@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\sdk\csharp-sdk.csproj" />
+    <ProjectReference Include="../sdk/csharp-sdk.csproj" />
   </ItemGroup>
 
 </Project>
