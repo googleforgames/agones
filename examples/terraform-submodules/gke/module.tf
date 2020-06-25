@@ -86,11 +86,10 @@ module "helm_agones" {
   // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
   // to Agones version 1.3.0
   // ***************************************************************************************************
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
 
   agones_version         = var.agones_version
   values_file            = ""
-  chart                  = "agones"
   feature_gates          = var.feature_gates
   host                   = module.gke_cluster.host
   token                  = module.gke_cluster.token
