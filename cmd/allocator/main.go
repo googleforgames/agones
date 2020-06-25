@@ -223,6 +223,9 @@ func readTLSCert() (*tls.Certificate, error) {
 // getServerOptions returns a list of GRPC server options.
 // Current options are TLS certs and opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
+	if !h.mTLSEnabled {
+		return []grpc.ServerOption{grpc.StatsHandler(&ocgrpc.ServerHandler{})}
+	}
 
 	cfg := &tls.Config{
 		GetCertificate:        h.getTLSCert,
@@ -242,10 +245,6 @@ func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, 
 // verifyClientCertificate verifies that the client certificate is accepted
 // This method is used as GetConfigForClient is cross lang incompatible.
 func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-	if !h.mTLSEnabled {
-		return nil
-	}
-
 	opts := x509.VerifyOptions{
 		Roots:         h.caCertPool,
 		CurrentTime:   time.Now(),
