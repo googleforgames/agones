@@ -32,7 +32,6 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"agones.dev/agones/pkg/util/apiserver"
-	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -1162,8 +1161,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 func TestCreateRestClientError(t *testing.T) {
 	t.Parallel()
-	err := runtime.ParseFeatures("")
-	assert.NoError(t, err)
 	t.Run("Missing secret", func(t *testing.T) {
 		c, _ := newFakeController()
 
