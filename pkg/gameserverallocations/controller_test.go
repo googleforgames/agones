@@ -1162,7 +1162,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 func TestCreateRestClientError(t *testing.T) {
 	t.Parallel()
-	runtime.ParseFeatures("")
+	err := runtime.ParseFeatures("")
+	assert.NoError(t, err)
 	t.Run("Missing secret", func(t *testing.T) {
 		c, _ := newFakeController()
 
