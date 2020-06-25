@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#
+# This is a Helm 2.x module.
+# Please upgrade to the helm3 module, as this one will not be actively updated.
+#
+
 resource "kubernetes_service_account" "tiller" {
   metadata {
     name      = "tiller"
