@@ -89,9 +89,6 @@ Table of Contents
         * [make kind-test-e2e](#make-kind-test-e2e)
         * [make kind-shell](#make-kind-shell)
         * [make kind-controller-portforward](#make-kind-controller-portforward)
-     * [Custom Environment](#custom-environment)
-        * [make setup-test-cluster](#make-setup-test-cluster)
-        * [make clean-test-cluster](#make-clean-test-cluster)
   * [Dependencies](#dependencies)
   * [Troubleshooting](#troubleshooting)
       * [$GOPATH/$GOROOT error when building in WSL](#gopathgoroot-error-when-building-in-wsl)
@@ -352,8 +349,6 @@ To begin, you need to set up the following environment variables:
    if set, `make install` will install this secret in both the `agones-system` (for pulling the controller image)
    and `default` (for pulling the sdk image) repositories
    
-The second step is to prepare your cluster for the Agones deployments. Run `make setup-test-cluster` to install helm in it.
-
 Now you're ready to begin the development/test cycle:
 - `make build` will build Agones
 - `make test` will run local tests, which includes `site-test` target
@@ -742,14 +737,6 @@ instead of `make shell` to start an interactive shell for development on Kind.
 #### `make kind-controller-portforward`
 The Kind version of [`make controller-portforward`](#make-controller-portforward) to setup
 port forwarding to the controller deployment.
-
-### Custom Environment
-
-#### `make setup-test-cluster`
-Initializes your custom cluster for working with Agones, by installing Helm/Tiller.
-
-#### `make clean-test-cluster`
-Cleans up your custom cluster by resetting Helm.
 
 ## Dependencies
 

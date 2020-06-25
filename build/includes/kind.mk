@@ -28,7 +28,6 @@ kind-test-cluster: $(ensure-build-image)
 		echo "Could not find $(KIND_PROFILE) cluster. Creating...";\
 		kind create cluster --name $(KIND_PROFILE) --image kindest/node:v1.15.7 --wait 5m;\
 	fi
-	$(MAKE) setup-test-cluster DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 
 # deletes the kind agones cluster
 # useful if you're want to start from scratch

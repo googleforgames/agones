@@ -70,13 +70,15 @@ site_path := $(agones_path)/site
 kubeconfig_path := $(dir $(KUBECONFIG))
 kubeconfig_file := $(notdir $(KUBECONFIG))
 
-helm_path := ~/.helm
+helm_config := ~/.config/helm
+helm_cache := ~/.cache/helm
 
 agones_package = agones.dev/agones
 mount_path = /go/src/$(agones_package)
 common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 				-v $(kubeconfig_path):/root/.kube \
-				-v $(helm_path):/root/.helm \
+				-v $(helm_config):/root/.config/helm \
+				-v $(helm_cache):/root/.cache/helm \
 				-v $(agones_path):$(mount_path) \
 				-v $(build_path)/.gomod:/go/pkg/mod
 
@@ -210,7 +212,7 @@ build-chart: CHART_DIR ?= install/helm/agones/
 build-chart: $(ensure-build-image)
 	docker run --rm $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
-			helm init --client-only && helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
+			helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
 
 # push the current chart to google cloud storage and update the index
 push-chart: $(ensure-build-image) build-chart
@@ -299,7 +301,8 @@ install: LOG_LEVEL := "debug"
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait --namespace=agones-system\
+		helm upgrade --install --wait --namespace=agones-system \
+		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
 		--set agones.image.controller.pullSecret=$(IMAGE_PULL_SECRET) \
@@ -312,7 +315,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 
 uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \
-		helm delete --purge agones
+		helm uninstall agones --namespace=agones-system
 
 
 # Build a static binary for the gameserver controller
@@ -407,7 +410,7 @@ push-agones-sdk-image: $(ensure-build-image)
 # Generate the static install script
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
-		'helm template --name=agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
+		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		--set agones.allocator.generateTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
@@ -443,15 +446,17 @@ setup-prometheus: PVC ?= true
 setup-prometheus: PV_SIZE ?= 64Gi
 setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
-	$(DOCKER_RUN) \
-		helm upgrade --install --wait prom stable/prometheus --namespace metrics \
+	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+	$(DOCKER_RUN) helm repo update
+	$(DOCKER_RUN) helm upgrade prom stable/prometheus \
+		--install --wait --namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) \
 		-f $(mount_path)/build/prometheus.yaml
 
 uninstall-prometheus: $(ensure-build-image)
 	$(DOCKER_RUN) \
-		helm delete --purge prom
+		helm uninstall prom --namespace=metrics
 
 # setup grafana in the current cluster with datasource and dashboards ready for use with agones
 # by default Persistent Volume Claims are requested.
@@ -459,26 +464,23 @@ setup-grafana: PVC ?= true
 setup-grafana: PV_SIZE ?= 64Gi
 setup-grafana: PASSWORD ?= admin
 setup-grafana:
+	-$(DOCKER_RUN) kubectl create namespace metrics
+	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
-	$(DOCKER_RUN) \
-		helm upgrade --install --wait grafana stable/grafana --version=5.0.13  --namespace metrics \
+	$(DOCKER_RUN) helm upgrade grafana stable/grafana \
+		--install --wait --namespace metrics \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
 uninstall-grafana: $(ensure-build-image)
 	$(DOCKER_RUN) \
-		helm delete --purge grafana
+		helm uninstall grafana --namespace=metrics
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update
 
-setup-test-cluster: DOCKER_RUN_ARGS+=--network=host
-setup-test-cluster: $(ensure-build-image)
-	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/helm.yaml
-	$(DOCKER_RUN) helm init --wait --service-account helm
-
 clean-test-cluster: $(ensure-build-image) $(uninstall)
-	docker run --rm -it $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" $(DOCKER_RUN_ARGS) $(build_tag) helm reset
 
 install-custom-pull-secret:
 	# if IMAGE_PULL_SECRET_FILE is specified, create the agones-system namespace and install the secret
