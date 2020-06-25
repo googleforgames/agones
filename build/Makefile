@@ -451,8 +451,7 @@ setup-prometheus:
 	$(DOCKER_RUN) helm upgrade prom stable/prometheus \
 		--install --wait --namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
-		$(HELM_ARGS) \
-		-f $(mount_path)/build/prometheus.yaml
+		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
 
 uninstall-prometheus: $(ensure-build-image)
 	$(DOCKER_RUN) \
@@ -474,8 +473,8 @@ setup-grafana:
 		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
 
 uninstall-grafana: $(ensure-build-image)
-	$(DOCKER_RUN) \
-		helm uninstall grafana --namespace=metrics
+	$(DOCKER_RUN) helm uninstall grafana --namespace=metrics
+	$(DOCKER_RUN) kubectl delete -f $(mount_path)/build/grafana/
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update
