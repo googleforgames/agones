@@ -177,14 +177,14 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		kubeClient,
 		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
 
-	mTLSEnabled := runtime.FeatureEnabled(runtime.FeatureMTLSEnabled)
+	mTLSDisabled := runtime.FeatureEnabled(runtime.FeatureAllocatorMTLSDisabled)
 
 	stop := signals.NewStopChannel()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
 			return allocator.Allocate(gsa, stop)
 		},
-		mTLSEnabled: mTLSEnabled,
+		mTLSDisabled: mTLSDisabled,
 	}
 
 	kubeInformerFactory.Start(stop)
@@ -223,7 +223,7 @@ func readTLSCert() (*tls.Certificate, error) {
 // getServerOptions returns a list of GRPC server options.
 // Current options are TLS certs and opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	if !h.mTLSEnabled {
+	if h.mTLSDisabled {
 		return []grpc.ServerOption{grpc.StatsHandler(&ocgrpc.ServerHandler{})}
 	}
 
@@ -330,7 +330,7 @@ type serviceHandler struct {
 	tlsMutex sync.RWMutex
 	tlsCert  *tls.Certificate
 
-	mTLSEnabled bool
+	mTLSDisabled bool
 }
 
 // Allocate implements the Allocate gRPC method definition

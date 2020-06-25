@@ -232,7 +232,11 @@ steps:
 #
 
 - name: 'e2e-runner'
+<<<<<<< HEAD
   args: ['PlayerTracking=true&ContainerPortAllocation=false', 'e2e-test-cluster']
+=======
+  args: ['PlayerTracking=true&ContainerPortAllocation=true&AllocatorMTLSDisabled=true', 'e2e-test-cluster']
+>>>>>>> d563119b... Changed flag name and added it to the documentation.
   id: e2e-feature-gates
   waitFor:
     - push-images

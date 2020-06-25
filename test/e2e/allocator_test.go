@@ -222,8 +222,8 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
-	mTLSEnabled := runtime.FeatureEnabled(runtime.FeatureMTLSEnabled)
-	if !mTLSEnabled {
+	mTLSDisabled := runtime.FeatureEnabled(runtime.FeatureAllocatorMTLSDisabled)
+	if mTLSDisabled {
 		return grpc.WithInsecure(), nil
 	}
 
