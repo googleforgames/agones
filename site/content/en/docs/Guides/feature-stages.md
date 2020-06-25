@@ -31,6 +31,7 @@ The current set of `alpha` and `beta` feature gates are:
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
 | [Port Allocations to Multiple Containers]({{< ref "/docs/Reference/gameserver.md" >}}) | `ContainerPortAllocation` | Disabled | `Alpha` | 1.6.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
+| MTLS in the Allocator | `AllocatorMTLSDisabled` | Disabled | `Alpha` | 1.7.0 |
 <sup>*</sup>Multicluster Allocation was started before this process was in place, and therefore does not have a
  feature gate and cannot be disabled.
  {{% /feature %}}

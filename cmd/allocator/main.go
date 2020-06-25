@@ -179,7 +179,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		kubeClient,
 		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health), mTLSDisabled)
 
-	mTLSEnabled := runtime.FeatureEnabled(runtime.FeatureMTLSEnabled)
+	mTLSDisabled := runtime.FeatureEnabled(runtime.FeatureAllocatorMTLSDisabled)
 
 	stop := signals.NewStopChannel()
 	h := serviceHandler{

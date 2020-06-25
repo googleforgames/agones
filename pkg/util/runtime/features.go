@@ -34,8 +34,8 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureMTLSEnabled is a feature flag to enable/disable mTLS in the allocator.
-	FeatureMTLSEnabled Feature = "MTLSEnabled"
+	// FeatureAllocatorMTLSDisabled is a feature flag to enable/disable mTLS in the allocator.
+	FeatureAllocatorMTLSDisabled Feature = "AllocatorMTLSDisabled"
 
 	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
 	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
@@ -49,7 +49,7 @@ var (
 		FeatureExample:                 true,
 		FeaturePlayerTracking:          false,
 		FeatureContainerPortAllocation: true,
-		FeatureMTLSEnabled:             true,
+		FeatureAllocatorMTLSDisabled:   false,
 	}
 
 	// featureGates is the storage of what features are enabled
