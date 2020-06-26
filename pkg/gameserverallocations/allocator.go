@@ -366,9 +366,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func (c *Allocator) createRemoteClusterDialOption(namespace string, connectionInfo *multiclusterv1.ClusterConnectionInfo) (grpc.DialOption, error) {
-	if c.mTLSDisabled {
-		return grpc.WithInsecure(), nil
-	}
+	// TODO: disableMTLS works for a single cluster; still need to address multi-cluster authnetication here.
 
 	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, connectionInfo.SecretName)
 	if err != nil {
