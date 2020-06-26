@@ -120,6 +120,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: DISABLE_MTLS
+          value: {{ .Values.agones.disableMTLS | quote }}
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:

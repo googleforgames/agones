@@ -34,6 +34,7 @@ agones:
     sdk: agones-sdk
   createPriorityClass: true
   priorityClassName: agones-system
+  disableMTLS: false
   controller:
     resources: {}
     nodeSelector: {}
@@ -126,6 +127,7 @@ agones:
       serviceType: LoadBalancer
       annotations: {}
     generateTLS: true
+    disableMTLS: false
   image:
     registry: gcr.io/agones-images
     tag: 1.7.0

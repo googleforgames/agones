@@ -118,6 +118,8 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverProjectID | quote }}
         - name: STACKDRIVER_LABELS
           value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
+        - name: DISABLE_MTLS
+          value: {{ .Values.agones.disableMTLS | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:

@@ -1342,7 +1342,7 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, false)
 	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder
