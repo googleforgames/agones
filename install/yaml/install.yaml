@@ -1,17 +1,4 @@
 ---
-# Source: agones/templates/service/allocation.yaml
-# Create a ServiceAccount that will be bound to the above role
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: agones-allocator
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
----
 # Source: agones/templates/serviceaccounts/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
 #
@@ -35,7 +22,102 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agones-controller
+  namespace: agones-system
+  labels:
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["create", "delete", "list", "watch"]
+- apiGroups: [""]
+  resources: ["nodes", "secrets"]
+  verbs: ["list", "watch"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers", "gameserversets"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["patch"]
+- apiGroups: ["agones.dev"]
+  resources: ["fleets"]
+  verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["fleets/status", "gameserversets/status"]
+  verbs: ["update"]
+- apiGroups: ["multicluster.agones.dev"]
+  resources: ["gameserverallocationpolicies"]
+  verbs: ["create", "delete", "get", "list", "update", "watch"]
+- apiGroups: ["autoscaling.agones.dev"]
+  resources: ["fleetautoscalers"]
+  verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["autoscaling.agones.dev"]
+  resources: ["fleetautoscalers/status"]
+  verbs: ["update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-controller-access
+  namespace: agones-system
+  labels:
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+subjects:
+- kind: User
+  name: system:serviceaccount:agones-system:agones-controller
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-controller
+---
+#
+# RBACs for APIService
+#
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-controller:system:auth-delegator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: agones-controller
+    namespace: agones-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: agones-controller-auth-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - kind: ServiceAccount
+    name: agones-controller
+    namespace: agones-system
+
 ---
 # Source: agones/templates/serviceaccounts/sdk.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -60,70 +142,46 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 ---
-# Source: agones/templates/extensions.yaml
-apiVersion: v1
-kind: Secret
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
 metadata:
-  name: agones-manual-cert
+  name: agones-sdk
   namespace: agones-system
   labels:
-    app: agones-manual
-    chart: "agones-1.7.0"
-    release: "agones-manual"
-    heritage: "Helm"
-type: Opaque
-data:
-  server.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-  server.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBemdWVDkwZWp4Tm53Q28vT2pNRDI2ZlU0ZHJrU2Vmd2RRZ3dpYmlmYWw4cms2WTBWCnZPSVYxSCtsUm93ZTA2bVdOdVI1Rk9YRkEwZlhsdnhDS0tZVlFwU1BFSzJZU3loL2FTbkpRTDZxbzhlQVlUSkIKa09ZTEI1Q2J6SXppV2VvUWZPWU44TWxFbjhiWEpkaWVKaEhIOFVueWp0eW9UbHh6aFptWCtwZnRoVWRlYTNWawp6TzIxbjQrUUUzUlg1ZjEzMkZURmN1cVhPVUEvcGk4Y2NBTkdjM3pqTGVaSnZBOW9kUEVoR2Y3Z0M4ZXlBNjhTClZjc2grUGp6MGx3OTVBUHZsTXYxam1xVVJGV2NFU1RMYVEwRng1S3dSeVYwemlabVV2QUFGMlp4RFpoSFVjb0YKUEhBd1RsNzVOQWhuSHBNbExOcDVMN3RjVmR5VDhCMkdScytzbFFJREFRQUJBb0lCQUVvVTVHS1E0alRRNFY0Swo1QXo4L2t5V254MGg0NkQxcFZld29WalcvK1dCVWRzaG5tVnpMc0pndS8rb054V0piN2lCWTRDK05wKzlYNnF0ClB1VDdBNzRUU1hhSDFiR0ErSC9LUk5JQlBiN3k2QmtMUjBSaFZDbitOK2ZQNlR6SHkvSDlqNW03NWU5R1F1c2EKLzVOVTVYN0FSblpVcGppM1Nkc0twZm00VS9LT1YrcDJqV1NQWDdIT0J1L0tZYTFqdmVDdDZKTVBRMzZLQlhrUgpNbFZDa0FEY3ZBQUd1T2JwYS9zbTBNQTYzK2loZGVTWWhrRVhLcXhINEF6M1BWREx3UDgwVDhmNVZxd1dZbW5xCkwvQmc2SG5WNUdIbmxUWEErV2VwTmJIa29rTjlHMEg2bTBJdGo0YWwzYkdUQjRqZUJDSlpwNUZIVzVvYko0cVAKV2tjZlhjRUNnWUVBOFVJWnZkTlNzU3BSWlZUZTRoaHRYbmNPcHRGVGRvVktJelR1VVZLZktlOU9CNWkzMkI5dQo0aEROcEJEcWtnRWt0ZzRSOC9jbjU3ejZaVWRVQ2NvYmpXUWJKTFhFNXdwN0h0ZjdqQ0duTDJRbUljcDIwcmJGCkhyRTJsSHIwb05yM01MVXJ1QnZBclZCM0xMR21PRWduM05RdzlhSndnLzU0MkVEUzd4NXYzWGtDZ1lFQTJwd0cKSGlHWVhUSmZZTmcvK1NtRHVTRFdGZTRpTVBUUncxVFQ4NXVHRTlVRXJZUFFkOE9xWVFRT2dJQVQ3eHAxejBvcQo2cG1zalBPNkhabmc5b0hLZUFPL0pQZVN1WEUrYko4SFlLcDdXOTI5RitMR0pvcWl0T0xQTW0vOU9vdllEQ3ZoCjYrcURZNUxOUkhkQWVUcXd3STJ5dWdmNFluQmpZNnpJZkJwNUxQMENnWUVBeXJydjVKcVNienVQUUdaTUVKUFUKTzhBeCtLNEh3NTJIeWdQdGl6cXhjc3lidGpoM3JFM2xvR1BjV2RTNU9FMXJxdXd4Mjk5QmtqTXoraTB4Q2pUaQphRExKdUZSaURIKzdMQlQwVlRIbVNpV1BBWEFmM3pza2M0RVl5elp6SUVRLzJaYzBFTGFKZDFvWmV0NGhQa1FyCjh4My9zamw0OFFIQ1RINVVnZ2tDbVlrQ2dZQWZLL3BQVjVrRFNRaUNwYk5Sa3hMZVZnbFE3VGpnNURmNDgyS1oKclFhTVUyYXNXMHhobDN2M0EzNFI0ckYwK2Ivc3cvV2txQzhMbGtGbXNTZDczdndBNnYvWmhKZmVhNEJzT3F6eApvcjJlVnRyOHlmQlpWSkZvMjZLUjNaZ3RQZjJibHJKTFVwQlRwWDR4a2hPV2RjRDRZL3dsUExlMVNiTlNaalBjClJtWWEvUUtCZ1FDNmE3ek5BU1AwQTBxTVBocXlKWmxiZzRGOFdNUnRnSEZmc3kvaUx3ZGlFVUd1Q2hRV1VMa2MKaHpQV3BqRDB6d3JTeFp0eWhTTDBiNlRIbnFUaWluMjNPdnRJTmxWaVptb3M1bVdXMFZlR3NiSG5KdVJhM1RIeQpFalNrU1A0bVI3dEpsSm9rYm9aK2xZTDdnQUJIbjJFUm5Ec3FYOG9FVTZRcERQMXJaaFlTemc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["list", "update", "watch"]
 ---
-# Source: agones/templates/service/allocation.yaml
-# Allocation CA
-apiVersion: v1
-kind: Secret
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
-  name: allocator-client-ca
-  namespace: agones-system
+  name: agones-sdk-access
+  namespace: default
   labels:
-    app: agones-manual
-    chart: "agones-1.7.0"
-    release: "agones-manual"
-    heritage: "Helm"
-data:
-  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+subjects:
+- kind: User
+  name: system:serviceaccount:default:agones-sdk
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-sdk
 ---
-# Source: agones/templates/service/allocation.yaml
-# Allocation TLS certs
-apiVersion: v1
-kind: Secret
-type: kubernetes.io/tls
-metadata:
-  name: allocator-tls
-  namespace: agones-system
-  labels:
-    app: agones-manual
-    chart: "agones-1.7.0"
-    release: "agones-manual"
-    heritage: "Helm"
-data:
-  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBK2l5WndvdlJYNExCY2RVL3MzRWE1eE9CVU9RajFCRC9CcEQ3S2h6RzdKZzh6L3RBCmZsSkJQc3VhWTFaWVBydktwYkhRcDg3VUZWT2ZQNWM5a2ord0g3QjlkeHlDYkl1c1pPKzkxMFJFT09sNmlhYUoKMSsrdUVZOXNuKzhUcHlkT0c3WlV5YmQ2dkVnZnoyTzdKRnJja0Rkanc5OFFFclF4RnA3djhOeHRTek8rdGwyOApKR2UxVVUzRnhMU1U0dXU3b3FjUDg0VklqaktXWGpsZFZqb00vc2E5ajN1bi9nalp0MTB0MUoxM0V2Q1c0cW8vCkZnWFBLTzJTbnF4YTN1R2l3eUhyV1BzZmQyRjErbCt0d1hkNklLM2hxWDhWa0VzUUd0Qmp5aXBGcUliQXlIMEEKeGRJQ1NhK2tiQ1pQVkRWeGE0YTQ5RXlPTEMzUzVmbXIwU3lkVHdJREFRQUJBb0lCQVFDK1JQV2NsU0prZGRvUwpiWkhKTkJpMTdvdkhyZnZoNmh0TUx6QVhVMU9uMWhGS1RWazd1ZXVOaXVTYzhLcWs2OGF3UnBEZlQ5clZiWWdNCm9VWmUyTGxuSUtBTDIwOEdweVF5a0hQZUtUbUozMmtuRDlaK3VQZTJ1MUp1UVRLOVNwT0pXQjhjVzhPcE4yR2EKSmN2TFZwK3h2NjdNNWZZZmc1UmlFL2VCUk9TSzhBc0ZFMUlTNmpSRzRVaC84U1dSUUdEYzlReU1Lc3lNbFNVZwphajB4ZWtsWUZDWXl0WUtCMnBaSGw0N1lUK1kzalR6cXN1ekhxK1hIM1hkT043bDk3eHZYZWJPTEJZRWorMGI1Cml4NEJ1bEJIQS9WRk93eXU2LzRKalptRHB1dVRpNnpNbVMyYXV0OW1EY3VoOUZjem1qQ0ZMcnAyWmJiMC9acDQKRkttZXRJR0JBb0dCQVAwSzk4V3kyN2xyVklrQ2JVTnpoNkdzeUhGSXZZYXY0cTJsSzJZVGdKRld2a0tGemFKagpmYWRZMHRmUHV6V3dPUU9nWkl3aW94TElOVFNSa0llbCtrQnFVMkNIblZOc3F4M05nSWk0S0g3K1ltS2ZFMFJtCkRaamV0YTlpTW52a0IyQXVSRUhDSEplVThYd2JNR2JnaXJNSmhlZmIwREJlY2xmZmwrbk8wSlFSQW9HQkFQMFoKRFBoU2RsQnBRMDFQcDVSNmpwaW1KaEIrNXNaejhsZXNiRlpSMDc2VHI5STJXQm1vY2t2dmZYWi8vWkRxSllaYgpoWkxEN09NdjFELy9MMDFvK1ZTaGRwNVovL05samw3NG5nV3VoY01GYmVLMjdhVmEyQTRmak1VMGE2a3NCZXM3CmkxZTRIOTJLOHpHVk9vOTV3dXhub3RtVEY1SHpncE9CUFhLY0NmdGZBb0dCQUlId3ZlZWh2ejlxSkZEdkZCak4KSE5zakZSTkhYVHZxMmlaOWFOblVMZk4wYmVOUFBwZWpLNFZpRVhPTlV2OXc3UFkxeVN4RkpTU2g5dUIxMTVndwozVjl5dWpvWnFlcUxKUnY2eVlScnZTL3BoYkJMSytPMTNFbWlJLzVhR0w2U0RFK1JzcTlwOUxES1pXOXJydUZGCmNUUWJNYzRzaks0cDhlRzZDaEtnaDI5aEFvR0JBTkdUK01WM296a2FzUHhIeFVDUjY1cERtcWwySzZxUlFFK1IKRzNTdTlXT043NzFsK3JYa1lpQzNBM0Vvc3ROWTBCSGRuMUhVbzBmTXh6am5Ha2hEY0pLLzBQVjNHUlozTmRrMgpqY091ckZ5OUZpenh4UDl6cGd5cjIybEE2eFYrdXJmNjZudU1uL1pYcE9HZDdJdjZDNHF1bG84TDJpeWxNNjdwCkNmVHBlT3FKQW9HQUF4cit6Qm1wSkNMbjJZcXJQRVRSUTE2K2Vna1ovMElIQWh4KzhTVlZnN2hjc2Z0MmJLSEoKWUJ2bVBlRnNaNjFTdmRHbXRtT2pqMkUremtFekZvQzhHWXpOU0hsbjFLYTh3UnNlVmI1UlJkWiswSnB5ZUFCWQpOVVlISDVjcWgxamdnQlg4eXExSmdPcDN1REZLQVFJelpCWnZXZ01YRFUwY2thS1pHQkxsQUYwPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
----
-# Source: agones/templates/service/allocation.yaml
-# Allocation TLS CA
-apiVersion: v1
-kind: Secret
-metadata:
-  name: allocator-tls-ca
-  namespace: agones-system
-  labels:
-    app: agones-manual
-    chart: "agones-1.7.0"
-    release: "agones-manual"
-    heritage: "Helm"
-data:
-  tls-ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+
 ---
 # Source: agones/templates/crds/fleet.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -149,7 +207,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.scheduling
@@ -359,6 +417,7 @@ spec:
       statusReplicasPath: .status.replicas
       # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
       labelSelectorPath: .status.labelSelector
+
 ---
 # Source: agones/templates/crds/fleetautoscaler.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -384,7 +443,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   group: autoscaling.agones.dev
   version: v1
@@ -444,6 +503,7 @@ spec:
   subresources:
     # status enables the status subresource.
     status: {}
+
 ---
 # Source: agones/templates/crds/gameserver.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -469,7 +529,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   group: agones.dev
   version: v1
@@ -644,6 +704,7 @@ spec:
                       type: integer
                       title: The initial player capacity of this Game Server
                       minimum: 0
+
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -670,7 +731,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
   name: gameserverallocationpolicies.multicluster.agones.dev
 spec:
   group: multicluster.agones.dev
@@ -740,6 +801,7 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+
 ---
 # Source: agones/templates/crds/gameserverset.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -765,7 +827,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.scheduling
@@ -970,240 +1032,7 @@ spec:
       statusReplicasPath: .status.replicas
       # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
       labelSelectorPath: .status.labelSelector
----
-# Source: agones/templates/service/allocation.yaml
-# Create a ClusterRole in that grants access to the agones allocation api
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: agones-allocator
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["allocation.agones.dev"]
-  resources: ["gameserverallocations"]
-  verbs: ["create"]
-- apiGroups: [""]
-  resources: ["nodes", "secrets"]
-  verbs: ["get", "list", "watch"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers", "gameserversets"]
-  verbs: ["get", "list", "update", "watch"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers"]
-  verbs: ["patch"]
-- apiGroups: ["multicluster.agones.dev"]
-  resources: ["gameserverallocationpolicies"]
-  verbs: ["get", "list", "watch"]
----
-# Source: agones/templates/serviceaccounts/controller.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: agones-controller
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: ["create", "delete", "list", "watch"]
-- apiGroups: [""]
-  resources: ["nodes", "secrets"]
-  verbs: ["list", "watch"]
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["get"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers", "gameserversets"]
-  verbs: ["create", "delete", "get", "list", "update", "watch"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers"]
-  verbs: ["patch"]
-- apiGroups: ["agones.dev"]
-  resources: ["fleets"]
-  verbs: ["get", "list", "update", "watch"]
-- apiGroups: ["agones.dev"]
-  resources: ["fleets/status", "gameserversets/status"]
-  verbs: ["update"]
-- apiGroups: ["multicluster.agones.dev"]
-  resources: ["gameserverallocationpolicies"]
-  verbs: ["create", "delete", "get", "list", "update", "watch"]
-- apiGroups: ["autoscaling.agones.dev"]
-  resources: ["fleetautoscalers"]
-  verbs: ["get", "list", "update", "watch"]
-- apiGroups: ["autoscaling.agones.dev"]
-  resources: ["fleetautoscalers/status"]
-  verbs: ["update"]
----
-# Source: agones/templates/serviceaccounts/sdk.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: agones-sdk
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["agones.dev"]
-  resources: ["gameservers"]
-  verbs: ["list", "update", "watch"]
----
-# Source: agones/templates/service/allocation.yaml
-# Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: agones-allocator
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-subjects:
-- kind: ServiceAccount
-  name: agones-allocator
-  namespace: agones-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: agones-allocator
----
-# Source: agones/templates/serviceaccounts/controller.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: agones-controller-access
-  namespace: agones-system
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-subjects:
-- kind: User
-  name: system:serviceaccount:agones-system:agones-controller
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: agones-controller
----
-# Source: agones/templates/serviceaccounts/controller.yaml
-#
-# RBACs for APIService
-#
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: agones-controller:system:auth-delegator
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-  - kind: ServiceAccount
-    name: agones-controller
-    namespace: agones-system
----
-# Source: agones/templates/serviceaccounts/controller.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: agones-controller-auth-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-  - kind: ServiceAccount
-    name: agones-controller
-    namespace: agones-system
----
-# Source: agones/templates/serviceaccounts/sdk.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: agones-sdk-access
-  namespace: default
-  labels:
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-subjects:
-- kind: User
-  name: system:serviceaccount:default:agones-sdk
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: agones-sdk
----
-# Source: agones/templates/ping.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: agones-ping-http-service
-  namespace: agones-system
-  labels:
-    component: ping
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-spec:
-  selector:
-    agones.dev/role: ping
-  ports:
-    - port: 80
-      name: http
-      targetPort: 8080
-      protocol: TCP
-  type: LoadBalancer
----
-# Source: agones/templates/ping.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: agones-ping-udp-service
-  namespace: agones-system
-  labels:
-    component: ping
-    app: agones
-    chart: agones-1.7.0
-    release: agones-manual
-    heritage: Helm
-spec:
-  selector:
-    agones.dev/role: ping
-  ports:
-    - port: 50000
-      name: udp
-      targetPort: 8080
-      protocol: UDP
-  type: LoadBalancer
+
 ---
 # Source: agones/templates/service.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -1230,7 +1059,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   selector:
     agones.dev/role: controller
@@ -1266,7 +1095,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   selector:
     multicluster.agones.dev/role: allocator
@@ -1276,6 +1105,227 @@ spec:
       targetPort: 8443
       protocol: TCP
   type: LoadBalancer
+
+---
+# Deploy a pod to run the agones-allocator code
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agones-allocator
+  namespace: agones-system
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: agones
+    release: agones-manual
+    heritage: Tiller
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+      app: agones
+      release: agones-manual
+      heritage: Tiller
+  template:
+    metadata:
+      annotations:
+      labels:
+        multicluster.agones.dev/role: allocator
+        app: agones
+        release: agones-manual
+        heritage: Tiller
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: agones.dev/agones-system
+                operator: Exists
+            weight: 1
+        
+      tolerations:
+        - effect: NoExecute
+          key: agones.dev/agones-system
+          operator: Equal
+          value: "true"
+        
+      serviceAccountName: agones-allocator
+      volumes:
+      - name: tls
+        secret:
+          secretName: allocator-tls
+      - name: client-ca
+        secret:
+          secretName: allocator-client-ca
+      containers:
+      - name: agones-allocator
+        image: "gcr.io/agones-images/agones-allocator:1.7.0"
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          failureThreshold: 3
+          timeoutSeconds: 1
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+        env:
+        - name: PROMETHEUS_EXPORTER
+          value: "true"
+        - name: STACKDRIVER_EXPORTER
+          value: "false"
+        - name: GCP_PROJECT_ID
+          value: ""
+        - name: STACKDRIVER_LABELS
+          value: ""
+        - name: DISABLE_MTLS
+          value: "false"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: CONTAINER_NAME
+          value: "agones-allocator"
+        - name: FEATURE_GATES
+          value: ""
+        ports:
+        - name: https
+          containerPort: 8443
+        volumeMounts:
+        - mountPath: /home/allocator/tls
+          name: tls
+          readOnly: true
+        - mountPath: /home/allocator/client-ca
+          name: client-ca
+          readOnly: true
+
+---
+# Create a ClusterRole in that grants access to the agones allocation api
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: agones-allocator
+  namespace: agones-system
+  labels:
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: ["allocation.agones.dev"]
+  resources: ["gameserverallocations"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["nodes", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers", "gameserversets"]
+  verbs: ["get", "list", "update", "watch"]
+- apiGroups: ["agones.dev"]
+  resources: ["gameservers"]
+  verbs: ["patch"]
+- apiGroups: ["multicluster.agones.dev"]
+  resources: ["gameserverallocationpolicies"]
+  verbs: ["get", "list", "watch"]
+
+---
+# Create a ServiceAccount that will be bound to the above role
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agones-allocator
+  namespace: agones-system
+  labels:
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+
+---
+# Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: agones-allocator
+  namespace: agones-system
+  labels:
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+subjects:
+- kind: ServiceAccount
+  name: agones-allocator
+  namespace: agones-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: agones-allocator
+
+---
+# Allocation CA
+apiVersion: v1
+kind: Secret
+metadata:
+  name: allocator-client-ca
+  namespace: agones-system
+  labels:
+    app: agones-manual
+    chart: "agones-1.7.0"
+    release: "agones-manual"
+    heritage: "Tiller"
+data:
+  ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  
+
+---
+# Allocation TLS certs
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: allocator-tls
+  namespace: agones-system
+  labels:
+    app: agones-manual
+    chart: "agones-1.7.0"
+    release: "agones-manual"
+    heritage: "Tiller"
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBK2l5WndvdlJYNExCY2RVL3MzRWE1eE9CVU9RajFCRC9CcEQ3S2h6RzdKZzh6L3RBCmZsSkJQc3VhWTFaWVBydktwYkhRcDg3VUZWT2ZQNWM5a2ord0g3QjlkeHlDYkl1c1pPKzkxMFJFT09sNmlhYUoKMSsrdUVZOXNuKzhUcHlkT0c3WlV5YmQ2dkVnZnoyTzdKRnJja0Rkanc5OFFFclF4RnA3djhOeHRTek8rdGwyOApKR2UxVVUzRnhMU1U0dXU3b3FjUDg0VklqaktXWGpsZFZqb00vc2E5ajN1bi9nalp0MTB0MUoxM0V2Q1c0cW8vCkZnWFBLTzJTbnF4YTN1R2l3eUhyV1BzZmQyRjErbCt0d1hkNklLM2hxWDhWa0VzUUd0Qmp5aXBGcUliQXlIMEEKeGRJQ1NhK2tiQ1pQVkRWeGE0YTQ5RXlPTEMzUzVmbXIwU3lkVHdJREFRQUJBb0lCQVFDK1JQV2NsU0prZGRvUwpiWkhKTkJpMTdvdkhyZnZoNmh0TUx6QVhVMU9uMWhGS1RWazd1ZXVOaXVTYzhLcWs2OGF3UnBEZlQ5clZiWWdNCm9VWmUyTGxuSUtBTDIwOEdweVF5a0hQZUtUbUozMmtuRDlaK3VQZTJ1MUp1UVRLOVNwT0pXQjhjVzhPcE4yR2EKSmN2TFZwK3h2NjdNNWZZZmc1UmlFL2VCUk9TSzhBc0ZFMUlTNmpSRzRVaC84U1dSUUdEYzlReU1Lc3lNbFNVZwphajB4ZWtsWUZDWXl0WUtCMnBaSGw0N1lUK1kzalR6cXN1ekhxK1hIM1hkT043bDk3eHZYZWJPTEJZRWorMGI1Cml4NEJ1bEJIQS9WRk93eXU2LzRKalptRHB1dVRpNnpNbVMyYXV0OW1EY3VoOUZjem1qQ0ZMcnAyWmJiMC9acDQKRkttZXRJR0JBb0dCQVAwSzk4V3kyN2xyVklrQ2JVTnpoNkdzeUhGSXZZYXY0cTJsSzJZVGdKRld2a0tGemFKagpmYWRZMHRmUHV6V3dPUU9nWkl3aW94TElOVFNSa0llbCtrQnFVMkNIblZOc3F4M05nSWk0S0g3K1ltS2ZFMFJtCkRaamV0YTlpTW52a0IyQXVSRUhDSEplVThYd2JNR2JnaXJNSmhlZmIwREJlY2xmZmwrbk8wSlFSQW9HQkFQMFoKRFBoU2RsQnBRMDFQcDVSNmpwaW1KaEIrNXNaejhsZXNiRlpSMDc2VHI5STJXQm1vY2t2dmZYWi8vWkRxSllaYgpoWkxEN09NdjFELy9MMDFvK1ZTaGRwNVovL05samw3NG5nV3VoY01GYmVLMjdhVmEyQTRmak1VMGE2a3NCZXM3CmkxZTRIOTJLOHpHVk9vOTV3dXhub3RtVEY1SHpncE9CUFhLY0NmdGZBb0dCQUlId3ZlZWh2ejlxSkZEdkZCak4KSE5zakZSTkhYVHZxMmlaOWFOblVMZk4wYmVOUFBwZWpLNFZpRVhPTlV2OXc3UFkxeVN4RkpTU2g5dUIxMTVndwozVjl5dWpvWnFlcUxKUnY2eVlScnZTL3BoYkJMSytPMTNFbWlJLzVhR0w2U0RFK1JzcTlwOUxES1pXOXJydUZGCmNUUWJNYzRzaks0cDhlRzZDaEtnaDI5aEFvR0JBTkdUK01WM296a2FzUHhIeFVDUjY1cERtcWwySzZxUlFFK1IKRzNTdTlXT043NzFsK3JYa1lpQzNBM0Vvc3ROWTBCSGRuMUhVbzBmTXh6am5Ha2hEY0pLLzBQVjNHUlozTmRrMgpqY091ckZ5OUZpenh4UDl6cGd5cjIybEE2eFYrdXJmNjZudU1uL1pYcE9HZDdJdjZDNHF1bG84TDJpeWxNNjdwCkNmVHBlT3FKQW9HQUF4cit6Qm1wSkNMbjJZcXJQRVRSUTE2K2Vna1ovMElIQWh4KzhTVlZnN2hjc2Z0MmJLSEoKWUJ2bVBlRnNaNjFTdmRHbXRtT2pqMkUremtFekZvQzhHWXpOU0hsbjFLYTh3UnNlVmI1UlJkWiswSnB5ZUFCWQpOVVlISDVjcWgxamdnQlg4eXExSmdPcDN1REZLQVFJelpCWnZXZ01YRFUwY2thS1pHQkxsQUYwPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+
+---
+# Allocation TLS CA
+apiVersion: v1
+kind: Secret
+metadata:
+  name: allocator-tls-ca
+  namespace: agones-system
+  labels:
+    app: agones-manual
+    chart: "agones-1.7.0"
+    release: "agones-manual"
+    heritage: "Tiller"
+data:
+  tls-ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUM0akNDQWNxZ0F3SUJBZ0lSQU9lTWcwK1JKaFBJbks5ekFpMnpoUjR3RFFZSktvWklodmNOQVFFTEJRQXcKR0RFV01CUUdBMVVFQXhNTllXeHNiMk5oZEdsdmJpMWpZVEFlRncweE9UQTJNVGt4T0RRek5UVmFGdzB5T1RBMgpNVFl4T0RRek5UVmFNQUF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQkFRRDZMSm5DCmk5RmZnc0Z4MVQremNScm5FNEZRNUNQVUVQOEdrUHNxSE1ic21EelArMEIrVWtFK3k1cGpWbGcrdThxbHNkQ24KenRRVlU1OC9sejJTUDdBZnNIMTNISUpzaTZ4azc3M1hSRVE0NlhxSnBvblg3NjRSajJ5Zjd4T25KMDRidGxUSgp0M3E4U0IvUFk3c2tXdHlRTjJQRDN4QVN0REVXbnUvdzNHMUxNNzYyWGJ3a1o3VlJUY1hFdEpUaTY3dWlwdy96CmhVaU9NcFplT1YxV09neit4cjJQZTZmK0NObTNYUzNVblhjUzhKYmlxajhXQmM4bzdaS2VyRnJlNGFMRElldFkKK3g5M1lYWDZYNjNCZDNvZ3JlR3BmeFdRU3hBYTBHUEtLa1dvaHNESWZRREYwZ0pKcjZSc0prOVVOWEZyaHJqMApUSTRzTGRMbCthdlJMSjFQQWdNQkFBR2pQekE5TUE0R0ExVWREd0VCL3dRRUF3SUZvREFkQmdOVkhTVUVGakFVCkJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBTkJna3Foa2lHOXcwQkFRc0YKQUFPQ0FRRUFKZ1ErVzZlYTdKZjhldmp0cWNmRC9EZUVMYzRLcFFwdk9NR0ZGVDkzQTM4bWFzeFNxVXluOGk4RgppaEplNDZFZnFkREQvcWRWSDh4TkJId2NIcjgyVDVLcFkzTWc1amJPWG1iMEoxZEdSTFRHSmdGd0ZpUXdsM3J3CmZ4dWhlYnZvaTJkcVhQbGc3L2ZZZmVqN2RkbTAxMTdhRCtwUExCN0NNUGVLdk5QSHF2N0VBRlowOU8rRjM3cjkKNTBPZEMrSk1VK0FNczRVMzVVeEZGZjRVRHVIbWM4U0l0bTJra1U3Vk1TcDFaV1VuRVZFUExaU09SZ3dZdWFNcQo3WTgzOVpXVmtyRGZMUEJrS09Ec1BVMDI3NGdmbXBpTmNyVElYREhPY2hhcFByWG53eDhxLzcrZERYYlhoUk84ClFDK2lZWVY0MVlTSGt1djNiYUtrYXlYamV0czc3Zz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+
 ---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -1302,14 +1352,14 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   selector:
     matchLabels:
       agones.dev/role: controller
       app: agones
       release: agones-manual
-      heritage: Helm
+      heritage: Tiller
   replicas: 1
   strategy:
     type: Recreate
@@ -1324,7 +1374,7 @@ spec:
         agones.dev/role: controller
         app: agones
         release: agones-manual
-        heritage: Helm
+        heritage: Tiller
     spec:
       affinity:
         nodeAffinity:
@@ -1334,11 +1384,13 @@ spec:
               - key: agones.dev/agones-system
                 operator: Exists
             weight: 1
+        
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
           operator: Equal
           value: "true"
+        
       priorityClassName: agones-system
       serviceAccountName: agones-controller
       containers:
@@ -1392,6 +1444,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        - name: DISABLE_MTLS
+          value: "false"
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
@@ -1419,6 +1473,7 @@ spec:
           secretName: agones-manual-cert
       - name: logs
         emptyDir: {}
+
 ---
 # Source: agones/templates/ping.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -1444,14 +1499,14 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
   selector:
     matchLabels:
       agones.dev/role: ping
       app: agones
       release: agones-manual
-      heritage: Helm
+      heritage: Tiller
   replicas: 2
   template:
     metadata:
@@ -1459,7 +1514,7 @@ spec:
         agones.dev/role: ping
         app: agones
         release: agones-manual
-        heritage: Helm
+        heritage: Tiller
     spec:
       affinity:
         nodeAffinity:
@@ -1469,11 +1524,13 @@ spec:
               - key: agones.dev/agones-system
                 operator: Exists
             weight: 1
+        
       tolerations:
         - effect: NoExecute
           key: agones.dev/agones-system
           operator: Equal
           value: "true"
+        
       priorityClassName: agones-system
       containers:
         - name: agones-ping
@@ -1495,128 +1552,47 @@ spec:
           - name: FEATURE_GATES
             value: ""
 ---
-# Source: agones/templates/service/allocation.yaml
-# Deploy a pod to run the agones-allocator code
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: agones-allocator
+  name: agones-ping-http-service
   namespace: agones-system
   labels:
-    multicluster.agones.dev/role: allocator
-    app: agones
-    release: agones-manual
-    heritage: Helm
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      multicluster.agones.dev/role: allocator
-      app: agones
-      release: agones-manual
-      heritage: Helm
-  template:
-    metadata:
-      annotations:
-      labels:
-        multicluster.agones.dev/role: allocator
-        app: agones
-        release: agones-manual
-        heritage: Helm
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/metrics"
-    spec:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - preference:
-              matchExpressions:
-              - key: agones.dev/agones-system
-                operator: Exists
-            weight: 1
-      tolerations:
-        - effect: NoExecute
-          key: agones.dev/agones-system
-          operator: Equal
-          value: "true"
-      serviceAccountName: agones-allocator
-      volumes:
-      - name: tls
-        secret:
-          secretName: allocator-tls
-      - name: client-ca
-        secret:
-          secretName: allocator-client-ca
-      containers:
-      - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:1.7.0"
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /live
-            port: 8080
-          initialDelaySeconds: 3
-          periodSeconds: 3
-          failureThreshold: 3
-          timeoutSeconds: 1
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8080
-        env:
-        - name: PROMETHEUS_EXPORTER
-          value: "true"
-        - name: STACKDRIVER_EXPORTER
-          value: "false"
-        - name: GCP_PROJECT_ID
-          value: ""
-        - name: STACKDRIVER_LABELS
-          value: ""
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: CONTAINER_NAME
-          value: "agones-allocator"
-        - name: FEATURE_GATES
-          value: ""
-        ports:
-        - name: https
-          containerPort: 8443
-        volumeMounts:
-        - mountPath: /home/allocator/tls
-          name: tls
-          readOnly: true
-        - mountPath: /home/allocator/client-ca
-          name: client-ca
-          readOnly: true
----
-# Source: agones/templates/extensions.yaml
-apiVersion: apiregistration.k8s.io/v1beta1
-kind: APIService
-metadata:
-  name: v1.allocation.agones.dev
-  labels:
-    component: controller
+    component: ping
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 spec:
-  group: allocation.agones.dev
-  groupPriorityMinimum: 1000
-  versionPriority: 15
-  service:
-    name: agones-controller-service
-    namespace: agones-system
-  caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-  version: v1
+  selector:
+    agones.dev/role: ping
+  ports:
+    - port: 80
+      name: http
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-ping-udp-service
+  namespace: agones-system
+  labels:
+    component: ping
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+spec:
+  selector:
+    agones.dev/role: ping
+  ports:
+    - port: 50000
+      name: udp
+      targetPort: 8080
+      protocol: UDP
+  type: LoadBalancer
 ---
 # Source: agones/templates/extensions.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -1633,47 +1609,26 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
-# Source: agones/templates/extensions.yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
 metadata:
-  name: agones-mutation-webhook
+  name: v1.allocation.agones.dev
   labels:
     component: controller
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
-webhooks:
-  - name: mutations.agones.dev
-    failurePolicy: Fail
-    clientConfig:
-      service:
-        name: agones-controller-service
-        namespace: agones-system
-        path: /mutate
-      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
-    rules:
-      - apiGroups:
-          - agones.dev
-        resources:
-          - "gameservers"
-          - "fleets"
-        apiVersions:
-          - "v1"
-        operations:
-          - CREATE
+    heritage: Tiller
+spec:
+  group: allocation.agones.dev
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: agones-controller-service
+    namespace: agones-system
+  caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  version: v1
 ---
-# Source: agones/templates/priority-class.yaml
-apiVersion: scheduling.k8s.io/v1beta1
-kind: PriorityClass
-metadata:
-  name: agones-system
-value: 1000000
-globalDefault: false
-description: "This priority class should be used for Agones service pods only."
----
-# Source: agones/templates/extensions.yaml
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
@@ -1683,7 +1638,7 @@ metadata:
     app: agones
     chart: agones-1.7.0
     release: agones-manual
-    heritage: Helm
+    heritage: Tiller
 webhooks:
   - name: validations.agones.dev
     failurePolicy: Fail
@@ -1722,3 +1677,75 @@ webhooks:
         operations:
           - CREATE
           - UPDATE
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: agones-mutation-webhook
+  labels:
+    component: controller
+    app: agones
+    chart: agones-1.7.0
+    release: agones-manual
+    heritage: Tiller
+webhooks:
+  - name: mutations.agones.dev
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: agones-controller-service
+        namespace: agones-system
+        path: /mutate
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    rules:
+      - apiGroups:
+          - agones.dev
+        resources:
+          - "gameservers"
+          - "fleets"
+        apiVersions:
+          - "v1"
+        operations:
+          - CREATE
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: agones-manual-cert
+  namespace: agones-system
+  labels:
+    app: agones-manual
+    chart: "agones-1.7.0"
+    release: "agones-manual"
+    heritage: "Tiller"
+type: Opaque
+data:
+  server.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUVLVENDQXhHZ0F3SUJBZ0lKQU9KUDY0MTB3dkdTTUEwR0NTcUdTSWIzRFFFQkN3VUFNSUdxTVFzd0NRWUQKVlFRR0V3SlZVekVUTUJFR0ExVUVDQXdLVTI5dFpTMVRkR0YwWlRFUE1BMEdBMVVFQ2d3R1FXZHZibVZ6TVE4dwpEUVlEVlFRTERBWkJaMjl1WlhNeE5EQXlCZ05WQkFNTUsyRm5iMjVsY3kxamIyNTBjbTlzYkdWeUxYTmxjblpwClkyVXVZV2R2Ym1WekxYTjVjM1JsYlM1emRtTXhMakFzQmdrcWhraUc5dzBCQ1FFV0gyRm5iMjVsY3kxa2FYTmoKZFhOelFHZHZiMmRzWldkeWIzVndjeTVqYjIwd0hoY05NVGd3TWpFME1EUTBORFEyV2hjTk1qZ3dNakV5TURRMApORFEyV2pDQnFqRUxNQWtHQTFVRUJoTUNWVk14RXpBUkJnTlZCQWdNQ2xOdmJXVXRVM1JoZEdVeER6QU5CZ05WCkJBb01Ca0ZuYjI1bGN6RVBNQTBHQTFVRUN3d0dRV2R2Ym1Wek1UUXdNZ1lEVlFRRERDdGhaMjl1WlhNdFkyOXUKZEhKdmJHeGxjaTF6WlhKMmFXTmxMbUZuYjI1bGN5MXplWE4wWlcwdWMzWmpNUzR3TEFZSktvWklodmNOQVFrQgpGaDloWjI5dVpYTXRaR2x6WTNWemMwQm5iMjluYkdWbmNtOTFjSE11WTI5dE1JSUJJakFOQmdrcWhraUc5dzBCCkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXpnVlQ5MGVqeE5ud0NvL09qTUQyNmZVNGRya1NlZndkUWd3aWJpZmEKbDhyazZZMFZ2T0lWMUgrbFJvd2UwNm1XTnVSNUZPWEZBMGZYbHZ4Q0tLWVZRcFNQRUsyWVN5aC9hU25KUUw2cQpvOGVBWVRKQmtPWUxCNUNiekl6aVdlb1FmT1lOOE1sRW44YlhKZGllSmhISDhVbnlqdHlvVGx4emhabVgrcGZ0CmhVZGVhM1Zrek8yMW40K1FFM1JYNWYxMzJGVEZjdXFYT1VBL3BpOGNjQU5HYzN6akxlWkp2QTlvZFBFaEdmN2cKQzhleUE2OFNWY3NoK1BqejBsdzk1QVB2bE12MWptcVVSRldjRVNUTGFRMEZ4NUt3UnlWMHppWm1VdkFBRjJaeApEWmhIVWNvRlBIQXdUbDc1TkFobkhwTWxMTnA1TDd0Y1ZkeVQ4QjJHUnMrc2xRSURBUUFCbzFBd1RqQWRCZ05WCkhRNEVGZ1FVZ3YxblRQYVFKU04zTHFtNWpJalc0eEhtZEcwd0h3WURWUjBqQkJnd0ZvQVVndjFuVFBhUUpTTjMKTHFtNWpJalc0eEhtZEcwd0RBWURWUjBUQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBSEtFQwprdEVqWU5VQ0ErbXlzejRvclc3cFJVdmhCSERWU2dzWTZlRVZSTHpmLzF5SVpFMHU2NTZrcEs2T1Q3TWhKR2xVCkt3R1NTb1VCQnpWZ1VzWmpEbTdQZ2JrNGlZem40TTF4THpiTFFCcjNNYzV6WEhlZlB2YmltaEQ1NWNMenBWRnUKVlFtQm1aVjJOalU1RHVTZFJuZGxjUGFOY2cvdU9jdlpLNEtZMUtDQkEzRW9BUUlrcHpIWDJpVU1veGlSdlpWTgpORXdnRlR0SUdCWW4wSGZML3ZnT3NIOGZWck1Va3VHMnZoR2RlWEJwWmlxL0JaSmJaZU4yckNmMmdhWDFRSXYwCkVLYmN1RnFNOThXVDVaVlpSdFgxWTNSd2V2ZzRteFlKWEN1SDZGRjlXOS9TejI5NEZ5Mk9CS0I4SkFWYUV4OW4KMS9pNmZJZmZHbkhUWFdIc1ZRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  server.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBemdWVDkwZWp4Tm53Q28vT2pNRDI2ZlU0ZHJrU2Vmd2RRZ3dpYmlmYWw4cms2WTBWCnZPSVYxSCtsUm93ZTA2bVdOdVI1Rk9YRkEwZlhsdnhDS0tZVlFwU1BFSzJZU3loL2FTbkpRTDZxbzhlQVlUSkIKa09ZTEI1Q2J6SXppV2VvUWZPWU44TWxFbjhiWEpkaWVKaEhIOFVueWp0eW9UbHh6aFptWCtwZnRoVWRlYTNWawp6TzIxbjQrUUUzUlg1ZjEzMkZURmN1cVhPVUEvcGk4Y2NBTkdjM3pqTGVaSnZBOW9kUEVoR2Y3Z0M4ZXlBNjhTClZjc2grUGp6MGx3OTVBUHZsTXYxam1xVVJGV2NFU1RMYVEwRng1S3dSeVYwemlabVV2QUFGMlp4RFpoSFVjb0YKUEhBd1RsNzVOQWhuSHBNbExOcDVMN3RjVmR5VDhCMkdScytzbFFJREFRQUJBb0lCQUVvVTVHS1E0alRRNFY0Swo1QXo4L2t5V254MGg0NkQxcFZld29WalcvK1dCVWRzaG5tVnpMc0pndS8rb054V0piN2lCWTRDK05wKzlYNnF0ClB1VDdBNzRUU1hhSDFiR0ErSC9LUk5JQlBiN3k2QmtMUjBSaFZDbitOK2ZQNlR6SHkvSDlqNW03NWU5R1F1c2EKLzVOVTVYN0FSblpVcGppM1Nkc0twZm00VS9LT1YrcDJqV1NQWDdIT0J1L0tZYTFqdmVDdDZKTVBRMzZLQlhrUgpNbFZDa0FEY3ZBQUd1T2JwYS9zbTBNQTYzK2loZGVTWWhrRVhLcXhINEF6M1BWREx3UDgwVDhmNVZxd1dZbW5xCkwvQmc2SG5WNUdIbmxUWEErV2VwTmJIa29rTjlHMEg2bTBJdGo0YWwzYkdUQjRqZUJDSlpwNUZIVzVvYko0cVAKV2tjZlhjRUNnWUVBOFVJWnZkTlNzU3BSWlZUZTRoaHRYbmNPcHRGVGRvVktJelR1VVZLZktlOU9CNWkzMkI5dQo0aEROcEJEcWtnRWt0ZzRSOC9jbjU3ejZaVWRVQ2NvYmpXUWJKTFhFNXdwN0h0ZjdqQ0duTDJRbUljcDIwcmJGCkhyRTJsSHIwb05yM01MVXJ1QnZBclZCM0xMR21PRWduM05RdzlhSndnLzU0MkVEUzd4NXYzWGtDZ1lFQTJwd0cKSGlHWVhUSmZZTmcvK1NtRHVTRFdGZTRpTVBUUncxVFQ4NXVHRTlVRXJZUFFkOE9xWVFRT2dJQVQ3eHAxejBvcQo2cG1zalBPNkhabmc5b0hLZUFPL0pQZVN1WEUrYko4SFlLcDdXOTI5RitMR0pvcWl0T0xQTW0vOU9vdllEQ3ZoCjYrcURZNUxOUkhkQWVUcXd3STJ5dWdmNFluQmpZNnpJZkJwNUxQMENnWUVBeXJydjVKcVNienVQUUdaTUVKUFUKTzhBeCtLNEh3NTJIeWdQdGl6cXhjc3lidGpoM3JFM2xvR1BjV2RTNU9FMXJxdXd4Mjk5QmtqTXoraTB4Q2pUaQphRExKdUZSaURIKzdMQlQwVlRIbVNpV1BBWEFmM3pza2M0RVl5elp6SUVRLzJaYzBFTGFKZDFvWmV0NGhQa1FyCjh4My9zamw0OFFIQ1RINVVnZ2tDbVlrQ2dZQWZLL3BQVjVrRFNRaUNwYk5Sa3hMZVZnbFE3VGpnNURmNDgyS1oKclFhTVUyYXNXMHhobDN2M0EzNFI0ckYwK2Ivc3cvV2txQzhMbGtGbXNTZDczdndBNnYvWmhKZmVhNEJzT3F6eApvcjJlVnRyOHlmQlpWSkZvMjZLUjNaZ3RQZjJibHJKTFVwQlRwWDR4a2hPV2RjRDRZL3dsUExlMVNiTlNaalBjClJtWWEvUUtCZ1FDNmE3ek5BU1AwQTBxTVBocXlKWmxiZzRGOFdNUnRnSEZmc3kvaUx3ZGlFVUd1Q2hRV1VMa2MKaHpQV3BqRDB6d3JTeFp0eWhTTDBiNlRIbnFUaWluMjNPdnRJTmxWaVptb3M1bVdXMFZlR3NiSG5KdVJhM1RIeQpFalNrU1A0bVI3dEpsSm9rYm9aK2xZTDdnQUJIbjJFUm5Ec3FYOG9FVTZRcERQMXJaaFlTemc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+
+---
+# Source: agones/templates/priority-class.yaml
+
+apiVersion: scheduling.k8s.io/v1beta1
+kind: PriorityClass
+metadata:
+  name: agones-system
+value: 1000000
+globalDefault: false
+description: "This priority class should be used for Agones service pods only."
+---
+# Source: agones/templates/hooks/pre_delete_hook.yaml
+
+
+---
+# Source: agones/templates/hooks/sa.yaml
+
+
+---
+# Source: agones/templates/hooks/scripts.yaml
+
+
+---
+# Source: agones/templates/tests/test-runner.yaml
+
