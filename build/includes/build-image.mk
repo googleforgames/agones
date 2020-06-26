@@ -33,7 +33,8 @@ ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.gocache
 	-mkdir -p $(build_path)/.config/gcloud
-	-mkdir -p $(helm_path)
+	-mkdir -p $(helm_config)
+	-mkdir -p $(helm_cache)
 
 # create the build image if it doesn't exist
 ensure-build-image: ensure-build-config

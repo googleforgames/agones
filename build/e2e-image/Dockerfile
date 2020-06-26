@@ -21,8 +21,8 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECT
     mv ./kubectl /usr/local/bin/kubectl
 
 # install Helm package manager
-ENV HELM_VER 2.11.0
-ENV HELM_URL https://storage.googleapis.com/kubernetes-helm/helm-v${HELM_VER}-linux-amd64.tar.gz
+ENV HELM_VER 3.2.3
+ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
     && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
