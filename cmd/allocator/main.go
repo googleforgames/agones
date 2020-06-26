@@ -179,8 +179,6 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		kubeClient,
 		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health), mTLSDisabled)
 
-	mTLSDisabled := runtime.FeatureEnabled(runtime.FeatureAllocatorMTLSDisabled)
-
 	stop := signals.NewStopChannel()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {

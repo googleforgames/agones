@@ -189,7 +189,6 @@ steps:
     - lint
     - ensure-build-sdk-image-base
     - htmltest-restore-cache
-    - build-sdks
   dir: "build"
   args: [ "-j", "5", "--output-sync=target", "test" ]
 
@@ -228,7 +227,7 @@ steps:
     - GO111MODULE=on
 
 #
-# Run the e2e tests with FeatureGates inverted compared to Stable
+# Run the e2e tests with FeatureGates
 #
 
 - name: 'e2e-runner'

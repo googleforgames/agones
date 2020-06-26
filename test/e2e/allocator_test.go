@@ -31,7 +31,6 @@ import (
 	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -222,11 +221,6 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
-	mTLSDisabled := runtime.FeatureEnabled(runtime.FeatureAllocatorMTLSDisabled)
-	if mTLSDisabled {
-		return grpc.WithInsecure(), nil
-	}
-
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
 	if err != nil {

@@ -45,6 +45,7 @@ type config struct {
 	Stackdriver       bool
 	GCPProjectID      string
 	StackdriverLabels string
+	MTLSDisabled      bool
 }
 
 func parseEnvFlags() config {
