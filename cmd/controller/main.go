@@ -378,6 +378,7 @@ type config struct {
 	AlwaysPullSidecar     bool
 	PrometheusMetrics     bool
 	Stackdriver           bool
+	MTLSDisabled          bool
 	StackdriverLabels     string
 	KeyFile               string
 	CertFile              string
@@ -389,7 +390,6 @@ type config struct {
 	LogDir                string
 	LogLevel              string
 	LogSizeLimitMB        int
-	MTLSDisabled          bool
 }
 
 // validate ensures the ctlConfig data is valid.

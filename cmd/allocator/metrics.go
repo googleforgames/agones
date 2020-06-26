@@ -40,11 +40,11 @@ func init() {
 }
 
 type config struct {
+	MTLSDisabled      bool
 	PrometheusMetrics bool
 	Stackdriver       bool
 	GCPProjectID      string
 	StackdriverLabels string
-	MTLSDisabled      bool
 }
 
 func parseEnvFlags() config {
