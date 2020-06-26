@@ -189,6 +189,7 @@ steps:
     - lint
     - ensure-build-sdk-image-base
     - htmltest-restore-cache
+    - build-sdks
   dir: "build"
   args: [ "-j", "5", "--output-sync=target", "test" ]
 
