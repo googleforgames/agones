@@ -32,7 +32,6 @@ gcloud-test-cluster: $(ensure-build-image)
 		--properties cluster.zone:$(GCP_CLUSTER_ZONE),cluster.name:$(GCP_CLUSTER_NAME),cluster.nodePool.initialNodeCount:$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT),cluster.nodePool.machineType:$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\
 		--template=$(mount_path)/build/gke-test-cluster/cluster.yml.jinja
 	$(MAKE) gcloud-auth-cluster
-	$(MAKE) setup-test-cluster
 
 clean-gcloud-test-cluster: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
@@ -46,18 +45,16 @@ gcloud-e2e-test-cluster: $(ensure-build-image)
 		deployment-manager deployments create $(TEST_CLUSTER_NAME) \
 		--config=$(mount_path)/build/gke-test-cluster/cluster-e2e.yml
 	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME) GCP_CLUSTER_ZONE=us-west1-c
+	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+	$(DOCKER_RUN) helm repo update
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		kubectl apply -f $(mount_path)/build/helm.yaml
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm init --service-account helm --wait
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm install --wait --set Replicas=1,uiService.type=ClusterIP --name consul stable/consul
+		helm install consul stable/consul --wait --set Replicas=1,uiService.type=ClusterIP
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
 clean-gcloud-e2e-test-cluster: TEST_CLUSTER_NAME ?= e2e-test-cluster
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 	-docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm delete --purge consul && kubectl delete pvc -l component=consul-consul
+		helm uninstall consul && kubectl delete pvc -l component=consul-consul
 	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME)
 
 # Creates a gcloud cluster for prow

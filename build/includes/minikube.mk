@@ -34,7 +34,6 @@ minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
 			echo "Waiting for cluster to start..."; \
 			sleep 1; \
 		done
-	$(MAKE) setup-test-cluster DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS)"
 	$(MAKE) minikube-post-start
 
 # switch to the agones cluster
