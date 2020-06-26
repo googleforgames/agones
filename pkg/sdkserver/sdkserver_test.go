@@ -665,7 +665,7 @@ func TestSDKServerWatchGameServer(t *testing.T) {
 	assert.Equal(t, stream, sc.connectedStreams[1])
 }
 
-func TestSDKServerWatchGameServer_FeatureGameServerCaching(t *testing.T) {
+func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	t.Parallel()
 
 	agruntime.FeatureTestMutex.Lock()
@@ -686,9 +686,9 @@ func TestSDKServerWatchGameServer_FeatureGameServerCaching(t *testing.T) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
 	})
 
-	err := agruntime.ParseFeatures(string(agruntime.FeatureGameServerCaching) + "=true")
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
 	if !assert.NoError(t, err) {
-		t.Fatal("Can not parse FeatureGameServerCaching")
+		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
 	}
 
 	sc, err := defaultSidecar(m)

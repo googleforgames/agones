@@ -510,15 +510,17 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
 	s.streamMutex.Lock()
 
-	if runtime.FeatureEnabled(runtime.FeatureGameServerCaching) {
+	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
 		gs, err := s.getCachedGameServer()
 		if err != nil {
 			s.logger.WithError(errors.WithStack(err)).Error("error getting cached game server")
-		} else {
-			err := stream.Send(gs)
-			if err != nil {
-				s.logger.WithError(errors.WithStack(err)).Error("error sending cached game server")
-			}
+			return err
+		}
+
+		err = stream.Send(gs)
+		if err != nil {
+			s.logger.WithError(errors.WithStack(err)).Error("error sending cached game server")
+			return err
 		}
 	}
 
