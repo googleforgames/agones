@@ -40,8 +40,9 @@ const (
 	// FeatureSDKWatchSendOnExecute is a feature flag to enable/disable immediate game server return after SDK.WatchGameServer is called
 	FeatureSDKWatchSendOnExecute Feature = "SDKWatchSendOnExecute"
 
-	// FeatureFixRollingUpdateRest is a feature flag to enable/disable rolling update fixes
-	FeatureFixRollingUpdateRest Feature = "FixRollingUpdate"
+	// FeatureFixRollingUpdateScaleDown is a feature flag to enable/disable rolling update fix of scale down, when ReadyReplicas
+	// count is taken into account
+	FeatureFixRollingUpdateScaleDown Feature = "FixRollingUpdateScaleDown"
 )
 
 var (
@@ -49,11 +50,10 @@ var (
 	// operational in Agones, and what their default configuration is.
 	// alpha features are disabled
 	featureDefaults = map[Feature]bool{
-		FeatureExample:                 true,
-		FeaturePlayerTracking:          false,
-		FeatureContainerPortAllocation: true,
-		FeatureSDKWatchSendOnExecute:   false,
-		FeatureFixRollingUpdateRest:    false,
+		FeatureExample:                   true,
+		FeaturePlayerTracking:            false,
+		FeatureContainerPortAllocation:   true,
+		FeatureFixRollingUpdateScaleDown: false,
 	}
 
 	// featureGates is the storage of what features are enabled

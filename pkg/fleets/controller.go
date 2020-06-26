@@ -493,7 +493,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 	totalScaleDownCount := readyReplicasCount - minAvailable
 
 	for _, gsSet := range rest {
-		if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+		if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
 			if totalScaledDown >= totalScaleDownCount {
 				// No further scaling required.
 				break
@@ -515,7 +515,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 		newReplicasCount := fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
 		if gsSet.Status.ShutdownReplicas == 0 {
 			var scaleDownCount int32
-			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
 				// Wait for new GameServers to become Ready before scaling down Inactive GameServerset
 				// Scale down.
 				scaleDownCount := int32(integer.IntMin(int(gsSet.Spec.Replicas), int(totalScaleDownCount-totalScaledDown)))
@@ -542,7 +542,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
 				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 
-			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateRest) {
+			if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
 				totalScaledDown += scaleDownCount
 			} else {
 				// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us

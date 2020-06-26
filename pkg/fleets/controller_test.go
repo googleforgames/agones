@@ -196,6 +196,8 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
+		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
@@ -1000,13 +1002,13 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
-func TestFeatureFixRollingUpdateRest(t *testing.T) {
+func TestFeatureFixRollingUpdateScaleDown(t *testing.T) {
 	t.Parallel()
 
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFixRollingUpdateRest)+"=true"))
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFixRollingUpdateScaleDown)+"=true"))
 
 	type expected struct {
 		inactiveSpecReplicas int32
