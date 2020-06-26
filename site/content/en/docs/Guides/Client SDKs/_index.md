@@ -164,7 +164,7 @@ For language specific documentation, have a look at the respective source (linke
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
 {{% feature publishVersion="1.7.0" %}}
-You can use `SDKWatchSendOnExecute` feature passed as a feature gate if you want a `GameServer` to be returned right after `SDK.WatchGameServer` is called.
+You can use `SDKWatchSendOnExecute` feature passed as a [feature gate] ({{< ref "/docs/Guides/feature-stages.md#feature-gates" >}}) if you want a `GameServer` to be returned right after `SDK.WatchGameServer` is called.
 {{% /feature %}}
 
 ### Metadata Management
