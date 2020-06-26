@@ -228,11 +228,11 @@ steps:
     - GO111MODULE=on
 
 #
-# Run the e2e tests with FeatureGates
+# Run the e2e tests with FeatureGates inverted compared to Stable
 #
 
 - name: 'e2e-runner'
-  args: ['PlayerTracking=true&ContainerPortAllocation=true', 'e2e-test-cluster']
+  args: ['PlayerTracking=true&ContainerPortAllocation=false', 'e2e-test-cluster']
   id: e2e-feature-gates
   waitFor:
     - push-images
