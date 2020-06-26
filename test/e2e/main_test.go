@@ -23,6 +23,8 @@ import (
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 var framework *e2eframework.Framework
@@ -46,6 +48,11 @@ func TestMain(m *testing.M) {
 
 	if framework, err = e2eframework.NewFromFlags(); err != nil {
 		log.WithError(err).Error("failed to setup framework")
+		os.Exit(1)
+	}
+
+	if err = cleanupNamespaces(framework); err != nil {
+		log.WithError(err).Error("failed to cleanup e2e namespaces")
 		os.Exit(1)
 	}
 
@@ -83,4 +90,22 @@ func TestMain(m *testing.M) {
 	}
 
 	exitCode = m.Run()
+}
+
+func cleanupNamespaces(framework *e2eframework.Framework) error {
+	// list all e2e namespaces
+	opts := metav1.ListOptions{LabelSelector: labels.Set(e2eframework.NamespaceLabel).String()}
+	list, err := framework.KubeClient.CoreV1().Namespaces().List(opts)
+	if err != nil {
+		return err
+	}
+
+	// loop through them, and delete them
+	for _, ns := range list.Items {
+		if err := framework.DeleteNamespace(ns.ObjectMeta.Name); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
