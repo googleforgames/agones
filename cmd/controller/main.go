@@ -390,7 +390,6 @@ type config struct {
 	LogDir                string
 	LogLevel              string
 	LogSizeLimitMB        int
-	MTLSDisabled          bool
 }
 
 // validate ensures the ctlConfig data is valid.
