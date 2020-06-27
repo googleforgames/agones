@@ -58,6 +58,10 @@ const (
 	AutoCleanupLabelValue = "true"
 )
 
+// NamespaceLabel is the label that is put on all namespaces that are created
+// for e2e tests.
+var NamespaceLabel = map[string]string{"owner": "e2e-test"}
+
 // Framework is a testing framework
 type Framework struct {
 	KubeClient      kubernetes.Interface
@@ -500,7 +504,7 @@ func (f *Framework) CreateNamespace(namespace string) error {
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   namespace,
-			Labels: map[string]string{"owner": "e2e-test"},
+			Labels: NamespaceLabel,
 		},
 	}
 
