@@ -76,7 +76,6 @@ const (
 	logLevelFlag                 = "log-level"
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
-	mTLSDisabledFlag             = "disable-mtls"
 	defaultResync                = 30 * time.Second
 )
 
@@ -210,7 +209,7 @@ func main() {
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory, ctlConf.MTLSDisabled)
+	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
@@ -241,7 +240,6 @@ func parseEnvFlags() config {
 	}
 
 	base := filepath.Dir(exec)
-	viper.SetDefault(mTLSDisabledFlag, false)
 	viper.SetDefault(sidecarImageFlag, "gcr.io/agones-images/agones-sdk:"+pkg.Version)
 	viper.SetDefault(sidecarCPURequestFlag, "0")
 	viper.SetDefault(sidecarCPULimitFlag, "0")
@@ -263,7 +261,6 @@ func parseEnvFlags() config {
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
 
-	pflag.Bool(mTLSDisabledFlag, viper.GetBool(mTLSDisabledFlag), "Flag to enable/disable mTLS for the allocator.")
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
 	pflag.String(sidecarCPURequestFlag, viper.GetString(sidecarCPURequestFlag), "Flag to overwrite the GameServer sidecar container's cpu request. Can also use SIDECAR_CPU_REQUEST env variable")
@@ -290,7 +287,6 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	runtime.Must(viper.BindEnv(mTLSDisabledFlag))
 	runtime.Must(viper.BindEnv(sidecarImageFlag))
 	runtime.Must(viper.BindEnv(sidecarCPULimitFlag))
 	runtime.Must(viper.BindEnv(sidecarCPURequestFlag))
@@ -361,7 +357,6 @@ func parseEnvFlags() config {
 		LogLevel:              viper.GetString(logLevelFlag),
 		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
 		StackdriverLabels:     viper.GetString(stackdriverLabels),
-		MTLSDisabled:          viper.GetBool(mTLSDisabledFlag),
 	}
 }
 
@@ -378,7 +373,6 @@ type config struct {
 	AlwaysPullSidecar     bool
 	PrometheusMetrics     bool
 	Stackdriver           bool
-	MTLSDisabled          bool
 	StackdriverLabels     string
 	KeyFile               string
 	CertFile              string

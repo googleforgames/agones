@@ -177,7 +177,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 		kubeInformerFactory.Core().V1().Secrets(),
 		kubeClient,
-		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health), mTLSDisabled)
+		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
 
 	stop := signals.NewStopChannel()
 	h := serviceHandler{

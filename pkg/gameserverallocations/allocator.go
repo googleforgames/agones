@@ -107,7 +107,6 @@ type Allocator struct {
 	readyGameServerCache     *ReadyGameServerCache
 	topNGameServerCount      int
 	remoteAllocationCallback func(string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
-	mTLSDisabled             bool
 }
 
 // request is an async request for allocation
@@ -125,7 +124,7 @@ type response struct {
 
 // NewAllocator creates an instance off Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
-	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, mTLSDisabled bool) *Allocator {
+	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache) *Allocator {
 	ah := &Allocator{
 		pendingRequests:        make(chan request, maxBatchQueue),
 		allocationPolicyLister: policyInformer.Lister(),
@@ -144,7 +143,6 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			grpcClient := pb.NewAllocationServiceClient(conn)
 			return grpcClient.Allocate(context.Background(), request)
 		},
-		mTLSDisabled: mTLSDisabled,
 	}
 
 	ah.baseLogger = runtime.NewLoggerWithType(ah)
@@ -367,7 +365,6 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func (c *Allocator) createRemoteClusterDialOption(namespace string, connectionInfo *multiclusterv1.ClusterConnectionInfo) (grpc.DialOption, error) {
 	// TODO: disableMTLS works for a single cluster; still need to address how the flag interacts with multi-cluster authentication.
-
 	clientCert, clientKey, caCert, err := c.getClientCertificates(namespace, connectionInfo.SecretName)
 	if err != nil {
 		return nil, err

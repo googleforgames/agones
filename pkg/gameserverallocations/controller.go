@@ -58,7 +58,6 @@ func NewController(apiServer *apiserver.APIServer,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
-	mTLSDisabled bool,
 ) *Controller {
 	c := &Controller{
 		api: apiServer,
@@ -66,8 +65,7 @@ func NewController(apiServer *apiserver.APIServer,
 			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 			kubeInformerFactory.Core().V1().Secrets(),
 			kubeClient,
-			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health),
-			mTLSDisabled),
+			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health)),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 

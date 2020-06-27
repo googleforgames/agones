@@ -1392,8 +1392,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: DISABLE_MTLS
-          value: "false"
         - name: POD_NAMESPACE
           valueFrom:
             fieldRef:
