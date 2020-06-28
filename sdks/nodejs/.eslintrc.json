@@ -10,6 +10,7 @@
     },
     "rules": {
         "lines-between-class-members": "error",
+        "quotes": ["error", "single"],
         "semi": "error",
         "space-before-blocks": "error"
     }
