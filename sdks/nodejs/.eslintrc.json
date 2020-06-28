@@ -9,6 +9,7 @@
         "ecmaVersion": 2018
     },
     "rules": {
+        "indent": ["error", "tab"],
         "lines-between-class-members": "error",
         "quotes": ["error", "single"],
         "semi": "error",

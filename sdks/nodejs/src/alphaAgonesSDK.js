@@ -24,7 +24,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		super();
 
 		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
-        this.alphaClient = new services.agones.dev.sdk.alpha.SDK(`localhost:${this.port}`, grpc.credentials.createInsecure());
+		this.alphaClient = new services.agones.dev.sdk.alpha.SDK(`localhost:${this.port}`, grpc.credentials.createInsecure());
 	}
 
 	async playerConnect(playerID) {
