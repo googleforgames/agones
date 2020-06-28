@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@google-cloud/agones-sdk": "file:../../sdks/nodejs"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}
