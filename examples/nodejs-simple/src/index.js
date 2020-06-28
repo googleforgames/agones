@@ -91,6 +91,7 @@ const connect = async (timeout) => {
 		console.error(error);
 		clearInterval(healthInterval);
 		clearInterval(lifetimeInterval);
+		process.exit(0);
 	}
 };
 
