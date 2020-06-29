@@ -665,6 +665,69 @@ func TestSDKServerWatchGameServer(t *testing.T) {
 	assert.Equal(t, stream, sc.connectedStreams[1])
 }
 
+func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
+	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
+
+	m := agtesting.NewMocks()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
+	})
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
+	sc, err := defaultSidecar(m)
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not create sidecar")
+	}
+	assert.Empty(t, sc.connectedStreams)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
+
+	stream := newGameServerMockStream()
+	asyncWatchGameServer(t, sc, stream)
+
+	assert.Nil(t, waitConnectedStreamCount(sc, 1))
+	assert.Equal(t, stream, sc.connectedStreams[0])
+
+	totalSendCalls := 0
+	for i := 0; i < 2; i++ {
+		select {
+		case _, ok := <-stream.msgs:
+			if ok {
+				totalSendCalls++
+			} else {
+				assert.Fail(t, "Channel is closed!")
+			}
+		default:
+			t.Log("No gameserver in the stream, moving on.")
+		}
+	}
+
+	// if SDKWatchSendOnExecute feature is turned on, there are two stream.Send() calls should happen:
+	// one in sendGameServerUpdate, another one in WatchGameServer.
+	assert.Equal(t, 2, totalSendCalls)
+}
+
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
 	m := agtesting.NewMocks()

@@ -42,7 +42,7 @@ $ make run
 
 The example can also be run via docker:
 ```
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5
 ```
 Or directly via npm:
 ```
@@ -51,7 +51,7 @@ $ npm start
 
 You will see the output like the following:
 ```
-docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4
+docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5
 
 > @ start /home/server/examples/nodejs-simple
 > node src/index.js
@@ -63,7 +63,7 @@ Connecting to the SDK server...
 To see help, pass `--help` as the argument (use the preferred command below, all are equivalent):
 ```
 $ make args="--help" run
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --help
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --help
 $ npm start -- --help
 ```
 
@@ -71,14 +71,14 @@ You can optionally specify how long the server will stay up once the basic tests
 To do this pass arguments through, e.g. to increase the shutdown duration to 120 seconds:
 ```
 $ make args="--timeout=120" run
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --timeout=120
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --timeout=120
 $ npm start -- --timeout=120
 ```
 
 To make run indefinitely use the special timeout value of 0:
 ```
 $ make args="--timeout=0" run
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --timeout=0
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --timeout=0
 $ npm start -- --timeout=0
 ```
 
