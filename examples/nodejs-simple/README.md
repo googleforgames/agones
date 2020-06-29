@@ -90,6 +90,6 @@ $ cd ../../build; make run-sdk-conformance-local TIMEOUT=120 FEATURE_GATES="Play
 Then enable the alpha suite:
 ```
 $ make args="--alpha" run
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.4 --alpha
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --alpha
 $ npm start -- --alpha
 ```
