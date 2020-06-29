@@ -455,7 +455,7 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	// make sure we don't end up with more than the configured max surge
 	maxSurge := surge + fleet.Spec.Replicas
 	replicas = fleet.UpperBoundReplicas(replicas + surge)
-	total := agonesv1.SumStatusReplicas(rest) + replicas
+	total := agonesv1.SumSpecReplicas(rest) + replicas
 	if total > maxSurge {
 		replicas = fleet.LowerBoundReplicas(replicas - (total - maxSurge))
 	}
@@ -479,7 +479,17 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 	allGSS := append(rest, active)
 	readyReplicasCount := getReadyReplicaCountForGameServerSets(allGSS)
 
-	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
+	// Look at Kubernetes Deployment util ResolveFenceposts() function
+	var r int
+	var err error
+	if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
+		r, err = intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), false)
+		if r == 0 {
+			r = 1
+		}
+	} else {
+		r, err = intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
+	}
 
 	if err != nil {
 		return errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)

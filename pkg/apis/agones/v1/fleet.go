@@ -237,3 +237,14 @@ func SumStatusReplicas(list []*GameServerSet) int32 {
 
 	return total
 }
+
+// SumSpecReplicas returns the total number of
+// Spec.Replicas in the list of GameServerSets
+func SumSpecReplicas(list []*GameServerSet) int32 {
+	total := int32(0)
+	for _, gsSet := range list {
+		total += gsSet.Spec.Replicas
+	}
+
+	return total
+}

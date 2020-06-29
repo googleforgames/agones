@@ -294,7 +294,11 @@ func TestFleetRollingUpdate(t *testing.T) {
 					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, 100, true)
 					assert.Nil(t, err)
 					target := float64(targetScale)
-					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
+					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Floor(target*float64(maxUnavailable)/100.)) {
+						for i, v := range list.Items {
+							fmt.Println("List of Gameservers ", i, v)
+						}
+						fmt.Println("compare ", len(list.Items), "  - ", int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)))
 						err = errors.New("New replicas should be less than target + maxSurge + maxUnavailable")
 					}
 					if err != nil {
