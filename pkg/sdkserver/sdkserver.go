@@ -100,7 +100,6 @@ type SDKServer struct {
 	gsReserveDuration  *time.Duration
 	gsPlayerCapacity   int64
 	gsConnectedPlayers []string
-	cachedGameServer   *sdk.GameServer
 }
 
 // NewSDKServer creates a SDKServer that sets up an
@@ -491,17 +490,7 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 	if err != nil {
 		return nil, err
 	}
-
-	s.cachedGameServer = convert(gs)
-	return s.cachedGameServer, nil
-}
-
-func (s *SDKServer) getCachedGameServer() (*sdk.GameServer, error) {
-	if s.cachedGameServer != nil {
-		return s.cachedGameServer, nil
-	}
-
-	return s.GetGameServer(context.Background(), &sdk.Empty{})
+	return convert(gs), nil
 }
 
 // WatchGameServer sends events through the stream when changes occur to the
@@ -511,15 +500,13 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 	s.streamMutex.Lock()
 
 	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
-		gs, err := s.getCachedGameServer()
+		gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
 		if err != nil {
-			s.logger.WithError(errors.WithStack(err)).Error("error getting cached game server")
 			return err
 		}
 
 		err = stream.Send(gs)
 		if err != nil {
-			s.logger.WithError(errors.WithStack(err)).Error("error sending cached game server")
 			return err
 		}
 	}

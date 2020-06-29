@@ -705,12 +705,27 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
+
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 	assert.Equal(t, stream, sc.connectedStreams[0])
 
-	assert.Equal(t, fixture.ObjectMeta.Name, sc.cachedGameServer.ObjectMeta.Name)
-	assert.Equal(t, fixture.ObjectMeta.Namespace, sc.cachedGameServer.ObjectMeta.Namespace)
-	assert.Equal(t, string(fixture.Status.State), sc.cachedGameServer.Status.State)
+	totalSendCalls := 0
+	for i := 0; i < 2; i++ {
+		select {
+		case _, ok := <-stream.msgs:
+			if ok {
+				totalSendCalls++
+			} else {
+				assert.Fail(t, "Channel is closed!")
+			}
+		default:
+			t.Log("No gameserver in the stream, moving on.")
+		}
+	}
+
+	// if SDKWatchSendOnExecute feature is turned on, there are two stream.Send() calls should happen:
+	// one in sendGameServerUpdate, another one in WatchGameServer.
+	assert.Equal(t, 2, totalSendCalls)
 }
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
