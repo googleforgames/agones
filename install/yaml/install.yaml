@@ -1574,6 +1574,8 @@ spec:
           value: ""
         - name: STACKDRIVER_LABELS
           value: ""
+        - name: DISABLE_MTLS
+          value: "false"
         - name: POD_NAME
           valueFrom:
             fieldRef:
