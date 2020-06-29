@@ -13,7 +13,6 @@
 // limitations under the License.
 
 const AgonesSDK = require('./agonesSDK');
-const AlphaAgonesSDK = require('./alphaAgonesSDK');
+AgonesSDK.alpha = require('./alphaAgonesSDK');
 
-module.exports.sdk = AgonesSDK;
-module.exports.alphaSDK = AlphaAgonesSDK;
+module.exports = AgonesSDK;
