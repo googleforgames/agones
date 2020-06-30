@@ -718,7 +718,7 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 			} else {
 				assert.Fail(t, "Channel is closed!")
 			}
-		default:
+		case <-time.After(30 * time.Second):
 			t.Log("No gameserver in the stream, moving on.")
 		}
 	}
