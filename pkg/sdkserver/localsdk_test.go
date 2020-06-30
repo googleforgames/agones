@@ -64,9 +64,14 @@ func TestLocal(t *testing.T) {
 	gs, err := l.GetGameServer(ctx, e)
 	assert.Nil(t, err)
 
-	assert.Equal(t, defaultGs().GetObjectMeta(), gs.GetObjectMeta())
-	assert.Equal(t, defaultGs().GetSpec(), gs.GetSpec())
-	gsStatus := defaultGs().GetStatus()
+	defaultGameServer := defaultGs()
+	// do this to adjust for any time differences.
+	// we only care about all the other values to be compared.
+	defaultGameServer.ObjectMeta.CreationTimestamp = gs.GetObjectMeta().CreationTimestamp
+
+	assert.Equal(t, defaultGameServer.GetObjectMeta(), gs.GetObjectMeta())
+	assert.Equal(t, defaultGameServer.GetSpec(), gs.GetSpec())
+	gsStatus := defaultGameServer.GetStatus()
 	gsStatus.State = "Shutdown"
 	assert.Equal(t, gsStatus, gs.GetStatus())
 }
