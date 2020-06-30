@@ -53,6 +53,7 @@ var (
 		FeatureExample:                   true,
 		FeaturePlayerTracking:            false,
 		FeatureContainerPortAllocation:   true,
+		FeatureSDKWatchSendOnExecute:     false,
 		FeatureFixRollingUpdateScaleDown: false,
 	}
 

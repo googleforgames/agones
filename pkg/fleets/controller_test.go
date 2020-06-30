@@ -983,11 +983,13 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	active := f.GameServerSet()
 	active.ObjectMeta.Name = "active"
 	active.Spec.Replicas = 75
+	active.Status.ReadyReplicas = 75
 	active.Status.Replicas = 75
 
 	inactive := f.GameServerSet()
 	inactive.ObjectMeta.Name = "inactive"
 	inactive.Spec.Replicas = 10
+	inactive.Status.ReadyReplicas = 10
 	inactive.Status.Replicas = 10
 	inactive.Status.AllocatedReplicas = 5
 
@@ -1060,7 +1062,7 @@ func TestFeatureFixRollingUpdateScaleDown(t *testing.T) {
 			allocatedReplicas:           0,
 			expected: expected{
 				updated:              true,
-				inactiveSpecReplicas: 8,
+				inactiveSpecReplicas: 9,
 				replicas:             75,
 			},
 		},
@@ -1117,6 +1119,17 @@ func TestFeatureFixRollingUpdateScaleDown(t *testing.T) {
 func TestControllerRollingUpdateDeployment(t *testing.T) {
 	t.Parallel()
 
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	inactiveReplicas1 := int32(3)
+	inactiveReplicas2 := int32(65)
+
+	// TODO(alekser) Fix the scaling logic for a new feature or prove this change useful
+	if utilruntime.FeatureEnabled(utilruntime.FeatureFixRollingUpdateScaleDown) {
+		inactiveReplicas1 = 4
+		inactiveReplicas2 = 45
+	}
 	type expected struct {
 		inactiveSpecReplicas int32
 		replicas             int32
@@ -1128,6 +1141,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 		fleetSpecReplicas                int32
 		activeSpecReplicas               int32
 		activeStatusReplicas             int32
+		readyReplicas                    int32
 		inactiveSpecReplicas             int32
 		inactiveStatusReplicas           int32
 		inactiveStatusAllocationReplicas int32
@@ -1190,7 +1204,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveSpecReplicas:   95,
 			inactiveStatusReplicas: 95,
 			expected: expected{
-				inactiveSpecReplicas: 65,
+				inactiveSpecReplicas: inactiveReplicas2,
 				replicas:             30,
 				updated:              true,
 			},
@@ -1216,7 +1230,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusAllocationReplicas: 2,
 
 			expected: expected{
-				inactiveSpecReplicas: 3,
+				inactiveSpecReplicas: inactiveReplicas1,
 				replicas:             2,
 				updated:              true,
 			},
@@ -1265,9 +1279,11 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			active.ObjectMeta.Name = "active"
 			active.Spec.Replicas = v.activeSpecReplicas
 			active.Status.Replicas = v.activeStatusReplicas
+			active.Status.ReadyReplicas = v.activeStatusReplicas
 
 			inactive := f.GameServerSet()
 			inactive.ObjectMeta.Name = "inactive"
+			inactive.Status.ReadyReplicas = v.inactiveStatusReplicas
 			inactive.Spec.Replicas = v.inactiveSpecReplicas
 			inactive.Status.Replicas = v.inactiveStatusReplicas
 			inactive.Status.AllocatedReplicas = v.inactiveStatusAllocationReplicas
