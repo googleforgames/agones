@@ -232,7 +232,7 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['PlayerTracking=true&ContainerPortAllocation=false', 'e2e-test-cluster']
+  args: ['PlayerTracking=true&ContainerPortAllocation=false&SDKWatchSendOnExecute=true', 'e2e-test-cluster']
   id: e2e-feature-gates
   waitFor:
     - push-images

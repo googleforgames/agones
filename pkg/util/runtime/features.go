@@ -36,6 +36,9 @@ const (
 
 	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
 	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
+
+	// FeatureSDKWatchSendOnExecute is a feature flag to enable/disable immediate game server return after SDK.WatchGameServer is called
+	FeatureSDKWatchSendOnExecute Feature = "SDKWatchSendOnExecute"
 )
 
 var (
@@ -46,6 +49,7 @@ var (
 		FeatureExample:                 true,
 		FeaturePlayerTracking:          false,
 		FeatureContainerPortAllocation: true,
+		FeatureSDKWatchSendOnExecute:   false,
 	}
 
 	// featureGates is the storage of what features are enabled
