@@ -1,7 +1,10 @@
 {{ define "main" }}
 <div class="td-content">
 	<h1>{{ .Title }}</h1>
-	{{ with .Params.description }}<div class="lead">{{ . | markdownify }}</div>{{ end }}
+        {{ with .Params.description }}<div class="lead">{{ . | markdownify }}</div>{{ end }}
+	{{ if (and (not .Params.hide_readingtime) (.Site.Params.ui.readingtime.enable)) }}
+            {{ partial "reading-time.html" . }}
+        {{ end }}
 	{{ .Content }}
         {{ partial "section-index.html" . }}
 	{{ if (and (not .Params.hide_feedback) (.Site.Params.ui.feedback.enable) (.Site.GoogleAnalytics)) }}
