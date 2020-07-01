@@ -236,7 +236,7 @@ push-release-chart: $(ensure-build-image)
 test: $(ensure-build-image) test-go test-sdks test-install-yaml site-test
 
 # Run go tests
-test-go:
+test-go: $(ensure-build-image)
 	$(GO_TEST) $(agones_package)/pkg/... \
 	    $(agones_package)/sdks/... $(agones_package)/cmd/...
 
