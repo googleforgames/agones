@@ -648,6 +648,14 @@ func TestSDKServerGetGameServer(t *testing.T) {
 
 func TestSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
@@ -745,6 +753,14 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
@@ -774,8 +790,15 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
-	m := agtesting.NewMocks()
 
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if !assert.NoError(t, err) {
+		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
+	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
