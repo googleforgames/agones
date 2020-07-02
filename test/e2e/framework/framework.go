@@ -581,13 +581,13 @@ func (f *Framework) DeleteNamespace(namespace string) error {
 			}}
 			payloadBytes, _ := json.Marshal(payload)
 			if _, err := kubeCore.Pods(namespace).Patch(pod.Name, types.JSONPatchType, payloadBytes); err != nil {
-				return errors.Errorf("updating pod %s failed: %s", pod.GetName(), err)
+				return errors.Wrapf(err, "updating pod %s failed", pod.GetName())
 			}
 		}
 	}
 
 	if err := kubeCore.Namespaces().Delete(namespace, &metav1.DeleteOptions{}); err != nil {
-		return errors.Errorf("deleting namespace %s failed: %s", namespace, err)
+		return errors.Wrapf(err, "deleting namespace %s failed", namespace)
 	}
 	logrus.Infof("Namespace %s is deleted", namespace)
 	return nil
