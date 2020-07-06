@@ -52,7 +52,7 @@ $td-sidebar-border-color: $border-color !default;
 // Background colors for the sections on home page etc. It is a paint by number system, starting at 0, where the number is taken from the shortcode's ordinal
 // if not provided by the user.
 // These colors are all part of the theme palette, but the mix is fairly random to create variation. This can be overridden by the project if needed.
-$td-box-colors: $dark, $primary, $secondary, $info, $primary-light, $gray-600, $success, $warning, $dark, $danger, $primary, $secondary, $primary-light, $info;
+$td-box-colors: $dark, $primary, $secondary, $info, $primary-light, $gray-600, $success, $warning, $dark, $danger, $primary, $secondary, $primary-light, $info !default;
 
 $link-color: darken($blue, 15%) !default;
 $link-decoration: none !default;
@@ -110,8 +110,8 @@ $display4-size: 1.75rem !default;
 // Space
 
 $spacer: 1rem;
-$td-block-space-top-base: 4 * $spacer;
-$td-block-space-bottom-base: 4 * $spacer;
+$td-block-space-top-base: 4 * $spacer !default;
+$td-block-space-bottom-base: 4 * $spacer !default;
 
 // Pagination
 
