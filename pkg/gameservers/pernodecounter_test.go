@@ -177,7 +177,7 @@ func TestPerNodeCounterRun(t *testing.T) {
 		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, *gs3, *gs4}}, nil
 	})
 
-	stop, cancel := agtesting.StartInformers(m)
+	stop, cancel := agtesting.StartInformers(m, pnc.gameServerSynced)
 	defer cancel()
 
 	err := pnc.Run(0, stop)

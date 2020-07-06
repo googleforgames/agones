@@ -2,7 +2,6 @@
 <html lang="{{ .Site.Language.Lang }}" class="no-js">
   <head>
     {{ partial "head.html" . }}
-    <title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ with .Title }}{{ . }} | {{ end }}{{ .Site.Title }}{{ end }}</title>
   </head>
   <body class="td-{{ .Kind }} td-blog">
     <header>

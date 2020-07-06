@@ -21,8 +21,9 @@ import (
 	"time"
 
 	e2eframework "agones.dev/agones/test/e2e/framework"
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -30,7 +31,7 @@ import (
 var framework *e2eframework.Framework
 
 func TestMain(m *testing.M) {
-	logrus.SetFormatter(&logrus.TextFormatter{
+	log.SetFormatter(&log.TextFormatter{
 		EnvironmentOverrideColors: true,
 		FullTimestamp:             true,
 		TimestampFormat:           "2006-01-02 15:04:05.000",
@@ -103,7 +104,14 @@ func cleanupNamespaces(framework *e2eframework.Framework) error {
 	// loop through them, and delete them
 	for _, ns := range list.Items {
 		if err := framework.DeleteNamespace(ns.ObjectMeta.Name); err != nil {
-			return err
+			cause := errors.Cause(err)
+			if k8serrors.IsConflict(cause) {
+				log.WithError(cause).Warn("namespace already being deleted")
+				continue
+			}
+			// here just in case we need to catch other errors
+			log.WithField("reason", k8serrors.ReasonForError(cause)).Info("cause for namespace deletion error")
+			return cause
 		}
 	}
 

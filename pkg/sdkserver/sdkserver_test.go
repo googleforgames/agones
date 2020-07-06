@@ -682,9 +682,8 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	}
 
 	m := agtesting.NewMocks()
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
-	})
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
 	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
 	if !assert.NoError(t, err) {
@@ -700,6 +699,8 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	stop := make(chan struct{})
 	defer close(stop)
 	sc.informerFactory.Start(stop)
+
+	fakeWatch.Add(fixture.DeepCopy())
 	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
 	sc.gsWaitForSync.Done()
 
@@ -709,17 +710,31 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 	assert.Equal(t, stream, sc.connectedStreams[0])
 
+	// modify for 2nd event in watch stream
+	fixture.Status.State = agonesv1.GameServerStateAllocated
+	fakeWatch.Modify(fixture.DeepCopy())
+
 	totalSendCalls := 0
-	for i := 0; i < 2; i++ {
+	running := true
+	for running {
 		select {
-		case _, ok := <-stream.msgs:
-			if ok {
-				totalSendCalls++
-			} else {
-				assert.Fail(t, "Channel is closed!")
+		case gs := <-stream.msgs:
+			assert.Equal(t, fixture.ObjectMeta.Name, gs.ObjectMeta.Name)
+			totalSendCalls++
+			switch totalSendCalls {
+			case 1:
+				assert.Equal(t, string(agonesv1.GameServerStateReady), gs.Status.State)
+			case 2:
+				assert.Equal(t, string(agonesv1.GameServerStateAllocated), gs.Status.State)
 			}
-		default:
-			t.Log("No gameserver in the stream, moving on.")
+			// we shouldn't get more than 2, but let's put an upper bound on this
+			// just in case we suddenly get way more than we expect.
+			if totalSendCalls > 10 {
+				assert.FailNow(t, "We should have only received two events. Got over 10 instead.")
+			}
+		case <-time.After(5 * time.Second):
+			// we can't `break` out of the loop, hence we need `running`.
+			running = false
 		}
 	}
 
