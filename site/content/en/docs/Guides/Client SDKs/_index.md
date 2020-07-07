@@ -15,6 +15,7 @@ The current supported SDKs are:
 - [Unreal Engine]({{< relref "unreal.md" >}})
 - [Unity]({{< relref "unity.md" >}})
 - [C++]({{< relref "cpp.md" >}})
+- [C#]({{< relref "csharp.md" >}})
 - [Node.js]({{< relref "nodejs.md" >}})
 - [Go]({{< relref "go.md" >}})
 - [Rust]({{< relref "rust.md" >}})
