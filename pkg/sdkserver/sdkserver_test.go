@@ -648,6 +648,14 @@ func TestSDKServerGetGameServer(t *testing.T) {
 
 func TestSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if err != nil {
+		assert.FailNow(t, "Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
@@ -686,8 +694,8 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
 	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
-	if !assert.NoError(t, err) {
-		t.Fatal("Can not parse FeatureSDKWatchSendOnExecute")
+	if err != nil {
+		assert.FailNow(t, "Can not parse FeatureSDKWatchSendOnExecute")
 	}
 
 	sc, err := defaultSidecar(m)
@@ -745,6 +753,14 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
+
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if err != nil {
+		assert.FailNow(t, "Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
 	assert.Nil(t, err)
@@ -774,8 +790,17 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
-	m := agtesting.NewMocks()
 
+	// Acquire lock in order to be sure that
+	// no other parallel test turn on FeatureSDKWatchSendOnExecute
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
+	if err != nil {
+		assert.FailNow(t, "Can not parse FeatureSDKWatchSendOnExecute")
+	}
+
+	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
@@ -1271,6 +1296,9 @@ func waitConnectedStreamCount(sc *SDKServer, count int) error {
 }
 
 func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream sdk.SDK_WatchGameServerServer) {
+	// Note that new FeatureSDKWatchSendOnExecute feature gate
+	// uses getGameServer() function and therefore WatchGameServer()
+	// would block if gsWaitForSync is not Done().
 	go func() {
 		err := sc.WatchGameServer(&sdk.Empty{}, stream)
 		assert.Nil(t, err)
