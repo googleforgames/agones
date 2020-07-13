@@ -76,7 +76,7 @@ func destroy(t *testing.T, options *terraform.Options, tfPass string) {
 }
 
 func TestMain(m *testing.M) {
-	pass := "../agones.dev/agones/build/terraform/gke/"
+	pass := "./"
 	projectFlag := flag.String("project", "agones", "name of the proejct")
 	tfPassFlag := flag.String("tfpass", pass, "pass to terraform configs")
 	flag.Parse()

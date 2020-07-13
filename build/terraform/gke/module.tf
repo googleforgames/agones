@@ -136,22 +136,3 @@ output "token" {
 output "cluster_ca_certificate" {
   value = module.gke_cluster.cluster_ca_certificate
 }
-
-// Additional resources for terratests
-
-// Template used in "terraform-google-modules/kubernetes-engine/google//modules/auth"
-
-data "template_file" "kubeconfig" {
-  template = file("${path.module}/templates/kubeconfig-template.yaml.tpl")
-
-  vars = {
-    context                = var.name
-    cluster_ca_certificate = base64encode(module.gke_cluster.cluster_ca_certificate)
-    endpoint               = module.gke_cluster.host
-    token                  = module.gke_cluster.token
-  }
-}
-resource "local_file" "kubeconfig" {
-  content  = data.template_file.kubeconfig.rendered
-  filename = "${path.module}/kubeconfig"
-}

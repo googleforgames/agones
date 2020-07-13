@@ -15,6 +15,7 @@
 # The GKE development cluster name
 GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 
+<<<<<<< HEAD
 # the current project
 current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
 
@@ -22,6 +23,14 @@ current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value projec
 terraform-init: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
 	cd $(mount_path)/build/terraform/$(DIRECTORY) && terraform init && gcloud auth application-default login'
+=======
+### Deploy cluster with Terraform
+terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
+terraform-init:
+terraform-init: $(ensure-build-image)
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
+	cd $(TERRAFORM_BUILD_DIR) && terraform init && gcloud auth application-default login'
+>>>>>>> Fixed file to use .go ext. Split terraform configs
 
 terraform-clean:
 	rm -r ../build/terraform/gke/.terraform || true
@@ -89,7 +98,10 @@ terraform-test: $(ensure-build-image)
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
-	$(MAKE) terraform-init
-	$(DOCKER_RUN) bash -c 'mkdir -p /go/src/terraform && \
-	cd /go/src/terraform && cp -r $(mount_path)/test/terraform /go/src/ && mv ./gke_test.go.nolint gke_test.go && go test -v -run TestTerraformGKEInstallConfig \
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
+	$(MAKE) run-terraform-test
+
+# run terratest which verifies GKE and Helm Terraform modules
+run-terraform-test:
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/test/terraform && go test -v -run TestTerraformGKEInstallConfig \
 	-timeout 1h -project $(GCP_PROJECT) $(ARGS)'
