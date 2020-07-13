@@ -629,12 +629,13 @@ Run `terraform destroy` on your cluster.
 #### `make terraform-clean`
 Remove .terraform directory with configs as well as tfstate files.
 
-#### `make terraform-test`
+#### `make terraform-test GCP_PROJECT="<YOUR_PROJECT_ID>"`
 Run Golang test which emulates and verifies successful execution of next two steps:
 ```
 make gcloud-terraform-cluster
 make gcloud-terraform-destroy-cluster
 ```
+Singleton, could not be executed in parallel with itself. As it uses the one terraform tfstate file.
 
 ### Minikube
 

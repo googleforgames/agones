@@ -32,10 +32,12 @@ terraform-init: $(ensure-build-image)
 	cd $(TERRAFORM_BUILD_DIR) && terraform init && gcloud auth application-default login'
 >>>>>>> Fixed file to use .go ext. Split terraform configs
 
+terraform-clean: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-clean:
-	rm -r ../build/terraform/gke/.terraform || true
-	rm ../build/terraform/gke/terraform.tfstate* || true
-	rm ../build/terraform/gke/kubeconfig || true
+	$(DOCKER_RUN) bash -c ' \
+	cd $(TERRAFORM_BUILD_DIR) && rm -r ./.terraform || true && \
+	rm ./terraform.tfstate* || true && \
+	rm ./kubeconfig || true'
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
@@ -100,6 +102,10 @@ ifndef GCP_PROJECT
 endif
 	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
 	$(MAKE) run-terraform-test
+	$(MAKE) terraform-test-clean
+
+terraform-test-clean: $(ensure-build-image)
+	$(MAKE) terraform-clean TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
 
 # run terratest which verifies GKE and Helm Terraform modules
 run-terraform-test:

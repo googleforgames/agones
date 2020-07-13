@@ -38,7 +38,7 @@ func TestTerraformGKEInstallConfig(t *testing.T) {
 		TerraformDir: tfPass,
 		Vars: map[string]interface{}{
 			"project":     project,
-			"name":        "terratest-cluster",
+			"name":        "terratest-cluster2",
 			"values_file": "",
 		},
 	}
@@ -52,7 +52,7 @@ func TestTerraformGKEInstallConfig(t *testing.T) {
 }
 
 func destroy(t *testing.T, options *terraform.Options, tfPass string) {
-	options.Targets = []string{"module.helm_agones.helm_release.agones"}
+	options.Targets = []string{"module.gke_helm.module.helm_agones.helm_release.agones"}
 	terraform.Destroy(t, options)
 	namespaceName := "agones-system"
 	options.Targets = []string{}

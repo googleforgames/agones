@@ -54,5 +54,5 @@ resource "local_file" "kubeconfig" {
 }
 
 output "host" {
-  value = module.gke_cluster.host
+  value = module.gke_helm.host
 }
