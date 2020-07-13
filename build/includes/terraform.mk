@@ -15,22 +15,12 @@
 # The GKE development cluster name
 GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 
-<<<<<<< HEAD
-# the current project
-current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
-
-### Init Terraform with subdirectory of DIRECTORY in ./build/terraform
-terraform-init: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
-	cd $(mount_path)/build/terraform/$(DIRECTORY) && terraform init && gcloud auth application-default login'
-=======
 ### Deploy cluster with Terraform
 terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-init:
 terraform-init: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
 	cd $(TERRAFORM_BUILD_DIR) && terraform init && gcloud auth application-default login'
->>>>>>> Fixed file to use .go ext. Split terraform configs
 
 terraform-clean: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-clean:
