@@ -26,6 +26,11 @@ or their cloud specific documentation.
 * [Administering Clusters: Autoscaling a Cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-autoscaler)
 * [Cluster Autoscaler](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler)
 
+### Amazon Elastic Kubernetes Service
+* [Cluster Autoscaler for EKS](https://docs.aws.amazon.com/eks/latest/userguide/cluster-autoscaler.html)
+* [Terraform EKS Module: Autoscaling Example](https://github.com/terraform-aws-modules/terraform-aws-eks/blob/master/docs/autoscaling.md)
+* [Terraform EKS Module: IAM Roles For Service Accounts Autoscaler Example](https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/examples/irsa)
+
 ### Azure Kubernetes Service
 * [Cluster Autoscaler on Azure Kubernetes Service (AKS) - Preview](https://docs.microsoft.com/en-us/azure/aks/autoscaler)
 
@@ -166,4 +171,3 @@ to distribute the `GameServer` `Pods` across as many nodes as possible.
 
 With the "Distributed" strategy, Fleets will remove `Ready` `GameServers` from Nodes with at random, to ensure
 a distributed load is maintained.
-
