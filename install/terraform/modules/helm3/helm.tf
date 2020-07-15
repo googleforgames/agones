@@ -91,7 +91,6 @@ resource "helm_release" "agones" {
     value = var.feature_gates
   }
 
-  set {
     name  = "agones.featureGates"
     value = var.feature_gates
   }
