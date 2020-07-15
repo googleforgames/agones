@@ -6,7 +6,8 @@
 {{ $image_anchor := .Get "image_anchor" | default "smart" }}
 {{ $logo_anchor := .Get "logo_anchor" | default "smart" }}
 {{/* Height can be one of: auto, min, med, max, full. */}}
-{{ $height := .Get "height" | default "max"  }}
+{{ $height := .Get "height" | default "max" }}
+{{ $byline := .Get "byline" | default "" }}
 {{ with $promo_image }}
 {{ $promo_image_big := (.Fill (printf "1920x1080 %s" $image_anchor)) }}
 {{ $promo_image_small := (.Fill (printf "960x540 %s" $image_anchor)) }}
@@ -37,4 +38,9 @@
       </div>
     </div>
   </div>
+  {{ if $byline }}
+  <div class="byline">
+    <small>{{ $byline }}</small>
+  </div>
+  {{ end }}
 </section>

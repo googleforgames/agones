@@ -122,7 +122,7 @@ type response struct {
 	err     error
 }
 
-// NewAllocator creates an instance off Allocator
+// NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
 	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache) *Allocator {
 	ah := &Allocator{
@@ -403,7 +403,7 @@ func (c *Allocator) getClientCertificates(namespace, secretName string) (clientC
 		return nil, nil, nil, err
 	}
 	if secret == nil || len(secret.Data) == 0 {
-		return nil, nil, nil, fmt.Errorf("secert %s does not have data", secretName)
+		return nil, nil, nil, fmt.Errorf("secret %s does not have data", secretName)
 	}
 
 	// Create http client using cert

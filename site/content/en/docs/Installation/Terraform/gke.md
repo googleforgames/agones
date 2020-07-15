@@ -78,10 +78,6 @@ The GKE cluster created from the example configuration will contain 3 Node Pools
 - `"agones-system"` node pool for Agones Controller.
 - `"agones-metrics"` for monitoring and metrics collecting purpose.
 
-{{% feature expiryVersion="1.7.0" %}}
-Additionally, a `"tiller"` service account will be created with ClusterRole.
-{{% /feature %}}
-
 Configurable parameters:
 
 - project - your Google Cloud Project ID (required)

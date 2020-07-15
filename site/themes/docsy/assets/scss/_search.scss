@@ -14,3 +14,16 @@
 
     font-family: "Font Awesome 5 Free", $font-family-base;
 }
+
+.popover.offline-search-result {
+    // Override bootstrap default style (max-width: $popover-max-width;)
+    max-width: 90%;
+
+    .card {
+        margin-bottom: $spacer * .5;
+
+        .card-header {
+            font-weight: bold;
+        }
+    }
+}

@@ -497,7 +497,6 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 // backing GameServer configuration / status
 func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
-	s.streamMutex.Lock()
 
 	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
 		gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
@@ -511,6 +510,7 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 		}
 	}
 
+	s.streamMutex.Lock()
 	s.connectedStreams = append(s.connectedStreams, stream)
 	s.streamMutex.Unlock()
 	// don't exit until we shutdown, because that will close the stream
