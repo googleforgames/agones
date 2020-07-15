@@ -169,7 +169,7 @@ resource "helm_release" "agones" {
   }
 
   set {
-    name  = "gameservers.maxport"
+    name  = "gameservers.maxPort"
     value = var.gameserver_maxport
   }
 
