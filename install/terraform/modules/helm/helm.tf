@@ -153,6 +153,26 @@ resource "helm_release" "agones" {
     name  = "agones.featureGates"
     value = var.feature_gates
   }
+  
+  set {
+    name  = "agones.featureGates"
+    value = var.feature_gates
+  }
+
+  set {
+    name  = "gameservers.namespaces"
+    value = var.gameserver_namespaces
+  }
+
+  set {
+    name  = "gameservers.minport"
+    value = var.gameserver_minport
+  }
+
+  set {
+    name  = "gameservers.maxport"
+    value = var.gameserver_maxport
+  }
 
   version   = var.agones_version
   namespace = "agones-system"
