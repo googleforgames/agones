@@ -73,11 +73,11 @@ variable "values_file" {
   default = ""
 }
 
-variable "gameserver_minport" {
+variable "gameserver_minPort" {
   default = "7000"
 }
 
-variable "gameserver_maxport" {
+variable "gameserver_maxPort" {
   default = "8000"
 }
 

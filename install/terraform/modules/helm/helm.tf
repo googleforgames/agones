@@ -162,12 +162,12 @@ resource "helm_release" "agones" {
 
   set {
     name  = "gameservers.minPort"
-    value = var.gameserver_minport
+    value = var.gameserver_minPort
   }
 
   set {
     name  = "gameservers.maxPort"
-    value = var.gameserver_maxport
+    value = var.gameserver_maxPort
   }
 
   version   = var.agones_version
