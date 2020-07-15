@@ -164,7 +164,7 @@ resource "helm_release" "agones" {
   }
 
   set {
-    name  = "gameservers.minport"
+    name  = "gameservers.minPort"
     value = var.gameserver_minport
   }
 
