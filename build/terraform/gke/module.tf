@@ -116,7 +116,7 @@ module "gke_cluster" {
 }
 
 module "helm_agones" {
-  source = "../../../install/terraform/modules/helm"
+  source = "../../../install/terraform/modules/helm3"
 
   agones_version         = var.agones_version
   values_file            = var.values_file
