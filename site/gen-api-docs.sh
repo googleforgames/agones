@@ -62,7 +62,7 @@ function sedeasy {
 }
 
 # do we have changes in generated API docs compared to previous version
-if ! diff $RESULT $OLD;
+if ! diff <(sort $RESULT) <(sort $OLD);
 then 
   echo "Output to a file $FILE"
 
