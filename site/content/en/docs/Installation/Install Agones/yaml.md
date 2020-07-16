@@ -25,14 +25,14 @@ Example of setting `featureGates` and `generateTLS` helm parameters in `install.
 ```
 helm pull --untar https://agones.dev/chart/stable/agones-{{< release-version >}}.tgz && \
 cd agones && \
-helm3 template agones-manual --namespace agones-system  . \
+helm template agones-manual --namespace agones-system  . \
   --set agones.controller.generateTLS=false \
   --set agones.allocator.generateTLS=false \
   --set agones.crds.cleanupOnDelete=false \
   --set agones.featureGates="PlayerTracking=true" \
   > install-custom.yaml
 ```
-Note: `pull` command was introduced in helm 3.
+Note: `pull` command was introduced in Helm version 3.
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/googleforgames/agones/releases) archive.
 
