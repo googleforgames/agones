@@ -56,6 +56,11 @@ variable "network" {
   description = "The name of the VPC network to attach the cluster and firewall rule to"
 }
 
+variable "subnetwork" {
+  default     = ""
+  description = "The subnetwork to host the cluster in. Required field if network value isn't 'default'."
+}
+
 variable "log_level" {
   default = "info"
 }
@@ -66,8 +71,8 @@ variable "feature_gates" {
 
 module "gke_cluster" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
-  // to Agones version 1.3.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.7.0 corresponds
+  // to Agones version 1.7.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"
 
@@ -78,13 +83,14 @@ module "gke_cluster" {
     "initialNodeCount" = var.node_count
     "project"          = var.project
     "network"          = var.network
+    "subnetwork"       = var.subnetwork
   }
 }
 
 module "helm_agones" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.3.0 corresponds
-  // to Agones version 1.3.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.7.0 corresponds
+  // to Agones version 1.7.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
 
