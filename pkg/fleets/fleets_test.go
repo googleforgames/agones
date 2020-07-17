@@ -24,6 +24,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
@@ -65,7 +66,7 @@ func TestListGameServerSetsByFleetOwner(t *testing.T) {
 	defer cancel()
 
 	list, err := ListGameServerSetsByFleetOwner(gameServerSets.Lister(), f)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// sort of stable ordering
 	sort.SliceStable(list, func(i, j int) bool {
@@ -100,7 +101,7 @@ func TestListGameServersByFleetOwner(t *testing.T) {
 	defer cancel()
 
 	list, err := ListGameServersByFleetOwner(informer.GameServers().Lister(), f)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Len(t, list, len(gsList), "Retrieved list should be same size as original")
 
 	sort.SliceStable(list, func(i, j int) bool {
