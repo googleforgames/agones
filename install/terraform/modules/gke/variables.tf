@@ -31,6 +31,7 @@ variable "cluster" {
     "initialNodeCount"  = "4"
     "project"           = "agones"
     "network"           = "default"
+    "subnetwork"        = ""
     "kubernetesVersion" = "1.15"
   }
 }

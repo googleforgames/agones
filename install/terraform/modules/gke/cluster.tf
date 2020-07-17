@@ -28,6 +28,7 @@ locals {
   machineType       = lookup(var.cluster, "machineType", "n1-standard-4")
   initialNodeCount  = lookup(var.cluster, "initialNodeCount", "4")
   network           = lookup(var.cluster, "network", "default")
+  subnetwork        = lookup(var.cluster, "subnetwork", "")
   kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.15")
 }
 
@@ -49,6 +50,7 @@ resource "google_container_cluster" "primary" {
   location = local.zone
   project  = local.project
   network  = local.network
+  subnetwork = local.subnetwork
 
   min_master_version = local.kubernetesVersion
 
