@@ -17,7 +17,9 @@ const stream = require('stream');
 const grpc = require('@grpc/grpc-js');
 
 const messages = require('../lib/sdk_pb');
+
 const AgonesSDK = require('../src/agonesSDK');
+const Alpha = require('../src/alpha');
 
 describe('AgonesSDK', () => {
 	let agonesSDK;
@@ -420,7 +422,7 @@ describe('AgonesSDK', () => {
 
 	describe('alpha', () => {
 		it('returns the alpha features class', () => {
-
+			expect(agonesSDK.alpha).toBeInstanceOf(Alpha);
 		});
 	});
 });
