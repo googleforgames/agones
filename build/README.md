@@ -152,10 +152,11 @@ If you are not familiar with GOPATHs, you can read [How to Write Go Code](https:
 
 Make sure you are in the `build` directory to start.
 
-First, let's test all the code. To do this, run `make test`, which will execute all the unit tests for the codebase. 
+First, let's test the Agones system code. To do this, run `make test-go`, which will execute all the unit tests for
+the Go codebase (there are other tests, but they can take a long time to run).
 
-If you haven't run any of the `build` make targets before then this will also create the Docker based build image,
-and then run the tests.
+If you haven't run any of Make targets before then this will also create the Docker based build
+image, and then run the tests.
 
 Building the build image may take a few minutes to download all the dependencies, so feel 
 free to make cup of tea or coffee at this point. ☕️ 
@@ -177,6 +178,9 @@ Let's compile and build everything, by running `make build`, this will:
 You may note that docker images, and tar archives are tagged with a concatenation of the 
 upcoming release number and short git hash for the current commit. This has also been set in 
 the code itself, so that it can be seen in via log statements.
+
+If you don't have a long time to kill, you can run `make build-images` to only build the images for running Agones
+, which is often all you need for development.
 
 Congratulations! You have now successfully tested and built Agones!
 

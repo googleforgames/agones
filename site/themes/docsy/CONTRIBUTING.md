@@ -26,3 +26,9 @@ information on using pull requests.
 
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google.com/conduct/).
+
+## How to contribute
+
+See the [contribution
+guidelines](https://www.docsy.dev/docs/contribution-guidelines/)
+in the Docsy user guide.

@@ -82,6 +82,11 @@
              padding: 0 0 1rem;
         }
     }
+
+    & > .td-sidebar-nav__section {
+        padding-top: .5rem;
+        padding-left: 1.5rem;
+    }
 }
 
 .td-sidebar {

@@ -10,6 +10,10 @@
     #{$parent} {
         color: $color;
 
+        &:hover {
+            color: $hover-color;
+        }
+
         @if $underline {
             text-decoration: underline;
         }

@@ -60,7 +60,7 @@ gcloud-terraform-install: PING_SERVICE_TYPE := "LoadBalancer"
 gcloud-terraform-install: CRD_CLEANUP := true
 gcloud-terraform-install: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-install: LOG_LEVEL ?= debug
-gcloud-terraform-install: FEATURE_GATES := "PlayerTracking=true&ContainerPortAllocation=true"
+gcloud-terraform-install: FEATURE_GATES := $(ALPHA_FEATURE_GATES)
 gcloud-terraform-install:
 ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))

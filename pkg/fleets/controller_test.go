@@ -34,6 +34,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -367,7 +368,7 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Run("invalid JSON", func(t *testing.T) {
 		c, _ := newFakeController()
 		raw, err := json.Marshal([]byte(`1`))
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
 		_, err = c.creationValidationHandler(review)
@@ -379,11 +380,11 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		fixture := agonesv1.Fleet{}
 
 		raw, err := json.Marshal(fixture)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
 		result, err := c.creationValidationHandler(review)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, "Failure", result.Response.Result.Status)
 	})
@@ -396,11 +397,11 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		f.Spec.Template = gsSpec
 
 		raw, err := json.Marshal(f)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
 		result, err := c.creationValidationHandler(review)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 	})
 }
@@ -413,17 +414,17 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		fixture := agonesv1.Fleet{}
 
 		raw, err := json.Marshal(fixture)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
 		result, err := c.creationMutationHandler(review)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 		assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
 
 		patch := &jsonpatch.ByPath{}
 		err = json.Unmarshal(result.Response.Patch, patch)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
 		assertContains := func(patch *jsonpatch.ByPath, op jsonpatch.JsonPatchOperation) {
 			found := false
@@ -442,7 +443,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 	t.Run("invalid JSON", func(t *testing.T) {
 		c, _ := newFakeController()
 		raw, err := json.Marshal([]byte(`1`))
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		review := getAdmissionReview(raw)
 
 		_, err = c.creationMutationHandler(review)
@@ -492,7 +493,7 @@ func TestControllerRun(t *testing.T) {
 	}
 
 	expected, err := cache.MetaNamespaceKeyFunc(fleet)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// test adding fleet
 	fleetWatch.Add(fleet.DeepCopy())
@@ -593,7 +594,7 @@ func TestControllerUpdateFleetPlayerStatus(t *testing.T) {
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+	require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
 
 	fleet := defaultFixture()
 	c, m := newFakeController()
@@ -692,7 +693,7 @@ func TestControllerRecreateDeployment(t *testing.T) {
 
 		replicas, err := c.recreateDeployment(f, []*agonesv1.GameServerSet{gsSet1, gsSet2})
 
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.True(t, updated)
 		assert.Equal(t, f.Spec.Replicas-1, replicas)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
@@ -774,7 +775,7 @@ func TestControllerApplyDeploymentStrategy(t *testing.T) {
 			})
 
 			replicas, err := c.applyDeploymentStrategy(f, f.GameServerSet(), []*agonesv1.GameServerSet{gsSet1, gsSet2})
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.True(t, updated, "update should happen")
 			assert.Equal(t, f.Spec.Replicas, replicas)
 		})
@@ -790,7 +791,7 @@ func TestControllerApplyDeploymentStrategy(t *testing.T) {
 		c, _ := newFakeController()
 
 		replicas, err := c.applyDeploymentStrategy(f, f.GameServerSet(), []*agonesv1.GameServerSet{})
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, f.Spec.Replicas, replicas)
 	})
 }
@@ -1170,7 +1171,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			if v.expected.err != "" {
 				assert.EqualError(t, err, v.expected.err)
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, v.expected.replicas, replicas)
 				assert.Equal(t, v.expected.updated, updated)
 				if updated {
