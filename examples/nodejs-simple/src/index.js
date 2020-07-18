@@ -21,13 +21,7 @@ const DEFAULT_TIMEOUT = 60;
 const MAX_TIMEOUT = 2147483;
 
 const connect = async (timeout, enableAlpha) => {
-	let agonesSDK;
-
-	if (enableAlpha) {
-		agonesSDK = new AgonesSDK.alpha();
-	} else {
-		agonesSDK = new AgonesSDK();
-	}
+	let agonesSDK = new AgonesSDK();
 
 	let lifetimeInterval;
 	let healthInterval;
@@ -118,50 +112,50 @@ const connect = async (timeout, enableAlpha) => {
 const runAlphaSuite = async (agonesSDK) => {
 	await sleep(10000);
 	console.log('Setting capacity');
-	await agonesSDK.setPlayerCapacity(64);
+	await agonesSDK.alpha.setPlayerCapacity(64);
 
 	await sleep(10000);
 	console.log('Getting capacity');
-	let result = await agonesSDK.getPlayerCapacity();
+	let result = await agonesSDK.alpha.getPlayerCapacity();
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Connecting a player');
-	result = await agonesSDK.playerConnect('firstPlayerID');
+	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Connecting a duplicate player');
-	result = await agonesSDK.playerConnect('firstPlayerID');
+	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Connecting another player');
-	await agonesSDK.playerConnect('secondPlayerID');
+	await agonesSDK.alpha.playerConnect('secondPlayerID');
 
 	await sleep(10000);
 	console.log('Getting player count');
-	result = await agonesSDK.getPlayerCount();
+	result = await agonesSDK.alpha.getPlayerCount();
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Finding if firstPlayerID connected');
-	result = await agonesSDK.isPlayerConnected('firstPlayerID');
+	result = await agonesSDK.alpha.isPlayerConnected('firstPlayerID');
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Getting connected players');
-	result = await agonesSDK.getConnectedPlayers();
+	result = await agonesSDK.alpha.getConnectedPlayers();
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Disconnecting a player');
-	result = await agonesSDK.playerDisconnect('firstPlayerID');
+	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
 	await sleep(10000);
 	console.log('Disconnecting the same player');
-	result = await agonesSDK.playerDisconnect('firstPlayerID');
+	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
 	console.log(`result: ${result}`);
 };
 
