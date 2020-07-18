@@ -14,17 +14,13 @@
 
 const grpc = require('@grpc/grpc-js');
 
-const AgonesSDK = require('./agonesSDK');
-
 const messages = require('../lib/alpha/alpha_pb');
 const servicesPackageDefinition = require('../lib/alpha/alpha_grpc_pb');
 
-class AlphaAgonesSDK extends AgonesSDK {
-	constructor() {
-		super();
-
+class Alpha {
+	constructor(address, credentials) {
 		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
-		this.alphaClient = new services.agones.dev.sdk.alpha.SDK(`localhost:${this.port}`, grpc.credentials.createInsecure());
+		this.client = new services.agones.dev.sdk.alpha.SDK(address, credentials);
 	}
 
 	async playerConnect(playerID) {
@@ -32,7 +28,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		request.setPlayerid(playerID);
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.playerConnect(request, (error, response) => {
+			this.client.playerConnect(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -47,7 +43,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		request.setPlayerid(playerID);
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.playerDisconnect(request, (error, response) => {
+			this.client.playerDisconnect(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -62,7 +58,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		request.setCount(capacity);
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.setPlayerCapacity(request, (error, response) => {
+			this.client.setPlayerCapacity(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -76,7 +72,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.getPlayerCapacity(request, (error, response) => {
+			this.client.getPlayerCapacity(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -90,7 +86,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.getPlayerCount(request, (error, response) => {
+			this.client.getPlayerCount(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -105,7 +101,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		request.setPlayerid(playerID);
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.isPlayerConnected(request, (error, response) => {
+			this.client.isPlayerConnected(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -119,7 +115,7 @@ class AlphaAgonesSDK extends AgonesSDK {
 		const request = new messages.Empty();
 
 		return new Promise((resolve, reject) => {
-			this.alphaClient.getConnectedPlayers(request, (error, response) => {
+			this.client.getConnectedPlayers(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -130,4 +126,4 @@ class AlphaAgonesSDK extends AgonesSDK {
 	}
 }
 
-module.exports = AlphaAgonesSDK;
+module.exports = Alpha;

@@ -12,50 +12,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-const messages = require('../lib/alpha/alpha_pb');
-const AlphaAgonesSDK = require('../src/alphaAgonesSDK');
+const grpc = require('@grpc/grpc-js');
 
-describe('alphaAgonesSDK', () => {
-	let agonesSDK;
+const messages = require('../lib/alpha/alpha_pb');
+const Alpha = require('../src/alpha');
+
+describe('Alpha', () => {
+	let alpha;
 
 	beforeEach(() => {
-		agonesSDK = new AlphaAgonesSDK();
+		const address = 'localhost:9357';
+		const credentials = grpc.credentials.createInsecure();
+		alpha = new Alpha(address, credentials);
 	});
 
 	describe('playerConnect', () => {
 		it('calls the server and handles success when the player is not connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerConnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerConnect').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(true);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.playerConnect('playerID');
-			expect(agonesSDK.alphaClient.playerConnect).toHaveBeenCalled();
+			let result = await alpha.playerConnect('playerID');
+			expect(alpha.client.playerConnect).toHaveBeenCalled();
 			expect(result).toEqual(true);
 		});
 
 		it('calls the server and handles success when the player is already connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerConnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerConnect').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(false);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.playerConnect('playerID');
-			expect(agonesSDK.alphaClient.playerConnect).toHaveBeenCalled();
+			let result = await alpha.playerConnect('playerID');
+			expect(alpha.client.playerConnect).toHaveBeenCalled();
 			expect(result).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerConnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerConnect').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.playerConnect('playerID');
+				await alpha.playerConnect('playerID');
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.playerConnect).toHaveBeenCalled();
+				expect(alpha.client.playerConnect).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -63,38 +67,38 @@ describe('alphaAgonesSDK', () => {
 
 	describe('playerDisconnect', () => {
 		it('calls the server and handles success when the player is connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerDisconnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerDisconnect').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(true);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.playerDisconnect('playerID');
-			expect(agonesSDK.alphaClient.playerDisconnect).toHaveBeenCalled();
+			let result = await alpha.playerDisconnect('playerID');
+			expect(alpha.client.playerDisconnect).toHaveBeenCalled();
 			expect(result).toEqual(true);
 		});
 
 		it('calls the server and handles success when the player is not connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerDisconnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerDisconnect').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(false);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.playerDisconnect('playerID');
-			expect(agonesSDK.alphaClient.playerDisconnect).toHaveBeenCalled();
+			let result = await alpha.playerDisconnect('playerID');
+			expect(alpha.client.playerDisconnect).toHaveBeenCalled();
 			expect(result).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'playerDisconnect').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'playerDisconnect').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.playerDisconnect('playerID');
+				await alpha.playerDisconnect('playerID');
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.playerDisconnect).toHaveBeenCalled();
+				expect(alpha.client.playerDisconnect).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -102,27 +106,27 @@ describe('alphaAgonesSDK', () => {
 
 	describe('setPlayerCapacity', () => {
 		it('passes arguments to the server and handles success', async () => {
-			spyOn(agonesSDK.alphaClient, 'setPlayerCapacity').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'setPlayerCapacity').and.callFake((request, callback) => {
 				let result = new messages.Empty();
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.setPlayerCapacity(64);
+			let result = await alpha.setPlayerCapacity(64);
 			expect(result).toEqual({});
-			expect(agonesSDK.alphaClient.setPlayerCapacity).toHaveBeenCalled();
-			let request = agonesSDK.alphaClient.setPlayerCapacity.calls.argsFor(0)[0];
+			expect(alpha.client.setPlayerCapacity).toHaveBeenCalled();
+			let request = alpha.client.setPlayerCapacity.calls.argsFor(0)[0];
 			expect(request.getCount()).toEqual(64);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'setPlayerCapacity').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'setPlayerCapacity').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.setPlayerCapacity(64);
+				await alpha.setPlayerCapacity(64);
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.setPlayerCapacity).toHaveBeenCalled();
+				expect(alpha.client.setPlayerCapacity).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -130,26 +134,26 @@ describe('alphaAgonesSDK', () => {
 
 	describe('getPlayerCapacity', () => {
 		it('calls the server and handles the response', async () => {
-			spyOn(agonesSDK.alphaClient, 'getPlayerCapacity').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getPlayerCapacity').and.callFake((request, callback) => {
 				let capacity = new messages.Count();
 				capacity.setCount(64);
 				callback(undefined, capacity);
 			});
 
-			let capacity = await agonesSDK.getPlayerCapacity();
-			expect(agonesSDK.alphaClient.getPlayerCapacity).toHaveBeenCalled();
+			let capacity = await alpha.getPlayerCapacity();
+			expect(alpha.client.getPlayerCapacity).toHaveBeenCalled();
 			expect(capacity).toEqual(64);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'getPlayerCapacity').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getPlayerCapacity').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.getPlayerCapacity();
+				await alpha.getPlayerCapacity();
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.getPlayerCapacity).toHaveBeenCalled();
+				expect(alpha.client.getPlayerCapacity).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -157,26 +161,26 @@ describe('alphaAgonesSDK', () => {
 
 	describe('getPlayerCount', () => {
 		it('calls the server and handles the response', async () => {
-			spyOn(agonesSDK.alphaClient, 'getPlayerCount').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getPlayerCount').and.callFake((request, callback) => {
 				let capacity = new messages.Count();
 				capacity.setCount(16);
 				callback(undefined, capacity);
 			});
 
-			let capacity = await agonesSDK.getPlayerCount();
-			expect(agonesSDK.alphaClient.getPlayerCount).toHaveBeenCalled();
+			let capacity = await alpha.getPlayerCount();
+			expect(alpha.client.getPlayerCount).toHaveBeenCalled();
 			expect(capacity).toEqual(16);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'getPlayerCount').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getPlayerCount').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.getPlayerCount();
+				await alpha.getPlayerCount();
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.getPlayerCount).toHaveBeenCalled();
+				expect(alpha.client.getPlayerCount).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -184,38 +188,38 @@ describe('alphaAgonesSDK', () => {
 
 	describe('isPlayerConnected', () => {
 		it('calls the server and handles success when the player is connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'isPlayerConnected').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'isPlayerConnected').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(true);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.isPlayerConnected('playerID');
-			expect(agonesSDK.alphaClient.isPlayerConnected).toHaveBeenCalled();
+			let result = await alpha.isPlayerConnected('playerID');
+			expect(alpha.client.isPlayerConnected).toHaveBeenCalled();
 			expect(result).toEqual(true);
 		});
 
 		it('calls the server and handles success when the player is not connected', async () => {
-			spyOn(agonesSDK.alphaClient, 'isPlayerConnected').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'isPlayerConnected').and.callFake((request, callback) => {
 				let result = new messages.Bool();
 				result.setBool(false);
 				callback(undefined, result);
 			});
 
-			let result = await agonesSDK.isPlayerConnected('playerID');
-			expect(agonesSDK.alphaClient.isPlayerConnected).toHaveBeenCalled();
+			let result = await alpha.isPlayerConnected('playerID');
+			expect(alpha.client.isPlayerConnected).toHaveBeenCalled();
 			expect(result).toEqual(false);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'isPlayerConnected').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'isPlayerConnected').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.isPlayerConnected('playerID');
+				await alpha.isPlayerConnected('playerID');
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.isPlayerConnected).toHaveBeenCalled();
+				expect(alpha.client.isPlayerConnected).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -223,26 +227,26 @@ describe('alphaAgonesSDK', () => {
 
 	describe('getConnectedPlayers', () => {
 		it('calls the server and handles the response', async () => {
-			spyOn(agonesSDK.alphaClient, 'getConnectedPlayers').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getConnectedPlayers').and.callFake((request, callback) => {
 				let connectedPlayers = new messages.PlayerIDList();
 				connectedPlayers.setListList(['firstPlayerID', 'secondPlayerID']);
 				callback(undefined, connectedPlayers);
 			});
 
-			let connectedPlayers = await agonesSDK.getConnectedPlayers();
-			expect(agonesSDK.alphaClient.getConnectedPlayers).toHaveBeenCalled();
+			let connectedPlayers = await alpha.getConnectedPlayers();
+			expect(alpha.client.getConnectedPlayers).toHaveBeenCalled();
 			expect(connectedPlayers).toEqual(['firstPlayerID', 'secondPlayerID']);
 		});
 
 		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.alphaClient, 'getConnectedPlayers').and.callFake((request, callback) => {
+			spyOn(alpha.client, 'getConnectedPlayers').and.callFake((request, callback) => {
 				callback('error', undefined);
 			});
 			try {
-				await agonesSDK.getConnectedPlayers();
+				await alpha.getConnectedPlayers();
 				fail();
 			} catch (error) {
-				expect(agonesSDK.alphaClient.getConnectedPlayers).toHaveBeenCalled();
+				expect(alpha.client.getConnectedPlayers).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});

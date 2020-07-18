@@ -19,7 +19,7 @@ const grpc = require('@grpc/grpc-js');
 const messages = require('../lib/sdk_pb');
 const AgonesSDK = require('../src/agonesSDK');
 
-describe('agonesSDK', () => {
+describe('AgonesSDK', () => {
 	let agonesSDK;
 
 	beforeEach(() => {
@@ -415,6 +415,12 @@ describe('agonesSDK', () => {
 				expect(agonesSDK.client.reserve).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
+		});
+	});
+
+	describe('alpha', () => {
+		it('returns the alpha features class', () => {
+
 		});
 	});
 });
