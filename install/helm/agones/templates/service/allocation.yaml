@@ -284,9 +284,9 @@ data:
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
-metadata: 
+metadata:
   name: allocator-client.default
-  namespace: {{ .Release.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app: {{ template "agones.fullname" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
