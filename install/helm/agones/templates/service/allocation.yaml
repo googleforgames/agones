@@ -276,3 +276,24 @@ data:
 {{- else }}
   tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
 {{- end }}
+
+---
+# Default allocation client secret
+{{- if .Values.agones.allocator.generateClientTLS }}
+{{- $selfSignedCert := genSelfSignedCert "allocation-client.default" nil nil 3650 }}
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata: 
+  name: allocator-client.default
+  namespace: {{ .Release.namespace }}
+  labels:
+    app: {{ template "agones.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+data:
+  tls.crt: {{ b64enc $selfSignedCert.Cert }}
+  tls.key: {{ b64enc $selfSignedCert.Key }}
+{{- end }}
+

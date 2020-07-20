@@ -126,6 +126,7 @@ agones:
       serviceType: LoadBalancer
       annotations: {}
     generateTLS: true
+    generateClientTLS: false
     disableMTLS: false
   image:
     registry: gcr.io/agones-images
