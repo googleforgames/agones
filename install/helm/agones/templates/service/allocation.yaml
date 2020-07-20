@@ -280,7 +280,7 @@ data:
 ---
 # Default allocation client secret
 {{- if .Values.agones.allocator.generateClientTLS }}
-{{- $selfSignedCert := genSelfSignedCert "allocation-client.default" nil nil 3650 }}
+{{- $selfSignedCert := genSelfSignedCert "allocator-client.default" nil nil 3650 }}
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
@@ -296,4 +296,3 @@ data:
   tls.crt: {{ b64enc $selfSignedCert.Cert }}
   tls.key: {{ b64enc $selfSignedCert.Key }}
 {{- end }}
-
