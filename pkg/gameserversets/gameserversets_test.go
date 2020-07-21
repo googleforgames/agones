@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
@@ -98,7 +99,7 @@ func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	defer cancel()
 
 	list, err := ListGameServersByGameServerSetOwner(gameServers.Lister(), gsSet)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// sort of stable ordering
 	sort.SliceStable(list, func(i, j int) bool {
