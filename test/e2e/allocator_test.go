@@ -37,6 +37,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -107,6 +108,10 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
 
+	// Create namespaces A and B
+	namespaceA := framework.Namespace // let's reuse an existing one
+	copyDefaultAllocatorClientSecret(t, namespaceA)
+
 	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
 	err := framework.CreateNamespace(namespaceB)
 	if !assert.Nil(t, err) {
@@ -122,7 +127,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	p := &multiclusterv1.GameServerAllocationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      policyName,
-			Namespace: allocatorClientSecretNamespace,
+			Namespace: namespaceA,
 		},
 		Spec: multiclusterv1.GameServerAllocationPolicySpec{
 			Priority: 1,
@@ -144,7 +149,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 	request := &pb.AllocationRequest{
-		Namespace: allocatorClientSecretNamespace,
+		Namespace: namespaceA,
 		// Enable multi-cluster setting
 		MultiClusterSetting:        &pb.MultiClusterSetting{Enabled: true},
 		RequiredGameServerSelector: &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
@@ -153,7 +158,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
+		dialOpts, err := createRemoteClusterDialOption(namespaceA, allocatorClientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -176,6 +181,30 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+func copyDefaultAllocatorClientSecret(t *testing.T, toNamespace string) {
+	kubeCore := framework.KubeClient.CoreV1()
+	clientSecret, err := kubeCore.Secrets(allocatorClientSecretNamespace).Get(allocatorClientSecretName, metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Could not retrieve default allocator client secret %s/%s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, err)
+	}
+	newSecret := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       clientSecret.TypeMeta.Kind,
+			APIVersion: clientSecret.TypeMeta.APIVersion,
+		},
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   clientSecret.ObjectMeta.Name,
+			Labels: clientSecret.ObjectMeta.Labels,
+		},
+		Data: clientSecret.Data,
+	}
+	_, err = kubeCore.Secrets(toNamespace).Create(newSecret)
+	if err != nil {
+		t.Fatalf("Could not copy default allocator client %s/%s secret to namespace %s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, toNamespace, err)
+	}
 }
 
 func createAllocationPolicy(t *testing.T, p *multiclusterv1.GameServerAllocationPolicy) {

@@ -216,8 +216,8 @@ roleRef:
 {{- end }}
 
 ---
-{{- $selfSignedCert := genSelfSignedCert "" nil nil 3650 }}
 # Allocation CA
+{{- $selfSigned := genSelfSignedCert "" nil nil 3650 }}
 {{- $ca := genCA "allocation-ca" 3650 }}
 apiVersion: v1
 kind: Secret
@@ -231,8 +231,11 @@ metadata:
     heritage: "{{ .Release.Service }}"
 data:
 {{- if .Values.agones.allocator.generateClientTLS }}
-  client-ca.crt: {{ b64enc $selfSignedCert.Cert }} 
-{{- else if .Values.agones.allocator.generateTLS }}
+  allocator-client.default.crt: {{ b64enc $selfSigned.Cert }}
+{{- else }}
+  allocator-client.default.crt: {{ .Files.Get "certs/allocator/allocator-client.default/client.crt" | b64enc }}
+{{- end }}
+{{- if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
   {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
@@ -282,7 +285,6 @@ data:
 
 ---
 # Default allocation client secret
-{{- if .Values.agones.allocator.generateClientTLS }}
 {{- range .Values.gameservers.namespaces }}
 apiVersion: v1
 kind: Secret
@@ -296,7 +298,11 @@ metadata:
     release: "{{ $.Release.Name }}"
     heritage: "{{ $.Release.Service }}"
 data:
-  tls.crt: {{ b64enc $selfSignedCert.Cert }}
-  tls.key: {{ b64enc $selfSignedCert.Key }}
+{{- if $.Values.agones.allocator.generateClientTLS }}
+  tls.crt: {{ b64enc $selfSigned.Cert }}
+  tls.key: {{ b64enc $selfSigned.Key }}
+{{- else }}
+  tls.crt: {{ $.Files.Get "certs/allocator/allocator-client.default/client.crt" | b64enc }}
+  tls.key: {{ $.Files.Get "certs/allocator/allocator-client.default/client.key" | b64enc }}
 {{- end }}
 {{- end }}
