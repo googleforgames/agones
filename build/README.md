@@ -371,7 +371,7 @@ Have a look in the [examples](../examples) folder to see examples of running Gam
 ## Make Variable Reference
 
 ### VERSION
-The version of this build. Version defaults to the short hash of the latest commit
+The version of this build. Version defaults to the short hash of the latest commit.
 
 ### REGISTRY
 The registry that is being used to store docker images. Defaults to gcr.io/agones-images - the release + CI registry.
@@ -380,7 +380,7 @@ The registry that is being used to store docker images. Defaults to gcr.io/agone
 The Kubernetes config file used to access the cluster. Defaults to `~/.kube/config` - the file used by default by kubectl.
 
 ### CLUSTER_NAME
-The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`
+The (gcloud) test cluster that is being worked against. Defaults to `test-cluster`.
 
 ### GCP_PROJECT
 Your GCP project for deploying GKE cluster. Defaults to gcloud default project settings.
@@ -405,7 +405,7 @@ All targets will create the build image if it is not present.
 
 ### Development Targets
 
-Targets for developing with the build image
+Targets for developing with the build image.
 
 #### `make build`
 Build all the images required for Agones, as well as the SDKs
