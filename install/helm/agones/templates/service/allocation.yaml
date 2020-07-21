@@ -216,6 +216,7 @@ roleRef:
 {{- end }}
 
 ---
+{{- $selfSignedCert := genSelfSignedCert "" nil nil 3650 }}
 # Allocation CA
 {{- $ca := genCA "allocation-ca" 3650 }}
 apiVersion: v1
@@ -229,7 +230,9 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
-{{- if .Values.agones.allocator.generateTLS }}
+{{- if .Values.agones.allocator.generateClientTLS }}
+  client-ca.crt: {{ b64enc $selfSignedCert.Cert }} 
+{{- else if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
   {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
@@ -280,19 +283,20 @@ data:
 ---
 # Default allocation client secret
 {{- if .Values.agones.allocator.generateClientTLS }}
-{{- $selfSignedCert := genSelfSignedCert "allocator-client.default" nil nil 3650 }}
+{{- range .Values.gameservers.namespaces }}
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
 metadata:
   name: allocator-client.default
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ . }}
   labels:
-    app: {{ template "agones.fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
+    app: {{ template "agones.fullname" $ }}
+    chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    release: "{{ $.Release.Name }}"
+    heritage: "{{ $.Release.Service }}"
 data:
   tls.crt: {{ b64enc $selfSignedCert.Cert }}
   tls.key: {{ b64enc $selfSignedCert.Key }}
+{{- end }}
 {{- end }}
