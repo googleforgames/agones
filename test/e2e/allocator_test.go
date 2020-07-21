@@ -37,7 +37,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -189,19 +188,9 @@ func copyDefaultAllocatorClientSecret(t *testing.T, toNamespace string) {
 	if err != nil {
 		t.Fatalf("Could not retrieve default allocator client secret %s/%s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, err)
 	}
-	newSecret := &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       clientSecret.TypeMeta.Kind,
-			APIVersion: clientSecret.TypeMeta.APIVersion,
-		},
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   clientSecret.ObjectMeta.Name,
-			Labels: clientSecret.ObjectMeta.Labels,
-		},
-		Data: clientSecret.Data,
-	}
-	_, err = kubeCore.Secrets(toNamespace).Create(newSecret)
+	clientSecret.ObjectMeta.Namespace = toNamespace
+	clientSecret.ResourceVersion = ""
+	_, err = kubeCore.Secrets(toNamespace).Create(clientSecret)
 	if err != nil {
 		t.Fatalf("Could not copy default allocator client %s/%s secret to namespace %s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, toNamespace, err)
 	}
