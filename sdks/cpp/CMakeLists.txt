@@ -48,6 +48,7 @@ if (Git_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
+        ERROR_QUIET
     )
     if (${result} EQUAL 0)
         string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" AGONES_VERSION ${output})
