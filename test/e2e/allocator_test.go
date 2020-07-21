@@ -46,7 +46,6 @@ const (
 	agonesSystemNamespace          = "agones-system"
 	allocatorServiceName           = "agones-allocator"
 	allocatorTLSName               = "allocator-tls"
-	allocatorClientCAName          = "allocator-client-ca"
 	tlsCrtTag                      = "tls.crt"
 	tlsKeyTag                      = "tls.key"
 	allocatorReqURLFmt             = "%s:%d"
@@ -237,8 +236,8 @@ func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []b
 	}
 
 	tlsConfig := &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		RootCAs:            rootCA,
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      rootCA,
 	}
 
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
