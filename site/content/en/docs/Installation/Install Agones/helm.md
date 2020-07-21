@@ -214,7 +214,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
 | `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
-| `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide  certificates in `certs/allocator/allocator-client.default/*` | `false`                 |
+| `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `false`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
