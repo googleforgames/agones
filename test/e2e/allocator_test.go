@@ -37,29 +37,26 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 const (
-	agonesSystemNamespace = "agones-system"
-	allocatorServiceName  = "agones-allocator"
-	allocatorTLSName      = "allocator-tls"
-	allocatorClientCAName = "allocator-client-ca"
-	tlsCrtTag             = "tls.crt"
-	tlsKeyTag             = "tls.key"
-	allocatorReqURLFmt    = "%s:%d"
+	agonesSystemNamespace          = "agones-system"
+	allocatorServiceName           = "agones-allocator"
+	allocatorTLSName               = "allocator-tls"
+	tlsCrtTag                      = "tls.crt"
+	tlsKeyTag                      = "tls.key"
+	allocatorReqURLFmt             = "%s:%d"
+	allocatorClientSecretName      = "allocator-client.default"
+	allocatorClientSecretNamespace = "default"
 )
 
 func TestAllocator(t *testing.T) {
 	ip, port := getAllocatorEndpoint(t)
 	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
 	tlsCA := refreshAllocatorTLSCerts(t, ip)
-
-	clientSecretName := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, framework.Namespace, clientSecretName)
 
 	flt, err := createFleet(framework.Namespace)
 	if !assert.Nil(t, err) {
@@ -77,7 +74,7 @@ func TestAllocator(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(framework.Namespace, clientSecretName, tlsCA)
+		dialOpts, err := createRemoteClusterDialOption(allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -112,6 +109,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 
 	// Create namespaces A and B
 	namespaceA := framework.Namespace // let's reuse an existing one
+	copyDefaultAllocatorClientSecret(t, namespaceA)
 
 	namespaceB := fmt.Sprintf("allocator-b-%s", uuid.NewUUID())
 	err := framework.CreateNamespace(namespaceB)
@@ -124,10 +122,6 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 		}
 	}()
 
-	// Create client secret A, B is receiver of the request and does not need client secret
-	clientSecretNameA := fmt.Sprintf("allocator-client-%s", uuid.NewUUID())
-	genClientSecret(t, namespaceA, clientSecretNameA)
-
 	policyName := fmt.Sprintf("a-to-b-%s", uuid.NewUUID())
 	p := &multiclusterv1.GameServerAllocationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -138,7 +132,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 			Priority: 1,
 			Weight:   1,
 			ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
-				SecretName:          clientSecretNameA,
+				SecretName:          allocatorClientSecretName,
 				Namespace:           namespaceB,
 				AllocationEndpoints: []string{ip},
 				ServerCA:            tlsCA,
@@ -163,7 +157,7 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	// wait for the allocation system to come online
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		// create the grpc client each time, as we may end up looking at an old cert
-		dialOpts, err := createRemoteClusterDialOption(namespaceA, clientSecretNameA, tlsCA)
+		dialOpts, err := createRemoteClusterDialOption(namespaceA, allocatorClientSecretName, tlsCA)
 		if err != nil {
 			return false, err
 		}
@@ -186,6 +180,20 @@ func TestAllocatorCrossNamespace(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
+}
+
+func copyDefaultAllocatorClientSecret(t *testing.T, toNamespace string) {
+	kubeCore := framework.KubeClient.CoreV1()
+	clientSecret, err := kubeCore.Secrets(allocatorClientSecretNamespace).Get(allocatorClientSecretName, metav1.GetOptions{})
+	if err != nil {
+		t.Fatalf("Could not retrieve default allocator client secret %s/%s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, err)
+	}
+	clientSecret.ObjectMeta.Namespace = toNamespace
+	clientSecret.ResourceVersion = ""
+	_, err = kubeCore.Secrets(toNamespace).Create(clientSecret)
+	if err != nil {
+		t.Fatalf("Could not copy default allocator client %s/%s secret to namespace %s: %v", allocatorClientSecretNamespace, allocatorClientSecretName, toNamespace, err)
+	}
 }
 
 func createAllocationPolicy(t *testing.T, p *multiclusterv1.GameServerAllocationPolicy) {
@@ -257,41 +265,6 @@ func createFleet(namespace string) (*agonesv1.Fleet, error) {
 	fleets := framework.AgonesClient.AgonesV1().Fleets(namespace)
 	fleet := defaultFleet(namespace)
 	return fleets.Create(fleet)
-}
-
-func genClientSecret(t *testing.T, namespace, secretName string) {
-	t.Helper()
-
-	pub, priv := generateTLSCertPair(t, "")
-
-	kubeCore := framework.KubeClient.CoreV1()
-	s := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
-			tlsCrtTag: pub,
-			tlsKeyTag: priv,
-		},
-	}
-	if _, err := kubeCore.Secrets(namespace).Create(s); err != nil {
-		t.Fatalf("Creating secret %s/%s failed: %s", namespace, secretName, err)
-	}
-	t.Logf("Client secret is created: %v", s)
-
-	// Add client CA to authorized client CAs
-	s, err := kubeCore.Secrets(agonesSystemNamespace).Get(allocatorClientCAName, metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("getting secret %s/%s failed: %s", agonesSystemNamespace, allocatorClientCAName, err)
-	}
-
-	s.Data["client-ca.crt"] = pub
-	clientCASecret, err := kubeCore.Secrets(agonesSystemNamespace).Update(s)
-	if err != nil {
-		t.Fatalf("updating secrets failed: %s", err)
-	}
-	t.Logf("Secret is updated: %v", clientCASecret)
 }
 
 func refreshAllocatorTLSCerts(t *testing.T, host string) []byte {

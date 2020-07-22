@@ -217,6 +217,7 @@ roleRef:
 
 ---
 # Allocation CA
+{{- $selfSigned := genSelfSignedCert "" nil nil 3650 }}
 {{- $ca := genCA "allocation-ca" 3650 }}
 apiVersion: v1
 kind: Secret
@@ -229,6 +230,9 @@ metadata:
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 data:
+{{- if .Values.agones.allocator.generateClientTLS }}
+  allocator-client.default.crt: {{ b64enc $selfSigned.Cert }}
+{{- end }}
 {{- if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
@@ -275,4 +279,25 @@ data:
   tls-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
   tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
+{{- end }}
+
+---
+# Default allocation client secret
+{{- if .Values.agones.allocator.generateClientTLS }}
+{{- range .Values.gameservers.namespaces }}
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: allocator-client.default
+  namespace: {{ . }}
+  labels:
+    app: {{ template "agones.fullname" $ }}
+    chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
+    release: "{{ $.Release.Name }}"
+    heritage: "{{ $.Release.Service }}"
+data:
+  tls.crt: {{ b64enc $selfSigned.Cert }}
+  tls.key: {{ b64enc $selfSigned.Key }}
+{{- end }}
 {{- end }}
