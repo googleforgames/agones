@@ -156,7 +156,7 @@ We routinely see users running container images that are multiple GB in size.
 The only downside to larger images, is that they can take longer to first load on a Kubernetes node, but that can be
 managed by your 
 [Fleet]({{< ref "/docs/Reference/fleet.md" >}}) and 
-[Fleet Autoscaling]({{< ref "/docs/Reference/fleetautoscaler.md" >}}
+[Fleet Autoscaling]({{< ref "/docs/Reference/fleetautoscaler.md" >}})
 configuration to ensure this load time is taken into account on a new Node's container initial load.
 
 ### How quickly can Agones spin up new GameServer instances?

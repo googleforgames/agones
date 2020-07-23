@@ -413,6 +413,7 @@ gen-install: $(ensure-build-image)
 		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		--set agones.allocator.generateTLS=false \
+		--set agones.allocator.generateClientTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
 
