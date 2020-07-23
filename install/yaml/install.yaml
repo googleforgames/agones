@@ -1635,6 +1635,9 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
+# Source: agones/templates/service/allocation.yaml
+# Default allocation client secret
+---
 # Source: agones/templates/extensions.yaml
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
