@@ -22,5 +22,7 @@ protoc_destination=/go/src/agones.dev/agones/sdks/csharp/sdk/generated
 
 # Generate C# proto file `Sdk.cs`
 protoc --csharp_out=${protoc_destination} -I ${sdk} -I ${googleapis} --plugin=protoc-gen-grpc=`which grpc_csharp_plugin` sdk.proto
+protoc --csharp_out=${protoc_destination} -I ${sdk}/alpha -I ${googleapis} --plugin=protoc-gen-grpc=`which grpc_csharp_plugin` alpha.proto
 # Generate proto stub?
 protoc --grpc_out=${protoc_destination} -I ${sdk} -I ${googleapis} --plugin=protoc-gen-grpc=`which grpc_csharp_plugin` sdk.proto
+protoc --grpc_out=${protoc_destination} -I ${sdk}/alpha -I ${googleapis} --plugin=protoc-gen-grpc=`which grpc_csharp_plugin` alpha.proto
