@@ -430,7 +430,7 @@ func (c *Controller) syncGameServerDeletionTimestamp(gs *agonesv1.GameServer) (*
 		if pod.ObjectMeta.DeletionTimestamp.IsZero() {
 			err = c.podGetter.Pods(pod.ObjectMeta.Namespace).Delete(pod.ObjectMeta.Name, nil)
 			if err != nil {
-				return gs, errors.Wrapf(err, "error deleting pod for GameServer %s, %s", gs.ObjectMeta.Name, pod.ObjectMeta.Name)
+				return gs, errors.Wrapf(err, "error deleting pod for GameServer. Name: %s, Namespace: %s", gs.ObjectMeta.Name, pod.ObjectMeta.Namespace)
 			}
 			c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), fmt.Sprintf("Deleting Pod %s", pod.ObjectMeta.Name))
 		}
