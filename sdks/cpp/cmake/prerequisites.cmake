@@ -15,7 +15,7 @@
 cmake_minimum_required (VERSION 3.5.0)
 
 option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" OFF)
-set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
+set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL for details")
 set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
 
 if (NOT DEFINED MSVC)

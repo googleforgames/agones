@@ -155,7 +155,7 @@ CMake is used to build SDK for all supported platforms (Linux/Window/MacOS).
 * C++14 compiler
 
 Agones SDK depends on [gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md). If CMake cannot find gRPC with find_package(), it downloads and builds gRPC.
-There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/master/NOTES.WIN):
+There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/NOTES.WIN):
 
 * Perl
 * NASM
@@ -171,7 +171,7 @@ Following options are available:
 (Windows only):
 
 - **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
-- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL.md)). Used only if OpenSSL and gRPC is built by Agones.
+- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
 
 ## Linux / MacOS
 ```
