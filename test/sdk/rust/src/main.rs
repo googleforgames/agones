@@ -112,6 +112,69 @@ fn run() -> Result<(), String> {
     sdk.set_label("test-label", &creation_ts.to_string())
         .map_err(|e| format!("Could not run SetLabel(): {}. Exiting!", e))?;
 
+    println!("Setting player capacity...");
+    sdk.alpha()
+        .set_player_capacity(10)
+        .map_err(|e| format!("Could not run SetPlayerCapacity(): {}. Exiting!", e))?;
+
+    println!("Getting player capacity...");
+    let capacity = sdk
+        .alpha()
+        .get_player_capacity()
+        .map_err(|e| format!("Could not run GetPlayerCapacity(): {}. Exiting!", e))?;
+    println!("Player capacity: {}", capacity);
+
+    println!("Increasing the player count...");
+    let player_id = "1234".to_string();
+    let added = sdk
+        .alpha()
+        .player_connect(&player_id)
+        .map_err(|e| format!("Could not run PlayerConnect(): {}. Exiting!", e))?;
+    if added {
+        println!("Added player");
+    } else {
+        panic!("Failed to add player. Exiting!");
+    }
+
+    let connected = sdk
+        .alpha()
+        .is_player_connected(&player_id)
+        .map_err(|e| format!("Could not run IsPlayerConnected(): {}. Exiting!", e))?;
+    if connected {
+        println!("{} is connected", player_id);
+    } else {
+        panic!("{} is not connected. Exiting!", player_id);
+    }
+
+    let player_ids = sdk
+        .alpha()
+        .get_connected_players()
+        .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))?;
+    println!("Connected players: {:?}", player_ids);
+
+    let player_count = sdk
+        .alpha()
+        .get_player_count()
+        .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))?;
+    println!("Cuurent player count: {}", player_count);
+
+    println!("Decreasing the player count...");
+    let removed = sdk
+        .alpha()
+        .player_disconnect(&player_id)
+        .map_err(|e| format!("Could not run PlayerDisconnect(): {}. Exiting!", e))?;
+    if removed {
+        println!("Removed player");
+    } else {
+        panic!("Failed to remove player. Exiting!");
+    }
+
+    let player_count = sdk
+        .alpha()
+        .get_player_count()
+        .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))?;
+    println!("Cuurent player count: {}", player_count);
+
     for i in 0..1 {
         let time = i * 5;
         println!("Running for {} seconds", time);

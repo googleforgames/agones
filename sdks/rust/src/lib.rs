@@ -20,6 +20,7 @@ extern crate grpcio;
 extern crate grpcio_proto;
 extern crate protobuf;
 
+pub mod alpha;
 pub mod errors;
 mod grpc;
 mod sdk;

@@ -165,7 +165,7 @@ run-sdk-conformance-test-go:
 	$(MAKE) run-sdk-conformance-no-build SDK_FOLDER=go GRPC_PORT=9001 HTTP_PORT=9101 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rust:
-	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust
+	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rest:
 	# run without feature flags
