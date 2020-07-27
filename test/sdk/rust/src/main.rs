@@ -156,7 +156,7 @@ fn run() -> Result<(), String> {
         .alpha()
         .get_player_count()
         .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))?;
-    println!("Cuurent player count: {}", player_count);
+    println!("Current player count: {}", player_count);
 
     println!("Decreasing the player count...");
     let removed = sdk
@@ -173,7 +173,7 @@ fn run() -> Result<(), String> {
         .alpha()
         .get_player_count()
         .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))?;
-    println!("Cuurent player count: {}", player_count);
+    println!("Current player count: {}", player_count);
 
     for i in 0..1 {
         let time = i * 5;
