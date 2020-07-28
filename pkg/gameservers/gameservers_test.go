@@ -19,6 +19,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,8 +31,7 @@ func TestIsGameServerPod(t *testing.T) {
 		gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "gameserver", UID: "1234"}, Spec: newSingleContainerSpec()}
 		gs.ApplyDefaults()
 		pod, err := gs.Pod()
-		assert.Nil(t, err)
-
+		require.NoError(t, err)
 		assert.True(t, isGameServerPod(pod))
 	})
 
@@ -72,7 +72,7 @@ func TestAddress(t *testing.T) {
 	for name, fixture := range fixture {
 		t.Run(name, func(t *testing.T) {
 			addr, err := address(fixture.node)
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, fixture.expectedAddress, addr)
 		})
 	}
@@ -81,19 +81,38 @@ func TestAddress(t *testing.T) {
 func TestApplyGameServerAddressAndPort(t *testing.T) {
 	t.Parallel()
 
-	gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
-	gsFixture.ApplyDefaults()
-	node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
-	pod, err := gsFixture.Pod()
-	assert.Nil(t, err)
-	pod.Spec.NodeName = node.ObjectMeta.Name
+	t.Run("OK scenario", func(t *testing.T) {
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
+		pod, err := gsFixture.Pod()
+		require.NoError(t, err)
+		pod.Spec.NodeName = node.ObjectMeta.Name
 
-	gs, err := applyGameServerAddressAndPort(gsFixture, node, pod)
-	assert.Nil(t, err)
-	assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
-	assert.Equal(t, ipFixture, gs.Status.Address)
-	assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
+		gs, err := applyGameServerAddressAndPort(gsFixture, node, pod)
+		require.NoError(t, err)
+		if assert.NotEmpty(t, gs.Spec.Ports) {
+			assert.Equal(t, gs.Spec.Ports[0].HostPort, gs.Status.Ports[0].Port)
+		}
+		assert.Equal(t, ipFixture, gs.Status.Address)
+		assert.Equal(t, node.ObjectMeta.Name, gs.Status.NodeName)
+	})
+
+	t.Run("No IP specified, err expected", func(t *testing.T) {
+		gsFixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
+			Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateRequestReady}}
+		gsFixture.ApplyDefaults()
+		node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{}}}
+		pod, err := gsFixture.Pod()
+		require.NoError(t, err)
+		pod.Spec.NodeName = node.ObjectMeta.Name
+
+		_, err = applyGameServerAddressAndPort(gsFixture, node, pod)
+		if assert.Error(t, err) {
+			assert.Equal(t, "error getting external address for GameServer test: Could not find an address for Node: node1", err.Error())
+		}
+	})
 }
 
 func TestIsBeforePodCreated(t *testing.T) {
