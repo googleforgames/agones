@@ -294,7 +294,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 					assert.Nil(t, err)
 					target := float64(targetScale)
 
-					if !runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
+					if !runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
 						if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
 							err = errors.New(fmt.Sprintf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.))))
 						}

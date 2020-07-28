@@ -59,7 +59,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.1
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&SDKWatchSendOnExecute=true&FixRollingUpdateScaleDown=true"
+ALPHA_FEATURE_GATES ?= "PlayerTracking=true&SDKWatchSendOnExecute=true&FeatureRollingUpdateOnReady=true"
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))

@@ -1003,13 +1003,13 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
-func TestFeatureFixRollingUpdateScaleDown(t *testing.T) {
+func TestFeatureRollingUpdateOnReady(t *testing.T) {
 	t.Parallel()
 
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureFixRollingUpdateScaleDown)+"=true"))
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=true"))
 
 	type expected struct {
 		inactiveSpecReplicas int32
@@ -1124,7 +1124,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 	inactiveReplicas2 := int32(65)
 
 	// TODO(alekser) Fix the scaling logic for a new feature or prove this change useful
-	if utilruntime.FeatureEnabled(utilruntime.FeatureFixRollingUpdateScaleDown) {
+	if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateOnReady) {
 		inactiveReplicas1 = 4
 		inactiveReplicas2 = 45
 	}
