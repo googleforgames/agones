@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -40,7 +42,7 @@ func TestHealthControllerFailedContainer(t *testing.T) {
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	pod.Status = corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{{Name: gs.Spec.Container,
 		State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}}
 
@@ -67,7 +69,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	gs.ApplyDefaults()
 
 	pod, err := gs.Pod()
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	pod.Status.Conditions = []corev1.PodCondition{
 		{Type: corev1.PodScheduled, Reason: corev1.PodReasonUnschedulable,
@@ -286,7 +288,44 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 	}
 }
 
+func TestHealthControllerSyncGameServerUpdateFailed(t *testing.T) {
+	t.Parallel()
+
+	m := agtesting.NewMocks()
+	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
+	hc.recorder = m.FakeRecorder
+
+	gs := agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Namespace: "default", Name: "test"}, Spec: newSingleContainerSpec(),
+		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateAllocated}}
+	gs.ApplyDefaults()
+
+	m.KubeClient.AddReactor("list", "pods", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		list := &corev1.PodList{Items: []corev1.Pod{}}
+		return true, list, nil
+	})
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+	m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		ua := action.(k8stesting.UpdateAction)
+		gsObj := ua.GetObject().(*agonesv1.GameServer)
+		assert.Equal(t, agonesv1.GameServerStateUnhealthy, gsObj.Status.State)
+		return true, gsObj, errors.New("update-err")
+	})
+
+	_, cancel := agtesting.StartInformers(m, hc.gameServerSynced, hc.podSynced)
+	defer cancel()
+
+	err := hc.syncGameServer("default/test")
+
+	if assert.Error(t, err) {
+		assert.Equal(t, "error updating GameServer test/default to unhealthy: update-err", err.Error())
+	}
+}
+
 func TestHealthControllerRun(t *testing.T) {
+	t.Parallel()
+
 	m := agtesting.NewMocks()
 	hc := NewHealthController(healthcheck.NewHandler(), m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	hc.recorder = m.FakeRecorder
@@ -313,7 +352,7 @@ func TestHealthControllerRun(t *testing.T) {
 		Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}}
 	gs.ApplyDefaults()
 	pod, err := gs.Pod()
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	stop, cancel := agtesting.StartInformers(m)
 	defer cancel()
