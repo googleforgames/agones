@@ -197,7 +197,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
 
 	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
-		return errors.Wrapf(err, "error updating GameServer %s to unhealthy", gs.ObjectMeta.Name)
+		return errors.Wrapf(err, "error updating GameServer %s/%s to unhealthy", gs.ObjectMeta.Name, gs.ObjectMeta.Namespace)
 	}
 
 	hc.recorder.Event(gs, corev1.EventTypeWarning, string(gsCopy.Status.State), "Issue with Gameserver pod")
