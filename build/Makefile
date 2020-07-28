@@ -256,7 +256,7 @@ test-e2e-integration: $(ensure-build-image)
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--feature-gates=$(FEATURE_GATES) \
-		--namespace=$(GAMESERVERS_NAMESPACE) \
+		--namespace=$(GAMESERVERS_NAMESPACE)
 	echo "Finishing e2e integration test!"
 
 test-e2e-failure: $(ensure-build-image)

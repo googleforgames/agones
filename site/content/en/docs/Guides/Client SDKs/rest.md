@@ -180,7 +180,7 @@ Response:
 
 Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata. 
 
-See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) documentation for restrictions.
+See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}}) documentation for restrictions.
 
 ##### Example
 

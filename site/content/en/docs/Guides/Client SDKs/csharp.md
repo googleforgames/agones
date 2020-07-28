@@ -59,7 +59,7 @@ Will return `null` if there is an error in retrieving the `GameServer` record.
 var gameserver = await agones.GetGameServerAsync();
 ```
 
-To mark the GameServer as [Reserved]({{< relref "_index.md#reserve-seconds" >}}) for a duration call 
+To mark the GameServer as [Reserved]({{< relref "_index.md#reserveseconds" >}}) for a duration call 
 `ReserveAsync(long duration)`.
 
 ```csharp
@@ -76,7 +76,7 @@ var status = await agones.ShutdownAsync();
 Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, string value)` are async methods that perform an action & return a `Status` object.
 
 To watch when 
-[the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserver-function-gameserver" >}})
+[the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserverfunctiongameserver" >}})
 call `WatchGameServer(callback)`, where the delegate function `callback` of type `Action<GameServer>` will be executed every time the `GameServer` 
 configuration changes.
 This process is non-blocking internally.

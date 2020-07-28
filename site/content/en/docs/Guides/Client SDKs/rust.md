@@ -52,7 +52,7 @@ To mark the [game session as ready]({{< relref "_index.md#ready" >}}) call `sdk.
 sdk.ready()?;
 ```
 
-To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}}) for a period of time, call `sdk.reserve(duration)`.
+To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}}) for a period of time, call `sdk.reserve(duration)`.
 
 ```rust
 sdk.reserve(Duration::new(5, 0))?;
@@ -66,13 +66,13 @@ if sdk.shutdown().is_err() {
 }
 ```
 
-To [set a Label]({{< relref "_index.md#setlabel-key-value" >}}) on the backing `GameServer` call `sdk.set_label(key, value)`.
+To [set a Label]({{< relref "_index.md#setlabelkey-value" >}}) on the backing `GameServer` call `sdk.set_label(key, value)`.
 
 ```rust
 sdk.set_label("test-label", "test-value")?;
 ```
 
-To [set an Annotation]({{< relref "_index.md#setannotation-key-value" >}}) on the backing `GameServer` call `sdk.set_annotation(key, value)`.
+To [set an Annotation]({{< relref "_index.md#setannotationkey-value" >}}) on the backing `GameServer` call `sdk.set_annotation(key, value)`.
 
 ```rust
 sdk.set_annotation("test-annotation", "test value")?;
@@ -86,7 +86,7 @@ The function will return an instance of `agones::types::GameServer` including `G
 let gameserver = sdk.get_gameserver()?;
 ```
 
-To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, call `sdk.watch_gameserver(|gameserver| {...})`.
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `sdk.watch_gameserver(|gameserver| {...})`.
 
 This will call the passed closure synchronously (this is a blocking function, so you may want to run it in its own thread) whenever the backing `GameServer` is updated.
 
