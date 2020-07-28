@@ -61,7 +61,7 @@ in {{< ghlink href="proto/sdk/sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
 let result = await agonesSDK.getGameServer();
 ```
 
-To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen, call `watchGameServer(callback)`. The callback will be called with a parameter matching the result of `getGameServer()`.
+To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `watchGameServer(callback)`. The callback will be called with a parameter matching the result of `getGameServer()`.
 
 ```javascript
 agonesSDK.watchGameServer((result) => {
@@ -69,6 +69,6 @@ agonesSDK.watchGameServer((result) => {
 });
 ```
 
-To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}}) for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
+To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}}) for a period of time, call the async method `reserve(seconds)`. The result will be an empty object.
 
 For more information, please read the [SDK Overview]({{< relref "_index.md" >}}), check out {{< ghlink href="sdks/nodejs/src/agonesSDK.js" >}}agonesSDK.js{{< /ghlink >}} and also look at the {{< ghlink href="examples/nodejs-simple" >}}Node.js example{{< / >}}.
