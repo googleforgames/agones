@@ -14,6 +14,7 @@
 
 extern crate agones;
 
+use std::env;
 use std::result::Result;
 use std::thread;
 use std::time::Duration;
@@ -112,6 +113,26 @@ fn run() -> Result<(), String> {
     sdk.set_label("test-label", &creation_ts.to_string())
         .map_err(|e| format!("Could not run SetLabel(): {}. Exiting!", e))?;
 
+    let feature_gates = env::var("FEATURE_GATES").unwrap_or("".to_string());
+    if feature_gates.contains("PlayerTracking=true") {
+        run_player_tracking_features(&sdk)?;
+    }
+
+    for i in 0..1 {
+        let time = i * 5;
+        println!("Running for {} seconds", time);
+
+        thread::sleep(Duration::from_secs(5));
+    }
+
+    println!("Shutting down...");
+    sdk.shutdown()
+        .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))?;
+    println!("...marked for Shutdown");
+    Ok(())
+}
+
+fn run_player_tracking_features(sdk: &agones::Sdk) -> Result<(), String> {
     println!("Setting player capacity...");
     sdk.alpha()
         .set_player_capacity(10)
@@ -175,16 +196,5 @@ fn run() -> Result<(), String> {
         .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))?;
     println!("Current player count: {}", player_count);
 
-    for i in 0..1 {
-        let time = i * 5;
-        println!("Running for {} seconds", time);
-
-        thread::sleep(Duration::from_secs(5));
-    }
-
-    println!("Shutting down...");
-    sdk.shutdown()
-        .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))?;
-    println!("...marked for Shutdown");
     Ok(())
 }
