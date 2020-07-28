@@ -1004,8 +1004,6 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 }
 
 func TestFeatureRollingUpdateOnReady(t *testing.T) {
-	t.Parallel()
-
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
@@ -1073,7 +1071,7 @@ func TestFeatureRollingUpdateOnReady(t *testing.T) {
 
 			f := defaultFixture()
 			f.Spec.Replicas = 75
-			f.Status.ReadyReplicas = 0
+			f.Status.ReadyReplicas = v.activeStatusReadyReplicas + v.inactiveStatusReadyReplicas
 
 			active := f.GameServerSet()
 			active.ObjectMeta.Name = "active"
