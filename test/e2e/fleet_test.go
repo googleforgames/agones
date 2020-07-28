@@ -218,7 +218,6 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 // maxUnavailable and maxSurge parameters check.
 func TestFleetRollingUpdate(t *testing.T) {
 	t.Parallel()
-
 	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 	maxSurge := []string{"25%", "10%"}
@@ -294,15 +293,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, 100, true)
 					assert.Nil(t, err)
 					target := float64(targetScale)
-					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Floor(target*float64(maxUnavailable)/100.)) {
-						for i, v := range list.Items {
-							fmt.Println("List of Gameservers ", i, v)
+
+					if !runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
+						if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
+							err = errors.New(fmt.Sprintf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.))))
 						}
-						fmt.Println("compare ", len(list.Items), "  - ", int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)))
-						err = errors.New("New replicas should be less than target + maxSurge + maxUnavailable")
-					}
-					if err != nil {
-						return false, err
+						if err != nil {
+							return false, err
+						}
 					}
 					gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(
 						metav1.ListOptions{LabelSelector: selector.String()})

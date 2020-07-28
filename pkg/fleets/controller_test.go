@@ -17,7 +17,6 @@ package fleets
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -1075,7 +1074,6 @@ func TestFeatureFixRollingUpdateScaleDown(t *testing.T) {
 			f := defaultFixture()
 			f.Spec.Replicas = 75
 			f.Status.ReadyReplicas = 0
-			fmt.Println("k")
 
 			active := f.GameServerSet()
 			active.ObjectMeta.Name = "active"

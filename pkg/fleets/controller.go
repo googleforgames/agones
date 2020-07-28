@@ -455,7 +455,12 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	// make sure we don't end up with more than the configured max surge
 	maxSurge := surge + fleet.Spec.Replicas
 	replicas = fleet.UpperBoundReplicas(replicas + surge)
-	total := agonesv1.SumSpecReplicas(rest) + replicas
+	var total int32
+	if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
+		total = agonesv1.SumSpecReplicas(rest) + replicas
+	} else {
+		total = agonesv1.SumStatusReplicas(rest) + replicas
+	}
 	if total > maxSurge {
 		replicas = fleet.LowerBoundReplicas(replicas - (total - maxSurge))
 	}
@@ -476,8 +481,6 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 	if len(rest) == 0 {
 		return nil
 	}
-	allGSS := append(rest, active)
-	readyReplicasCount := getReadyReplicaCountForGameServerSets(allGSS)
 
 	// Look at Kubernetes Deployment util ResolveFenceposts() function
 	var r int
@@ -486,6 +489,9 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 		r, err = intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), false)
 		if r == 0 {
 			r = 1
+		}
+		if r > int(fleet.Spec.Replicas) {
+			r = int(fleet.Spec.Replicas)
 		}
 	} else {
 		r, err = intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
@@ -498,10 +504,18 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 
 	totalScaledDown := int32(0)
 
-	// Check if we can scale down.
-	minAvailable := fleet.Spec.Replicas - unavailable
-	totalScaleDownCount := readyReplicasCount - minAvailable
-
+	totalScaleDownCount := int32(0)
+	if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
+		// Check if we can scale down.
+		allGSS := append(rest, active)
+		readyReplicasCount := getReadyReplicaCountForGameServerSets(allGSS)
+		minAvailable := fleet.Spec.Replicas - unavailable
+		totalScaleDownCount = readyReplicasCount - minAvailable
+		if readyReplicasCount <= minAvailable {
+			// Cannot scale down.
+			return nil
+		}
+	}
 	for _, gsSet := range rest {
 		if runtime.FeatureEnabled(runtime.FeatureFixRollingUpdateScaleDown) {
 			if totalScaledDown >= totalScaleDownCount {
