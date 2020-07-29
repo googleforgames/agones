@@ -12,5 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+pub mod alpha;
+pub mod alpha_grpc;
 pub mod sdk;
 pub mod sdk_grpc;
