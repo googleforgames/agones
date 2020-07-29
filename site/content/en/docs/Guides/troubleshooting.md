@@ -11,16 +11,16 @@ If there is something going wrong with your GameServer, there are a few approach
 
 ### Run with the local sdk server
 
-A good first step for seeing what may be going wrong, is replicating the issue locally. To do this you can take
-advantage for the Agones [local sdk server]({{% ref "/docs/Guides/local-game-server.md" %}})
+A good first step for seeing what may be going wrong is replicating the issue locally. To do this you can take
+advantage of the Agones [local SDK server]({{% ref "/docs/Guides/local-game-server.md" %}})
 , with the following troubleshooting steps:
 
-1. Run your game server as a local binary against the local sdk server
-1. Run your game server container against the local sdk server. It's worth noting that running with 
-   `docker run --network=host ...` can be an easy way to allow your game server container(s) access to the local sdk
+1. Run your game server as a local binary against the local SDK server
+1. Run your game server container against the local SDK server. It's worth noting that running with 
+   `docker run --network=host ...` can be an easy way to allow your game server container(s) access to the local SDK
     server)  
 
-At each stage, keep an eye on the logs of your game binary, and the local sdk server, and ensure there are no system
+At each stage, keep an eye on the logs of your game server binary, and the local SDK server, and ensure there are no system
 errors.
 
 ### Run as a `GameServer` rather than a `Fleet` 
