@@ -21,6 +21,7 @@ use futures::{Future, Sink, Stream};
 use grpcio;
 use protobuf::Message;
 
+use alpha::*;
 use errors::*;
 use grpc::sdk;
 use grpc::sdk_grpc;
@@ -30,6 +31,7 @@ use types::*;
 pub struct Sdk {
     client: Arc<sdk_grpc::SdkClient>,
     health: Arc<Mutex<Option<grpcio::ClientCStreamSender<sdk::Empty>>>>,
+    alpha: Arc<Alpha>,
 }
 
 impl Sdk {
@@ -43,7 +45,8 @@ impl Sdk {
         let ch = grpcio::ChannelBuilder::new(env)
             .keepalive_timeout(Duration::new(30, 0))
             .connect(&addr);
-        let cli = sdk_grpc::SdkClient::new(ch);
+        let cli = sdk_grpc::SdkClient::new(ch.clone());
+        let alpha = Alpha::new(ch);
         let req = sdk::Empty::new();
 
         // Unfortunately there isn't a native way to block until connected
@@ -67,7 +70,13 @@ impl Sdk {
         Ok(Sdk {
             client: Arc::new(cli),
             health: Arc::new(Mutex::new(Some(sender))),
+            alpha: Arc::new(alpha),
         })
+    }
+
+    /// Alpha returns the Alpha SDK
+    pub fn alpha(&self) -> &Arc<Alpha> {
+        &self.alpha
     }
 
     /// Marks the Game Server as ready to receive connections
@@ -190,6 +199,7 @@ impl Clone for Sdk {
         Self {
             client: Arc::clone(&self.client),
             health: self.health.clone(),
+            alpha: Arc::clone(&self.alpha),
         }
     }
 }
