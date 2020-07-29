@@ -9,7 +9,7 @@ description: "Troubleshooting guides and steps."
 
 If there is something going wrong with your GameServer, there are a few approaches to determining the cause:
 
-### Run with the local sdk server
+### Run with the local SDK server
 
 A good first step for seeing what may be going wrong is replicating the issue locally. To do this you can take
 advantage of the Agones [local SDK server]({{% ref "/docs/Guides/local-game-server.md" %}})
