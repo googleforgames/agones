@@ -39,9 +39,11 @@ Configurable parameters:
 - node_count - count of game server nodes for the default node pool (default is "4")
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 - feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
+{{% feature publishVersion="1.8.0" %}}
 - gameserver_minPort - the lower bound of the port range which gameservers will listen on (default is "7000")
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
+{{% /feature %}}
 
 Now you can create an EKS cluster and deploy Agones on EKS:
 ```
