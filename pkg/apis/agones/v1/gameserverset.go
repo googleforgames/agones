@@ -34,7 +34,7 @@ const (
 
 // GameServerSet is the data structure for a set of GameServers.
 // This matches philosophically with the relationship between
-// Depoyments and ReplicaSets
+// Deployments and ReplicaSets
 type GameServerSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -65,19 +65,19 @@ type GameServerSetSpec struct {
 
 // GameServerSetStatus is the status of a GameServerSet
 type GameServerSetStatus struct {
-	// Replicas the total number of current GameServer replicas
+	// Replicas is the total number of current GameServer replicas
 	Replicas int32 `json:"replicas"`
-	// ReadyReplicas are the number of Ready GameServer replicas
+	// ReadyReplicas is the number of Ready GameServer replicas
 	ReadyReplicas int32 `json:"readyReplicas"`
-	// ReservedReplicas are the number of Reserved GameServer replicas
+	// ReservedReplicas is the number of Reserved GameServer replicas
 	ReservedReplicas int32 `json:"reservedReplicas"`
-	// AllocatedReplicas are the number of Allocated GameServer replicas
+	// AllocatedReplicas is the number of Allocated GameServer replicas
 	AllocatedReplicas int32 `json:"allocatedReplicas"`
-	// ShutdownReplicas are the number of Shutdown GameServers replicas
+	// ShutdownReplicas is the number of Shutdown GameServers replicas
 	ShutdownReplicas int32 `json:"shutdownReplicas"`
 	// [Stage:Alpha]
 	// [FeatureFlag:PlayerTracking]
-	// Players are the current total player capacity and count for this GameServerSet
+	// Players is the current total player capacity and count for this GameServerSet
 	// +optional
 	Players *AggregatedPlayerStatus `json:"players,omitempty"`
 }
@@ -101,7 +101,7 @@ func (gsSet *GameServerSet) ValidateUpdate(newGSS *GameServerSet) ([]metav1.Stat
 func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	causes := validateName(gsSet)
 
-	// check Gameserver specification in a Gameserverset
+	// check GameServer specification in a GameServerSet
 	gsCauses := validateGSSpec(gsSet)
 	if len(gsCauses) > 0 {
 		causes = append(causes, gsCauses...)
@@ -115,7 +115,7 @@ func (gsSet *GameServerSet) Validate() ([]metav1.StatusCause, bool) {
 	return causes, len(causes) == 0
 }
 
-// GetGameServerSpec get underlying Gameserver specification
+// GetGameServerSpec get underlying GameServer specification
 func (gsSet *GameServerSet) GetGameServerSpec() *GameServerSpec {
 	return &gsSet.Spec.Template.Spec
 }

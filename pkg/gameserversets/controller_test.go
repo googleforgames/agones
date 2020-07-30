@@ -30,6 +30,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admv1beta1 "k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -303,7 +304,7 @@ func TestComputeStatus(t *testing.T) {
 		utilruntime.FeatureTestMutex.Lock()
 		defer utilruntime.FeatureTestMutex.Unlock()
 
-		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+		require.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
 
 		var list []*agonesv1.GameServer
 		gs1 := gsWithState(agonesv1.GameServerStateAllocated)
@@ -373,12 +374,12 @@ func TestControllerWatchGameServers(t *testing.T) {
 	}
 
 	expected, err := cache.MetaNamespaceKeyFunc(gsSet)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// gsSet add
 	logrus.Info("adding gsSet")
 	gsSetWatch.Add(gsSet.DeepCopy())
-	assert.Nil(t, err)
+
 	assert.Equal(t, expected, f())
 	// gsSet update
 	logrus.Info("modify gsSet")
@@ -630,13 +631,13 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		Spec: agonesv1.GameServerSetSpec{Replicas: 5},
 	}
 	raw, err := json.Marshal(fixture)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	t.Run("valid gameserverset update", func(t *testing.T) {
 		newGSS := fixture.DeepCopy()
 		newGSS.Spec.Replicas = 10
 		newRaw, err := json.Marshal(newGSS)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
 		review := admv1beta1.AdmissionReview{
 			Request: &admv1beta1.AdmissionRequest{
@@ -653,7 +654,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		}
 
 		result, err := c.updateValidationHandler(review)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
 	})
 
@@ -665,7 +666,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			},
 		}
 		newRaw, err := json.Marshal(newGSS)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 
 		assert.NotEqual(t, string(raw), string(newRaw))
 
@@ -683,9 +684,8 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 			Response: &admv1beta1.AdmissionResponse{Allowed: true},
 		}
 
-		logrus.Info("here?")
 		result, err := c.updateValidationHandler(review)
-		assert.Nil(t, err)
+		require.NoError(t, err)
 		assert.False(t, result.Response.Allowed)
 		assert.Equal(t, metav1.StatusFailure, result.Response.Result.Status)
 		assert.Equal(t, metav1.StatusReasonInvalid, result.Response.Result.Reason)

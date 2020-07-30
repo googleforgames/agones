@@ -48,6 +48,7 @@ if (Git_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         RESULT_VARIABLE result
         OUTPUT_VARIABLE output
+        ERROR_QUIET
     )
     if (${result} EQUAL 0)
         string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" AGONES_VERSION ${output})
@@ -66,7 +67,7 @@ option(AGONES_ZLIB_STATIC "Use static version of ZLIB" ON)
 option(AGONES_BUILD_THIRDPARTY_DEBUG "Build debug version of thirdparty libraries (MSVC only)" OFF)
 option(AGONES_CLANG_FORMAT "Apply clang-format (if found) as a pre-build step" OFF)
 set(AGONES_THIRDPARTY_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}" CACHE STRING "Path for installing third-party OpenSSL and gRPC, if they are not found with find_package")
-set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/master/INSTALL for details")
+set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL for details")
 
 # Prerequisities
 include(./cmake/prerequisites.cmake)

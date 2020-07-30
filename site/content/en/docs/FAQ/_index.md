@@ -74,7 +74,7 @@ and/or [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-o
 GameServer at Allocation time.
 
 The game server binary can watch for the state change to `Allocated`, as well as changes to the GameServer metadata,
-through [SDK.WatchGameServer()]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserver-function-gameserver" >}}).
+through [SDK.WatchGameServer()]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}).
 
 Combining these two features allows you to pass information such as map data, gameplay metadata and more to a game
 server binary at Allocation time, through Agones functionality.
@@ -84,8 +84,8 @@ server binary at Allocation time, through Agones functionality.
 The Agones game server SDK allows you to set custom 
 [Labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) 
 and [Annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) through 
-the [SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) 
-and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/_index.md#setannotation-key-value" >}}) functionality
+the [SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}}) 
+and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/_index.md#setannotationkey-value" >}}) functionality
 respectively.
 
 This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}), 
@@ -94,8 +94,8 @@ and can be used for game specific, custom integrations.
 ### If my game server requires more states than what Agones provides (e.g. Ready, Allocated, Shutdown, etc), can I add my own? 
 
 If you want to track custom game server states, then you can utilise the game server client SDK
-[SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabel-key-value" >}}) 
-and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/_index.md#setannotation-key-value" >}}) functionality to
+[SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}}) 
+and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/_index.md#setannotationkey-value" >}}) functionality to
 expose these custom states to outside systems via your own labels and annotations.
 
 This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}), and 
@@ -156,7 +156,7 @@ We routinely see users running container images that are multiple GB in size.
 The only downside to larger images, is that they can take longer to first load on a Kubernetes node, but that can be
 managed by your 
 [Fleet]({{< ref "/docs/Reference/fleet.md" >}}) and 
-[Fleet Autoscaling]({{< ref "/docs/Reference/fleetautoscaler.md" >}}
+[Fleet Autoscaling]({{< ref "/docs/Reference/fleetautoscaler.md" >}})
 configuration to ensure this load time is taken into account on a new Node's container initial load.
 
 ### How quickly can Agones spin up new GameServer instances?

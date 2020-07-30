@@ -164,14 +164,14 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-You can use `SDKWatchSendOnExecute` feature passed as a [feature gate] ({{< ref "/docs/Guides/feature-stages.md#feature-gates" >}}) if you want a `GameServer` to be returned right after `SDK.WatchGameServer` is called.
+You can use `SDKWatchSendOnExecute` feature passed as a [feature gate]({{< ref "/docs/Guides/feature-stages.md#feature-gates" >}}) if you want a `GameServer` to be returned right after `SDK.WatchGameServer` is called.
 
 ### Metadata Management
 
 #### SetLabel(key, value)
 
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
-record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
+record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-".
 
 {{< alert title="Warning" color="warning">}}
 There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
@@ -182,7 +182,7 @@ This can be useful if you want information from your running game server process
 #### SetAnnotation(key, value)
 
 This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
-`Gameserver` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-"
+`GameServer` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-".
 
 This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
 

@@ -9,6 +9,38 @@ description: "Troubleshooting guides and steps."
 
 If there is something going wrong with your GameServer, there are a few approaches to determining the cause:
 
+### Run with the local SDK server
+
+A good first step for seeing what may be going wrong is replicating the issue locally. To do this you can take
+advantage of the Agones [local SDK server]({{% ref "/docs/Guides/local-game-server.md" %}})
+, with the following troubleshooting steps:
+
+1. Run your game server as a local binary against the local SDK server
+1. Run your game server container against the local SDK server. It's worth noting that running with 
+   `docker run --network=host ...` can be an easy way to allow your game server container(s) access to the local SDK
+    server)  
+
+At each stage, keep an eye on the logs of your game server binary, and the local SDK server, and ensure there are no system
+errors.
+
+### Run as a `GameServer` rather than a `Fleet` 
+
+A `Fleet` will automatically replace any unhealthy `GameServer` under its control - which can make it hard to catch
+all the details to determine the cause.
+
+To work around this, instantiate a single instance of your game server as a  
+[GameServer]({{% ref "/docs/Reference/gameserver.md" %}}) within your Agones cluster.
+ 
+This `GameServer` will not be replaced if it moves to an Unhealthy state, giving you time to introspect what is
+going wrong. 
+
+### Introspect with Kubernetes tooling
+
+There are many Kubernetes tools that will help with determining where things have potentially gone wrong for your
+game server. Here are a few you may want to try.
+
+#### kubectl describe
+
 Depending on what is happening, you may want to run `kubectl describe <gameserver name>` to view the events
 that are associated with that particular `GameServer` resource. This can give you insight into the lifecycle of the
 `GameServer` and if anything has gone wrong.
@@ -190,6 +222,35 @@ The above commands will only give the most recent container's logs (so we won't 
 you can use `kubectl logs --previous=true simple-udp-zqppv -c simple-udp` to get the previous instance of the containers logs, or 
 use your Kubernetes platform of choice's logging aggregation tools to view the crash details.
 
+#### kubectl events
+
+The "Events" section that is seen at the bottom of a `kubectl describe` is backed an actual `Event` record in
+Kubernetes, which can be queried - and is general persistent for an hour after it is created.
+
+Therefore, even a `GameServer` or `Pod` resource is no longer available in the system, its `Events` may well be.
+
+`kubectl get events` can be used to see all these events. This can also be grepped with the GameServer name to see
+ all events across both the `GameServer` and its backing `Pod`, like so:
+ 
+```shell script
+root@c9a845c474c2:/go/src/agones.dev/agones# kubectl get events | grep simple-udp-v992s-jwpx2
+2m47s       Normal   PortAllocation          gameserver/simple-udp-v992s-jwpx2   Port allocated
+2m47s       Normal   Creating                gameserver/simple-udp-v992s-jwpx2   Pod simple-udp-v992s-jwpx2 created
+2m47s       Normal   Scheduled               pod/simple-udp-v992s-jwpx2          Successfully assigned default/simple-udp-v992s-jwpx2 to gke-test-cluster-default-77e7f57d-j1mp
+2m47s       Normal   Scheduled               gameserver/simple-udp-v992s-jwpx2   Address and port populated
+2m46s       Normal   Pulled                  pod/simple-udp-v992s-jwpx2          Container image "gcr.io/agones-images/udp-server:0.21" already present on machine
+2m46s       Normal   Created                 pod/simple-udp-v992s-jwpx2          Created container simple-udp
+2m45s       Normal   Started                 pod/simple-udp-v992s-jwpx2          Started container simple-udp
+2m45s       Normal   Pulled                  pod/simple-udp-v992s-jwpx2          Container image "gcr.io/agones-images/agones-sdk:1.7.0" already present on machine
+2m45s       Normal   Created                 pod/simple-udp-v992s-jwpx2          Created container agones-gameserver-sidecar
+2m45s       Normal   Started                 pod/simple-udp-v992s-jwpx2          Started container agones-gameserver-sidecar
+2m45s       Normal   RequestReady            gameserver/simple-udp-v992s-jwpx2   SDK state change
+2m45s       Normal   Ready                   gameserver/simple-udp-v992s-jwpx2   SDK.Ready() complete
+2m47s       Normal   SuccessfulCreate        gameserverset/simple-udp-v992s      Created gameserver: simple-udp-v992s-jwpx2
+```
+
+#### Other techniques 
+
 For more tips and tricks, the [Kubernetes Cheatsheet: Interactive with Pods](https://kubernetes.io/docs/reference/kubectl/cheatsheet/#interacting-with-running-pods)
  also provides more troubleshooting techniques.
 
@@ -216,6 +277,22 @@ particular `GameServer`.
    `kubectl logs simple-udp-dnbwj -c agones-gameserver-sidecar`
 
 Agones uses JSON structured logging, therefore errors will be visible through the `"severity":"info"` key and value.       
+
+### Enable Debug Level Logging for the SDK Server 
+
+By default, the SDK Server binary is set to an `Info` level of logging.
+
+You can use the `sdkServer.logLevel` to increase this to `Debug` levels, and see extra information about what is
+happening with the SDK Server that runs alonside your game server container(s).
+
+See the [GameServer reference]({{% ref "/docs/Reference/gameserver.md" %}}) for configuration details. 
+
+### Enable Debug Level Logging for the Agones Controller
+
+By default, the log level for the Agones controller is "info". To get a more verbose log output, switch this to "debug"
+via the `agones.controller.logLevel` 
+[Helm Configuration parameters]({{% ref "/docs/Installation/Install Agones/helm.md#configuration" %}})
+at installation. 
 
 ## I uninstalled Agones before deleted all my `GameServers` and now they won't delete
 
