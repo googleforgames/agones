@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runtime
+package fuzz
 
 // This file holds fuzzers that are implemented
 // using go-fuzz. More info about go-fuzz can
@@ -25,9 +25,11 @@ package runtime
 // 4) $GOPATH/bin/go-fuzz-build
 // 5) $GOPATH/bin/go-fuzz
 
+import "agones.dev/agones/pkg/util/runtime"
+
 // Fuzz implements a fuzzer that targets ParseFeatures
 func Fuzz(data []byte) int {
-	err := ParseFeatures(string(data))
+	err := runtime.ParseFeatures(string(data))
 	if err != nil {
 		return 0
 	}
