@@ -153,7 +153,6 @@ resource "helm_release" "agones" {
     name  = "agones.featureGates"
     value = var.feature_gates
   }
-  
 
   set {
     name  = "gameservers.namespaces"
