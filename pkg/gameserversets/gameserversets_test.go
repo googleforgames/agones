@@ -45,7 +45,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 
 	result := sortGameServersByLeastFullNodes(list, nc)
 
-	assert.Len(t, result, len(list))
+	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[2].ObjectMeta.Name)
@@ -62,7 +62,7 @@ func TestSortGameServersByNewFirst(t *testing.T) {
 	l := len(list)
 
 	result := sortGameServersByNewFirst(list)
-	assert.Len(t, result, l)
+	require.Len(t, result, l)
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[2].ObjectMeta.Name)
