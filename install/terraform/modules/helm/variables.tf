@@ -72,3 +72,15 @@ variable "ping_service_type" {
 variable "values_file" {
   default = ""
 }
+
+variable "gameserver_minPort" {
+  default = "7000"
+}
+
+variable "gameserver_maxPort" {
+  default = "8000"
+}
+
+variable "gameserver_namespaces" {
+  default = ["default"]
+}
