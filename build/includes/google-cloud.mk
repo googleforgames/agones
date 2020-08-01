@@ -31,39 +31,32 @@ gcloud-test-cluster: $(ensure-build-image) terraform-init
 		GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)" GCP_CLUSTER_NODEPOOL_MACHINETYPE="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)"
 	$(MAKE) gcloud-auth-cluster
 
-clean-gcloud-test-cluster: $(ensure-build-image)
+clean-gcloud-test-cluster: $(ensure-build-image) terraform-init
 	$(MAKE) gcloud-terraform-destroy-cluster
 
 # Creates a gcloud cluster for end-to-end
 # it installs also a consul cluster to handle build system concurrency using a distributed lock
-gcloud-e2e-test-cluster: TEST_CLUSTER_NAME ?= e2e-test-cluster
+gcloud-e2e-test-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-e2e-test-cluster: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments create $(TEST_CLUSTER_NAME) \
-		--config=$(mount_path)/build/gke-test-cluster/cluster-e2e.yml
-	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME) GCP_CLUSTER_ZONE=us-west1-c
-	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-	$(DOCKER_RUN) helm repo update
-	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm install consul stable/consul --wait --set Replicas=1,uiService.type=ClusterIP
+gcloud-e2e-test-cluster:
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/e2e && \
+      	terraform init && gcloud auth application-default login && terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
-clean-gcloud-e2e-test-cluster: TEST_CLUSTER_NAME ?= e2e-test-cluster
-clean-gcloud-e2e-test-cluster: $(ensure-build-image)
-	-docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
-		helm uninstall consul && kubectl delete pvc -l component=consul-consul
-	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=$(TEST_CLUSTER_NAME)
+clean-gcloud-e2e-test-cluster: $(ensure-build-image) terraform-init
+clean-gcloud-e2e-test-cluster:
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/e2e && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 # Creates a gcloud cluster for prow
+gcloud-prow-build-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-prow-build-cluster: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments create prow-build-cluster \
-		--config=$(mount_path)/build/gke-test-cluster/cluster-prow.yml
-	$(MAKE) gcloud-auth-cluster GCP_CLUSTER_NAME=prow-build-cluster GCP_CLUSTER_ZONE=us-west1-c
+gcloud-prow-build-cluster:
+	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/prow && \
+      	terraform init && gcloud auth application-default login && terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud prow build cluster
-clean-gcloud-prow-build-cluster: $(ensure-build-image)
-	$(MAKE) clean-gcloud-test-cluster GCP_CLUSTER_NAME=prow-build-cluster
+clean-gcloud-prow-build-cluster: $(ensure-build-image) terraform-init
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/prow && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
 # (defaults to 'test-cluster')

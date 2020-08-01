@@ -196,8 +196,8 @@ everything separate (see below for overwriting these config locations). Therefor
 we will need to authenticate out gcloud tooling against it. To do that run `make gcloud-init` and fill in the
 prompts as directed.
 
-Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the deployment template
-found in the `gke-test-cluster` directory.
+Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the Terraform
+configuration found in the `build/terraform/gke` directory.
 
 You can customize GKE cluster via environment variables or by using a [`local-includes`](./local-includes) file.
 See the table below for available customizations :
