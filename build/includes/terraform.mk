@@ -15,6 +15,9 @@
 # The GKE development cluster name
 GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 
+# the current project
+current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
+
 ### Deploy cluster with Terraform
 terraform-init:
 terraform-init: $(ensure-build-image)
@@ -35,10 +38,8 @@ gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
 gcloud-terraform-cluster: $(ensure-build-image)
 gcloud-terraform-cluster: FEATURE_GATES := ""
+gcloud-terraform-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-cluster:
-ifndef GCP_PROJECT
-	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
-endif
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
 		 terraform apply -auto-approve -var agones_version="$(AGONES_VERSION)" \
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
@@ -61,10 +62,8 @@ gcloud-terraform-install: CRD_CLEANUP := true
 gcloud-terraform-install: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-install: LOG_LEVEL ?= debug
 gcloud-terraform-install: FEATURE_GATES := $(ALPHA_FEATURE_GATES)
+gcloud-terraform-install: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-install:
-ifndef GCP_PROJECT
-	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
-endif
 	$(DOCKER_RUN) bash -c ' \
 	cd $(mount_path)/build/terraform/gke && terraform apply -auto-approve -var agones_version="$(VERSION)" -var image_registry="$(REGISTRY)" \
 		-var pull_policy="$(IMAGE_PULL_POLICY)" \
@@ -80,10 +79,7 @@ endif
 		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
+gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-destroy-cluster:
-ifndef GCP_PROJECT
-	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
-endif
-	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
-	terraform destroy -var project=$(GCP_PROJECT) -target module.helm_agones.helm_release.agones -auto-approve && sleep 60 && \
-	terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
+
