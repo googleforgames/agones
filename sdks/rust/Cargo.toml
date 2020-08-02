@@ -15,10 +15,15 @@
 [package]
 name = "agones"
 version = "0.1.0"
+edition = "2018"
+
+[features]
+openssl = ["grpcio/openssl"]
+openssl-vendored = ["grpcio/openssl-vendored"]
 
 [dependencies]
-grpcio = "0.3.0"
-grpcio-proto = "0.3.0"
-protobuf = "2.0.2"
-futures = "^0.1.15"
-error-chain = "0.11.0"
+grpcio = "0.6.0"
+protobuf = "2.16.2"
+futures = { version = "0.3", features = ["compat"] }
+futures01 = "0.1"
+error-chain = "0.12.3"
