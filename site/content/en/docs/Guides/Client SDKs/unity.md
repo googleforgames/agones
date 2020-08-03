@@ -55,7 +55,7 @@ Will return `null` if there is an error in retrieving the `GameServer` record.
 var gameserver = await agones.GameServer();
 ```
 
-To mark the GameServer as [Reserved]({{< relref "_index.md#reserve-seconds" >}}) for a duration call 
+To mark the GameServer as [Reserved]({{< relref "_index.md#reserveseconds" >}}) for a duration call 
 `Reserve(TimeSpan duration)`.
 
 ```csharp
@@ -73,7 +73,7 @@ Similarly `SetAnnotation(string key, string value)` and `SetLabel(string key, st
 And there is no need to call `Health()`, it is automatically called.
 
 To watch when 
-[the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserver-function-gameserver" >}})
+[the backing `GameServer` configuration changes]({{< relref "_index.md#watchgameserverfunctiongameserver" >}})
 call `WatchGameServer(callback)`, where the delegate function `callback` will be executed every time the `GameServer` 
 configuration changes.
 

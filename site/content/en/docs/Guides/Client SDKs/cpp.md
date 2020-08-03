@@ -64,7 +64,7 @@ grpc::Status status = sdk->Allocate();
 if (!status.ok()) { ... }
 ```
 
-To mark the game server as [reserved]({{< relref "_index.md#reserve-seconds" >}}), call
+To mark the game server as [reserved]({{< relref "_index.md#reserveseconds" >}}), call
 `sdk->Reserve(seconds)`. This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
 
@@ -86,7 +86,7 @@ grpc::Status status = sdk->Shutdown();
 if (!status.ok()) { ... }
 ```
 
-To [set a Label]({{< relref "_index.md#setlabel-key-value" >}}) on the backing `GameServer` call
+To [set a Label]({{< relref "_index.md#setlabelkey-value" >}}) on the backing `GameServer` call
 `sdk->SetLabel(key, value)`.
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
@@ -98,7 +98,7 @@ grpc::Status status = sdk->SetLabel("test-label", "test-value");
 if (!status.ok()) { ... }
 ```
 
-To [set an Annotation]({{< relref "_index.md#setannotation-key-value" >}}) on the backing `GameServer` call
+To [set an Annotation]({{< relref "_index.md#setannotationkey-value" >}}) on the backing `GameServer` call
 `sdk->SetAnnotation(key, value)`.
 This will return a grpc::Status object, from which we can call `status.ok()` to determine
 if the function completed successfully.
@@ -122,7 +122,7 @@ grpc::Status status = sdk->GameServer(&gameserver);
 if (!status.ok()) {...}
 ```
 
-To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserver-function-gameserver" >}}) as they happen,
+To get [updates on the backing `GameServer`]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen,
 call `sdk->WatchGameServer([](const agones::dev::sdk::GameServer& gameserver){...})`.
 
 This will call the passed in `std::function`
@@ -155,7 +155,7 @@ CMake is used to build SDK for all supported platforms (Linux/Window/MacOS).
 * C++14 compiler
 
 Agones SDK depends on [gRPC](https://github.com/grpc/grpc/blob/master/BUILDING.md). If CMake cannot find gRPC with find_package(), it downloads and builds gRPC.
-There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/master/NOTES.WIN):
+There are some extra prerequisites for OpenSSL on Windows, see [documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/NOTES.WIN):
 
 * Perl
 * NASM
@@ -171,7 +171,7 @@ Following options are available:
 (Windows only):
 
 - **AGONES_BUILD_THIRDPARTY_DEBUG** (default is OFF) - build both debug and release versions of SDK's prerequisites. Option is not used if you already have built gRPC.
-- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/master/INSTALL.md)). Used only if OpenSSL and gRPC is built by Agones.
+- **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
 
 ## Linux / MacOS
 ```
