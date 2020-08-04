@@ -38,7 +38,7 @@ root_path = $(realpath $(project_path)/../..)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# build the cpp-simple binary
+# build the nodejs-simple binary
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
 

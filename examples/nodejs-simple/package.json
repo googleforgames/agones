@@ -1,7 +1,8 @@
 {
   "dependencies": {
-    "@google-cloud/agones-sdk": "1.6.0"
+    "@google-cloud/agones-sdk": "file:../../sdks/nodejs"
   },
+  "description": "replace @google-cloud/agones-sdk dependency with the latest version once published",
   "scripts": {
     "start": "node src/index.js"
   }
