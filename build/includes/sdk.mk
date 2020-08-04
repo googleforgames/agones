@@ -167,11 +167,11 @@ run-sdk-conformance-test-go:
 run-sdk-conformance-test-rust:
 	# run without feature flags
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104
-	# run without feature flag and RUN_ASYNC=true
+	# run without feature flags and with RUN_ASYNC=true
 	DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -e RUN_ASYNC=true" $(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104
 	# run with feature flags enabled
 	$(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
-	# run with feature flags enabled and RUN_ASYNC=true
+	# run with feature flags enabled and with RUN_ASYNC=true
 	DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -e RUN_ASYNC=true" $(MAKE) run-sdk-conformance-test SDK_FOLDER=rust GRPC_PORT=9004 HTTP_PORT=9104 FEATURE_GATES=PlayerTracking=true TESTS=$(DEFAULT_CONFORMANCE_TESTS),$(ALPHA_CONFORMANCE_TESTS)
 
 run-sdk-conformance-test-rest:
