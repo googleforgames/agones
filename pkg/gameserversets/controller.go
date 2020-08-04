@@ -233,7 +233,7 @@ func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview
 		}
 		review.Response.Result = &metav1.Status{
 			Status:  metav1.StatusFailure,
-			Message: "GameServerSet update is invalid",
+			Message: "GameServerSet create is invalid",
 			Reason:  metav1.StatusReasonInvalid,
 			Details: &details,
 		}
@@ -500,7 +500,7 @@ func (c *Controller) deleteGameServers(gsSet *agonesv1.GameServerSet, toDelete [
 		gsCopy.Status.State = agonesv1.GameServerStateShutdown
 		_, err := c.gameServerGetter.GameServers(gs.Namespace).Update(gsCopy)
 		if err != nil {
-			return errors.Wrapf(err, "error updating gameserver %s from status %s to Shutdown status.", gs.ObjectMeta.Name, gs.Status.State)
+			return errors.Wrapf(err, "error updating gameserver %s from status %s to Shutdown status", gs.ObjectMeta.Name, gs.Status.State)
 		}
 
 		c.stateCache.forGameServerSet(gsSet).deleted(gs)
