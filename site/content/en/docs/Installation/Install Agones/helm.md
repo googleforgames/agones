@@ -60,7 +60,7 @@ If you want to add a new namespace afterward upgrade your release:
 
 ```bash
 $ kubectl create namespace ps4
-$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}"
+$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" --namespace agones-system
 ```
 
 ### Uninstalling the Chart
