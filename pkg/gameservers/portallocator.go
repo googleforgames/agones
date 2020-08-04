@@ -106,7 +106,6 @@ func (pa *PortAllocator) Run(stop <-chan struct{}) error {
 }
 
 // Allocate assigns a port to the GameServer and returns it.
-// Return ErrPortNotFound if no port is allocatable
 func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer {
 	pa.mutex.Lock()
 	defer pa.mutex.Unlock()
