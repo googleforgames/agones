@@ -93,7 +93,7 @@ resource "helm_release" "agones" {
 
   set {
     name  = "gameservers.namespaces"
-    value = var.gameserver_namespaces
+    value = "{${join(",", var.gameserver_namespaces)}}"
   }
 
   set {
