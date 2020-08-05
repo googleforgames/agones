@@ -17,9 +17,11 @@ const stream = require('stream');
 const grpc = require('@grpc/grpc-js');
 
 const messages = require('../lib/sdk_pb');
-const AgonesSDK = require('../src/agonesSDK');
 
-describe('agones', () => {
+const AgonesSDK = require('../src/agonesSDK');
+const Alpha = require('../src/alpha');
+
+describe('AgonesSDK', () => {
 	let agonesSDK;
 
 	beforeEach(() => {
@@ -72,31 +74,6 @@ describe('agones', () => {
 		});
 	});
 
-	describe('allocate', () => {
-		it('calls the server and handles success', async () => {
-			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
-				let result = new messages.Empty();
-				callback(undefined, result);
-			});
-			let result = await agonesSDK.allocate();
-			expect(agonesSDK.client.allocate).toHaveBeenCalled();
-			expect(result).toEqual({});
-		});
-
-		it('calls the server and handles failure', async () => {
-			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
-				callback('error', undefined);
-			});
-			try {
-				await agonesSDK.allocate();
-				fail();
-			} catch (error) {
-				expect(agonesSDK.client.allocate).toHaveBeenCalled();
-				expect(error).toEqual('error');
-			}
-		});
-	});
-
 	describe('ready', () => {
 		it('calls the server and handles success', async () => {
 			spyOn(agonesSDK.client, 'ready').and.callFake((request, callback) => {
@@ -117,6 +94,31 @@ describe('agones', () => {
 				fail();
 			} catch (error) {
 				expect(agonesSDK.client.ready).toHaveBeenCalled();
+				expect(error).toEqual('error');
+			}
+		});
+	});
+
+	describe('allocate', () => {
+		it('calls the server and handles success', async () => {
+			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
+				let result = new messages.Empty();
+				callback(undefined, result);
+			});
+			let result = await agonesSDK.allocate();
+			expect(agonesSDK.client.allocate).toHaveBeenCalled();
+			expect(result).toEqual({});
+		});
+
+		it('calls the server and handles failure', async () => {
+			spyOn(agonesSDK.client, 'allocate').and.callFake((request, callback) => {
+				callback('error', undefined);
+			});
+			try {
+				await agonesSDK.allocate();
+				fail();
+			} catch (error) {
+				expect(agonesSDK.client.allocate).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
 		});
@@ -415,6 +417,12 @@ describe('agones', () => {
 				expect(agonesSDK.client.reserve).toHaveBeenCalled();
 				expect(error).toEqual('error');
 			}
+		});
+	});
+
+	describe('alpha', () => {
+		it('returns the alpha features class', () => {
+			expect(agonesSDK.alpha).toBeInstanceOf(Alpha);
 		});
 	});
 });

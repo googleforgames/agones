@@ -14,15 +14,20 @@
 
 const grpc = require('@grpc/grpc-js');
 
+const Alpha = require('./alpha');
+
 const messages = require('../lib/sdk_pb');
 const servicesPackageDefinition = require('../lib/sdk_grpc_pb');
 
 class AgonesSDK {
 	constructor() {
 		const services = grpc.loadPackageDefinition(servicesPackageDefinition);
-		this.client = new services.agones.dev.sdk.SDK(`localhost:${this.port}`, grpc.credentials.createInsecure());
+		const address = `localhost:${this.port}`;
+		const credentials = grpc.credentials.createInsecure();
+		this.client = new services.agones.dev.sdk.SDK(address, credentials);
 		this.healthStream = undefined;
 		this.streams = [];
+		this.alpha = new Alpha(address, credentials);
 	}
 
 	get port() {
@@ -49,10 +54,10 @@ class AgonesSDK {
 		this.client.close();
 	}
 
-	async allocate() {
+	async ready() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
-			this.client.allocate(request, (error, response) => {
+			this.client.ready(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
@@ -61,11 +66,11 @@ class AgonesSDK {
 			});
 		});
 	}
-
-	async ready() {
+	
+	async allocate() {
 		const request = new messages.Empty();
 		return new Promise((resolve, reject) => {
-			this.client.ready(request, (error, response) => {
+			this.client.allocate(request, (error, response) => {
 				if (error) {
 					reject(error);
 				} else {
