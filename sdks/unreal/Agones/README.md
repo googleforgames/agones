@@ -1,49 +1,125 @@
-# Agones UE4 Plugin
+﻿# Agones Unreal SDK
 
-For installation and usage instructions, see
-[Unreal Engine Game Server Client Plugin](https://agones.dev/site/docs/guides/client-sdks/unreal/).
+Agones is a multilayer dedicated game server scaling and orchestration platform that can run anywhere Kubernetes can run.
 
-If you'd like to contribute to the plugin, see
-[CONTRIBUTING.md](/CONTRIBUTING.md)
+This is a SDK inspired by the REST API to the Agones sidecars that allows engineers to talk to the sidecar from either C++ or Blueprints.
 
-## Developer Information
+## Getting Started
 
-### Directory Structure
+The Agones Unreal SDK can either be used from C++ or from Blueprints.
 
-The plugin consists of a single [UE4
-Module](https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html),
-also named [Agones](Source/Agones). The structure of this
-module is based on the common *Public*/*Private* module layout found in many of
-UE4's own internal modules where:
+### Getting the Code
 
-- *Public* contains all public C++ header files. These files can be included by
-  game code and must not include files in *Private*.
-- *Private* contains private C++ header and all C++ source files.
+Easiest way to get this code is to clone the repository and drop the entire plugin folder into your own `Plugins` folder. This runs the plugin as a Project plugin rather than an engine plugin.
 
-For more information on directory structure, see:
+We could however turn this into a marketplace plugin that can be retrived from the marketplace directly into the UE4 editor.
 
-- *PublicIncludePaths* in [Modules](https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/ModuleFiles/index.html)
-- [UE4 Marketplace Guidelines - Code Plugins](https://www.unrealengine.com/en-US/marketplace-guidelines#26)
-- [UE4 engine source code](https://github.com/EpicGames/UnrealEngine/tree/release/Engine/Source)
-(requires acceptance of [UE4 EULA](https://www.unrealengine.com/en-US/ue4-on-github))
+### Health Calls
+#### Using C++
+- Add Plugin (in your own `.uplugin` file)
+```
+  "Plugins": [
+    {
+      "Enabled": true,
+      "Name": "Agones"
+    }
+  ],
+```
+- Add Plugin (in your own `*.Build.cs`)
+```
+PublicDependencyModuleNames.AddRange(
+    new[]
+    {
+        "Agones",
+    });
+```
+- Add component in header
+```c++
+#include "AgonesComponent.h"
 
-### IWYU
+UPROPERTY(EditAnywhere, BlueprintReadWrite)
+UAgonesComponent* AgonesSDK;
+```
+- Initialize component in GameMode
+```c++
+#include "AgonesComponent.h"
+#include "Classes.h"
 
-Code should follow the [Include What You
-Use](https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/IWYU/index.html)
-dependency model. From [General Tips](https://docs.unrealengine.com/en-US/Programming/BuildTools/UnrealBuildTool/IWYU/#generaltips):
+ATestGameMode::ATestGameMode()
+{
+	AgonesSDK = CreateDefaultSubobject<UAgonesComponent>(TEXT("AgonesSDK"));
+}
+```
 
-> 1. Include `CoreMinimal.h` at the top of each header file.
-> 1. To verify that all of your source files include all of their required
->    dependencies, compile your game project in non-unity mode with PCH files
->    disabled.
-> 1. If you need to access `UEngine` or `GEngine`, which are defined in
->    `Runtime\Engine\Classes\Engine\Engine.h`, you can `#include
->    Engine/Engine.h` (distinguishing from the monolithic header file, which is
->    located at `Runtime\Engine\Public\Engine.h`).
-> 1. If you use a class that the compiler doesn't recognize, and don't know
->    what you need to include may be missing the header file. This is
->    especially the case if you are converting from non-IWYU code that compiled
->    correctly. You can look up the class in the API Documentation, and find
->    the necessary modules and header files at the bottom of the page. 
+- Use the Agones component to call PlayerReady
+```c++
+void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
+{
+  // Empty brances are for callbacks on success and errror.
+  AgonesSDK->PlayerConnect("netspeak-player", {}, {});
+}
+```
 
+#### Using Blueprints
+- Add Component to your Blueprint GameMode
+![component](/docs/img/01_bp_component.PNG)
+- This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
+
+- Accessing other functionality of Agones can be done via adding a node in Blueprints.
+![actions](/docs/img/02_bp_actions.PNG)
+
+
+## SDK Functionality
+
+Additional methods have been added for ease of use (both of which are enabled by default):
+
+- Connect
+  - will call `/gameserver` till a succesful response is returned and then call `/ready`.
+  - disabled by setting `bDisableAutoConnect` to `true`.
+  - An event is broadcast with the `GameServer` data once the `/gameserver` call succeeds.
+- Health
+  - calls `/health` endpoint on supplied rate
+  - enabled by default with 10 second rate
+  - disabled by default by setting `HealthRateSeconds` to `0`.
+
+Both of the above are automatically kicked off in the `BeginPlay` of the component.
+
+This Agones SDK wraps the REST API and supports the following actions:
+
+Stable
+- Lifecycle
+  - Ready
+  - Health
+  - Reserve
+  - Allocate
+  - Shutdown
+- Configuration
+  - GameServer
+- Metadata
+  - SetAnnotation
+  - SetLabel
+
+Alpha
+- Player Tracking
+  - GetConnectedPlayers
+  - GetPlayerCapacity
+  - GetPlayerCount
+  - IsPlayerConnected
+  - PlayerConnect
+  - PlayerDisconnect
+  - SetPlayerCapacity
+
+Unimplemented
+  - WatchGameServer
+
+Current the only missing functionality is the `WatchGameServer` functionality. We welcome collaborators to help implement this, if people need it before we get around to implementing it ourselves.
+
+## Unreal Hooks
+
+Within the Unreal [GameMode](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html) and [GameSession](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameSession/index.html) exist a number of useful existing
+funtions that can be used to fit in with making calls out to Agones.
+
+A few examples are:
+- `RegisterServer` to call `SetLabel`, `SetPlayerCapacity`
+- `PostLogin` to call `PlayerConnect`
+- `NotifyLogout` to call `PlayerDisconnect`
