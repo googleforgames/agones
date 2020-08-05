@@ -1,10 +1,8 @@
 #include "AgonesComponent.h"
 
-#include "Classes/Classes.h"
 #include "Engine/World.h"
 #include "HttpModule.h"
-#include "IHttpRequest.h"
-#include "IHttpResponse.h"
+#include "Interfaces/IHttpResponse.h"
 #include "JsonUtilities/Public/JsonObjectConverter.h"
 #include "TimerManager.h"
 

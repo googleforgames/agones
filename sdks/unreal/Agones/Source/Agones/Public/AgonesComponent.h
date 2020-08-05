@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Classes/Classes.h"
+#include "Classes.h"
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
-#include "IHttpRequest.h"
+#include "Interfaces/IHttpRequest.h"
 
 #include "AgonesComponent.generated.h"
 
