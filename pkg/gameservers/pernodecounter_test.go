@@ -20,6 +20,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -65,7 +66,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts := pnc.Counts()
-	assert.Len(t, counts, 1)
+	require.Len(t, counts, 1)
 	assert.Equal(t, int64(1), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
@@ -74,7 +75,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
-	assert.Len(t, counts, 1)
+	require.Len(t, counts, 1)
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(1), counts[name1].Allocated)
 
@@ -83,7 +84,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
-	assert.Len(t, counts, 1)
+	require.Len(t, counts, 1)
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
@@ -95,7 +96,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
-	assert.Len(t, counts, 2)
+	require.Len(t, counts, 2)
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 	assert.Equal(t, int64(1), counts[name2].Ready)
@@ -110,7 +111,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	cache.WaitForCacheSync(stop, hasSynced)
 
 	counts = pnc.Counts()
-	assert.Len(t, counts, 2)
+	require.Len(t, counts, 2)
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 	assert.Equal(t, int64(1), counts[name2].Ready)
@@ -185,7 +186,7 @@ func TestPerNodeCounterRun(t *testing.T) {
 
 	counts := pnc.Counts()
 
-	assert.Len(t, counts, 2)
+	require.Len(t, counts, 2)
 	assert.Equal(t, int64(1), counts[name1].Ready)
 	assert.Equal(t, int64(2), counts[name1].Allocated)
 	assert.Equal(t, int64(0), counts[name2].Ready)
