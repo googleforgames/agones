@@ -236,6 +236,32 @@ func TestPortAllocatorAllocate(t *testing.T) {
 			ports = append(ports, gs.Spec.Ports[0].HostPort)
 		}
 	})
+
+	t.Run("portPolicy as an empty string", func(t *testing.T) {
+		m := agtesting.NewMocks()
+		pa := NewPortAllocator(10, 50, m.KubeInformerFactory, m.AgonesInformerFactory)
+		nodeWatch := watch.NewFake()
+		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
+
+		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		defer cancel()
+
+		// Make sure the add's don't corrupt the sync
+		// (no longer an issue, but leave this here for posterity)
+		nodeWatch.Add(&n1)
+		nodeWatch.Add(&n2)
+		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+
+		err := pa.syncAll()
+		require.NoError(t, err)
+
+		// single port empty
+		fd := fixture.DeepCopy()
+		fd.Spec.Ports[0].PortPolicy = ""
+		gs := pa.Allocate(fd)
+		assert.NotNil(t, gs)
+		assert.Equal(t, 0, countTotalAllocatedPorts(pa))
+	})
 }
 
 func TestPortAllocatorMultithreadAllocate(t *testing.T) {
