@@ -18,7 +18,7 @@
 
 // https://github.com/Manishearth/rust-clippy/issues/702
 #![allow(unknown_lints)]
-#![allow(clippy)]
+#![allow(clippy::all)]
 
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
@@ -82,6 +82,7 @@ const METHOD_SDK_GET_CONNECTED_PLAYERS: ::grpcio::Method<super::alpha::Empty, su
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
+#[derive(Clone)]
 pub struct SdkClient {
     client: ::grpcio::Client,
 }
@@ -204,48 +205,48 @@ impl SdkClient {
     pub fn get_connected_players_async(&self, req: &super::alpha::Empty) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::alpha::PlayerIDList>> {
         self.get_connected_players_async_opt(req, ::grpcio::CallOption::default())
     }
-    pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
+    pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Output = ()> + Send + 'static {
         self.client.spawn(f)
     }
 }
 
 pub trait Sdk {
-    fn player_connect(&self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
-    fn player_disconnect(&self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
-    fn set_player_capacity(&self, ctx: ::grpcio::RpcContext, req: super::alpha::Count, sink: ::grpcio::UnarySink<super::alpha::Empty>);
-    fn get_player_capacity(&self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::Count>);
-    fn get_player_count(&self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::Count>);
-    fn is_player_connected(&self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
-    fn get_connected_players(&self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::PlayerIDList>);
+    fn player_connect(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
+    fn player_disconnect(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
+    fn set_player_capacity(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::Count, sink: ::grpcio::UnarySink<super::alpha::Empty>);
+    fn get_player_capacity(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::Count>);
+    fn get_player_count(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::Count>);
+    fn is_player_connected(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::PlayerID, sink: ::grpcio::UnarySink<super::alpha::Bool>);
+    fn get_connected_players(&mut self, ctx: ::grpcio::RpcContext, req: super::alpha::Empty, sink: ::grpcio::UnarySink<super::alpha::PlayerIDList>);
 }
 
 pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let mut builder = ::grpcio::ServiceBuilder::new();
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_PLAYER_CONNECT, move |ctx, req, resp| {
         instance.player_connect(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_PLAYER_DISCONNECT, move |ctx, req, resp| {
         instance.player_disconnect(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SET_PLAYER_CAPACITY, move |ctx, req, resp| {
         instance.set_player_capacity(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_GET_PLAYER_CAPACITY, move |ctx, req, resp| {
         instance.get_player_capacity(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_GET_PLAYER_COUNT, move |ctx, req, resp| {
         instance.get_player_count(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_IS_PLAYER_CONNECTED, move |ctx, req, resp| {
         instance.is_player_connected(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s;
     builder = builder.add_unary_handler(&METHOD_SDK_GET_CONNECTED_PLAYERS, move |ctx, req, resp| {
         instance.get_connected_players(ctx, req, resp)
     });
