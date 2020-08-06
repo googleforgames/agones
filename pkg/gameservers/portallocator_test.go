@@ -253,7 +253,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
 
 		err := pa.syncAll()
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		// single port empty
 		fd := fixture.DeepCopy()
