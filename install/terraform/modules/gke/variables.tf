@@ -35,3 +35,9 @@ variable "cluster" {
     "kubernetesVersion" = "1.15"
   }
 }
+
+variable "firewallName" {
+  description = "name for the cluster firewall. Defaults to 'game-server-firewall-{local.name}' if not set."
+  type        = string
+  default     = ""
+}
