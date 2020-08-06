@@ -13,7 +13,7 @@
 // limitations under the License.
 use std::collections::HashMap;
 
-use grpc::sdk;
+use super::grpc::sdk;
 
 #[derive(PartialEq, Clone, Default)]
 pub struct GameServer {
