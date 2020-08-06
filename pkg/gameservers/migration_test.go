@@ -22,6 +22,7 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -72,7 +73,7 @@ func TestMigrationControllerIsRunningGameServer(t *testing.T) {
 			gs.ApplyDefaults()
 
 			gsPod, err := gs.Pod()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			pod := v.setup(gsPod)
 			assert.Equal(t, v.expected, isActiveGameServerWithNode(pod))
@@ -198,8 +199,8 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 			gs.ApplyDefaults()
 
 			pod, err := gs.Pod()
+			require.NoError(t, err)
 			pod.Spec.NodeName = nodeFixtureName
-			assert.NoError(t, err)
 
 			node := &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
 				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: ipFixture, Type: corev1.NodeExternalIP}}}}
@@ -246,8 +247,8 @@ func TestMigrationControllerRun(t *testing.T) {
 		Spec: newSingleContainerSpec(), Status: agonesv1.GameServerStatus{}}
 	gs.ApplyDefaults()
 	gsPod, err := gs.Pod()
+	require.NoError(t, err)
 	gsPod.Spec.NodeName = nodeFixtureName
-	assert.NoError(t, err)
 
 	received := make(chan string)
 	h := func(name string) error {
