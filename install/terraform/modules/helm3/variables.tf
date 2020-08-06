@@ -78,4 +78,5 @@ variable "gameserver_maxPort" {
 
 variable "gameserver_namespaces" {
   default = ["default"]
+  type = list(string)
 }

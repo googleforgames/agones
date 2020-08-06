@@ -18,7 +18,7 @@
 
 // https://github.com/Manishearth/rust-clippy/issues/702
 #![allow(unknown_lints)]
-#![allow(clippy)]
+#![allow(clippy::all)]
 
 #![cfg_attr(rustfmt, rustfmt_skip)]
 
@@ -96,6 +96,7 @@ const METHOD_SDK_RESERVE: ::grpcio::Method<super::sdk::Duration, super::sdk::Emp
     resp_mar: ::grpcio::Marshaller { ser: ::grpcio::pb_ser, de: ::grpcio::pb_de },
 };
 
+#[derive(Clone)]
 pub struct SdkClient {
     client: ::grpcio::Client,
 }
@@ -234,58 +235,58 @@ impl SdkClient {
     pub fn reserve_async(&self, req: &super::sdk::Duration) -> ::grpcio::Result<::grpcio::ClientUnaryReceiver<super::sdk::Empty>> {
         self.reserve_async_opt(req, ::grpcio::CallOption::default())
     }
-    pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Item = (), Error = ()> + Send + 'static {
+    pub fn spawn<F>(&self, f: F) where F: ::futures::Future<Output = ()> + Send + 'static {
         self.client.spawn(f)
     }
 }
 
 pub trait Sdk {
-    fn ready(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
-    fn allocate(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
-    fn shutdown(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
-    fn health(&self, ctx: ::grpcio::RpcContext, stream: ::grpcio::RequestStream<super::sdk::Empty>, sink: ::grpcio::ClientStreamingSink<super::sdk::Empty>);
-    fn get_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::GameServer>);
-    fn watch_game_server(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::ServerStreamingSink<super::sdk::GameServer>);
-    fn set_label(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
-    fn set_annotation(&self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
-    fn reserve(&self, ctx: ::grpcio::RpcContext, req: super::sdk::Duration, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn ready(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn allocate(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn shutdown(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn health(&mut self, ctx: ::grpcio::RpcContext, stream: ::grpcio::RequestStream<super::sdk::Empty>, sink: ::grpcio::ClientStreamingSink<super::sdk::Empty>);
+    fn get_game_server(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::UnarySink<super::sdk::GameServer>);
+    fn watch_game_server(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Empty, sink: ::grpcio::ServerStreamingSink<super::sdk::GameServer>);
+    fn set_label(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn set_annotation(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::KeyValue, sink: ::grpcio::UnarySink<super::sdk::Empty>);
+    fn reserve(&mut self, ctx: ::grpcio::RpcContext, req: super::sdk::Duration, sink: ::grpcio::UnarySink<super::sdk::Empty>);
 }
 
 pub fn create_sdk<S: Sdk + Send + Clone + 'static>(s: S) -> ::grpcio::Service {
     let mut builder = ::grpcio::ServiceBuilder::new();
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_READY, move |ctx, req, resp| {
         instance.ready(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_ALLOCATE, move |ctx, req, resp| {
         instance.allocate(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SHUTDOWN, move |ctx, req, resp| {
         instance.shutdown(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_client_streaming_handler(&METHOD_SDK_HEALTH, move |ctx, req, resp| {
         instance.health(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_GET_GAME_SERVER, move |ctx, req, resp| {
         instance.get_game_server(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_server_streaming_handler(&METHOD_SDK_WATCH_GAME_SERVER, move |ctx, req, resp| {
         instance.watch_game_server(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SET_LABEL, move |ctx, req, resp| {
         instance.set_label(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s.clone();
     builder = builder.add_unary_handler(&METHOD_SDK_SET_ANNOTATION, move |ctx, req, resp| {
         instance.set_annotation(ctx, req, resp)
     });
-    let instance = s.clone();
+    let mut instance = s;
     builder = builder.add_unary_handler(&METHOD_SDK_RESERVE, move |ctx, req, resp| {
         instance.reserve(ctx, req, resp)
     });
