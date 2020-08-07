@@ -26,16 +26,13 @@ gcloud-init: ensure-build-config
 # Creates and authenticates a small, 6 node GKE cluster to work against (2 nodes are used for agones-metrics and agones-system)
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-test-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
-gcloud-test-cluster: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments create $(GCP_CLUSTER_NAME)  \
-		--properties cluster.zone:$(GCP_CLUSTER_ZONE),cluster.name:$(GCP_CLUSTER_NAME),cluster.nodePool.initialNodeCount:$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT),cluster.nodePool.machineType:$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)\
-		--template=$(mount_path)/build/gke-test-cluster/cluster.yml.jinja
+gcloud-test-cluster: $(ensure-build-image) terraform-init
+	$(MAKE) gcloud-terraform-cluster GCP_TF_CLUSTER_NAME="$(GCP_CLUSTER_NAME)" GCP_CLUSTER_ZONE="$(GCP_CLUSTER_ZONE)" \
+		GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT="$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)" GCP_CLUSTER_NODEPOOL_MACHINETYPE="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)"
 	$(MAKE) gcloud-auth-cluster
 
 clean-gcloud-test-cluster: $(ensure-build-image)
-	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) gcloud \
-		deployment-manager deployments delete $(GCP_CLUSTER_NAME)
+	$(MAKE) gcloud-terraform-destroy-cluster
 
 # Creates a gcloud cluster for end-to-end
 # it installs also a consul cluster to handle build system concurrency using a distributed lock

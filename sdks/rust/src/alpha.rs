@@ -16,9 +16,9 @@ use std::sync::Arc;
 
 use grpcio;
 
-use errors::*;
-use grpc::alpha;
-use grpc::alpha_grpc;
+use super::errors::*;
+use super::grpc::alpha;
+use super::grpc::alpha_grpc;
 
 /// Alpha is an instance of the Agones Alpha SDK
 pub struct Alpha {
@@ -100,6 +100,101 @@ impl Alpha {
         let res = self
             .client
             .get_connected_players(&req)
+            .map(|pl| pl.list.into())?;
+        Ok(res)
+    }
+
+    /// This returns the last player capacity that was set through the SDK.
+    /// If the player capacity is set from outside the SDK, use sdk.get_gameserver() instead.
+    pub async fn get_player_capacity_async(&self) -> Result<i64> {
+        let req = alpha::Empty::new();
+        let count = self
+            .client
+            .get_player_capacity_async(&req)?
+            .await
+            .map(|c| c.count)?;
+        Ok(count)
+    }
+
+    /// This changes the player capacity to a new value.
+    pub async fn set_player_capacity_async(&self, capacity: i64) -> Result<()> {
+        let mut c = alpha::Count::new();
+        c.set_count(capacity);
+        let res = self
+            .client
+            .set_player_capacity_async(&c)?
+            .await
+            .map(|_| ())?;
+        Ok(res)
+    }
+
+    /// This function increases the SDK’s stored player count by one, and appends this playerID to GameServer.status.players.ids.
+    /// Returns true and adds the playerID to the list of playerIDs if the playerIDs was not already in the list of connected playerIDs.
+    pub async fn player_connect_async<S>(&self, id: S) -> Result<bool>
+    where
+        S: Into<String>,
+    {
+        let mut p = alpha::PlayerID::new();
+        p.set_playerID(id.into());
+        let res = self
+            .client
+            .player_connect_async(&p)?
+            .await
+            .map(|b| b.bool)?;
+        Ok(res)
+    }
+
+    /// This function decreases the SDK’s stored player count by one, and removes the playerID from GameServer.status.players.ids.
+    /// Will return true and remove the supplied playerID from the list of connected playerIDs if the playerID value exists within the list.
+    pub async fn player_disconnect_async<S>(&self, id: S) -> Result<bool>
+    where
+        S: Into<String>,
+    {
+        let mut p = alpha::PlayerID::new();
+        p.set_playerID(id.into());
+        let res = self
+            .client
+            .player_disconnect_async(&p)?
+            .await
+            .map(|b| b.bool)?;
+        Ok(res)
+    }
+
+    /// Returns the current player count.
+    pub async fn get_player_count_async(&self) -> Result<i64> {
+        let req = alpha::Empty::new();
+        let count = self
+            .client
+            .get_player_count_async(&req)?
+            .await
+            .map(|c| c.count)?;
+        Ok(count)
+    }
+
+    /// This returns if the playerID is currently connected to the GameServer.
+    /// This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
+    pub async fn is_player_connected_async<S>(&self, id: S) -> Result<bool>
+    where
+        S: Into<String>,
+    {
+        let mut p = alpha::PlayerID::new();
+        p.set_playerID(id.into());
+        let res = self
+            .client
+            .is_player_connected_async(&p)?
+            .await
+            .map(|b| b.bool)?;
+        Ok(res)
+    }
+
+    /// This returns the list of the currently connected player ids.
+    /// This is always accurate, even if the value has not been updated to the Game Server status yet.
+    pub async fn get_connected_players_async(&self) -> Result<Vec<String>> {
+        let req = alpha::Empty::new();
+        let res = self
+            .client
+            .get_connected_players_async(&req)?
+            .await
             .map(|pl| pl.list.into())?;
         Ok(res)
     }

@@ -51,9 +51,19 @@ func computeDesiredFleetSize(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fle
 	return 0, false, errors.New("wrong policy type, should be one of: Buffer, Webhook")
 }
 
-func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error) {
+// buildURLFromWebhookPolicy - build URL for Webhook and set CARoot for client Transport
+func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (u *url.URL, err error) {
 	if w.URL != nil && w.Service != nil {
 		return nil, errors.New("service and URL cannot be used simultaneously")
+	}
+
+	scheme := "http"
+	if w.CABundle != nil {
+		scheme = "https"
+
+		if err := setCABundle(w.CABundle); err != nil {
+			return nil, err
+		}
 	}
 
 	if w.URL != nil {
@@ -79,15 +89,6 @@ func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (*url.URL, error)
 
 	if w.Service.Namespace == "" {
 		w.Service.Namespace = "default"
-	}
-
-	scheme := "http"
-	if w.CABundle != nil {
-		scheme = "https"
-
-		if err := setCABundle(w.CABundle); err != nil {
-			return nil, err
-		}
 	}
 
 	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path), nil
