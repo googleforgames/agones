@@ -1,3 +1,17 @@
+// Copyright 2020 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include "Classes.h"
@@ -78,7 +92,7 @@ private:
  * \brief UAgonesComponent is the Unreal Component to call to the Agones SDK.
  * See - https://agones.dev/ for more information.
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Config = Game)
 class AGONES_API UAgonesComponent final : public UActorComponent
 {
 	GENERATED_BODY()
@@ -89,19 +103,19 @@ public:
 	/**
 	 * \brief HttpPort is the default Agones HTTP port to use.
 	 */
-	UPROPERTY(EditAnywhere, Category = Agones)
+	UPROPERTY(EditAnywhere, Category = Agones, Config)
 	FString HttpPort = "9358";
 
 	/**
 	 * \brief HealthRateSeconds is the frequency to send Health calls. Value of 0 will disable auto health calls.
 	 */
-	UPROPERTY(EditAnywhere, Category = Agones)
+	UPROPERTY(EditAnywhere, Category = Agones, Config)
 	float HealthRateSeconds = 10.f;
 
 	/**
 	 * \brief bDisableAutoConnect will stop the component auto connecting (calling GamesServer and Ready).
 	 */
-	UPROPERTY(EditAnywhere, Category = Agones)
+	UPROPERTY(EditAnywhere, Category = Agones, Config)
 	bool bDisableAutoConnect;
 
 	/**
