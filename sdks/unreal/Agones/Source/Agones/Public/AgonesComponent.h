@@ -92,7 +92,7 @@ private:
  * \brief UAgonesComponent is the Unreal Component to call to the Agones SDK.
  * See - https://agones.dev/ for more information.
  */
-UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Config = Game)
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent), Config = Game, defaultconfig)
 class AGONES_API UAgonesComponent final : public UActorComponent
 {
 	GENERATED_BODY()

@@ -4,7 +4,7 @@
   "CreatedBy": "",
   "CreatedByURL": "",
   "Description": "Agones SDK for Unreal, wrapping the Agones REST API.",
-  "DocsURL": "https://agones.dev/site/docs/guides/client-sdks/rest/",
+  "DocsURL": "https://agones.dev/site/docs/guides/client-sdks/unreal/",
   "FileVersion": 3,
   "FriendlyName": "Agones",
   "Installed": false,

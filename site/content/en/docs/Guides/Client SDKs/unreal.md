@@ -77,13 +77,10 @@ Available settings:
 - Send Ready at Startup. Automatically send a Ready request when the server starts. Disable this to manually control when the game server should be marked as ready. (default: `true`)
 {{% /feature %}}
 {{% feature publishVersion="1.8.0" %}}
-# Agones Unreal SDK
-
-This is a SDK inspired by the REST API to the Agones sidecars that allows engineers to talk to the sidecar from either C++ or Blueprints.
 
 ## Getting Started
 
-The Agones Unreal SDK can either be used from C++ or from Blueprints.
+This is a SDK inspired by the REST API to the Agones sidecars that allows engineers to communicate with the sidecar from either C++ or Blueprints.
 
 ### Getting the Code
 
@@ -91,7 +88,6 @@ Easiest way to get this code is to clone the repository and drop the entire plug
 
 We could however turn this into a marketplace plugin that can be retrived from the marketplace directly into the UE4 editor.
 
-### Health Calls
 #### Using C++
 - Add Plugin (in your own `.uplugin` file)
 ```
