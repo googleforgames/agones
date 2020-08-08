@@ -142,6 +142,17 @@ gcloud compute firewall-rules create game-server-firewall \
   --description "Firewall to allow game server udp traffic"
 ```
 
+{{< alert title="Note" color="info">}}
+Before planning your production GKE infrastructure, it is worth reviewing the 
+[different types of GKE clusters that can be created](https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters),
+such as Zonal or Regional, as each has different reliability and cost values, and ensuring this aligns with your
+Service Level Objectives or Agreements. 
+
+This is particularly true for GKE masters, which can go down temporarily to adjust for cluster resizing,
+[automatic upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades) and
+[repairs](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#repairs). 
+{{< /alert >}}
+
 ## Next Steps
 
 - Continue to [Install Agones]({{< relref "../Install Agones/_index.md" >}}).
