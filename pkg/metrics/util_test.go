@@ -16,12 +16,14 @@ package metrics
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -184,5 +186,95 @@ func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1.FleetAutos
 			CurrentReplicas: 10,
 			DesiredReplicas: 20,
 		},
+	}
+}
+
+func TestParseLabels(t *testing.T) {
+	cases := []struct {
+		desc     string
+		labels   string
+		expected map[string]string
+		err      string
+	}{
+		{
+			desc:     "Two valid labels, no error",
+			labels:   "l1=1,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "",
+		},
+		{
+			desc:     "Empty input string, empty struct expected",
+			labels:   "",
+			expected: map[string]string{},
+			err:      "",
+		},
+		{
+			desc:     "Valid labels, invalid separator, error expected",
+			labels:   "l1=1|l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid labels: l1=1|l2=2, expect key=value,key2=value2",
+		},
+		{
+			desc:     "Two valid labels with extra spaces, error expected",
+			labels:   "   l1=1,   l2=2   ",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "",
+		},
+		{
+			desc:     "Two invalid labels, error expected",
+			labels:   "l1-1,l2-2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid labels: l1-1,l2-2, expect key=value,key2=value2",
+		},
+		{
+			desc:     "Invalid key utf8 string, error expected",
+			labels:   "\xF4=1,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid key: \xF4, must be a valid utf-8 string",
+		},
+		{
+			desc:     "Invalid value utf8 string, error expected",
+			labels:   "l1=\xF4,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid value: \xF4, must be a valid utf-8 string",
+		},
+		{
+			desc:     "Empty key, error expected",
+			labels:   " =1,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid key: can not be empty",
+		},
+		{
+			desc:     "Empty value, error expected",
+			labels:   "l1= ,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid value for key l1: can not be empty",
+		},
+		{
+			desc:     "Empty key and value, key err excpected",
+			labels:   " = ,l2=2",
+			expected: map[string]string{"l1": "1", "l2": "2"},
+			err:      "invalid key: can not be empty",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			res, err := parseLabels(tc.labels)
+
+			if tc.err != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.err, err.Error())
+			} else {
+				require.NoError(t, err)
+				// retrieve inner map
+				m := reflect.ValueOf(res).Elem().FieldByName("m").MapRange()
+				for m.Next() {
+					val, ok := tc.expected[m.Key().String()]
+					require.True(t, ok)
+					assert.Equal(t, val, m.Value().FieldByName("val").String())
+				}
+			}
+		})
 	}
 }

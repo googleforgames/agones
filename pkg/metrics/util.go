@@ -68,12 +68,23 @@ func parseLabels(s string) (*stackdriver.Labels, error) {
 		}
 		key := strings.TrimSpace(keyValue[0])
 		value := strings.TrimSpace(keyValue[1])
-		if !utf8.ValidString(key) || !utf8.ValidString(value) {
-			return nil, errors.New("invalid labels: must be a valid utf-8 string")
+
+		if key == "" {
+			return nil, errors.New("invalid key: can not be empty")
 		}
-		if key == "" || value == "" {
-			return nil, errors.New("invalid labels: must not be empty string")
+
+		if value == "" {
+			return nil, fmt.Errorf("invalid value for key %s: can not be empty", key)
 		}
+
+		if !utf8.ValidString(key) {
+			return nil, fmt.Errorf("invalid key: %s, must be a valid utf-8 string", key)
+		}
+
+		if !utf8.ValidString(value) {
+			return nil, fmt.Errorf("invalid value: %s, must be a valid utf-8 string", value)
+		}
+
 		res.Set(key, value, "")
 	}
 	return res, nil

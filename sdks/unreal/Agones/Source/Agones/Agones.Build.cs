@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,28 +16,26 @@ using UnrealBuildTool;
 
 public class Agones : ModuleRules
 {
-	public Agones(ReadOnlyTargetRules Target) : base(Target)
+	public Agones(ReadOnlyTargetRules target) : base(target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
-			new string[] {
-			});
-
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-				"Http",
-			});
-		
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+		PublicIncludePaths.AddRange(new string[] {});
+		PrivateIncludePaths.AddRange(new string[] {});
+		PublicDependencyModuleNames.AddRange(new[]
+		{
+			"Core",
+			"Http",
+			"Json",
+			"JsonUtilities"
+		});
 		PrivateDependencyModuleNames.AddRange(
-			new string[]
+			new[]
 			{
 				"CoreUObject",
-				"Json",
-				"JsonUtilities",
 				"Engine",
+				"Slate",
+				"SlateCore"
 			});
+		DynamicallyLoadedModuleNames.AddRange(new string[]{ });
 	}
 }

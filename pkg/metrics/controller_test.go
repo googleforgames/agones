@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricexport"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -395,4 +396,47 @@ func TestCalcDuration(t *testing.T) {
 		})
 	}
 	assert.Len(t, c.gameServerStateLastChange.Keys(), 0, "We should not have any keys after the test")
+}
+
+func TestIsSystemNode(t *testing.T) {
+	cases := []struct {
+		desc     string
+		node     *corev1.Node
+		expected bool
+	}{
+		{
+			desc: "Is system node, true expected",
+			node: &corev1.Node{
+				Spec: corev1.NodeSpec{
+					Taints: []corev1.Taint{{Key: "agones.dev/test"}},
+				},
+			},
+			expected: true,
+		},
+		{
+			desc: "Not a system node, false expected",
+			node: &corev1.Node{
+				Spec: corev1.NodeSpec{
+					Taints: []corev1.Taint{{Key: "qwerty.dev/test"}},
+				},
+			},
+			expected: false,
+		},
+		{
+			desc: "Empty taints, false expected",
+			node: &corev1.Node{
+				Spec: corev1.NodeSpec{
+					Taints: []corev1.Taint{},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.desc, func(t *testing.T) {
+			res := isSystemNode(tc.node)
+			assert.Equal(t, tc.expected, res)
+		})
+	}
 }

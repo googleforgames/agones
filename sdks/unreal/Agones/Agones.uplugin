@@ -1,23 +1,24 @@
 {
-  "FileVersion": 3,
-  "Version": 1,
-  "VersionName": "0.2",
-  "FriendlyName": "Agones",
-  "Description": "Unreal Engine Plugin for Agones Game Server Client",
-  "Category": "Google",
-  "CreatedBy": "Google Inc",
-  "CreatedByURL": "https://agones.dev",
-  "DocsURL": "https://agones.dev/site/docs/",
-  "MarketplaceURL": "",
-  "SupportURL": "https://github.com/googleforgames/agones/issues",
   "CanContainContent": false,
-  "IsBetaVersion": true,
-  "Installed": true,
+  "Category": "Agones",
+  "CreatedBy": "",
+  "CreatedByURL": "",
+  "Description": "Agones SDK for Unreal, wrapping the Agones REST API.",
+  "DocsURL": "https://agones.dev/site/docs/guides/client-sdks/unreal/",
+  "FileVersion": 3,
+  "FriendlyName": "Agones",
+  "Installed": false,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "MarketplaceURL": "",
   "Modules": [
     {
+      "LoadingPhase": "PreLoadingScreen",
       "Name": "Agones",
-      "Type": "Runtime",
-      "LoadingPhase": "Default"
+      "Type": "Runtime"
     }
-  ]
+  ],
+  "SupportURL": "https://github.com/googleforgames/agones",
+  "Version": 2,
+  "VersionName": "2.0.0"
 }
