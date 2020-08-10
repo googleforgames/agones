@@ -46,10 +46,10 @@ local.zone)}
 }
 
 resource "google_container_cluster" "primary" {
-  name     = local.name
-  location = local.zone
-  project  = local.project
-  network  = local.network
+  name       = local.name
+  location   = local.zone
+  project    = local.project
+  network    = local.network
   subnetwork = local.subnetwork
 
   min_master_version = local.kubernetesVersion
@@ -146,7 +146,7 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_compute_firewall" "default" {
-  name    = "game-server-firewall-firewall-${local.name}"
+  name    = length(var.firewallName) == 0 ? "game-server-firewall-${local.name}" : var.firewallName
   project = local.project
   network = local.network
 
