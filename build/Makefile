@@ -256,7 +256,7 @@ test-e2e-integration: $(ensure-build-image)
 		--gameserver-image=$(GS_TEST_IMAGE) \
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--feature-gates=$(FEATURE_GATES) \
-		--namespace=$(GAMESERVERS_NAMESPACE) \
+		--namespace=$(GAMESERVERS_NAMESPACE)
 	echo "Finishing e2e integration test!"
 
 test-e2e-failure: $(ensure-build-image)
@@ -413,6 +413,7 @@ gen-install: $(ensure-build-image)
 		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		--set agones.allocator.generateTLS=false \
+		--set agones.allocator.generateClientTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
 		> $(mount_path)/install/yaml/install.yaml'
 

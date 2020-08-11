@@ -13,7 +13,7 @@
 // limitations under the License.
 use std::collections::HashMap;
 
-use grpc::sdk;
+use super::grpc::sdk;
 
 #[derive(PartialEq, Clone, Default)]
 pub struct GameServer {
@@ -112,6 +112,7 @@ pub struct GameServerStatus {
     pub state: String,
     pub address: String,
     pub ports: Vec<GameServerStatusPort>,
+    pub players: Option<GameServerStatusPlayersStatus>,
 }
 
 impl GameServerStatus {
@@ -124,6 +125,10 @@ impl GameServerStatus {
                 .into_iter()
                 .map(|e| GameServerStatusPort::from_message(e))
                 .collect(),
+            players: msg
+                .players
+                .into_option()
+                .map(|e| GameServerStatusPlayersStatus::from_message(e)),
         }
     }
 }
@@ -139,6 +144,23 @@ impl GameServerStatusPort {
         GameServerStatusPort {
             name: msg.name,
             port: msg.port,
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Default)]
+pub struct GameServerStatusPlayersStatus {
+    pub count: i64,
+    pub capacity: i64,
+    pub ids: Vec<String>,
+}
+
+impl GameServerStatusPlayersStatus {
+    pub fn from_message(msg: sdk::GameServer_Status_PlayerStatus) -> GameServerStatusPlayersStatus {
+        GameServerStatusPlayersStatus {
+            count: msg.count,
+            capacity: msg.capacity,
+            ids: msg.ids.into(),
         }
     }
 }

@@ -60,7 +60,7 @@ If you want to add a new namespace afterward upgrade your release:
 
 ```bash
 $ kubectl create namespace ps4
-$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}"
+$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" --namespace agones-system
 ```
 
 ### Uninstalling the Chart
@@ -214,6 +214,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
 | `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `true`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |

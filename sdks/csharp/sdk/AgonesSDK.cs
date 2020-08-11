@@ -47,6 +47,7 @@ namespace Agones
 		private event Action<GameServer> GameServerUpdated;
 		internal Delegate[] GameServerUpdatedCallbacks => GameServerUpdated.GetInvocationList();
 		private readonly ILogger _logger;
+		internal readonly Alpha alpha;
 
 		public AgonesSDK(
 			double requestTimeoutSec = 15,
@@ -61,6 +62,16 @@ namespace Agones
 			channel = new Channel(Host, Port, ChannelCredentials.Insecure);
 			client = sdkClient ?? new SDK.SDKClient(channel);
 			healthStream = client.Health().RequestStream;
+			alpha = new Alpha(channel, requestTimeoutSec, cancellationTokenSource, logger);
+		}
+
+		/// <summary>
+		/// Alpha returns the Alpha SDK
+		/// </summary>
+		/// <returns>Agones alpha SDK</returns>
+		public IAgonesAlphaSDK Alpha()
+		{
+			return alpha;
 		}
 
 		/// <summary>

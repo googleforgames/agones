@@ -22,7 +22,7 @@ RUN apt-get update && \
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH \
-    RUST_VERSION=1.43.1
+    RUST_VERSION=1.45.0
 ENV RUST_ARCH=x86_64-unknown-linux-gnu \
     RUSTUP_SHA256=c9837990bce0faab4f6f52604311a19bb8d2cde989bea6a7b605c8e526db6f02
 RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rustup-init && \
@@ -35,8 +35,8 @@ RUN wget -q https://static.rust-lang.org/rustup/archive/1.11.0/${RUST_ARCH}/rust
     rustc --version;
 
 # install rust tooling for SDK generation
-RUN cargo install protobuf-codegen --vers 2.0.2
-RUN cargo install grpcio-compiler --vers 0.3.0
+RUN cargo install protobuf-codegen --vers 2.16.2
+RUN cargo install grpcio-compiler --vers 0.6.0
 
 RUN wget -q https://cmake.org/files/v3.14/cmake-3.14.1-Linux-x86_64.sh
 RUN mkdir /opt/cmake

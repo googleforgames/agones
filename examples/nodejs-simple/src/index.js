@@ -17,12 +17,12 @@ const util = require('util');
 
 const sleep = util.promisify(setTimeout);
 
-const agonesSDK = new AgonesSDK();
-
 const DEFAULT_TIMEOUT = 60;
 const MAX_TIMEOUT = 2147483;
 
-const connect = async (timeout) => {
+const connect = async (timeout, enableAlpha) => {
+	let agonesSDK = new AgonesSDK();
+
 	let lifetimeInterval;
 	let healthInterval;
 	
@@ -41,7 +41,16 @@ const connect = async (timeout) => {
 			console.log('Health ping sent');
 		}, 20000);
 		agonesSDK.watchGameServer((result) => {
-			console.log(`GameServer Update:\n\tname: ${result.objectMeta.name}\n\tstate: ${result.status.state}\n\tlabels: ${result.objectMeta.labelsMap.join(' & ')}\n\tannotations: ${result.objectMeta.annotationsMap.join(' & ')}`);
+			let output = `GameServer Update:
+	name: ${result.objectMeta.name}
+	state: ${result.status.state}
+	labels: ${result.objectMeta.labelsMap.join(' & ')}
+	annotations: ${result.objectMeta.annotationsMap.join(' & ')}`;
+			if (enableAlpha) {
+				output += `
+	players: ${result.status.players.count}/${result.status.players.capacity} [${result.status.players.idsList}]`;
+			}
+			console.log(output);
 		});
 
 		await sleep(10000);
@@ -64,6 +73,11 @@ const connect = async (timeout) => {
 		console.log('Reserving for 10 seconds');
 		await agonesSDK.reserve(10);
 		await sleep(20000);
+
+		if (enableAlpha) {
+			console.log('Running alpha suite');
+			await runAlphaSuite(agonesSDK);
+		}
 
 		if (timeout === 0) {
 			do {
@@ -91,16 +105,72 @@ const connect = async (timeout) => {
 		console.error(error);
 		clearInterval(healthInterval);
 		clearInterval(lifetimeInterval);
+		process.exit(0);
 	}
+};
+
+const runAlphaSuite = async (agonesSDK) => {
+	await sleep(10000);
+	console.log('Setting capacity');
+	await agonesSDK.alpha.setPlayerCapacity(64);
+
+	await sleep(10000);
+	console.log('Getting capacity');
+	let result = await agonesSDK.alpha.getPlayerCapacity();
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Connecting a player');
+	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Connecting a duplicate player');
+	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Connecting another player');
+	await agonesSDK.alpha.playerConnect('secondPlayerID');
+
+	await sleep(10000);
+	console.log('Getting player count');
+	result = await agonesSDK.alpha.getPlayerCount();
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Finding if firstPlayerID connected');
+	result = await agonesSDK.alpha.isPlayerConnected('firstPlayerID');
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Getting connected players');
+	result = await agonesSDK.alpha.getConnectedPlayers();
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Disconnecting a player');
+	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
+	console.log(`result: ${result}`);
+
+	await sleep(10000);
+	console.log('Disconnecting the same player');
+	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
+	console.log(`result: ${result}`);
 };
 
 let args = process.argv.slice(2);
 let timeout = DEFAULT_TIMEOUT;
+let enableAlpha = false;
 
 for (let arg of args) {
 	let [argName, argValue] = arg.split('=');
 	if (argName === '--help') {
-		console.log(`Example to call each SDK feature in turn. Once complete will call shutdown and close after a default timeout of ${DEFAULT_TIMEOUT} seconds.\n\nOptions:\n\t--timeout=...\t\tshutdown timeout in seconds. Use 0 to never shut down`);
+		console.log(`Example to call each SDK feature in turn. Once complete will call shutdown and close after a default timeout of ${DEFAULT_TIMEOUT} seconds.
+		
+Options:
+	--timeout=...\t\tshutdown timeout in seconds. Use 0 to never shut down
+	--alpha\t\t\tenable alpha features`);
 		return;
 	}
 	if (argName === '--timeout') {
@@ -116,6 +186,11 @@ for (let arg of args) {
 			console.log(`Using shutdown timeout of ${timeout} seconds`);
 		}
 	}
+
+	if (argName === '--alpha') {
+		console.log('Enabling alpha features!');
+		enableAlpha = true;
+	}
 }
 
-connect(timeout);
+connect(timeout, enableAlpha);

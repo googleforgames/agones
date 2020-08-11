@@ -18,6 +18,8 @@
 [package]
 name = "rust-simple"
 version = "0.2.0"
+edition = "2018"
 
 [dependencies]
 agones = { path = "../../../sdks/rust" }
+async-std = "1.6.2"

@@ -15,11 +15,8 @@
 //! the Rust game server SDK
 #[macro_use]
 extern crate error_chain;
-extern crate futures;
-extern crate grpcio;
-extern crate grpcio_proto;
-extern crate protobuf;
 
+pub mod alpha;
 pub mod errors;
 mod grpc;
 mod sdk;

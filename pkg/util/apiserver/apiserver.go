@@ -105,7 +105,7 @@ func NewAPIServer(mux *http.ServeMux) *APIServer {
 
 // AddAPIResource stores the APIResource under the given groupVersion string, and returns it
 // in the appropriate place for the K8s discovery service
-// e.g. http://localhost:8001/apis/scheduling.k8s.io/v1beta1
+// e.g. http://localhost:8001/apis/scheduling.k8s.io/v1
 // as well as registering a CRDHandler that all http requests for the given APIResource are routed to
 func (as *APIServer) AddAPIResource(groupVersion string, resource metav1.APIResource, handler CRDHandler) {
 	_, ok := as.resourceList[groupVersion]

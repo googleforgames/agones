@@ -23,6 +23,7 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
@@ -44,7 +45,7 @@ func TestSortGameServersByLeastFullNodes(t *testing.T) {
 
 	result := sortGameServersByLeastFullNodes(list, nc)
 
-	assert.Len(t, result, len(list))
+	require.Len(t, result, len(list))
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[2].ObjectMeta.Name)
@@ -61,7 +62,7 @@ func TestSortGameServersByNewFirst(t *testing.T) {
 	l := len(list)
 
 	result := sortGameServersByNewFirst(list)
-	assert.Len(t, result, l)
+	require.Len(t, result, l)
 	assert.Equal(t, "g2", result[0].ObjectMeta.Name)
 	assert.Equal(t, "g1", result[1].ObjectMeta.Name)
 	assert.Equal(t, "g3", result[2].ObjectMeta.Name)
@@ -98,7 +99,7 @@ func TestListGameServersByGameServerSetOwner(t *testing.T) {
 	defer cancel()
 
 	list, err := ListGameServersByGameServerSetOwner(gameServers.Lister(), gsSet)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	// sort of stable ordering
 	sort.SliceStable(list, func(i, j int) bool {
