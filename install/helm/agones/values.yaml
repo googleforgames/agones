@@ -130,7 +130,7 @@ agones:
     disableMTLS: false
   image:
     registry: gcr.io/agones-images
-    tag: 1.8.0-dev
+    tag: 1.8.0-rc
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
