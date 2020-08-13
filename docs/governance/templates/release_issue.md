@@ -19,7 +19,10 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
-- [ ] Ensure the [`sdks/nodejs/package.json`][nodejs] version is correct (should be {version} if a full release, {version}-rc if release candidate)
+- [ ] Update SDK Package Versions
+    - [ ] Ensure the [`sdks/nodejs/package.json`][nodejs] version is correct (should be {version} if a full release, {version}-rc if release candidate)
+    - [ ] Ensure the [`sdks/csharp/AgonesSDK.nuspec` and `sdks/csharp/csharp-sdk.csproj`][csharp] versions 
+       are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Run `make gen-install`
 - [ ] Run `make test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
 - [ ] Create a *draft* release with the [release template][release-template]
@@ -37,6 +40,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
    - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package
+   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. (if release candidate: `make sdk-publish-csharp RELEASE_VERSION={version}-rc`) 
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
 - [ ] Do a `helm install` and a smoke test to confirm everything is working.
@@ -47,6 +51,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1-dev
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1-dev
 - [ ] If full release move the [`sdks/nodejs/package.json`][nodejs] to {version}+1-dev
+- [ ] If full release move the [`sdks/csharp/AgonesSDK.nuspec` and `sdks/csharp/csharp-sdk.csproj`][csharp] to {version}+1-dev
 - [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
@@ -59,3 +64,4 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 [release-template]: https://github.com/googleforgames/agones/blob/master/docs/governance/templates/release.md
 [build-makefile]: https://github.com/googleforgames/agones/blob/master/build/Makefile
 [nodejs]: https://github.com/googleforgames/agones/blob/master/sdks/nodejs/package.json
+[csharp]: https://github.com/googleforgames/agones/blob/master/sdks/csharp/sdk/

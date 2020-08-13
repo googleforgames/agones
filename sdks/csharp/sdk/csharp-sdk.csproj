@@ -13,8 +13,8 @@
     <PackageProjectUrl>https://agones.dev</PackageProjectUrl>
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <AssemblyName>AgonesSDK</AssemblyName>
-    <Version>1.7.0</Version>
-    <PackageTags>agones, googleforgames, kuberenetes</PackageTags>
+    <Version>1.8.0-rc</Version>
+    <PackageTags>agones, googleforgames, kuberenetes, multiplayer</PackageTags>
     <Company>agones.dev</Company>
     <Configurations>Debug;Release;DebugProtoGen</Configurations>
   </PropertyGroup>
