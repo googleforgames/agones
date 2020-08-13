@@ -605,9 +605,6 @@ Creates a short lived access to Google Cloud container repositories, so that you
 
 Utilities for deploying a Kubernetes Engine cluster on Google Cloud Platform using `google` Terraform provider.
 
-#### `make terraform-init`
-Install `google` and `google-beta` terraform providers and authorize.
-
 #### `make gcloud-terraform-cluster`
 Create GKE cluster and install release version of agones.
 Run next command to create GKE cluster with agones (version from helm repository):
