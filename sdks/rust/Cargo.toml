@@ -27,3 +27,4 @@ protobuf = "2.16.2"
 futures = { version = "0.3", features = ["compat"] }
 futures01 = "0.1"
 error-chain = "0.12.3"
+libz-sys = "=1.0.25" # = Can be removed when https://github.com/rust-lang/libz-sys/issues/65 is fixed
