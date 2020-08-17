@@ -196,8 +196,8 @@ everything separate (see below for overwriting these config locations). Therefor
 we will need to authenticate out gcloud tooling against it. To do that run `make gcloud-init` and fill in the
 prompts as directed.
 
-Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the deployment template
-found in the `gke-test-cluster` directory.
+Once authenticated, to create the test cluster, run `make gcloud-test-cluster`, which will use the Terraform
+configuration found in the `build/terraform/gke` directory.
 
 You can customize GKE cluster via environment variables or by using a [`local-includes`](./local-includes) file.
 See the table below for available customizations :
@@ -604,9 +604,6 @@ Creates a short lived access to Google Cloud container repositories, so that you
 ### Terraform
 
 Utilities for deploying a Kubernetes Engine cluster on Google Cloud Platform using `google` Terraform provider.
-
-#### `make terraform-init`
-Install `google` and `google-beta` terraform providers and authorize.
 
 #### `make gcloud-terraform-cluster`
 Create GKE cluster and install release version of agones.
