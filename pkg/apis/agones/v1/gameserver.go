@@ -71,6 +71,8 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
+
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
 	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
 	// SdkServerLogLevelDebug will cause the SDK server to output all messages including debug messages.
