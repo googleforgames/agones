@@ -40,6 +40,10 @@ spec:
     # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
     # protocol being used. Defaults to UDP. TCP is the only other option
+    # - "UDP" (default) use the UDP protocol
+    # - "TCP", use the TCP protocol
+    # - "TCPUDP", uses both TCP and UDP, and exposes the same hostPort for both protocols.
+    #       This will mean that it adds an extra port, and the first port is set to TCP, and second port set to UDP
     protocol: UDP
   # Health checking for the running game server
   health:
