@@ -118,7 +118,7 @@ func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error)
 const (
 	kubeconfigFlag      = "kubeconfig"
 	gsimageFlag         = "gameserver-image"
-	gsimageTcpUdpFlag   = "gameserver-image-tcpudp"
+	gsimageTCPUDPFlag   = "gameserver-image-tcpudp"
 	pullSecretFlag      = "pullsecret"
 	stressTestLevelFlag = "stress"
 	perfOutputDirFlag   = "perf-output"
@@ -176,7 +176,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(gsimageFlag))
-	runtime.Must(viper.BindEnv(gsimagetcpudpFlag))
+	runtime.Must(viper.BindEnv(gsimageTCPUDPFlag))
 	runtime.Must(viper.BindEnv(pullSecretFlag))
 	runtime.Must(viper.BindEnv(stressTestLevelFlag))
 	runtime.Must(viper.BindEnv(perfOutputDirFlag))
@@ -191,7 +191,7 @@ func NewFromFlags() (*Framework, error) {
 		return framework, err
 	}
 	framework.GameServerImage = viper.GetString(gsimageFlag)
-	framework.GameServerImageTCPUDP = viper.GetString(gsimagetcpudpFlag)
+	framework.GameServerImageTCPUDP = viper.GetString(gsimageTCPUDPFlag)
 	framework.PullSecret = viper.GetString(pullSecretFlag)
 	framework.StressTestLevel = viper.GetInt(stressTestLevelFlag)
 	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
