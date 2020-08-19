@@ -269,6 +269,7 @@ spec:
                             enum:
                             - UDP
                             - TCP
+                            - TCPUDP
                           containerPort:
                             title: The port that is being opened on the game server process
                             type: integer
@@ -565,6 +566,7 @@ spec:
                     enum:
                     - UDP
                     - TCP
+                    - TCPUDP
                   containerPort:
                     title: The port that is being opened on the game server process
                     type: integer
@@ -880,6 +882,7 @@ spec:
                             enum:
                             - UDP
                             - TCP
+                            - TCPUDP
                           containerPort:
                             title: The port that is being opened on the game server process
                             type: integer
