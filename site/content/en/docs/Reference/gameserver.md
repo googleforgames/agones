@@ -39,7 +39,7 @@ spec:
     containerPort: 7654
     # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
-    # protocol being used. Defaults to UDP. TCP is the only other option
+    # protocol being used. Defaults to UDP. TCP and TCPUDP are other options
     # - "UDP" (default) use the UDP protocol
     # - "TCP", use the TCP protocol
     # - "TCPUDP", uses both TCP and UDP, and exposes the same hostPort for both protocols.
@@ -111,7 +111,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
         - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
   - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
-  - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
+  - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
 - `sdkServer` defines parameters for the game server sidecar
   - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:

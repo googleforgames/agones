@@ -201,7 +201,7 @@ type GameServerPort struct {
 	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
-	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
+	// Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 }
 
