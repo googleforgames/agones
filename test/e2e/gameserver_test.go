@@ -704,7 +704,15 @@ func TestGameServerPassthroughPort(t *testing.T) {
 
 func TestGameServerTcpUdpProtocol(t *testing.T) {
 	t.Parallel()
-	gs := framework.TcpUdpGameServer(framework.Namespace)
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	const name = "tcpudp-server"
+	gs.ObjectMeta.GenerateName = name
+	gs.Spec.Container = name
+	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
+	gs.Spec.Template.Spec.Containers[0].Name = name
+	gs.Spec.Template.Spec.Containers[0].Image = framework.GameServerImageTCPUDP
+
 	// gate
 	_, valid := gs.Validate()
 	assert.True(t, valid)
@@ -726,21 +734,21 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
 
-	replyUdp, err := e2eframework.SendGameServerUDPToPort(readyGs, udpPort.Name, "Hello World !")
+	replyUDP, err := e2eframework.SendGameServerUDPToPort(readyGs, udpPort.Name, "Hello World !")
 	if err != nil {
 		t.Fatalf("Could not ping UDP GameServer: %v", err)
 	}
 
-	assert.Equal(t, "ACK UDP: Hello World !\n", replyUdp)
+	assert.Equal(t, "ACK UDP: Hello World !\n", replyUDP)
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("TCP ping passed, sending TCP ping")
 
-	replyTcp, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
 	if err != nil {
 		t.Fatalf("Could not ping TCP GameServer: %v", err)
 	}
 
-	assert.Equal(t, "ACK TCP: Hello World !\n", replyTcp)
+	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 }
 
 // TestGameServerResourceValidation - check that we are not able to use

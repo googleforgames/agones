@@ -71,6 +71,7 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP
 	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
 
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
