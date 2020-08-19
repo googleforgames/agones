@@ -578,6 +578,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 
 func TestCreateURL(t *testing.T) {
 	t.Parallel()
+	var nonStandardPort int32 = 8888
 
 	var testCases = []struct {
 		description string
@@ -585,6 +586,7 @@ func TestCreateURL(t *testing.T) {
 		name        string
 		namespace   string
 		path        string
+		port        *int32
 		expected    string
 	}{
 		{
@@ -611,11 +613,20 @@ func TestCreateURL(t *testing.T) {
 			path:        "",
 			expected:    "http://service1.default.svc:8000",
 		},
+		{
+			description: "OK, port specified",
+			scheme:      "http",
+			name:        "service1",
+			namespace:   "default",
+			path:        "scale",
+			port:        &nonStandardPort,
+			expected:    "http://service1.default.svc:8888/scale",
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			res := createURL(tc.scheme, tc.name, tc.namespace, tc.path)
+			res := createURL(tc.scheme, tc.name, tc.namespace, tc.path, tc.port)
 
 			if assert.NotNil(t, res) {
 				assert.Equal(t, tc.expected, res.String())
