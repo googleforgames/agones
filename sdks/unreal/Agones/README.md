@@ -77,11 +77,11 @@ void APlatformGameSession::PostLogin(APlayerController* NewPlayer)
 
 #### Using Blueprints
 - Add Component to your Blueprint GameMode
-![component](/docs/img/01_bp_component.PNG)
+![component](./docs/img/01_bp_component.PNG)
 - This will automatically call `/health` every 10 seconds and once `/gameserver` calls are succesful it will call `/ready`.
 
 - Accessing other functionality of Agones can be done via adding a node in Blueprints.
-![actions](/docs/img/02_bp_actions.PNG)
+![actions](./docs/img/02_bp_actions.PNG)
 
 
 ## SDK Functionality
