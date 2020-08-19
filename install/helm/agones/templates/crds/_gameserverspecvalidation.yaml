@@ -76,7 +76,7 @@ properties:
               - Static
               - Passthrough
             protocol:
-              title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+              title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options
               type: string
               enum:
               - UDP
