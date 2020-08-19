@@ -78,6 +78,8 @@ properties:
             protocol:
               title: Protocol being used. Defaults to UDP. TCP is the only other option
               type: string
+              title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+              type: string
               enum:
               - UDP
               - TCP
