@@ -121,6 +121,7 @@ func udpReadPacket(conn net.PacketConn, b []byte) (net.Addr, string) {
 
 // respond responds to a given sender.
 func udpRespond(conn net.PacketConn, sender net.Addr, txt string) {
+	log.Printf("Responding with %q", txt)
 	if _, err := conn.WriteTo([]byte(txt), sender); err != nil {
 		log.Fatalf("Could not write to udp stream: %v", err)
 	}

@@ -254,6 +254,7 @@ test-e2e-integration: $(ensure-build-image)
 	echo "Starting e2e integration test!"
 	$(GO_TEST) $(ARGS) $(agones_package)/test/e2e $(GO_E2E_TEST_ARGS) \
 		--gameserver-image=$(GS_TEST_IMAGE) \
+		--gameserver-image-tcpudp=$(GS_TEST_IMAGE_TCPUDP)
 		--pullsecret=$(IMAGE_PULL_SECRET) \
 		--feature-gates=$(FEATURE_GATES) \
 		--namespace=$(GAMESERVERS_NAMESPACE)

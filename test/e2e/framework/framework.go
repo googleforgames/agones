@@ -64,14 +64,15 @@ var NamespaceLabel = map[string]string{"owner": "e2e-test"}
 
 // Framework is a testing framework
 type Framework struct {
-	KubeClient      kubernetes.Interface
-	AgonesClient    versioned.Interface
-	GameServerImage string
-	PullSecret      string
-	StressTestLevel int
-	PerfOutputDir   string
-	Version         string
-	Namespace       string
+	KubeClient            kubernetes.Interface
+	AgonesClient          versioned.Interface
+	GameServerImage       string
+	GameServerImageTcpUdp string
+	PullSecret            string
+	StressTestLevel       int
+	PerfOutputDir         string
+	Version               string
+	Namespace             string
 }
 
 // New setups a testing framework using a kubeconfig path and the game server image to use for testing.
@@ -117,6 +118,7 @@ func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error)
 const (
 	kubeconfigFlag      = "kubeconfig"
 	gsimageFlag         = "gameserver-image"
+	gsimagetcpudpFlag   = "gameserver-image-tcpudp"
 	pullSecretFlag      = "pullsecret"
 	stressTestLevelFlag = "stress"
 	perfOutputDirFlag   = "perf-output"
@@ -174,6 +176,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(kubeconfigFlag))
 	runtime.Must(viper.BindEnv(gsimageFlag))
+	runtime.Must(viper.BindEnv(gsimagetcpudpFlag))
 	runtime.Must(viper.BindEnv(pullSecretFlag))
 	runtime.Must(viper.BindEnv(stressTestLevelFlag))
 	runtime.Must(viper.BindEnv(perfOutputDirFlag))
@@ -188,6 +191,7 @@ func NewFromFlags() (*Framework, error) {
 		return framework, err
 	}
 	framework.GameServerImage = viper.GetString(gsimageFlag)
+	framework.GameServerImageTcpUdp = viper.GetString(gsimagetcpudpFlag)
 	framework.PullSecret = viper.GetString(pullSecretFlag)
 	framework.StressTestLevel = viper.GetInt(stressTestLevelFlag)
 	framework.PerfOutputDir = viper.GetString(perfOutputDirFlag)
@@ -195,6 +199,7 @@ func NewFromFlags() (*Framework, error) {
 	framework.Namespace = viper.GetString(namespaceFlag)
 
 	logrus.WithField("gameServerImage", framework.GameServerImage).
+		WithField("gameServerImageTcpUdp", framework.GameServerImageTcpUdp).
 		WithField("pullSecret", framework.PullSecret).
 		WithField("stressTestLevel", framework.StressTestLevel).
 		WithField("perfOutputDir", framework.PerfOutputDir).
@@ -488,6 +493,59 @@ func SendUDP(address, msg string) (string, error) {
 	return string(b[:n]), nil
 }
 
+// SendGameServerTCP sends a message to a gameserver and returns its reply
+// assumes the first port is the port to send the message to,
+// returns error if no Ports were allocated
+func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+	return SendGameServerTCPToPort(gs, gs.Status.Ports[0].Name, msg)
+}
+
+// SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
+// returns error if no Ports were allocated or a port of the specified name doesn't exist
+func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+	var port agonesv1.GameServerStatusPort
+	for _, p := range gs.Status.Ports {
+		if p.Name == portName {
+			port = p
+		}
+	}
+	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
+	return SendTCP(address, msg)
+}
+
+// SendTCP sends a message to an address, and returns its reply if
+// it returns one in 30 seconds
+func SendTCP(address, msg string) (string, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		err = conn.Close()
+	}()
+	_, err = conn.Write([]byte(msg))
+	if err != nil {
+		return "", errors.Wrapf(err, "Could not write message %s", msg)
+	}
+	b := make([]byte, 1024)
+
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		return "", err
+	}
+	n, err := conn.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return string(b[:n]), nil
+}
+
 // GetAllocation returns a GameServerAllocation that is looking for a Ready
 // GameServer from this fleet.
 func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
@@ -615,6 +673,48 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 					Containers: []corev1.Container{{
 						Name:            "udp-server",
 						Image:           f.GameServerImage,
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+							Limits: corev1.ResourceList{
+								corev1.ResourceCPU:    resource.MustParse("30m"),
+								corev1.ResourceMemory: resource.MustParse("32Mi"),
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
+
+	if f.PullSecret != "" {
+		gs.Spec.Template.Spec.ImagePullSecrets = []corev1.LocalObjectReference{{
+			Name: f.PullSecret}}
+	}
+
+	return gs
+}
+
+// TcpUdpGameServer provides a default GameServer fixture, based on parameters
+// passed to the Test Framework.
+func (f *Framework) TcpUdpGameServer(namespace string) *agonesv1.GameServer {
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "tcpudp-server", Namespace: namespace},
+		Spec: agonesv1.GameServerSpec{
+			Container: "tcpudp-server",
+			Ports: []agonesv1.GameServerPort{{
+				ContainerPort: 7654,
+				Name:          "gameport",
+				PortPolicy:    agonesv1.Dynamic,
+				Protocol:      agonesv1.ProtocolTCPUDP,
+			}},
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{{
+						Name:            "tcpudp-server",
+						Image:           f.GameServerImageTcpUdp,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Resources: corev1.ResourceRequirements{
 							Requests: corev1.ResourceList{

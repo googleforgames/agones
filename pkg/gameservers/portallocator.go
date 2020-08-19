@@ -175,11 +175,13 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 
 					extraPorts = append(extraPorts, duplicate)
 
+					gs.Spec.Ports[i].Name = p.Name + "-tcp"
 					gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
 				}
 			}
 
 			for _, p := range extraPorts {
+				p.Name = p.Name + "-udp"
 				p.Protocol = corev1.ProtocolUDP
 				gs.Spec.Ports = append(gs.Spec.Ports, p)
 			}

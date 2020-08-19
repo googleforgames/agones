@@ -119,7 +119,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		require.NotNil(t, gs)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[1].HostPort)
 		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[0].Protocol)
-		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[1].Protocol)
+		assert.Equal(t, corev1.ProtocolUDP, gsCopy.Spec.Ports[1].Protocol)
 		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
