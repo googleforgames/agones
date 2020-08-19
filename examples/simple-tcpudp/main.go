@@ -98,8 +98,6 @@ func udpListener(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
 			// respond here, as we os.Exit() before we get to below
 			udpRespond(conn, sender, "ACK UDP: "+txt+"\n")
 			exit(s)
-		// turns off the health pings
-
 		case "ALLOCATE":
 			allocate(s)
 		}
