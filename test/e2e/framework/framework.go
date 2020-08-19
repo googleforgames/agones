@@ -118,7 +118,7 @@ func newFramework(kubeconfig string, qps float32, burst int) (*Framework, error)
 const (
 	kubeconfigFlag      = "kubeconfig"
 	gsimageFlag         = "gameserver-image"
-	gsimagetcpudpFlag   = "gameserver-image-tcpudp"
+	gsimageTcpUdpFlag   = "gameserver-image-tcpudp"
 	pullSecretFlag      = "pullsecret"
 	stressTestLevelFlag = "stress"
 	perfOutputDirFlag   = "perf-output"
