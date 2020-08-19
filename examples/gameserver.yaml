@@ -50,7 +50,7 @@ spec:
     containerPort: 7654
     # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
-    # protocol being used. Defaults to UDP. TCP is the only other option
+    # protocol being used. Defaults to UDP. TCP and TCPUDP are other options
     protocol: UDP
   # Health checking for the running game server
   health:
