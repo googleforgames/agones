@@ -741,7 +741,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 
 	assert.Equal(t, "ACK UDP: Hello World !\n", replyUDP)
 
-	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("TCP ping passed, sending TCP ping")
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
 
 	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
 	if err != nil {

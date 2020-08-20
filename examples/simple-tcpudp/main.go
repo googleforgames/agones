@@ -129,13 +129,10 @@ func udpRespond(conn net.PacketConn, sender net.Addr, txt string) {
 func tcpHandleConnection(conn net.Conn, stop chan struct{}, s *sdk.SDK) {
 	log.Printf("Client %s connected", conn.RemoteAddr().String())
 	scanner := bufio.NewScanner(conn)
-	for {
-		if ok := scanner.Scan(); !ok {
-			log.Printf("Client %s disconnected", conn.RemoteAddr().String())
-			return
-		}
+	for scanner.Scan() {
 		tcpHandleCommand(conn, scanner.Text(), stop, s)
 	}
+	log.Printf("Client %s disconnected", conn.RemoteAddr().String())
 }
 
 func tcpHandleCommand(conn net.Conn, txt string, stop chan struct{}, s *sdk.SDK) {

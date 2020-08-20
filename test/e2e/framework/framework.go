@@ -17,9 +17,11 @@
 package framework
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/user"
@@ -524,8 +526,14 @@ func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg strin
 func SendTCP(address, msg string) (string, error) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
-		return "", err
+		log.Fatalf("Could not Dial: %v", err)
 	}
+
+	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		log.Fatalf("Timed out: %v", err)
+	}
+
 	defer func() {
 		err = conn.Close()
 	}()
@@ -533,17 +541,12 @@ func SendTCP(address, msg string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "Could not write message %s", msg)
 	}
-	b := make([]byte, 1024)
 
-	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	if err != nil {
-		return "", err
-	}
-	n, err := conn.Read(b)
-	if err != nil {
-		return "", err
-	}
-	return string(b[:n]), nil
+	// writes to the tcp connection
+	fmt.Fprintf(conn, msg+"\n")
+
+	response, _ := bufio.NewReader(conn).ReadString('\n')
+	return response, nil
 }
 
 // GetAllocation returns a GameServerAllocation that is looking for a Ready
