@@ -228,7 +228,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |
+| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancerIP] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -239,6 +240,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
+[loadBalancerIP]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
