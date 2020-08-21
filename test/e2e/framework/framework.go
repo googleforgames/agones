@@ -537,10 +537,6 @@ func SendTCP(address, msg string) (string, error) {
 	defer func() {
 		err = conn.Close()
 	}()
-	_, err = conn.Write([]byte(msg))
-	if err != nil {
-		return "", errors.Wrapf(err, "Could not write message %s", msg)
-	}
 
 	// writes to the tcp connection
 	fmt.Fprintf(conn, msg+"\n")
