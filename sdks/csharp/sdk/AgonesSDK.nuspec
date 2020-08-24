@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>AgonesSDK</id>
-    <version>1.7.0</version>
+    <version>1.9.0-dev</version>
     <authors>Google LLC</authors>
     <owners>Google LLC</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>https://agones.dev/</projectUrl>
     <description>Game Server SDK for Agones, the open source project for hosting dedicated game servers on Kubernetes</description>
-    <tags>agones, googleforgames, kubernetes</tags>
+    <tags>agones, googleforgames, kubernetes, multiplayer, gameservers</tags>
     <repository url="https://github.com/googleforgames/agones" />
     <dependencies>
       <group targetFramework=".NETStandard2.0">
