@@ -18,5 +18,5 @@ set -ex
 cd ./sdks/csharp/sdk
 
 dotnet pack csharp-sdk.csproj --configuration Release --include-source --output ./pkgs
-read -p 'NuGet Token: ' TOKEN && \
+read -p 'NuGet API Key: ' TOKEN && \
 dotnet nuget push ./pkgs/AgonesSDK.$VERSION.nupkg -k $TOKEN -s https://api.nuget.org/v3/index.json

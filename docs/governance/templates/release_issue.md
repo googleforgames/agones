@@ -40,7 +40,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
    - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package
-   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. (if release candidate: `make sdk-publish-csharp RELEASE_VERSION={version}-rc`) 
+   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. (if release candidate: 
+   `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
+   Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` and verify that the new version is available via the command `helm search agones/`
 - [ ] Do a `helm install` and a smoke test to confirm everything is working.
