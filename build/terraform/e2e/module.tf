@@ -62,3 +62,16 @@ resource "helm_release" "consul" {
     value = "ClusterIP"
   }
 }
+
+resource "google_compute_firewall" "tcp" {
+  name    = "game-server-firewall-e2e-test-cluster-tcp"
+  project = var.project
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["7000-8000"]
+  }
+
+  target_tags = ["game-server"]
+}
