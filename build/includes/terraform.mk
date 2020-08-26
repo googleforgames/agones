@@ -91,7 +91,7 @@ ifndef GCP_PROJECT
 	$(eval GCP_PROJECT=$(shell sh -c "gcloud config get-value project 2> /dev/null"))
 endif
 	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
-	$(MAKE) run-terraform-test
+	$(MAKE) run-terraform-test GCP_PROJECT=$(GCP_PROJECT)
 	$(MAKE) terraform-test-clean
 
 terraform-test-clean: $(ensure-build-image)
