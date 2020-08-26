@@ -32,7 +32,7 @@ variable "cluster" {
     "project"           = "agones"
     "network"           = "default"
     "subnetwork"        = ""
-    "kubernetesVersion" = "1.15"
+    "kubernetesVersion" = "1.16"
   }
 }
 

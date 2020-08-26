@@ -97,10 +97,6 @@ variable "feature_gates" {
   default = ""
 }
 
-variable "kubernetes_version" {
-  default = "1.15"
-}
-
 module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
@@ -111,7 +107,6 @@ module "gke_cluster" {
     "initialNodeCount"  = var.node_count
     "project"           = var.project
     "network"           = var.network
-    "kubernetesVersion" = var.kubernetes_version
   }
 }
 
