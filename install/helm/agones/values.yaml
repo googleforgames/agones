@@ -124,6 +124,7 @@ agones:
     http:
       port: 443
       serviceType: LoadBalancer
+      loadBalancerIP: ""
       annotations: {}
     generateTLS: true
     generateClientTLS: true
