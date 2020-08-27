@@ -29,7 +29,7 @@ locals {
   initialNodeCount  = lookup(var.cluster, "initialNodeCount", "4")
   network           = lookup(var.cluster, "network", "default")
   subnetwork        = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.15")
+  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.16")
 }
 
 # echo command used for debugging purpose
@@ -57,6 +57,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "default"
     node_count = local.initialNodeCount
+    version = local.kubernetesVersion
 
     management {
       auto_upgrade = false
@@ -80,6 +81,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-system"
     node_count = 1
+    version = local.kubernetesVersion
 
     management {
       auto_upgrade = false
@@ -111,6 +113,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-metrics"
     node_count = 1
+    version = local.kubernetesVersion
 
     management {
       auto_upgrade = false

@@ -186,9 +186,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
-| `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `64`                   |
-| `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `100`                  |
-| `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `200`                  |
+| `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `100`                  |
+| `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `400`                  |
+| `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `500`                  |
 | `agones.controller.logLevel`                        | Agones Controller Log level. Log only entries with that severity and above                      | `info`                 |
 | `agones.controller.persistentLogs`                  | Store Agones controller logs in a temporary volume attached to a container for debugging        | `true`                 |
 | `agones.controller.persistentLogsSizeLimitMB`       | Maximum total size of all Agones container logs in MB                                           | `10000`                |
@@ -223,12 +223,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.8.0" %}}
+{{% feature publishVersion="1.9.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |
+| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancerIP] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -239,6 +240,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
+[loadBalancerIP]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

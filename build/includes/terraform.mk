@@ -18,11 +18,10 @@ GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 # the current project
 current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
 
-### Deploy cluster with Terraform
-terraform-init:
+### Init Terraform with subdirectory of DIRECTORY in ./build/terraform
 terraform-init: $(ensure-build-image)
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
-	cd $(mount_path)/build/terraform/gke && terraform init && gcloud auth application-default login'
+	cd $(mount_path)/build/terraform/$(DIRECTORY) && terraform init && gcloud auth application-default login'
 
 terraform-clean:
 	rm -r ../build/terraform/gke/.terraform || true
@@ -40,6 +39,7 @@ gcloud-terraform-cluster: $(ensure-build-image)
 gcloud-terraform-cluster: FEATURE_GATES := ""
 gcloud-terraform-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-cluster:
+	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && \
 		 terraform apply -auto-approve -var agones_version="$(AGONES_VERSION)" \
 		-var name=$(GCP_TF_CLUSTER_NAME) -var machine_type="$(GCP_CLUSTER_NODEPOOL_MACHINETYPE)" \
@@ -64,6 +64,7 @@ gcloud-terraform-install: LOG_LEVEL ?= debug
 gcloud-terraform-install: FEATURE_GATES := $(ALPHA_FEATURE_GATES)
 gcloud-terraform-install: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-install:
+	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c ' \
 	cd $(mount_path)/build/terraform/gke && terraform apply -auto-approve -var agones_version="$(VERSION)" -var image_registry="$(REGISTRY)" \
 		-var pull_policy="$(IMAGE_PULL_POLICY)" \

@@ -121,9 +121,17 @@ relinquish control to an external service which likely doesn't have as much info
 {{< /alert >}}
 
 #### Shutdown()
-This tells Agones to shut down the currently running game server.
-The GameServer state will be set `Shutdown` and the 
-backing Pod will be deleted, if they have not shut themselves down already. 
+This tells Agones to shut down the currently running game server. The GameServer state will be set `Shutdown` and the 
+backing Pod will be Terminated.
+
+It's worth reading the [Termination of Pods](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination)
+Kubernetes documentation, to understand the termination process, and the related configuration options.
+
+As a rule of thumb, implement a graceful shutdown in your game sever process when it receives the TERM signal
+from Kubernetes when the backing Pod goes into Termination state.
+
+Be aware that if you use a variation of `System.exit(0)` after calling SDK.Shutdown(), your game server container may
+restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Guides/health-checking.md#health-failure-strategy" %}}) policies. 
 
 ### Configuration Retrieval 
 
