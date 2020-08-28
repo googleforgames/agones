@@ -118,30 +118,31 @@ Next, make sure that you can authenticate using gcloud:
 ```
 gcloud auth application-default login
 ```
+{{% feature expiryVersion="1.9.0" %}}
+Now you can create your GKE cluster (optionally specifying the version of Agones you want to use):
+```
+terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.0.0"]
+```
+{{% /feature %}}
 
-
-#### Creating the cluster in the default VPC 
-
-To create your GKE cluster in the default VPC just specify the project variable. 
+{{% feature publishVersion="1.9.0" %}}
+#### Option 1: Creating the cluster in the default VPC
+To create your GKE cluster in the default VPC just specify the project variable.
 
 (optionally you can specify the version of Agones you want to use):
-
 ```
 terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.7.0"]
 ```
 
-{{% feature publishVersion="1.7.0" %}}
 #### Option 2: Creating the cluster in a custom VPC
-
-To create the cluster in a custom VPC you must specify the project flag as well as the network and subnetwork variable. 
+To create the cluster in a custom VPC you must specify the project, network and subnetwork variables.
 
 (optionally you can specify the version of Agones you want to use):
 ```
-terraform apply -var project="<YOUR_GCP_ProjectID>" project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>"[-var agones_version="1.7.0"]
+terraform apply -var project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>" [-var agones_version="1.7.0"]
 ```
 {{% /feature %}}
 
-### Verifying the Cluster
 
 To verify that the cluster was created successfully, set up your kubectl credentials:
 ```
