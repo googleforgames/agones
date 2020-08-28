@@ -40,6 +40,13 @@ void UAgonesComponent::BeginPlay()
 void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
+
+	const UWorld* World = GetWorld();
+	if (World != nullptr)
+	{
+		World->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
+		World->GetTimerManager().ClearTimer(HealthTimerHandler);
+	}
 }
 
 TSharedRef<IHttpRequest> UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
