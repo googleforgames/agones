@@ -31,6 +31,7 @@ The current set of `alpha` and `beta` feature gates are:
 | [Port Allocations to Multiple Containers]({{< ref "/docs/Reference/gameserver.md" >}}) | `ContainerPortAllocation` | Enabled | `Beta` | 1.7.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
 | [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Disabled | `Alpha` | 1.7.0 |
+
 <sup>*</sup>Multicluster Allocation was started before this process was in place, and therefore does not have a
  feature gate and cannot be disabled.
 
