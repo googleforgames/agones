@@ -73,7 +73,7 @@ void UAgonesComponent::Connect()
 	FGameServerDelegate SuccessDel;
 	SuccessDel.BindUFunction(this, FName("ConnectSuccess"));
 	FTimerDelegate ConnectDel;
-	ConnectDel.BindUObject(this, &UAgonesComponent::GameServer, SuccessDel, FAgonesErrorDelegate()));
+	ConnectDel.BindUObject(this, &UAgonesComponent::GameServer, SuccessDel, FAgonesErrorDelegate());
 	GetWorld()->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(ConnectDelTimerHandle, ConnectDel, 5.f, true);
 }
