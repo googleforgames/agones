@@ -14,7 +14,7 @@
 
 
 // Run:
-//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.4.0"]
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.8.0"]
 
 provider "google" {
   version = "~> 2.10"
@@ -71,8 +71,8 @@ variable "feature_gates" {
 
 module "gke_cluster" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.7.0 corresponds
-  // to Agones version 1.7.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.8.0 corresponds
+  // to Agones version 1.8.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"
 
@@ -89,8 +89,8 @@ module "gke_cluster" {
 
 module "helm_agones" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.7.0 corresponds
-  // to Agones version 1.7.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.8.0 corresponds
+  // to Agones version 1.8.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
 

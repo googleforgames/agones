@@ -124,7 +124,7 @@ gcloud auth application-default login
 {{% feature expiryVersion="1.9.0" %}}
 Now you can create your GKE cluster (optionally specifying the version of Agones you want to use):
 ```
-terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.8.0"]
+terraform apply -var project="<YOUR_GCP_ProjectID>"
 ```
 {{% /feature %}}
 
@@ -132,17 +132,15 @@ terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.8.0"
 #### Option 1: Creating the cluster in the default VPC
 To create your GKE cluster in the default VPC just specify the project variable.
 
-(optionally you can specify the version of Agones you want to use):
 ```
-terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.8.0"]
+terraform apply -var project="<YOUR_GCP_ProjectID>"
 ```
 
 #### Option 2: Creating the cluster in a custom VPC
 To create the cluster in a custom VPC you must specify the project, network and subnetwork variables.
 
-(optionally you can specify the version of Agones you want to use):
 ```
-terraform apply -var project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>" [-var agones_version="1.8.0"]
+terraform apply -var project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>"
 ```
 {{% /feature %}}
 
