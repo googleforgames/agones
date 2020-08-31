@@ -88,14 +88,14 @@ func main() {
 		return err
 	})
 
-	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled)
+	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", sslPort))
 	if err != nil {
 		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
 	}
 
-	if !h.mTLSDisabled {
+	if !h.tlsDisabled {
 		// creates a new file watcher for client certificate folder
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -167,7 +167,7 @@ func main() {
 	logger.WithError(err).Fatal("allocation service crashed")
 }
 
-func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool) *serviceHandler {
+func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -185,6 +185,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 			return allocator.Allocate(gsa, stop)
 		},
 		mTLSDisabled: mTLSDisabled,
+		tlsDisabled:  tlsDisabled,
 	}
 
 	kubeInformerFactory.Start(stop)
@@ -193,7 +194,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
-	if !h.mTLSDisabled {
+	if !h.tlsDisabled {
 		caCertPool, err := getCACertPool(certDir)
 		if err != nil {
 			logger.WithError(err).Fatal("could not load CA certs.")
@@ -225,14 +226,16 @@ func readTLSCert() (*tls.Certificate, error) {
 // getServerOptions returns a list of GRPC server options.
 // Current options are TLS certs and opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	if h.mTLSDisabled {
+	if h.tlsDisabled {
 		return []grpc.ServerOption{grpc.StatsHandler(&ocgrpc.ServerHandler{})}
 	}
 
 	cfg := &tls.Config{
-		GetCertificate:        h.getTLSCert,
-		ClientAuth:            tls.RequireAnyClientCert,
-		VerifyPeerCertificate: h.verifyClientCertificate,
+		GetCertificate: h.getTLSCert,
+	}
+	if !h.mTLSDisabled {
+		cfg.ClientAuth = tls.RequireAnyClientCert
+		cfg.VerifyPeerCertificate = h.verifyClientCertificate
 	}
 	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
 	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
@@ -333,6 +336,7 @@ type serviceHandler struct {
 	tlsCert  *tls.Certificate
 
 	mTLSDisabled bool
+	tlsDisabled  bool
 }
 
 // Allocate implements the Allocate gRPC method definition

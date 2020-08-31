@@ -1576,6 +1576,8 @@ spec:
           value: ""
         - name: DISABLE_MTLS
           value: "false"
+        - name: DISABLE_TLS
+          value: "false"
         - name: POD_NAME
           valueFrom:
             fieldRef:
