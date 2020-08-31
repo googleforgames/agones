@@ -43,6 +43,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"gopkg.in/fsnotify.v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -249,12 +250,25 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 	cfg := &tls.Config{
 		GetCertificate: h.getTLSCert,
 	}
+
 	if !h.mTLSDisabled {
 		cfg.ClientAuth = tls.RequireAnyClientCert
 		cfg.VerifyPeerCertificate = h.verifyClientCertificate
 	}
-	// Add options for creds and OpenCensus stats handler to enable stats and tracing.
-	return []grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg)), grpc.StatsHandler(&ocgrpc.ServerHandler{})}
+
+	// Add options for creds, OpenCensus stats handler to enable stats and tracing, and keepalive for health checks.
+	return []grpc.ServerOption{
+		grpc.Creds(credentials.NewTLS(cfg)),
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             1 * time.Minute,
+			PermitWithoutStream: true,
+		}),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: 5 * time.Minute,
+			Timeout:           10 * time.Minute,
+		}),
+	}
 }
 
 func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
