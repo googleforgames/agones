@@ -95,7 +95,7 @@ func main() {
 		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
 	}
 
-	if !h.tlsDisabled {
+	if !h.mTLSDisabled {
 		// creates a new file watcher for client certificate folder
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -106,6 +106,30 @@ func main() {
 			logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
 		}
 
+		go func() {
+			for {
+				select {
+				// watch for events
+				case event := <-watcher.Events:
+					h.certMutex.Lock()
+					caCertPool, err := getCACertPool(certDir)
+					if err != nil {
+						logger.WithError(err).Error("could not load CA certs; keeping old ones")
+					} else {
+						h.caCertPool = caCertPool
+					}
+					logger.Infof("Certificate directory change event %v", event)
+					h.certMutex.Unlock()
+
+				// watch for errors
+				case err := <-watcher.Errors:
+					logger.WithError(err).Error("error watching for certificate directory")
+				}
+			}
+		}()
+	}
+
+	if !h.tlsDisabled {
 		watcherTLS, err := fsnotify.NewWatcher()
 		if err != nil {
 			logger.WithError(err).Fatal("could not create watcher for tls certs")
@@ -130,20 +154,10 @@ func main() {
 						h.tlsMutex.Unlock()
 					}
 					logger.Infof("Tls directory change event %v", event)
-				case event := <-watcher.Events:
-					h.certMutex.Lock()
-					caCertPool, err := getCACertPool(certDir)
-					if err != nil {
-						logger.WithError(err).Error("could not load CA certs; keeping old ones")
-					} else {
-						h.caCertPool = caCertPool
-					}
-					logger.Infof("Certificate directory change event %v", event)
-					h.certMutex.Unlock()
 
-					// watch for errors
-				case err := <-watcher.Errors:
-					logger.WithError(err).Error("error watching for certificate directory")
+				// watch for errors
+				case err := <-watcherTLS.Errors:
+					logger.WithError(err).Error("error watching for TLS directory")
 				}
 			}
 		}()
@@ -194,7 +208,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
-	if !h.tlsDisabled {
+	if !h.mTLSDisabled {
 		caCertPool, err := getCACertPool(certDir)
 		if err != nil {
 			logger.WithError(err).Fatal("could not load CA certs.")
@@ -202,7 +216,9 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		h.certMutex.Lock()
 		h.caCertPool = caCertPool
 		h.certMutex.Unlock()
+	}
 
+	if !h.tlsDisabled {
 		tlsCert, err := readTLSCert()
 		if err != nil {
 			logger.WithError(err).Fatal("could not load TLS certs.")
