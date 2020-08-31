@@ -39,7 +39,7 @@ func TestTerraformGKEInstallConfig(t *testing.T) {
 		TerraformDir: tfPass,
 		Vars: map[string]interface{}{
 			"project":     project,
-			"name":        "terratest-cluster2",
+			"name":        "terratest-cluster",
 			"values_file": "",
 		},
 	}
