@@ -417,16 +417,6 @@ func (c *Controller) rollingUpdateDeployment(fleet *agonesv1.Fleet, active *agon
 	return replicas, nil
 }
 
-func getReadyReplicaCountForGameServerSets(gss []*agonesv1.GameServerSet) int32 {
-	totalReadyReplicas := int32(0)
-	for _, gss := range gss {
-		if gss != nil {
-			totalReadyReplicas += gss.Status.ReadyReplicas
-		}
-	}
-	return totalReadyReplicas
-}
-
 // rollingUpdateActive applies the rolling update to the active GameServerSet
 // and returns what its replica value should be set to
 func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) (int32, error) {
@@ -441,14 +431,14 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	}
 
 	// if the active spec replicas are greater than or equal the fleet spec replicas, then we don't
-	// need to another rolling update upwards.
+	// need to do another rolling update upwards.
 	if active.Spec.Replicas >= (fleet.Spec.Replicas - sumAllocated) {
 		return fleet.Spec.Replicas - sumAllocated, nil
 	}
 
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxSurge, int(fleet.Spec.Replicas), true)
 	if err != nil {
-		return 0, errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
+		return 0, errors.Wrapf(err, "error parsing MaxSurge value: %s", fleet.ObjectMeta.Name)
 	}
 	surge := int32(r)
 
@@ -498,17 +488,17 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, "error calculating scaling gameserverset: %s", fleet.ObjectMeta.Name)
+		return errors.Wrapf(err, "error parsing MaxUnavailable value: %s", fleet.ObjectMeta.Name)
 	}
 	unavailable := int32(r)
 
-	totalScaledDown := int32(0)
+	totalAlreadyScaledDown := int32(0)
 
 	totalScaleDownCount := int32(0)
 	if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
 		// Check if we can scale down.
 		allGSS := append(rest, active)
-		readyReplicasCount := getReadyReplicaCountForGameServerSets(allGSS)
+		readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
 		minAvailable := fleet.Spec.Replicas - unavailable
 		totalScaleDownCount = readyReplicasCount - minAvailable
 		if readyReplicasCount <= minAvailable {
@@ -518,7 +508,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 	}
 	for _, gsSet := range rest {
 		if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-			if totalScaledDown >= totalScaleDownCount {
+			if totalAlreadyScaledDown >= totalScaleDownCount {
 				// No further scaling required.
 				break
 			}
@@ -542,7 +532,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 			if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
 				// Wait for new GameServers to become Ready before scaling down Inactive GameServerset
 				// Scale down.
-				scaleDownCount := int32(integer.IntMin(int(gsSet.Spec.Replicas), int(totalScaleDownCount-totalScaledDown)))
+				scaleDownCount := int32(integer.IntMin(int(gsSet.Spec.Replicas), int(totalScaleDownCount-totalAlreadyScaledDown)))
 
 				newReplicasCount = gsSet.Spec.Replicas - scaleDownCount
 				if newReplicasCount > gsSet.Spec.Replicas {
@@ -567,7 +557,7 @@ func (c *Controller) rollingUpdateRest(fleet *agonesv1.Fleet, active *agonesv1.G
 				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
 
 			if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-				totalScaledDown += scaleDownCount
+				totalAlreadyScaledDown += scaleDownCount
 			} else {
 				// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
 				// to make sure we don't overshoot the amount that is being shutdown at any given point and time

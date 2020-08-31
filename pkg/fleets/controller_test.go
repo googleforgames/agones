@@ -1153,10 +1153,10 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusReplicas: 100,
 			nilMaxUnavailable:      true,
 			expected: expected{
-				err: "error calculating scaling gameserverset: fleet-1: nil value for IntOrString",
+				err: "error parsing MaxUnavailable value: fleet-1: nil value for IntOrString",
 			},
 		},
-		"nil MaxSurge, err excpected": {
+		"nil MaxSurge, err expected": {
 			fleetSpecReplicas:      100,
 			activeSpecReplicas:     0,
 			activeStatusReplicas:   0,
@@ -1164,7 +1164,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusReplicas: 100,
 			nilMaxSurge:            true,
 			expected: expected{
-				err: "error calculating scaling gameserverset: fleet-1: nil value for IntOrString",
+				err: "error parsing MaxSurge value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"full inactive, empty inactive": {

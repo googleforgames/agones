@@ -248,3 +248,15 @@ func SumSpecReplicas(list []*GameServerSet) int32 {
 
 	return total
 }
+
+// GetReadyReplicaCountForGameServerSets returns the total number of
+// Status.ReadyКReplicas in the list of GameServerSets
+func GetReadyReplicaCountForGameServerSets(gss []*GameServerSet) int32 {
+	totalReadyReplicas := int32(0)
+	for _, gss := range gss {
+		if gss != nil {
+			totalReadyReplicas += gss.Status.ReadyReplicas
+		}
+	}
+	return totalReadyReplicas
+}
