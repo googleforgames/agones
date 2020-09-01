@@ -95,8 +95,8 @@ void UAgonesComponent::ConnectSuccess(const FGameServerResponse GameServerRespon
 void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("ready");
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({});
@@ -198,8 +198,8 @@ void UAgonesComponent::Health(const FHealthDelegate SuccessDelegate, const FAgon
 void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("shutdown");
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
@@ -223,8 +223,8 @@ void UAgonesComponent::SetAnnotation(
 	}
 
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("metadata/annotation", FHttpVerb::Put, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
@@ -239,8 +239,8 @@ void UAgonesComponent::SetAnnotation(
 void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("allocate");
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
@@ -264,8 +264,8 @@ void UAgonesComponent::Reserve(
 	}
 
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("reserve", FHttpVerb::Post, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
@@ -377,8 +377,8 @@ void UAgonesComponent::SetPlayerCapacity(
 	}
 
 	TSharedRef<IHttpRequest> Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Post, Json);
-	Request->OnProcessRequestComplete().BindWeakLambda(
-		this, [SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
+	Request->OnProcessRequestComplete().BindWeakLambda(this,
+		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
