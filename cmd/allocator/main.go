@@ -96,40 +96,6 @@ func main() {
 		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
 	}
 
-	if !h.mTLSDisabled {
-		// creates a new file watcher for client certificate folder
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			logger.WithError(err).Fatal("could not create watcher for client certs")
-		}
-		defer watcher.Close() // nolint: errcheck
-		if err := watcher.Add(certDir); err != nil {
-			logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
-		}
-
-		go func() {
-			for {
-				select {
-				// watch for events
-				case event := <-watcher.Events:
-					h.certMutex.Lock()
-					caCertPool, err := getCACertPool(certDir)
-					if err != nil {
-						logger.WithError(err).Error("could not load CA certs; keeping old ones")
-					} else {
-						h.caCertPool = caCertPool
-					}
-					logger.Infof("Certificate directory change event %v", event)
-					h.certMutex.Unlock()
-
-				// watch for errors
-				case err := <-watcher.Errors:
-					logger.WithError(err).Error("error watching for certificate directory")
-				}
-			}
-		}()
-	}
-
 	if !h.tlsDisabled {
 		watcherTLS, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -162,6 +128,40 @@ func main() {
 				}
 			}
 		}()
+
+		if !h.mTLSDisabled {
+			// creates a new file watcher for client certificate folder
+			watcher, err := fsnotify.NewWatcher()
+			if err != nil {
+				logger.WithError(err).Fatal("could not create watcher for client certs")
+			}
+			defer watcher.Close() // nolint: errcheck
+			if err := watcher.Add(certDir); err != nil {
+				logger.WithError(err).Fatalf("cannot watch folder %s for secret changes", certDir)
+			}
+
+			go func() {
+				for {
+					select {
+					// watch for events
+					case event := <-watcher.Events:
+						h.certMutex.Lock()
+						caCertPool, err := getCACertPool(certDir)
+						if err != nil {
+							logger.WithError(err).Error("could not load CA certs; keeping old ones")
+						} else {
+							h.caCertPool = caCertPool
+						}
+						logger.Infof("Certificate directory change event %v", event)
+						h.certMutex.Unlock()
+
+					// watch for errors
+					case err := <-watcher.Errors:
+						logger.WithError(err).Error("error watching for certificate directory")
+					}
+				}
+			}()
+		}
 	}
 
 	opts := h.getServerOptions()
@@ -209,16 +209,6 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
-	if !h.mTLSDisabled {
-		caCertPool, err := getCACertPool(certDir)
-		if err != nil {
-			logger.WithError(err).Fatal("could not load CA certs.")
-		}
-		h.certMutex.Lock()
-		h.caCertPool = caCertPool
-		h.certMutex.Unlock()
-	}
-
 	if !h.tlsDisabled {
 		tlsCert, err := readTLSCert()
 		if err != nil {
@@ -227,6 +217,16 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		h.tlsMutex.Lock()
 		h.tlsCert = tlsCert
 		h.tlsMutex.Unlock()
+
+		if !h.mTLSDisabled {
+			caCertPool, err := getCACertPool(certDir)
+			if err != nil {
+				logger.WithError(err).Fatal("could not load CA certs.")
+			}
+			h.certMutex.Lock()
+			h.caCertPool = caCertPool
+			h.certMutex.Unlock()
+		}
 	}
 
 	return &h
