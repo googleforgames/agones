@@ -256,7 +256,9 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 		cfg.VerifyPeerCertificate = h.verifyClientCertificate
 	}
 
-	// Add options for creds, OpenCensus stats handler to enable stats and tracing, and keepalive for health checks.
+	// Add options for creds and  OpenCensus stats handler to enable stats and tracing.
+	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
+	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
 	return []grpc.ServerOption{
 		grpc.Creds(credentials.NewTLS(cfg)),
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
