@@ -297,6 +297,13 @@ For most use cases the controller would have required a restart anyway (eg: cont
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
 
+## Fixed Allocator Load Balancer IP
+
+If you have reserved a static IP for your allocator, in the case that the Agones allocator is installed as a `LoadBalancer` service, you can pass the static IP you have reserved to Agones with the `agones.allocator.loadBalancerIP`. Assuming your Kubernetes provider supports this setting a `LoadBalancer` service's IP, this will do two things:
+
+1. Agones will fix the `LoadBalancer` service's IP to the static IP you provided.
+2. Agones will also generate a CA cert corresponding to the IP you have provided, which means you do not have to re-generate CA certs when [setting up your allocator service]({{< relref "/docs/Advanced/allocator-service.md#server-tls-certificate" >}}).
+
 ## Next Steps
 
 - [Confirm Agones is up and running]({{< relref "../confirm.md" >}})

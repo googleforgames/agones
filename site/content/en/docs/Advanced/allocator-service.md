@@ -29,7 +29,7 @@ agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b> 
 
 ## Server TLS certificate
 
-Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
+Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management. Note that if you installed the Agones allocator as a `LoadBalancer` service [with a static IP]({{< relref "/docs/Installation/Install Agones/helm.md#fixed-allocator-load-balancer-ip" }}) on installation, you do not need to do this step, since the Helm file will deal with generating a CA cert corresponding to the IP you passed in.
 
 In order to use cert-manager solution, first, [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster. Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and last configure a `Certificate` resource to manage allocator-tls `Secret`.
 
