@@ -218,6 +218,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
+| `agones.allocator.disableTLS`                       | Turns off all authentication for incoming connections to the allocator.                         | `false`                |
+| `agones.allocator.disableMTLS`                      | Just turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
@@ -283,7 +285,7 @@ RUNNING: agones-test
 ERROR: pods "agones-test" already exists
 Error: 1 test(s) failed
 ```
-That mean that you skiped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
+That mean that you skipped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
 {{< /alert >}}
 
 ## TLS Certificates
