@@ -218,8 +218,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
-| `agones.allocator.disableTLS`                       | Turns off the built-in encryption and authentication mechanism for the agones-allocator service. | `false`                |
-| `agones.allocator.disableMTLS`                      | Just turns off client cert authentication for incoming connections to the allocator.            | `false`                |
+| `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
@@ -231,6 +230,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancerIP] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+| `agones.allocator.disableTLS`                       | Turns off client cert authentication and encryption using the server cert for incoming connections to the allocator. | `false`                |
 
 {{% /feature %}}
 
