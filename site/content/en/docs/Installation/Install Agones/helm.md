@@ -218,7 +218,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
-| `agones.allocator.disableTLS`                       | Turns off all authentication for incoming connections to the allocator.                         | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off the built-in encryption and authentication mechanism for the agones-allocator service. | `false`                |
 | `agones.allocator.disableMTLS`                      | Just turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
@@ -297,12 +297,14 @@ For most use cases the controller would have required a restart anyway (eg: cont
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
 
-## Fixed Allocator Load Balancer IP
+{{% feature publishVersion="1.9.0" %}}
+## Reserved Allocator Load Balancer IP
 
-If you have reserved a static IP for your allocator, in the case that the Agones allocator is installed as a `LoadBalancer` service, you can pass the static IP you have reserved to Agones with the `agones.allocator.http.loadBalancerIP`. Assuming your Kubernetes provider supports this setting a `LoadBalancer` service's IP, this will do two things:
+In order to reuse the existing load balancer IP on upgrade or install the `agones-allocator` service as a `LoadBalancer` using a reserved static IP, a user can specify the load balancer's IP with the `agones.allocator.http.loadBalancerIP` helm configuration parameter value. By setting the `loadBalancerIP` value:
 
-1. Agones will fix the `LoadBalancer` service's IP to the static IP you provided.
-2. Agones will also generate a CA cert corresponding to the IP you have provided, which means you do not have to re-generate CA certs when [setting up your allocator service]({{< relref "/docs/Advanced/allocator-service.md#server-tls-certificate" >}}).
+1. The `LoadBalancer` is created with the specified IP, if supported by the cloud provider.
+2. A self-signed server TLS certificate is generated for the IP, used by the `agones-allocator` service.
+{{% /feature %}}
 
 ## Next Steps
 
