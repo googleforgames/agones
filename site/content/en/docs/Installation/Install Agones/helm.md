@@ -230,7 +230,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancerIP] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
-| `agones.allocator.disableTLS`                       | Turns off client cert authentication and encryption using the server cert for incoming connections to the allocator. | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
 
 {{% /feature %}}
 
@@ -285,7 +285,7 @@ RUNNING: agones-test
 ERROR: pods "agones-test" already exists
 Error: 1 test(s) failed
 ```
-That mean that you skipped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
+That means that you skipped the `--cleanup` flag and you should either delete the `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
 {{< /alert >}}
 
 ## TLS Certificates
