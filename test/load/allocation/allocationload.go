@@ -35,7 +35,7 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Unable to determine the current user: %v", err)
 	}
-	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, "/.kube/config"),
+	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, ".kube", "config"),
 		"kube config path, e.g. $HOME/.kube/config")
 	fleetName := flag.String("fleet_name", "simple-udp", "The fleet name that the tests will run against")
 	qps := flag.Int("qps", 1000, "The QPS value that will overwrite the default value")
