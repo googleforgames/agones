@@ -1,4 +1,4 @@
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.*
-!.gitignore
-!.helmignore
-!.gitattributes
-!.dockerignore
-!.golangci.yml
-!.gcloudignore
-!.eslintrc.*
-!.nycrc
-!.clang-format
-*.iml
-bin
-*.o
-tmp
-terraform.tfvars
-terraform.tfstate*
-kubeconfig
-build/local-includes/*
-!build/local-includes/README.md
-/release
-debug.test
-obj
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: ${cluster_ca_certificate}
+    server: ${endpoint}
+  name: ${context}
+contexts:
+- context:
+    cluster: ${context}
+    user: ${context}
+  name: ${context}
+current-context: ${context}
+kind: Config
+preferences: {}
+users:
+- name: ${context}
+  user:
+    token: ${token}
