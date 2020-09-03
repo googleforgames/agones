@@ -46,6 +46,7 @@ output:
 
 linters:
   enable:
+    - exportloopref
     - deadcode
     - megacheck
     - govet
@@ -77,6 +78,7 @@ linters-settings:
     disabled-checks:
       - paramTypeCombine
       - unnamedResult
+      - unnecessaryDefer
     settings: # settings passed to gocritic
       hugeParam:
         sizeThreshold: 512
