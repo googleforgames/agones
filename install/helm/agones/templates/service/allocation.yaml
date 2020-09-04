@@ -124,6 +124,8 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: DISABLE_MTLS
           value: {{ .Values.agones.allocator.disableMTLS | quote }}
+        - name: DISABLE_TLS
+          value: {{ .Values.agones.allocator.disableTLS | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:

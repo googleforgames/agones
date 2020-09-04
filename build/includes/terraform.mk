@@ -18,14 +18,19 @@ GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 # the current project
 current_project := $(shell $(DOCKER_RUN) bash -c "gcloud config get-value project 2> /dev/null")
 
-### Init Terraform with subdirectory of DIRECTORY in ./build/terraform
+### Deploy cluster with Terraform
+terraform-init: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-init: $(ensure-build-image)
+terraform-init:
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c '\
-	cd $(mount_path)/build/terraform/$(DIRECTORY) && terraform init && gcloud auth application-default login'
+	cd $(TERRAFORM_BUILD_DIR) && terraform init && gcloud auth application-default login'
 
+terraform-clean: TERRAFORM_BUILD_DIR ?= $(mount_path)/build/terraform/gke
 terraform-clean:
-	rm -r ../build/terraform/gke/.terraform || true
-	rm ../build/terraform/gke/terraform.tfstate* || true
+	$(DOCKER_RUN) bash -c ' \
+	cd $(TERRAFORM_BUILD_DIR) && rm -r ./.terraform || true && \
+	rm ./terraform.tfstate* || true && \
+	rm ./kubeconfig || true'
 
 # Creates a cluster and install release version of Agones controller
 # Version could be specified by AGONES_VERSION
@@ -84,3 +89,17 @@ gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-destroy-cluster:
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
+terraform-test: $(ensure-build-image)
+terraform-test: GCP_PROJECT ?= $(current_project)
+terraform-test:
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
+	$(MAKE) run-terraform-test GCP_PROJECT=$(GCP_PROJECT)
+	$(MAKE) terraform-test-clean
+
+terraform-test-clean: $(ensure-build-image)
+	$(MAKE) terraform-clean TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
+
+# run terratest which verifies GKE and Helm Terraform modules
+run-terraform-test:
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/test/terraform && go test -v -run TestTerraformGKEInstallConfig \
+	-timeout 1h -project $(GCP_PROJECT) $(ARGS)'
