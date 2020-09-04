@@ -64,7 +64,7 @@ TSharedRef<IHttpRequest> UAgonesComponent::BuildAgonesRequest(const FString Path
 
 void UAgonesComponent::HealthPing(const float RateSeconds)
 {
-	if (RateSeconds <= 0)
+	if (RateSeconds <= 0.0f)
 	{
 		return;
 	}
