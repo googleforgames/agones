@@ -328,3 +328,42 @@ kubectl create clusterrolebinding cluster-admin-binding \
 
 On GKE, `gcloud config get-value accounts` will return a lowercase email address, so if
 you are using a CamelCase email, you may need to type it in manually.
+
+## I'm getting stuck in "Terminating" when I uninstall Agones
+
+If you try to uninstall the `agones-system` namespace before you have removed all of the components in the namespace you may
+end up in a `Terminating` state.
+
+```bash
+kubectl get ns
+NAME              STATUS        AGE                                                                                                                                                    
+agones-system     Terminating   4d
+```
+
+Fixing this up requires us to bypass the finalizer in Kubernetes ([article link](https://www.ibm.com/support/knowledgecenter/en/SSBS6K_3.1.1/troubleshoot/ns_terminating.html)), by manually changing the namespace details:
+
+First get the current state of the namespace:
+```bash
+ kubectl get namespace agones-system -o json >tmp.json
+```
+
+Edit the response `tmp.json` to remove the finalizer data, for example remove the following:
+```json
+      "spec": {
+         "finalizers": 
+      },
+```
+
+Open a new terminal to proxy traffic:
+```bash
+ kubectl proxy
+ Starting to serve on 127.0.0.1:8001
+```
+
+Now make an API call to send the altered namespace data:
+```bash
+ curl -k -H "Content-Type: application/json" -X PUT --data-binary @tmp.json http://127.0.0.1:8001/api/v1/namespaces/agones-system/finalize
+```
+
+You may need to clean up any other resources you have in your cluster at this point.
+
