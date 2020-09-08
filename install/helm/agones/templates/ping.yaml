@@ -108,6 +108,15 @@ spec:
       targetPort: 8080
       protocol: TCP
   type: {{ .Values.agones.ping.http.serviceType }}
+{{- if eq .Values.agones.ping.http.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.ping.http.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.agones.ping.http.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.agones.ping.http.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.agones.ping.http.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+{{- end }}
   {{- end }}
 
   {{- if .Values.agones.ping.udp.expose }}
@@ -136,6 +145,15 @@ spec:
       targetPort: 8080
       protocol: UDP
   type: {{ .Values.agones.ping.udp.serviceType }}
+{{- if eq .Values.agones.ping.udp.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.ping.udp.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.agones.ping.udp.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.agones.ping.udp.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.agones.ping.udp.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+{{- end }}
   {{- end }}
 
 {{- end }}
