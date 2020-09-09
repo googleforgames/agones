@@ -365,5 +365,4 @@ Now make an API call to send the altered namespace data:
  curl -k -H "Content-Type: application/json" -X PUT --data-binary @tmp.json http://127.0.0.1:8001/api/v1/namespaces/agones-system/finalize
 ```
 
-You may need to clean up any other resources you have in your cluster at this point.
-
+You may need to clean up any other Agones related resources you have in your cluster at this point.
