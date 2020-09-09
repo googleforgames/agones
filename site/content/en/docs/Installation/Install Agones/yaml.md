@@ -6,6 +6,8 @@ description: >
   We can install Agones to the cluster using an install.yaml file.
 ---
 
+### Installing Agones
+
 {{< alert title="Warning" color="warning">}}
 Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
 kubernetes webhooks communication. 
@@ -35,6 +37,19 @@ helm template agones-manual --namespace agones-system  . \
 Note: `pull` command was introduced in Helm version 3.
 
 You can also find the install.yaml in the latest `agones-install` zip from the [releases](https://github.com/googleforgames/agones/releases) archive.
+
+### Uninstalling Agones
+
+To uninstall/delete the `Agones` deployment and delete `agones-system` namespace:
+
+```bash
+$ kubectl delete fleets --all --all-namespaces
+$ kubectl delete gameservers --all --all-namespaces
+$ kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
+$ kubectl delete namespace agones-system
+```
+
+Note: you should wait up to a couple of minutes until all resources described in `install.yaml` file would be deleted.
 
 ## Next Steps
 

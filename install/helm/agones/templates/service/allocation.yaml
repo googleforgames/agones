@@ -42,6 +42,12 @@ spec:
 {{- if $useLoadBalancerIP }}
   loadBalancerIP: {{ .Values.agones.allocator.http.loadBalancerIP }}
 {{- end }}
+{{- if eq .Values.agones.allocator.http.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.allocator.http.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.agones.allocator.http.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+{{- end }}
 
 ---
 # Deploy a pod to run the agones-allocator code
