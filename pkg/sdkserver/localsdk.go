@@ -615,8 +615,12 @@ func (l *LocalSDKServer) EqualSets(expected, received []string) bool {
 // compare the results of a test run
 func (l *LocalSDKServer) compare() {
 	if l.testMode {
+		l.testMutex.Lock()
+		defer l.testMutex.Unlock()
 		if !l.EqualSets(l.expectedSequence, l.requestSequence) {
 			l.logger.WithField("expected", l.expectedSequence).WithField("received", l.requestSequence).Info("Testing Failed")
+			// we don't care if the mutex gets unlocked on exit, so ignore the warning.
+			// nolint: gocritic
 			os.Exit(1)
 		} else {
 			l.logger.Info("Received requests match expected list. Test run was successful")

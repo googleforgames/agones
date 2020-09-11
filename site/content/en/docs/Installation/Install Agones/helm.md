@@ -228,7 +228,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancerIP] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+| `agones.allocator.http.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
+| `agones.ping.http.loadBalancerIP`                   | The [Load Balancer IP][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.               | ""           |
+| `agones.ping.http.loadBalancerSourceRanges`         | The [Load Balancer SourceRanges][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.     | `[]`         |
+| `agones.ping.udp.loadBalancerIP`                    | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.                | ""           |
+| `agones.ping.udp.loadBalancerSourceRanges`          | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.      | `[]`         |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
 
@@ -242,7 +247,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
-[loadBalancerIP]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+[loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
