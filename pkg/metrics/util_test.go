@@ -37,6 +37,12 @@ import (
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() *fakeController {
 	m := agtesting.NewMocks()
+	return newFakeControllerWithMock(m)
+}
+
+// newFakeControllerWithMock returns a Controller with a pre-populated mock.
+// This is useful if you want to populate a data set before the informer starts.
+func newFakeControllerWithMock(m agtesting.Mocks) *fakeController {
 	c := NewController(m.KubeClient, m.AgonesClient, m.KubeInformerFactory, m.AgonesInformerFactory)
 	gsWatch := watch.NewFake()
 	fasWatch := watch.NewFake()

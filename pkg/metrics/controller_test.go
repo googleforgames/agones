@@ -30,7 +30,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 const defaultNs = "default"
@@ -66,7 +68,7 @@ func assertMetricData(t *testing.T, exporter *metricExporter, metricName string,
 			wantedMetric = m
 		}
 	}
-	assert.NotNil(t, wantedMetric, "No metric found with name: %s", metricName)
+	require.NotNil(t, wantedMetric, "No metric found with name: %s", metricName)
 
 	assert.Equal(t, len(expectedValuesAsMap), len(expected), "Multiple entries in 'expected' slice have the exact same labels")
 	assert.Equalf(t, len(expectedValuesAsMap), len(wantedMetric.TimeSeries), "number of timeseries does not match under metric: %v", metricName)
@@ -331,47 +333,47 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 
 func TestControllerGameServersNodeState(t *testing.T) {
 	resetMetrics()
-	c := newFakeController()
-	defer c.close()
-	c.nodeWatch.Add(nodeWithName("node1"))
-	c.nodeWatch.Add(nodeWithName("node2"))
-	c.nodeWatch.Add(nodeWithName("node3"))
-	c.gsWatch.Add(gameServerWithNode("node1"))
-	c.gsWatch.Add(gameServerWithNode("node2"))
-	c.gsWatch.Add(gameServerWithNode("node2"))
+	m := agtesting.NewMocks()
 
-	c.run(t)
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		n1 := nodeWithName("node1")
+		n2 := nodeWithName("node2")
+		n3 := nodeWithName("node3")
+		return true, &corev1.NodeList{Items: []corev1.Node{*n1, *n2, *n3}}, nil
+	})
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs1 := gameServerWithNode("node1")
+		gs2 := gameServerWithNode("node2")
+		gs3 := gameServerWithNode("node2")
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, *gs3}}, nil
+	})
+
+	c := newFakeControllerWithMock(m)
+	defer c.close()
+	require.True(t, c.sync())
+	c.collect()
 	reader := metricexport.NewReader()
 
-	// wait until we have some nodes and gameservers
+	// wait until we have some nodes and gameservers in metrics
+	var exporter *metricExporter
 	assert.Eventually(t, func() bool {
-		ex := &metricExporter{}
-		reader.ReadAndExport(ex)
+		exporter = &metricExporter{}
+		reader.ReadAndExport(exporter)
 
 		check := 0
-
-		for _, m := range ex.metrics {
+		for _, m := range exporter.metrics {
 			switch m.Descriptor.Name {
 			case "nodes_count":
-				for _, d := range m.TimeSeries {
-					if d.LabelValues[0].Value == "true" {
-						check++
-					}
-				}
+				check++
 			case "gameservers_node_count":
-				dist := m.TimeSeries[0].Points[0].Value.(*metricdata.Distribution)
-				if dist.Count == 3 && dist.Sum == 3 && dist.SumOfSquaredDeviation == 2 {
-					check++
-				}
+				check++
 			}
 		}
 
 		return check == 2
-	}, time.Minute, time.Second) // give a minute, since we're waiting for the run -> sync to fire.
+	}, 10*time.Second, time.Second)
 
-	// now confirm all the details.
-	exporter := &metricExporter{}
-	reader.ReadAndExport(exporter)
+	// check the details
 	assertMetricData(t, exporter, "gameservers_node_count", []expectedMetricData{
 		{labels: []string{}, val: &metricdata.Distribution{
 			Count:                 3,
