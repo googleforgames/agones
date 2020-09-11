@@ -45,7 +45,7 @@ RUN go get -u golang.org/x/tools/cmd/goimports
 RUN gcloud components update && gcloud components install app-engine-go
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.15.11
+ENV KUBERNETES_VER 1.16.15
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
