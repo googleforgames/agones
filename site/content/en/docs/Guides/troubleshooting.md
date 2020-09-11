@@ -350,7 +350,9 @@ First get the current state of the namespace:
 Edit the response `tmp.json` to remove the finalizer data, for example remove the following:
 ```json
       "spec": {
-         "finalizers": 
+         "finalizers": [
+             "kubernetes"
+         ]
       },
 ```
 
