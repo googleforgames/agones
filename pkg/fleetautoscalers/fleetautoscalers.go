@@ -91,14 +91,19 @@ func buildURLFromWebhookPolicy(w *autoscalingv1.WebhookPolicy) (u *url.URL, err 
 		w.Service.Namespace = "default"
 	}
 
-	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path), nil
+	return createURL(scheme, w.Service.Name, w.Service.Namespace, *w.Service.Path, w.Service.Port), nil
 }
 
 // moved to a separate method to cover it with unit tests and check that URL corresponds to a proper pattern
-func createURL(scheme, name, namespace, path string) *url.URL {
+func createURL(scheme, name, namespace, path string, port *int32) *url.URL {
+	var hostPort int32 = 8000
+	if port != nil {
+		hostPort = *port
+	}
+
 	return &url.URL{
 		Scheme: scheme,
-		Host:   fmt.Sprintf("%s.%s.svc:8000", name, namespace),
+		Host:   fmt.Sprintf("%s.%s.svc:%d", name, namespace, hostPort),
 		Path:   path,
 	}
 }

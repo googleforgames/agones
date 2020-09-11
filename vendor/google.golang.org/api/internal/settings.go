@@ -40,6 +40,11 @@ type DialSettings struct {
 	GRPCDialOpts    []grpc.DialOption
 	GRPCConn        *grpc.ClientConn
 	NoAuth          bool
+
+	// Google API system parameters. For more information please read:
+	// https://cloud.google.com/apis/docs/system-parameters
+	QuotaProject  string
+	RequestReason string
 }
 
 // Validate reports an error if ds is invalid.
@@ -79,6 +84,12 @@ func (ds *DialSettings) Validate() error {
 	}
 	if ds.HTTPClient != nil && ds.GRPCDialOpts != nil {
 		return errors.New("WithHTTPClient is incompatible with gRPC dial options")
+	}
+	if ds.HTTPClient != nil && ds.QuotaProject != "" {
+		return errors.New("WithHTTPClient is incompatible with QuotaProject")
+	}
+	if ds.HTTPClient != nil && ds.RequestReason != "" {
+		return errors.New("WithHTTPClient is incompatible with RequestReason")
 	}
 
 	return nil

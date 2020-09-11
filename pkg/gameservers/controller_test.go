@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -37,6 +38,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -89,7 +91,11 @@ func TestControllerSyncGameServer(t *testing.T) {
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 			watchPods.Add(pod)
 			// wait for the change to propagate
-			assert.True(t, cache.WaitForCacheSync(context.Background().Done(), mocks.KubeInformerFactory.Core().V1().Pods().Informer().HasSynced))
+			require.Eventually(t, func() bool {
+				list, err := c.podLister.List(labels.Everything())
+				assert.NoError(t, err)
+				return len(list) == 1
+			}, 5*time.Second, time.Second)
 			return true, pod, nil
 		})
 		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -1452,30 +1458,43 @@ func TestControllerGameServerPod(t *testing.T) {
 	}
 
 	t.Run("no pod exists", func(t *testing.T) {
-		c, gs, _, stop, cancel := setup()
+		c, gs, _, _, cancel := setup()
 		defer cancel()
 
-		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		require.Never(t, func() bool {
+			list, err := c.podLister.List(labels.Everything())
+			assert.NoError(t, err)
+			return len(list) > 0
+		}, time.Second, 100*time.Millisecond)
 		_, err := c.gameServerPod(gs)
 		assert.Error(t, err)
 		assert.True(t, k8serrors.IsNotFound(err))
 	})
 
 	t.Run("a pod exists", func(t *testing.T) {
-		c, gs, fakeWatch, stop, cancel := setup()
+		c, gs, fakeWatch, _, cancel := setup()
 
 		defer cancel()
 		pod, err := gs.Pod()
 		require.NoError(t, err)
 
 		fakeWatch.Add(pod.DeepCopy())
-		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		require.Eventually(t, func() bool {
+			list, err := c.podLister.List(labels.Everything())
+			assert.NoError(t, err)
+			return len(list) == 1
+		}, 5*time.Second, time.Second)
+
 		pod2, err := c.gameServerPod(gs)
 		require.NoError(t, err)
 		assert.Equal(t, pod, pod2)
 
 		fakeWatch.Delete(pod.DeepCopy())
-		cache.WaitForCacheSync(stop, c.gameServerSynced)
+		require.Eventually(t, func() bool {
+			list, err := c.podLister.List(labels.Everything())
+			assert.NoError(t, err)
+			return len(list) == 0
+		}, 5*time.Second, time.Second)
 		_, err = c.gameServerPod(gs)
 		assert.Error(t, err)
 		assert.True(t, k8serrors.IsNotFound(err))

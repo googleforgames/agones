@@ -76,8 +76,8 @@ func (c *fakeController) run(t *testing.T) {
 	c.sync()
 }
 
-func (c *fakeController) sync() {
-	cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
+func (c *fakeController) sync() bool {
+	return cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
 }
 
 type fakeController struct {

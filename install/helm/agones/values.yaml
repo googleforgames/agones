@@ -88,12 +88,16 @@ agones:
       response: ok
       port: 80
       serviceType: LoadBalancer
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: []
       annotations: {}
     udp:
       expose: true
       rateLimit: 20
       port: 50000
       serviceType: LoadBalancer
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: []
       annotations: {}
     healthCheck:
       initialDelaySeconds: 3
@@ -124,13 +128,16 @@ agones:
     http:
       port: 443
       serviceType: LoadBalancer
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: []
       annotations: {}
     generateTLS: true
     generateClientTLS: true
     disableMTLS: false
+    disableTLS: false
   image:
     registry: gcr.io/agones-images
-    tag: 1.8.0
+    tag: 1.9.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

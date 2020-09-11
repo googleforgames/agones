@@ -228,7 +228,15 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |
+| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | ""                     |
+| `agones.allocator.http.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
+| `agones.ping.http.loadBalancerIP`                   | The [Load Balancer IP][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.               | ""           |
+| `agones.ping.http.loadBalancerSourceRanges`         | The [Load Balancer SourceRanges][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.     | `[]`         |
+| `agones.ping.udp.loadBalancerIP`                    | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.                | ""           |
+| `agones.ping.udp.loadBalancerSourceRanges`          | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.      | `[]`         |
+| `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -239,6 +247,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
+[loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -281,7 +290,7 @@ RUNNING: agones-test
 ERROR: pods "agones-test" already exists
 Error: 1 test(s) failed
 ```
-That mean that you skiped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
+That means that you skipped the `--cleanup` flag and you should either delete the `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
 {{< /alert >}}
 
 ## TLS Certificates
@@ -292,6 +301,15 @@ For most use cases the controller would have required a restart anyway (eg: cont
 {{< alert title="Tip" color="info">}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
+
+{{% feature publishVersion="1.9.0" %}}
+## Reserved Allocator Load Balancer IP
+
+In order to reuse the existing load balancer IP on upgrade or install the `agones-allocator` service as a `LoadBalancer` using a reserved static IP, a user can specify the load balancer's IP with the `agones.allocator.http.loadBalancerIP` helm configuration parameter value. By setting the `loadBalancerIP` value:
+
+1. The `LoadBalancer` is created with the specified IP, if supported by the cloud provider.
+2. A self-signed server TLS certificate is generated for the IP, used by the `agones-allocator` service.
+{{% /feature %}}
 
 ## Next Steps
 
