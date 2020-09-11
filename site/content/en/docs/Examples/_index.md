@@ -22,6 +22,9 @@ These are all examples of simple game server implementations, that integrate the
 
 - {{< ghlink href="examples/simple-udp" >}}Simple UDP{{< /ghlink >}} (Go) - simple server and client that send UDP packets back and forth.
 - {{< ghlink href="examples/simple-tcp" >}}Simple TCP{{< /ghlink >}} (Go) - simple server that responds to new-line delimited messages sent over a TCP connection.
+{{% feature publishVersion="1.9.0" %}}
+- {{< ghlink href="examples/simple-game-server" >}}Simple gameserver{{< /ghlink >}} (Go) - simple server that responds to TCP connections or UDP packets on the same port.
+{{% /feature %}}
 - {{< ghlink href="examples/cpp-simple" >}}CPP Simple{{< /ghlink >}} (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
 - {{< ghlink href="examples/nodejs-simple" >}}Node.js Simple{{< /ghlink >}} (Node.js) -
   A simple Node.js example that marks itself as ready, sets some labels and then shutsdown.
