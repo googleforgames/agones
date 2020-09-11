@@ -17,6 +17,7 @@ If you are using Azure CLI from your local shell, you need to log in to your Azu
 
 Here are the steps you need to follow to create a new AKS cluster (additional instructions and clarifications are listed [here](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough)):
 
+{{% feature expiryVersion="1.9.0" %}}
 ```bash
 # Declare necessary variables, modify them according to your needs
 AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
@@ -28,14 +29,8 @@ az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
 
 # Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
 
-{{% feature expiryVersion="1.9.0" %}}
-# The following command will create a four Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.16.10. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.16.10
-{{% /feature %}}
-{{% feature publishVersion="1.9.0" %}}
 # The following command will create a four Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.15.10. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
 az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.15.10
-{{% /feature %}}
 
 # Install kubectl
 sudo az aks install-cli
@@ -43,6 +38,30 @@ sudo az aks install-cli
 # Get credentials for your new AKS cluster
 az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
 ```
+{{% /feature %}}
+
+{{% feature publishVersion="1.9.0" %}}
+```bash
+# Declare necessary variables, modify them according to your needs
+AKS_RESOURCE_GROUP=akstestrg     # Name of the resource group your AKS cluster will be created in
+AKS_NAME=akstest                 # Name of your AKS cluster
+AKS_LOCATION=westeurope          # Azure region in which you'll deploy your AKS cluster
+
+# Create the Resource Group where your AKS resource will be installed
+az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
+
+# Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
+
+# The following command will create a four Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is 1.16.13. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version 1.16.13
+
+# Install kubectl
+sudo az aks install-cli
+
+# Get credentials for your new AKS cluster
+az aks get-credentials --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME
+```
+{{% /feature %}}
 
 Alternatively, you can use the [Azure Portal](https://portal.azure.com) to create a new AKS cluster [(instructions)](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-portal).
 
