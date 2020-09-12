@@ -25,7 +25,12 @@ Configure your terraform:
 terraform init
 ```
 
-Now you can deploy your cluster (use variables from the above `az ad sp create-for-rbac` command output):
+Create a service principal and configure its access to Azure resources: 
+```
+az ad sp create-for-rbac
+```
+
+Now you can deploy your cluster (use values from the above command output):
 ```
 terraform apply -var client_id="<appId>" -var client_secret="<password>"
 ```
