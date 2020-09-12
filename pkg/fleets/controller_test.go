@@ -1098,7 +1098,7 @@ func TestFeatureRollingUpdateOnReady(t *testing.T) {
 			})
 
 			replicas, err := c.rollingUpdateDeployment(f, active, []*agonesv1.GameServerSet{inactive})
-			assert.Nil(t, err, "no error")
+			require.NoError(t, err, "no error")
 
 			assert.Equal(t, v.expected.replicas, replicas)
 			assert.Equal(t, v.expected.updated, updated)
@@ -1118,14 +1118,14 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	inactiveReplicas1 := int32(3)
-	inactiveReplicas2 := int32(65)
+	inactiveReplicas1 := int32(65)
+	inactiveReplicas2 := int32(3)
 
-	// TODO(alekser) Fix the scaling logic for a new feature or prove this change useful
 	if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateOnReady) {
-		inactiveReplicas1 = 4
-		inactiveReplicas2 = 45
+		inactiveReplicas1 = 45
+		inactiveReplicas2 = 4
 	}
+
 	type expected struct {
 		inactiveSpecReplicas int32
 		replicas             int32
@@ -1200,7 +1200,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveSpecReplicas:   95,
 			inactiveStatusReplicas: 95,
 			expected: expected{
-				inactiveSpecReplicas: inactiveReplicas2,
+				inactiveSpecReplicas: inactiveReplicas1,
 				replicas:             30,
 				updated:              true,
 			},
@@ -1226,7 +1226,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusAllocationReplicas: 2,
 
 			expected: expected{
-				inactiveSpecReplicas: inactiveReplicas1,
+				inactiveSpecReplicas: inactiveReplicas2,
 				replicas:             2,
 				updated:              true,
 			},
