@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"sync"
 	"testing"
@@ -288,19 +287,29 @@ func TestFleetRollingUpdate(t *testing.T) {
 						return false, err
 					}
 
-					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, 100, true)
+					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, int(flt.Spec.Replicas), true)
 					assert.Nil(t, err)
-					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, 100, true)
-					assert.Nil(t, err)
-					target := float64(targetScale)
 
-					if !runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-						if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
-							err = errors.New(fmt.Sprintf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.))))
+					roundUp := true
+					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
+						roundUp = false
+					}
+					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
+
+					shift := 0
+					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
+						if maxUnavailable == 0 {
+							maxUnavailable = 1
 						}
-						if err != nil {
-							return false, err
-						}
+						shift = maxUnavailable
+					}
+					assert.Nil(t, err)
+
+					if len(list.Items) > targetScale+maxSurge+maxUnavailable+shift {
+						err = errors.New(fmt.Sprintf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift))
+					}
+					if err != nil {
+						return false, err
 					}
 					gssList, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(
 						metav1.ListOptions{LabelSelector: selector.String()})

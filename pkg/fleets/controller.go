@@ -485,6 +485,15 @@ func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active
 	allGSS := append(rest, active)
 	readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
 	minAvailable := fleet.Spec.Replicas - unavailable
+
+	// Check if we are ready to scale down
+	allPodsCount := agonesv1.SumSpecReplicas(allGSS)
+	newGSSUnavailablePodCount := active.Spec.Replicas - active.Status.ReadyReplicas
+	maxScaledDown := allPodsCount - minAvailable - newGSSUnavailablePodCount
+	if maxScaledDown <= 0 {
+		return nil
+	}
+	// Resulting value is readyReplicasCount + unavailable - fleet.Spec.Replicas
 	totalScaleDownCount = readyReplicasCount - minAvailable
 	if readyReplicasCount <= minAvailable {
 		// Cannot scale down.
