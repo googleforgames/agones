@@ -706,12 +706,9 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
 
-	const name = "tcpudp-server"
-	gs.ObjectMeta.GenerateName = name
-	gs.Spec.Container = name
 	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
-	gs.Spec.Template.Spec.Containers[0].Name = name
-	gs.Spec.Template.Spec.Containers[0].Image = framework.GameServerImageTCPUDP
+	gs.Spec.Ports[0].Name = "tcpudp-port"
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
 	// gate
 	_, valid := gs.Validate()
@@ -739,7 +736,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 		t.Fatalf("Could not ping UDP GameServer: %v", err)
 	}
 
-	assert.Equal(t, "ACK UDP: Hello World !\n", replyUDP)
+	assert.Equal(t, "ACK: Hello World !\n", replyUDP)
 
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
 
