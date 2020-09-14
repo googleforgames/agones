@@ -295,6 +295,7 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 
 	c, err := x509.ParseCertificate(rawCerts[0])
 	if err != nil {
+		logger.WithError(err).Warning("cannot parse client certificate")
 		return errors.New("bad client certificate: " + err.Error())
 	}
 
@@ -302,6 +303,7 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 	defer h.certMutex.RUnlock()
 	_, err = c.Verify(opts)
 	if err != nil {
+		logger.WithError(err).Warning("failed to verify client certificate")
 		return errors.New("failed to verify client certificate: " + err.Error())
 	}
 	return nil
