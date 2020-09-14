@@ -259,6 +259,7 @@ steps:
   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
+    - tests
 
 #
 # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
