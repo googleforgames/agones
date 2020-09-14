@@ -1118,13 +1118,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	inactiveReplicas1 := int32(65)
-	inactiveReplicas2 := int32(3)
-
-	if utilruntime.FeatureEnabled(utilruntime.FeatureRollingUpdateOnReady) {
-		inactiveReplicas1 = 45
-		inactiveReplicas2 = 4
-	}
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=false"))
 
 	type expected struct {
 		inactiveSpecReplicas int32
@@ -1200,7 +1194,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveSpecReplicas:   95,
 			inactiveStatusReplicas: 95,
 			expected: expected{
-				inactiveSpecReplicas: inactiveReplicas1,
+				inactiveSpecReplicas: 65,
 				replicas:             30,
 				updated:              true,
 			},
@@ -1226,7 +1220,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusAllocationReplicas: 2,
 
 			expected: expected{
-				inactiveSpecReplicas: inactiveReplicas2,
+				inactiveSpecReplicas: 3,
 				replicas:             2,
 				updated:              true,
 			},

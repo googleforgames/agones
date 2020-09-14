@@ -531,12 +531,14 @@ func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active
 
 	if maxScaledDown <= 0 {
 		return nil
-
 	}
 	rest, _, err = c.cleanupUnhealthyReplicas(rest, fleet, maxScaledDown)
 	if err != nil {
 		c.loggerForFleet(fleet).WithField("fleet", fleet.ObjectMeta.Name).WithField("maxScaledDown", maxScaledDown).
 			Debug("Can not cleanup Unhealth Replicas")
+		// There could be the case when GameServerSet would be updated from another place, say Status or Spec would be updated
+		// We don't want to propagate such errors further
+		// And this set in sync with reconcileOldReplicaSets() Kubernetes code
 		return nil
 	}
 	// Resulting value is readyReplicasCount + unavailable - fleet.Spec.Replicas

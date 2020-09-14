@@ -105,4 +105,11 @@ Fleets through that mechanism. The `preferred` label matching selector tells the
 all `GameServers` with the `v2` `Fleet` label, and if not found, search through the rest of the set.
 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
-the rate that you deem fit for your specific rollout. 
+the rate that you deem fit for your specific rollout.
+
+## Alpha Feature RollingUpdateOnReady
+
+{{< alpha title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
+
+If we are updating the Fleet configuration, the new GameServerSet would be created with 0 GameServers at the beginning, if RollingUpdate deployment strategy is used. After creating a first batch of `MaxSurge` GameServers, old GameServerSet should be waiting before some of them become Ready, before scaling down GameServers which belong to an old GameServerSet.
+With this feature disabled old GameServerSet could scale down all of its GameServers down to zero and total number of Ready GameServers could be 0 which is more than `MaxUnavailable`, which could not be more than 99%, so this should never happen.

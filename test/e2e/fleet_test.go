@@ -27,7 +27,6 @@ import (
 	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -301,12 +300,13 @@ func TestFleetRollingUpdate(t *testing.T) {
 						if maxUnavailable == 0 {
 							maxUnavailable = 1
 						}
+						// This difference is inevitable, also could be seen with Deployments and ReplicaSeets
 						shift = maxUnavailable
 					}
 					assert.Nil(t, err)
 
 					if len(list.Items) > targetScale+maxSurge+maxUnavailable+shift {
-						err = errors.New(fmt.Sprintf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift))
+						err = fmt.Errorf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift)
 					}
 					if err != nil {
 						return false, err
