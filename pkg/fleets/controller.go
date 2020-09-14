@@ -461,10 +461,48 @@ func (c *Controller) rollingUpdateActive(fleet *agonesv1.Fleet, active *agonesv1
 	return replicas, nil
 }
 
+func (c *Controller) cleanupUnhealthyReplicas(rest []*agonesv1.GameServerSet, fleet *agonesv1.Fleet, maxCleanupCount int32) ([]*agonesv1.GameServerSet, int32, error) {
+
+	// Safely scale down all old GameServerSets with unhealthy replicas.
+	totalScaledDown := int32(0)
+	for i, gsSet := range rest {
+		if totalScaledDown >= maxCleanupCount {
+			break
+		}
+		if gsSet.Spec.Replicas == 0 {
+			// cannot scale down this replica set.
+			continue
+		}
+		if gsSet.Spec.Replicas == gsSet.Status.ReadyReplicas {
+			// no unhealthy replicas found, no scaling required.
+			continue
+		}
+
+		scaledDownCount := int32(integer.IntMin(int(maxCleanupCount-totalScaledDown), int(gsSet.Spec.Replicas-gsSet.Status.ReadyReplicas)))
+		newReplicasCount := gsSet.Spec.Replicas - scaledDownCount
+		if newReplicasCount > gsSet.Spec.Replicas {
+			return nil, 0, fmt.Errorf("when cleaning up unhealthy replicas, got invalid request to scale down %s/%s %d -> %d", gsSet.Namespace, gsSet.Name, gsSet.Spec.Replicas, newReplicasCount)
+		}
+
+		gsSetCopy := gsSet.DeepCopy()
+		gsSetCopy.Spec.Replicas = newReplicasCount
+		totalScaledDown += scaledDownCount
+		if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(gsSetCopy); err != nil {
+			return nil, totalScaledDown, errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
+		}
+		c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
+			"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
+
+		rest[i] = gsSetCopy
+	}
+	return rest, totalScaledDown, nil
+}
+
 func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) error {
 	if len(rest) == 0 {
 		return nil
 	}
+
 	// Look at Kubernetes Deployment util ResolveFenceposts() function
 	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), false)
 	if err != nil {
@@ -490,7 +528,15 @@ func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active
 	allPodsCount := agonesv1.SumSpecReplicas(allGSS)
 	newGSSUnavailablePodCount := active.Spec.Replicas - active.Status.ReadyReplicas
 	maxScaledDown := allPodsCount - minAvailable - newGSSUnavailablePodCount
+
 	if maxScaledDown <= 0 {
+		return nil
+
+	}
+	rest, _, err = c.cleanupUnhealthyReplicas(rest, fleet, maxScaledDown)
+	if err != nil {
+		c.loggerForFleet(fleet).WithField("fleet", fleet.ObjectMeta.Name).WithField("maxScaledDown", maxScaledDown).
+			Debug("Can not cleanup Unhealth Replicas")
 		return nil
 	}
 	// Resulting value is readyReplicasCount + unavailable - fleet.Spec.Replicas
@@ -505,9 +551,12 @@ func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active
 			break
 		}
 
-		// if the status.Replicas are less than or equal to 0, then that means we are done
+		// Crucial fix if we are using wrong configuration of a fleet,
+		// that would lead to Status.Replicas being 0 but number of GameServers would be in a Scheduled or Unhealthy state.
+		// Compare with scaleDownOldReplicaSetsForRollingUpdate() for loop.
+		// if the Spec.Replicas are less than or equal to 0, then that means we are done
 		// scaling this GameServerSet down, and can therefore exit/move to the next one.
-		if gsSet.Status.Replicas <= 0 {
+		if gsSet.Spec.Replicas <= 0 {
 			continue
 		}
 
@@ -533,7 +582,6 @@ func (c *Controller) rollingUpdateRestFixedOnReady(fleet *agonesv1.Fleet, active
 			}
 
 			gsSetCopy.Spec.Replicas = newReplicasCount
-			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Replicas in a Shutdown state - %d", gsSet.Status.ShutdownReplicas))
 			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
 				Debug("applying rolling update to inactive gameserverset")
 

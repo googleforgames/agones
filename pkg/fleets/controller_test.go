@@ -1036,7 +1036,7 @@ func TestFeatureRollingUpdateOnReady(t *testing.T) {
 			allocatedReplicas:           5,
 			expected: expected{
 				updated:              true,
-				inactiveSpecReplicas: 0,
+				inactiveSpecReplicas: 5,
 				replicas:             70,
 			},
 		},
@@ -1059,7 +1059,7 @@ func TestFeatureRollingUpdateOnReady(t *testing.T) {
 			allocatedReplicas:           0,
 			expected: expected{
 				updated:              true,
-				inactiveSpecReplicas: 9,
+				inactiveSpecReplicas: 8,
 				replicas:             75,
 			},
 		},
