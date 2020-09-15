@@ -52,18 +52,9 @@ Agones incorporates these abilities:
 
 Participation in this project comes under the {{< ghlink href="code-of-conduct.md" branch="master" >}}Contributor Covenant Code of Conduct{{< /ghlink >}}
 
-## This all sounds great, but can you explain Docker and/or Kubernetes to me?
-
-### Docker
-- [Docker's official "Getting Started" guide](https://docs.docker.com/get-started/)
-- [Katacoda's free, interactive Docker course](https://www.katacoda.com/courses/docker)
-
-### Kubernetes
-- [You should totally read this comic, and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
-- [Kubernetes concepts, explained](https://kubernetes.io/docs/concepts/)
-- [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
-
 ## What Next?
+- Review our [Prerequisite Knowledge]({{% ref "/docs/Prerequisite Knowledge/_index.md" %}}). Especially if the above
+  sounds fantastic, but you aren't yet familiar with technology like Kubernetes, or terms such as "Game Servers".
 - Have a look at our [installation guides]({{< ref "/docs/Installation/_index.md" >}}), for setting up a Kubernetes cluster
   and installing Agones on it.
 - Go through our [Quickstart Guides]({{< ref "/docs/Getting Started/_index.md" >}}) to take you through setting up a simple game server on Agones.
