@@ -16,6 +16,7 @@ package gameserverallocations
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -968,7 +969,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			},
 		}
 
-		c.allocator.remoteAllocationCallback = func(e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			assert.Equal(t, endpoint+":443", e)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
@@ -991,7 +992,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		retry := 0
 		endpoint := "z.z.z.z"
 
-		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if count == 0 {
 				serverResponse := pb.AllocationResponse{}
 				count++
@@ -1087,7 +1088,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		healthyEndpoint := "healthy_endpoint:443"
 
 		expectedGSName := "mocked"
-		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if endpoint == unhealthyEndpoint {
 				return nil, errors.New("test error message")
 			}

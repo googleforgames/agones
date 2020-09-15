@@ -82,6 +82,13 @@ const (
 	batchWaitTime         = 500 * time.Millisecond
 )
 
+const (
+	// Timeout for an individual Allocate RPC call can take
+	remoteAllocateTimeout = 10 * time.Second
+	// Total timeout for allocation including retries
+	totalRemoteAllocationTimeout = 30 * time.Second
+)
+
 var allocationRetry = wait.Backoff{
 	Steps:    5,
 	Duration: 10 * time.Millisecond,
@@ -106,7 +113,7 @@ type Allocator struct {
 	pendingRequests          chan request
 	readyGameServerCache     *ReadyGameServerCache
 	topNGameServerCount      int
-	remoteAllocationCallback func(string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	remoteAllocationCallback func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 }
 
 // request is an async request for allocation
@@ -133,15 +140,17 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:           secretInformer.Informer().HasSynced,
 		readyGameServerCache:   readyGameServerCache,
 		topNGameServerCount:    topNGameServerDefaultCount,
-		remoteAllocationCallback: func(endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			conn, err := grpc.Dial(endpoint, dialOpts)
 			if err != nil {
 				return nil, err
 			}
 			defer conn.Close() // nolint: errcheck
 
+			allocationCtx, cancel := context.WithTimeout(ctx, remoteAllocateTimeout)
+			defer cancel() // nolint: errcheck
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.Allocate(context.Background(), request)
+			return grpcClient.Allocate(allocationCtx, request)
 		},
 	}
 
@@ -336,13 +345,15 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
 
+	ctx, cancel := context.WithTimeout(context.Background(), totalRemoteAllocationTimeout)
+	defer cancel() // nolint: errcheck
 	// Retry on remote call failures.
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			endpoint := addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 
-			allocationResponse, err = c.remoteAllocationCallback(endpoint, dialOpts, request)
+			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
 			if err != nil {
 				c.baseLogger.Errorf("remote allocation failed with: %v", err)
 				// If there are multiple enpoints for the allocator connection and the current one is
