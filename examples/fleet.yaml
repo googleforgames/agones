@@ -21,7 +21,7 @@
 apiVersion: "agones.dev/v1"
 kind: Fleet
 # Fleet Metadata
-# https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
+# https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta
 metadata:
   name: fleet-example
 spec:
