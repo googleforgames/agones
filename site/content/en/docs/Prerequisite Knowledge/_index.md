@@ -34,7 +34,7 @@ The following resources are great for learning these concepts:
 * [Docker "Quickstart" guide](https://docs.docker.com/get-started/)
 * [Katacoda's free, interactive Docker course](https://www.katacoda.com/courses/docker)
 
-## Kubernertes
+## Kubernetes
 
 Kubernetes builds on top of Docker to run containers at scale, on lots of machines. 
 If you have yet to learn about Kubernetes, we recommend that you have knowledge in the following
@@ -66,7 +66,7 @@ start with the above.
 
 ## Dedicated Game Servers
 
-Agones is a platform for dedicated game servers for mulitplayer games. If "dedicated game servers" is a term that is not
+Agones is a platform for dedicated game servers for multiplayer games. If "dedicated game servers" is a term that is not
 something you are familiar with, we recommend checking out some of the resources below, before getting started with
 Agones:
 
