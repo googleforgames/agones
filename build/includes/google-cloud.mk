@@ -39,27 +39,27 @@ clean-gcloud-test-cluster: $(ensure-build-image)
 gcloud-e2e-test-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-e2e-test-cluster: $(ensure-build-image)
 gcloud-e2e-test-cluster:
-	$(MAKE) terraform-init DIRECTORY=e2e
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/build/terraform/e2e
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/e2e && \
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud e2e cluster and cleanup any left pvc volumes
 clean-gcloud-e2e-test-cluster: $(ensure-build-image)
 clean-gcloud-e2e-test-cluster:
-	$(MAKE) terraform-init DIRECTORY=e2e
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/build/terraform/e2e
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/e2e && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 # Creates a gcloud cluster for prow
 gcloud-prow-build-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-prow-build-cluster: $(ensure-build-image)
 gcloud-prow-build-cluster:
-	$(MAKE) terraform-init DIRECTORY=prow
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/build/terraform/prow
 	docker run --rm -it $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c 'cd $(mount_path)/build/terraform/prow && \
       	terraform apply -auto-approve -var project="$(GCP_PROJECT)"'
 
 # Deletes the gcloud prow build cluster
 clean-gcloud-prow-build-cluster: $(ensure-build-image)
-	$(MAKE) terraform-init DIRECTORY=prow
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/build/terraform/prow
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/prow && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 # Pulls down authentication information for kubectl against a cluster, name can be specified through GCP_CLUSTER_NAME
