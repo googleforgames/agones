@@ -122,7 +122,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[0].Protocol)
 		assert.Equal(t, corev1.ProtocolUDP, gsCopy.Spec.Ports[1].Protocol)
 		assert.Equal(t, "gameport-tcp", gsCopy.Spec.Ports[0].Name)
-		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[0].Name)
+		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[1].Name)
 		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
