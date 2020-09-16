@@ -367,6 +367,11 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 			}
 			break
 		}
+		select {
+		case <-ctx.Done():
+			return status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
+		default:
+		}
 		return nil
 	})
 
