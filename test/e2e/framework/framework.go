@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/user"
@@ -535,22 +534,27 @@ func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg strin
 func SendTCP(address, msg string) (string, error) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
-		log.Fatalf("Could not Dial: %v", err)
+		return "", err
 	}
 
-	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	if err != nil {
-		log.Fatalf("Timed out: %v", err)
+	if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+		return "", err
 	}
 
 	defer func() {
-		err = conn.Close()
+		if err := conn.Close(); err != nil {
+			logrus.Warn("Could not close TCP connection")
+		}
 	}()
 
 	// writes to the tcp connection
 	fmt.Fprintf(conn, msg+"\n")
 
-	response, _ := bufio.NewReader(conn).ReadString('\n')
+	response, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
 	return response, nil
 }
 
