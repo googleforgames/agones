@@ -37,8 +37,9 @@ site-static: ensure-build-image
 	# for some reason, this only work locally
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
 		bash -c "npm list postcss-cli || npm install postcss-cli"
+	# autoprefixer 10.0.0 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list autoprefixer || npm install autoprefixer"
+		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"$(ENV) hugo --config=config.toml $(ARGS)"
 
