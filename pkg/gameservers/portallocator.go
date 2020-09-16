@@ -164,7 +164,7 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 					gs.Spec.Ports[i].ContainerPort = a.port
 				}
 
-				// create a second port for UDP
+				// create a port for TCP when using TCPUDP protocol
 				if p.Protocol == agonesv1.ProtocolTCPUDP {
 					var duplicate = p
 					duplicate.HostPort = a.port
@@ -180,6 +180,7 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 				}
 			}
 
+			// create the UDP port when using TCPUDP protocol
 			for _, p := range extraPorts {
 				p.Name += "-udp"
 				p.Protocol = corev1.ProtocolUDP
