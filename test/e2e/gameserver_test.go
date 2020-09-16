@@ -726,7 +726,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	udpPort := readyGs.Spec.Ports[1]
 	assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
 	assert.NotEmpty(t, udpPort.HostPort)
-	assert.Equal(t, "gameserver-udp", tcpPort.Name)
+	assert.Equal(t, "gameserver-udp", udpPort.Name)
 
 	assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
 
