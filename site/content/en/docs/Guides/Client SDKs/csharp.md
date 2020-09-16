@@ -35,6 +35,8 @@ Reference the SDK in your project & create a new instance of the SDK wrapper:
 
 ### Initialization
 
+To use the AgonesSDK, you will need to import the namespace by adding `using Agones;` at the beginning of your relevant files.
+
 ```csharp
 var agones = new AgonesSDK();
 ```
