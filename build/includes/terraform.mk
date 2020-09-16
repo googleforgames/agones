@@ -99,6 +99,20 @@ terraform-test:
 terraform-test-clean: $(ensure-build-image)
 	$(MAKE) terraform-clean TERRAFORM_BUILD_DIR=$(mount_path)/test/terraform
 
+# setup Stackdriver dashboards ready for use with Agones
+setup-stackdriver: $(ensure-build-image)
+setup-stackdriver:
+	$(MAKE) terraform-init TERRAFORM_BUILD_DIR=$(mount_path)/examples/terraform-submodules/stackdriver
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/examples/terraform-submodules/stackdriver && \
+		 terraform apply -auto-approve
+
+# removes dashboards created with a previous command
+uninstall-stackdriver:
+	$(DOCKER_RUN) bash -c 'cd $(mount_path)/examples/terraform-submodules/stackdriver && \
+		 terraform destroy -auto-approve
+	$(MAKE) terraform-clean TERRAFORM_BUILD_DIR=$(mount_path)/examples/terraform-submodules/stackdriver
+
+
 # run terratest which verifies GKE and Helm Terraform modules
 run-terraform-test:
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/test/terraform && go test -v -run TestTerraformGKEInstallConfig \
