@@ -707,10 +707,9 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	gs := framework.DefaultGameServer(framework.Namespace)
 
 	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
-	gs.Spec.Ports[0].Name = "tcpudp-port"
+	gs.Spec.Ports[0].Name = "gameserver"
 	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
 
-	// gate
 	_, valid := gs.Validate()
 	assert.True(t, valid)
 
@@ -722,10 +721,12 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	tcpPort := readyGs.Spec.Ports[0]
 	assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
 	assert.NotEmpty(t, tcpPort.HostPort)
+	assert.Equal(t, "gameserver-tcp", tcpPort.Name)
 
 	udpPort := readyGs.Spec.Ports[1]
 	assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
 	assert.NotEmpty(t, udpPort.HostPort)
+	assert.Equal(t, "gameserver-udp", tcpPort.Name)
 
 	assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
 

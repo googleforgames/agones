@@ -113,13 +113,16 @@ func TestPortAllocatorAllocate(t *testing.T) {
 
 		// single port to two ports, tcpudp
 		gsCopy = fixture.DeepCopy()
-		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "tcpudp", PortPolicy: agonesv1.Dynamic, Protocol: agonesv1.ProtocolTCPUDP}
+		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "gameport", PortPolicy: agonesv1.Dynamic, Protocol: agonesv1.ProtocolTCPUDP}
 
 		gs = pa.Allocate(gsCopy)
 		require.NotNil(t, gs)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[1].HostPort)
+
 		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[0].Protocol)
 		assert.Equal(t, corev1.ProtocolUDP, gsCopy.Spec.Ports[1].Protocol)
+		assert.Equal(t, "gameport-tcp", gsCopy.Spec.Ports[0].Name)
+		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[0].Name)
 		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
