@@ -17,15 +17,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 
 	sdk "agones.dev/agones/sdks/go"
+	"github.com/hpcloud/tail"
 )
 
 // logLocation is the path to the location of the SuperTuxKart log file
@@ -34,20 +35,31 @@ const logLocation = "/.config/supertuxkart/config-0.10/server_config.log"
 // main intercepts the log file of the SuperTuxKart gameserver and uses it
 // to determine if the game server is ready or not.
 func main() {
+	log.SetPrefix("[wrapper] ")
 	input := flag.String("i", "", "the command and arguments to execute the server binary")
+
+	// Since player tracking is not on by default, it is behind this flag.
+	// If it is off, still log messages about players, but don't actually call the player tracking functions.
+	enablePlayerTracking := flag.Bool("player-tracking", false, "If true, player tracking will be enabled.")
 	flag.Parse()
 
-	fmt.Println(">>> Connecting to Agones with the SDK")
+	log.Println("Connecting to Agones with the SDK")
 	s, err := sdk.NewSDK()
 	if err != nil {
-		log.Fatalf(">>> Could not connect to SDK: %v", err)
+		log.Fatalf("could not connect to SDK: %v", err)
 	}
 
-	fmt.Println(">>> Starting health checking")
+	if *enablePlayerTracking {
+		if err = s.Alpha().SetPlayerCapacity(8); err != nil {
+			log.Fatalf("could not set play count: %v", err)
+		}
+	}
+
+	log.Println("Starting health checking")
 	go doHealth(s)
 
-	fmt.Println(">>> Starting wrapper for SuperTuxKart")
-	fmt.Printf(">>> Command being run for SuperTuxKart server: %s \n", *input)
+	log.Println("Starting wrapper for SuperTuxKart")
+	log.Printf("Command being run for SuperTuxKart server: %s \n", *input)
 
 	cmdString := strings.Split(*input, " ")
 	command, args := cmdString[0], cmdString[1:]
@@ -57,49 +69,74 @@ func main() {
 	cmd.Stdout = os.Stdout
 
 	if err := cmd.Start(); err != nil {
-		log.Fatalf(">>> Error starting cmd: %v", err)
+		log.Fatalf("error starting cmd: %v", err)
 	}
 
 	// SuperTuxKart refuses to output to foreground, so we're going to
 	// poll the server log.
-	ready := false
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf(">>> Could not get home dir: %v", err)
+		log.Fatalf("could not get home dir: %v", err)
 	}
-	for i := 0; i <= 10; i++ {
+
+	t := &tail.Tail{}
+	// Loop to make sure the log has been created. Sometimes it takes a few seconds
+	for i := 0; i < 10; i++ {
 		time.Sleep(time.Second)
 
-		logFile, err := os.Open(path.Join(home, logLocation))
+		t, err = tail.TailFile(path.Join(home, logLocation), tail.Config{Follow: true})
 		if err != nil {
-			log.Printf(">>> Could not open server log: %v", err)
+			log.Print(err)
 			continue
-		}
-
-		content, err := ioutil.ReadAll(logFile)
-		if err != nil {
-			log.Printf(">>> Could not read server file: %v", err)
-			continue
-		}
-		output := string(content)
-		println(">>> Output from server_config.log:")
-		print(output)
-
-		if strings.Contains(output, "Listening has been started") {
-			ready = true
-			log.Printf(">>> Moving to READY!")
-			if err := s.Ready(); err != nil {
-				log.Fatalf(">>> Could not send ready message")
-			}
+		} else {
 			break
 		}
 	}
-	if ready == false {
-		log.Fatalf(">>> Server did not become ready within 10 seconds")
+	defer t.Cleanup()
+	for line := range t.Lines {
+		// Don't use the logger here. This would add multiple prefixes to the logs. We just want
+		// to show the supertuxkart logs as they are, and layer the wrapper logs in with them.
+		fmt.Println(line.Text)
+		action, player := handleLogLine(line.Text)
+		switch action {
+		case "READY":
+			if err := s.Ready(); err != nil {
+				log.Fatal("failed to mark server ready")
+			}
+		case "PLAYERJOIN":
+			if player == nil {
+				log.Print("could not determine player")
+				break
+			}
+			if *enablePlayerTracking {
+				result, err := s.Alpha().PlayerConnect(*player)
+				if err != nil {
+					log.Print(err)
+				} else {
+					log.Print(result)
+				}
+			}
+		case "PLAYERLEAVE":
+			if player == nil {
+				log.Print("could not determine player")
+				break
+			}
+			if *enablePlayerTracking {
+				result, err := s.Alpha().PlayerDisconnect(*player)
+				if err != nil {
+					log.Print(err)
+				} else {
+					log.Print(result)
+				}
+			}
+		case "SHUTDOWN":
+			if err := s.Shutdown(); err != nil {
+				log.Fatal(err)
+			}
+			os.Exit(0)
+		}
 	}
-
-	err = cmd.Wait()
-	log.Fatalf(">>> SuperTuxKart shutdown unexpectedly: %v", err)
+	log.Fatal("tail ended")
 }
 
 // doHealth sends the regular Health Pings
@@ -107,8 +144,45 @@ func doHealth(sdk *sdk.SDK) {
 	tick := time.Tick(2 * time.Second)
 	for {
 		if err := sdk.Health(); err != nil {
-			log.Fatalf(">>> Could not send health ping: %v", err)
+			log.Fatalf("could not send health ping: %v", err)
 		}
 		<-tick
 	}
+}
+
+// handleLogLine compares the log line to a series of regexes to determine if any action should be taken.
+// TODO: This could probably be handled better with a custom type rather than just (string, *string)
+func handleLogLine(line string) (string, *string) {
+	// The various regexes that match server lines
+	playerJoin := regexp.MustCompile(`ServerLobby: New player (.+) with online id [0-9][0-9]?`)
+	playerLeave := regexp.MustCompile(`ServerLobby: (.+) disconnected$`)
+	noMorePlayers := regexp.MustCompile(`STKHost.+There are now 0 peers\.$`)
+	serverStart := regexp.MustCompile(`Listening has been started`)
+
+	// Start the server
+	if serverStart.MatchString(line) {
+		log.Print("server ready")
+		return "READY", nil
+	}
+
+	// Player tracking
+	if playerJoin.MatchString(line) {
+		matches := playerJoin.FindSubmatch([]byte(line))
+		player := string(matches[1])
+		log.Printf("Player %s joined\n", player)
+		return "PLAYERJOIN", &player
+	}
+	if playerLeave.MatchString(line) {
+		matches := playerLeave.FindSubmatch([]byte(line))
+		player := string(matches[1])
+		log.Printf("Player %s disconnected", player)
+		return "PLAYERLEAVE", &player
+	}
+
+	// All the players left, send a shutdown
+	if noMorePlayers.MatchString(line) {
+		log.Print("server has no more players. shutting down")
+		return "SHUTDOWN", nil
+	}
+	return "", nil
 }

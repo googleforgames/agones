@@ -26,3 +26,6 @@ spec:
       - name: supertuxkart
         image: gcr.io/agones-images/supertuxkart-example:0.2
         # imagePullPolicy: Always # add for development
+        env:
+          - name: ENABLE_PLAYER_TRACKING
+            value: 'false'
