@@ -114,6 +114,8 @@ type Allocator struct {
 	readyGameServerCache     *ReadyGameServerCache
 	topNGameServerCount      int
 	remoteAllocationCallback func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	allocationTimeout        time.Duration
+	totalAllocationTimeout   time.Duration
 }
 
 // request is an async request for allocation
@@ -131,7 +133,7 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
-	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache) *Allocator {
+	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, allocationTimeout time.Duration, totalAllocationTimeout time.Duration) *Allocator {
 	ah := &Allocator{
 		pendingRequests:        make(chan request, maxBatchQueue),
 		allocationPolicyLister: policyInformer.Lister(),
@@ -140,6 +142,8 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:           secretInformer.Informer().HasSynced,
 		readyGameServerCache:   readyGameServerCache,
 		topNGameServerCount:    topNGameServerDefaultCount,
+		allocationTimeout:      allocationTimeout,
+		totalAllocationTimeout:      totalAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			conn, err := grpc.Dial(endpoint, dialOpts)
 			if err != nil {

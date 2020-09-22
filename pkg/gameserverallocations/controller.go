@@ -66,7 +66,9 @@ func NewController(apiServer *apiserver.APIServer,
 			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 			kubeInformerFactory.Core().V1().Secrets(),
 			kubeClient,
-			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health)),
+			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health),
+			10*time.Second,
+			30*time.Second),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 

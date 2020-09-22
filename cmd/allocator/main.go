@@ -89,7 +89,7 @@ func main() {
 		return err
 	})
 
-	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled)
+	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.AllocationTimeout, conf.TotalAllocationTimeout)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", sslPort))
 	if err != nil {
@@ -182,7 +182,7 @@ func main() {
 	logger.WithError(err).Fatal("allocation service crashed")
 }
 
-func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool) *serviceHandler {
+func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, allocationTimeout time.Duration, totalAllocationTimeout time.Duration) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -192,7 +192,9 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 		kubeInformerFactory.Core().V1().Secrets(),
 		kubeClient,
-		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
+		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health),
+		allocationTimeout,
+		totalAllocationTimeout)
 
 	stop := signals.NewStopChannel()
 	h := serviceHandler{
