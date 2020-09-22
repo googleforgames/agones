@@ -102,8 +102,8 @@ On the lines that read `source = "git::https://github.com/googleforgames/agones.
 make sure to change `?ref=master` to match your targeted Agones release, as Terraform modules can change between
 releases.
 
-For example, if you are targeting release {{< release-branch >}}, then you will want to have 
-`source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=release-{{< release-branch >}}"`
+For example, if you are targeting {{< release-branch >}}, then you will want to have 
+`source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref={{< release-branch >}}"`
 as your source.
 {{% /alert %}}
 

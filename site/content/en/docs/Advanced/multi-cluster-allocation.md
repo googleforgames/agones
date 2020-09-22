@@ -16,7 +16,9 @@ The remainder of this article describes how to enable multi-cluster allocation.
 
 ## Define Cluster Priority
 
-{{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} is the CRD defined by Agones for setting multi-cluster allocation rules. In addition to cluster priority, it describes the connection information for the target cluster, including the game server namespace, agones-allocator endpoint and client K8s secrets name for redirecting the allocation request. Here is an example of setting the priority for a cluster and it's connection rules. One such resource should be defined per cluster. For clusters with the same priority, the cluster is chosen with a probability relative to its weight.
+{{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} is the CRD defined by Agones for setting multi-cluster allocation rules. In addition to cluster priority, it describes the connection information for the target cluster, including the game server namespace, agones-allocator endpoint and client K8s secrets name for redirecting the allocation request. Game servers will be allocated from clusters with the lowest `priority` number. If there are no available game servers available in clusters with the lowest `priority` number, they will be allocated from clusters with the next lowest `priority` number. For clusters with the same priority, the cluster is chosen with a probability relative to its weight.
+
+Here is an example of setting the priority for a cluster and it's connection rules. One such resource should be defined per cluster.
 
 In the following example the policy is defined for cluster B in cluster A.
 
@@ -25,15 +27,15 @@ cat <<EOF | kubectl apply -f -
 apiVersion: multicluster.agones.dev/v1
 kind: GameServerAllocationPolicy
 metadata:
-  name: allocator-cluster-B
-  namespace: cluster-A-ns
+  name: allocator-cluster-b
+  namespace: cluster-a-ns
 spec:
   connectionInfo:
     allocationEndpoints:
     - 34.82.195.204
     clusterName: "clusterB"
-    namespace: cluster-B-ns
-    secretName: allocator-client-to-cluster-B
+    namespace: cluster-b-ns
+    secretName: allocator-client-to-cluster-b
     serverCa: c2VydmVyQ0E=
   priority: 1
   weight: 100
@@ -57,8 +59,8 @@ cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Secret
 metadata:
-  name: allocator-client-to-cluster-B
-  namespace: cluster-A-ns
+  name: allocator-client-to-cluster-b
+  namespace: cluster-a-ns
 type: Opaque
 data:
   tls.crt: <REDACTED>
