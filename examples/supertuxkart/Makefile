@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-image_tag = $(REPOSITORY)/supertuxkart-example:0.2
+image_tag = $(REPOSITORY)/supertuxkart-example:0.3
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -39,6 +39,10 @@ image_tag = $(REPOSITORY)/supertuxkart-example:0.2
 # Build a docker image for the server, and tag it
 build:
 	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+
+# Run tests
+test:
+	go test -v ./...
 
 # check if hosted on Google Cloud Registry
 gcr-check:
