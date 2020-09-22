@@ -1158,6 +1158,86 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
 	})
+	t.Run("Allocation is retried", func(t *testing.T) {
+		c, m := newFakeController()
+		fleetName := addReactorForGameServer(&m)
+
+		healthyEndpoint := "healthy_endpoint:443"
+		unhealthyEndpoint := "unhealthy_endpoint:443"
+
+		expectedGSName := "mocked"
+		retried := false
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			if !retried {
+				retried = true
+				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation timeout exceeded")
+			}
+
+			serverResponse := pb.AllocationResponse{
+				GameServerName: expectedGSName,
+			}
+			return &serverResponse, nil
+		}
+
+		// Allocation policy reactor
+		secretName := clusterName + "secret"
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
+								AllocationEndpoints: []string{unhealthyEndpoint, healthyEndpoint},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
+								ServerCA:            clientCert,
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: defaultNs,
+						},
+					},
+				},
+			}, nil
+		})
+
+		m.KubeClient.AddReactor("list", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				return true, getTestSecret(secretName, clientCert), nil
+			})
+
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		gsa := &allocationv1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "localcluster",
+			},
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
+					Enabled: true,
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		result, err := executeAllocation(gsa, c)
+		if assert.NoError(t, err) {
+			assert.Equal(t, expectedGSName, result.Status.GameServerName)
+		}
+		assert.True(t, retried)
+	})
 }
 
 func TestCreateRestClientError(t *testing.T) {
