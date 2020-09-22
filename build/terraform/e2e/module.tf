@@ -64,7 +64,7 @@ resource "helm_release" "consul" {
 }
 
 resource "google_compute_firewall" "tcp" {
-  name    = "game-server-firewall-e2e-test-cluster-tcp"
+  name    = "game-server-firewall-tcp"
   project = var.project
   network = "default"
 
