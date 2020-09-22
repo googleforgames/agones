@@ -16,7 +16,6 @@ package e2e
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"sync"
 	"testing"
@@ -28,7 +27,6 @@ import (
 	typedagonesv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
@@ -218,7 +216,6 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 // maxUnavailable and maxSurge parameters check.
 func TestFleetRollingUpdate(t *testing.T) {
 	t.Parallel()
-
 	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 	maxSurge := []string{"25%", "10%"}
@@ -289,13 +286,27 @@ func TestFleetRollingUpdate(t *testing.T) {
 						return false, err
 					}
 
-					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, 100, true)
+					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, int(flt.Spec.Replicas), true)
 					assert.Nil(t, err)
-					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, 100, true)
+
+					roundUp := true
+					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
+						roundUp = false
+					}
+					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
+
+					shift := 0
+					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
+						if maxUnavailable == 0 {
+							maxUnavailable = 1
+						}
+						// This difference is inevitable, also could be seen with Deployments and ReplicaSeets
+						shift = maxUnavailable
+					}
 					assert.Nil(t, err)
-					target := float64(targetScale)
-					if len(list.Items) > int(target+math.Ceil(target*float64(maxSurge)/100.)+math.Ceil(target*float64(maxUnavailable)/100.)) {
-						err = errors.New("New replicas should be less than target + maxSurge + maxUnavailable")
+
+					if len(list.Items) > targetScale+maxSurge+maxUnavailable+shift {
+						err = fmt.Errorf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift)
 					}
 					if err != nil {
 						return false, err

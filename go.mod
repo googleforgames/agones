@@ -38,7 +38,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.16.15
 	k8s.io/apimachinery v0.16.15
 	k8s.io/client-go v0.16.15
-	k8s.io/utils v0.0.0-20200124190032-861946025e34 // indirect
+	k8s.io/utils v0.0.0-20200124190032-861946025e34
 )
 
 replace google.golang.org/grpc v1.23.0 => google.golang.org/grpc v1.20.1 // apiserver updated grpc, but we aren't using that, so it's fine.
