@@ -17,6 +17,7 @@
 package framework
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -436,13 +437,20 @@ func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) 
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
-// assumes the first port is the port to send the message to,
+// finds the first udp port from the spec to send the message to,
 // returns error if no Ports were allocated
 func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
-	return SendGameServerUDPToPort(gs, gs.Status.Ports[0].Name, msg)
+
+	// use first udp port
+	for _, p := range gs.Spec.Ports {
+		if p.Protocol == corev1.ProtocolUDP {
+			return SendGameServerUDPToPort(gs, p.Name, msg)
+		}
+	}
+	return "", errors.New("No UDP ports")
 }
 
 // SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
@@ -486,6 +494,68 @@ func SendUDP(address, msg string) (string, error) {
 		return "", err
 	}
 	return string(b[:n]), nil
+}
+
+// SendGameServerTCP sends a message to a gameserver and returns its reply
+// finds the first tcp port from the spec to send the message to,
+// returns error if no Ports were allocated
+func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+
+	// use first tcp port
+	for _, p := range gs.Spec.Ports {
+		if p.Protocol == corev1.ProtocolTCP {
+			return SendGameServerTCPToPort(gs, p.Name, msg)
+		}
+	}
+	return "", errors.New("No UDP ports")
+}
+
+// SendGameServerTCPToPort sends a message to a gameserver at the named port and returns its reply
+// returns error if no Ports were allocated or a port of the specified name doesn't exist
+func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+	var port agonesv1.GameServerStatusPort
+	for _, p := range gs.Status.Ports {
+		if p.Name == portName {
+			port = p
+		}
+	}
+	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
+	return SendTCP(address, msg)
+}
+
+// SendTCP sends a message to an address, and returns its reply if
+// it returns one in 30 seconds
+func SendTCP(address, msg string) (string, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return "", err
+	}
+
+	if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+		return "", err
+	}
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			logrus.Warn("Could not close TCP connection")
+		}
+	}()
+
+	// writes to the tcp connection
+	fmt.Fprintf(conn, msg+"\n")
+
+	response, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	return response, nil
 }
 
 // GetAllocation returns a GameServerAllocation that is looking for a Ready
@@ -601,19 +671,19 @@ type patchRemoveNoValue struct {
 // DefaultGameServer provides a default GameServer fixture, based on parameters
 // passed to the Test Framework.
 func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: namespace},
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "game-server", Namespace: namespace},
 		Spec: agonesv1.GameServerSpec{
-			Container: "udp-server",
+			Container: "game-server",
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
-				Name:          "gameport",
+				Name:          "udp-port",
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Name:            "udp-server",
+						Name:            "game-server",
 						Image:           f.GameServerImage,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Resources: corev1.ResourceRequirements{
