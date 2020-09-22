@@ -34,6 +34,7 @@ test-examples-on-gcr: example-image-test.unity-simple
 test-examples-on-gcr: example-image-test.xonotic
 test-examples-on-gcr: example-image-test.crd-client
 test-examples-on-gcr: example-image-test.supertuxkart
+test-examples-on-gcr: example-image-test.simple-game-server
 
 # Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
 example-image-test.%:
