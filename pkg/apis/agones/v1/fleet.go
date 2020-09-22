@@ -243,7 +243,9 @@ func SumStatusReplicas(list []*GameServerSet) int32 {
 func SumSpecReplicas(list []*GameServerSet) int32 {
 	total := int32(0)
 	for _, gsSet := range list {
-		total += gsSet.Spec.Replicas
+		if gsSet != nil {
+			total += gsSet.Spec.Replicas
+		}
 	}
 
 	return total

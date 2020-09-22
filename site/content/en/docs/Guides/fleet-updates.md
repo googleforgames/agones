@@ -111,5 +111,7 @@ the rate that you deem fit for your specific rollout.
 
 {{< alpha title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
 
-If we are updating the Fleet configuration, the new GameServerSet would be created with 0 GameServers at the beginning, if RollingUpdate deployment strategy is used. After creating a first batch of `MaxSurge` GameServers, old GameServerSet should be waiting before some of them become Ready, before scaling down GameServers which belong to an old GameServerSet.
-With this feature disabled old GameServerSet could scale down all of its GameServers down to zero and total number of Ready GameServers could be 0 which is more than `MaxUnavailable`, which could not be more than 99%, so this should never happen.
+When this feature is enabled, Fleets will wait for the new GameSevers to become Ready during a Rolling Update, to ensure there is always a set of Ready GameServers before attempting to shut down the previous version Fleet's GameServers.
+
+This ensures a Fleet cannot accidentally have 0 GameServers Ready if something goes wrong during a Rolling Update, or GameServers have a long delay when moving to a Ready state.
+
