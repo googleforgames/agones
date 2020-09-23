@@ -76,11 +76,12 @@ properties:
               - Static
               - Passthrough
             protocol:
-              title: Protocol being used. Defaults to UDP. TCP is the only other option
+              title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
               type: string
               enum:
               - UDP
               - TCP
+              - TCPUDP
             containerPort:
               title: The port that is being opened on the game server process
               type: integer

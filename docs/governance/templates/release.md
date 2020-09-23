@@ -21,14 +21,15 @@ Images available with this release:
 - [gcr.io/agones-images/agones-ping:{version}](https://gcr.io/agones-images/agones-ping:{version})
 - [gcr.io/agones-images/agones-allocator:{version}](https://gcr.io/agones-images/agones-allocator:{version})
 - [gcr.io/agones-images/cpp-simple-server:{example-version}](https://gcr.io/agones-images/cpp-simple-server:{example-version})
+- [gcr.io/agones-images/crd-client:{example-version}](https://gcr.io/agones-images/crd-client:{example-version})
 - [gcr.io/agones-images/nodejs-simple-server:{example-version}](https://gcr.io/agones-images/nodejs-simple-server:{example-version})
 - [gcr.io/agones-images/rust-simple-server:{example-version}](https://gcr.io/agones-images/rust-simple-server:{example-version})
-- [gcr.io/agones-images/unity-simple-server:{example-version}](https://gcr.io/agones-images/unity-simple-server:{example-version})
-- [gcr.io/agones-images/udp-server:{example-version}](https://gcr.io/agones-images/udp-server:{example-version})
-- [gcr.io/agones-images/tcp-server:{example-version}](https://gcr.io/agones-images/tcp-server:{example-version})
-- [gcr.io/agones-images/xonotic-example:{example-version}](https://gcr.io/agones-images/xonotic-example:{example-version})
+- [gcr.io/agones-images/simple-game-server:{example-version}](https://gcr.io/agones-images/simple-game-server:{example-version})
 - [gcr.io/agones-images/supertuxkart-example:{example-version}](https://gcr.io/agones-images/supertuxkart-example:{example-version})
-- [gcr.io/agones-images/crd-client:{example-version}](https://gcr.io/agones-images/crd-client:{example-version})
+- [gcr.io/agones-images/tcp-server:{example-version}](https://gcr.io/agones-images/tcp-server:{example-version})
+- [gcr.io/agones-images/udp-server:{example-version}](https://gcr.io/agones-images/udp-server:{example-version})
+- [gcr.io/agones-images/unity-simple-server:{example-version}](https://gcr.io/agones-images/unity-simple-server:{example-version})
+- [gcr.io/agones-images/xonotic-example:{example-version}](https://gcr.io/agones-images/xonotic-example:{example-version})
 
 Helm chart available with this release:
 

@@ -702,6 +702,53 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
+func TestGameServerTcpUdpProtocol(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
+	gs.Spec.Ports[0].Name = "gameserver"
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+
+	_, valid := gs.Validate()
+	assert.True(t, valid)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
+	if err != nil {
+		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
+	}
+
+	tcpPort := readyGs.Spec.Ports[0]
+	assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
+	assert.NotEmpty(t, tcpPort.HostPort)
+	assert.Equal(t, "gameserver-tcp", tcpPort.Name)
+
+	udpPort := readyGs.Spec.Ports[1]
+	assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
+	assert.NotEmpty(t, udpPort.HostPort)
+	assert.Equal(t, "gameserver-udp", udpPort.Name)
+
+	assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
+
+	replyUDP, err := e2eframework.SendGameServerUDPToPort(readyGs, udpPort.Name, "Hello World !")
+	if err != nil {
+		t.Fatalf("Could not ping UDP GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK: Hello World !\n", replyUDP)
+
+	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
+
+	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+	if err != nil {
+		t.Fatalf("Could not ping TCP GameServer: %v", err)
+	}
+
+	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
+}
+
 // TestGameServerResourceValidation - check that we are not able to use
 // invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
 func TestGameServerResourceValidation(t *testing.T) {
