@@ -89,12 +89,6 @@ var allocationRetry = wait.Backoff{
 	Jitter:   0.1,
 }
 
-var remoteAllocationRetry = wait.Backoff{
-	Steps:    7,
-	Duration: 100 * time.Millisecond,
-	Factor:   2.0,
-}
-
 // Allocator handles game server allocation
 type Allocator struct {
 	baseLogger               *logrus.Entry
@@ -106,7 +100,7 @@ type Allocator struct {
 	pendingRequests          chan request
 	readyGameServerCache     *ReadyGameServerCache
 	topNGameServerCount      int
-	remoteAllocationCallback func(string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	remoteAllocationCallback func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 }
 
 // request is an async request for allocation
@@ -133,7 +127,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:           secretInformer.Informer().HasSynced,
 		readyGameServerCache:   readyGameServerCache,
 		topNGameServerCount:    topNGameServerDefaultCount,
-		remoteAllocationCallback: func(endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			conn, err := grpc.Dial(endpoint, dialOpts)
 			if err != nil {
 				return nil, err
@@ -141,7 +135,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			defer conn.Close() // nolint: errcheck
 
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.Allocate(context.Background(), request)
+			return grpcClient.Allocate(ctx, request)
 		},
 	}
 
@@ -335,14 +329,26 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	request := converters.ConvertGSAToAllocationRequest(gsa)
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
+	backoff := newRemoteAllocationBackoff(time.Duration(connectionInfo.BackoffCap) * time.Millisecond)
 
 	// Retry on remote call failures.
-	err = Retry(remoteAllocationRetry, func() error {
+	err = Retry(backoff, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			endpoint := addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 
-			allocationResponse, err = c.remoteAllocationCallback(endpoint, dialOpts, request)
+			ctx := context.Background()
+
+			if connectionInfo.Timeout > 0 {
+				deadline := time.Now().Add(time.Duration(connectionInfo.Timeout) * time.Millisecond)
+				ctxWithDeadline, cancel := context.WithDeadline(ctx, deadline)
+				defer cancel()
+
+				ctx = ctxWithDeadline
+			}
+
+			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
+
 			if err != nil {
 				c.baseLogger.Errorf("remote allocation failed with: %v", err)
 				// If there are multiple enpoints for the allocator connection and the current one is
@@ -360,6 +366,17 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	})
 
 	return converters.ConvertAllocationResponseToGSA(allocationResponse), err
+}
+
+func newRemoteAllocationBackoff(backoffCap time.Duration) wait.Backoff {
+	backoff := wait.Backoff{
+		Steps:    7,
+		Duration: 100 * time.Millisecond,
+		Factor:   2.0,
+		Cap:      backoffCap,
+	}
+
+	return backoff
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.

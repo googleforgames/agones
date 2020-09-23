@@ -44,6 +44,11 @@ type ClusterConnectionInfo struct {
 	Namespace string `json:"namespace"`
 	// The PEM encoded server CA, used by the allocator client to authenticate the remote server.
 	ServerCA []byte `json:"serverCa,omitempty"`
+	// Optional: specifies how long (in milliseconds) gRPC client is willing to wait for the allocator service
+	// to complete request before it is terminated with the error DEADLINE_EXCEEDED
+	Timeout int64 `json:"timeout,omitempty"`
+	// Optional: the maximum duration (in milliseconds) applied to a backoff function
+	BackoffCap int64 `json:"backoffCap,omitempty"`
 }
 
 // +genclient

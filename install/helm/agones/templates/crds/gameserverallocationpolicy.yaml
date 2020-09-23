@@ -71,6 +71,14 @@ spec:
                   minItems: 1
                 clusterName:
                   type: string
+                timeout:
+                  format: int64
+                  minimum: 0
+                  type: integer
+                backoffCap:
+                  format: int64
+                  minimum: 0
+                  type: integer
                 namespace:
                   type: string
               required:

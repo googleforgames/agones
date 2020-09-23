@@ -338,8 +338,19 @@ type serviceHandler struct {
 // Allocate implements the Allocate gRPC method definition
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
+
+	switch ctx.Err() {
+	case context.Canceled:
+		logger.Info("allocation request canceled by client, abandoning")
+		return nil, status.Error(codes.Canceled, "allocation request canceled by client, abandoning")
+	case context.DeadlineExceeded:
+		logger.Info("allocation request deadline exceedeed, abandoning")
+		return nil, status.Error(codes.DeadlineExceeded, "allocation request deadline exceeded, abandoning")
+	}
+
 	gsa := converters.ConvertAllocationRequestToGSA(in)
 	resultObj, err := h.allocationCallback(gsa)
+
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")
 		return nil, err

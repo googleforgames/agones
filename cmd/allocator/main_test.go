@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	pb "agones.dev/agones/pkg/allocation/go"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -104,6 +105,52 @@ func TestGetTlsCert(t *testing.T) {
 	retrievedCert2, err := h.getTLSCert(nil)
 	assert.Nil(t, err, "expected getTlsCert() to not fail")
 	assert.Equal(t, cert2.Certificate, retrievedCert2.Certificate, "expected the retrieved cert to be equal to the original one")
+}
+
+func TestContextDeadlineExceeded(t *testing.T) {
+	t.Parallel()
+
+	handler := serviceHandler{}
+	request := pb.AllocationRequest{}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Nanosecond))
+	defer cancel()
+	_, err := handler.Allocate(ctx, &request)
+
+	if !assert.Error(t, err, "expecting failure") {
+		return
+	}
+
+	st, ok := status.FromError(err)
+
+	if !ok {
+		t.Errorf("expecting status error: %v", err)
+	}
+
+	assert.Equal(t, codes.DeadlineExceeded, st.Code())
+	assert.Contains(t, st.Message(), "allocation request deadline exceeded, abandoning")
+}
+
+func TestContextCancelation(t *testing.T) {
+	t.Parallel()
+
+	handler := serviceHandler{}
+	request := pb.AllocationRequest{}
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Minute))
+	cancel()
+	_, err := handler.Allocate(ctx, &request)
+
+	if !assert.Error(t, err, "expecting failure") {
+		return
+	}
+
+	st, ok := status.FromError(err)
+
+	if !ok {
+		t.Errorf("expecting status error: %v", err)
+	}
+
+	assert.Equal(t, codes.Canceled, st.Code())
+	assert.Contains(t, st.Message(), "allocation request canceled by client, abandoning")
 }
 
 func TestHandlingStatus(t *testing.T) {
