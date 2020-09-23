@@ -59,6 +59,8 @@ func NewController(apiServer *apiserver.APIServer,
 	kubeInformerFactory informers.SharedInformerFactory,
 	agonesClient versioned.Interface,
 	agonesInformerFactory externalversions.SharedInformerFactory,
+	allocationTimeout time.Duration,
+	totalAllcoationTimeout time.Duration,
 ) *Controller {
 	c := &Controller{
 		api: apiServer,
@@ -67,8 +69,8 @@ func NewController(apiServer *apiserver.APIServer,
 			kubeInformerFactory.Core().V1().Secrets(),
 			kubeClient,
 			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health),
-			10*time.Second,
-			30*time.Second),
+			allocationTimeout,
+			totalAllcoationTimeout),
 	}
 	c.baseLogger = runtime.NewLoggerWithType(c)
 

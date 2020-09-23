@@ -1158,25 +1158,14 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
 	})
-	t.Run("Allocation is retried", func(t *testing.T) {
-		c, m := newFakeController()
+	t.Run("Allocation fails after total timeout", func(t *testing.T) {
+		c, m := newFakeControllerWithTimeout(10*time.Second, 0*time.Second)
 		fleetName := addReactorForGameServer(&m)
 
-		healthyEndpoint := "healthy_endpoint:443"
 		unhealthyEndpoint := "unhealthy_endpoint:443"
 
-		expectedGSName := "mocked"
-		retried := false
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
-			if !retried {
-				retried = true
-				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation timeout exceeded")
-			}
-
-			serverResponse := pb.AllocationResponse{
-				GameServerName: expectedGSName,
-			}
-			return &serverResponse, nil
+			return nil, errors.New("Error")
 		}
 
 		// Allocation policy reactor
@@ -1189,7 +1178,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 							Priority: 1,
 							Weight:   200,
 							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
-								AllocationEndpoints: []string{unhealthyEndpoint, healthyEndpoint},
+								AllocationEndpoints: []string{unhealthyEndpoint},
 								ClusterName:         clusterName,
 								SecretName:          secretName,
 								ServerCA:            clientCert,
@@ -1232,11 +1221,8 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			},
 		}
 
-		result, err := executeAllocation(gsa, c)
-		if assert.NoError(t, err) {
-			assert.Equal(t, expectedGSName, result.Status.GameServerName)
-		}
-		assert.True(t, retried)
+		_, err = executeAllocation(gsa, c)
+		assert.Error(t, err)
 	})
 }
 
@@ -1423,7 +1409,20 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, 10*time.Second, 30*time.Second)
+	c.allocator.topNGameServerCount = 1
+	c.recorder = m.FakeRecorder
+	c.allocator.recorder = m.FakeRecorder
+	return c, m
+}
+
+// newFakeController returns a controller, backed by the fake Clientset
+func newFakeControllerWithTimeout(allocationTimeout time.Duration, totalAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
+	m := agtesting.NewMocks()
+	m.Mux = http.NewServeMux()
+	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
+	api := apiserver.NewAPIServer(m.Mux)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, allocationTimeout, totalAllocationTimeout)
 	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder

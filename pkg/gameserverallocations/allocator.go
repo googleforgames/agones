@@ -347,6 +347,11 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	// Retry on remote call failures.
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
+			select {
+			case <-ctx.Done():
+				return status.Errorf(codes.ResourceExhausted, "remote allocation retry timeout exceeded")
+			default:
+			}
 			endpoint := addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
@@ -363,11 +368,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 			}
 			break
 		}
-		select {
-		case <-ctx.Done():
-			return status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
-		default:
-		}
+
 		return nil
 	})
 
