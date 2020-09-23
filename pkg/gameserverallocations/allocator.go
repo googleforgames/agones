@@ -97,18 +97,18 @@ var remoteAllocationRetry = wait.Backoff{
 
 // Allocator handles game server allocation
 type Allocator struct {
-	baseLogger               *logrus.Entry
-	allocationPolicyLister   multiclusterlisterv1.GameServerAllocationPolicyLister
-	allocationPolicySynced   cache.InformerSynced
-	secretLister             corev1lister.SecretLister
-	secretSynced             cache.InformerSynced
-	recorder                 record.EventRecorder
-	pendingRequests          chan request
-	readyGameServerCache     *ReadyGameServerCache
-	topNGameServerCount      int
-	remoteAllocationCallback func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
-	allocationTimeout        time.Duration
-	totalAllocationTimeout   time.Duration
+	baseLogger                   *logrus.Entry
+	allocationPolicyLister       multiclusterlisterv1.GameServerAllocationPolicyLister
+	allocationPolicySynced       cache.InformerSynced
+	secretLister                 corev1lister.SecretLister
+	secretSynced                 cache.InformerSynced
+	recorder                     record.EventRecorder
+	pendingRequests              chan request
+	readyGameServerCache         *ReadyGameServerCache
+	topNGameServerCount          int
+	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	remoteAllocationTimeout      time.Duration
+	totalRemoteAllocationTimeout time.Duration
 }
 
 // request is an async request for allocation
@@ -126,17 +126,17 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
-	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, allocationTimeout time.Duration, totalAllocationTimeout time.Duration) *Allocator {
+	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
 	ah := &Allocator{
-		pendingRequests:        make(chan request, maxBatchQueue),
-		allocationPolicyLister: policyInformer.Lister(),
-		allocationPolicySynced: policyInformer.Informer().HasSynced,
-		secretLister:           secretInformer.Lister(),
-		secretSynced:           secretInformer.Informer().HasSynced,
-		readyGameServerCache:   readyGameServerCache,
-		topNGameServerCount:    topNGameServerDefaultCount,
-		allocationTimeout:      allocationTimeout,
-		totalAllocationTimeout:      totalAllocationTimeout,
+		pendingRequests:              make(chan request, maxBatchQueue),
+		allocationPolicyLister:       policyInformer.Lister(),
+		allocationPolicySynced:       policyInformer.Informer().HasSynced,
+		secretLister:                 secretInformer.Lister(),
+		secretSynced:                 secretInformer.Informer().HasSynced,
+		readyGameServerCache:         readyGameServerCache,
+		topNGameServerCount:          topNGameServerDefaultCount,
+		remoteAllocationTimeout:      remoteAllocationTimeout,
+		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			conn, err := grpc.Dial(endpoint, dialOpts)
 			if err != nil {
@@ -144,7 +144,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 			}
 			defer conn.Close() // nolint: errcheck
 
-			allocationCtx, cancel := context.WithTimeout(ctx, allocationTimeout)
+			allocationCtx, cancel := context.WithTimeout(ctx, remoteAllocationTimeout)
 			defer cancel() // nolint: errcheck
 			grpcClient := pb.NewAllocationServiceClient(conn)
 			return grpcClient.Allocate(allocationCtx, request)
@@ -342,7 +342,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
 
-	ctx, cancel := context.WithTimeout(context.Background(), c.totalAllocationTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), c.totalRemoteAllocationTimeout)
 	defer cancel() // nolint: errcheck
 	// Retry on remote call failures.
 	err = Retry(remoteAllocationRetry, func() error {

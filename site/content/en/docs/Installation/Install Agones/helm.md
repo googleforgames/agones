@@ -235,7 +235,9 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.udp.loadBalancerIP`                    | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.                | ""           |
 | `agones.ping.udp.loadBalancerSourceRanges`          | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.      | `[]`         |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
-| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator.    | `false`                |
+| `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
+| `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.       | `30s`                |
 
 {{% /feature %}}
 

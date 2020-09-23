@@ -29,14 +29,14 @@ import (
 )
 
 const (
-	enableStackdriverMetricsFlag = "stackdriver-exporter"
-	enablePrometheusMetricsFlag  = "prometheus-exporter"
-	projectIDFlag                = "gcp-project-id"
-	stackdriverLabels            = "stackdriver-labels"
-	mTLSDisabledFlag             = "disable-mtls"
-	tlsDisabledFlag              = "disable-tls"
-	allocationTimeoutFlag        = "allocation-timeout"
-	totalAllocationTimeoutFlag   = "total-allocation-timeout"
+	enableStackdriverMetricsFlag     = "stackdriver-exporter"
+	enablePrometheusMetricsFlag      = "prometheus-exporter"
+	projectIDFlag                    = "gcp-project-id"
+	stackdriverLabels                = "stackdriver-labels"
+	mTLSDisabledFlag                 = "disable-mtls"
+	tlsDisabledFlag                  = "disable-tls"
+	remoteAllocationTimeoutFlag      = "remote-allocation-timeout"
+	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
 )
 
 func init() {
@@ -44,14 +44,14 @@ func init() {
 }
 
 type config struct {
-	TLSDisabled            bool
-	MTLSDisabled           bool
-	PrometheusMetrics      bool
-	Stackdriver            bool
-	GCPProjectID           string
-	StackdriverLabels      string
-	TotalAllocationTimeout time.Duration
-	AllocationTimeout      time.Duration
+	TLSDisabled                  bool
+	MTLSDisabled                 bool
+	PrometheusMetrics            bool
+	Stackdriver                  bool
+	GCPProjectID                 string
+	StackdriverLabels            string
+	totalRemoteAllocationTimeout time.Duration
+	remoteAllocationTimeout      time.Duration
 }
 
 func parseEnvFlags() config {
@@ -69,8 +69,8 @@ func parseEnvFlags() config {
 	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
 	pflag.Bool(mTLSDisabledFlag, viper.GetBool(mTLSDisabledFlag), "Flag to enable/disable mTLS in the allocator.")
 	pflag.Bool(tlsDisabledFlag, viper.GetBool(tlsDisabledFlag), "Flag to enable/disable TLS in the allocator.")
-	pflag.Duration(allocationTimeoutFlag, viper.GetDuration(allocationTimeoutFlag), "Flag to set allocation call timeout.")
-	pflag.Duration(totalAllocationTimeoutFlag, viper.GetDuration(totalAllocationTimeoutFlag), "Flag to set total allocation timeout including retries.")
+	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
+	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -87,14 +87,14 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		PrometheusMetrics:      viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:            viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:           viper.GetString(projectIDFlag),
-		StackdriverLabels:      viper.GetString(stackdriverLabels),
-		MTLSDisabled:           viper.GetBool(mTLSDisabledFlag),
-		TLSDisabled:            viper.GetBool(tlsDisabledFlag),
-		AllocationTimeout:      viper.GetDuration(allocationTimeoutFlag),
-		TotalAllocationTimeout: viper.GetDuration(totalAllocationTimeoutFlag),
+		PrometheusMetrics:            viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:                  viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:                 viper.GetString(projectIDFlag),
+		StackdriverLabels:            viper.GetString(stackdriverLabels),
+		MTLSDisabled:                 viper.GetBool(mTLSDisabledFlag),
+		TLSDisabled:                  viper.GetBool(tlsDisabledFlag),
+		remoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
+		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 	}
 }
 

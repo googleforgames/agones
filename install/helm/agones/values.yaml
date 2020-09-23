@@ -135,8 +135,8 @@ agones:
     generateClientTLS: true
     disableMTLS: false
     disableTLS: false
-    allocationTimeout: 10s
-    totalAllocationTimeout: 30s
+    remoteAllocationTimeout: 10s
+    totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
     tag: 1.9.0-dev

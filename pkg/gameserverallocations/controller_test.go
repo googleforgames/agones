@@ -1412,12 +1412,12 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 }
 
 // newFakeController returns a controller, backed by the fake Clientset with custom allocation timeouts
-func newFakeControllerWithTimeout(allocationTimeout time.Duration, totalAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
+func newFakeControllerWithTimeout(remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, allocationTimeout, totalAllocationTimeout)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, remoteAllocationTimeout, totalRemoteAllocationTimeout)
 	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder
