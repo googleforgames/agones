@@ -1166,7 +1166,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
-			calls +=1
+			calls += 1
 			return nil, errors.New("Error")
 		}
 
