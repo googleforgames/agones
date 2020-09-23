@@ -1405,18 +1405,10 @@ func defaultFixtures(gsLen int) (*agonesv1.Fleet, []agonesv1.GameServer) {
 
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
-	m := agtesting.NewMocks()
-	m.Mux = http.NewServeMux()
-	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
-	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, 10*time.Second, 30*time.Second)
-	c.allocator.topNGameServerCount = 1
-	c.recorder = m.FakeRecorder
-	c.allocator.recorder = m.FakeRecorder
-	return c, m
+	return newFakeControllerWithTimeout(10*time.Second, 30*time.Second)
 }
 
-// newFakeController returns a controller, backed by the fake Clientset
+// newFakeController returns a controller, backed by the fake Clientset with custom allocation timeouts
 func newFakeControllerWithTimeout(allocationTimeout time.Duration, totalAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	m.Mux = http.NewServeMux()
