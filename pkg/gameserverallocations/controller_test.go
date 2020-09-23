@@ -1158,13 +1158,15 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
 	})
-	t.Run("Allocation fails after total timeout", func(t *testing.T) {
+	t.Run("No allocations called after total timeout", func(t *testing.T) {
 		c, m := newFakeControllerWithTimeout(10*time.Second, 0*time.Second)
 		fleetName := addReactorForGameServer(&m)
 
 		unhealthyEndpoint := "unhealthy_endpoint:443"
 
+		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			calls +=1
 			return nil, errors.New("Error")
 		}
 
@@ -1223,6 +1225,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		_, err = executeAllocation(gsa, c)
 		assert.Error(t, err)
+		assert.Equal(t, 0, calls)
 	})
 }
 
