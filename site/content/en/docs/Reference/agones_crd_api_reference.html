@@ -803,8 +803,7 @@ WebhookPolicy
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>Webhook policy config params. Present only if FleetAutoscalerPolicyType = Webhook.</p>
+<p>Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options</p>
 </td>
 </tr>
 </tbody>
@@ -1685,15 +1684,36 @@ int32
 </tr>
 <tr>
 <td>
-<code>scheduling</code></br>
+<code>status</code></br>
 <em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
+<a href="#agones.dev/v1.GameServerSetStatus">
+GameServerSetStatus
+</a>
 </em>
 </td>
 <td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
 </td>
 </tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.AggregatedPlayerStatus">AggregatedPlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>, 
+<a href="#agones.dev/v1.GameServerSetStatus">GameServerSetStatus</a>)
+</p>
+<p>
+<p>AggregatedPlayerStatus stores total player tracking values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
 <tr>
 <td>
 <code>template</code></br>
@@ -1712,7 +1732,7 @@ GameServerTemplateSpec
 </tr>
 <tr>
 <td>
-<code>status</code></br>
+<code>capacity</code></br>
 <em>
 <a href="#agones.dev/v1.GameServerSetStatus">
 GameServerSetStatus
@@ -2282,11 +2302,16 @@ PlayersSpec
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Description</th>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
 </tr>
-</thead>
-<tbody>
 <tr>
 <td>
 <code>state</code></br>
@@ -2310,6 +2335,8 @@ GameServerState
 </em>
 </td>
 <td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
 </td>
 </tr>
 <tr>
@@ -2703,11 +2730,18 @@ int64
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Description</th>
+<td>
+<code>strategy</code></br>
+<em>
+<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#deploymentstrategy-v1-apps">
+Kubernetes apps/v1.DeploymentStrategy
+</a>
+</em>
+</td>
+<td>
+<p>Deployment strategy</p>
+</td>
 </tr>
-</thead>
-<tbody>
 <tr>
 <td>
 <code>logLevel</code></br>
@@ -2763,9 +2797,6 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 <p>Packages:</p>
 <ul>
 <li>
-<a href="#agones.dev%2fv1">agones.dev/v1</a>
-</li>
-<li>
 <a href="#allocation.agones.dev%2fv1">allocation.agones.dev/v1</a>
 </li>
 <li>
@@ -2774,1450 +2805,10 @@ Generated with <code>gen-crd-api-reference-docs</code>.
 <li>
 <a href="#multicluster.agones.dev%2fv1">multicluster.agones.dev/v1</a>
 </li>
+<li>
+<a href="#agones.dev%2fv1">agones.dev/v1</a>
+</li>
 </ul>
-<h2 id="agones.dev/v1">agones.dev/v1</h2>
-<p>
-<p>Package v1 is the v1 version of the API.</p>
-</p>
-Resource Types:
-<ul><li>
-<a href="#agones.dev/v1.Fleet">Fleet</a>
-</li><li>
-<a href="#agones.dev/v1.GameServer">GameServer</a>
-</li><li>
-<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>
-</li></ul>
-<h3 id="agones.dev/v1.Fleet">Fleet
-</h3>
-<p>
-<p>Fleet is the data structure for a Fleet resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>apiVersion</code></br>
-string</td>
-<td>
-<code>
-agones.dev/v1
-</code>
-</td>
-</tr>
-<tr>
-<td>
-<code>kind</code></br>
-string
-</td>
-<td><code>Fleet</code></td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#agones.dev/v1.FleetSpec">
-FleetSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>strategy</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#deploymentstrategy-v1-apps">
-Kubernetes apps/v1.DeploymentStrategy
-</a>
-</em>
-</td>
-<td>
-<p>Deployment strategy</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerTemplateSpec">
-GameServerTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template the GameServer template to apply for this Fleet</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code></br>
-<em>
-<a href="#agones.dev/v1.FleetStatus">
-FleetStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServer">GameServer
-</h3>
-<p>
-<p>GameServer is the data structure for a GameServer resource.
-It is worth noting that while there is a <code>GameServerStatus</code> Status entry for the <code>GameServer</code>, it is not
-defined as a subresource - unlike <code>Fleet</code> and other Agones resources.
-This is so that we can retain the ability to change multiple aspects of a <code>GameServer</code> in a single atomic operation,
-which is particularly useful for operations such as allocation.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>apiVersion</code></br>
-string</td>
-<td>
-<code>
-agones.dev/v1
-</code>
-</td>
-</tr>
-<tr>
-<td>
-<code>kind</code></br>
-string
-</td>
-<td><code>GameServer</code></td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerSpec">
-GameServerSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>container</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Container specifies which Pod container is the game server. Only required if there is more than one
-container defined</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerPort">
-[]GameServerPort
-</a>
-</em>
-</td>
-<td>
-<p>Ports are the array of ports that can be exposed via the game server</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>health</code></br>
-<em>
-<a href="#agones.dev/v1.Health">
-Health
-</a>
-</em>
-</td>
-<td>
-<p>Health configures health checking</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sdkServer</code></br>
-<em>
-<a href="#agones.dev/v1.SdkServer">
-SdkServer
-</a>
-</em>
-</td>
-<td>
-<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core">
-Kubernetes core/v1.PodTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template describes the Pod that will be created for the GameServer</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.PlayersSpec">
-PlayersSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerStatus">
-GameServerStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerSet">GameServerSet
-</h3>
-<p>
-<p>GameServerSet is the data structure for a set of GameServers.
-This matches philosophically with the relationship between
-Deployments and ReplicaSets</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>apiVersion</code></br>
-string</td>
-<td>
-<code>
-agones.dev/v1
-</code>
-</td>
-</tr>
-<tr>
-<td>
-<code>kind</code></br>
-string
-</td>
-<td><code>GameServerSet</code></td>
-</tr>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerSetSpec">
-GameServerSetSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas are the number of GameServers that should be in this set</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerTemplateSpec">
-GameServerTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template the GameServer template to apply for this GameServerSet</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-<tr>
-<td>
-<code>status</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerSetStatus">
-GameServerSetStatus
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.AggregatedPlayerStatus">AggregatedPlayerStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>, 
-<a href="#agones.dev/v1.GameServerSetStatus">GameServerSetStatus</a>)
-</p>
-<p>
-<p>AggregatedPlayerStatus stores total player tracking values</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>count</code></br>
-<em>
-int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>capacity</code></br>
-<em>
-int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.FleetSpec">FleetSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.Fleet">Fleet</a>)
-</p>
-<p>
-<p>FleetSpec is the spec for a Fleet</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>strategy</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#deploymentstrategy-v1-apps">
-Kubernetes apps/v1.DeploymentStrategy
-</a>
-</em>
-</td>
-<td>
-<p>Deployment strategy</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerTemplateSpec">
-GameServerTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template the GameServer template to apply for this Fleet</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.FleetStatus">FleetStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.Fleet">Fleet</a>, 
-<a href="#autoscaling.agones.dev/v1.FleetAutoscaleRequest">FleetAutoscaleRequest</a>)
-</p>
-<p>
-<p>FleetStatus is the status of a Fleet</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas the total number of current GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>readyReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ReadyReplicas are the number of Ready GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>reservedReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
-Reserved instances won&rsquo;t be deleted on scale down, but won&rsquo;t cause an autoscaler to scale up.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>allocatedReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>AllocatedReplicas are the number of Allocated GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.AggregatedPlayerStatus">
-AggregatedPlayerStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>[Stage:Alpha]
-[FeatureFlag:PlayerTracking]
-Players are the current total player capacity and count for this Fleet</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerPort">GameServerPort
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>GameServerPort defines a set of Ports that
-are to be exposed via the GameServer</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the descriptive name of the port</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>portPolicy</code></br>
-<em>
-<a href="#agones.dev/v1.PortPolicy">
-PortPolicy
-</a>
-</em>
-</td>
-<td>
-<p>PortPolicy defines the policy for how the HostPort is populated.
-Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
-at installation time.
-When <code>Static</code> portPolicy is specified, <code>HostPort</code> is required, to specify the port that game clients will
-connect to</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>container</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Container is the name of the container on which to open the port. Defaults to the game server container.
-This field is beta-level and is enabled by default, could be disabled by the &ldquo;ContainerPortAllocation&rdquo; feature.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>containerPort</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ContainerPort is the port that is being opened on the specified container&rsquo;s process</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>hostPort</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>HostPort the port exposed on the host for clients to connect to</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>protocol</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#protocol-v1-core">
-Kubernetes core/v1.Protocol
-</a>
-</em>
-</td>
-<td>
-<p>Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerSetSpec">GameServerSetSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>)
-</p>
-<p>
-<p>GameServerSetSpec the specification for GameServerSet</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas are the number of GameServers that should be in this set</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerTemplateSpec">
-GameServerTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template the GameServer template to apply for this GameServerSet</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerSetStatus">GameServerSetStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>)
-</p>
-<p>
-<p>GameServerSetStatus is the status of a GameServerSet</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>replicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>Replicas is the total number of current GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>readyReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ReadyReplicas is the number of Ready GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>reservedReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ReservedReplicas is the number of Reserved GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>allocatedReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>AllocatedReplicas is the number of Allocated GameServer replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>shutdownReplicas</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>ShutdownReplicas is the number of Shutdown GameServers replicas</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.AggregatedPlayerStatus">
-AggregatedPlayerStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>[Stage:Alpha]
-[FeatureFlag:PlayerTracking]
-Players is the current total player capacity and count for this GameServerSet</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerSpec">GameServerSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServer">GameServer</a>, 
-<a href="#agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec</a>)
-</p>
-<p>
-<p>GameServerSpec is the spec for a GameServer resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>container</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Container specifies which Pod container is the game server. Only required if there is more than one
-container defined</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerPort">
-[]GameServerPort
-</a>
-</em>
-</td>
-<td>
-<p>Ports are the array of ports that can be exposed via the game server</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>health</code></br>
-<em>
-<a href="#agones.dev/v1.Health">
-Health
-</a>
-</em>
-</td>
-<td>
-<p>Health configures health checking</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sdkServer</code></br>
-<em>
-<a href="#agones.dev/v1.SdkServer">
-SdkServer
-</a>
-</em>
-</td>
-<td>
-<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core">
-Kubernetes core/v1.PodTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template describes the Pod that will be created for the GameServer</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.PlayersSpec">
-PlayersSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerState">GameServerState
-(<code>string</code> alias)</p></h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
-</p>
-<p>
-<p>GameServerState is the state for the GameServer</p>
-</p>
-<h3 id="agones.dev/v1.GameServerStatus">GameServerStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServer">GameServer</a>)
-</p>
-<p>
-<p>GameServerStatus is the status for a GameServer resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>state</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerState">
-GameServerState
-</a>
-</em>
-</td>
-<td>
-<p>GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerStatusPort">
-[]GameServerStatusPort
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>address</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>nodeName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>reservedUntil</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#time-v1-meta">
-Kubernetes meta/v1.Time
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.PlayerStatus">
-PlayerStatus
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>[Stage:Alpha]
-[FeatureFlag:PlayerTracking]</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerStatusPort">GameServerStatusPort
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>, 
-<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
-</p>
-<p>
-<p>GameServerStatusPort shows the port that was allocated to a
-GameServer.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>port</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
-<a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
-</p>
-<p>
-<p>GameServerTemplateSpec is a template for GameServers</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>metadata</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
-Kubernetes meta/v1.ObjectMeta
-</a>
-</em>
-</td>
-<td>
-Refer to the Kubernetes API documentation for the fields of the
-<code>metadata</code> field.
-</td>
-</tr>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerSpec">
-GameServerSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>container</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Container specifies which Pod container is the game server. Only required if there is more than one
-container defined</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ports</code></br>
-<em>
-<a href="#agones.dev/v1.GameServerPort">
-[]GameServerPort
-</a>
-</em>
-</td>
-<td>
-<p>Ports are the array of ports that can be exposed via the game server</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>health</code></br>
-<em>
-<a href="#agones.dev/v1.Health">
-Health
-</a>
-</em>
-</td>
-<td>
-<p>Health configures health checking</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>scheduling</code></br>
-<em>
-agones.dev/agones/pkg/apis.SchedulingStrategy
-</em>
-</td>
-<td>
-<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sdkServer</code></br>
-<em>
-<a href="#agones.dev/v1.SdkServer">
-SdkServer
-</a>
-</em>
-</td>
-<td>
-<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>template</code></br>
-<em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core">
-Kubernetes core/v1.PodTemplateSpec
-</a>
-</em>
-</td>
-<td>
-<p>Template describes the Pod that will be created for the GameServer</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>players</code></br>
-<em>
-<a href="#agones.dev/v1.PlayersSpec">
-PlayersSpec
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.Health">Health
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>Health configures health checking on the GameServer</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>disabled</code></br>
-<em>
-bool
-</em>
-</td>
-<td>
-<p>Disabled is whether health checking is disabled or not</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>periodSeconds</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>PeriodSeconds is the number of seconds each health ping has to occur in</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>failureThreshold</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>FailureThreshold how many failures in a row constitutes unhealthy</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>initialDelaySeconds</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>InitialDelaySeconds initial delay before checking health</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.PlayerStatus">PlayerStatus
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
-</p>
-<p>
-<p>PlayerStatus stores the current player capacity values</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>count</code></br>
-<em>
-int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>capacity</code></br>
-<em>
-int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>ids</code></br>
-<em>
-[]string
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.PlayersSpec">PlayersSpec
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>PlayersSpec tracks the initial player capacity</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>initialCapacity</code></br>
-<em>
-int64
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.PortPolicy">PortPolicy
-(<code>string</code> alias)</p></h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerPort">GameServerPort</a>)
-</p>
-<p>
-<p>PortPolicy is the port policy for the GameServer</p>
-</p>
-<h3 id="agones.dev/v1.SdkServer">SdkServer
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
-</p>
-<p>
-<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>logLevel</code></br>
-<em>
-<a href="#agones.dev/v1.SdkServerLogLevel">
-SdkServerLogLevel
-</a>
-</em>
-</td>
-<td>
-<p>LogLevel for SDK server (sidecar) logs. Defaults to &ldquo;Info&rdquo;</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>grpcPort</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>httpPort</code></br>
-<em>
-int32
-</em>
-</td>
-<td>
-<p>HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="agones.dev/v1.SdkServerLogLevel">SdkServerLogLevel
-(<code>string</code> alias)</p></h3>
-<p>
-(<em>Appears on:</em>
-<a href="#agones.dev/v1.SdkServer">SdkServer</a>)
-</p>
-<p>
-<p>SdkServerLogLevel is the log level for SDK server (sidecar) logs</p>
-</p>
-<hr/>
 <h2 id="allocation.agones.dev/v1">allocation.agones.dev/v1</h2>
 <p>
 <p>Package v1 is the v1 version of the API.</p>
@@ -4261,7 +2852,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -4302,7 +2893,7 @@ Otherwise, allocation will happen locally.</p>
 <td>
 <code>required</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -4315,7 +2906,7 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>preferred</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#labelselector-v1-meta">
 []Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -4403,7 +2994,7 @@ Otherwise, allocation will happen locally.</p>
 <td>
 <code>required</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -4416,7 +3007,7 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>preferred</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#labelselector-v1-meta">
 []Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -4607,7 +3198,7 @@ bool
 <td>
 <code>policySelector</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#labelselector-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
 </em>
@@ -4660,7 +3251,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -5105,7 +3696,7 @@ of the fleet managed by this autoscaler, as last calculated by the autoscaler</p
 <td>
 <code>lastScaleTime</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#time-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#time-v1-meta">
 Kubernetes meta/v1.Time
 </a>
 </em>
@@ -5194,7 +3785,7 @@ allowed, either.</p>
 <td>
 <code>service</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#servicereference-v1beta1-admissionregistration">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#servicereference-v1beta1-admissionregistration">
 Kubernetes admissionregistration/v1beta1.ServiceReference
 </a>
 </em>
@@ -5264,7 +3855,7 @@ string
 <td>
 <code>metadata</code></br>
 <em>
-<a href="https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta">
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
 Kubernetes meta/v1.ObjectMeta
 </a>
 </em>
@@ -5533,6 +4124,1449 @@ ClusterConnectionInfo
 </tr>
 </tbody>
 </table>
+<hr/>
+<h2 id="agones.dev/v1">agones.dev/v1</h2>
+<p>
+<p>Package v1 is the v1 version of the API.</p>
+</p>
+Resource Types:
+<ul><li>
+<a href="#agones.dev/v1.Fleet">Fleet</a>
+</li><li>
+<a href="#agones.dev/v1.GameServer">GameServer</a>
+</li><li>
+<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>
+</li></ul>
+<h3 id="agones.dev/v1.Fleet">Fleet
+</h3>
+<p>
+<p>Fleet is the data structure for a Fleet resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+agones.dev/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Fleet</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#agones.dev/v1.FleetSpec">
+FleetSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>strategy</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#deploymentstrategy-v1-apps">
+Kubernetes apps/v1.DeploymentStrategy
+</a>
+</em>
+</td>
+<td>
+<p>Deployment strategy</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerTemplateSpec">
+GameServerTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template the GameServer template to apply for this Fleet</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code></br>
+<em>
+<a href="#agones.dev/v1.FleetStatus">
+FleetStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServer">GameServer
+</h3>
+<p>
+<p>GameServer is the data structure for a GameServer resource.
+It is worth noting that while there is a <code>GameServerStatus</code> Status entry for the <code>GameServer</code>, it is not
+defined as a subresource - unlike <code>Fleet</code> and other Agones resources.
+This is so that we can retain the ability to change multiple aspects of a <code>GameServer</code> in a single atomic operation,
+which is particularly useful for operations such as allocation.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+agones.dev/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>GameServer</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerSpec">
+GameServerSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Container specifies which Pod container is the game server. Only required if there is more than one
+container defined</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerPort">
+[]GameServerPort
+</a>
+</em>
+</td>
+<td>
+<p>Ports are the array of ports that can be exposed via the game server</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>health</code></br>
+<em>
+<a href="#agones.dev/v1.Health">
+Health
+</a>
+</em>
+</td>
+<td>
+<p>Health configures health checking</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#agones.dev/v1.SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplatespec-v1-core">
+Kubernetes core/v1.PodTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template describes the Pod that will be created for the GameServer</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerStatus">
+GameServerStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerSet">GameServerSet
+</h3>
+<p>
+<p>GameServerSet is the data structure for a set of GameServers.
+This matches philosophically with the relationship between
+Deployments and ReplicaSets</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+agones.dev/v1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>GameServerSet</code></td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerSetSpec">
+GameServerSetSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas are the number of GameServers that should be in this set</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerTemplateSpec">
+GameServerTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template the GameServer template to apply for this GameServerSet</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerSetStatus">
+GameServerSetStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.AggregatedPlayerStatus">AggregatedPlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.FleetStatus">FleetStatus</a>, 
+<a href="#agones.dev/v1.GameServerSetStatus">GameServerSetStatus</a>)
+</p>
+<p>
+<p>AggregatedPlayerStatus stores total player tracking values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.FleetSpec">FleetSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.Fleet">Fleet</a>)
+</p>
+<p>
+<p>FleetSpec is the spec for a Fleet</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas are the number of GameServers that should be in this set. Defaults to 0.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>strategy</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#deploymentstrategy-v1-apps">
+Kubernetes apps/v1.DeploymentStrategy
+</a>
+</em>
+</td>
+<td>
+<p>Deployment strategy</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerTemplateSpec">
+GameServerTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template the GameServer template to apply for this Fleet</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.FleetStatus">FleetStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.Fleet">Fleet</a>, 
+<a href="#autoscaling.agones.dev/v1.FleetAutoscaleRequest">FleetAutoscaleRequest</a>)
+</p>
+<p>
+<p>FleetStatus is the status of a Fleet</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas the total number of current GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>readyReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReadyReplicas are the number of Ready GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reservedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReservedReplicas are the total number of Reserved GameServer replicas in this fleet.
+Reserved instances won&rsquo;t be deleted on scale down, but won&rsquo;t cause an autoscaler to scale up.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocatedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>AllocatedReplicas are the number of Allocated GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players are the current total player capacity and count for this Fleet</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerPort">GameServerPort
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>GameServerPort defines a set of Ports that
+are to be exposed via the GameServer</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the descriptive name of the port</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>portPolicy</code></br>
+<em>
+<a href="#agones.dev/v1.PortPolicy">
+PortPolicy
+</a>
+</em>
+</td>
+<td>
+<p>PortPolicy defines the policy for how the HostPort is populated.
+Dynamic port will allocate a HostPort within the selected MIN_PORT and MAX_PORT range passed to the controller
+at installation time.
+When <code>Static</code> portPolicy is specified, <code>HostPort</code> is required, to specify the port that game clients will
+connect to</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Container is the name of the container on which to open the port. Defaults to the game server container.
+This field is beta-level and is enabled by default, could be disabled by the &ldquo;ContainerPortAllocation&rdquo; feature.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>containerPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ContainerPort is the port that is being opened on the specified container&rsquo;s process</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hostPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>HostPort the port exposed on the host for clients to connect to</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>protocol</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#protocol-v1-core">
+Kubernetes core/v1.Protocol
+</a>
+</em>
+</td>
+<td>
+<p>Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerSetSpec">GameServerSetSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>)
+</p>
+<p>
+<p>GameServerSetSpec the specification for GameServerSet</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas are the number of GameServers that should be in this set</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerTemplateSpec">
+GameServerTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template the GameServer template to apply for this GameServerSet</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerSetStatus">GameServerSetStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSet">GameServerSet</a>)
+</p>
+<p>
+<p>GameServerSetStatus is the status of a GameServerSet</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Replicas is the total number of current GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>readyReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReadyReplicas is the number of Ready GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reservedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ReservedReplicas is the number of Reserved GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>allocatedReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>AllocatedReplicas is the number of Allocated GameServer replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>shutdownReplicas</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>ShutdownReplicas is the number of Shutdown GameServers replicas</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.AggregatedPlayerStatus">
+AggregatedPlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]
+Players is the current total player capacity and count for this GameServerSet</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerSpec">GameServerSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServer">GameServer</a>, 
+<a href="#agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec</a>)
+</p>
+<p>
+<p>GameServerSpec is the spec for a GameServer resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Container specifies which Pod container is the game server. Only required if there is more than one
+container defined</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerPort">
+[]GameServerPort
+</a>
+</em>
+</td>
+<td>
+<p>Ports are the array of ports that can be exposed via the game server</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>health</code></br>
+<em>
+<a href="#agones.dev/v1.Health">
+Health
+</a>
+</em>
+</td>
+<td>
+<p>Health configures health checking</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#agones.dev/v1.SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplatespec-v1-core">
+Kubernetes core/v1.PodTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template describes the Pod that will be created for the GameServer</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerState">GameServerState
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>GameServerState is the state for the GameServer</p>
+</p>
+<h3 id="agones.dev/v1.GameServerStatus">GameServerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServer">GameServer</a>)
+</p>
+<p>
+<p>GameServerStatus is the status for a GameServer resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>state</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerState">
+GameServerState
+</a>
+</em>
+</td>
+<td>
+<p>GameServerState is the current state of a GameServer, e.g. Creating, Starting, Ready, etc</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerStatusPort">
+[]GameServerStatusPort
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>address</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>reservedUntil</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#time-v1-meta">
+Kubernetes meta/v1.Time
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.PlayerStatus">
+PlayerStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerTracking]</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerStatusPort">GameServerStatusPort
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationStatus">GameServerAllocationStatus</a>, 
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>GameServerStatusPort shows the port that was allocated to a
+GameServer.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.GameServerTemplateSpec">GameServerTemplateSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.FleetSpec">FleetSpec</a>, 
+<a href="#agones.dev/v1.GameServerSetSpec">GameServerSetSpec</a>)
+</p>
+<p>
+<p>GameServerTemplateSpec is a template for GameServers</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerSpec">
+GameServerSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>container</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Container specifies which Pod container is the game server. Only required if there is more than one
+container defined</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ports</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerPort">
+[]GameServerPort
+</a>
+</em>
+</td>
+<td>
+<p>Ports are the array of ports that can be exposed via the game server</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>health</code></br>
+<em>
+<a href="#agones.dev/v1.Health">
+Health
+</a>
+</em>
+</td>
+<td>
+<p>Health configures health checking</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>scheduling</code></br>
+<em>
+agones.dev/agones/pkg/apis.SchedulingStrategy
+</em>
+</td>
+<td>
+<p>Scheduling strategy. Defaults to &ldquo;Packed&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sdkServer</code></br>
+<em>
+<a href="#agones.dev/v1.SdkServer">
+SdkServer
+</a>
+</em>
+</td>
+<td>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>template</code></br>
+<em>
+<a href="https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplatespec-v1-core">
+Kubernetes core/v1.PodTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Template describes the Pod that will be created for the GameServer</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#agones.dev/v1.PlayersSpec">
+PlayersSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>(Alpha, PlayerTracking feature flag) Players provides the configuration for player tracking features.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.Health">Health
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>Health configures health checking on the GameServer</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>disabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Disabled is whether health checking is disabled or not</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>periodSeconds</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>PeriodSeconds is the number of seconds each health ping has to occur in</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>failureThreshold</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>FailureThreshold how many failures in a row constitutes unhealthy</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>initialDelaySeconds</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>InitialDelaySeconds initial delay before checking health</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.PlayerStatus">PlayerStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
+</p>
+<p>
+<p>PlayerStatus stores the current player capacity values</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>capacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>ids</code></br>
+<em>
+[]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.PlayersSpec">PlayersSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>PlayersSpec tracks the initial player capacity</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>initialCapacity</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.PortPolicy">PortPolicy
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerPort">GameServerPort</a>)
+</p>
+<p>
+<p>PortPolicy is the port policy for the GameServer</p>
+</p>
+<h3 id="agones.dev/v1.SdkServer">SdkServer
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.GameServerSpec">GameServerSpec</a>)
+</p>
+<p>
+<p>SdkServer specifies parameters for the Agones SDK Server sidecar container</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>logLevel</code></br>
+<em>
+<a href="#agones.dev/v1.SdkServerLogLevel">
+SdkServerLogLevel
+</a>
+</em>
+</td>
+<td>
+<p>LogLevel for SDK server (sidecar) logs. Defaults to &ldquo;Info&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>grpcPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>GRPCPort is the port on which the SDK Server binds the gRPC server to accept incoming connections</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>httpPort</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>HTTPPort is the port on which the SDK Server binds the HTTP gRPC gateway server to accept incoming connections</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="agones.dev/v1.SdkServerLogLevel">SdkServerLogLevel
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#agones.dev/v1.SdkServer">SdkServer</a>)
+</p>
+<p>
+<p>SdkServerLogLevel is the log level for SDK server (sidecar) logs</p>
+</p>
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>.

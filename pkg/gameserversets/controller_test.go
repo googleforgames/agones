@@ -553,7 +553,7 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 
 		err := c.deleteGameServers(gsSet, []*agonesv1.GameServer{gs1, gs2, gs3})
 		require.Error(t, err)
-		assert.Equal(t, "error updating gameserver test-1 from status Unhealthy to Shutdown status: update-err", err.Error())
+		assert.Contains(t, err.Error(), "error updating gameserver")
 	})
 }
 

@@ -16,6 +16,7 @@ package gameservers
 
 import (
 	"testing"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -26,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
-	"k8s.io/client-go/tools/cache"
 )
 
 const (
@@ -43,8 +43,7 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 
-	hasSynced := m.AgonesInformerFactory.Agones().V1().GameServers().Informer().HasSynced
-	stop, cancel := agtesting.StartInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
 	assert.Empty(t, pnc.Counts())
@@ -57,46 +56,47 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	}
 
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
-
-	assert.Empty(t, pnc.Counts())
+	require.Eventuallyf(t, func() bool {
+		return len(pnc.Counts()) == 0
+	}, 5*time.Second, time.Second, "Should be empty, instead has %v elements", len(pnc.Counts()))
 
 	gs.Status.State = agonesv1.GameServerStateReady
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts := pnc.Counts()
-	require.Len(t, counts, 1)
+	var counts map[string]NodeCount
+	require.Eventuallyf(t, func() bool {
+		counts = pnc.Counts()
+		return len(counts) == 1
+	}, 5*time.Second, time.Second, "len should be 1, instead: %v", len(counts))
 	assert.Equal(t, int64(1), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.Status.State = agonesv1.GameServerStateAllocated
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
 
-	counts = pnc.Counts()
-	require.Len(t, counts, 1)
-	assert.Equal(t, int64(0), counts[name1].Ready)
+	require.Eventuallyf(t, func() bool {
+		counts = pnc.Counts()
+		return len(counts) == 1 && int64(0) == counts[name1].Ready
+	}, 5*time.Second, time.Second, "Ready should be 0, but is instead", counts[name1].Ready)
 	assert.Equal(t, int64(1), counts[name1].Allocated)
 
 	gs.Status.State = agonesv1.GameServerStateShutdown
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
-
-	counts = pnc.Counts()
-	require.Len(t, counts, 1)
+	require.Eventuallyf(t, func() bool {
+		counts = pnc.Counts()
+		return len(counts) == 1 && int64(0) == counts[name1].Allocated
+	}, 5*time.Second, time.Second, "Allocated should be 0, but is instead", counts[name1].Allocated)
 	assert.Equal(t, int64(0), counts[name1].Ready)
-	assert.Equal(t, int64(0), counts[name1].Allocated)
 
 	gs.ObjectMeta.Name = "gs2"
 	gs.Status.State = agonesv1.GameServerStateReady
 	gs.Status.NodeName = name2
 
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
-
-	counts = pnc.Counts()
-	require.Len(t, counts, 2)
+	require.Eventuallyf(t, func() bool {
+		counts = pnc.Counts()
+		return len(counts) == 2
+	}, 5*time.Second, time.Second, "len should be 2, instead: %v", len(counts))
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 	assert.Equal(t, int64(1), counts[name2].Ready)
@@ -108,14 +108,13 @@ func TestPerNodeCounterGameServerEvents(t *testing.T) {
 	gs.Status.NodeName = name2
 
 	fakeWatch.Add(gs.DeepCopy())
-	cache.WaitForCacheSync(stop, hasSynced)
-
-	counts = pnc.Counts()
-	require.Len(t, counts, 2)
+	require.Eventuallyf(t, func() bool {
+		counts = pnc.Counts()
+		return len(counts) == 2 && int64(1) == counts[name2].Allocated
+	}, 5*time.Second, time.Second, "Allocated should be 1, but is instead", counts[name2].Allocated)
 	assert.Equal(t, int64(0), counts[name1].Ready)
 	assert.Equal(t, int64(0), counts[name1].Allocated)
 	assert.Equal(t, int64(1), counts[name2].Ready)
-	assert.Equal(t, int64(1), counts[name2].Allocated)
 }
 
 func TestPerNodeCounterNodeEvents(t *testing.T) {
@@ -128,13 +127,10 @@ func TestPerNodeCounterNodeEvents(t *testing.T) {
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-	gsSynced := m.AgonesInformerFactory.Agones().V1().GameServers().Informer().HasSynced
-	nodeSynced := m.KubeInformerFactory.Core().V1().Nodes().Informer().HasSynced
-
-	stop, cancel := agtesting.StartInformers(m)
+	_, cancel := agtesting.StartInformers(m)
 	defer cancel()
 
-	assert.Empty(t, pnc.Counts())
+	require.Empty(t, pnc.Counts())
 
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs},
@@ -144,12 +140,14 @@ func TestPerNodeCounterNodeEvents(t *testing.T) {
 
 	gsWatch.Add(gs.DeepCopy())
 	nodeWatch.Add(node.DeepCopy())
-	cache.WaitForCacheSync(stop, gsSynced, nodeSynced)
-	assert.Len(t, pnc.Counts(), 1)
+	require.Eventuallyf(t, func() bool {
+		return len(pnc.Counts()) == 1
+	}, 5*time.Second, time.Second, "Should be 1 element, not %v", len(pnc.Counts()))
 
 	nodeWatch.Delete(node.DeepCopy())
-	cache.WaitForCacheSync(stop, nodeSynced)
-	assert.Empty(t, pnc.Counts())
+	require.Eventually(t, func() bool {
+		return len(pnc.Counts()) == 0
+	}, 5*time.Second, time.Second, "pnc.Counts() should be empty, but is instead has %v element", len(pnc.Counts()))
 }
 
 func TestPerNodeCounterRun(t *testing.T) {

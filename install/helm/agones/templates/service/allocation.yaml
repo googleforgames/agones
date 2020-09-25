@@ -42,6 +42,12 @@ spec:
 {{- if $useLoadBalancerIP }}
   loadBalancerIP: {{ .Values.agones.allocator.http.loadBalancerIP }}
 {{- end }}
+{{- if eq .Values.agones.allocator.http.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.allocator.http.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.agones.allocator.http.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+{{- end }}
 
 ---
 # Deploy a pod to run the agones-allocator code
@@ -124,6 +130,8 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: DISABLE_MTLS
           value: {{ .Values.agones.allocator.disableMTLS | quote }}
+        - name: DISABLE_TLS
+          value: {{ .Values.agones.allocator.disableTLS | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:

@@ -33,6 +33,7 @@ const (
 	projectIDFlag                = "gcp-project-id"
 	stackdriverLabels            = "stackdriver-labels"
 	mTLSDisabledFlag             = "disable-mtls"
+	tlsDisabledFlag              = "disable-tls"
 )
 
 func init() {
@@ -40,6 +41,7 @@ func init() {
 }
 
 type config struct {
+	TLSDisabled       bool
 	MTLSDisabled      bool
 	PrometheusMetrics bool
 	Stackdriver       bool
@@ -54,12 +56,14 @@ func parseEnvFlags() config {
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(stackdriverLabels, "")
 	viper.SetDefault(mTLSDisabledFlag, false)
+	viper.SetDefault(tlsDisabledFlag, false)
 
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
 	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
 	pflag.Bool(mTLSDisabledFlag, viper.GetBool(mTLSDisabledFlag), "Flag to enable/disable mTLS in the allocator.")
+	pflag.Bool(tlsDisabledFlag, viper.GetBool(tlsDisabledFlag), "Flag to enable/disable TLS in the allocator.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -69,6 +73,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(projectIDFlag))
 	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(mTLSDisabledFlag))
+	runtime.Must(viper.BindEnv(tlsDisabledFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -80,6 +85,7 @@ func parseEnvFlags() config {
 		GCPProjectID:      viper.GetString(projectIDFlag),
 		StackdriverLabels: viper.GetString(stackdriverLabels),
 		MTLSDisabled:      viper.GetBool(mTLSDisabledFlag),
+		TLSDisabled:       viper.GetBool(tlsDisabledFlag),
 	}
 }
 

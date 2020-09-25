@@ -28,6 +28,7 @@ bin
 tmp
 terraform.tfvars
 terraform.tfstate*
+kubeconfig
 build/local-includes/*
 !build/local-includes/README.md
 /release

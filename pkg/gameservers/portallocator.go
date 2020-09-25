@@ -148,6 +148,8 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 		if len(allocations) == amount {
 			pa.gameServerRegistry[gs.ObjectMeta.UID] = true
 
+			var extraPorts []agonesv1.GameServerPort
+
 			for i, p := range gs.Spec.Ports {
 				if p.PortPolicy != agonesv1.Dynamic && p.PortPolicy != agonesv1.Passthrough {
 					continue
@@ -161,6 +163,28 @@ func (pa *PortAllocator) Allocate(gs *agonesv1.GameServer) *agonesv1.GameServer 
 				if p.PortPolicy == agonesv1.Passthrough {
 					gs.Spec.Ports[i].ContainerPort = a.port
 				}
+
+				// create a port for TCP when using TCPUDP protocol
+				if p.Protocol == agonesv1.ProtocolTCPUDP {
+					var duplicate = p
+					duplicate.HostPort = a.port
+
+					if duplicate.PortPolicy == agonesv1.Passthrough {
+						duplicate.ContainerPort = a.port
+					}
+
+					extraPorts = append(extraPorts, duplicate)
+
+					gs.Spec.Ports[i].Name = p.Name + "-tcp"
+					gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
+				}
+			}
+
+			// create the UDP port when using TCPUDP protocol
+			for _, p := range extraPorts {
+				p.Name += "-udp"
+				p.Protocol = corev1.ProtocolUDP
+				gs.Spec.Ports = append(gs.Spec.Ports, p)
 			}
 
 			return gs

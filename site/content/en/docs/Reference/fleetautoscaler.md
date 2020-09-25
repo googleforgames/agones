@@ -9,6 +9,7 @@ weight: 30
 A full `FleetAutoscaler` specification is available below and in the 
 {{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
 
+{{% feature expiryVersion="1.9.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -38,6 +39,38 @@ spec:
       # required
       maxReplicas: 20
 ```
+{{% /feature %}}
+{{% feature publishVersion="1.9.0" %}}
+```yaml
+apiVersion: "autoscaling.agones.dev/v1"
+kind: FleetAutoscaler
+# FleetAutoscaler Metadata
+# https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta
+metadata:
+  name: fleet-autoscaler-example
+spec:
+  # The name of the fleet to attach to and control. Must be an existing Fleet in the same namespace
+  # as this FleetAutoscaler
+  fleetName: fleet-example
+  # The autoscaling policy
+  policy:
+    # type of the policy. for now, only Buffer is available
+    type: Buffer
+    # parameters of the buffer policy
+    buffer:
+      # Size of a buffer of "ready" game server instances
+      # The FleetAutoscaler will scale the fleet up and down trying to maintain this buffer, 
+      # as instances are being allocated or terminated
+      # it can be specified either in absolute (i.e. 5) or percentage format (i.e. 5%)
+      bufferSize: 5
+      # minimum fleet size to be set by this FleetAutoscaler. 
+      # if not specified, the actual minimum fleet size will be bufferSize
+      minReplicas: 10
+      # maximum fleet size that can be set by this FleetAutoscaler
+      # required
+      maxReplicas: 20
+```
+{{% /feature %}} 
 
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:

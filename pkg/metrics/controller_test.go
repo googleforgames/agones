@@ -24,12 +24,18 @@ import (
 	agtesting "agones.dev/agones/pkg/testing"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/metric/metricexport"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	k8stesting "k8s.io/client-go/testing"
 )
+
+const defaultNs = "default"
 
 type metricExporter struct {
 	metrics []*metricdata.Metric
@@ -62,10 +68,10 @@ func assertMetricData(t *testing.T, exporter *metricExporter, metricName string,
 			wantedMetric = m
 		}
 	}
-	assert.NotNil(t, wantedMetric, "No metric found with name: %s", metricName)
+	require.NotNil(t, wantedMetric, "No metric found with name: %s", metricName)
 
 	assert.Equal(t, len(expectedValuesAsMap), len(expected), "Multiple entries in 'expected' slice have the exact same labels")
-	assert.Equal(t, len(wantedMetric.TimeSeries), len(expectedValuesAsMap), "number of timeseries does not match")
+	assert.Equalf(t, len(expectedValuesAsMap), len(wantedMetric.TimeSeries), "number of timeseries does not match under metric: %v", metricName)
 	for _, tsd := range wantedMetric.TimeSeries {
 		actualLabelValues := make([]string, len(tsd.LabelValues))
 		for i, k := range tsd.LabelValues {
@@ -73,9 +79,9 @@ func assertMetricData(t *testing.T, exporter *metricExporter, metricName string,
 		}
 		e, ok := expectedValuesAsMap[serialize(actualLabelValues)]
 		assert.True(t, ok, "no TimeSeries found with labels: %v", actualLabelValues)
-		assert.Equal(t, actualLabelValues, e.labels, "label values don't match")
-		assert.Equal(t, len(tsd.Points), 1, "assertMetricDataValues can only handle a single Point in a TimeSeries")
-		assert.Equal(t, tsd.Points[0].Value, e.val, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
+		assert.Equal(t, e.labels, actualLabelValues, "label values don't match")
+		assert.Equal(t, 1, len(tsd.Points), "assertMetricDataValues can only handle a single Point in a TimeSeries")
+		assert.Equal(t, e.val, tsd.Points[0].Value, "metric: %s, tags: %v, values don't match; got: %v, want: %v", metricName, tsd.LabelValues, tsd.Points[0].Value, e.val)
 	}
 }
 
@@ -99,7 +105,12 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Modify(gs1)
 
 	c.run(t)
-	c.sync()
+	require.True(t, c.sync())
+	require.Eventually(t, func() bool {
+		gs, err := c.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).Get(gs1.ObjectMeta.Name)
+		assert.NoError(t, err)
+		return gs.Status.State == agonesv1.GameServerStateReady
+	}, 5*time.Second, time.Second)
 	c.collect()
 
 	gs1 = gs1.DeepCopy()
@@ -109,13 +120,31 @@ func TestControllerGameServerCount(t *testing.T) {
 	c.gsWatch.Add(gameServerWithFleetAndState("", agonesv1.GameServerStatePortAllocation))
 
 	c.run(t)
-	c.sync()
-	c.collect()
+	require.True(t, c.sync())
+	// Port allocation is last, so wait for that come to the state we expect
+	require.Eventually(t, func() bool {
+		c.collect()
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == "gameservers_count" {
+				for _, d := range m.TimeSeries {
+					if d.LabelValues[0].Value == "none" && d.LabelValues[1].Value == defaultNs && d.LabelValues[2].Value == "PortAllocation" {
+						return d.Points[0].Value == int64(2)
+					}
+				}
+			}
+		}
+
+		return false
+	}, 10*time.Second, time.Second)
+
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "gameservers_count", []expectedMetricData{
-		{labels: []string{"test-fleet", "default", "Ready"}, val: int64(0)},
-		{labels: []string{"test-fleet", "default", "Shutdown"}, val: int64(1)},
-		{labels: []string{"none", "default", "PortAllocation"}, val: int64(2)},
+		{labels: []string{"test-fleet", defaultNs, "Ready"}, val: int64(0)},
+		{labels: []string{"test-fleet", defaultNs, "Shutdown"}, val: int64(1)},
+		{labels: []string{"none", defaultNs, "PortAllocation"}, val: int64(2)},
 	})
 }
 
@@ -141,22 +170,32 @@ func TestControllerGameServersTotal(t *testing.T) {
 	generateGsEvents(16, agonesv1.GameServerStateStarting, "", c.gsWatch)
 	generateGsEvents(1, agonesv1.GameServerStateUnhealthy, "", c.gsWatch)
 
-	c.sync()
+	expected := 96
+	assert.Eventually(t, func() bool {
+		list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
+		require.NoError(t, err)
+		return len(list) == expected
+	}, 5*time.Second, time.Second)
+	// While these values are tested above, the following test checks will provide a more detailed diff output
+	// in the case where the assert.Eventually(...) case fails, which makes failing tests easier to debug.
+	list, err := c.gameServerLister.GameServers(gs.ObjectMeta.Namespace).List(labels.Everything())
+	require.NoError(t, err)
+	require.Len(t, list, expected)
+
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "gameservers_total", []expectedMetricData{
-		{labels: []string{"test", "default", "Creating"}, val: int64(16)},
-		{labels: []string{"test", "default", "Scheduled"}, val: int64(15)},
-		{labels: []string{"test", "default", "Starting"}, val: int64(10)},
-		{labels: []string{"test", "default", "Unhealthy"}, val: int64(1)},
-		{labels: []string{"none", "default", "Creating"}, val: int64(19)},
-		{labels: []string{"none", "default", "Scheduled"}, val: int64(18)},
-		{labels: []string{"none", "default", "Starting"}, val: int64(16)},
-		{labels: []string{"none", "default", "Unhealthy"}, val: int64(1)},
+		{labels: []string{"test", defaultNs, "Creating"}, val: int64(16)},
+		{labels: []string{"test", defaultNs, "Scheduled"}, val: int64(15)},
+		{labels: []string{"test", defaultNs, "Starting"}, val: int64(10)},
+		{labels: []string{"test", defaultNs, "Unhealthy"}, val: int64(1)},
+		{labels: []string{"none", defaultNs, "Creating"}, val: int64(19)},
+		{labels: []string{"none", defaultNs, "Scheduled"}, val: int64(18)},
+		{labels: []string{"none", defaultNs, "Starting"}, val: int64(16)},
+		{labels: []string{"none", defaultNs, "Unhealthy"}, val: int64(1)},
 	})
 }
 
 func TestControllerFleetReplicasCount(t *testing.T) {
-
 	resetMetrics()
 	exporter := &metricExporter{}
 	reader := metricexport.NewReader()
@@ -174,18 +213,35 @@ func TestControllerFleetReplicasCount(t *testing.T) {
 	c.fleetWatch.Add(fd)
 	c.fleetWatch.Delete(fd)
 
-	c.sync()
+	// wait until we have a fleet deleted and it's allocation count is 0
+	// since that is our last operation
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == "fleets_replicas_count" {
+				for _, d := range m.TimeSeries {
+					if d.LabelValues[0].Value == "fleet-deleted" && d.LabelValues[1].Value == defaultNs && d.LabelValues[2].Value == "total" {
+						return d.Points[0].Value == int64(0)
+					}
+				}
+			}
+		}
+
+		return false
+	}, 5*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "fleets_replicas_count", []expectedMetricData{
-		{labels: []string{"fleet-deleted", "default", "allocated"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "default", "desired"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "default", "ready"}, val: int64(0)},
-		{labels: []string{"fleet-deleted", "default", "total"}, val: int64(0)},
-		{labels: []string{"fleet-test", "default", "allocated"}, val: int64(2)},
-		{labels: []string{"fleet-test", "default", "desired"}, val: int64(5)},
-		{labels: []string{"fleet-test", "default", "ready"}, val: int64(1)},
-		{labels: []string{"fleet-test", "default", "total"}, val: int64(8)},
+		{labels: []string{"fleet-deleted", defaultNs, "allocated"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", defaultNs, "desired"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", defaultNs, "ready"}, val: int64(0)},
+		{labels: []string{"fleet-deleted", defaultNs, "total"}, val: int64(0)},
+		{labels: []string{"fleet-test", defaultNs, "allocated"}, val: int64(2)},
+		{labels: []string{"fleet-test", defaultNs, "desired"}, val: int64(5)},
+		{labels: []string{"fleet-test", defaultNs, "ready"}, val: int64(1)},
+		{labels: []string{"fleet-test", defaultNs, "total"}, val: int64(8)},
 	})
 }
 
@@ -220,60 +276,104 @@ func TestControllerFleetAutoScalerState(t *testing.T) {
 	c.fasWatch.Delete(fasDeleted)
 
 	c.sync()
+	// wait until we have a fleet deleted and it's allocation count is 0
+	// since that is our last operation
+	require.Eventually(t, func() bool {
+		ex := &metricExporter{}
+		reader.ReadAndExport(ex)
+
+		for _, m := range ex.metrics {
+			if m.Descriptor.Name == "fleet_autoscalers_limited" {
+				for _, d := range m.TimeSeries {
+					if d.LabelValues[0].Value == "deleted-fleet" && d.LabelValues[1].Value == "deleted" && d.LabelValues[2].Value == defaultNs {
+						return d.Points[0].Value == int64(0)
+					}
+				}
+			}
+		}
+
+		return false
+	}, 5*time.Second, time.Second)
 
 	reader.ReadAndExport(exporter)
 	assertMetricData(t, exporter, "fleet_autoscalers_able_to_scale", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(1)},
-		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_buffer_limits", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default", "max"}, val: int64(50)},
-		{labels: []string{"first-fleet", "name-switch", "default", "min"}, val: int64(10)},
-		{labels: []string{"second-fleet", "name-switch", "default", "max"}, val: int64(50)},
-		{labels: []string{"second-fleet", "name-switch", "default", "min"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted", "default", "max"}, val: int64(150)},
-		{labels: []string{"deleted-fleet", "deleted", "default", "min"}, val: int64(15)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "max"}, val: int64(50)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "min"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs, "max"}, val: int64(150)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs, "min"}, val: int64(15)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_buffer_size", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default", "count"}, val: int64(10)},
-		{labels: []string{"second-fleet", "name-switch", "default", "count"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted", "default", "percentage"}, val: int64(50)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs, "count"}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs, "percentage"}, val: int64(50)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_current_replicas_count", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(20)},
-		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(20)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_desired_replicas_count", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(10)},
-		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(10)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs}, val: int64(0)},
 	})
 	assertMetricData(t, exporter, "fleet_autoscalers_limited", []expectedMetricData{
-		{labels: []string{"first-fleet", "name-switch", "default"}, val: int64(0)},
-		{labels: []string{"second-fleet", "name-switch", "default"}, val: int64(1)},
-		{labels: []string{"deleted-fleet", "deleted", "default"}, val: int64(0)},
+		{labels: []string{"first-fleet", "name-switch", defaultNs}, val: int64(0)},
+		{labels: []string{"second-fleet", "name-switch", defaultNs}, val: int64(1)},
+		{labels: []string{"deleted-fleet", "deleted", defaultNs}, val: int64(0)},
 	})
 }
 
 func TestControllerGameServersNodeState(t *testing.T) {
 	resetMetrics()
-	c := newFakeController()
+	m := agtesting.NewMocks()
+
+	m.KubeClient.AddReactor("list", "nodes", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		n1 := nodeWithName("node1")
+		n2 := nodeWithName("node2")
+		n3 := nodeWithName("node3")
+		return true, &corev1.NodeList{Items: []corev1.Node{*n1, *n2, *n3}}, nil
+	})
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs1 := gameServerWithNode("node1")
+		gs2 := gameServerWithNode("node2")
+		gs3 := gameServerWithNode("node2")
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*gs1, *gs2, *gs3}}, nil
+	})
+
+	c := newFakeControllerWithMock(m)
 	defer c.close()
-	c.nodeWatch.Add(nodeWithName("node1"))
-	c.nodeWatch.Add(nodeWithName("node2"))
-	c.nodeWatch.Add(nodeWithName("node3"))
-	c.gsWatch.Add(gameServerWithNode("node1"))
-	c.gsWatch.Add(gameServerWithNode("node2"))
-	c.gsWatch.Add(gameServerWithNode("node2"))
-
-	c.run(t)
-	c.sync()
-
-	exporter := &metricExporter{}
+	require.True(t, c.sync())
+	c.collect()
 	reader := metricexport.NewReader()
-	reader.ReadAndExport(exporter)
+
+	// wait until we have some nodes and gameservers in metrics
+	var exporter *metricExporter
+	assert.Eventually(t, func() bool {
+		exporter = &metricExporter{}
+		reader.ReadAndExport(exporter)
+
+		check := 0
+		for _, m := range exporter.metrics {
+			switch m.Descriptor.Name {
+			case "nodes_count":
+				check++
+			case "gameservers_node_count":
+				check++
+			}
+		}
+
+		return check == 2
+	}, 10*time.Second, time.Second)
+
+	// check the details
 	assertMetricData(t, exporter, "gameservers_node_count", []expectedMetricData{
 		{labels: []string{}, val: &metricdata.Distribution{
 			Count:                 3,

@@ -55,6 +55,12 @@ func JoinPreservingTrailingSlash(elem ...string) string {
 	return result
 }
 
+// IsTimeout returns true if the given error is a network timeout error
+func IsTimeout(err error) bool {
+	neterr, ok := err.(net.Error)
+	return ok && neterr != nil && neterr.Timeout()
+}
+
 // IsProbableEOF returns true if the given error resembles a connection termination
 // scenario that would justify assuming that the watch is empty.
 // These errors are what the Go http stack returns back to us which are general
@@ -101,6 +107,9 @@ func SetOldTransportDefaults(t *http.Transport) *http.Transport {
 	if t.TLSHandshakeTimeout == 0 {
 		t.TLSHandshakeTimeout = defaultTransport.TLSHandshakeTimeout
 	}
+	if t.IdleConnTimeout == 0 {
+		t.IdleConnTimeout = defaultTransport.IdleConnTimeout
+	}
 	return t
 }
 
@@ -111,12 +120,27 @@ func SetTransportDefaults(t *http.Transport) *http.Transport {
 	// Allow clients to disable http2 if needed.
 	if s := os.Getenv("DISABLE_HTTP2"); len(s) > 0 {
 		klog.Infof("HTTP2 has been explicitly disabled")
-	} else {
+	} else if allowsHTTP2(t) {
 		if err := http2.ConfigureTransport(t); err != nil {
 			klog.Warningf("Transport failed http2 configuration: %v", err)
 		}
 	}
 	return t
+}
+
+func allowsHTTP2(t *http.Transport) bool {
+	if t.TLSClientConfig == nil || len(t.TLSClientConfig.NextProtos) == 0 {
+		// the transport expressed no NextProto preference, allow
+		return true
+	}
+	for _, p := range t.TLSClientConfig.NextProtos {
+		if p == http2.NextProtoTLS {
+			// the transport explicitly allowed http/2
+			return true
+		}
+	}
+	// the transport explicitly set NextProtos and excluded http/2
+	return false
 }
 
 type RoundTripperWrapper interface {
@@ -407,7 +431,7 @@ redirectLoop:
 
 		// Only follow redirects to the same host. Otherwise, propagate the redirect response back.
 		if requireSameHostRedirects && location.Hostname() != originalLocation.Hostname() {
-			break redirectLoop
+			return nil, nil, fmt.Errorf("hostname mismatch: expected %s, found %s", originalLocation.Hostname(), location.Hostname())
 		}
 
 		// Reset the connection.
