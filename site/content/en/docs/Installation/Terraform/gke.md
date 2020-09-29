@@ -88,9 +88,7 @@ Configurable parameters:
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
   created in (default is "us-west1-c")
 - network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
-{{% feature publishVersion="1.9.0" %}}
 - subnetwork - the name of the subnetwork in which the cluster's instances are launched. (required when using non default network)
-{{% /feature %}}
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 - feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
 - gameserver_minPort - the lower bound of the port range which gameservers will listen on (default is "7000")
@@ -121,14 +119,6 @@ Next, make sure that you can authenticate using gcloud:
 ```
 gcloud auth application-default login
 ```
-{{% feature expiryVersion="1.9.0" %}}
-Now you can create your GKE cluster (optionally specifying the version of Agones you want to use):
-```
-terraform apply -var project="<YOUR_GCP_ProjectID>"
-```
-{{% /feature %}}
-
-{{% feature publishVersion="1.9.0" %}}
 #### Option 1: Creating the cluster in the default VPC
 To create your GKE cluster in the default VPC just specify the project variable.
 
@@ -142,8 +132,6 @@ To create the cluster in a custom VPC you must specify the project, network and 
 ```
 terraform apply -var project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>"
 ```
-{{% /feature %}}
-
 
 To verify that the cluster was created successfully, set up your kubectl credentials:
 ```
