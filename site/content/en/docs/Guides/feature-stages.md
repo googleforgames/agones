@@ -24,7 +24,6 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates are:
 
-{{% feature publishVersion="1.9.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
 |--------------|---------|---------|-------|-------|
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
@@ -32,15 +31,6 @@ The current set of `alpha` and `beta` feature gates are:
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
 | [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Disabled | `Alpha` | 1.7.0 |
 | Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) and additional [details]({{< ref "/docs/Guides/fleet-updates.md#alpha-feature-rollingupdateonready" >}}) | `RollingUpdateOnReady` | Disabled | `Alpha` | 1.9.0 |
-{{% /feature %}}
-{{% feature expiryVersion="1.9.0" %}}
-| Feature Name | Gate    | Default | Stage | Since |
-|--------------|---------|---------|-------|-------|
-| Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
-| [Port Allocations to Multiple Containers]({{< ref "/docs/Reference/gameserver.md" >}}) | `ContainerPortAllocation` | Enabled | `Beta` | 1.7.0 |
-| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
-| [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Disabled | `Alpha` | 1.7.0 |
-{{% /feature %}}
 
 ## Description of Stages
 
