@@ -65,3 +65,4 @@ Agones is in active development - we would love your help in shaping its future!
 ## Licence
 
 Apache 2.0
+Thank you 😊,
