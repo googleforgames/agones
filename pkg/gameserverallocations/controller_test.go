@@ -1225,6 +1225,9 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 
 		_, err = executeAllocation(gsa, c)
 		assert.Error(t, err)
+		st, ok := status.FromError(err)
+		assert.True(t, ok)
+		assert.Equal(t, st.Code(), codes.ResourceExhausted)
 		assert.Equal(t, 0, calls)
 	})
 }
