@@ -112,6 +112,10 @@ This process is non-blocking internally.
 agonesSDK.WatchGameServer((gameServer) => { Console.WriteLine($"Server - Watch {gameServer}");});
 ```
 
+## Player Tracking
+
+{{< alpha title="Player Tracking" gate="PlayerTracking" >}}
+
 ### Alpha: PlayerConnect
 
 This method increases the SDK’s stored player count by one, and appends this playerID to GameServer.Status.Players.IDs.
