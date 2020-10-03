@@ -10,7 +10,8 @@ To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/alloc
 
 The gRPC service is accessible through a Kubernetes service that is externalized using a load balancer. For the gRPC request to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 
-The remainder of this article describes how to manually make a successful allocation request using the gRPC API.
+The remainder of this article describes how to manually make a successful allocation request using the gRPC API. 
+The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
 ## Find the external IP
 
@@ -29,13 +30,14 @@ agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b> 
 
 ## Server TLS certificate
 
-{{% feature publishVersion="1.9.0" %}}
 If the `agones-allocator` service is installed as a `LoadBalancer` [using a static IP]({{< relref "/docs/Installation/Install Agones/helm.md#reserved-allocator-load-balancer-ip" >}}), a valid self-signed server TLS certificate is generated using the IP provided. Otherwise, the server TLS certificate should be replaced.
-{{% /feature %}}
 
 Replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
 
-In order to use cert-manager solution, first, [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster. Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and last configure a `Certificate` resource to manage allocator-tls `Secret`.
+In order to use the cert-manager solution, first [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster.
+Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and
+last [configure](https://cert-manager.io/docs/usage/certificate/) a `Certificate` resource to manage allocator-tls `Secret`.
+Make sure to configure the `Certificate` based on your system's requirements, including the validity `duration`.
 
 Here is an example of using a self-signed `ClusterIssuer` for configuring allocator-tls `Secret`:
 
@@ -43,7 +45,7 @@ Here is an example of using a self-signed `ClusterIssuer` for configuring alloca
 #!/bin/bash
 # Create a self-signed ClusterIssuer
 cat <<EOF | kubectl apply -f -
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
   name: selfsigned
@@ -53,12 +55,15 @@ EOF
 
 EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
 
+# for EKS use hostname
+# HOST_NAME=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+
 # Create a Certificate with IP for the allocator-tls secret
 cat <<EOF | kubectl apply -f -
-apiVersion: cert-manager.io/v1alpha2
+apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: allocator-selfsigned-cert
+  name: allocator-tls
   namespace: agones-system
 spec:
   commonName: ${EXTERNAL_IP}

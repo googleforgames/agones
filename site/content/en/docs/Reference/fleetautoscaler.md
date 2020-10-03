@@ -39,7 +39,6 @@ spec:
       maxReplicas: 20
 ```
 
-
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
 ```yaml
@@ -92,9 +91,7 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
       - `namespace` is the kubernetes namespace where webhook is deployed. Optional
                       If not specified, the "default" would be used
       - `path` is an optional URL path which will be sent in any request to this service. (i. e. /scale)
-{{% feature publishVersion="1.9.0" %}}
       - `port` is optional, it is the port for the service which is hosting the webhook. The default is 8000 for backward compatibility. If given, it should be a valid port number (1-65535, inclusive).
-{{% /feature %}}
     - `url` gives the location of the webhook, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. The `host` should not refer to a service running in the cluster; use the `service` field instead.  (optional, instead of service)
     - `caBundle` is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.
 

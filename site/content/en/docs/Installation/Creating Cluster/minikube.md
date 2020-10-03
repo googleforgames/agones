@@ -29,16 +29,9 @@ minikube profile agones
 The following command starts a local minikube cluster via virtualbox - but this can be
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
-{{% feature expiryVersion="1.9.0" %}}
-```bash
-minikube start --kubernetes-version v1.15.10 --vm-driver virtualbox
-```
-{{% /feature %}}
-{{% feature publishVersion="1.9.0" %}}
 ```bash
 minikube start --kubernetes-version v1.16.13 --vm-driver virtualbox
 ```
-{{% /feature %}}
 
 ## Next Steps
 
