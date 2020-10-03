@@ -118,7 +118,7 @@ This method increases the SDK’s stored player count by one, and appends this p
 Returns true and adds the playerID to the list of playerIDs if the playerIDs was not already in the list of connected playerIDs.
 
 ```csharp
-bool ok = PlayerConnectAsync(playerId);
+bool ok = await agones.Alpha().PlayerConnectAsync(playerId);
 ```
 
 ### Alpha: PlayerDisconnect
@@ -127,7 +127,7 @@ This function decreases the SDK’s stored player count by one, and removes the 
 Will return true and remove the supplied playerID from the list of connected playerIDs if the playerID value exists within the list.
 
 ```csharp
-bool ok = PlayerDisconnectAsync(playerId);
+bool ok = await agones.Alpha().PlayerDisconnectAsync(playerId);
 ```
 
 ### Alpha: SetPlayerCapacity
@@ -135,7 +135,8 @@ bool ok = PlayerDisconnectAsync(playerId);
 Update the `GameServer.Status.Players.Capacity` value with a new capacity.
 
 ```csharp
-var status = await SetPlayerCapactyAsync();
+var capacity = 100;
+var status = await agones.Alpha().SetPlayerCapacityAsync(capacity);
 ```
 
 ### Alpha: GetPlayerCapacity
@@ -144,7 +145,7 @@ This function retrieves the current player capacity `GameServer.Status.Players.C
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 ```csharp
-long cap = await GetPlayerCapacityAsync();
+long cap = await agones.Alpha().GetPlayerCapacityAsync();
 ```
 
 ### Alpha: GetPlayerCount
@@ -152,7 +153,7 @@ long cap = await GetPlayerCapacityAsync();
 Returns the current player count
 
 ```csharp
-long count = await GetPlayerCountAsync();
+long count = await agones.Alpha().GetPlayerCountAsync();
 ```
 
 ### Alpha: IsPlayerConnected
@@ -161,7 +162,8 @@ This returns if the playerID is currently connected to the GameServer.
 This is always accurate, even if the value hasn’t been updated to the GameServer status yet.
 
 ```csharp
-bool isConnected = IsPlayerConnectedAsync();
+var playerId = "player1";
+bool isConnected = await agones.Alpha().IsPlayerConnectedAsync(playerId);
 ```
 
 ## Remarks
