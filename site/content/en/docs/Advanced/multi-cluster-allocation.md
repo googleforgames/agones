@@ -5,7 +5,7 @@ description: >
   In order to allow allocation from multiple clusters, Agones provides a mechanism to set redirect rules for allocation requests to the right cluster.
 ---
 
-{{% feature expiryVersion="1.9.0" %}}
+{{% feature expiryVersion="1.10.0" %}}
 {{< alert title="Beta" color="warning">}}
 This feature is in a pre-release state and might change.
 {{< /alert >}}
