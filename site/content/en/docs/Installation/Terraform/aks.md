@@ -50,6 +50,7 @@ Configurable parameters:
 - log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
 - cluster_name - the name of the AKS cluster (default is "agones-terraform-example")
 - agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
 - machine_type - node machine type for hosting game servers (default is "Standard_D2_v2")
 - disk_size - disk size of the node
 - region - the location of the cluster

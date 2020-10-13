@@ -83,6 +83,7 @@ Configurable parameters:
 - project - your Google Cloud Project ID (required)
 - name - the name of the GKE cluster (default is "agones-terraform-example")
 - agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
+- force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
 - machine_type - machine type for hosting game servers (default is "n1-standard-4")
 - node_count - count of game server nodes for the default node pool (default is "4")
 - zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
