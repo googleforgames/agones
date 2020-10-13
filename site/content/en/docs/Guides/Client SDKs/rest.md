@@ -262,9 +262,8 @@ Response:
 
 #### Alpha: GetPlayerCount
 
-This function returns if the playerID is currently connected to the GameServer. 
-This is always accurate from what has been set through this SDK,
-even if the value has yet to be updated on the GameServer status resource.
+This function retrieves the current player count. 
+This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 ```bash
 $ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count

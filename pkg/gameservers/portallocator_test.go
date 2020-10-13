@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -27,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
@@ -108,6 +110,20 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.NotEmpty(t, gsCopy.Spec.Ports[0].HostPort)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[0].ContainerPort)
 		assert.Equal(t, 11, countTotalAllocatedPorts(pa))
+
+		// single port to two ports, tcpudp
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "gameport", PortPolicy: agonesv1.Dynamic, Protocol: agonesv1.ProtocolTCPUDP}
+
+		gs = pa.Allocate(gsCopy)
+		require.NotNil(t, gs)
+		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[1].HostPort)
+
+		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[0].Protocol)
+		assert.Equal(t, corev1.ProtocolUDP, gsCopy.Spec.Ports[1].Protocol)
+		assert.Equal(t, "gameport-tcp", gsCopy.Spec.Ports[0].Name)
+		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[1].Name)
+		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
 	t.Run("ports are all allocated", func(t *testing.T) {
@@ -445,14 +461,17 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 		return true, nl, nil
 	})
 
-	stop, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
+	_, cancel := agtesting.StartInformers(m, pa.gameServerSynced, pa.nodeSynced)
 	defer cancel()
 
 	gsWatch.Add(gs1.DeepCopy())
 	gsWatch.Add(gs2.DeepCopy())
 	gsWatch.Add(gs3.DeepCopy())
-
-	assert.True(t, cache.WaitForCacheSync(stop, pa.gameServerSynced))
+	require.Eventually(t, func() bool {
+		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		assert.NoError(t, err)
+		return len(list) == 3
+	}, 5*time.Second, time.Second)
 
 	err := pa.syncAll()
 	require.NoError(t, err)
@@ -465,7 +484,11 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 
 	// delete allocated gs
 	gsWatch.Delete(gs3.DeepCopy())
-	assert.True(t, cache.WaitForCacheSync(stop, pa.gameServerSynced))
+	require.Eventually(t, func() bool {
+		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		assert.NoError(t, err)
+		return len(list) == 2
+	}, 5*time.Second, time.Second)
 
 	pa.mutex.RLock() // reading mutable state, so read lock
 	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
@@ -475,7 +498,11 @@ func TestPortAllocatorSyncDeleteGameServer(t *testing.T) {
 	// delete the currently non allocated server, all should be the same
 	// simulated getting an old delete message
 	gsWatch.Delete(gs4.DeepCopy())
-	assert.True(t, cache.WaitForCacheSync(stop, pa.gameServerSynced))
+	require.Never(t, func() bool {
+		list, err := pa.gameServerLister.GameServers(gs1.ObjectMeta.Namespace).List(labels.Everything())
+		assert.NoError(t, err)
+		return len(list) != 2
+	}, time.Second, 100*time.Millisecond)
 	pa.mutex.RLock() // reading mutable state, so read lock
 	assert.Equal(t, 1, countAllocatedPorts(pa, 10))
 	assert.Equal(t, 1, countAllocatedPorts(pa, 11))

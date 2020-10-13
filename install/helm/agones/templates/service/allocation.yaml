@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- $useLoadBalancerIP := and (ne .Values.agones.allocator.http.loadBalancerIP "") (eq .Values.agones.allocator.http.serviceType "LoadBalancer") }}
 {{- if .Values.agones.allocator.install }}
 # Define a Service for the agones-allocator
 apiVersion: v1
@@ -38,6 +39,15 @@ spec:
       targetPort: 8443
       protocol: TCP
   type: {{ .Values.agones.allocator.http.serviceType }}
+{{- if $useLoadBalancerIP }}
+  loadBalancerIP: {{ .Values.agones.allocator.http.loadBalancerIP }}
+{{- end }}
+{{- if eq .Values.agones.allocator.http.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.allocator.http.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.agones.allocator.http.loadBalancerSourceRanges | indent 4 }}
+  {{- end }}
+{{- end }}
 
 ---
 # Deploy a pod to run the agones-allocator code
@@ -120,6 +130,8 @@ spec:
           value: {{ .Values.agones.metrics.stackdriverLabels | quote }}
         - name: DISABLE_MTLS
           value: {{ .Values.agones.allocator.disableMTLS | quote }}
+        - name: DISABLE_TLS
+          value: {{ .Values.agones.allocator.disableTLS | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -241,7 +253,7 @@ data:
 
 ---
 # Allocation TLS certs
-{{- $cert := genSignedCert "" nil nil 3650 $ca }}
+{{- $cert := genSignedCert "" ($useLoadBalancerIP | ternary (list .Values.agones.allocator.http.loadBalancerIP) nil) nil 3650 $ca }}
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls

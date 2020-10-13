@@ -201,6 +201,15 @@ sdk-shell:
 sdk-shell-node:
 	$(MAKE) sdk-shell SDK_FOLDER=node
 
+# SDK shell for csharp
+sdk-shell-csharp:
+	$(MAKE) sdk-shell SDK_FOLDER=csharp
+
+# Publish csharp SDK to NuGet
+sdk-publish-csharp: RELEASE_VERSION ?= $(base_version)
+sdk-publish-csharp:
+	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
+
 # Perform make build for all examples
 build-examples: build-example-xonotic build-example-cpp-simple build-example-simple-udp build-example-autoscaler-webhook build-example-nodejs-simple
 

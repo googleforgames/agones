@@ -6,10 +6,6 @@ weight: 15
 description: "This is the Unity version of the Agones Game Server Client SDK."
 ---
 
-{{< alert title="Note" color="info" >}}
-The Unity SDK is not feature complete in 1.2.0, but will be feature complete with the 1.3.0 release.
-{{< /alert >}}
-
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
 ## Download

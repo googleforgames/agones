@@ -151,21 +151,21 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
 | `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
 | `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
-| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | ``|
+| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | \`\` | 
 | `agones.crds.install`                               | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart. | `true` |
 | `agones.crds.cleanupOnDelete`                       | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion | `true`          |
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
-| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | ``                     |
-| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | ``                     |
+| `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | \`\`                   |
+| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` | 
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
 | `agones.image.controller.pullPolicy`                | Image pull policy for the controller                                                            | `IfNotPresent`         |
-| `agones.image.controller.pullSecret`                | Image pull secret for the controller, allocator, sdk and ping image. Should be created both in `agones-system` and `default` namespaces | ``                     |
+| `agones.image.controller.pullSecret`                | Image pull secret for the controller, allocator, sdk and ping image. Should be created both in `agones-system` and `default` namespaces | \`\`                     |
 | `agones.image.sdk.name`                             | Image name for the sdk                                                                          | `agones-sdk`           |
 | `agones.image.sdk.tag`                              | Image tag for the sdk                                                                           | value of `agones.image.tag`  |
 | `agones.image.sdk.cpuRequest`                       | The [cpu request][cpu-constraints] for sdk server container                                     | `30m`                  |
@@ -198,10 +198,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.http.response`                         | The string response returned from the http service                                              | `ok`                   |
 | `agones.ping.http.port`                             | The port to expose on the service                                                               | `80`                   |
 | `agones.ping.http.serviceType`                      | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.ping.http.loadBalancerIP`                   | The [Load Balancer IP][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.               | \`\`           |
+| `agones.ping.http.loadBalancerSourceRanges`         | The [Load Balancer SourceRanges][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.     | `[]`         |
 | `agones.ping.udp.expose`                            | Expose the udp ping service via a Service                                                       | `true`                 |
 | `agones.ping.udp.rateLimit`                         | Number of UDP packets the ping service handles per instance, per second, per sender             | `20`                   |
 | `agones.ping.udp.port`                              | The port to expose on the service                                                               | `80`                   |
 | `agones.ping.udp.serviceType`                       | The [Service Type][service] of the UDP Service                                                  | `LoadBalancer`         |
+| `agones.ping.udp.loadBalancerIP`                    | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.                | \`\`           |
+| `agones.ping.udp.loadBalancerSourceRanges`          | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.      | `[]`         |
 | `agones.ping.healthCheck.initialDelaySeconds`       | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
 | `agones.ping.healthCheck.periodSeconds`             | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.ping.healthCheck.failureThreshold`          | Number of times before giving up (in seconds)                                                   | `3`                    |
@@ -214,8 +218,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
 | `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
+| `agones.allocator.http.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
 | `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `true`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
+| `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
@@ -223,12 +231,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.9.0" %}}
+{{% feature publishVersion="1.10.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |
+|                                                     |                                                                                                 |                        |             
+
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -239,6 +248,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [ping]: {{< ref "/docs/Guides/ping-service.md" >}}
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
+[loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
@@ -281,7 +291,7 @@ RUNNING: agones-test
 ERROR: pods "agones-test" already exists
 Error: 1 test(s) failed
 ```
-That mean that you skiped `--cleanup` flag and you should either delete `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
+That means that you skipped the `--cleanup` flag and you should either delete the `agones-test` pod manually or run with the same test `helm test my-release --cleanup` two more times.
 {{< /alert >}}
 
 ## TLS Certificates
@@ -292,6 +302,13 @@ For most use cases the controller would have required a restart anyway (eg: cont
 {{< alert title="Tip" color="info">}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
+
+## Reserved Allocator Load Balancer IP
+
+In order to reuse the existing load balancer IP on upgrade or install the `agones-allocator` service as a `LoadBalancer` using a reserved static IP, a user can specify the load balancer's IP with the `agones.allocator.http.loadBalancerIP` helm configuration parameter value. By setting the `loadBalancerIP` value:
+
+1. The `LoadBalancer` is created with the specified IP, if supported by the cloud provider.
+2. A self-signed server TLS certificate is generated for the IP, used by the `agones-allocator` service.
 
 ## Next Steps
 

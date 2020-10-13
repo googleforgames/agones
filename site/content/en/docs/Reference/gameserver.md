@@ -13,7 +13,7 @@ A full GameServer specification is available below and in the {{< ghlink href="e
 apiVersion: "agones.dev/v1"
 kind: GameServer
 # GameServer Metadata
-# https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#objectmeta-v1-meta
+# https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -39,7 +39,11 @@ spec:
     containerPort: 7654
     # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
     hostPort: 7777
-    # protocol being used. Defaults to UDP. TCP is the only other option
+    # protocol being used. Defaults to UDP. TCP and TCPUDP are other options
+    # - "UDP" (default) use the UDP protocol
+    # - "TCP", use the TCP protocol
+    # - "TCPUDP", uses both TCP and UDP, and exposes the same hostPort for both protocols.
+    #       This will mean that it adds an extra port, and the first port is set to TCP, and second port set to UDP
     protocol: UDP
   # Health checking for the running game server
   health:
@@ -75,7 +79,7 @@ spec:
   #   # set this GameServer's initial player capacity
   #   initialCapacity: 10
   # Pod template configuration
-  # https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplate-v1-core
+  # https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplate-v1-core
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:
@@ -107,7 +111,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
         - `Passthrough` dynamically sets the `containerPort`  to the same value as the dynamically selected hostPort. This will mean that users will need to lookup what port to open through the server side SDK before starting communications.
   - `container` (Alpha) the name of the container to open the port on. Defaults to the game server container if omitted or empty.
   - `containerPort` the port that is being opened on the game server process, this is a required field for `Dynamic` and `Static` port policies, and should not be included in <code>Passthrough</code> configuration.
-  - `protocol` the protocol being used. Defaults to UDP. TCP is the only other option.
+  - `protocol` the protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 - `health` to track the overall healthy state of the GameServer, more information available in the [health check documentation]({{< relref "../Guides/health-checking.md" >}}).
 - `sdkServer` defines parameters for the game server sidecar
   - `logging` field defines log level for SDK server. Defaults to "Info". It has three options:
@@ -117,7 +121,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
-- `template` the [pod spec template](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+- `template` the [pod spec template](https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram
 

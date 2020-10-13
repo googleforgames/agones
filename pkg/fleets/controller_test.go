@@ -195,9 +195,12 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
+		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
+		f.Status.ReadyReplicas = 5
 		c, m := newFakeController()
 		gsSet := f.GameServerSet()
 		gsSet.ObjectMeta.Name = "gsSet1"
@@ -974,15 +977,18 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 
 	f := defaultFixture()
 	f.Spec.Replicas = 75
+	f.Status.ReadyReplicas = 75
 
 	active := f.GameServerSet()
 	active.ObjectMeta.Name = "active"
 	active.Spec.Replicas = 75
+	active.Status.ReadyReplicas = 75
 	active.Status.Replicas = 75
 
 	inactive := f.GameServerSet()
 	inactive.ObjectMeta.Name = "inactive"
 	inactive.Spec.Replicas = 10
+	inactive.Status.ReadyReplicas = 10
 	inactive.Status.Replicas = 10
 	inactive.Status.AllocatedReplicas = 5
 
@@ -997,8 +1003,122 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
+func TestFeatureRollingUpdateOnReady(t *testing.T) {
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=true"))
+
+	type expected struct {
+		inactiveSpecReplicas int32
+		replicas             int32
+		updated              bool
+	}
+
+	fixtures := map[string]struct {
+		activeStatusReadyReplicas   int32
+		inactiveStatusReadyReplicas int32
+		allocatedReplicas           int32
+		expected                    expected
+	}{
+		"not enough Ready GameServers - do not scale down rest GameServerSet": {
+			activeStatusReadyReplicas:   10,
+			inactiveStatusReadyReplicas: 10,
+			expected: expected{
+				updated:              false,
+				inactiveSpecReplicas: 0,
+				replicas:             75,
+			},
+		},
+		"enough Ready GameServers - scale down rest GameServerSet to Allocated": {
+			activeStatusReadyReplicas:   70,
+			inactiveStatusReadyReplicas: 5,
+			allocatedReplicas:           5,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 5,
+				replicas:             70,
+			},
+		},
+		"enough Ready GameServers - scale down rest GameServerSet to 0": {
+			activeStatusReadyReplicas:   70,
+			inactiveStatusReadyReplicas: 10,
+			allocatedReplicas:           0,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 0,
+				replicas:             75,
+			},
+		},
+		"scale down rest GameServerSet to > 0": {
+			// 75 - 19 = 56 is minimum number of gameservers
+			// scaling 58 - 56 = -2 gameservers
+			// initial 10 - 2 = 8
+			activeStatusReadyReplicas:   50,
+			inactiveStatusReadyReplicas: 8,
+			allocatedReplicas:           0,
+			expected: expected{
+				updated:              true,
+				inactiveSpecReplicas: 8,
+				replicas:             75,
+			},
+		},
+	}
+
+	for k, v := range fixtures {
+		t.Run(k, func(t *testing.T) {
+			c, m := newFakeController()
+
+			f := defaultFixture()
+			f.Spec.Replicas = 75
+			f.Status.ReadyReplicas = v.activeStatusReadyReplicas + v.inactiveStatusReadyReplicas
+
+			active := f.GameServerSet()
+			active.ObjectMeta.Name = "active"
+			active.Spec.Replicas = 75
+			active.Status.Replicas = 75
+			active.Status.ReadyReplicas = v.activeStatusReadyReplicas
+
+			inactive := f.GameServerSet()
+			inactive.ObjectMeta.Name = "inactive"
+			inactive.Spec.Replicas = 10
+			inactive.Status.Replicas = 10
+			inactive.Status.ReadyReplicas = v.inactiveStatusReadyReplicas
+			inactive.Status.AllocatedReplicas = v.allocatedReplicas
+			updated := false
+			// triggered inside rollingUpdateRest
+			m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+				updated = true
+				ua := action.(k8stesting.UpdateAction)
+				gsSet := ua.GetObject().(*agonesv1.GameServerSet)
+				assert.Equal(t, inactive.ObjectMeta.Name, gsSet.ObjectMeta.Name)
+				assert.Equal(t, v.expected.inactiveSpecReplicas, gsSet.Spec.Replicas)
+
+				return true, gsSet, nil
+			})
+
+			replicas, err := c.rollingUpdateDeployment(f, active, []*agonesv1.GameServerSet{inactive})
+			require.NoError(t, err, "no error")
+
+			assert.Equal(t, v.expected.replicas, replicas)
+			assert.Equal(t, v.expected.updated, updated)
+			if updated {
+				agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingGameServerSet")
+			} else {
+				agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+			}
+		})
+	}
+
+}
+
 func TestControllerRollingUpdateDeployment(t *testing.T) {
 	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=false"))
 
 	type expected struct {
 		inactiveSpecReplicas int32
@@ -1011,6 +1131,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 		fleetSpecReplicas                int32
 		activeSpecReplicas               int32
 		activeStatusReplicas             int32
+		readyReplicas                    int32
 		inactiveSpecReplicas             int32
 		inactiveStatusReplicas           int32
 		inactiveStatusAllocationReplicas int32
@@ -1018,7 +1139,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 		nilMaxUnavailable                bool
 		expected                         expected
 	}{
-		"nil MaxUnavailable, err excpected": {
+		"nil MaxUnavailable, err expected": {
 			fleetSpecReplicas:      100,
 			activeSpecReplicas:     0,
 			activeStatusReplicas:   0,
@@ -1026,10 +1147,10 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusReplicas: 100,
 			nilMaxUnavailable:      true,
 			expected: expected{
-				err: "error calculating scaling gameserverset: fleet-1: nil value for IntOrString",
+				err: "error parsing MaxUnavailable value: fleet-1: nil value for IntOrString",
 			},
 		},
-		"nil MaxSurge, err excpected": {
+		"nil MaxSurge, err expected": {
 			fleetSpecReplicas:      100,
 			activeSpecReplicas:     0,
 			activeStatusReplicas:   0,
@@ -1037,7 +1158,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusReplicas: 100,
 			nilMaxSurge:            true,
 			expected: expected{
-				err: "error calculating scaling gameserverset: fleet-1: nil value for IntOrString",
+				err: "error parsing MaxSurge value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"full inactive, empty inactive": {
@@ -1128,6 +1249,10 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			f.Spec.Strategy.RollingUpdate.MaxUnavailable = &mu
 			f.Spec.Replicas = v.fleetSpecReplicas
 
+			// Inactive GameServerSet is downscaled second time only after
+			// ReadyReplicas has raised.
+			f.Status.ReadyReplicas = v.fleetSpecReplicas
+
 			if v.nilMaxSurge {
 				f.Spec.Strategy.RollingUpdate.MaxSurge = nil
 			} else {
@@ -1144,9 +1269,11 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			active.ObjectMeta.Name = "active"
 			active.Spec.Replicas = v.activeSpecReplicas
 			active.Status.Replicas = v.activeStatusReplicas
+			active.Status.ReadyReplicas = v.activeStatusReplicas
 
 			inactive := f.GameServerSet()
 			inactive.ObjectMeta.Name = "inactive"
+			inactive.Status.ReadyReplicas = v.inactiveStatusReplicas
 			inactive.Spec.Replicas = v.inactiveSpecReplicas
 			inactive.Status.Replicas = v.inactiveStatusReplicas
 			inactive.Status.AllocatedReplicas = v.inactiveStatusAllocationReplicas

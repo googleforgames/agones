@@ -71,6 +71,9 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
+	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
+
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
 	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
 	// SdkServerLogLevelDebug will cause the SDK server to output all messages including debug messages.
@@ -198,7 +201,7 @@ type GameServerPort struct {
 	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
-	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
+	// Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 }
 
