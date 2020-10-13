@@ -349,7 +349,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			select {
 			case <-ctx.Done():
-				return status.Errorf(codes.ResourceExhausted, "remote allocation retry timeout exceeded")
+				return status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
 			default:
 			}
 			endpoint := addPort(ip)
