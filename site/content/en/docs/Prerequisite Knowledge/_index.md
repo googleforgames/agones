@@ -48,21 +48,10 @@ areas before getting started with Agones:
 
 ### Resources
 
-* [You should totally read this comic, and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
+* [You should totally read this comic and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
 * [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
 * [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
 * [Kubernetes concepts, explained](https://kubernetes.io/docs/concepts/)
-
-## Game Engine
-
-If you are building a multiplayer game, having some knowledge of a game engine is a requirement. There are multiple
-possible solutions, but the engines that have out of the box SDK's for Agones are:
-
-* [Unity](https://unity.com/)
-* [Unreal](https://www.unrealengine.com/)
-
-While you can integrate other engines with Agones, if you are new to developing on a game engine, you may want to
-start with the above.
 
 ## Dedicated Game Servers
 
@@ -75,3 +64,17 @@ Agones:
 * [Dedicated Game Servers, Drawn Badly (video)](https://www.youtube.com/watch?v=Nl_FIGFtYdc)
 * [What Every Programmer Needs To Know About Game Networking](https://gafferongames.com/post/what_every_programmer_needs_to_know_about_game_networking/)
 * [Game Server (wikipedia)](https://en.wikipedia.org/wiki/Game_server)
+* {{< ghlink href="examples/simple-game-server" >}}Example simple gameserver that responds to UDP and/or
+ TCP commands{{< /ghlink >}}
+
+## Game Engine
+
+If you are building a multiplayer game, you will eventually need to understand how your
+[game engine](https://en.wikipedia.org/wiki/Game_engine) will integrate with Agones.
+There are multiple possible solutions, but the engines that have out of the box SDK's for Agones are:
+
+* [Unity](https://unity.com/)
+* [Unreal](https://www.unrealengine.com/)
+
+While you can integrate other engines with Agones, if you are new to developing on a game engine, you may want to
+start with the above.

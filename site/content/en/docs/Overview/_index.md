@@ -54,7 +54,7 @@ Participation in this project comes under the {{< ghlink href="code-of-conduct.m
 
 ## What Next?
 - Review our [Prerequisite Knowledge]({{% ref "/docs/Prerequisite Knowledge/_index.md" %}}). Especially if the above
-  sounds fantastic, but you aren't yet familiar with technology like Kubernetes, or terms such as "Game Servers".
+  sounds fantastic, but you aren't yet familiar with technology like Kubernetes or terms such as "Game Servers".
 - Have a look at our [installation guides]({{< ref "/docs/Installation/_index.md" >}}), for setting up a Kubernetes cluster
   and installing Agones on it.
 - Go through our [Quickstart Guides]({{< ref "/docs/Getting Started/_index.md" >}}) to take you through setting up a simple game server on Agones.
