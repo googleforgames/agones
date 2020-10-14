@@ -21,7 +21,7 @@ or {{< ghlink href="sdks/unreal" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Prerequisite Knowledge
 
-[Unreal](https://www.unrealengine.com/) is a [game engine]((https://en.wikipedia.org/wiki/Game_engine)) that is used by anyone from hobbiests all the way thought to huge AAA Game Stuidos.
+[Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbiests all the way thought to huge AAA Game Stuidos.
 
 With this in mind there is a vast amount to learn to run a production game using Unreal, even before you get to learning how it integrates with Agones. If you want to kick the tires with a starter project you will probably be fine with one of the starter projects out of the box.
 
