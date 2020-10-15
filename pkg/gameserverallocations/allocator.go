@@ -62,6 +62,7 @@ var (
 	ErrNoGameServerReady = errors.New("Could not find a Ready GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
+	ErrTotalTimeoutExceeded          = status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
 )
 
 const (
@@ -349,7 +350,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 		for i, ip := range connectionInfo.AllocationEndpoints {
 			select {
 			case <-ctx.Done():
-				return status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
+				return ErrTotalTimeoutExceeded
 			default:
 			}
 			endpoint := addPort(ip)
@@ -577,6 +578,8 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 		case err == nil:
 			return true, nil
 		case err == ErrNoGameServerReady:
+			return true, err
+		case err == ErrTotalTimeoutExceeded:
 			return true, err
 		default:
 			lastConflictErr = err

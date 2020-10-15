@@ -1159,7 +1159,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		}
 	})
 	t.Run("No allocations called after total timeout", func(t *testing.T) {
-		start := time.Now()
 		c, m := newFakeControllerWithTimeout(10*time.Second, 0*time.Second)
 		fleetName := addReactorForGameServer(&m)
 
@@ -1225,8 +1224,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		}
 
 		_, err = executeAllocation(gsa, c)
-		totalTime := time.Since(start)
-		fmt.Printf("Total time is %v\n", totalTime)
 		assert.Error(t, err)
 		st, ok := status.FromError(err)
 		assert.True(t, ok)
