@@ -18,6 +18,10 @@ variable "chart" {
   default = "agones"
 }
 
+variable "force_update" {
+  default = "true"
+}
+
 variable "agones_version" {
   default = ""
 }
