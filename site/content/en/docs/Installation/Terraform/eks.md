@@ -42,6 +42,9 @@ Configurable parameters:
 - gameserver_minPort - the lower bound of the port range which gameservers will listen on (default is "7000")
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
+{{% feature publishVersion="1.10.0" %}}
+- force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
+{{% /feature %}}
 
 Now you can create an EKS cluster and deploy Agones on EKS:
 ```

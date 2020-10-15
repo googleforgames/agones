@@ -29,7 +29,7 @@ provider "helm" {
 resource "helm_release" "agones" {
   name         = "agones"
   repository   = "https://agones.dev/chart/stable"
-  force_update = "true"
+  force_update = var.force_update
   chart        = var.chart
   timeout      = 420
   version      = var.agones_version
