@@ -62,6 +62,7 @@ var (
 	ErrNoGameServerReady = errors.New("Could not find a Ready GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
+	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
 	ErrTotalTimeoutExceeded          = status.Errorf(codes.DeadlineExceeded, "remote allocation retry timeout exceeded")
 )
 
