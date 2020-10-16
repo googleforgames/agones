@@ -19,7 +19,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
 or {{< ghlink href="sdks/unreal" >}}directly from GitHub{{< /ghlink >}}.
 
-## Prerequisite Knowledge
+## Resources
 
 [Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbiests all the way through to huge AAA Game Stuidos.
 
@@ -30,6 +30,8 @@ However as your Unreal/Agones project gets more advanced you will want to unders
 A few helpful links for Unreal:
 
 - [UE4 Documentation Site](https://docs.unrealengine.com/en-US/index.html)
+- [UE4 Dedicated Servers](https://docs.unrealengine.com/en-US/Gameplay/Networking/HowTo/DedicatedServers/index.html)
+  - useful guide to getting started with dedicated servers in Unreal
 - [UE4 Game Flow](https://docs.unrealengine.com/en-US/Gameplay/Framework/GameFlow/index.html)
 - [UE4 Game Mode](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html)
   - useful for hooking up calls to Agones
