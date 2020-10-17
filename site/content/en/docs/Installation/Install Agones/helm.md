@@ -186,7 +186,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
-| `agones.controller.annotations`                     | Controller [annotations][annotations] settings for pod assignment                               | `{}`                   |
 | `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `100`                  |
 | `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `400`                  |
 | `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `500`                  |
@@ -227,7 +226,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
-| `agones.allocator.annotations`                      | Allocator [annotations][annotations] settings for pod assignment                                | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
@@ -238,7 +236,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |             
+| `agones.controller.annotations`                     | Controller [annotations][annotations] settings for pod assignment                               | `{}`                   |
+| `agones.allocator.annotations`                      | Allocator [annotations][annotations] settings for pod assignment                                | `{}`                   |
+| `agones.ping.annotations`                           | Ping [annotations][annotations] settings for pod assignment                                     | `{}`                   |
+| `agones.ping.http.annotations`                      | [Annotations](annotations) for ping http service                                                | `{}`                   |
+| `agones.ping.udp.annotations`                       | [Annotations][annotations] for ping udp service                                                 | `{}`                   |
+|                                                     |                                                                                                 |                        |
 
 {{% /feature %}}
 
