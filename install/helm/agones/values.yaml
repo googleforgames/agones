@@ -70,6 +70,7 @@ agones:
     install: true
     resources: {}
     nodeSelector: {}
+    annotations: {}
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
