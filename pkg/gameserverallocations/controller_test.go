@@ -1239,10 +1239,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if calls == 0 {
-				calls += 1
+				calls++
 				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation call timeout")
 			}
-			calls += 1
+			calls++
 			return &pb.AllocationResponse{}, nil
 		}
 
