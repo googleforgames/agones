@@ -54,6 +54,8 @@ const (
 	defaultNs = "default"
 	n1        = "node1"
 	n2        = "node2"
+
+	unhealthyEndpoint = "unhealthy_endpoint:443"
 )
 
 func TestControllerAllocator(t *testing.T) {
@@ -1084,7 +1086,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		unhealthyEndpoint := "unhealthy_endpoint:443"
 		healthyEndpoint := "healthy_endpoint:443"
 
 		expectedGSName := "mocked"
@@ -1162,8 +1163,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		c, m := newFakeControllerWithTimeout(10*time.Second, 0*time.Second)
 		fleetName := addReactorForGameServer(&m)
 
-		unhealthyEndpoint := "unhealthy_endpoint:443"
-
 		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			calls++
@@ -1233,8 +1232,6 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 	t.Run("No allocations called after total timeout", func(t *testing.T) {
 		c, m := newFakeControllerWithTimeout(10*time.Second, 10*time.Second)
 		fleetName := addReactorForGameServer(&m)
-
-		unhealthyEndpoint := "unhealthy_endpoint:443"
 
 		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
