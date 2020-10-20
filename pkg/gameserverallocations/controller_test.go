@@ -1229,17 +1229,17 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		assert.Equal(t, st.Code(), codes.DeadlineExceeded)
 		assert.Equal(t, 0, calls)
 	})
-	t.Run("No allocations called after total timeout", func(t *testing.T) {
-		c, m := newFakeControllerWithTimeout(10*time.Second, 10*time.Second)
+	t.Run("First allocation fails and second succeeds on the same server", func(t *testing.T) {
+		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
+		// Mock server to return DeadlineExceeded on the first call and success on subsequent ones
 		calls := 0
 		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
-			if calls == 0 {
-				calls++
+			calls++
+			if calls == 1 {
 				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation call timeout")
 			}
-			calls++
 			return &pb.AllocationResponse{}, nil
 		}
 

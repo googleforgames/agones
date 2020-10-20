@@ -62,6 +62,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(stackdriverLabels, "")
 	viper.SetDefault(mTLSDisabledFlag, false)
 	viper.SetDefault(tlsDisabledFlag, false)
+	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
+	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
