@@ -447,10 +447,10 @@ setup-prometheus: PVC ?= true
 setup-prometheus: PV_SIZE ?= 64Gi
 setup-prometheus: SCRAPE_INTERVAL=30s
 setup-prometheus:
-	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
-	$(DOCKER_RUN) helm upgrade prom stable/prometheus \
-		--install --wait --namespace metrics --create-namespace \
+	$(DOCKER_RUN) helm upgrade prom prometheus-community/prometheus --install --wait --version 11.16.2 \
+ 		--namespace metrics --create-namespace \
 		--set server.global.scrape_interval=$(SCRAPE_INTERVAL),server.persistentVolume.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
 		$(HELM_ARGS) -f $(mount_path)/build/prometheus.yaml
 
@@ -464,14 +464,13 @@ setup-grafana: PVC ?= true
 setup-grafana: PV_SIZE ?= 64Gi
 setup-grafana: PASSWORD ?= admin
 setup-grafana:
-	-$(DOCKER_RUN) kubectl create namespace metrics
-	$(DOCKER_RUN) helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+	$(DOCKER_RUN) helm repo add grafana https://grafana.github.io/helm-charts
 	$(DOCKER_RUN) helm repo update
 	$(DOCKER_RUN) kubectl apply -f $(mount_path)/build/grafana/
-	$(DOCKER_RUN) helm upgrade grafana stable/grafana \
-		--install --wait --namespace metrics \
+	$(DOCKER_RUN) helm upgrade grafana grafana/grafana --install --wait --version=5.7.10 \
+		--namespace metrics --create-namespace \
 		--set persistence.enabled=$(PVC),server.persistentVolume.size=$(PV_SIZE) \
-		--set adminPassword=$(PASSWORD) -f $(mount_path)/build/grafana.yaml
+		--set adminPassword=$(PASSWORD) $(HELM_ARGS) -f $(mount_path)/build/grafana.yaml
 
 uninstall-grafana: $(ensure-build-image)
 	$(DOCKER_RUN) helm uninstall grafana --namespace=metrics
