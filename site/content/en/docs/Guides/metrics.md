@@ -125,7 +125,10 @@ Prometheus is an open source monitoring solution, we will use it to store Agones
 Let's install Prometheus using the [helm stable](https://github.com/helm/charts/tree/master/stable/prometheus) repository.
 
 ```bash
-helm upgrade --install --wait prom stable/prometheus --namespace metrics \
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+helm upgrade --install --wait prom prometheus-community/prometheus --version 11.16.2 --namespace metrics \
     --set server.global.scrape_interval=30s \
     --set server.persistentVolume.enabled=true \
     --set server.persistentVolume.size=64Gi \
@@ -191,7 +194,10 @@ kubectl apply -f ./build/grafana/
 Now we can install [grafana chart](https://github.com/helm/charts/tree/master/stable/grafana) from stable repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash
-helm install --wait --name grafana stable/grafana --version=5.0.13 --namespace metrics \
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+
+helm upgrade --install --wait grafana grafana/grafana --version=5.7.10 --namespace metrics \
   --set adminPassword=<your-admin-password> -f ./build/grafana.yaml
 ```
 
