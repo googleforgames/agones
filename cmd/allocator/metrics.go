@@ -16,6 +16,7 @@ package main
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"agones.dev/agones/pkg/metrics"
 	"agones.dev/agones/pkg/util/runtime"
@@ -28,12 +29,14 @@ import (
 )
 
 const (
-	enableStackdriverMetricsFlag = "stackdriver-exporter"
-	enablePrometheusMetricsFlag  = "prometheus-exporter"
-	projectIDFlag                = "gcp-project-id"
-	stackdriverLabels            = "stackdriver-labels"
-	mTLSDisabledFlag             = "disable-mtls"
-	tlsDisabledFlag              = "disable-tls"
+	enableStackdriverMetricsFlag     = "stackdriver-exporter"
+	enablePrometheusMetricsFlag      = "prometheus-exporter"
+	projectIDFlag                    = "gcp-project-id"
+	stackdriverLabels                = "stackdriver-labels"
+	mTLSDisabledFlag                 = "disable-mtls"
+	tlsDisabledFlag                  = "disable-tls"
+	remoteAllocationTimeoutFlag      = "remote-allocation-timeout"
+	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
 )
 
 func init() {
@@ -41,12 +44,14 @@ func init() {
 }
 
 type config struct {
-	TLSDisabled       bool
-	MTLSDisabled      bool
-	PrometheusMetrics bool
-	Stackdriver       bool
-	GCPProjectID      string
-	StackdriverLabels string
+	TLSDisabled                  bool
+	MTLSDisabled                 bool
+	PrometheusMetrics            bool
+	Stackdriver                  bool
+	GCPProjectID                 string
+	StackdriverLabels            string
+	totalRemoteAllocationTimeout time.Duration
+	remoteAllocationTimeout      time.Duration
 }
 
 func parseEnvFlags() config {
@@ -57,6 +62,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(stackdriverLabels, "")
 	viper.SetDefault(mTLSDisabledFlag, false)
 	viper.SetDefault(tlsDisabledFlag, false)
+	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
+	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
@@ -64,6 +71,8 @@ func parseEnvFlags() config {
 	pflag.String(stackdriverLabels, viper.GetString(stackdriverLabels), "A set of default labels to add to all stackdriver metrics generated. By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.")
 	pflag.Bool(mTLSDisabledFlag, viper.GetBool(mTLSDisabledFlag), "Flag to enable/disable mTLS in the allocator.")
 	pflag.Bool(tlsDisabledFlag, viper.GetBool(tlsDisabledFlag), "Flag to enable/disable TLS in the allocator.")
+	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
+	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -80,12 +89,14 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
-		PrometheusMetrics: viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:       viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:      viper.GetString(projectIDFlag),
-		StackdriverLabels: viper.GetString(stackdriverLabels),
-		MTLSDisabled:      viper.GetBool(mTLSDisabledFlag),
-		TLSDisabled:       viper.GetBool(tlsDisabledFlag),
+		PrometheusMetrics:            viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:                  viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:                 viper.GetString(projectIDFlag),
+		StackdriverLabels:            viper.GetString(stackdriverLabels),
+		MTLSDisabled:                 viper.GetBool(mTLSDisabledFlag),
+		TLSDisabled:                  viper.GetBool(tlsDisabledFlag),
+		remoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
+		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 	}
 }
 

@@ -236,7 +236,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                                                     |                                                                                                 |                        |             
+| `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
+| `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.       | `30s`                |
 
 {{% /feature %}}
 
