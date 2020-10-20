@@ -243,8 +243,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.annotations`                           | [Annotations][annotations] added to the Agones ping pods                                        | `{}`                   |
 |                                                     |                                                                                                 |                        |
 
-[annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -256,6 +254,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+[annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
