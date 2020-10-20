@@ -16,6 +16,7 @@ package gameserverallocations
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -53,6 +54,8 @@ const (
 	defaultNs = "default"
 	n1        = "node1"
 	n2        = "node2"
+
+	unhealthyEndpoint = "unhealthy_endpoint:443"
 )
 
 func TestControllerAllocator(t *testing.T) {
@@ -968,7 +971,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 			},
 		}
 
-		c.allocator.remoteAllocationCallback = func(e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, e string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			assert.Equal(t, endpoint+":443", e)
 			serverResponse := pb.AllocationResponse{
 				GameServerName: expectedGSName,
@@ -991,7 +994,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		retry := 0
 		endpoint := "z.z.z.z"
 
-		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if count == 0 {
 				serverResponse := pb.AllocationResponse{}
 				count++
@@ -1083,11 +1086,10 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		c, m := newFakeController()
 		fleetName := addReactorForGameServer(&m)
 
-		unhealthyEndpoint := "unhealthy_endpoint:443"
 		healthyEndpoint := "healthy_endpoint:443"
 
 		expectedGSName := "mocked"
-		c.allocator.remoteAllocationCallback = func(endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			if endpoint == unhealthyEndpoint {
 				return nil, errors.New("test error message")
 			}
@@ -1156,6 +1158,147 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 		if assert.NoError(t, err) {
 			assert.Equal(t, expectedGSName, result.Status.GameServerName)
 		}
+	})
+	t.Run("No allocations called after total timeout", func(t *testing.T) {
+		c, m := newFakeControllerWithTimeout(10*time.Second, 0*time.Second)
+		fleetName := addReactorForGameServer(&m)
+
+		calls := 0
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			calls++
+			return nil, errors.New("Error")
+		}
+
+		// Allocation policy reactor
+		secretName := clusterName + "secret"
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
+								AllocationEndpoints: []string{unhealthyEndpoint},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
+								ServerCA:            clientCert,
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: defaultNs,
+						},
+					},
+				},
+			}, nil
+		})
+
+		m.KubeClient.AddReactor("list", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				return true, getTestSecret(secretName, clientCert), nil
+			})
+
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		gsa := &allocationv1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "localcluster",
+			},
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
+					Enabled: true,
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		_, err = executeAllocation(gsa, c)
+		assert.Error(t, err)
+		st, ok := status.FromError(err)
+		assert.True(t, ok)
+		assert.Equal(t, st.Code(), codes.DeadlineExceeded)
+		assert.Equal(t, 0, calls)
+	})
+	t.Run("First allocation fails and second succeeds on the same server", func(t *testing.T) {
+		c, m := newFakeController()
+		fleetName := addReactorForGameServer(&m)
+
+		// Mock server to return DeadlineExceeded on the first call and success on subsequent ones
+		calls := 0
+		c.allocator.remoteAllocationCallback = func(ctx context.Context, endpoint string, dialOpt grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+			calls++
+			if calls == 1 {
+				return nil, status.Errorf(codes.DeadlineExceeded, "remote allocation call timeout")
+			}
+			return &pb.AllocationResponse{}, nil
+		}
+
+		// Allocation policy reactor
+		secretName := clusterName + "secret"
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
+								AllocationEndpoints: []string{unhealthyEndpoint},
+								ClusterName:         clusterName,
+								SecretName:          secretName,
+								ServerCA:            clientCert,
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Namespace: defaultNs,
+						},
+					},
+				},
+			}, nil
+		})
+
+		m.KubeClient.AddReactor("list", "secrets",
+			func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+				return true, getTestSecret(secretName, clientCert), nil
+			})
+
+		stop, cancel := agtesting.StartInformers(m, c.allocator.allocationPolicySynced, c.allocator.secretSynced, c.allocator.readyGameServerCache.gameServerSynced)
+		defer cancel()
+
+		// This call initializes the cache
+		err := c.allocator.readyGameServerCache.syncReadyGSServerCache()
+		assert.Nil(t, err)
+
+		err = c.allocator.readyGameServerCache.counter.Run(0, stop)
+		assert.Nil(t, err)
+
+		gsa := &allocationv1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "localcluster",
+			},
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
+					Enabled: true,
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}},
+			},
+		}
+
+		_, err = executeAllocation(gsa, c)
+		assert.NoError(t, err)
+		assert.Equal(t, 2, calls)
 	})
 }
 
@@ -1338,11 +1481,16 @@ func defaultFixtures(gsLen int) (*agonesv1.Fleet, []agonesv1.GameServer) {
 
 // newFakeController returns a controller, backed by the fake Clientset
 func newFakeController() (*Controller, agtesting.Mocks) {
+	return newFakeControllerWithTimeout(10*time.Second, 30*time.Second)
+}
+
+// newFakeController returns a controller, backed by the fake Clientset with custom allocation timeouts
+func newFakeControllerWithTimeout(remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) (*Controller, agtesting.Mocks) {
 	m := agtesting.NewMocks()
 	m.Mux = http.NewServeMux()
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
-	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory)
+	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, remoteAllocationTimeout, totalRemoteAllocationTimeout)
 	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder

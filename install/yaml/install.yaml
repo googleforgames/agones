@@ -1581,6 +1581,10 @@ spec:
           value: "false"
         - name: DISABLE_TLS
           value: "false"
+        - name: REMOTE_ALLOCATION_TIMEOUT
+          value: "10s"
+        - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
+          value: "30s"
         - name: POD_NAME
           valueFrom:
             fieldRef:

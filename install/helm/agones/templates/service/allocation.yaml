@@ -132,6 +132,10 @@ spec:
           value: {{ .Values.agones.allocator.disableMTLS | quote }}
         - name: DISABLE_TLS
           value: {{ .Values.agones.allocator.disableTLS | quote }}
+        - name: REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.remoteAllocationTimeout | quote }}
+        - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.totalRemoteAllocationTimeout | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:

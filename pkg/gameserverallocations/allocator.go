@@ -62,6 +62,8 @@ var (
 	ErrNoGameServerReady = errors.New("Could not find a Ready GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
+	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
+	ErrTotalTimeoutExceeded = status.Errorf(codes.DeadlineExceeded, "remote allocation total timeout exceeded")
 )
 
 const (
@@ -97,16 +99,18 @@ var remoteAllocationRetry = wait.Backoff{
 
 // Allocator handles game server allocation
 type Allocator struct {
-	baseLogger               *logrus.Entry
-	allocationPolicyLister   multiclusterlisterv1.GameServerAllocationPolicyLister
-	allocationPolicySynced   cache.InformerSynced
-	secretLister             corev1lister.SecretLister
-	secretSynced             cache.InformerSynced
-	recorder                 record.EventRecorder
-	pendingRequests          chan request
-	readyGameServerCache     *ReadyGameServerCache
-	topNGameServerCount      int
-	remoteAllocationCallback func(string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	baseLogger                   *logrus.Entry
+	allocationPolicyLister       multiclusterlisterv1.GameServerAllocationPolicyLister
+	allocationPolicySynced       cache.InformerSynced
+	secretLister                 corev1lister.SecretLister
+	secretSynced                 cache.InformerSynced
+	recorder                     record.EventRecorder
+	pendingRequests              chan request
+	readyGameServerCache         *ReadyGameServerCache
+	topNGameServerCount          int
+	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
+	remoteAllocationTimeout      time.Duration
+	totalRemoteAllocationTimeout time.Duration
 }
 
 // request is an async request for allocation
@@ -124,24 +128,28 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
-	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache) *Allocator {
+	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
 	ah := &Allocator{
-		pendingRequests:        make(chan request, maxBatchQueue),
-		allocationPolicyLister: policyInformer.Lister(),
-		allocationPolicySynced: policyInformer.Informer().HasSynced,
-		secretLister:           secretInformer.Lister(),
-		secretSynced:           secretInformer.Informer().HasSynced,
-		readyGameServerCache:   readyGameServerCache,
-		topNGameServerCount:    topNGameServerDefaultCount,
-		remoteAllocationCallback: func(endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
+		pendingRequests:              make(chan request, maxBatchQueue),
+		allocationPolicyLister:       policyInformer.Lister(),
+		allocationPolicySynced:       policyInformer.Informer().HasSynced,
+		secretLister:                 secretInformer.Lister(),
+		secretSynced:                 secretInformer.Informer().HasSynced,
+		readyGameServerCache:         readyGameServerCache,
+		topNGameServerCount:          topNGameServerDefaultCount,
+		remoteAllocationTimeout:      remoteAllocationTimeout,
+		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
+		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 			conn, err := grpc.Dial(endpoint, dialOpts)
 			if err != nil {
 				return nil, err
 			}
 			defer conn.Close() // nolint: errcheck
 
+			allocationCtx, cancel := context.WithTimeout(ctx, remoteAllocationTimeout)
+			defer cancel() // nolint: errcheck
 			grpcClient := pb.NewAllocationServiceClient(conn)
-			return grpcClient.Allocate(context.Background(), request)
+			return grpcClient.Allocate(allocationCtx, request)
 		},
 	}
 
@@ -336,13 +344,19 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 	request.MultiClusterSetting.Enabled = false
 	request.Namespace = connectionInfo.Namespace
 
+	ctx, cancel := context.WithTimeout(context.Background(), c.totalRemoteAllocationTimeout)
+	defer cancel() // nolint: errcheck
 	// Retry on remote call failures.
 	err = Retry(remoteAllocationRetry, func() error {
 		for i, ip := range connectionInfo.AllocationEndpoints {
+			select {
+			case <-ctx.Done():
+				return ErrTotalTimeoutExceeded
+			default:
+			}
 			endpoint := addPort(ip)
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
-
-			allocationResponse, err = c.remoteAllocationCallback(endpoint, dialOpts, request)
+			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
 			if err != nil {
 				c.baseLogger.Errorf("remote allocation failed with: %v", err)
 				// If there are multiple enpoints for the allocator connection and the current one is
@@ -356,6 +370,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 			}
 			break
 		}
+
 		return nil
 	})
 
@@ -564,6 +579,8 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 		case err == nil:
 			return true, nil
 		case err == ErrNoGameServerReady:
+			return true, err
+		case err == ErrTotalTimeoutExceeded:
 			return true, err
 		default:
 			lastConflictErr = err
