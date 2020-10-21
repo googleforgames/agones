@@ -37,6 +37,7 @@ agones:
   controller:
     resources: {}
     nodeSelector: {}
+    annotations: {}
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
@@ -69,6 +70,7 @@ agones:
     install: true
     resources: {}
     nodeSelector: {}
+    annotations: {}
     tolerations:
     - key: "agones.dev/agones-system"
       operator: "Equal"
@@ -106,6 +108,7 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    annotations: {}
     healthCheck:
       initialDelaySeconds: 3
       periodSeconds: 3
