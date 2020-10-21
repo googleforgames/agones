@@ -45,6 +45,9 @@ spec:
         prometheus.io/port: {{ .Values.agones.controller.http.port | quote }}
         prometheus.io/path: "/metrics"
 {{- end }}
+{{- if .Values.agones.controller.annotations }}
+{{- toYaml .Values.agones.controller.annotations | nindent 8 }}
+{{- end }}
       labels:
         agones.dev/role: controller
         app: {{ template "agones.name" . }}
