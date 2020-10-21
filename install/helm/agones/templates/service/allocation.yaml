@@ -86,6 +86,9 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
 {{- end }}
+{{- if .Values.agones.allocator.annotations }}
+{{- toYaml .Values.agones.allocator.annotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.agones.allocator.affinity }}
       affinity:

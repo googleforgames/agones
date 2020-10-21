@@ -39,6 +39,10 @@ spec:
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
+{{- if .Values.agones.ping.annotations }}
+      annotations:
+{{- toYaml .Values.agones.ping.annotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.agones.ping.affinity }}
       affinity:

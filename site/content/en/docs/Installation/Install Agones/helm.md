@@ -200,12 +200,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.http.serviceType`                      | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
 | `agones.ping.http.loadBalancerIP`                   | The [Load Balancer IP][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.               | \`\`           |
 | `agones.ping.http.loadBalancerSourceRanges`         | The [Load Balancer SourceRanges][loadBalancer] of the HTTP Service load balancer. Only works if the Kubernetes provider supports this option.     | `[]`         |
+| `agones.ping.http.annotations`                      | [Annotations][annotations] added to the Agones ping http service                                | `{}`                   |
 | `agones.ping.udp.expose`                            | Expose the udp ping service via a Service                                                       | `true`                 |
 | `agones.ping.udp.rateLimit`                         | Number of UDP packets the ping service handles per instance, per second, per sender             | `20`                   |
 | `agones.ping.udp.port`                              | The port to expose on the service                                                               | `80`                   |
 | `agones.ping.udp.serviceType`                       | The [Service Type][service] of the UDP Service                                                  | `LoadBalancer`         |
 | `agones.ping.udp.loadBalancerIP`                    | The [Load Balancer IP][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.                | \`\`           |
 | `agones.ping.udp.loadBalancerSourceRanges`          | The [Load Balancer SourceRanges][loadBalancer] of the UDP Service load balancer. Only works if the Kubernetes provider supports this option.      | `[]`         |
+| `agones.ping.udp.annotations`                       | [Annotations][annotations] added to the Agones ping udp service                                 | `{}`                   |
 | `agones.ping.healthCheck.initialDelaySeconds`       | Initial delay before performing the first probe (in seconds)                                    | `3`                    |
 | `agones.ping.healthCheck.periodSeconds`             | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.ping.healthCheck.failureThreshold`          | Number of times before giving up (in seconds)                                                   | `3`                    |
@@ -238,7 +240,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
 | `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.       | `30s`                |
-
+| `agones.controller.annotations`                     | [Annotations][annotations] added to the Agones controller pods                                  | `{}`                   |
+| `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
+| `agones.ping.annotations`                           | [Annotations][annotations] added to the Agones ping pods                                        | `{}`                   |
+|                                                     |                                                                                                 |                        |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -250,6 +255,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 [service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
+[annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
