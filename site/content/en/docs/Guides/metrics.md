@@ -135,12 +135,6 @@ helm upgrade --install --wait prom prometheus-community/prometheus --version 11.
     -f ./build/prometheus.yaml
 ```
 
-{{% alert title="Note" color="info"%}}
-You can also run our {{< ghlink href="/build/Makefile" branch="master" branch="master" >}}Makefile{{< /ghlink >}} target `make setup-prometheus`
-or `make kind-setup-prometheus` and `make minikube-setup-prometheus` 
-for {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}} and {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="master" >}}Minikube{{< /ghlink >}}.
-{{% /alert %}}
-
 For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers
 are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="master" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
 tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones.dev/agones-metrics=true` if available.
@@ -165,11 +159,6 @@ Finally to access Prometheus metrics, rules and alerts explorer use
 ```bash
 kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
 ```
-
-{{< alert title="Note" color="info">}}
- Again you can use our Makefile {{< ghlink href="/build/README.md#prometheus-portforward" branch="master" >}}`make prometheus-portforward`{{< /ghlink >}}.
-  (For {{< ghlink href="/build/README.md#running-a-test-kind-cluster" branch="master" >}}Kind{{< /ghlink >}} and {{< ghlink href="/build/README.md#running-a-test-minikube-cluster" branch="master" >}}Minikube{{< /ghlink >}} use their specific targets `make kind-prometheus-portforward` and `make minikube-prometheus-portforward`)
-{{< /alert >}}
 
 Now you can access the prometheus dashboard [http://localhost:9090](http://localhost:9090).
 
@@ -203,10 +192,6 @@ helm upgrade --install --wait grafana grafana/grafana --version=5.7.10 --namespa
 
 This will install Grafana with our prepopulated dashboards and prometheus datasource [previously installed](#prometheus-installation)
 
-{{< alert title="Note" color="info">}}
-You can also use our {{< ghlink href="/build/Makefile" branch="master" >}}Makefile{{< /ghlink >}} targets (`setup-grafana`, `minikube-setup-grafana` and `kind-setup-grafana`).
-{{< /alert >}}
-
 Finally to access dashboards run
 
 ```bash
@@ -214,10 +199,6 @@ kubectl port-forward deployments/grafana 3000 -n metrics
 ```
 
 Open a web browser to [http://localhost:3000](http://localhost:3000), you should see Agones [dashboards](#grafana-dashboards) after login as admin.
-
-{{< alert title="Note" color="info">}}
-You can also use our `Makefile` targets `make grafana-portforward`, `make kind-grafana-portforward` and `make minikube-grafana-portforward`.
-{{< /alert >}}
 
 ### Stackdriver installation
 
