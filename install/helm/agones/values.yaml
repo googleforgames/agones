@@ -108,6 +108,8 @@ agones:
       timeoutSeconds: 1
   allocator:
     install: true
+    apiServerQPS: 400
+    apiServerQPSBurst: 500
     annotations: {}
     healthCheck:
       initialDelaySeconds: 3
