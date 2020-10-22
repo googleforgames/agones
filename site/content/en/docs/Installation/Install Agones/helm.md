@@ -8,14 +8,22 @@ description: >
 
 ## Prerequisites
 
+{{% feature expiryVersion="1.10.0" %}}
 - [Helm](https://helm.sh/) package manager 2.10.0+, or 3.2.3+
 - [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
+{{% /feature %}}
+{{% feature publishVersion="1.10.0" %}}
+- [Helm](https://helm.sh/) package manager 3.2.3+
+- [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
+{{% /feature %}}
 
+{{% feature expiryVersion="1.10.0" %}}
 {{% alert title="Note" color="info"%}}
 We are in the process of shifting our development platform to run on [Helm 3](https://helm.sh/blog/helm-3-released/),
 and recommend upgrading your Helm installs,
 as it will soon become the most tested platform.
 {{% /alert %}}
+{{% /feature %}}
 
 ## Helm 3
 
@@ -71,6 +79,7 @@ To uninstall/delete the `my-release` deployment:
 $ helm uninstall my-release --namespace=agones-system
 ```
 
+{{% feature expiryVersion="1.10.0" %}}
 ## Helm 2
 
 ### Installing the Chart
@@ -130,6 +139,7 @@ $ helm delete my-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
+{{% /feature %}}
 
 ## RBAC
 
