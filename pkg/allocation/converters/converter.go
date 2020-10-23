@@ -171,6 +171,10 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.Gam
 	}
 
 	out := &allocationv1.GameServerAllocation{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       allocationv1.SchemeGroupVersion.Group,
+			APIVersion: allocationv1.SchemeGroupVersion.Version,
+		},
 		Status: allocationv1.GameServerAllocationStatus{
 			State:          allocationv1.GameServerAllocationAllocated,
 			GameServerName: in.GameServerName,
