@@ -72,7 +72,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close()
 
 	grpcClient := pb.NewAllocationServiceClient(conn)
 	fmt.Printf("started: %v\n", time.Now())
@@ -118,4 +117,3 @@ func createRemoteClusterDialOption(clientCert, clientKey, caCert []byte) (grpc.D
 
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
-

@@ -4,48 +4,27 @@ This load tests aims to validate performance of the gRPC allocation service.
 
 ## Kubernetes Cluster Setup
 
-For the load test you can follow the regular Kubernetes and Agones setup. In order to test the the allocation performance in isolation, we let the Agones to actuate all
-the game servers beefor starting the test.
+For the load test you can follow the regular Kubernetes and Agones setup. In order to test the allocation performance in isolation, we let Agones to get all
+the game servers to Ready state before starting a test.
 Here are the few important things:
-- Install Kubernetes in a region not zone to avoid being impacted by the rollouts
-- Consider using multiple cpu VMs for the agones-system node pool. We used n1-4 type VMs 
-- In the default-node pool (where the Game Server pods are created), make sure there are enough nodes available so Agones can actuate the game servers. We set the clustre count to 25 pre zonee (total of 75 per region)
-
-## Configuring the Allocator Service
-
-The allocator service uses gRPC. In order to be able to call the service, TLS and optionally mTLS has to be setup.
-For more information visit [agones-allocator]({{< relref "https://agones.dev/site/docs/advanced/allocator-service/">}}).
+- If you are running in GCP, use a regional cluster instead of a zonal cluster to ensure high availability of the cluster control plane
+- Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `n1-standard-4'
+- In the default node pool (where the Game Server pods are created), make sure there are enough nodes available for all game servers to move into the ready state. We set the cluster count to 25 per zone (total of 75 per region)
 
 ## Fleet Setting
 
-We used the following fleet configuration during out testing. It creates 4000 simple-udp game servers. 
-Also uaing the automaticShutdownDelayMin parameter to 10, simple-udp game servers shutdown after 10 minutes.
-This helps to easily re-run the test without requiring to delete the game servers. 
+We used the sample [fleet configuration](https://github.com/googleforgames/agones/blob/master/examples/fleet.yaml) with some minor modifications. We updated the `replicas` to 4000. 
+Also w set the `automaticShutdownDelayMin` parameter to 10 so simple-udp game servers shutdown after 10 minutes (see below).
+This helps to easily re-run the test without having to delete the game servers and allows to run tests continously. 
 
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
-metadata:
-  name: fleet-example
-spec:
-  # the number of GameServers to keep Ready or Allocated in this Fleet
+ ...
+ spec:
+  # the number of GameServers to keep Ready 
   replicas: 4000
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-  template:
-    metadata:
-      labels:
-        foo: bar
-    # GameServer specification
-    spec:
-        health: {}
-        ports:
-        - containerPort: 7654
-          name: default
-        sdkServer: {}
+  ...
         # The GameServer's Pod template
         template:
             spec:
@@ -55,19 +34,13 @@ spec:
                   - -automaticShutdownDelayMin=10
                   image: gcr.io/agones-images/udp-server:0.21
                   name: simple-udp
-                  resources:
-                  limits:
-                    cpu: 20m
-                    memory: 32Mi
-                  requests:
-                    cpu: 20m
-                    memory: 32Mi
+  ...
 ```
 
 ## Configuring the Allocator Service
 
-The allocator service uses gRPC. In order to be able to call the service, TLS and optionally mTLS has to be setup.
-For more information visit [agones-allocator]({{< relref "https://agones.dev/site/docs/advanced/allocator-service/">}}).
+The allocator service uses gRPC. In order to be able to call the service, TLS and mTLS has to be setup.
+For more information visit [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service).
 
 ## Running the test
 
@@ -83,9 +56,9 @@ TLS_CA_FILE=ca.crt     # Path to TLS CA file
 ```
 Once you update these values, you can run the run.sh script by providing two parameters: 
 - number of clients (to do parallel allocations)
-- numbre of allocations for client
+- number of allocations for client
 
-For making 4000 allocations call, you can provide 40 and 100
+For making 4000 allocations calls, you can provide 40 and 100
 
 ```
 ./run.sh 40 100
