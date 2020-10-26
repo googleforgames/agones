@@ -14,12 +14,12 @@
 
 #!/bin/bash
 # The number of times you want allocation test to be run
-TESTRUNSCOUNT=3
-NAMESPACE=default
-EXTERNAL_IP=<IP_ADRESSS_TO_THE_ALLOCATOR_SERVICES_LOAD_BALANCER>
-KEY_FILE=client.key
-CERT_FILE=client.crt
-TLS_CA_FILE=ca.crt
+TESTRUNSCOUNT=${TESTRUNSCOUNT:-3}
+NAMESPACE=${NAMESPACE:-default}
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=${KEY_FILE:-client.key}
+CERT_FILE=${CERT_FILE:-client.crt}
+TLS_CA_FILE=${TLS_CA_FILE:-ca.crt}
 
 counter=1
 while [ $counter -le $TESTRUNSCOUNT ]
