@@ -95,7 +95,7 @@ func main() {
 	}
 	wg.Wait()
 	fmt.Printf("finished: %v\n", time.Now())
-	conn.Close()
+	_ = conn.Close()
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with TLS configuration.
