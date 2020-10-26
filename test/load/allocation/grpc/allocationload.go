@@ -73,7 +73,6 @@ func main() {
 		panic(err)
 	}
 
-	grpcClient := pb.NewAllocationServiceClient(conn)
 	fmt.Printf("started: %v\n", time.Now())
 
 	var wg sync.WaitGroup
@@ -84,6 +83,7 @@ func main() {
 
 		go func(clientID int) {
 			defer wg.Done()
+			grpcClient := pb.NewAllocationServiceClient(conn)
 
 			for i := 0; i < *perClientAllocs; i++ {
 				_, err := grpcClient.Allocate(context.Background(), request)
@@ -95,6 +95,7 @@ func main() {
 	}
 	wg.Wait()
 	fmt.Printf("finished: %v\n", time.Now())
+	conn.Close()
 }
 
 // createRemoteClusterDialOption creates a grpc client dial option with TLS configuration.

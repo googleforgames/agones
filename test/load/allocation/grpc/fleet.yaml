@@ -15,7 +15,7 @@
 apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
-  name: load--test-fleet
+  name: load-test-fleet
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
   replicas: 4000
