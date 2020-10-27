@@ -60,8 +60,8 @@ type config struct {
 
 func parseEnvFlags() config {
 
-	viper.SetDefault(apiServerSustainedQPSFlag, 100)
-	viper.SetDefault(apiServerBurstQPSFlag, 200)
+	viper.SetDefault(apiServerSustainedQPSFlag, 400)
+	viper.SetDefault(apiServerBurstQPSFlag, 500)
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(projectIDFlag, "")
@@ -71,8 +71,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 
-	pflag.Int32(apiServerSustainedQPSFlag, 100, "Maximum sustained queries per second to send to the API server")
-	pflag.Int32(apiServerBurstQPSFlag, 200, "Maximum burst queries per second to send to the API server")
+	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
+	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
