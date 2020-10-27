@@ -299,6 +299,7 @@ install: ALLOCATOR_SERVICE_TYPE := "LoadBalancer"
 install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
 		helm upgrade --install --wait --namespace=agones-system \
@@ -311,7 +312,17 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.controller.logLevel=$(LOG_LEVEL) \
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
+		$(HELM_ARGS) \
 		agones $(mount_path)/install/helm/agones/
+
+update-allocation-certs: EXTERNAL_IP ?= $(shell $(DOCKER_RUN) kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+update-allocation-certs: NAMESPACE ?= default
+update-allocation-certs:
+	-mkdir -p $(agones_path)/build/allocation
+	$(MAKE) install HELM_ARGS="--set agones.allocator.http.loadBalancerIP=$(EXTERNAL_IP)"
+	$(DOCKER_RUN) bash -c 'kubectl get secret allocator-client.default -n $(NAMESPACE) -ojsonpath="{.data.tls\.crt}" | base64 -d > $(mount_path)/build/allocation/client.crt'
+	$(DOCKER_RUN) bash -c 'kubectl get secret allocator-client.default -n $(NAMESPACE) -ojsonpath="{.data.tls\.key}" | base64 -d > $(mount_path)/build/allocation/client.key'
+	$(DOCKER_RUN) bash -c 'kubectl get secret allocator-tls-ca -n agones-system -ojsonpath="{.data.tls-ca\.crt}" | base64 -d > $(mount_path)/build/allocation/ca.crt'
 
 uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \

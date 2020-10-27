@@ -30,6 +30,7 @@ terraform.tfvars
 terraform.tfstate*
 kubeconfig
 build/local-includes/*
+build/allocation
 !build/local-includes/README.md
 /release
 debug.test
