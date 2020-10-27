@@ -13,9 +13,15 @@
 # limitations under the License.
 
 #!/bin/bash
+
+NAMESPACE=${NAMESPACE:-default}
+# extract the required TLS and mTLS files
+kubectl get secret allocator-client.default -n ${NAMESPACE} -ojsonpath="{.data.tls\.crt}" | base64 -d > client.crt
+kubectl get secret allocator-client.default -n ${NAMESPACE} -ojsonpath="{.data.tls\.key}" | base64 -d > client.key
+kubectl get secret allocator-tls-ca -n agones-system -ojsonpath='{.data.tls-ca\.crt}' | base64 -d > ca.crt
+
 # The number of times you want allocation test to be run
 TESTRUNSCOUNT=${TESTRUNSCOUNT:-3}
-NAMESPACE=${NAMESPACE:-default}
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 KEY_FILE=${KEY_FILE:-client.key}
 CERT_FILE=${CERT_FILE:-client.crt}
