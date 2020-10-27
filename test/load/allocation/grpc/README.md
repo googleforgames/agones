@@ -44,24 +44,14 @@ For more information visit [Allocator Service](https://agones.dev/site/docs/adva
 
 ## Running the test
 
-You can use the provided runAllocation.sh file. Before you run, you need to update the values in runAllocation.sh
-
-```
-TESTRUNSCOUNT=3
-NAMESPACE=default      # Namescape of the fleet
-EXTERNAL_IP=<IP_ADRESSS_TO_THE_ALLOCATOR_SERVICES_LOAD_BALANCER>
-KEY_FILE=client.key    # Path to mTLS client key file 
-CERT_FILE=client.crt   # Path to mTLS client cert file
-TLS_CA_FILE=ca.crt     # Path to TLS CA file
-```
-Once you update these values, you can run the run.sh script by providing two parameters: 
+You can use the provided runAllocation.sh script by providing two parameters: 
 - number of clients (to do parallel allocations)
 - number of allocations for client
 
 For making 4000 allocations calls, you can provide 40 and 100
 
 ```
-./run.sh 40 100
+./runAllocation.sh 40 100
 ```
 
 Script will print out the start and end date/time:
