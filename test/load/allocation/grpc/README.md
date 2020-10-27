@@ -13,7 +13,7 @@ Here are the few important things:
 
 ## Fleet Setting
 
-We used the sample [fleet configuration](https://github.com/googleforgames/agones/blob/master/examples/fleet.yaml) with some minor modifications. We updated the `replicas` to 4000. 
+We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000. 
 Also w set the `automaticShutdownDelayMin` parameter to 10 so simple-udp game servers shutdown after 10 minutes (see below).
 This helps to easily re-run the test without having to delete the game servers and allows to run tests continously. 
 
@@ -67,4 +67,9 @@ started: 2020-10-22 22:16:47.322731849 -0700 PDT m=+0.002953843
 (failed(client=2,allocation=47): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-udp-mlljx-rxflv": the object has been modified; please apply your changes to the latest version and try again
 (failed(client=7,allocation=45): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-udp-mlljx-x4khw": the object has been modified; please apply your changes to the latest version and try again
 finished: 2020-10-22 22:17:18.822039094 -0700 PDT m=+31.502261092
+```
+
+You can use environment variables overwrite defaults. To run only a single run of tests, you can use:
+```
+TESTRUNSCOUNT=1 ./runAllocation.sh 40 10
 ```
