@@ -39,7 +39,7 @@ func main() {
 	namespace := flag.String("namespace", "default", "the game server kubernetes namespace")
 	multicluster := flag.Bool("multicluster", false, "set to true to enable the multi-cluster allocation")
 	numOfClients := flag.Int("numberofclients", 1, "number of clients to do allocations in parallel")
-	perClientAllocs := flag.Int("perclientallocations", 1, "numbere of allocations to be done per client")
+	perClientAllocs := flag.Int("perclientallocations", 1, "number of allocations to be done per client")
 
 	flag.Parse()
 
@@ -73,7 +73,7 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	// Allocate GS by numOfClients in parallel while the fleet is scaling down
+	// Allocate GS by numOfClients in parallel
 	for k := 0; k < *numOfClients; k++ {
 		wg.Add(1)
 

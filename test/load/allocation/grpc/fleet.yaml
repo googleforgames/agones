@@ -19,11 +19,6 @@ metadata:
 spec:
   # the number of GameServers to keep Ready or Allocated in this Fleet
   replicas: 4000
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
   template:
     metadata:
       labels:
@@ -34,7 +29,6 @@ spec:
         ports:
         - containerPort: 7654
           name: default
-        sdkServer: {}
         # The GameServer's Pod template
         template:
             spec:
@@ -45,10 +39,10 @@ spec:
                   image: gcr.io/agones-images/udp-server:0.21
                   name: simple-udp
                   resources:
-                  limits:
-                    cpu: 20m
-                    memory: 32Mi
-                  requests:
-                    cpu: 20m
-                    memory: 32Mi
+                    limits:
+                      cpu: 20m
+                      memory: 32Mi
+                    requests:
+                      cpu: 20m
+                      memory: 32Mi
 
