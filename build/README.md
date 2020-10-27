@@ -63,6 +63,7 @@ Table of Contents
      * [Google Cloud Platform](#google-cloud-platform)
         * [make gcloud-init](#make-gcloud-init)
         * [make gcloud-test-cluster](#make-gcloud-test-cluster)
+        * [make gcloud-test-cluster-allocation-certs](#gcloud-test-cluster-allocation-certs)
         * [make clean-gcloud-test-cluster](#make-clean-gcloud-test-cluster)
         * [make gcloud-auth-cluster](#make-gcloud-auth-cluster)
         * [make gcloud-auth-docker](#make-gcloud-auth-docker)
@@ -469,6 +470,12 @@ Installs the current development version of Agones into the Kubernetes cluster
 
 #### `make uninstall`
 Removes Agones from the Kubernetes cluster
+
+#### `make update-allocation-certs`
+Updates the Agones installation with the IP of the Allocation LoadBalancer, thereby creating a valid certificate
+for the Allocation gRPC endpoints.
+
+The certificates are downloaded from the test kubernetes cluster and stored in ./build/allocation
 
 #### `make test-e2e`
 Runs end-to-end tests on the previously installed version of Agones.
