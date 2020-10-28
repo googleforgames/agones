@@ -123,6 +123,10 @@ spec:
             path: /ready
             port: 8080
         env:
+        - name: API_SERVER_QPS
+          value: {{ .Values.agones.allocator.apiServerQPS | quote }}
+        - name: API_SERVER_QPS_BURST
+          value: {{ .Values.agones.allocator.apiServerQPSBurst | quote }}
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER

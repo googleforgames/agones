@@ -1569,6 +1569,10 @@ spec:
             path: /ready
             port: 8080
         env:
+        - name: API_SERVER_QPS
+          value: "400"
+        - name: API_SERVER_QPS_BURST
+          value: "500"
         - name: PROMETHEUS_EXPORTER
           value: "true"
         - name: STACKDRIVER_EXPORTER

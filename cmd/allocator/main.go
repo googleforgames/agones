@@ -76,7 +76,7 @@ func main() {
 	// http.DefaultServerMux is used for http connection, not for https
 	http.Handle("/", health)
 
-	kubeClient, agonesClient, err := getClients()
+	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
 		logger.WithError(err).Fatal("could not create clients")
 	}
@@ -312,12 +312,15 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 }
 
 // Set up our client which we will use to call the API
-func getClients() (*kubernetes.Clientset, *versioned.Clientset, error) {
+func getClients(ctlConfig config) (*kubernetes.Clientset, *versioned.Clientset, error) {
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, nil, errors.New("Could not create in cluster config")
 	}
+
+	config.QPS = float32(ctlConfig.APIServerSustainedQPS)
+	config.Burst = ctlConfig.APIServerBurstQPS
 
 	// Access to the Agones resources through the Agones Clientset
 	kubeClient, err := kubernetes.NewForConfig(config)

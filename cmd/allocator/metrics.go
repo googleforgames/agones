@@ -37,6 +37,8 @@ const (
 	tlsDisabledFlag                  = "disable-tls"
 	remoteAllocationTimeoutFlag      = "remote-allocation-timeout"
 	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
+	apiServerSustainedQPSFlag        = "api-server-qps"
+	apiServerBurstQPSFlag            = "api-server-qps-burst"
 )
 
 func init() {
@@ -44,6 +46,8 @@ func init() {
 }
 
 type config struct {
+	APIServerSustainedQPS        int
+	APIServerBurstQPS            int
 	TLSDisabled                  bool
 	MTLSDisabled                 bool
 	PrometheusMetrics            bool
@@ -56,6 +60,8 @@ type config struct {
 
 func parseEnvFlags() config {
 
+	viper.SetDefault(apiServerSustainedQPSFlag, 400)
+	viper.SetDefault(apiServerBurstQPSFlag, 500)
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(projectIDFlag, "")
@@ -65,6 +71,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 
+	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
+	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
 	pflag.Bool(enableStackdriverMetricsFlag, viper.GetBool(enableStackdriverMetricsFlag), "Flag to activate stackdriver monitoring metrics for Agones. Can also use STACKDRIVER_EXPORTER env variable.")
 	pflag.String(projectIDFlag, viper.GetString(projectIDFlag), "GCP ProjectID used for Stackdriver, if not specified ProjectID from Application Default Credentials would be used. Can also use GCP_PROJECT_ID env variable.")
@@ -77,6 +85,8 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
+	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
 	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
 	runtime.Must(viper.BindEnv(enableStackdriverMetricsFlag))
 	runtime.Must(viper.BindEnv(projectIDFlag))
@@ -89,6 +99,8 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
+		APIServerSustainedQPS:        int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		APIServerBurstQPS:            int(viper.GetInt32(apiServerBurstQPSFlag)),
 		PrometheusMetrics:            viper.GetBool(enablePrometheusMetricsFlag),
 		Stackdriver:                  viper.GetBool(enableStackdriverMetricsFlag),
 		GCPProjectID:                 viper.GetString(projectIDFlag),
