@@ -25,7 +25,6 @@ spec:
         foo: bar
     # GameServer specification
     spec:
-        health: {}
         ports:
         - containerPort: 7654
           name: default
