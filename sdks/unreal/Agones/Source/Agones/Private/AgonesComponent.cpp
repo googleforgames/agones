@@ -102,7 +102,13 @@ void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgones
 				ErrorDelegate.ExecuteIfBound({});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -205,7 +211,13 @@ void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const F
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -230,7 +242,13 @@ void UAgonesComponent::SetAnnotation(
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -246,7 +264,13 @@ void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const F
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -271,7 +295,13 @@ void UAgonesComponent::Reserve(
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -384,7 +414,13 @@ void UAgonesComponent::SetPlayerCapacity(
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
 				return;
 			}
-
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
+				return;
+			}
+			
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -398,6 +434,12 @@ void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDeleg
 			if (!bSucceeded)
 			{
 				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
+				return;
+			}
+			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+			{
+				ErrorDelegate.ExecuteIfBound(
+					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
