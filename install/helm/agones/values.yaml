@@ -111,6 +111,7 @@ agones:
     apiServerQPS: 400
     apiServerQPSBurst: 500
     annotations: {}
+    resources: {}
     healthCheck:
       initialDelaySeconds: 3
       periodSeconds: 3
