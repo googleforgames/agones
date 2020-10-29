@@ -358,7 +358,7 @@ func (c *Allocator) allocateFromRemoteCluster(gsa *allocationv1.GameServerAlloca
 			c.loggerForGameServerAllocationKey("remote-allocation").WithField("request", request).WithField("endpoint", endpoint).Debug("forwarding allocation request")
 			allocationResponse, err = c.remoteAllocationCallback(ctx, endpoint, dialOpts, request)
 			if err != nil {
-				c.baseLogger.WithError(err).Error("remote allocation failed with")
+				c.baseLogger.WithError(err).Error("remote allocation failed")
 				// If there are multiple endpoints for the allocator connection and the current one is
 				// failing, try the next endpoint. Otherwise, return the error response.
 				if (i + 1) < len(connectionInfo.AllocationEndpoints) {
