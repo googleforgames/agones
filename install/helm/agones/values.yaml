@@ -36,6 +36,9 @@ agones:
   priorityClassName: agones-system
   controller:
     resources: {}
+      # requests:
+      #   cpu: 1
+      #   memory: 256Mi
     nodeSelector: {}
     annotations: {}
     tolerations:
@@ -69,6 +72,9 @@ agones:
   ping:
     install: true
     resources: {}
+      # requests:
+      #   cpu: 1
+      #   memory: 256Mi
     nodeSelector: {}
     annotations: {}
     tolerations:
@@ -112,6 +118,9 @@ agones:
     apiServerQPSBurst: 500
     annotations: {}
     resources: {}
+      # requests:
+      #   cpu: 1
+      #   memory: 256Mi
     healthCheck:
       initialDelaySeconds: 3
       periodSeconds: 3
