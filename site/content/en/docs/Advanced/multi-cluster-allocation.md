@@ -11,7 +11,7 @@ This feature is in a pre-release state and might change.
 {{< /alert >}}
 {{% /feature %}}
 
-There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost-saving and availability. 
+There may be different types of clusters, such as on-premise, and Google Kubernetes Engine (GKE), used by a game to help with the cost-saving and availability.
 For this purpose, Agones provides a mechanism to define priorities on the clusters. Priorities are defined on {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} agones CRD. A matchmaker can enable the multi-cluster rules on a request and target [agones-allocator]({{< relref "allocator-service.md">}}) endpoint in any of the clusters and get resources allocated on the cluster with the highest priority. If the cluster with the highest priority is overloaded, the allocation request is redirected to the cluster with the next highest priority.
 
 The remainder of this article describes how to enable multi-cluster allocation.
@@ -97,16 +97,49 @@ EOF
 
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
 
+Follow [agones-allocator]({{< relref "allocator-service.md#send-allocation-request">}}) to set the environment variables.
+
 ```bash
 #!/bin/bash
-EXTERNAL_IP=`kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-
-NAMESPACE=default # replace with any namespace
-
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
     --cacert ${TLS_CA_FILE} \
     --multicluster true
+```
+
+## Troubleshooting
+
+If you encounter problems, explore the following potential root causes:
+
+1. Make sure single cluster allocation works for each cluster using [this troubleshooting]({{< relref "allocator-service.md#troubleshooting">}}).
+
+2. For each cluster, make sure there is a `GameServerAllocationPolicy` resource defined in the game server cluster.
+
+3. Inspect the `.spec.connectionInfo` for `GameServerAllocationPolicy` for each cluster. Use the cluster connection information in that field to verify that single cluster allocation works. Use the information to verify the connection:
+
+```bash
+POLICY_NAME=<policy-name>
+POLICY_NAMESPACE=<policy-namespace>
+
+NAMESPACE=$(kubectl get gameserverallocationpolicy ${POLICY_NAME} -n ${POLICY_NAMESPACE} -ojsonpath={.spec.connectionInfo.namespace})
+EXTERNAL_IP=$(kubectl get gameserverallocationpolicy ${POLICY_NAME} -n ${POLICY_NAMESPACE} -ojsonpath={.spec.connectionInfo.allocationEndpoints\[0\]})
+CLIENT_SECRET_NAME=$(kubectl get gameserverallocationpolicy ${POLICY_NAME} -n ${POLICY_NAMESPACE} -ojsonpath={.spec.connectionInfo.secretName})
+
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
+
+# In case of MacOS replace "base64 -d" with "base64 -D"
+kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.tls\.crt}" | base64 -d > "${CERT_FILE}"
+kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.tls\.key}" | base64 -d > "${KEY_FILE}"
+kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.ca\.crt}" | base64 -d > "${TLS_CA_FILE}"
+
+go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
+    --port 443 \
+    --namespace ${NAMESPACE} \
+    --key ${KEY_FILE} \
+    --cert ${CERT_FILE} \
+    --cacert ${TLS_CA_FILE}
 ```
