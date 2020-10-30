@@ -39,6 +39,7 @@ import (
 	"agones.dev/agones/pkg/util/signals"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -66,9 +67,18 @@ const (
 func main() {
 	conf := parseEnvFlags()
 
-	logger.WithField("version", pkg.Version).WithField("ctlConf", conf).
+	logger.WithField("version", pkg.Version).WithField("conf", conf).
 		WithField("featureGates", runtime.EncodeFeatures()).WithField("sslPort", sslPort).
 		Info("Starting agones-allocator")
+
+	logger.WithField("logLevel", conf.LogLevel).Info("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(strings.ToLower(conf.LogLevel))
+	if err == nil {
+		runtime.SetLevel(level)
+	} else {
+		logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		runtime.SetLevel(logrus.InfoLevel)
+	}
 
 	health, closer := setupMetricsRecorder(conf)
 	defer closer()

@@ -1599,6 +1599,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-allocator"
+        - name: LOG_LEVEL
+          value: "info"
         - name: FEATURE_GATES
           value: ""
         ports:
