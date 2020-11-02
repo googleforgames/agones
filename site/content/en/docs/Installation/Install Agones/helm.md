@@ -33,6 +33,7 @@ To install the chart with the release name `my-release` using our stable helm re
 
 ```bash
 $ helm repo add agones https://agones.dev/chart/stable
+$ helm repo update
 $ helm install my-release --namespace agones-system --create-namespace agones/agones
 ```
 
