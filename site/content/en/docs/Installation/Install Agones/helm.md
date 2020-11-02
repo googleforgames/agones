@@ -191,7 +191,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.periodSeconds`       | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.controller.healthCheck.failureThreshold`    | Number of times before giving up (in seconds)                                                   | `3`                    |
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
-| `agones.controller.resources`                       | Controller resource requests/limit                                                              | `{}`                   |
+| `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates in `certs/*` | `true`                 |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
@@ -222,7 +222,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.healthCheck.periodSeconds`             | Seconds between every liveness probe (in seconds)                                               | `3`                    |
 | `agones.ping.healthCheck.failureThreshold`          | Number of times before giving up (in seconds)                                                   | `3`                    |
 | `agones.ping.healthCheck.timeoutSeconds`            | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
-| `agones.ping.resources`                             | Ping pods resource requests/limit                                                               | `{}`                   |
+| `agones.ping.resources`                             | Ping pods [resource requests/limit][resources]                                                  | `{}`                   |
 | `agones.ping.nodeSelector`                          | Ping [node labels][nodeSelector] for pod assignment                                             | `{}`                   |
 | `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
 | `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
@@ -248,6 +248,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
 | `agones.allocator.apiServerQPS`                     | Maximum sustained queries per second that an allocator should be making against API Server      | `400`                  |
 | `agones.allocator.apiServerQPSBurst`                | Maximum burst queries per second that an allocator should be making against API Server          | `500`                  |
 | `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
@@ -268,6 +269,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 [allocator]: {{< ref "/docs/advanced/allocator-service.md" >}}
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 [annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+[resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,

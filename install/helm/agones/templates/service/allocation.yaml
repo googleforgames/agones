@@ -165,6 +165,10 @@ spec:
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
+{{- if .Values.agones.allocator.resources }}
+        resources:
+{{ toYaml .Values.agones.allocator.resources | indent 10 }}
+{{- end }}
 {{- if .Values.agones.image.controller.pullSecret }}
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
