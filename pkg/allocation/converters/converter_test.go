@@ -232,8 +232,8 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			name: "status state is set to allocated",
 			in: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					State:          allocationv1.GameServerAllocationAllocated,
@@ -268,8 +268,8 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			name: "status field is set to unallocated",
 			in: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					State:          allocationv1.GameServerAllocationUnAllocated,
@@ -293,8 +293,8 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			name: "status state is set to contention",
 			in: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					State: allocationv1.GameServerAllocationContention,
@@ -307,8 +307,8 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			name: "Empty fields",
 			in: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					Ports: []agonesv1.GameServerStatusPort{},
@@ -321,8 +321,8 @@ func TestConvertGSAToAllocationResponse(t *testing.T) {
 			name: "Empty objects",
 			in: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					State: allocationv1.GameServerAllocationAllocated,
@@ -376,8 +376,8 @@ func TestConvertAllocationResponseToGSA(t *testing.T) {
 			},
 			want: &allocationv1.GameServerAllocation{
 				TypeMeta: metav1.TypeMeta{
-					Kind:       "allocation.agones.dev",
-					APIVersion: "v1",
+					Kind:       "GameServerAllocation",
+					APIVersion: "allocation.agones.dev/v1",
 				},
 				Status: allocationv1.GameServerAllocationStatus{
 					State: allocationv1.GameServerAllocationAllocated,
