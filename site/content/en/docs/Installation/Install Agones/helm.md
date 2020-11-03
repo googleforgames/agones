@@ -254,6 +254,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.apiServerQPSBurst`                | Maximum burst queries per second that an allocator should be making against API Server          | `500`                  |
 | `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
 | `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.       | `30s`                |
+| `agones.allocator.logLevel`                         | Agones Allocator Log level. Log only entries with that severity and above                       | `info`                 |
 | `agones.controller.annotations`                     | [Annotations][annotations] added to the Agones controller pods                                  | `{}`                   |
 | `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
 | `agones.ping.annotations`                           | [Annotations][annotations] added to the Agones ping pods                                        | `{}`                   |
