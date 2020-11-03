@@ -11,6 +11,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Review closed issues have appropriate tags.
 - [ ] Review closed PRs have been applied to the current milestone.
 - [ ] Review closed PRs have appropriate tags.
+- [ ] Ensure the next RC and stable releases in the Google Calendar have the correct version number.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
@@ -39,8 +40,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
-   - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package
-   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. (if release candidate: 
+   - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package. Requires Google internal process
+     to publish.
+   - [ ] Run `make sdk-publish-csharp` to deploy to NuGet. Requires login credentials. (if release candidate: 
    `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
    Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
