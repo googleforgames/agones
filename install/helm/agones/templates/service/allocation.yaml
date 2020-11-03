@@ -153,6 +153,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-allocator"
+        - name: LOG_LEVEL
+          value: {{ .Values.agones.allocator.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
         ports:

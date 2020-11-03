@@ -116,6 +116,7 @@ agones:
     install: true
     apiServerQPS: 400
     apiServerQPSBurst: 500
+    logLevel: info
     annotations: {}
     resources: {}
       # requests:

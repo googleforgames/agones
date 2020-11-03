@@ -39,6 +39,7 @@ const (
 	totalRemoteAllocationTimeoutFlag = "total-remote-allocation-timeout"
 	apiServerSustainedQPSFlag        = "api-server-qps"
 	apiServerBurstQPSFlag            = "api-server-qps-burst"
+	logLevelFlag                     = "log-level"
 )
 
 func init() {
@@ -54,6 +55,7 @@ type config struct {
 	Stackdriver                  bool
 	GCPProjectID                 string
 	StackdriverLabels            string
+	LogLevel                     string
 	totalRemoteAllocationTimeout time.Duration
 	remoteAllocationTimeout      time.Duration
 }
@@ -70,6 +72,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(tlsDisabledFlag, false)
 	viper.SetDefault(remoteAllocationTimeoutFlag, 10*time.Second)
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
+	viper.SetDefault(logLevelFlag, "Info")
 
 	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
 	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
@@ -81,6 +84,7 @@ func parseEnvFlags() config {
 	pflag.Bool(tlsDisabledFlag, viper.GetBool(tlsDisabledFlag), "Flag to enable/disable TLS in the allocator.")
 	pflag.Duration(remoteAllocationTimeoutFlag, viper.GetDuration(remoteAllocationTimeoutFlag), "Flag to set remote allocation call timeout.")
 	pflag.Duration(totalRemoteAllocationTimeoutFlag, viper.GetDuration(totalRemoteAllocationTimeoutFlag), "Flag to set total remote allocation timeout including retries.")
+	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -93,6 +97,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(stackdriverLabels))
 	runtime.Must(viper.BindEnv(mTLSDisabledFlag))
 	runtime.Must(viper.BindEnv(tlsDisabledFlag))
+	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindPFlags(pflag.CommandLine))
 	runtime.Must(runtime.FeaturesBindEnv())
 
@@ -107,6 +112,7 @@ func parseEnvFlags() config {
 		StackdriverLabels:            viper.GetString(stackdriverLabels),
 		MTLSDisabled:                 viper.GetBool(mTLSDisabledFlag),
 		TLSDisabled:                  viper.GetBool(tlsDisabledFlag),
+		LogLevel:                     viper.GetString(logLevelFlag),
 		remoteAllocationTimeout:      viper.GetDuration(remoteAllocationTimeoutFlag),
 		totalRemoteAllocationTimeout: viper.GetDuration(totalRemoteAllocationTimeoutFlag),
 	}
