@@ -67,7 +67,7 @@ const (
 func main() {
 	conf := parseEnvFlags()
 
-	logger.WithField("version", pkg.Version).WithField("conf", conf).
+	logger.WithField("version", pkg.Version).WithField("ctlConf", conf).
 		WithField("featureGates", runtime.EncodeFeatures()).WithField("sslPort", sslPort).
 		Info("Starting agones-allocator")
 
