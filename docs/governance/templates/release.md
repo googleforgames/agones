@@ -2,7 +2,7 @@
 
 This is the {version} release of Agones.
 
-Check the [README](https://github.com/googleforgames/agones/tree/release-{version}) for details on features, installation and usage.
+Check the <a href="https://github.com/googleforgames/agones/tree/release-{version}" data-proofer-ignore>README</a> for details on features, installation and usage.
 
 **Implemented enhancements:**
 
@@ -12,7 +12,7 @@ Check the [README](https://github.com/googleforgames/agones/tree/release-{versio
 Documentation: https://development.agones.dev/site/
 { end }
 
-See [CHANGELOG](https://github.com/googleforgames/agones/blob/release-{version}/CHANGELOG.md) for more details on changes.
+See <a href="https://github.com/googleforgames/agones/blob/release-{version}/CHANGELOG.md" data-proofer-ignore>CHANGELOG</a> for more details on changes.
 
 Images available with this release:
 
@@ -33,6 +33,7 @@ Images available with this release:
 
 Helm chart available with this release:
 
-- [`helm install agones/agones --version {version}`](https://agones.dev/chart/stable/agones-{version}.tgz)
+- <a href="https://agones.dev/chart/stable/agones-{version}.tgz" data-proofer-ignore>
+  <code>helm install agones agones/agones --version {version}</code></a>
 
 > Make sure to add our stable helm repository using `helm repo add agones https://agones.dev/chart/stable`
