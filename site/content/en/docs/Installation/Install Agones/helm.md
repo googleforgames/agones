@@ -8,22 +8,8 @@ description: >
 
 ## Prerequisites
 
-{{% feature expiryVersion="1.10.0" %}}
-- [Helm](https://helm.sh/) package manager 2.10.0+, or 3.2.3+
-- [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
-{{% /feature %}}
-{{% feature publishVersion="1.10.0" %}}
 - [Helm](https://helm.sh/) package manager 3.2.3+
 - [Supported Kubernetes Cluster]({{< relref "../_index.md#usage-requirements" >}})
-{{% /feature %}}
-
-{{% feature expiryVersion="1.10.0" %}}
-{{% alert title="Note" color="info"%}}
-We are in the process of shifting our development platform to run on [Helm 3](https://helm.sh/blog/helm-3-released/),
-and recommend upgrading your Helm installs,
-as it will soon become the most tested platform.
-{{% /alert %}}
-{{% /feature %}}
 
 ## Helm 3
 
@@ -80,68 +66,6 @@ To uninstall/delete the `my-release` deployment:
 $ helm uninstall my-release --namespace=agones-system
 ```
 
-{{% feature expiryVersion="1.10.0" %}}
-## Helm 2
-
-### Installing the Chart
-
-{{< alert title="Note" color="info">}}
-If you don't have `Helm` installed locally, or `Tiller` installed in your Kubernetes cluster, read the [Using Helm](https://v2.helm.sh/docs/using_helm/) documentation to get started.
-{{< /alert >}}
-
-To install the chart with the release name `my-release` using our stable helm repository:
-
-```bash
-$ helm repo add agones https://agones.dev/chart/stable
-$ helm install --name my-release --namespace agones-system agones/agones
-```
-
-_We recommend installing Agones in its own namespaces, such as `agones-system` as shown above.
- If you want to use a different namespace, you can use the helm `--namespace` parameter to specify._
-
-When running in production, Agones should be scheduled on a dedicated pool of nodes, distinct from where Game Servers are scheduled for better isolation and resiliency. By default Agones prefers to be scheduled on nodes labeled with `agones.dev/agones-system=true` and tolerates node taint `agones.dev/agones-system=true:NoExecute`. If no dedicated nodes are available, Agones will
-run on regular nodes, but that's not recommended for production use. For instructions on setting up a dedicated node
-pool for Agones, see the [Agones installation instructions]({{< relref "../_index.md" >}}) for your preferred environment.
-
-The command deploys Agones on the Kubernetes cluster with the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation.
-
-{{< alert title="Tip" color="info">}}
-List all releases using `helm list`
-{{< /alert >}}
-
-### Namespaces
-
-By default Agones is configured to work with game servers deployed in the `default` namespace. If you are planning to use another namespace you can configure Agones via the parameter `gameservers.namespaces`.
-
-For example to use `default` **and** `xbox` namespaces:
-
-```bash
-$ kubectl create namespace xbox
-$ helm install --set "gameservers.namespaces={default,xbox}" --namespace agones-system --name my-release agones/agones
-```
-
-{{< alert title="Note" color="info">}}
-You need to create your namespaces before installing Agones.
-{{< /alert >}}
-
-If you want to add a new namespace afterward upgrade your release:
-
-```bash
-$ kubectl create namespace ps4
-$ helm upgrade --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" my-release agones/agones
-```
-
-### Uninstalling the Chart
-
-To uninstall/delete the `my-release` deployment:
-
-```bash
-$ helm delete my-release
-```
-
-The command removes all the Kubernetes components associated with the chart and deletes the release.
-{{% /feature %}}
-
 ## RBAC
 
 By default, `agones.rbacEnabled` is set to true. This enables RBAC support in Agones and must be true if RBAC is enabled in your cluster.
@@ -197,6 +121,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
+| `agones.controller.annotations`                     | [Annotations][annotations] added to the Agones controller pods                                  | `{}`                   |
 | `agones.controller.numWorkers`                      | Number of workers to spin per resource type                                                     | `100`                  |
 | `agones.controller.apiServerQPS`                    | Maximum sustained queries per second that controller should be making against API Server        | `400`                  |
 | `agones.controller.apiServerQPSBurst`               | Maximum burst queries per second that controller should be making against API Server            | `500`                  |
@@ -227,6 +152,12 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.ping.nodeSelector`                          | Ping [node labels][nodeSelector] for pod assignment                                             | `{}`                   |
 | `agones.ping.tolerations`                           | Ping [toleration][toleration] labels for pod assignment                                         | `[]`                   |
 | `agones.ping.affinity`                              | Ping [affinity][affinity] settings for pod assignment                                           | `{}`                   |
+| `agones.ping.annotations`                           | [Annotations][annotations] added to the Agones ping pods                                        | `{}`                   |
+| `agones.allocator.apiServerQPS`                     | Maximum sustained queries per second that an allocator should be making against API Server      | `400`                  |
+| `agones.allocator.apiServerQPSBurst`                | Maximum burst queries per second that an allocator should be making against API Server          | `500`                  |
+| `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                                                 | `10s`                  |
+| `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.                                              | `30s`                  |
+| `agones.allocator.logLevel`                         | Agones Allocator Log level. Log only entries with that severity and above                       | `info`                 |
 | `agones.allocator.install`                          | Whether to install the [allocator service][allocator]                                           | `true`                 |
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
 | `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
@@ -239,25 +170,18 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. | `false`                |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
+| `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
+| `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.10.0" %}}
+{{% feature publishVersion="1.11.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
-| `agones.allocator.apiServerQPS`                     | Maximum sustained queries per second that an allocator should be making against API Server      | `400`                  |
-| `agones.allocator.apiServerQPSBurst`                | Maximum burst queries per second that an allocator should be making against API Server          | `500`                  |
-| `agones.allocator.allocationTimeout`                | Remote allocation call timeout.                                      | `10s`                  |
-| `agones.allocator.remoteAllocationTimeout`          | Total remote allocation timeout including retries.       | `30s`                |
-| `agones.allocator.logLevel`                         | Agones Allocator Log level. Log only entries with that severity and above                       | `info`                 |
-| `agones.controller.annotations`                     | [Annotations][annotations] added to the Agones controller pods                                  | `{}`                   |
-| `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
-| `agones.ping.annotations`                           | [Annotations][annotations] added to the Agones ping pods                                        | `{}`                   |
 |                                                     |                                                                                                 |                        |
 {{% /feature %}}
 

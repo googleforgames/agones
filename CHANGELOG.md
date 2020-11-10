@@ -1,5 +1,20 @@
 # Changelog
 
+## [v1.10.0](https://github.com/googleforgames/agones/tree/v1.10.0) (2020-11-10)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.10.0-rc...v1.10.0)
+
+**Fixed bugs:**
+
+- helm install fails since helm3 requires a name [\#1886](https://github.com/googleforgames/agones/issues/1886)
+- Fix formatting on the 1.10 blog post. [\#1889](https://github.com/googleforgames/agones/pull/1889) ([roberthbailey](https://github.com/roberthbailey))
+- Fix GameServer count per type graph back to pie [\#1888](https://github.com/googleforgames/agones/pull/1888) ([markmandel](https://github.com/markmandel))
+- Updates to the release template [\#1887](https://github.com/googleforgames/agones/pull/1887) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 1.10.0 [\#1884](https://github.com/googleforgames/agones/issues/1884)
+
 ## [v1.10.0-rc](https://github.com/googleforgames/agones/tree/v1.10.0-rc) (2020-11-03)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.9.0...v1.10.0-rc)
@@ -30,6 +45,7 @@
 - Make the force\_update option configurable in Helm/Terraform [\#1844](https://github.com/googleforgames/agones/pull/1844) ([comerford](https://github.com/comerford))
 - \[Doc\] Mark multicluster allocation feature as stable [\#1843](https://github.com/googleforgames/agones/pull/1843) ([pooneh-m](https://github.com/pooneh-m))
 - Docs: Prerequisite Knowledge section [\#1821](https://github.com/googleforgames/agones/pull/1821) ([markmandel](https://github.com/markmandel))
+- adding timeout to remote cluster allocate call and adding total timeout to allocate [\#1815](https://github.com/googleforgames/agones/pull/1815) ([kdima](https://github.com/kdima))
 - Docs: Update C\# SDK docs page [\#1796](https://github.com/googleforgames/agones/pull/1796) ([Reousa](https://github.com/Reousa))
 
 **Fixed bugs:**
@@ -55,6 +71,7 @@
 
 **Merged pull requests:**
 
+- Release 1.10.0-rc [\#1885](https://github.com/googleforgames/agones/pull/1885) ([markmandel](https://github.com/markmandel))
 - Move the loadBalancerIP to helm installation as best effort [\#1877](https://github.com/googleforgames/agones/pull/1877) ([pooneh-m](https://github.com/pooneh-m))
 - Fixed error message [\#1875](https://github.com/googleforgames/agones/pull/1875) ([pooneh-m](https://github.com/pooneh-m))
 - MultiCluster Allocation: Cleanup on error logs [\#1862](https://github.com/googleforgames/agones/pull/1862) ([markmandel](https://github.com/markmandel))
@@ -98,7 +115,6 @@
 - Support using the same port for both TCP/UDP forwarding [\#1523](https://github.com/googleforgames/agones/issues/1523)
 - Write Tests for Terraform configs [\#1227](https://github.com/googleforgames/agones/issues/1227)
 - Add player tracking and shutdown to the supertuxkart example server [\#1825](https://github.com/googleforgames/agones/pull/1825) ([sudermanjr](https://github.com/sudermanjr))
-- adding timeout to remote cluster allocate call and adding total timeout to allocate [\#1815](https://github.com/googleforgames/agones/pull/1815) ([kdima](https://github.com/kdima))
 - Add logging for the client certificate verification [\#1812](https://github.com/googleforgames/agones/pull/1812) ([pooneh-m](https://github.com/pooneh-m))
 - Troubleshooting - namespace stuck terminating [\#1795](https://github.com/googleforgames/agones/pull/1795) ([domgreen](https://github.com/domgreen))
 - Add load balancer configuration for Helm options [\#1793](https://github.com/googleforgames/agones/pull/1793) ([yoshd](https://github.com/yoshd))
@@ -535,6 +551,7 @@
 - Release 1.5.0 [\#1473](https://github.com/googleforgames/agones/pull/1473) ([markmandel](https://github.com/markmandel))
 - Website: A number of corrections in the docs [\#1466](https://github.com/googleforgames/agones/pull/1466) ([aLekSer](https://github.com/aLekSer))
 - Website: Fix path in swagger command [\#1462](https://github.com/googleforgames/agones/pull/1462) ([aLekSer](https://github.com/aLekSer))
+- Use go modules for a website and update go version [\#1457](https://github.com/googleforgames/agones/pull/1457) ([aLekSer](https://github.com/aLekSer))
 
 ## [v1.5.0-rc](https://github.com/googleforgames/agones/tree/v1.5.0-rc) (2020-04-07)
 
@@ -593,7 +610,6 @@
 
 **Merged pull requests:**
 
-- Use go modules for a website and update go version [\#1457](https://github.com/googleforgames/agones/pull/1457) ([aLekSer](https://github.com/aLekSer))
 - Release 1.5.0-rc [\#1455](https://github.com/googleforgames/agones/pull/1455) ([markmandel](https://github.com/markmandel))
 - Fix wrong function usage [\#1442](https://github.com/googleforgames/agones/pull/1442) ([aLekSer](https://github.com/aLekSer))
 - Index out of range error in e2e TestFleetGSSpecValidation [\#1439](https://github.com/googleforgames/agones/pull/1439) ([akremsa](https://github.com/akremsa))
