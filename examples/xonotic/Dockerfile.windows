@@ -1,0 +1,70 @@
+# Copyright 2020 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Xonotic Dedicated Server for Windows.
+#
+# # Build Command (from Agones root on a Windows host)
+# docker build -t xonotic -f examples/xonotic/Dockerfile.windows .
+#
+# # Run Command
+# docker run -d -it --publish 26000:26000 --mount "type=bind,source=c:\xonotic\server\userdir,target=C:\xonotic\userdir" xonotic
+#
+# docker build must be run on a Windows host (in Windows containers mode)
+# otherwise it won't work.
+#
+# It's technically possible to build this image in Linux via
+# "DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build" but all the file copies
+# and setup must run on the host machine and then copied over. Docker
+# multi-stage build from Linux guest to Windows does not work.
+#
+# For custom configuration you'll want to mount C:\Xonotic\userdir.
+
+# Windows Containers have a strong host compatibility requirement.
+# Use `--build-arg WINDOWS_VERSION=` to select the correct base image
+# See https://docs.microsoft.com/en-us/virtualization/windowscontainers/deploy-containers/version-compatibility
+# for details.
+ARG WINDOWS_VERSION=ltsc2019
+
+FROM golang:1.14.12-windowsservercore as base
+
+# Set the default shell
+# See: https://docs.docker.com/engine/reference/builder/#shell
+SHELL ["powershell", "-command"]
+
+WORKDIR /gopath/src/xonotic
+
+RUN (New-Object System.Net.WebClient).Downloadfile('https://dl.xonotic.org/xonotic-0.8.2.zip', 'C:\xonotic.zip')
+RUN Expand-Archive -Path C:\xonotic.zip -DestinationPath C:\ -Force
+RUN Remove-Item -Path C:\xonotic.zip -Force
+RUN Copy-Item -Path C:\Xonotic\server\server_windows.bat -Destination C:\Xonotic\server_windows.bat
+RUN Copy-Item -Path C:\Xonotic\server\server.cfg -Destination C:\Xonotic\data\server.cfg
+
+COPY examples/xonotic/main.go .
+COPY . /gopath/src/agones.dev/agones
+RUN go build -o wrapper.exe .
+
+FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
+
+WORKDIR /Xonotic
+
+COPY --from=base /Xonotic /Xonotic
+COPY --from=base /gopath/src/xonotic/wrapper.exe /Xonotic/wrapper.exe
+RUN copy C:\Xonotic\server\server_windows.bat C:\Xonotic\server_windows.bat
+RUN copy C:\Xonotic\server\server_windows.bat C:\Xonotic\data\server_windows.bat
+RUN md "C:\Xonotic\userdir\data\"
+RUN copy C:\Xonotic\server\server.cfg "C:\Xonotic\userdir\data\server.cfg"
+
+EXPOSE 26000
+USER ContainerUser
+ENTRYPOINT ["C:\\Xonotic\\wrapper.exe", "-i", "C:\\Xonotic\\server_windows.bat", "-args", "'-dedicated +serverconfig server.cfg -userdir C:\\Xonotic\\userdir\\'"]

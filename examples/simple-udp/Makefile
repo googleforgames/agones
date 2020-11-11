@@ -24,10 +24,18 @@
 #
 
 REPOSITORY = gcr.io/agones-images
+BUILDX_WINDOWS_BUILDER = windows-builder
+WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
+WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 server_tag = $(REPOSITORY)/udp-server:0.21
+ifdef WITH_WINDOWS
+server_tag_linux_amd64 = $(server_tag)-linux_amd64
+else
+server_tag_linux_amd64 = $(server_tag)
+endif
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -37,9 +45,54 @@ root_path = $(realpath $(project_path)/../..)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
+ifdef WITH_WINDOWS
+push: push-multi-arch-image
+build: build-linux-image $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
+else
+push: push-linux-image
+build: build-linux-image
+endif
+
+# Builds all image artifacts and create a docker manifest that is used to inform the CRI (Docker or containerd usually)
+# which image is the best fit for the host. See https://www.docker.com/blog/multi-arch-images/ for details.
+push-multi-arch-image: push-linux-image push-windows-images
+	# TODO: `docker manifest` does not yet stamp the `os.version` for Windows manifest entry.
+	# This means only 1 Windows version can be supported in a multi-platform build.
+	# Either adopt, https://github.com/kubernetes-sigs/azuredisk-csi-driver/pull/585/files or
+	# wait for https://github.com/docker/cli/pull/2578 to be available in Docker 20.10.
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(server_tag) $(server_tag_linux_amd64) $(foreach windows_version, $(WINDOWS_VERSIONS), $(server_tag)-windows_amd64-$(windows_version))
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(server_tag) --purge
+
+# Pushes all variants of the Windows images to the container image registry.
+push-linux-image: build
+	docker push $(server_tag_linux_amd64)
+
+# Pushes all variants of the Windows images to the container image registry.
+push-windows-images: $(foreach winver, $(WINDOWS_VERSIONS), push-windows-image-$(winver))
+
+# Pushes a specific version of Windows to a container image registry.
+push-windows-image-%:
+	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-windows-image-$*
+
+build-windows-image-%: build-windows-binary ensure-windows-buildx
+	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
+	cd $(root_path) && DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 -f $(project_path)Dockerfile.windows --tag=$(server_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* examples/simple-udp/ $(WINDOWS_DOCKER_PUSH_ARGS)
+
+# Builds the server binary for Windows (amd64).
+build-windows-binary:
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o bin/simple-udp.exe main.go
+
+ensure-windows-buildx:
+	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
+	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
+	#
+	# Windows image builds must be directed to a specific buildx context.
+	# The default context does not support building cross platform images.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+
 # Build a docker image for the server, and tag it
-build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
+build-linux-image:
+	cd $(root_path) && docker build -f $(project_path)Dockerfile --tag=$(server_tag_linux_amd64) .
 
 # check if hosted on Google Cloud Registry
 gcr-check:
