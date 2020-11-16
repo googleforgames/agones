@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.14.4 as builder
+FROM golang:1.14.12 as builder
 WORKDIR /go/src/simple-tcp
 
 COPY examples/simple-tcp/main.go .
