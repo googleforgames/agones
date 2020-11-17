@@ -15,16 +15,20 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
@@ -93,6 +97,68 @@ func TestAllocator(t *testing.T) {
 			return false, nil
 		}
 		validateAllocatorResponse(t, response)
+		return true, nil
+	})
+
+	assert.NoError(t, err)
+}
+
+func TestRestAllocator(t *testing.T) {
+	ip, port := getAllocatorEndpoint(t)
+	requestURL := fmt.Sprintf(allocatorReqURLFmt, ip, port)
+	tlsCA := refreshAllocatorTLSCerts(t, ip)
+
+	flt, err := createFleet(framework.Namespace)
+	if !assert.Nil(t, err) {
+		return
+	}
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+	request := &pb.AllocationRequest{
+		Namespace:                    framework.Namespace,
+		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+		Scheduling:                   pb.AllocationRequest_Packed,
+		MetaPatch:                    &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
+	}
+	tlsCfg, err := getTlsConfig(allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
+	if !assert.Nil(t, err) {
+		return
+	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsCfg,
+		},
+	}
+	jsonRes, err := json.Marshal(request)
+	if !assert.Nil(t, err) {
+		return
+	}
+	req, err := http.NewRequest("POST", "https://"+requestURL+"/gameserverallocation", bytes.NewBuffer(jsonRes))
+	if !assert.Nil(t, err) {
+		logrus.WithError(err).Info("failed to create rest request")
+		return
+	}
+
+	// wait for the allocation system to come online
+	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
+		resp, err := client.Do(req)
+		if err != nil {
+			logrus.WithError(err).Info("failed Allocate rest request")
+			return false, nil
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			logrus.WithError(err).Info("failed Allocate rest request")
+			return false, nil
+		}
+		defer resp.Body.Close()
+		var response pb.AllocationResponse
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			logrus.WithError(err).Info("failed to unmarshal Allocate response")
+			return false, nil
+		}
+		validateAllocatorResponse(t, &response)
 		return true, nil
 	})
 
@@ -229,6 +295,15 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
+	tlsConfig, err := getTlsConfig(namespace, clientSecretName, tlsCA)
+	if err != nil {
+		return nil, err
+	}
+
+	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
+}
+
+func getTlsConfig(namespace, clientSecretName string, tlsCA []byte) (*tls.Config, error) {
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
 	if err != nil {
@@ -253,12 +328,10 @@ func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []b
 		return nil, errors.New("could not append PEM format CA cert")
 	}
 
-	tlsConfig := &tls.Config{
+	return &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      rootCA,
-	}
-
-	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
+	}, nil
 }
 
 func createFleet(namespace string) (*agonesv1.Fleet, error) {
