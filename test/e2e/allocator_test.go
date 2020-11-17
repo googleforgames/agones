@@ -148,7 +148,7 @@ func TestRestAllocator(t *testing.T) {
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			logrus.WithError(err).Info("failed Allocate rest request")
+			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
 		}
 		defer resp.Body.Close()

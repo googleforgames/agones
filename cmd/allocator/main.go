@@ -185,8 +185,6 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
 
-	// opts here
-
 	mux := gw_runtime.NewServeMux()
 	err = pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h)
 	if err != nil {
