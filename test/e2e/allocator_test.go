@@ -120,7 +120,7 @@ func TestRestAllocator(t *testing.T) {
 		Scheduling:                   pb.AllocationRequest_Packed,
 		MetaPatch:                    &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
-	tlsCfg, err := getTlsConfig(allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
+	tlsCfg, err := getTLSConfig(allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
 	if !assert.Nil(t, err) {
 		return
 	}
@@ -151,7 +151,7 @@ func TestRestAllocator(t *testing.T) {
 			logrus.WithError(err).Info("failed to read Allocate response body")
 			return false, nil
 		}
-		defer resp.Body.Close()
+		defer resp.Body.Close() // nolint: errcheck
 		var response pb.AllocationResponse
 		err = json.Unmarshal(body, &response)
 		if err != nil {
@@ -295,7 +295,7 @@ func getAllocatorEndpoint(t *testing.T) (string, int32) {
 
 // createRemoteClusterDialOption creates a grpc client dial option with proper certs to make a remote call.
 func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []byte) (grpc.DialOption, error) {
-	tlsConfig, err := getTlsConfig(namespace, clientSecretName, tlsCA)
+	tlsConfig, err := getTLSConfig(namespace, clientSecretName, tlsCA)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func createRemoteClusterDialOption(namespace, clientSecretName string, tlsCA []b
 	return grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), nil
 }
 
-func getTlsConfig(namespace, clientSecretName string, tlsCA []byte) (*tls.Config, error) {
+func getTLSConfig(namespace, clientSecretName string, tlsCA []byte) (*tls.Config, error) {
 	kubeCore := framework.KubeClient.CoreV1()
 	clientSecret, err := kubeCore.Secrets(namespace).Get(clientSecretName, metav1.GetOptions{})
 	if err != nil {
