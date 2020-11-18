@@ -111,7 +111,7 @@ kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["cli
 
 The last command creates a new entry in the secret data map for `allocator-client-ca` for the client CA. This is for the `agones-allocator` service to accept the newly generated client certificate.
 
-## Sending allocation request 
+## Send allocation request 
 
 After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.
 
