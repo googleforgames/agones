@@ -103,6 +103,17 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --multicluster true
 ```
 
+If using REST use
+
+```bash
+go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
+    --port 443 \
+    --namespace ${NAMESPACE} \
+    --key ${KEY_FILE} \
+    --cert ${CERT_FILE} \
+    --cacert ${TLS_CA_FILE}
+```
+
 ## Troubleshooting
 
 If you encounter problems, explore the following potential root causes:

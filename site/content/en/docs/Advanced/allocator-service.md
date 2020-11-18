@@ -6,11 +6,11 @@ description: >
   Agones provides an mTLS based allocator service that is accessible from outside the cluster using a load balancer. The service is deployed and scales independent to Agones controller.
 ---
 
-To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC service with mTLS authentication, called `agones-allocator`.
+To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC and REST service with mTLS authentication, called `agones-allocator`.
 
-The gRPC service is accessible through a Kubernetes service that is externalized using a load balancer. For the gRPC request to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
+Both services are accessible through a Kubernetes service that is externalized using a load balancer and they run on the same port. For requests to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 
-The remainder of this article describes how to manually make a successful allocation request using the gRPC API. 
+The remainder of this article describes how to manually make a successful allocation request using the API. 
 The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
 ## Find the external IP
@@ -111,11 +111,13 @@ kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["cli
 
 The last command creates a new entry in the secret data map for `allocator-client-ca` for the client CA. This is for the `agones-allocator` service to accept the newly generated client certificate.
 
-## Send allocation request
+## Sending allocation request 
 
-After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the `default` namespace.
+After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.
 
-Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.  Then proceed with running the following script.
+### Using gRPC
+ 
+To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the `default` namespace.
 
 ```bash
 #!/bin/bash
@@ -138,6 +140,25 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --key ${KEY_FILE} \
     --cert ${CERT_FILE} \
     --cacert ${TLS_CA_FILE}
+```
+
+### Using REST
+```bash
+#!/bin/bash
+
+NAMESPACE=default # replace with any namespace
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
+
+# allocator-client.default secret is created only when using helm installation. Otherwise generate the client certificate and replace the following.
+# In case of MacOS replace "base64 -d" with "base64 -D"
+kubectl get secret allocator-client.default -n "${NAMESPACE}" -ojsonpath="{.data.tls\.crt}" | base64 -d > "${CERT_FILE}"
+kubectl get secret allocator-client.default -n "${NAMESPACE}" -ojsonpath="{.data.tls\.key}" | base64 -d > "${KEY_FILE}"
+kubectl get secret allocator-tls-ca -n agones-system -ojsonpath="{.data.tls-ca\.crt}" | base64 -d > "${TLS_CA_FILE}"
+
+curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'"}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
 ```
 
 ## Secrets Explained
