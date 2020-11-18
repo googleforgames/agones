@@ -143,6 +143,7 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
 ```
 
 ### Using REST
+
 ```bash
 #!/bin/bash
 
