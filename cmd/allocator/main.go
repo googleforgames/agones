@@ -208,8 +208,12 @@ func main() {
 	}
 
 	go func() {
-		err = server.ListenAndServeTLS("", "")
-		logger.WithError(err).Fatal("could not listen on REST")
+		if !h.tlsDisabled {
+			err = server.ListenAndServeTLS("", "")
+		} else {
+			err = server.ListenAndServe()
+		}
+		logger.WithError(err).Fatal("unable to start HTTPS listener")
 		os.Exit(1)
 	}()
 
