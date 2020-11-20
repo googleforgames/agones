@@ -21,7 +21,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
@@ -29,11 +29,11 @@ import (
 
 func TestWaitForEstablishedCRD(t *testing.T) {
 	t.Parallel()
-	crd := &v1beta1.CustomResourceDefinition{
-		Status: v1beta1.CustomResourceDefinitionStatus{
-			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
-				Type:   v1beta1.Established,
-				Status: v1beta1.ConditionTrue,
+	crd := &apiextv1.CustomResourceDefinition{
+		Status: apiextv1.CustomResourceDefinitionStatus{
+			Conditions: []apiextv1.CustomResourceDefinitionCondition{{
+				Type:   apiextv1.Established,
+				Status: apiextv1.ConditionTrue,
 			}},
 		},
 	}
@@ -44,7 +44,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 			return true, crd, nil
 		})
 
-		err := WaitForEstablishedCRD(extClient.ApiextensionsV1beta1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
+		err := WaitForEstablishedCRD(extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
 		assert.Nil(t, err)
 	})
 
@@ -69,7 +69,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 			established = true
 		}()
 
-		err := WaitForEstablishedCRD(extClient.ApiextensionsV1beta1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
+		err := WaitForEstablishedCRD(extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
 		assert.Nil(t, err)
 	})
 }
