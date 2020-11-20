@@ -12,22 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{/* Validation for a gameserver spec */}}
-{{- define "gameserver.validation" }}
+{{/* schema for a gameserver spec */}}
+{{- define "gameserver.schema" }}
+type: object
 required:
 - spec
 properties:
+  {{- if .metadata | default false }}
+  metadata:
+    type: object
+    properties:
+      labels:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+      annotations:
+        type: object
+        x-kubernetes-preserve-unknown-fields: true
+  {{- end}}
   spec:
+    type: object
     required:
     - template
     properties:
       template:
         type: object
+        x-kubernetes-preserve-unknown-fields: true
         required:
         - spec
         properties:
           spec:
             type: object
+            x-kubernetes-preserve-unknown-fields: true
             required:
             - containers
             properties:
@@ -36,6 +51,7 @@ properties:
                 minItems: 1
                 items:
                   type: object
+                  x-kubernetes-preserve-unknown-fields: true
                   required:
                   - image
                   properties:
@@ -61,6 +77,9 @@ properties:
         items:
           type: object
           properties:
+            name:
+              title: Name is the descriptive name of the port
+              type: string
             portPolicy:
               title: the port policy that will be applied to the game server
               description: |
@@ -82,6 +101,11 @@ properties:
               - UDP
               - TCP
               - TCPUDP
+            container:
+              title: |
+                Container is the name of the container on which to open the port. Defaults to the game server container.
+                This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
+              type: string
             containerPort:
               title: The port that is being opened on the game server process
               type: integer
@@ -149,16 +173,13 @@ properties:
             type: integer
             minimum: 1
             maximum: 2147483648
-      alpha:
+      players:
         type: object
-        title: Alpha properties for the GameServer
+        title: Configuration of player capacity
+        nullable: true
         properties:
-          players:
-            type: object
-            title: Configuration of player capacity
-            properties:
-              initialCapacity:
-                type: integer
-                title: The initial player capacity of this Game Server
-                minimum: 0
+          initialCapacity:
+            type: integer
+            title: The initial player capacity of this Game Server
+            minimum: 0
 {{- end }}

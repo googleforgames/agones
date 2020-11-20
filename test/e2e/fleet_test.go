@@ -242,6 +242,8 @@ func TestFleetRollingUpdate(t *testing.T) {
 				}
 
 				assert.Equal(t, int32(1), flt.Spec.Replicas)
+				assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxSurge.StrVal)
+				assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxUnavailable.StrVal)
 
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -300,13 +302,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 						if maxUnavailable == 0 {
 							maxUnavailable = 1
 						}
-						// This difference is inevitable, also could be seen with Deployments and ReplicaSeets
+						// This difference is inevitable, also could be seen with Deployments and ReplicaSets
 						shift = maxUnavailable
 					}
 					assert.Nil(t, err)
 
-					if len(list.Items) > targetScale+maxSurge+maxUnavailable+shift {
-						err = fmt.Errorf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift)
+					expectedTotal := targetScale + maxSurge + maxUnavailable + shift
+					if len(list.Items) > expectedTotal {
+						err = fmt.Errorf("new replicas should be less than target + maxSurge + maxUnavailable + shift. Replicas: %d, Expected: %d", len(list.Items), expectedTotal)
 					}
 					if err != nil {
 						return false, err
@@ -1020,7 +1023,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	flt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	flt.Spec.Template.ObjectMeta.Labels["label"] = longName
 	_, err := client.Fleets(framework.Namespace).Create(flt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
@@ -1032,7 +1035,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	flt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	flt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
 	_, err = client.Fleets(framework.Namespace).Create(flt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
@@ -1056,7 +1059,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	goodFlt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	goodFlt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
 	_, err = client.Fleets(framework.Namespace).Update(goodFlt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)

@@ -14,7 +14,7 @@
 
 {{- if .Values.agones.crds.install }}
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: fleetautoscalers.autoscaling.agones.dev
@@ -26,61 +26,97 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   group: autoscaling.agones.dev
-  version: v1
-  scope: Namespaced
   names:
     kind: FleetAutoscaler
     plural: fleetautoscalers
     shortNames:
     - fas
     singular: fleetautoscaler
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - fleetName
-            - policy
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            fleetName:
-              type: string
-              minLength: 1
-              maxLength: 63
-              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-            policy:
+            spec:
+              type: object
               required:
-                - type
+                - fleetName
+                - policy
               properties:
-                type:
+                fleetName:
                   type: string
-                  enum:
-                  - Buffer
-                  - Webhook
-                buffer:
+                  minLength: 1
+                  maxLength: 63
+                  pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                policy:
+                  type: object
                   required:
-                    - maxReplicas
+                    - type
                   properties:
-                    minReplicas:
-                      type: integer
-                      minimum: 0
-                    maxReplicas:
-                      type: integer
-                      minimum: 1
-                webhook:
-                  properties:
-                    service:
+                    type:
+                      type: string
+                      enum:
+                      - Buffer
+                      - Webhook
+                    buffer:
+                      type: object
+                      nullable: true
+                      required:
+                        - maxReplicas
                       properties:
-                        name:
+                        minReplicas:
+                          type: integer
+                          minimum: 0
+                        maxReplicas:
+                          type: integer
+                          minimum: 1
+                        bufferSize:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                    webhook:
+                      type: object
+                      nullable: true
+                      properties:
+                        url:
                           type: string
-                        namespace:
+                        service:
+                          type: object
+                          required:
+                            - namespace
+                            - name
+                          properties:
+                            namespace:
+                              type: string
+                            name:
+                              type: string
+                            path:
+                              type: string
+                            port:
+                              type: integer
+                        caBundle:
                           type: string
-                        path:
-                          type: string
-                    url:
-                      type: string
-                    caBundle:
-                      type: string
-  subresources:
-    # status enables the status subresource.
-    status: {}
+                          format: byte
+            status:
+              type: object
+              properties:
+                currentReplicas:
+                  type: integer
+                desiredReplicas:
+                  type: integer
+                lastScaleTime:
+                  type: string
+                  format: date-time
+                ableToScale:
+                  type: boolean
+                scalingLimited:
+                  type: boolean
+      subresources:
+        # status enables the status subresource.
+        status: {}
 {{- end }}

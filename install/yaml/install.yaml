@@ -140,7 +140,7 @@ data:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: fleets.agones.dev
@@ -151,215 +151,279 @@ metadata:
     release: agones-manual
     heritage: Helm
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.scheduling
-    name: Scheduling
-    type: string
-  - JSONPath: .spec.replicas
-    name: Desired
-    type: integer
-  - JSONPath: .status.replicas
-    name: Current
-    type: integer
-  - JSONPath: .status.allocatedReplicas
-    name: Allocated
-    type: integer
-  - JSONPath: .status.readyReplicas
-    name: Ready
-    type: integer
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   group: agones.dev
-  version: v1
-  scope: Namespaced
   names:
     kind: Fleet
     plural: fleets
     shortNames:
-    - flt
+      - flt
     singular: fleet
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - template
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .spec.scheduling
+          name: Scheduling
+          type: string
+        - jsonPath: .spec.replicas
+          name: Desired
+          type: integer
+        - jsonPath: .status.replicas
+          name: Current
+          type: integer
+        - jsonPath: .status.allocatedReplicas
+          name: Allocated
+          type: integer
+        - jsonPath: .status.readyReplicas
+          name: Ready
+          type: integer
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            replicas:
-              type: integer
-              minimum: 0
-            scheduling:
-              type: string
-              enum:
-              - Packed
-              - Distributed
-            strategy:
+            spec:
+              type: object
+              required:
+                - template
               properties:
-                type:
+                replicas:
+                  type: integer
+                  minimum: 0
+                scheduling:
                   type: string
                   enum:
-                    - Recreate
-                    - RollingUpdate
-            template:              
-              required:
-              - spec
-              properties:
-                spec:
-                  required:
-                  - template
+                    - Packed
+                    - Distributed
+                strategy:
+                  type: object
                   properties:
-                    template:
-                      type: object
-                      required:
-                      - spec
-                      properties:
-                        spec:
-                          type: object
-                          required:
-                          - containers
-                          properties:
-                            containers:
-                              type: array
-                              minItems: 1
-                              items:
-                                type: object
-                                required:
-                                - image
-                                properties:
-                                  name:
-                                    type: string
-                                    minLength: 0
-                                    maxLength: 63
-                                    pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-                                  image:
-                                    type: string
-                                    minLength: 1
-                    container:
-                      title: The container name running the gameserver
-                      description: if there is more than one container, specify which one is the game server
-                      type: string
-                      minLength: 0
-                      maxLength: 63
-                      pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-                    ports:
-                      title: array of ports to expose on the game server container
-                      type: array
-                      minItems: 1
-                      items:
-                        type: object
-                        properties:
-                          portPolicy:
-                            title: the port policy that will be applied to the game server
-                            description: |
-                                portPolicy has three options:
-                                - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
-                                - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                                port is available. When static is the policy specified, `hostPort` is required to be populated
-                                - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
-                                This will mean that users will need to lookup what port has been opened through the server side SDK.
-                            type: string
-                            enum:
-                            - Dynamic
-                            - Static
-                            - Passthrough
-                          protocol:
-                            title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
-                            type: string
-                            enum:
-                            - UDP
-                            - TCP
-                            - TCPUDP
-                          containerPort:
-                            title: The port that is being opened on the game server process
-                            type: integer
-                            minimum: 1
-                            maximum: 65535
-                          hostPort:
-                            title: The port exposed on the host
-                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
-                            type: integer
-                            minimum: 1
-                            maximum: 65535
-                    sdkServer:
-                      type: object
-                      title: Parameters for the SDK Server (sidecar)
-                      properties:
-                        logLevel:
-                          type: string 
-                          description: |
-                            sdkServer log level parameter has three options:
-                            - "Info" (default) The SDK server will output all messages except for debug messages
-                            - "Debug" The SDK server will output all messages including debug messages
-                            - "Error" The SDK server will only output error messages
-                          enum:
-                          - Error
-                          - Info
-                          - Debug
-                        grpcPort:
-                          title: The port on which the SDK server binds the gRPC server to accept incoming connections
-                          description: |
-                            Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
-                          type: integer
-                          minimum: 1
-                          maximum: 65535
-                        httpPort:
-                          title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
-                          description: |
-                            Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
-                          type: integer
-                          minimum: 1
-                          maximum: 65535
-                    scheduling:
+                    type:
                       type: string
                       enum:
-                      - Packed
-                      - Distributed
-                    health:
+                        - Recreate
+                        - RollingUpdate
+                    rollingUpdate:
                       type: object
-                      title: Health checking for the running game server
+                      nullable: true
                       properties:
-                        disabled:
-                          title: Disable health checking. defaults to false, but can be set to true
-                          type: boolean
-                        initialDelaySeconds:
-                          title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
-                          type: integer
-                          minimum: 0
-                          maximum: 2147483648
-                        periodSeconds:
-                          title: How long before the server is considered not healthy
-                          type: integer
-                          minimum: 0
-                          maximum: 2147483648
-                        failureThreshold:
-                          title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
-                          type: integer
-                          minimum: 1
-                          maximum: 2147483648
-                    alpha:
-                      type: object
-                      title: Alpha properties for the GameServer
-                      properties:
-                        players:
-                          type: object
-                          title: Configuration of player capacity
-                          properties:
-                            initialCapacity:
-                              type: integer
-                              title: The initial player capacity of this Game Server
-                              minimum: 0
-  subresources:
-    # status enables the status subresource.
-    status: {}
-    # scale enables the scale subresource.
-    scale:
-      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
-      specReplicasPath: .spec.replicas
-      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
-      statusReplicasPath: .status.replicas
-      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
-      labelSelectorPath: .status.labelSelector
+                        maxSurge:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                        maxUnavailable:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                template:                 
+                 type: object
+                 required:
+                 - spec
+                 properties:
+                   metadata:
+                     type: object
+                     properties:
+                       labels:
+                         type: object
+                         x-kubernetes-preserve-unknown-fields: true
+                       annotations:
+                         type: object
+                         x-kubernetes-preserve-unknown-fields: true
+                   spec:
+                     type: object
+                     required:
+                     - template
+                     properties:
+                       template:
+                         type: object
+                         x-kubernetes-preserve-unknown-fields: true
+                         required:
+                         - spec
+                         properties:
+                           spec:
+                             type: object
+                             x-kubernetes-preserve-unknown-fields: true
+                             required:
+                             - containers
+                             properties:
+                               containers:
+                                 type: array
+                                 minItems: 1
+                                 items:
+                                   type: object
+                                   x-kubernetes-preserve-unknown-fields: true
+                                   required:
+                                   - image
+                                   properties:
+                                     name:
+                                       type: string
+                                       minLength: 0
+                                       maxLength: 63
+                                       pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                                     image:
+                                       type: string
+                                       minLength: 1
+                       container:
+                         title: The container name running the gameserver
+                         description: if there is more than one container, specify which one is the game server
+                         type: string
+                         minLength: 0
+                         maxLength: 63
+                         pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                       ports:
+                         title: array of ports to expose on the game server container
+                         type: array
+                         minItems: 1
+                         items:
+                           type: object
+                           properties:
+                             name:
+                               title: Name is the descriptive name of the port
+                               type: string
+                             portPolicy:
+                               title: the port policy that will be applied to the game server
+                               description: |
+                                   portPolicy has three options:
+                                   - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
+                                   - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                                   port is available. When static is the policy specified, `hostPort` is required to be populated
+                                   - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                                   This will mean that users will need to lookup what port has been opened through the server side SDK.
+                               type: string
+                               enum:
+                               - Dynamic
+                               - Static
+                               - Passthrough
+                             protocol:
+                               title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+                               type: string
+                               enum:
+                               - UDP
+                               - TCP
+                               - TCPUDP
+                             container:
+                               title: |
+                                 Container is the name of the container on which to open the port. Defaults to the game server container.
+                                 This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
+                               type: string
+                             containerPort:
+                               title: The port that is being opened on the game server process
+                               type: integer
+                               minimum: 1
+                               maximum: 65535
+                             hostPort:
+                               title: The port exposed on the host
+                               description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
+                               type: integer
+                               minimum: 1
+                               maximum: 65535
+                       sdkServer:
+                         type: object
+                         title: Parameters for the SDK Server (sidecar)
+                         properties:
+                           logLevel:
+                             type: string 
+                             description: |
+                               sdkServer log level parameter has three options:
+                               - "Info" (default) The SDK server will output all messages except for debug messages
+                               - "Debug" The SDK server will output all messages including debug messages
+                               - "Error" The SDK server will only output error messages
+                             enum:
+                             - Error
+                             - Info
+                             - Debug
+                           grpcPort:
+                             title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                             description: |
+                               Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
+                             type: integer
+                             minimum: 1
+                             maximum: 65535
+                           httpPort:
+                             title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                             description: |
+                               Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
+                             type: integer
+                             minimum: 1
+                             maximum: 65535
+                       scheduling:
+                         type: string
+                         enum:
+                         - Packed
+                         - Distributed
+                       health:
+                         type: object
+                         title: Health checking for the running game server
+                         properties:
+                           disabled:
+                             title: Disable health checking. defaults to false, but can be set to true
+                             type: boolean
+                           initialDelaySeconds:
+                             title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+                             type: integer
+                             minimum: 0
+                             maximum: 2147483648
+                           periodSeconds:
+                             title: How long before the server is considered not healthy
+                             type: integer
+                             minimum: 0
+                             maximum: 2147483648
+                           failureThreshold:
+                             title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+                             type: integer
+                             minimum: 1
+                             maximum: 2147483648
+                       players:
+                         type: object
+                         title: Configuration of player capacity
+                         nullable: true
+                         properties:
+                           initialCapacity:
+                             type: integer
+                             title: The initial player capacity of this Game Server
+                             minimum: 0
+            status:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 0
+                readyReplicas:
+                  type: integer
+                  minimum: 0
+                reservedReplicas:
+                  type: integer
+                  minimum: 0
+                allocatedReplicas:
+                  type: integer
+                  minimum: 0
+                players:
+                  type: object
+                  nullable: true
+                  properties:
+                    count:
+                      type: integer
+                      minimum: 0
+                    capacity:
+                      type: integer
+                      minimum: 0
+      subresources:
+        # status enables the status subresource.
+        status: { }
+        # scale enables the scale subresource.
+        scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.replicas
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.replicas
+          # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+          labelSelectorPath: .status.labelSelector
 ---
 # Source: agones/templates/crds/fleetautoscaler.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -376,7 +440,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: fleetautoscalers.autoscaling.agones.dev
@@ -388,63 +452,99 @@ metadata:
     heritage: Helm
 spec:
   group: autoscaling.agones.dev
-  version: v1
-  scope: Namespaced
   names:
     kind: FleetAutoscaler
     plural: fleetautoscalers
     shortNames:
     - fas
     singular: fleetautoscaler
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - fleetName
-            - policy
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            fleetName:
-              type: string
-              minLength: 1
-              maxLength: 63
-              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-            policy:
+            spec:
+              type: object
               required:
-                - type
+                - fleetName
+                - policy
               properties:
-                type:
+                fleetName:
                   type: string
-                  enum:
-                  - Buffer
-                  - Webhook
-                buffer:
+                  minLength: 1
+                  maxLength: 63
+                  pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                policy:
+                  type: object
                   required:
-                    - maxReplicas
+                    - type
                   properties:
-                    minReplicas:
-                      type: integer
-                      minimum: 0
-                    maxReplicas:
-                      type: integer
-                      minimum: 1
-                webhook:
-                  properties:
-                    service:
+                    type:
+                      type: string
+                      enum:
+                      - Buffer
+                      - Webhook
+                    buffer:
+                      type: object
+                      nullable: true
+                      required:
+                        - maxReplicas
                       properties:
-                        name:
+                        minReplicas:
+                          type: integer
+                          minimum: 0
+                        maxReplicas:
+                          type: integer
+                          minimum: 1
+                        bufferSize:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                    webhook:
+                      type: object
+                      nullable: true
+                      properties:
+                        url:
                           type: string
-                        namespace:
+                        service:
+                          type: object
+                          required:
+                            - namespace
+                            - name
+                          properties:
+                            namespace:
+                              type: string
+                            name:
+                              type: string
+                            path:
+                              type: string
+                            port:
+                              type: integer
+                        caBundle:
                           type: string
-                        path:
-                          type: string
-                    url:
-                      type: string
-                    caBundle:
-                      type: string
-  subresources:
-    # status enables the status subresource.
-    status: {}
+                          format: byte
+            status:
+              type: object
+              properties:
+                currentReplicas:
+                  type: integer
+                desiredReplicas:
+                  type: integer
+                lastScaleTime:
+                  type: string
+                  format: date-time
+                ableToScale:
+                  type: boolean
+                scalingLimited:
+                  type: boolean
+      subresources:
+        # status enables the status subresource.
+        status: {}
 ---
 # Source: agones/templates/crds/gameserver.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -461,7 +561,7 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: gameservers.agones.dev
@@ -473,179 +573,241 @@ metadata:
     heritage: Helm
 spec:
   group: agones.dev
-  version: v1
-  scope: Namespaced
-  additionalPrinterColumns:
-  - JSONPath: .status.state
-    name: State
-    type: string
-  - JSONPath: .status.address
-    name: Address
-    type: string
-  - JSONPath: .status.ports[0].port
-    name: Port
-    type: string
-  - JSONPath: .status.nodeName
-    name: Node
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   names:
     kind: GameServer
     plural: gameservers
     shortNames:
-    - gs
+      - gs
     singular: gameserver
-  validation:
-    openAPIV3Schema:      
-      required:
-      - spec
-      properties:
-        spec:
-          required:
-          - template
-          properties:
-            template:
-              type: object
-              required:
-              - spec
-              properties:
-                spec:
-                  type: object
-                  required:
-                  - containers
-                  properties:
-                    containers:
-                      type: array
-                      minItems: 1
-                      items:
-                        type: object
-                        required:
-                        - image
-                        properties:
-                          name:
-                            type: string
-                            minLength: 0
-                            maxLength: 63
-                            pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-                          image:
-                            type: string
-                            minLength: 1
-            container:
-              title: The container name running the gameserver
-              description: if there is more than one container, specify which one is the game server
-              type: string
-              minLength: 0
-              maxLength: 63
-              pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-            ports:
-              title: array of ports to expose on the game server container
-              type: array
-              minItems: 1
-              items:
-                type: object
-                properties:
-                  portPolicy:
-                    title: the port policy that will be applied to the game server
-                    description: |
-                        portPolicy has three options:
-                        - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
-                        - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                        port is available. When static is the policy specified, `hostPort` is required to be populated
-                        - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
-                        This will mean that users will need to lookup what port has been opened through the server side SDK.
-                    type: string
-                    enum:
-                    - Dynamic
-                    - Static
-                    - Passthrough
-                  protocol:
-                    title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
-                    type: string
-                    enum:
-                    - UDP
-                    - TCP
-                    - TCPUDP
-                  containerPort:
-                    title: The port that is being opened on the game server process
-                    type: integer
-                    minimum: 1
-                    maximum: 65535
-                  hostPort:
-                    title: The port exposed on the host
-                    description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
-                    type: integer
-                    minimum: 1
-                    maximum: 65535
-            sdkServer:
-              type: object
-              title: Parameters for the SDK Server (sidecar)
-              properties:
-                logLevel:
-                  type: string 
-                  description: |
-                    sdkServer log level parameter has three options:
-                    - "Info" (default) The SDK server will output all messages except for debug messages
-                    - "Debug" The SDK server will output all messages including debug messages
-                    - "Error" The SDK server will only output error messages
-                  enum:
-                  - Error
-                  - Info
-                  - Debug
-                grpcPort:
-                  title: The port on which the SDK server binds the gRPC server to accept incoming connections
-                  description: |
-                    Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
-                  type: integer
-                  minimum: 1
-                  maximum: 65535
-                httpPort:
-                  title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
-                  description: |
-                    Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
-                  type: integer
-                  minimum: 1
-                  maximum: 65535
-            scheduling:
-              type: string
-              enum:
-              - Packed
-              - Distributed
-            health:
-              type: object
-              title: Health checking for the running game server
-              properties:
-                disabled:
-                  title: Disable health checking. defaults to false, but can be set to true
-                  type: boolean
-                initialDelaySeconds:
-                  title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
-                  type: integer
-                  minimum: 0
-                  maximum: 2147483648
-                periodSeconds:
-                  title: How long before the server is considered not healthy
-                  type: integer
-                  minimum: 0
-                  maximum: 2147483648
-                failureThreshold:
-                  title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
-                  type: integer
-                  minimum: 1
-                  maximum: 2147483648
-            alpha:
-              type: object
-              title: Alpha properties for the GameServer
-              properties:
-                players:
-                  type: object
-                  title: Configuration of player capacity
-                  properties:
-                    initialCapacity:
-                      type: integer
-                      title: The initial player capacity of this Game Server
-                      minimum: 0
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .status.state
+          name: State
+          type: string
+        - jsonPath: .status.address
+          name: Address
+          type: string
+        - jsonPath: .status.ports[0].port
+          name: Port
+          type: string
+        - jsonPath: .status.nodeName
+          name: Node
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      schema:
+        openAPIV3Schema:         
+         type: object
+         required:
+         - spec
+         properties:
+           spec:
+             type: object
+             required:
+             - template
+             properties:
+               template:
+                 type: object
+                 x-kubernetes-preserve-unknown-fields: true
+                 required:
+                 - spec
+                 properties:
+                   spec:
+                     type: object
+                     x-kubernetes-preserve-unknown-fields: true
+                     required:
+                     - containers
+                     properties:
+                       containers:
+                         type: array
+                         minItems: 1
+                         items:
+                           type: object
+                           x-kubernetes-preserve-unknown-fields: true
+                           required:
+                           - image
+                           properties:
+                             name:
+                               type: string
+                               minLength: 0
+                               maxLength: 63
+                               pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                             image:
+                               type: string
+                               minLength: 1
+               container:
+                 title: The container name running the gameserver
+                 description: if there is more than one container, specify which one is the game server
+                 type: string
+                 minLength: 0
+                 maxLength: 63
+                 pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+               ports:
+                 title: array of ports to expose on the game server container
+                 type: array
+                 minItems: 1
+                 items:
+                   type: object
+                   properties:
+                     name:
+                       title: Name is the descriptive name of the port
+                       type: string
+                     portPolicy:
+                       title: the port policy that will be applied to the game server
+                       description: |
+                           portPolicy has three options:
+                           - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
+                           - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                           port is available. When static is the policy specified, `hostPort` is required to be populated
+                           - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                           This will mean that users will need to lookup what port has been opened through the server side SDK.
+                       type: string
+                       enum:
+                       - Dynamic
+                       - Static
+                       - Passthrough
+                     protocol:
+                       title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+                       type: string
+                       enum:
+                       - UDP
+                       - TCP
+                       - TCPUDP
+                     container:
+                       title: |
+                         Container is the name of the container on which to open the port. Defaults to the game server container.
+                         This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
+                       type: string
+                     containerPort:
+                       title: The port that is being opened on the game server process
+                       type: integer
+                       minimum: 1
+                       maximum: 65535
+                     hostPort:
+                       title: The port exposed on the host
+                       description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
+                       type: integer
+                       minimum: 1
+                       maximum: 65535
+               sdkServer:
+                 type: object
+                 title: Parameters for the SDK Server (sidecar)
+                 properties:
+                   logLevel:
+                     type: string 
+                     description: |
+                       sdkServer log level parameter has three options:
+                       - "Info" (default) The SDK server will output all messages except for debug messages
+                       - "Debug" The SDK server will output all messages including debug messages
+                       - "Error" The SDK server will only output error messages
+                     enum:
+                     - Error
+                     - Info
+                     - Debug
+                   grpcPort:
+                     title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                     description: |
+                       Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
+                     type: integer
+                     minimum: 1
+                     maximum: 65535
+                   httpPort:
+                     title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                     description: |
+                       Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
+                     type: integer
+                     minimum: 1
+                     maximum: 65535
+               scheduling:
+                 type: string
+                 enum:
+                 - Packed
+                 - Distributed
+               health:
+                 type: object
+                 title: Health checking for the running game server
+                 properties:
+                   disabled:
+                     title: Disable health checking. defaults to false, but can be set to true
+                     type: boolean
+                   initialDelaySeconds:
+                     title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+                     type: integer
+                     minimum: 0
+                     maximum: 2147483648
+                   periodSeconds:
+                     title: How long before the server is considered not healthy
+                     type: integer
+                     minimum: 0
+                     maximum: 2147483648
+                   failureThreshold:
+                     title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+                     type: integer
+                     minimum: 1
+                     maximum: 2147483648
+               players:
+                 type: object
+                 title: Configuration of player capacity
+                 nullable: true
+                 properties:
+                   initialCapacity:
+                     type: integer
+                     title: The initial player capacity of this Game Server
+                     minimum: 0           
+           status:
+             type: object
+             title: The status values for the GameServer
+             properties:
+               state:
+                 type: string
+                 enum:
+                   - PortAllocation
+                   - Creating
+                   - Starting
+                   - Scheduled
+                   - RequestReady
+                   - Ready
+                   - Shutdown
+                   - Error
+                   - Unhealthy
+                   - Reserved
+                   - Allocated
+               ports:
+                 type: array
+                 nullable: true
+                 items:
+                   type: object
+                   properties:
+                     name:
+                       type: string
+                     port:
+                       type: integer
+               address:
+                 type: string
+               nodeName:
+                 type: string
+               reservedUntil:
+                 type: string
+                 nullable: true
+                 format: date-time
+               players:
+                 type: object
+                 nullable: true
+                 properties:
+                   count:
+                     type: integer
+                   capacity:
+                     type: integer
+                   ids:
+                     type: array
+                     nullable: true
+                     items:
+                       type: string # in an include, as it's easier to align
 ---
 # Source: agones/templates/crds/gameserverallocationpolicy.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -662,12 +824,10 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  creationTimestamp: null
   labels:
-    controller-tools.k8s.io: "1.0"
     component: crd
     app: agones
     chart: agones-1.11.0-dev
@@ -676,72 +836,53 @@ metadata:
   name: gameserverallocationpolicies.multicluster.agones.dev
 spec:
   group: multicluster.agones.dev
-  versions:
-  - name: v1
-    served: true
-    storage: true
-  - name: v1alpha1
-    # Disable the v1alpha1 version, but include it for inplace upgrade.
-    served: false
-    storage: false
   names:
     kind: GameServerAllocationPolicy
     plural: gameserverallocationpolicies
+    shortNames:
+      - gsap
   scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-          type: string
-        metadata:
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
           type: object
-        spec:
           properties:
-            connectionInfo:
-              properties:
-                secretName:
-                  type: string
-                serverCa:
-                  type: string
-                  format: byte
-                allocationEndpoints:
-                  items:
-                    type: string
-                  type: array
-                  minItems: 1
-                clusterName:
-                  type: string
-                namespace:
-                  type: string
-              required:
-              - namespace
+            spec:
               type: object
-            priority:
-              format: int32
-              minimum: 0
-              type: integer
-            weight:
-              format: int64
-              minimum: 0
-              type: integer
-          required:
-          - priority
-          - weight
-          type: object
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
+              required:
+                - priority
+                - weight
+              properties:
+                priority:
+                  format: int32
+                  minimum: 0
+                  type: integer
+                weight:
+                  format: int64
+                  minimum: 0
+                  type: integer
+                connectionInfo:
+                  type: object
+                  required:
+                    - namespace
+                  properties:
+                    clusterName:
+                      type: string
+                    allocationEndpoints:
+                      items:
+                        type: string
+                      type: array
+                      minItems: 1
+                    secretName:
+                      type: string
+                    namespace:
+                      type: string
+                    serverCa:
+                      type: string
+                      format: byte
 ---
 # Source: agones/templates/crds/gameserverset.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -758,7 +899,7 @@ status:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: gameserversets.agones.dev
@@ -769,210 +910,262 @@ metadata:
     release: agones-manual
     heritage: Helm
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.scheduling
-    name: Scheduling
-    type: string
-  - JSONPath: .spec.replicas
-    name: Desired
-    type: integer
-  - JSONPath: .status.replicas
-    name: Current
-    type: integer
-  - JSONPath: .status.allocatedReplicas
-    name: Allocated
-    type: integer
-  - JSONPath: .status.readyReplicas
-    name: Ready
-    type: integer
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   group: agones.dev
-  version: v1
-  scope: Namespaced
   names:
     kind: GameServerSet
     plural: gameserversets
     shortNames:
-    - gss
-    - gsset
+      - gss
+      - gsset
     singular: gameserverset
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - replicas
-            - template
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .spec.scheduling
+          name: Scheduling
+          type: string
+        - jsonPath: .spec.replicas
+          name: Desired
+          type: integer
+        - jsonPath: .status.replicas
+          name: Current
+          type: integer
+        - jsonPath: .status.allocatedReplicas
+          name: Allocated
+          type: integer
+        - jsonPath: .status.readyReplicas
+          name: Ready
+          type: integer
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            replicas:
-              type: integer
-              minimum: 0
-            scheduling:
-              type: string
-              enum:
-              - Packed
-              - Distributed
-            template:              
+            spec:
+              type: object
               required:
-              - spec
+                - replicas
+                - template
               properties:
-                spec:
+                replicas:
+                  type: integer
+                  minimum: 0
+                scheduling:
+                  type: string
+                  enum:
+                    - Packed
+                    - Distributed
+                template:                  
+                  type: object
                   required:
-                  - template
+                  - spec
                   properties:
-                    template:
+                    metadata:
+                      type: object
+                      properties:
+                        labels:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                        annotations:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                    spec:
                       type: object
                       required:
-                      - spec
+                      - template
                       properties:
-                        spec:
+                        template:
                           type: object
+                          x-kubernetes-preserve-unknown-fields: true
                           required:
-                          - containers
+                          - spec
                           properties:
-                            containers:
-                              type: array
-                              minItems: 1
-                              items:
-                                type: object
-                                required:
-                                - image
-                                properties:
-                                  name:
-                                    type: string
-                                    minLength: 0
-                                    maxLength: 63
-                                    pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-                                  image:
-                                    type: string
-                                    minLength: 1
-                    container:
-                      title: The container name running the gameserver
-                      description: if there is more than one container, specify which one is the game server
-                      type: string
-                      minLength: 0
-                      maxLength: 63
-                      pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
-                    ports:
-                      title: array of ports to expose on the game server container
-                      type: array
-                      minItems: 1
-                      items:
-                        type: object
-                        properties:
-                          portPolicy:
-                            title: the port policy that will be applied to the game server
-                            description: |
-                                portPolicy has three options:
-                                - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
-                                - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
-                                port is available. When static is the policy specified, `hostPort` is required to be populated
-                                - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
-                                This will mean that users will need to lookup what port has been opened through the server side SDK.
-                            type: string
-                            enum:
-                            - Dynamic
-                            - Static
-                            - Passthrough
-                          protocol:
-                            title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
-                            type: string
-                            enum:
-                            - UDP
-                            - TCP
-                            - TCPUDP
-                          containerPort:
-                            title: The port that is being opened on the game server process
-                            type: integer
-                            minimum: 1
-                            maximum: 65535
-                          hostPort:
-                            title: The port exposed on the host
-                            description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
-                            type: integer
-                            minimum: 1
-                            maximum: 65535
-                    sdkServer:
-                      type: object
-                      title: Parameters for the SDK Server (sidecar)
-                      properties:
-                        logLevel:
-                          type: string 
-                          description: |
-                            sdkServer log level parameter has three options:
-                            - "Info" (default) The SDK server will output all messages except for debug messages
-                            - "Debug" The SDK server will output all messages including debug messages
-                            - "Error" The SDK server will only output error messages
+                            spec:
+                              type: object
+                              x-kubernetes-preserve-unknown-fields: true
+                              required:
+                              - containers
+                              properties:
+                                containers:
+                                  type: array
+                                  minItems: 1
+                                  items:
+                                    type: object
+                                    x-kubernetes-preserve-unknown-fields: true
+                                    required:
+                                    - image
+                                    properties:
+                                      name:
+                                        type: string
+                                        minLength: 0
+                                        maxLength: 63
+                                        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                                      image:
+                                        type: string
+                                        minLength: 1
+                        container:
+                          title: The container name running the gameserver
+                          description: if there is more than one container, specify which one is the game server
+                          type: string
+                          minLength: 0
+                          maxLength: 63
+                          pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+                        ports:
+                          title: array of ports to expose on the game server container
+                          type: array
+                          minItems: 1
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                title: Name is the descriptive name of the port
+                                type: string
+                              portPolicy:
+                                title: the port policy that will be applied to the game server
+                                description: |
+                                    portPolicy has three options:
+                                    - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
+                                    - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                                    port is available. When static is the policy specified, `hostPort` is required to be populated
+                                    - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                                    This will mean that users will need to lookup what port has been opened through the server side SDK.
+                                type: string
+                                enum:
+                                - Dynamic
+                                - Static
+                                - Passthrough
+                              protocol:
+                                title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+                                type: string
+                                enum:
+                                - UDP
+                                - TCP
+                                - TCPUDP
+                              container:
+                                title: |
+                                  Container is the name of the container on which to open the port. Defaults to the game server container.
+                                  This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
+                                type: string
+                              containerPort:
+                                title: The port that is being opened on the game server process
+                                type: integer
+                                minimum: 1
+                                maximum: 65535
+                              hostPort:
+                                title: The port exposed on the host
+                                description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
+                                type: integer
+                                minimum: 1
+                                maximum: 65535
+                        sdkServer:
+                          type: object
+                          title: Parameters for the SDK Server (sidecar)
+                          properties:
+                            logLevel:
+                              type: string 
+                              description: |
+                                sdkServer log level parameter has three options:
+                                - "Info" (default) The SDK server will output all messages except for debug messages
+                                - "Debug" The SDK server will output all messages including debug messages
+                                - "Error" The SDK server will only output error messages
+                              enum:
+                              - Error
+                              - Info
+                              - Debug
+                            grpcPort:
+                              title: The port on which the SDK server binds the gRPC server to accept incoming connections
+                              description: |
+                                Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
+                              type: integer
+                              minimum: 1
+                              maximum: 65535
+                            httpPort:
+                              title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+                              description: |
+                                Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
+                              type: integer
+                              minimum: 1
+                              maximum: 65535
+                        scheduling:
+                          type: string
                           enum:
-                          - Error
-                          - Info
-                          - Debug
-                        grpcPort:
-                          title: The port on which the SDK server binds the gRPC server to accept incoming connections
-                          description: |
-                            Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
-                          type: integer
-                          minimum: 1
-                          maximum: 65535
-                        httpPort:
-                          title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
-                          description: |
-                            Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
-                          type: integer
-                          minimum: 1
-                          maximum: 65535
-                    scheduling:
-                      type: string
-                      enum:
-                      - Packed
-                      - Distributed
-                    health:
-                      type: object
-                      title: Health checking for the running game server
-                      properties:
-                        disabled:
-                          title: Disable health checking. defaults to false, but can be set to true
-                          type: boolean
-                        initialDelaySeconds:
-                          title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
-                          type: integer
-                          minimum: 0
-                          maximum: 2147483648
-                        periodSeconds:
-                          title: How long before the server is considered not healthy
-                          type: integer
-                          minimum: 0
-                          maximum: 2147483648
-                        failureThreshold:
-                          title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
-                          type: integer
-                          minimum: 1
-                          maximum: 2147483648
-                    alpha:
-                      type: object
-                      title: Alpha properties for the GameServer
-                      properties:
+                          - Packed
+                          - Distributed
+                        health:
+                          type: object
+                          title: Health checking for the running game server
+                          properties:
+                            disabled:
+                              title: Disable health checking. defaults to false, but can be set to true
+                              type: boolean
+                            initialDelaySeconds:
+                              title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+                              type: integer
+                              minimum: 0
+                              maximum: 2147483648
+                            periodSeconds:
+                              title: How long before the server is considered not healthy
+                              type: integer
+                              minimum: 0
+                              maximum: 2147483648
+                            failureThreshold:
+                              title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+                              type: integer
+                              minimum: 1
+                              maximum: 2147483648
                         players:
                           type: object
                           title: Configuration of player capacity
+                          nullable: true
                           properties:
                             initialCapacity:
                               type: integer
                               title: The initial player capacity of this Game Server
                               minimum: 0
-  subresources:
-    # status enables the status subresource.
-    status: {}
-    # scale enables the scale subresource.
-    scale:
-      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
-      specReplicasPath: .spec.replicas
-      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
-      statusReplicasPath: .status.replicas
-      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
-      labelSelectorPath: .status.labelSelector
+            status:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 0
+                readyReplicas:
+                  type: integer
+                  minimum: 0
+                reservedReplicas:
+                  type: integer
+                  minimum: 0
+                allocatedReplicas:
+                  type: integer
+                  minimum: 0
+                shutdownReplicas:
+                  type: integer
+                  minimum: 0
+                players:
+                  type: object
+                  nullable: true
+                  properties:
+                    count:
+                      type: integer
+                      minimum: 0
+                    capacity:
+                      type: integer
+                      minimum: 0
+      subresources:
+        # status enables the status subresource.
+        status: { }
+        # scale enables the scale subresource.
+        scale:
+          # specReplicasPath defines the jsonPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.replicas
+          # statusReplicasPath defines the jsonPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.replicas
+          # labelSelectorPath defines the jsonPath inside of a custom resource that corresponds to Scale.Status.Selector.
+          labelSelectorPath: .status.labelSelector
 ---
 # Source: agones/templates/service/allocation.yaml
 # Create a ClusterRole in that grants access to the agones allocation api
