@@ -197,7 +197,7 @@ curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-T
 You should expect to see the following output:
 
 ```
-
+{"gameServerName":"game-server-name","ports":[{"name":"default","port":7463}],"address":"1.2.3.4","nodeName":"node-name"}
 ```
 {{% /feature %}}
 

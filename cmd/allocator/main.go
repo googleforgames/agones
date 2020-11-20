@@ -213,8 +213,11 @@ func main() {
 		} else {
 			err = server.ListenAndServe()
 		}
-		logger.WithError(err).Fatal("unable to start HTTPS listener")
-		os.Exit(1)
+
+		if err != nil {
+			logger.WithError(err).Fatal("unable to start HTTP/HTTPS listener")
+			os.Exit(1)
+		}
 	}()
 
 	// Finally listen on 8080 (http) and block the main goroutine
