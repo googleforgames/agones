@@ -5,12 +5,20 @@ publishDate: 2019-10-25T05:45:05Z
 description: >
   Agones provides an mTLS based allocator service that is accessible from outside the cluster using a load balancer. The service is deployed and scales independent to Agones controller.
 ---
+{{% feature expiryVersion="1.11.0" %}}
+To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC service with mTLS authentication, called `agones-allocator`.
 
+The gRPC service is accessible through a Kubernetes service that is externalized using a load balancer. For the gRPC request to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
+
+The remainder of this article describes how to manually make a successful allocation request using the gRPC API. 
+{{% /feature %}}
+
+{{% feature publishVersion="1.11.0" %}} 
 To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC and REST service with mTLS authentication, called `agones-allocator`.
 
 Both services are accessible through a Kubernetes service that is externalized using a load balancer and they run on the same port. For requests to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
-
 The remainder of this article describes how to manually make a successful allocation request using the API. 
+{{% /feature %}}
 The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
 ## Find the external IP
