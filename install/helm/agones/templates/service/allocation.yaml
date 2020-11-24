@@ -71,16 +71,15 @@ spec:
       heritage: {{ .Release.Service }}
   template:
     metadata:
-      annotations:
-{{- if .Values.agones.allocator.generateTLS }}
-        revision/tls-cert: {{ .Release.Revision | quote }}
-{{- end }}
       labels:
         multicluster.agones.dev/role: allocator
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
       annotations:
+{{- if .Values.agones.allocator.generateTLS }}
+        revision/tls-cert: {{ .Release.Revision | quote }}
+{{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
