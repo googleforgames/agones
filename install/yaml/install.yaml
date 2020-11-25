@@ -1520,7 +1520,6 @@ spec:
       heritage: Helm
   template:
     metadata:
-      annotations:
       labels:
         multicluster.agones.dev/role: allocator
         app: agones
