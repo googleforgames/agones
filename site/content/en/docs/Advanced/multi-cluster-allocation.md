@@ -91,10 +91,18 @@ EOF
 
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
 
-Follow [agones-allocator]({{< relref "allocator-service.md#send-allocation-request">}}) to set the environment variables.
+Set the following environment variables:
+```
+NAMESPACE=default # replace with any namespace
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
+```
 
 ```bash
 #!/bin/bash
+
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
@@ -108,12 +116,6 @@ If using REST use
 
 ```bash
 #!/bin/bash
-
-NAMESPACE=default # replace with any namespace
-EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-KEY_FILE=client.key
-CERT_FILE=client.crt
-TLS_CA_FILE=ca.crt
 
 # allocator-client.default secret is created only when using helm installation. Otherwise generate the client certificate and replace the following.
 # In case of MacOS replace "base64 -d" with "base64 -D"

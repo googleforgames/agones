@@ -155,18 +155,21 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
 
 After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.
 
+Set the following environment variables:
+```
+NAMESPACE=default # replace with any namespace
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
+```
+
 ### Using gRPC
  
 To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the `default` namespace.
 
 ```bash
 #!/bin/bash
-
-NAMESPACE=default # replace with any namespace
-EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-KEY_FILE=client.key
-CERT_FILE=client.crt
-TLS_CA_FILE=ca.crt
 
 # allocator-client.default secret is created only when using helm installation. Otherwise generate the client certificate and replace the following.
 # In case of MacOS replace "base64 -d" with "base64 -D"
@@ -186,12 +189,6 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
 
 ```bash
 #!/bin/bash
-
-NAMESPACE=default # replace with any namespace
-EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-KEY_FILE=client.key
-CERT_FILE=client.crt
-TLS_CA_FILE=ca.crt
 
 # allocator-client.default secret is created only when using helm installation. Otherwise generate the client certificate and replace the following.
 # In case of MacOS replace "base64 -d" with "base64 -D"
