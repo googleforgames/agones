@@ -323,7 +323,9 @@ subjectAltName = @alt_names
 DNS.1 = autoscaler-tls-service.default.svc
 ```
 
-Generate the certificate signing request, use valid hostname which is `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` in the config file.
+Generate the certificate signing request, use valid hostname which in this case will be `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` as well as `DNS.1` in the `alt_names` section of the config file.
+
+Check the [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records) to see how Services get assigned DNS entries.
 ```
 openssl req -new -out webhook.csr -key webhook.key -config cert.conf
 ```
