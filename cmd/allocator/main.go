@@ -288,9 +288,9 @@ func readTLSCert() (*tls.Certificate, error) {
 }
 
 // getServerOptions returns a list of GRPC server options.
-// Current options are TLS certs and opencensus stats handler.
+// Current options are opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	// Add options for creds and  OpenCensus stats handler to enable stats and tracing.
+	// Add options for  OpenCensus stats handler to enable stats and tracing.
 	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
 	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
 	return []grpc.ServerOption{
