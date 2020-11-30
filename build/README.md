@@ -102,8 +102,6 @@ Table of Contents
 ### Linux
 - Install Make, either via `apt install make` or `yum install make` depending on platform.
 - [Install Docker](https://docs.docker.com/engine/installation/) for your Linux platform.
-- (optional) Minikube will require [VirtualBox](https://www.virtualbox.org) and will need to be installed if you wish
-  to develop on Minikube 
 
 ### Windows
 Building and developing Agones requires you to use the 
@@ -121,16 +119,12 @@ as this makes it easy to create a (relatively) cross platform development and bu
 - Agones will need to be cloned somewhere on your `/c` (or drive of your choice) path, as that is what Docker will support mounts from
 - All interaction with Agones must be on the `/c` (or drive of your choice) path, otherwise Docker mounts will not work
 - Now the `make` commands can all be run from within your WSL shell
-- (optional) Minikube is supported via the [HyperV](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/index) 
-  driver - the same virtualisation platform as the Docker installation.
-- **Note**: If you want to dev and test with Minikube, you **must** run WSL as Administrator, otherwise Minikube can't control HyperV.
+- The Minikube setup on Windows has not been tested. Pull Requests would be appreciated!
 
 ### macOS
 
 - Install Make, `brew install make`, if it's not installed already
 - Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
-- (optional) Minikube will require [VirtualBox](https://www.virtualbox.org) and will need to be installed if you wish
-  to develop on Minikube 
 
 ## GOPATH
 
@@ -251,13 +245,10 @@ When your are finished, you can run `make clean-gcloud-test-cluster` to tear dow
 ### Running a Test Minikube cluster
 This will setup a [Minikube](https://github.com/kubernetes/minikube) cluster, running on an `agones` profile, 
 
-Because Minikube runs on a virtualisation layer on the host, some of the standard build and development Make targets
-need to be replaced by Minikube specific targets.
+Because Minikube runs on a virtualisation layer on the host (usually Docker), some of the standard build and development
+ Make targets need to be replaced by Minikube specific targets.
 
-First, [install Minikube](https://github.com/kubernetes/minikube#installation), which may also require you to install
-a virtualisation solution, such as [VirtualBox](https://www.virtualbox.org) as well.
-Check the [Building on Different Platforms](#building-on-different-platforms) above for details on what virtualisation 
-solution to use.
+First, [install Minikube](https://github.com/kubernetes/minikube#installation).
 
 Next we will create the Agones Minikube cluster. Run `make minikube-test-cluster` to create the `agones` profile,
 and a Kubernetes cluster of the supported version under this profile.
@@ -287,14 +278,8 @@ It's worth noting that Minikube does let you [reuse its Docker daemon](https://g
 and build directly on Minikube, but in this case this approach is far simpler, 
 and makes cross-platform support for the build system much easier.
 
-If you find you also want to push your own images into Minikube, 
-the convenience make target `make minikube-transfer-image` can be run with the `TAG` argument specifying 
-the tag of the Docker image you wish to transfer into Minikube.
-
-For example:
-```bash
-$ make minikube-transfer-image TAG=myimage:0.1
-```
+To push your own images into the cluster, take a look at Minikube's 
+[Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
 Running end-to-end tests on Minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Minikube cluster.
 
@@ -653,20 +638,22 @@ Since Minikube runs locally, there are some targets that need to be used instead
 
 #### `make minikube-test-cluster`
 Switches to an "agones" profile, and starts a kubernetes cluster
-of the right version.
+of the right version. Uses "docker" as the default driver.
 
-Use MINIKUBE_DRIVER variable to change the VM driver
-(defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
-
-#### `make minikube-push`
-Push the local Agones Docker images that have already been built 
-via `make build` or `make build-images` into the "agones" minikube instance.
+If needed, use MINIKUBE_DRIVER variable to change the VM driver.
 
 #### `make minikube-install`
+
 Installs the current development version of Agones into the Kubernetes cluster.
 Use this instead of `make install`, as it disables PullAlways on the install.yaml
 
+#### `make minikube-push`
+
+Push the local Agones Docker images that have already been built 
+via `make build` or `make build-images` into the "agones" minikube instance with `minikube cache add`
+
 #### `make minikube-setup-prometheus`
+
 Installs prometheus metric backend into the Kubernetes cluster.
 Use this instead of `make setup-prometheus`, as it disables Persistent Volume Claim.
 
@@ -692,10 +679,6 @@ These tests validate Agones flow from start to finish.
 #### `make minikube-shell`
 Connecting to Minikube requires so enhanced permissions, so use this target
 instead of `make shell` to start an interactive shell for development on Minikube.
-
-#### `make minikube-transfer-image`
-Convenience target for transferring images into minikube.
-Use TAG to specify the image to transfer into minikube
 
 #### `make minikube-controller-portforward`
 The minikube version of [`make controller-portforward`](#make-controller-portforward) to setup

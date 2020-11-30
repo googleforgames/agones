@@ -31,13 +31,6 @@ sha_dir = $(shell sha256sum  $(1) | cut -d' ' -f1 | sha256sum | head -c 10 )
 
 # Minikube executable
 MINIKUBE ?= minikube
-# Default minikube driver
-MINIKUBE_DRIVER ?= virtualbox
-# set docker env for minikube
-MINIKUBE_DOCKER_ENV ?= eval $$($(MINIKUBE) docker-env)
-
-# minikube shell mount for certificates
-minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -45,11 +38,6 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 #    | | (_| | | | (_| |  __/ |_\__ \
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
-
-# Does not do anything
-minikube-post-start:
-# kubectl > 1.11 may have --address flag, but for the time being,
-# we will use --network=host, as port-forward binds to localhost
 
 # port forward the agones controller.
 # useful for pprof and stats viewing, etc
