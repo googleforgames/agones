@@ -47,6 +47,10 @@ GCP_BUCKET_CHARTS ?= agones-chart
 # the profile to use when developing on minikube
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
+BUILDX_WINDOWS_BUILDER = windows-builder
+WINDOWS_DOCKER_PUSH_ARGS =
+WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
+BUILD_WINDOWS_IMAGE =
 
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-udp Game Servers.
@@ -89,6 +93,13 @@ build_version = $(call sha,$(build_path)/build-image/Dockerfile)
 build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
+
+ifdef WITH_WINDOWS
+sidecar_linux_amd64_tag = $(sidecar_tag)-linux_amd64
+else
+sidecar_linux_amd64_tag = $(sidecar_tag)
+endif
+
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 
@@ -137,10 +148,10 @@ PERF_OUTPUT_DIR=$(mount_path)/build/.perf
 go_build_base_path=$(mount_path)
 
 ifdef LOCAL_GO
-	# use local Go tooling, which greatly speeds up incremental rebuils, in particular on macOS
+	# use local Go tooling, which greatly speeds up incremental rebuilds, in particular on macOS
 	# Note that agones.dev must be in GOPATH
 	GO_BUILD_LINUX_AMD64=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(gomod_on) $(go_build_cmd)
-	GO_BUILD_WINDOWS_AMD64=GOOS=linux GOARCH=amd64 $(gomod_on) $(go_build_cmd)
+	GO_BUILD_WINDOWS_AMD64=GOOS=windows GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_BUILD_DARWIN_AMD64=GOOS=darwin GOARCH=amd64 $(gomod_on) $(go_build_cmd)
 	GO_TEST=$(go_test_cmd) -v
 	GO_E2E_TEST_ARGS=
@@ -205,6 +216,9 @@ build: build-images build-sdks
 
 # build the docker images
 build-images: build-controller-image build-agones-sdk-image build-ping-image build-allocator-image
+ifdef WITH_WINDOWS
+build-images: build-agones-sdk-image-windows
+endif
 
 # package the current agones helm chart
 build-chart: RELEASE_VERSION ?= $(base_version)
@@ -379,13 +393,35 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 	$(GO_BUILD_WINDOWS_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
+ensure-windows-buildx:
+	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
+	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
+	#
+	# Windows image builds must be directed to a specific buildx context.
+	# The default context does not support building cross platform images.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+
+build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
+
+# Build the image for the gameserver sidecar and SDK binaries
+build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx
+	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build sidecar image only
 build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+
+build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-server-image-windows-$(winver))
+
+# Build sidecar image only
+build-agones-sdk-server-image-windows-%: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist ensure-windows-buildx
+	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build $(agones_path)/cmd/sdk-server/ -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: $(ensure-build-image)
@@ -415,9 +451,22 @@ push-allocator-image: $(ensure-build-image)
 build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
 
+ifdef WITH_WINDOWS
 # push the gameservers sidecar image
-push-agones-sdk-image: $(ensure-build-image)
-	docker push $(sidecar_tag)
+push-agones-sdk-image: push-agones-sdk-linux-image
+	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
+	# was cached we have to rebuild the image (which should be fast since it's cached).
+	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
+	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(sidecar_linux_amd64_tag) $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag) --purge
+else
+push-agones-sdk-image: push-agones-sdk-linux-image
+endif
+
+# push the gameservers sidecar image
+push-agones-sdk-linux-image: $(ensure-build-image)
+	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the static install script
 gen-install: $(ensure-build-image)
