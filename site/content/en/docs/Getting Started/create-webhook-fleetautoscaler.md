@@ -307,14 +307,32 @@ Every webhook that you wish to install a trusted certificate will need to go thr
 openssl genrsa -out webhook.key 2048
 ```
 
-Once the key is created, you’ll generate the certificate signing request, use valid hostname which is `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` when prompted:
+Next create configuration file `cert.conf` for the certificate signing request:
 ```
-openssl req -new -key webhook.key -out webhook.csr
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+CN = autoscaler-tls-service.default.svc
+[v3_req]
+keyUsage = digitalSignature
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = autoscaler-tls-service.default.svc
+```
+
+Generate the certificate signing request, use valid hostname which in this case will be `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` as well as `DNS.1` in the `alt_names` section of the config file.
+
+Check the [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records) to see how Services get assigned DNS entries.
+```
+openssl req -new -out webhook.csr -key webhook.key -config cert.conf
 ```
 
 Once that’s done, you’ll sign the CSR, which requires the CA root key:
 ```
-openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256
+openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256 -extfile cert.conf -extensions v3_req
 ```
 This would generate webhook.crt certificate
 

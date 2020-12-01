@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+MINIKUBE_DRIVER ?= docker
+
+# minikube shell mount for certificates
+minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 
 #   __  __ _       _ _          _
 #  |  \/  (_)_ __ (_) | ___   _| |__   ___
@@ -22,58 +26,39 @@
 
 # Switches to an "agones" profile, and starts a kubernetes cluster
 # of the right version.
-#
-# Use MINIKUBE_DRIVER variable to change the VM driver
-# (defaults virtualbox for Linux and macOS, hyperv for windows) if you so desire.
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
-minikube-test-cluster: $(ensure-build-image) minikube-agones-profile
-	$(MINIKUBE) start --kubernetes-version v1.16.13 --vm-driver $(MINIKUBE_DRIVER)
-	# wait until the master is up
-	until docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) kubectl cluster-info; \
-		do \
-			echo "Waiting for cluster to start..."; \
-			sleep 1; \
-		done
-	$(MAKE) minikube-post-start
-
-# switch to the agones cluster
-minikube-agones-profile:
-	$(MINIKUBE) profile $(MINIKUBE_PROFILE)
+minikube-test-cluster: $(ensure-build-image)
+	$(MINIKUBE) start --kubernetes-version v1.17.13 -p $(MINIKUBE_PROFILE) --vm-driver $(MINIKUBE_DRIVER)
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
-minikube-shell: $(ensure-build-image) minikube-agones-profile
+minikube-shell: $(ensure-build-image)
 	$(MAKE) shell DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount) $(DOCKER_RUN_ARGS)"
 
 # Push the local Agones Docker images that have already been built
 # via `make build` or `make build-images` into the "agones" minikube instance.
-minikube-push: minikube-agones-profile
-	$(MAKE) minikube-transfer-image TAG=$(sidecar_tag)
-	$(MAKE) minikube-transfer-image TAG=$(controller_tag)
-	$(MAKE) minikube-transfer-image TAG=$(ping_tag)
-	$(MAKE) minikube-transfer-image TAG=$(allocator_tag)
+minikube-push:
+	$(MINIKUBE) cache add $(sidecar_tag)
+	$(MINIKUBE) cache add $(controller_tag)
+	$(MINIKUBE) cache add $(ping_tag)
+	$(MINIKUBE) cache add $(allocator_tag)
 
 # Installs the current development version of Agones into the Kubernetes cluster.
 # Use this instead of `make install`, as it disables PullAlways on the install.yaml
-minikube-install: minikube-agones-profile
+minikube-install:
 	$(MAKE) install DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" ALWAYS_PULL_SIDECAR=false \
 		IMAGE_PULL_POLICY=IfNotPresent PING_SERVICE_TYPE=NodePort ALLOCATOR_SERVICE_TYPE=NodePort
 
-minikube-uninstall: $(ensure-build-image) minikube-agones-profile
+minikube-uninstall: $(ensure-build-image)
 	$(MAKE) uninstall DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
-
-# Convenience target for transferring images into minikube.
-# Use TAG to specify the image to transfer into minikube
-minikube-transfer-image:
-	docker save $(TAG) | ($(MINIKUBE_DOCKER_ENV) && docker load)
 
 # Runs e2e tests against our minikube
 minikube-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
-minikube-test-e2e: minikube-agones-profile test-e2e
+minikube-test-e2e: test-e2e
 
 # Runs stress tests against our minikube
 minikube-stress-test-e2e: DOCKER_RUN_ARGS=--network=host -v $(minikube_cert_mount)
-minikube-stress-test-e2e: minikube-agones-profile stress-test-e2e
+minikube-stress-test-e2e: stress-test-e2e
 
 # prometheus on minkube
 # we have to disable PVC as it's not supported on minkube.
