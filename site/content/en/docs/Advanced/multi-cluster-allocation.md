@@ -91,10 +91,24 @@ EOF
 
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
 
-Follow [agones-allocator]({{< relref "allocator-service.md#send-allocation-request">}}) to set the environment variables.
+Set the environment variables and store the client secrets before allocating using gRPC or REST APIs
+```
+NAMESPACE=default # replace with any namespace
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+KEY_FILE=client.key
+CERT_FILE=client.crt
+TLS_CA_FILE=ca.crt
+
+# allocator-client.default secret is created only when using helm installation. Otherwise generate the client certificate and replace the following.
+# In case of MacOS replace "base64 -d" with "base64 -D"
+kubectl get secret allocator-client.default -n "${NAMESPACE}" -ojsonpath="{.data.tls\.crt}" | base64 -d > "${CERT_FILE}"
+kubectl get secret allocator-client.default -n "${NAMESPACE}" -ojsonpath="{.data.tls\.key}" | base64 -d > "${KEY_FILE}"
+kubectl get secret allocator-tls-ca -n agones-system -ojsonpath="{.data.tls-ca\.crt}" | base64 -d > "${TLS_CA_FILE}"
+```
 
 ```bash
 #!/bin/bash
+
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --namespace ${NAMESPACE} \
     --key ${KEY_FILE} \
@@ -102,6 +116,16 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --cacert ${TLS_CA_FILE} \
     --multicluster true
 ```
+
+{{% feature publishVersion="1.11.0" %}} 
+If using REST use
+
+```bash
+#!/bin/bash
+
+curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'", "multi_cluster_settings":{"enabled":"true"}}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
+```
+{{% /feature %}}
 
 ## Troubleshooting
 
