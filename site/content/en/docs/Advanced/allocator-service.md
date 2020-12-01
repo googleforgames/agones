@@ -155,7 +155,7 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
 
 After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.
 
-Reuse following snippet for both grpc and rest examples:
+Set the environment variables and store the client secrets before allocating using gRPC or REST APIs:
 
 ```
 NAMESPACE=default # replace with any namespace
