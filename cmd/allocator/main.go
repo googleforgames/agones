@@ -19,7 +19,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,13 +36,13 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
+	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"gopkg.in/fsnotify.v1"
@@ -64,6 +63,19 @@ const (
 	sslPort = "8443"
 )
 
+// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
+// connections or otherHandler otherwise. Copied from https://github.com/philips/grpc-gateway-example.
+func grpcHandlerFunc(grpcServer http.Handler, otherHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
+		// We switch on HTTP/1.1 or HTTP/2 by checking the ProtoMajor
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
+}
 func main() {
 	conf := parseEnvFlags()
 
@@ -100,11 +112,6 @@ func main() {
 	})
 
 	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout)
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", sslPort))
-	if err != nil {
-		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
-	}
 
 	if !h.tlsDisabled {
 		watcherTLS, err := fsnotify.NewWatcher()
@@ -179,11 +186,39 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
 
-	// serve GRPC for allocation
+	mux := gw_runtime.NewServeMux()
+	err = pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h)
+	if err != nil {
+		panic(err)
+	}
+
+	cfg := &tls.Config{}
+	if !h.tlsDisabled {
+		cfg.GetCertificate = h.getTLSCert
+	}
+	if !h.mTLSDisabled {
+		cfg.ClientAuth = tls.RequireAnyClientCert
+		cfg.VerifyPeerCertificate = h.verifyClientCertificate
+	}
+
+	// Create a Server instance to listen on port 8443 with the TLS config
+	server := &http.Server{
+		Addr:      ":8443",
+		TLSConfig: cfg,
+		Handler:   grpcHandlerFunc(grpcServer, mux),
+	}
+
 	go func() {
-		err := grpcServer.Serve(listener)
-		logger.WithError(err).Fatal("allocation service crashed")
-		os.Exit(1)
+		if !h.tlsDisabled {
+			err = server.ListenAndServeTLS("", "")
+		} else {
+			err = server.ListenAndServe()
+		}
+
+		if err != nil {
+			logger.WithError(err).Fatal("unable to start HTTP/HTTPS listener")
+			os.Exit(1)
+		}
 	}()
 
 	// Finally listen on 8080 (http) and block the main goroutine
@@ -253,26 +288,12 @@ func readTLSCert() (*tls.Certificate, error) {
 }
 
 // getServerOptions returns a list of GRPC server options.
-// Current options are TLS certs and opencensus stats handler.
+// Current options are opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	if h.tlsDisabled {
-		return []grpc.ServerOption{grpc.StatsHandler(&ocgrpc.ServerHandler{})}
-	}
-
-	cfg := &tls.Config{
-		GetCertificate: h.getTLSCert,
-	}
-
-	if !h.mTLSDisabled {
-		cfg.ClientAuth = tls.RequireAnyClientCert
-		cfg.VerifyPeerCertificate = h.verifyClientCertificate
-	}
-
-	// Add options for creds and  OpenCensus stats handler to enable stats and tracing.
+	// Add options for  OpenCensus stats handler to enable stats and tracing.
 	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
 	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
 	return []grpc.ServerOption{
-		grpc.Creds(credentials.NewTLS(cfg)),
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             1 * time.Minute,
