@@ -262,6 +262,11 @@ This function retrieves the current player count.
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the 
 GameServer status resource.
 
+{{< alert title="Note" color="info">}}
+If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
+or SDK.WatchGameServer() instead to retrieve the current player count.
+{{< /alert >}}
+
 #### Alpha().IsPlayerConnected(playerID)
 
 This function returns if the playerID is currently connected to the GameServer. This is always accurate from what has
