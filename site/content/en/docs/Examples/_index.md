@@ -10,6 +10,7 @@ weight: 120
 These are full examples for each of the resource types of Agones
 
 - {{< ghlink href="examples/gameserver.yaml" >}}Full GameServer Configuration{{< /ghlink >}}
+- {{< ghlink href="examples/gameserver-windows.yaml" >}}Full GameServer Configuration (for Windows){{< /ghlink >}}
 - {{< ghlink href="examples/fleet.yaml" >}}Full Fleet Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/gameserverallocation.yaml" >}}Full GameServer Allocation Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleetautoscaler.yaml" >}}Full Autoscaler Configuration with Buffer Strategy{{< /ghlink >}}

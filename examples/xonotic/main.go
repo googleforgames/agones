@@ -45,9 +45,11 @@ func (i *interceptor) Write(p []byte) (n int, err error) {
 // main intercepts the stdout of the Xonotic gameserver and uses it
 // to determine if the game server is ready or not.
 func main() {
-	input := flag.String("i", "", "path to server_linux.sh")
+	input := flag.String("i", "", "path to server_linux.sh or server_windows.bat")
+	args := flag.String("args", "", "additional arguments to pass to the script")
 	flag.Parse()
 
+	argsList := strings.Split(strings.Trim(strings.TrimSpace(*args), "'"), " ")
 	fmt.Println(">>> Connecting to Agones with the SDK")
 	s, err := sdk.NewSDK()
 	if err != nil {
@@ -58,12 +60,12 @@ func main() {
 	go doHealth(s)
 
 	fmt.Println(">>> Starting wrapper for Xonotic!")
-	fmt.Printf(">>> Path to Xonotic server script: %s \n", *input)
+	fmt.Printf(">>> Path to Xonotic server script: %s %v\n", *input, argsList)
 
 	// track references to listening count
 	listeningCount := 0
 
-	cmd := exec.Command(*input) // #nosec
+	cmd := exec.Command(*input, argsList...) // #nosec
 	cmd.Stderr = &interceptor{forward: os.Stderr}
 	cmd.Stdout = &interceptor{
 		forward: os.Stdout,
