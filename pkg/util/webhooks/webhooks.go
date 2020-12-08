@@ -22,7 +22,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -38,12 +38,12 @@ type WebHook struct {
 type operationHandler struct {
 	handler   Handler
 	groupKind schema.GroupKind
-	operation v1beta1.Operation
+	operation admissionv1.Operation
 }
 
 // Handler handles a webhook's AdmissionReview coming in, and will return the
 // AdmissionReview that will be the return value of the webhook
-type Handler func(review v1beta1.AdmissionReview) (v1beta1.AdmissionReview, error)
+type Handler func(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error)
 
 // NewWebHook returns a Kubernetes webhook manager
 func NewWebHook(mux *http.ServeMux) *WebHook {
@@ -57,7 +57,7 @@ func NewWebHook(mux *http.ServeMux) *WebHook {
 }
 
 // AddHandler adds a handler for a given path, group and kind, and operation
-func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op v1beta1.Operation, h Handler) {
+func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op admissionv1.Operation, h Handler) {
 	if len(wh.handlers[path]) == 0 {
 		wh.mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			err := wh.handle(path, w, r)
@@ -75,7 +75,7 @@ func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op v1beta1.Opera
 func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) error { // nolint: interfacer
 	wh.logger.WithField("path", path).Debug("running webhook")
 
-	var review v1beta1.AdmissionReview
+	var review admissionv1.AdmissionReview
 	err := json.NewDecoder(r.Body).Decode(&review)
 	if err != nil {
 		return errors.Wrapf(err, "error decoding decoding json for path %v", path)
@@ -83,8 +83,10 @@ func (wh *WebHook) handle(path string, w http.ResponseWriter, r *http.Request) e
 
 	// set it to true, in case there are no handlers
 	if review.Response == nil {
-		review.Response = &v1beta1.AdmissionResponse{Allowed: true}
+		review.Response = &admissionv1.AdmissionResponse{Allowed: true}
 	}
+	review.Response.UID = review.Request.UID
+
 	for _, oh := range wh.handlers[path] {
 		if oh.operation == review.Request.Operation &&
 			oh.groupKind.Kind == review.Request.Kind.Kind &&

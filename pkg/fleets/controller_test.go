@@ -35,7 +35,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1beta1 "k8s.io/api/extensions/v1beta1"
@@ -423,7 +423,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 		result, err := c.creationMutationHandler(review)
 		require.NoError(t, err)
 		assert.True(t, result.Response.Allowed)
-		assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
+		assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
 
 		patch := &jsonpatch.ByPath{}
 		err = json.Unmarshal(result.Response.Patch, patch)
@@ -1370,18 +1370,18 @@ func defaultGSSpec() *agonesv1.GameServerTemplateSpec {
 	}
 }
 
-func getAdmissionReview(raw []byte) admv1beta1.AdmissionReview {
+func getAdmissionReview(raw []byte) admissionv1.AdmissionReview {
 	gvk := metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("Fleet"))
 
-	return admv1beta1.AdmissionReview{
-		Request: &admv1beta1.AdmissionRequest{
+	return admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Kind:      gvk,
-			Operation: admv1beta1.Create,
+			Operation: admissionv1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
 		},
-		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		Response: &admissionv1.AdmissionResponse{Allowed: true},
 	}
 }
 
