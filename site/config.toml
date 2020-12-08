@@ -86,6 +86,11 @@ release_branch = "release-1.10.0"
 # the main version. Never is rc.
 release_version = "1.10.0"
 
+# shown for production
+supported_k8s = "1.16"
+# shown in development (or the next version that will be supported)
+dev_supported_k8s = "1.17"
+
 # example tag
 example_image_tag = "gcr.io/agones-images/udp-server:0.21"
 

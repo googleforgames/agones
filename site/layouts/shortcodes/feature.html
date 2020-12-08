@@ -1,5 +1,4 @@
 {{- $version := getenv "RELEASE_VERSION" | default $.Page.Site.Params.release_version }}
-
 {{- with or (.Get "publishVersion") (.Get "expiryVersion")}}
 {{- else }}
     {{ errorf "missing value for either publishVersion or expiryVersion: %s" .Position}}
@@ -15,20 +14,20 @@
 {{- $expire := 0}}
 {{- $index := 0}}
 
-{{/*Generate initial shift for most significant number*/}}
+{{- /*Generate initial shift for most significant number*/}}
 {{- $shift := 1 }}
 {{- range $curDigits}}
     {{- $shift = mul $shift $multiplier }}
 {{- end}}
 {{- $shift = div $shift $multiplier }}
 
-{{/* loop three times */}}
+{{- /* loop three times */}}
 {{- range $curDigits}}
-    {{/* Get integer from dot separated string at index */}}
+    {{- /* Get integer from dot separated string at index */}}
     {{- $c := int (index $curDigits $index)}}
     {{- $p := int (index $publDigits $index)}}
     {{- $e := int (index $expDigits $index)}}
-    {{/* current += digit * shift */}}
+    {{- /* current += digit * shift */}}
     {{- $current =  (add $current (mul $c  $shift ))}}
     {{- $publish =  (add $publish (mul $p $shift ))}}
     {{- $expire =  (add $expire (mul $e  $shift ))}}
