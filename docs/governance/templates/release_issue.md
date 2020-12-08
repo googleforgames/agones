@@ -37,6 +37,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] If full release, update `release_branch` to the new release branch for {version}.
     - [ ] If full release, update `release-version` with the new release version {version}.
     - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
+    - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
+    - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
     - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
