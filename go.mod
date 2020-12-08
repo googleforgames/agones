@@ -1,6 +1,6 @@
 module agones.dev/agones
 
-go 1.13
+go 1.14
 
 require (
 	cloud.google.com/go v0.38.0
@@ -10,7 +10,7 @@ require (
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.1
 	github.com/aws/aws-sdk-go v1.16.20 // indirect
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/go-openapi/spec v0.19.2
+	github.com/go-openapi/spec v0.19.3
 	github.com/golang/protobuf v1.3.2
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
@@ -18,9 +18,9 @@ require (
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/joonix/log v0.0.0-20180502111528-d2d3f2f4a806
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
-	github.com/munnerz/goautoneg v0.0.0-20120707110453-a547fc61f48d
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/pkg/errors v0.8.1
-	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/client_golang v1.0.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.3.2
@@ -30,15 +30,16 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20190920225731-5eefd052ad72
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
-	google.golang.org/grpc v1.23.0
+	google.golang.org/grpc v1.23.1
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	k8s.io/api v0.16.15
-	k8s.io/apiextensions-apiserver v0.16.15
-	k8s.io/apimachinery v0.16.15
-	k8s.io/client-go v0.16.15
+	k8s.io/api v0.17.14
+	k8s.io/apiextensions-apiserver v0.17.14
+	k8s.io/apimachinery v0.17.14
+	k8s.io/client-go v0.17.14
+	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
 	k8s.io/utils v0.0.0-20200124190032-861946025e34
 )
 
-replace google.golang.org/grpc v1.23.0 => google.golang.org/grpc v1.20.1 // apiserver updated grpc, but we aren't using that, so it's fine.
+replace google.golang.org/grpc v1.23.1 => google.golang.org/grpc v1.20.1 // apiserver updated grpc, but we aren't using that, so it's fine.
