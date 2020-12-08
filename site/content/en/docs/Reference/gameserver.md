@@ -12,8 +12,8 @@ A full GameServer specification is available below and in the {{< ghlink href="e
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
-# GameServer Metadata
-# https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta
+# GameServer Metadata 
+# {{< k8s-api href="#objectmeta-v1-meta" >}}
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -79,7 +79,7 @@ spec:
   #   # set this GameServer's initial player capacity
   #   initialCapacity: 10
   # Pod template configuration
-  # https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplate-v1-core
+  # {{< k8s-api href="#podtemplate-v1-core" >}}
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:
@@ -121,7 +121,7 @@ The `spec` field is the actual GameServer specification and it is composed as fo
   - `grpcPort` the port that the SDK Server binds to for gRPC connections
   - `httpPort` the port that the SDK Server binds to for HTTP gRPC gateway connections
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
-- `template` the [pod spec template](https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplatespec-v1-core) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
+- `template` the [pod spec template]({{% k8s-api href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
 ## GameServer State Diagram
 

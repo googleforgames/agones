@@ -32,11 +32,15 @@ and copy it into a release issue. Fill in relevant values, found inside {}
   - [ ] Copy the draft release content into a new `/site/content/en/blog/releases` content (this will be what you send via email). 
   - [ ] Review all `link_test` and `data-proofer-ignore` attributes and remove for link testing
   - [ ] If full release, review and remove all instances of the `feature` shortcode
-  - [ ] If full release, update to the new release branch {version}.
-  - [ ] If full release, update site with the new release version (`release-version` in config.toml) to {version}
-  - [ ] If full release, update documentation with updated example images tags
-  - [ ] If full release, add link to previous version's documentation to nav dropdown
-- [ ] Create PR with these changes, and merge them with approval
+  - [ ] If full release, add a link to previous version's documentation to nav dropdown.
+  - [ ] config.toml updates:
+    - [ ] If full release, update `release_branch` to the new release branch for {version}.
+    - [ ] If full release, update `release-version` with the new release version {version}.
+    - [ ] If full release, copy `dev_supported_k8s` to `supported_k8s`.
+    - [ ] If full release, copy `dev_aks_minor_supported_k8s` to `aks_minor_supported_k8s`.
+    - [ ] If full release, copy `dev_minikube_minor_supported_k8s` to `minikube_minor_supported_k8s`.
+    - [ ] If full release, update documentation with updated example images tags.
+- [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
 - [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages

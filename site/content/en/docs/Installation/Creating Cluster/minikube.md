@@ -30,7 +30,7 @@ The following command starts a local minikube cluster via virtualbox - but this 
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
 ```bash
-minikube start --kubernetes-version v1.16.13 --vm-driver virtualbox
+minikube start --kubernetes-version v{{% k8s-version %}}.{{% minikube-k8s-minor-version %}} --vm-driver virtualbox
 ```
 
 ## Next Steps

@@ -8,7 +8,7 @@ description: >
 
 ## Usage Requirements
 
-- **Kubernetes cluster version 1.16**
+- **Kubernetes cluster version {{% k8s-version %}}**
     - [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/),
       [Azure Kubernetes Service](https://azure.microsoft.com/en-us/services/kubernetes-service/),
       [Amazon EKS](https://aws.amazon.com/eks/) and [Minikube](https://github.com/kubernetes/minikube) have been tested
@@ -22,7 +22,7 @@ description: >
 - Game Servers must have the [game server SDK]({{< ref "/docs/Guides/Client SDKs/_index.md"  >}}) integrated, to manage Game Server state, health checking, etc.
 
 {{< alert title="Warning" color="warning">}}
-Later versions of Kubernetes may work, but this project is tested against 1.16, and is therefore the supported version.
+Later versions of Kubernetes may work, but this project is tested against {{% k8s-version %}}, and is therefore the supported version.
 Agones will update its support to n-1 version of what is available across the majority of major cloud providers - GKE, EKS and
 AKS, while also ensuring that all Cloud providers can support that version.
 {{< /alert >}}
