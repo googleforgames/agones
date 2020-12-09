@@ -21,7 +21,7 @@
 package v1
 
 import (
-	v1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -235,7 +235,7 @@ func (in *WebhookPolicy) DeepCopyInto(out *WebhookPolicy) {
 	}
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
-		*out = new(v1beta1.ServiceReference)
+		*out = new(admissionregistrationv1.ServiceReference)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.CABundle != nil {

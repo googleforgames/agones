@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -234,7 +234,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 		res.Spec.Policy.Buffer = nil
 		url := "/scale"
 		res.Spec.Policy.Webhook = &WebhookPolicy{
-			Service: &admregv1b.ServiceReference{
+			Service: &admregv1.ServiceReference{
 				Name:      "service1",
 				Namespace: "default",
 				Path:      &url,
