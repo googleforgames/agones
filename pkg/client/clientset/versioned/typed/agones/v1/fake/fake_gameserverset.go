@@ -20,7 +20,7 @@ package fake
 
 import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -141,23 +141,23 @@ func (c *FakeGameServerSets) Patch(name string, pt types.PatchType, data []byte,
 }
 
 // GetScale takes name of the gameServerSet, and returns the corresponding scale object, and an error if there is any.
-func (c *FakeGameServerSets) GetScale(gameServerSetName string, options v1.GetOptions) (result *v1beta1.Scale, err error) {
+func (c *FakeGameServerSets) GetScale(gameServerSetName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetSubresourceAction(gameserversetsResource, c.ns, "scale", gameServerSetName), &v1beta1.Scale{})
+		Invokes(testing.NewGetSubresourceAction(gameserversetsResource, c.ns, "scale", gameServerSetName), &autoscalingv1.Scale{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1beta1.Scale), err
+	return obj.(*autoscalingv1.Scale), err
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *FakeGameServerSets) UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (result *v1beta1.Scale, err error) {
+func (c *FakeGameServerSets) UpdateScale(gameServerSetName string, scale *autoscalingv1.Scale) (result *autoscalingv1.Scale, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "scale", c.ns, scale), &v1beta1.Scale{})
+		Invokes(testing.NewUpdateSubresourceAction(gameserversetsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
 
 	if obj == nil {
 		return nil, err
 	}
-	return obj.(*v1beta1.Scale), err
+	return obj.(*autoscalingv1.Scale), err
 }
