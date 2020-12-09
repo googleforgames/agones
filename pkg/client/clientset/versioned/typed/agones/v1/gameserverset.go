@@ -23,7 +23,7 @@ import (
 
 	v1 "agones.dev/agones/pkg/apis/agones/v1"
 	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -47,8 +47,8 @@ type GameServerSetInterface interface {
 	List(opts metav1.ListOptions) (*v1.GameServerSetList, error)
 	Watch(opts metav1.ListOptions) (watch.Interface, error)
 	Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.GameServerSet, err error)
-	GetScale(gameServerSetName string, options metav1.GetOptions) (*v1beta1.Scale, error)
-	UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (*v1beta1.Scale, error)
+	GetScale(gameServerSetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error)
+	UpdateScale(gameServerSetName string, scale *autoscalingv1.Scale) (*autoscalingv1.Scale, error)
 
 	GameServerSetExpansion
 }
@@ -194,9 +194,9 @@ func (c *gameServerSets) Patch(name string, pt types.PatchType, data []byte, sub
 	return
 }
 
-// GetScale takes name of the gameServerSet, and returns the corresponding v1beta1.Scale object, and an error if there is any.
-func (c *gameServerSets) GetScale(gameServerSetName string, options metav1.GetOptions) (result *v1beta1.Scale, err error) {
-	result = &v1beta1.Scale{}
+// GetScale takes name of the gameServerSet, and returns the corresponding autoscalingv1.Scale object, and an error if there is any.
+func (c *gameServerSets) GetScale(gameServerSetName string, options metav1.GetOptions) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
 	err = c.client.Get().
 		Namespace(c.ns).
 		Resource("gameserversets").
@@ -209,8 +209,8 @@ func (c *gameServerSets) GetScale(gameServerSetName string, options metav1.GetOp
 }
 
 // UpdateScale takes the top resource name and the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *gameServerSets) UpdateScale(gameServerSetName string, scale *v1beta1.Scale) (result *v1beta1.Scale, err error) {
-	result = &v1beta1.Scale{}
+func (c *gameServerSets) UpdateScale(gameServerSetName string, scale *autoscalingv1.Scale) (result *autoscalingv1.Scale, err error) {
+	result = &autoscalingv1.Scale{}
 	err = c.client.Put().
 		Namespace(c.ns).
 		Resource("gameserversets").

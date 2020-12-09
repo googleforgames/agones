@@ -30,8 +30,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1betaext "k8s.io/api/extensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -1419,10 +1419,10 @@ func fleetWithGameServerSpec(gsSpec *agonesv1.GameServerSpec, namespace string) 
 }
 
 // newScale returns a scale with specified Replicas spec
-func newScale(fleetName string, newReplicas int32, resourceVersion string) *v1betaext.Scale {
-	return &v1betaext.Scale{
+func newScale(fleetName string, newReplicas int32, resourceVersion string) *autoscalingv1.Scale {
+	return &autoscalingv1.Scale{
 		ObjectMeta: metav1.ObjectMeta{Name: fleetName, Namespace: framework.Namespace, ResourceVersion: resourceVersion},
-		Spec: v1betaext.ScaleSpec{
+		Spec: autoscalingv1.ScaleSpec{
 			Replicas: newReplicas,
 		},
 	}
