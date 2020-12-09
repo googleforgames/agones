@@ -1807,7 +1807,7 @@ spec:
           readOnly: true
 ---
 # Source: agones/templates/extensions.yaml
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
   name: v1.allocation.agones.dev
@@ -1846,7 +1846,7 @@ spec:
 # Default allocation client secret
 ---
 # Source: agones/templates/extensions.yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
@@ -1858,6 +1858,9 @@ metadata:
     heritage: Helm
 webhooks:
   - name: mutations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
     failurePolicy: Fail
     clientConfig:
       service:
@@ -1886,7 +1889,7 @@ globalDefault: false
 description: "This priority class should be used for Agones service pods only."
 ---
 # Source: agones/templates/extensions.yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
@@ -1898,6 +1901,9 @@ metadata:
     heritage: Helm
 webhooks:
   - name: validations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
     failurePolicy: Fail
     clientConfig:
       service:

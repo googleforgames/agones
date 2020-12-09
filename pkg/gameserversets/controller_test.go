@@ -32,7 +32,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -684,10 +684,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -695,7 +695,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.updateValidationHandler(review)
@@ -709,10 +709,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 	})
 
 	t.Run("new object is nil, err excpected", func(t *testing.T) {
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: nil,
 				},
@@ -720,7 +720,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err := c.updateValidationHandler(review)
@@ -734,10 +734,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -745,7 +745,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: nil,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err = c.updateValidationHandler(review)
@@ -765,10 +765,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 
 		assert.NotEqual(t, string(raw), string(newRaw))
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -776,7 +776,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.updateValidationHandler(review)
@@ -820,15 +820,15 @@ func TestCreationValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)
@@ -842,15 +842,15 @@ func TestCreationValidationHandler(t *testing.T) {
 	})
 
 	t.Run("object is nil, err excpected", func(t *testing.T) {
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: nil,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err := c.creationValidationHandler(review)
@@ -870,15 +870,15 @@ func TestCreationValidationHandler(t *testing.T) {
 
 		assert.NotEqual(t, string(raw), string(newRaw))
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)

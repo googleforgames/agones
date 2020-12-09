@@ -36,7 +36,7 @@ import (
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
@@ -149,8 +149,8 @@ func NewController(
 	health.AddLivenessCheck("gameserver-creation-workerqueue", healthcheck.Check(c.creationWorkerQueue.Healthy))
 	health.AddLivenessCheck("gameserver-deletion-workerqueue", healthcheck.Check(c.deletionWorkerQueue.Healthy))
 
-	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admv1beta1.Create, c.creationMutationHandler)
-	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admv1beta1.Create, c.creationValidationHandler)
+	wh.AddHandler("/mutate", agonesv1.Kind("GameServer"), admissionv1.Create, c.creationMutationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("GameServer"), admissionv1.Create, c.creationValidationHandler)
 
 	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.enqueueGameServerBasedOnState,
@@ -219,7 +219,7 @@ func fastRateLimiter() workqueue.RateLimiter {
 // the default values on the GameServer
 // Should only be called on gameserver create operations.
 // nolint:dupl
-func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) creationMutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
@@ -247,7 +247,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating json for patch for GameServer %s", gs.ObjectMeta.Name)
 	}
 
-	pt := admv1beta1.PatchTypeJSONPatch
+	pt := admissionv1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
 	review.Response.Patch = jsonPatch
 
@@ -268,7 +268,7 @@ func (c *Controller) loggerForGameServer(gs *agonesv1.GameServer) *logrus.Entry 
 
 // creationValidationHandler that validates a GameServer when it is created
 // Should only be called on gameserver create operations.
-func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) creationValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object
 	gs := &agonesv1.GameServer{}
 	err := json.Unmarshal(obj.Raw, gs)
