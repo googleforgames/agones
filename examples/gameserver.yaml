@@ -21,10 +21,12 @@
 # and provides a sidecar for this game server that the SDK will connect with.
 #
 
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/gameserver/
+#
+
 apiVersion: "agones.dev/v1"
 kind: GameServer
-# GameServer Metadata
-# https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#objectmeta-v1-meta
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
   name: "gds-example" # set a fixed name
@@ -85,8 +87,8 @@ spec:
   # players:
   #   # set this GameServer's initial player capacity
   #   initialCapacity: 10
+  #
   # Pod template configuration
-  # https://v1-16.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.16/#podtemplate-v1-core
   template:
     # pod metadata. Name & Namespace is overwritten
     metadata:
