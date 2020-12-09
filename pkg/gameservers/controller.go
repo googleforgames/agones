@@ -39,7 +39,7 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -70,7 +70,7 @@ type Controller struct {
 	sidecarMemoryRequest   resource.Quantity
 	sidecarMemoryLimit     resource.Quantity
 	sdkServiceAccount      string
-	crdGetter              v1beta1.CustomResourceDefinitionInterface
+	crdGetter              apiextclientv1.CustomResourceDefinitionInterface
 	podGetter              typedcorev1.PodsGetter
 	podLister              corelisterv1.PodLister
 	podSynced              cache.InformerSynced
@@ -120,7 +120,7 @@ func NewController(
 		sidecarMemoryRequest:   sidecarMemoryRequest,
 		alwaysPullSidecarImage: alwaysPullSidecarImage,
 		sdkServiceAccount:      sdkServiceAccount,
-		crdGetter:              extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:              extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		podGetter:              kubeClient.CoreV1(),
 		podLister:              pods.Lister(),
 		podSynced:              pods.Informer().HasSynced,
