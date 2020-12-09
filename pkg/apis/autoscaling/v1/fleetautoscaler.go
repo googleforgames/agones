@@ -19,7 +19,7 @@ import (
 	"net/url"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -108,7 +108,7 @@ type BufferPolicy struct {
 // WebhookPolicy controls the desired behavior of the webhook policy.
 // It contains the description of the webhook autoscaler service
 // used to form url which is accessible inside the cluster
-type WebhookPolicy admregv1b.WebhookClientConfig
+type WebhookPolicy admregv1.WebhookClientConfig
 
 // FleetAutoscalerStatus defines the current status of a FleetAutoscaler
 type FleetAutoscalerStatus struct {

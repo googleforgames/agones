@@ -29,7 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	admissionv1 "k8s.io/api/admission/v1"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -739,7 +739,7 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 	fas.Spec.Policy.Buffer = nil
 	url := "/autoscaler"
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
-		Service: &admregv1b.ServiceReference{
+		Service: &admregv1.ServiceReference{
 			Name: "fleetautoscaler-service",
 			Path: &url,
 		},
