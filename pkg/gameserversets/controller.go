@@ -38,7 +38,7 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -69,7 +69,7 @@ const (
 type Controller struct {
 	baseLogger          *logrus.Entry
 	counter             *gameservers.PerNodeCounter
-	crdGetter           v1beta1.CustomResourceDefinitionInterface
+	crdGetter           apiextclientv1.CustomResourceDefinitionInterface
 	gameServerGetter    getterv1.GameServersGetter
 	gameServerLister    listerv1.GameServerLister
 	gameServerSynced    cache.InformerSynced
@@ -98,7 +98,7 @@ func NewController(
 	gsSetInformer := gameServerSets.Informer()
 
 	c := &Controller{
-		crdGetter:           extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:           extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		counter:             counter,
 		gameServerGetter:    agonesClient.AgonesV1(),
 		gameServerLister:    gameServers.Lister(),
