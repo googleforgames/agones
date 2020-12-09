@@ -37,8 +37,8 @@ import (
 	"github.com/stretchr/testify/require"
 	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1beta1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -1433,10 +1433,10 @@ func (ffg *fakeFleetsGetterWithErr) Watch(opts metav1.ListOptions) (watch.Interf
 func (ffg *fakeFleetsGetterWithErr) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *v1.Fleet, err error) {
 	panic("not implemented")
 }
-func (ffg *fakeFleetsGetterWithErr) GetScale(fleetName string, options metav1.GetOptions) (*v1beta1.Scale, error) {
+func (ffg *fakeFleetsGetterWithErr) GetScale(fleetName string, options metav1.GetOptions) (*autoscalingv1.Scale, error) {
 	panic("not implemented")
 }
-func (ffg *fakeFleetsGetterWithErr) UpdateScale(fleetName string, scale *v1beta1.Scale) (*v1beta1.Scale, error) {
+func (ffg *fakeFleetsGetterWithErr) UpdateScale(fleetName string, scale *autoscalingv1.Scale) (*autoscalingv1.Scale, error) {
 	panic("not implemented")
 }
 
