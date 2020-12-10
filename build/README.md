@@ -50,7 +50,8 @@ Table of Contents
         * [make prometheus-portforward](#make-prometheus-portforward)
         * [make grafana-portforward](#make-grafana-portforward)
         * [make controller-portforward](#make-controller-portforward)
-        * [make pprof-web](#make-pprof-web)
+        * [make pprof-cpu-web](#make-pprof-cpu-web)
+        * [make pprof-heap-web](#make-pprof-heap-web)          
         * [make shell](#make-shell)
         * [make godoc](#make-godoc)
         * [make build-controller-image](#make-build-controller-image)
@@ -541,9 +542,13 @@ See [`make minikube-grafana-portforward`](#make-minikube-grafana-portforward) an
 Sets up port forwarding to a specified PORT var (defaults to 8080 for controller metrics) to the
 controller deployment.
 
-#### `make pprof-web`
+#### `make pprof-cpu-web`
 
-Start the web interface for pprof.
+Start the web interface for pprof for cpu profiling.
+
+#### `make pprof-heap-web`
+
+Start the web interface for pprof for heap profiling.
 
 #### `make shell`
 Run a bash shell with the developer tools (go tooling, kubectl, etc) and source code in it.
@@ -806,6 +811,9 @@ enabled in the controller, which you can then push and install on your cluster.
 To get the pprof ui working, run `make controller-portforward PORT=6060` (or `minikube-controller-portforward PORT=6060` if you are on minikube),
 which will setup the port forwarding to the pprof http endpoint.
 
-Run `make pprof-web`, which will start the web interface. It may take a few minutes to start up, but it can be opened on
-[http://localhost:6060/ui](http://localhost:6060/ui).
+To view CPU profiling, run `make pprof-cpu-web`, which will start the web interface with a CPU usage graph
+on [http://localhost:6061](http://localhost:6061).
+
+To view heap metrics, run `make pprof-heap-web`, which will start the web interface with a Heap usage graph.
+on [http://localhost:6062](http://localhost:6062).
 
