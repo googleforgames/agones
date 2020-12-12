@@ -128,6 +128,16 @@ Each `GameServer` inherits the IP Address of the Node on which it resides. If it
 the Node (which it should if it's a publicly addressable Node), that it utilised, otherwise it falls back to using the
 `InternalIP` address. 
 
+{{% feature publishVersion="1.12.0" %}}
+### How do I use the DNS name of the Node?
+[You can make this available by using the feature flag.]({{< ref "/docs/Guides/feature-stages.md" >}})  
+Agones uses an IP address as the game server address by default.
+This works fine in most cases, but can be a problem if your game server and game client are running on different IP protocols.  
+e.g) The game server is connected only to the IPv4 network, and the game client is connected only to the IPv6 network.  
+When this feature is enabled, Agones will preferentially use the External DNS of the Node on which the GameServer Pod is running.
+Since the game client can get the domain name instead of the IP address, it will be able to communicate with the game server via DNS64 and NAT64.
+{{% /feature %}}
+
 ### How is traffic routed from the allocated Port to the GameServer container?
 
 Traffic is routed to the GameServer Container utilising the `hostPort` field on a 
