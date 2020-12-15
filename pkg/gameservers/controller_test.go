@@ -1314,7 +1314,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		defer cancel()
 
 		_, err = c.syncGameServerRequestReadyState(gsFixture)
-		assert.EqualError(t, err, "game server container is not currently running, try again")
+		assert.EqualError(t, err, "game server container for GameServer test in namespace default is not currently running, try again")
 		assert.False(t, gsUpdated, "GameServer was updated")
 	})
 
