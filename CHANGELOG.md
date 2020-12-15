@@ -1,5 +1,62 @@
 # Changelog
 
+## [v1.11.0-rc](https://github.com/googleforgames/agones/tree/v1.11.0-rc) (2020-12-15)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.10.0...v1.11.0-rc)
+
+**Breaking changes:**
+
+- Upgrade to Kubernetes 1.17 [\#1824](https://github.com/googleforgames/agones/issues/1824)
+- Update apiextensions.k8s.io/v1beta1 to v1 for all CRDs [\#1799](https://github.com/googleforgames/agones/issues/1799)
+- Move apiregistration & admissionregistration to v1 [\#1918](https://github.com/googleforgames/agones/pull/1918) ([markmandel](https://github.com/markmandel))
+- Updated terraform scripts to 1.17 [\#1916](https://github.com/googleforgames/agones/pull/1916) ([markmandel](https://github.com/markmandel))
+- Update client-go to 0.17.14 [\#1913](https://github.com/googleforgames/agones/pull/1913) ([markmandel](https://github.com/markmandel))
+- Adding SAN to fleet autoscaler certs and updating documentation [\#1910](https://github.com/googleforgames/agones/pull/1910) ([kdima](https://github.com/kdima))
+- Move CRDs from v1beta1 to v1 [\#1909](https://github.com/googleforgames/agones/pull/1909) ([markmandel](https://github.com/markmandel))
+- Upgrade terraform and test clusters to 1.17 [\#1901](https://github.com/googleforgames/agones/pull/1901) ([markmandel](https://github.com/markmandel))
+
+**Implemented enhancements:**
+
+- Remove support / docs for helm v2 [\#1853](https://github.com/googleforgames/agones/issues/1853)
+- grpc-gateway powered REST API for MultiCluster Allocation [\#1495](https://github.com/googleforgames/agones/issues/1495)
+- Support Agones sidecar Windows build [\#110](https://github.com/googleforgames/agones/issues/110)
+- Tooling to review pprof heaps [\#1927](https://github.com/googleforgames/agones/pull/1927) ([markmandel](https://github.com/markmandel))
+- Move supported site K8s version to shortcodes [\#1917](https://github.com/googleforgames/agones/pull/1917) ([markmandel](https://github.com/markmandel))
+- Adding rest to allocation endpoint [\#1902](https://github.com/googleforgames/agones/pull/1902) ([kdima](https://github.com/kdima))
+- \#54 Preliminary Windows Image Support [\#1894](https://github.com/googleforgames/agones/pull/1894) ([jeremyje](https://github.com/jeremyje))
+
+**Fixed bugs:**
+
+- validations.agones.dev and mutations.agones.dev don't declare side effects [\#1891](https://github.com/googleforgames/agones/issues/1891)
+- Agones Game Server Client SDKs [\#1854](https://github.com/googleforgames/agones/issues/1854)
+- Pin the postcss-cli version [\#1930](https://github.com/googleforgames/agones/pull/1930) ([markmandel](https://github.com/markmandel))
+- Oops, k8s-api shortcode only pointed at one URL [\#1924](https://github.com/googleforgames/agones/pull/1924) ([markmandel](https://github.com/markmandel))
+
+**Security fixes:**
+
+- Updated Go to 1.14.12 [\#1900](https://github.com/googleforgames/agones/pull/1900) ([markmandel](https://github.com/markmandel))
+
+**Closed issues:**
+
+- Release 1.10.0 [\#1892](https://github.com/googleforgames/agones/issues/1892)
+- Proposal: Multi-Cluster Allocation Policies [\#597](https://github.com/googleforgames/agones/issues/597)
+
+**Merged pull requests:**
+
+- Add some logging to help determine which game server / namespace is causing this particular error [\#1929](https://github.com/googleforgames/agones/pull/1929) ([roberthbailey](https://github.com/roberthbailey))
+- Upgrade prow to 1.17 [\#1926](https://github.com/googleforgames/agones/pull/1926) ([markmandel](https://github.com/markmandel))
+- Update crd-doc-config.json to Kubernetes 1.17 [\#1925](https://github.com/googleforgames/agones/pull/1925) ([markmandel](https://github.com/markmandel))
+- Remove K8s API reference links from yaml examples [\#1923](https://github.com/googleforgames/agones/pull/1923) ([markmandel](https://github.com/markmandel))
+- Updated CRD libraries to v1 [\#1922](https://github.com/googleforgames/agones/pull/1922) ([markmandel](https://github.com/markmandel))
+- Move Scaling resource to v1betav1 to v1 [\#1920](https://github.com/googleforgames/agones/pull/1920) ([markmandel](https://github.com/markmandel))
+- Move admissionregistration to v1 [\#1919](https://github.com/googleforgames/agones/pull/1919) ([markmandel](https://github.com/markmandel))
+- Update Kind dev tooling to 1.17.3 [\#1915](https://github.com/googleforgames/agones/pull/1915) ([markmandel](https://github.com/markmandel))
+- Issue \#1854: Fix getplayercount\(\) description on index  [\#1912](https://github.com/googleforgames/agones/pull/1912) ([bnwhorton](https://github.com/bnwhorton))
+- Merge allocation service annotation metadata [\#1908](https://github.com/googleforgames/agones/pull/1908) ([markmandel](https://github.com/markmandel))
+- Update minikube dev tooling [\#1906](https://github.com/googleforgames/agones/pull/1906) ([markmandel](https://github.com/markmandel))
+- csharp SDK: exposes the Alpha SDK via the main interface [\#1896](https://github.com/googleforgames/agones/pull/1896) ([rcreasey](https://github.com/rcreasey))
+- Preparation for 1.11.0 [\#1895](https://github.com/googleforgames/agones/pull/1895) ([markmandel](https://github.com/markmandel))
+
 ## [v1.10.0](https://github.com/googleforgames/agones/tree/v1.10.0) (2020-11-10)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.10.0-rc...v1.10.0)
@@ -14,6 +71,10 @@
 **Closed issues:**
 
 - Release 1.10.0 [\#1884](https://github.com/googleforgames/agones/issues/1884)
+
+**Merged pull requests:**
+
+- Release 1.10.0 [\#1893](https://github.com/googleforgames/agones/pull/1893) ([markmandel](https://github.com/markmandel))
 
 ## [v1.10.0-rc](https://github.com/googleforgames/agones/tree/v1.10.0-rc) (2020-11-03)
 
@@ -119,7 +180,6 @@
 - Troubleshooting - namespace stuck terminating [\#1795](https://github.com/googleforgames/agones/pull/1795) ([domgreen](https://github.com/domgreen))
 - Add load balancer configuration for Helm options [\#1793](https://github.com/googleforgames/agones/pull/1793) ([yoshd](https://github.com/yoshd))
 - Added option to hardcode load balancer IP for allocator. [\#1766](https://github.com/googleforgames/agones/pull/1766) ([devloop0](https://github.com/devloop0))
-- Add TCPUDP protocol [\#1764](https://github.com/googleforgames/agones/pull/1764) ([Bmandk](https://github.com/Bmandk))
 - Publish to NuGet for Csharp SDK [\#1753](https://github.com/googleforgames/agones/pull/1753) ([markmandel](https://github.com/markmandel))
 - Add Terraform example for GKE custom VPC deployment [\#1697](https://github.com/googleforgames/agones/pull/1697) ([moesy](https://github.com/moesy))
 - Fix Fleets RollingUpdate [\#1626](https://github.com/googleforgames/agones/pull/1626) ([aLekSer](https://github.com/aLekSer))
@@ -174,6 +234,10 @@
 ## [v1.8.0](https://github.com/googleforgames/agones/tree/v1.8.0) (2020-08-18)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.8.0-rc...v1.8.0)
+
+**Implemented enhancements:**
+
+- Add TCPUDP protocol [\#1764](https://github.com/googleforgames/agones/pull/1764) ([Bmandk](https://github.com/Bmandk))
 
 **Fixed bugs:**
 
@@ -329,6 +393,7 @@
 - Adding AccelByte in Companies using Agones list [\#1593](https://github.com/googleforgames/agones/pull/1593) ([accelbyte-raymond](https://github.com/accelbyte-raymond))
 - Metrics: add namespace to distinguish fleets with the same name [\#1585](https://github.com/googleforgames/agones/pull/1585) ([akremsa](https://github.com/akremsa))
 - Move ContainerPortAllocation to beta [\#1577](https://github.com/googleforgames/agones/pull/1577) ([akremsa](https://github.com/akremsa))
+- PlayerConnect/Disconnect & related Go SDK functions [\#1519](https://github.com/googleforgames/agones/pull/1519) ([markmandel](https://github.com/markmandel))
 - New metric - state duration [\#1468](https://github.com/googleforgames/agones/pull/1468) ([aLekSer](https://github.com/aLekSer))
 
 **Fixed bugs:**
@@ -385,6 +450,7 @@
 - Update edit-first-gameserver-go.md [\#1595](https://github.com/googleforgames/agones/pull/1595) ([minho-comcom-ai](https://github.com/minho-comcom-ai))
 - Remove redundant "helm test" pod from "install.yaml" [\#1591](https://github.com/googleforgames/agones/pull/1591) ([aLekSer](https://github.com/aLekSer))
 - Preparation for 1.7.0 [\#1589](https://github.com/googleforgames/agones/pull/1589) ([markmandel](https://github.com/markmandel))
+- Release 1.6.0 [\#1588](https://github.com/googleforgames/agones/pull/1588) ([markmandel](https://github.com/markmandel))
 - Improved Fleets - controller tests [\#1547](https://github.com/googleforgames/agones/pull/1547) ([akremsa](https://github.com/akremsa))
 - CI: Add one more E2E tests run with all feature gates disabled [\#1546](https://github.com/googleforgames/agones/pull/1546) ([aLekSer](https://github.com/aLekSer))
 - Improved fleetautoscalers - fleetautoscalers\_test.go unit tests + applyWebhookPolicy refactoring [\#1531](https://github.com/googleforgames/agones/pull/1531) ([akremsa](https://github.com/akremsa))
@@ -404,7 +470,6 @@
 
 **Merged pull requests:**
 
-- Release 1.6.0 [\#1588](https://github.com/googleforgames/agones/pull/1588) ([markmandel](https://github.com/markmandel))
 - Fix flaky Local SDK test [\#1586](https://github.com/googleforgames/agones/pull/1586) ([aLekSer](https://github.com/aLekSer))
 - Warning to release checklist. [\#1580](https://github.com/googleforgames/agones/pull/1580) ([markmandel](https://github.com/markmandel))
 
@@ -444,7 +509,6 @@
 - Player Tracking Go SDK Conformance Tests [\#1527](https://github.com/googleforgames/agones/pull/1527) ([markmandel](https://github.com/markmandel))
 - Update EKS Kubernetes version to 1.15 [\#1522](https://github.com/googleforgames/agones/pull/1522) ([aLekSer](https://github.com/aLekSer))
 - Helm: add ping HTTP and UDP annotations into chart [\#1520](https://github.com/googleforgames/agones/pull/1520) ([aLekSer](https://github.com/aLekSer))
-- PlayerConnect/Disconnect & related Go SDK functions [\#1519](https://github.com/googleforgames/agones/pull/1519) ([markmandel](https://github.com/markmandel))
 - SDKServer Player Tracking implementation [\#1507](https://github.com/googleforgames/agones/pull/1507) ([markmandel](https://github.com/markmandel))
 - Add PlayerTracking IDs to SDK Convert function [\#1498](https://github.com/googleforgames/agones/pull/1498) ([markmandel](https://github.com/markmandel))
 - Add Event to Player Capacity update [\#1497](https://github.com/googleforgames/agones/pull/1497) ([markmandel](https://github.com/markmandel))
@@ -631,6 +695,7 @@
 - Fix for AKS recent provider change [\#1380](https://github.com/googleforgames/agones/pull/1380) ([aLekSer](https://github.com/aLekSer))
 - Terraform make targets: Switch from the plane structure to module terraform config [\#1375](https://github.com/googleforgames/agones/pull/1375) ([aLekSer](https://github.com/aLekSer))
 - Separate e2e tests in build Makefile [\#1371](https://github.com/googleforgames/agones/pull/1371) ([drichardson](https://github.com/drichardson))
+- Release 1.4.0 Release Candidate [\#1367](https://github.com/googleforgames/agones/pull/1367) ([markmandel](https://github.com/markmandel))
 - Updated log levels in pkg [\#1359](https://github.com/googleforgames/agones/pull/1359) ([akremsa](https://github.com/akremsa))
 
 ## [v1.4.0](https://github.com/googleforgames/agones/tree/v1.4.0) (2020-03-04)
@@ -726,7 +791,6 @@
 
 **Merged pull requests:**
 
-- Release 1.4.0 Release Candidate [\#1367](https://github.com/googleforgames/agones/pull/1367) ([markmandel](https://github.com/markmandel))
 - Update Feature Stage: New CRD attributes section [\#1355](https://github.com/googleforgames/agones/pull/1355) ([markmandel](https://github.com/markmandel))
 - Fix Kubernetes terraform provider version [\#1353](https://github.com/googleforgames/agones/pull/1353) ([aLekSer](https://github.com/aLekSer))
 - Update the kind make targets to work with kind 0.6.0 and later. [\#1349](https://github.com/googleforgames/agones/pull/1349) ([roberthbailey](https://github.com/roberthbailey))
@@ -1086,7 +1150,6 @@
 - Output JSON unmarshal error as Admission response [\#1005](https://github.com/googleforgames/agones/pull/1005) ([aLekSer](https://github.com/aLekSer))
 - Add GameServer troubleshooting guide [\#1003](https://github.com/googleforgames/agones/pull/1003) ([markmandel](https://github.com/markmandel))
 - Local SDK Server: Add proper GS state handling [\#979](https://github.com/googleforgames/agones/pull/979) ([aLekSer](https://github.com/aLekSer))
-- Add allocations metrics [\#963](https://github.com/googleforgames/agones/pull/963) ([cyriltovena](https://github.com/cyriltovena))
 
 **Fixed bugs:**
 
@@ -1175,6 +1238,7 @@
 - SDK Build/test pipeline separation from build-image [\#599](https://github.com/googleforgames/agones/issues/599)
 - Move to using CRD Subresources for all Agones CRDs [\#329](https://github.com/googleforgames/agones/issues/329)
 - Unity Plugin SDK [\#246](https://github.com/googleforgames/agones/issues/246)
+- Add allocations metrics [\#963](https://github.com/googleforgames/agones/pull/963) ([cyriltovena](https://github.com/cyriltovena))
 - Add Reserve to Node.js SDK [\#955](https://github.com/googleforgames/agones/pull/955) ([steven-supersolid](https://github.com/steven-supersolid))
 - Add the missing functions to the C++ SDK \(Allocated & Reserve\) [\#948](https://github.com/googleforgames/agones/pull/948) ([roberthbailey](https://github.com/roberthbailey))
 - Update the nodejs example to build in a docker image [\#945](https://github.com/googleforgames/agones/pull/945) ([roberthbailey](https://github.com/roberthbailey))
