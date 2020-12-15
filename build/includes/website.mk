@@ -35,8 +35,9 @@ site-static: ensure-build-image
 	-docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) rm -r ./public
 	-mkdir $(agones_path)/site/public
 	# for some reason, this only work locally
+	# postcss-cli@8.3.1 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list postcss-cli || npm install postcss-cli"
+		bash -c "npm list postcss-cli || npm install postcss-cli@8.3.0"
 	# autoprefixer 10.0.0 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
 		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
