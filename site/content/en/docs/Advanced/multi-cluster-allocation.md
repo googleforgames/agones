@@ -117,7 +117,6 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --multicluster true
 ```
 
-{{% feature publishVersion="1.11.0" %}} 
 If using REST use
 
 ```bash
@@ -125,7 +124,6 @@ If using REST use
 
 curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'", "multi_cluster_settings":{"enabled":"true"}}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
 ```
-{{% /feature %}}
 
 ## Troubleshooting
 
