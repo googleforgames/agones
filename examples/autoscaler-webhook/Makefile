@@ -44,3 +44,7 @@ build:
 # check if hosted on Google Cloud Registry
 gcr-check:
 	gcloud container images describe $(autoscaler_webhook_tag)
+
+#output the tag for this image
+echo-image-tag:
+	@echo $(autoscaler_webhook_tag)

@@ -47,3 +47,7 @@ test:
 # check if hosted on Google Cloud Registry
 gcr-check:
 	gcloud container images describe $(image_tag)
+
+#output the tag for this image
+echo-image-tag:
+	@echo $(image_tag)

@@ -36,6 +36,24 @@ gen-changelog:
 		--release-branch=$(RELEASE_BRANCH) \
 		--token $$TOKEN
 
+# outputs the markdown for the example images section of the release template
+release-example-image-markdown: example-image-markdown.autoscaler-webhook
+release-example-image-markdown: example-image-markdown.cpp-simple
+release-example-image-markdown: example-image-markdown.crd-client
+release-example-image-markdown: example-image-markdown.nodejs-simple
+release-example-image-markdown: example-image-markdown.rust-simple
+release-example-image-markdown: example-image-markdown.simple-game-server
+release-example-image-markdown: example-image-markdown.simple-tcp
+release-example-image-markdown: example-image-markdown.simple-udp
+release-example-image-markdown: example-image-markdown.supertuxkart
+release-example-image-markdown: example-image-markdown.unity-simple
+release-example-image-markdown: example-image-markdown.xonotic
+
+example-image-markdown.%:
+	@cd $(agones_path)/examples/$* && \
+    tag=$$(make -silent echo-image-tag) && \
+    echo "- [$$tag](https://$$tag)"
+
 # Creates a release. Version defaults to the base_version
 # - Checks out a release branch
 # - Build binaries and images
