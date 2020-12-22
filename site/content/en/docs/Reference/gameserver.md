@@ -123,9 +123,9 @@ The `spec` field is the actual GameServer specification and it is composed as fo
 - `players` (Alpha, behind "PlayerTracking" feature gate), sets this GameServer's initial player capacity
 - `template` the [pod spec template]({{% k8s-api href="#podtemplatespec-v1-core" %}}) to run your GameServer containers, [see](https://kubernetes.io/docs/concepts/workloads/pods/pod-overview/#pod-templates) for more information.
 
-{{% alert color="info" title="Note" %}}
+{{< alert title="Note" color="info">}}
 Please note that the GameServer resource does not support updates. If you need to make regular updates to the GameServer spec, consider using a [Fleet]({{< ref "/docs/Reference/fleet.md" >}}).
-{{% /alert %}}
+{{< /alert >}}
 
 ## GameServer State Diagram
 
