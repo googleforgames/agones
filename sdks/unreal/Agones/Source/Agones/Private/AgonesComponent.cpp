@@ -52,7 +52,9 @@ void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 TSharedRef<IHttpRequest> UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
 {
 	FHttpModule* Http = &FHttpModule::Get();
-	TSharedRef<IHttpRequest> Request = Http->CreateRequest();
+	// Use of auto is advised against in UE4 standards; however needed here due to breaking change in 4.26 to keep backwards
+	// compatibility with older versions of UE4.
+	auto Request = Http->CreateRequest();
 	Request->SetURL(FString::Format(TEXT("http://localhost:{0}/{1}"), {*HttpPort, *Path}));
 	Request->SetVerb(Verb.ToString());
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
