@@ -93,6 +93,10 @@ spec:
       affinity:
 {{ toYaml .Values.agones.allocator.affinity | indent 8 }}
       {{- end }}
+      {{- if .Values.agones.allocator.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.agones.allocator.nodeSelector | indent 8 }}
+      {{- end }}
       {{- if .Values.agones.allocator.tolerations }}
       tolerations:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
