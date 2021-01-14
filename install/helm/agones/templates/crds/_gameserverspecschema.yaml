@@ -24,10 +24,12 @@ properties:
     properties:
       labels:
         type: object
-        x-kubernetes-preserve-unknown-fields: true
+        additionalProperties:
+          type: string
       annotations:
         type: object
-        x-kubernetes-preserve-unknown-fields: true
+        additionalProperties:
+          type: string
   {{- end}}
   spec:
     type: object
