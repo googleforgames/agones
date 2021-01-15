@@ -538,6 +538,7 @@ spec:
                 lastScaleTime:
                   type: string
                   format: date-time
+                  nullable: true
                 ableToScale:
                   type: boolean
                 scalingLimited:
