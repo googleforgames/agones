@@ -13,6 +13,17 @@ The remainder of this article describes how to manually make a successful alloca
 
 The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
+## `GameServerAllocation` vs Allocator Service
+
+There are several reasons you may prefer to use the Allocator Service over the `GameServerAllocation` custom resource 
+definition, depending on your architecture and requirements:
+
+* A requirement to do [multi-cluster allocation]({{% relref "multi-cluster-allocation.md" %}}).
+* Want to create Allocations from outside the Agones Kubernetes cluster.
+* Prefer SSL based authentication over Kubernetes [RBAC](https://kubernetes.io/docs/reference/access-authn-authz/rbac/).
+* Prefer a [gRPC](https://grpc.github.io/) or REST based API over an integration with the
+  [Kubernetes API]({{% ref "/docs/Guides/access-api.md" %}}).
+
 ## Find the external IP
 
 The service is hosted under the same namespace as the Agones controller. To find the external IP of your allocator service, replace agones-system namespace with the namespace to which Agones is deployed and execute the following command:
