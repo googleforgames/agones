@@ -231,10 +231,12 @@ spec:
                      properties:
                        labels:
                          type: object
-                         x-kubernetes-preserve-unknown-fields: true
+                         additionalProperties:
+                           type: string
                        annotations:
                          type: object
-                         x-kubernetes-preserve-unknown-fields: true
+                         additionalProperties:
+                           type: string
                    spec:
                      type: object
                      required:
@@ -971,10 +973,12 @@ spec:
                       properties:
                         labels:
                           type: object
-                          x-kubernetes-preserve-unknown-fields: true
+                          additionalProperties:
+                            type: string
                         annotations:
                           type: object
-                          x-kubernetes-preserve-unknown-fields: true
+                          additionalProperties:
+                            type: string
                     spec:
                       type: object
                       required:
