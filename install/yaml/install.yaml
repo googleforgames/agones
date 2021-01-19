@@ -231,10 +231,12 @@ spec:
                      properties:
                        labels:
                          type: object
-                         x-kubernetes-preserve-unknown-fields: true
+                         additionalProperties:
+                           type: string
                        annotations:
                          type: object
-                         x-kubernetes-preserve-unknown-fields: true
+                         additionalProperties:
+                           type: string
                    spec:
                      type: object
                      required:
@@ -538,6 +540,7 @@ spec:
                 lastScaleTime:
                   type: string
                   format: date-time
+                  nullable: true
                 ableToScale:
                   type: boolean
                 scalingLimited:
@@ -970,10 +973,12 @@ spec:
                       properties:
                         labels:
                           type: object
-                          x-kubernetes-preserve-unknown-fields: true
+                          additionalProperties:
+                            type: string
                         annotations:
                           type: object
-                          x-kubernetes-preserve-unknown-fields: true
+                          additionalProperties:
+                            type: string
                     spec:
                       type: object
                       required:
