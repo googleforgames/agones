@@ -173,6 +173,10 @@ You can now communicate with the Game Server :
 If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
+
+If you are on Windows, you can alternatively install netcat on 
+[WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
+or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
 {{< /alert >}}
 
 ```
