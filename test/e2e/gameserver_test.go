@@ -789,7 +789,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = m50
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = m50
 
-	//gate
+	// confirm we have a valid GameServer before running the test
 	cause, valid := gs.Validate()
 	require.True(t, valid, cause)
 
