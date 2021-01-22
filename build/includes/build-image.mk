@@ -32,6 +32,7 @@ clean-build-image:
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
 	-mkdir -p $(build_path)/.gocache
+	-mkdir -p $(build_path)/.gomod
 	-mkdir -p $(build_path)/.config/gcloud
 	-mkdir -p $(helm_config)
 	-mkdir -p $(helm_cache)
