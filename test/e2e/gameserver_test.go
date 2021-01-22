@@ -495,10 +495,8 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
-		t.SkipNow()
-	}
 	t.Parallel()
+
 	firstContainerName := "udp-server"
 	secondContainerName := "second-udp-server"
 	firstPort := "gameport"
