@@ -49,7 +49,7 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:               true,
 		FeaturePlayerTracking:        false,
-		FeatureSDKWatchSendOnExecute: false,
+		FeatureSDKWatchSendOnExecute: true,
 		FeatureRollingUpdateOnReady:  false,
 	}
 
