@@ -79,12 +79,12 @@ helm_cache := ~/.cache/helm
 
 agones_package = agones.dev/agones
 mount_path = /go/src/$(agones_package)
-common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
-				-v $(kubeconfig_path):/root/.kube \
-				-v $(helm_config):/root/.config/helm \
-				-v $(helm_cache):/root/.cache/helm \
-				-v $(agones_path):$(mount_path) \
-				-v $(build_path)/.gomod:/go/pkg/mod
+common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud:Z \
+				-v $(kubeconfig_path):/root/.kube:Z \
+				-v $(helm_config):/root/.config/helm:Z \
+				-v $(helm_cache):/root/.cache/helm:Z \
+				-v $(agones_path):$(mount_path):Z \
+				-v $(build_path)/.gomod:/go/pkg/mod:Z
 
 # Its possible for this to change in the future, so it gets its own variable.
 workdir_path = $(mount_path)
@@ -121,7 +121,7 @@ endif
 
 ifndef FULL_BUILD
 	# keep a cache of files built by Go across docker invocations in a local directory.
-	common_mounts += -v $(build_path)/.gocache:/root/.cache/go-build
+	common_mounts += -v $(build_path)/.gocache:/root/.cache/go-build:Z
 	go_rebuild_flags =
 
 	# do not compress files in zips, slightly faster
