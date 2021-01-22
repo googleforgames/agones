@@ -312,7 +312,6 @@ spec:
                              container:
                                title: |
                                  Container is the name of the container on which to open the port. Defaults to the game server container.
-                                 This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
                                type: string
                              containerPort:
                                title: The port that is being opened on the game server process
@@ -684,7 +683,6 @@ spec:
                      container:
                        title: |
                          Container is the name of the container on which to open the port. Defaults to the game server container.
-                         This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
                        type: string
                      containerPort:
                        title: The port that is being opened on the game server process
@@ -1054,7 +1052,6 @@ spec:
                               container:
                                 title: |
                                   Container is the name of the container on which to open the port. Defaults to the game server container.
-                                  This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
                                 type: string
                               containerPort:
                                 title: The port that is being opened on the game server process

@@ -1051,8 +1051,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 		causesExpected []metav1.StatusCause
 	}{
 		{
-			description: "ContainerPortAllocation, invalid container name, container was not found",
-			feature:     fmt.Sprintf("%s=true", runtime.FeatureContainerPortAllocation),
+			description: "Invalid container name, container was not found",
 			gs: GameServer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "dev-game",
@@ -1080,37 +1079,7 @@ func TestGameServerValidateFeatures(t *testing.T) {
 			},
 		},
 		{
-			description: "ContainerPortAllocation, Port fileld Container should not be set if FeatureContainerPortAllocation is not enabled",
-			feature:     fmt.Sprintf("%s=false", runtime.FeatureContainerPortAllocation),
-			gs: GameServer{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "dev-game",
-					Namespace: "default",
-				},
-				Spec: GameServerSpec{
-					Ports: []GameServerPort{
-						{
-							Name:          "main",
-							ContainerPort: 7777,
-							PortPolicy:    Dynamic,
-							Container:     &portContainerName,
-						},
-					},
-					Container: "testing",
-					Template: corev1.PodTemplateSpec{
-						Spec: corev1.PodSpec{Containers: []corev1.Container{
-							{Name: "testing", Image: "testing/image"},
-						}}},
-				},
-			},
-			isValid: false,
-			causesExpected: []metav1.StatusCause{
-				{Type: metav1.CauseTypeFieldValueNotSupported, Message: "Value cannot be set unless feature flag ContainerPortAllocation is enabled", Field: "main.container"},
-			},
-		},
-		{
-			description: "ContainerPortAllocation enabled, OK scenario",
-			feature:     fmt.Sprintf("%s=true", runtime.FeatureContainerPortAllocation),
+			description: "Multiple container ports, OK scenario",
 			gs: GameServer{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "dev-game",
@@ -1198,8 +1167,6 @@ func TestGameServerPodNoErrors(t *testing.T) {
 
 func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 	t.Parallel()
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
 
 	containerName1 := "Container1"
 	fixture := &GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default", UID: "1234"},
@@ -1220,37 +1187,10 @@ func TestGameServerPodContainerNotFoundErrReturned(t *testing.T) {
 			},
 		}, Status: GameServerStatus{State: GameServerStateCreating}}
 
-	var testCases = []struct {
-		errExpected                    string
-		сontainerPortAllocationEnabled bool
-	}{
-		{
-			errExpected:                    "failed to find container named Container1 in pod spec",
-			сontainerPortAllocationEnabled: true,
-		},
-		{
-			errExpected:                    "Could not find a container named can-not-find-this-name",
-			сontainerPortAllocationEnabled: false,
-		},
+	_, err := fixture.Pod()
+	if assert.NotNil(t, err, "Pod should return an error") {
+		assert.Equal(t, "failed to find container named Container1 in pod spec", err.Error())
 	}
-
-	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("сontainerPortAllocationEnabled: %t", tc.сontainerPortAllocationEnabled), func(t *testing.T) {
-			if tc.сontainerPortAllocationEnabled {
-				err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
-				assert.NoError(t, err)
-			} else {
-				err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=false")
-				assert.NoError(t, err)
-			}
-
-			_, err := fixture.Pod()
-			if assert.NotNil(t, err, "Pod should return an error") {
-				assert.Equal(t, tc.errExpected, err.Error())
-			}
-		})
-	}
-
 }
 
 func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
@@ -1271,12 +1211,6 @@ func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 }
 
 func TestGameServerPodWithMultiplePortAllocations(t *testing.T) {
-	runtime.FeatureTestMutex.Lock()
-	defer runtime.FeatureTestMutex.Unlock()
-
-	err := runtime.ParseFeatures(string(runtime.FeatureContainerPortAllocation) + "=true")
-	assert.NoError(t, err)
-
 	fixture := defaultGameServer()
 	containerName := "authContainer"
 	fixture.Spec.Template.Spec.Containers = append(fixture.Spec.Template.Spec.Containers, corev1.Container{
