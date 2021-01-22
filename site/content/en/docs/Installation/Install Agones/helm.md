@@ -183,6 +183,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
+| `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -196,7 +197,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 [loadBalancer]: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
 [annotations]: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 [resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-
+[pruning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning
+[gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 

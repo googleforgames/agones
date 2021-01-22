@@ -96,7 +96,7 @@ spec:
                             - type: integer
                             - type: string
                 template:
-                  {{- $data := dict "metadata" true}}
+                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 17 }}
             status:
               type: object
