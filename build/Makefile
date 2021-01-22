@@ -468,6 +468,10 @@ endif
 push-agones-sdk-linux-image: $(ensure-build-image)
 	docker push $(sidecar_linux_amd64_tag)
 
+# Generate the Embedded CRD openapi
+gen-embedded-openapi:
+	docker run --rm $(common_mounts) -w $(workdir_path)/build $(build_tag) ./export-openapi.sh
+
 # Generate the static install script
 gen-install: $(ensure-build-image)
 	docker run --rm $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \

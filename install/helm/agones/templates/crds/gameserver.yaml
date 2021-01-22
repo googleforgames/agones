@@ -55,6 +55,7 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
           {{- include "gameserver.schema" . | indent 9 }}
           {{- include "gameserver.status" . | indent 11 }} # in an include, as it's easier to align
 {{- end }}
