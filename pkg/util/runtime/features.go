@@ -34,9 +34,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureContainerPortAllocation is a feature flag to enable/disable allocating ports to several containers in a pod
-	FeatureContainerPortAllocation Feature = "ContainerPortAllocation"
-
 	// FeatureSDKWatchSendOnExecute is a feature flag to enable/disable immediate game server return after SDK.WatchGameServer is called
 	FeatureSDKWatchSendOnExecute Feature = "SDKWatchSendOnExecute"
 
@@ -50,11 +47,10 @@ var (
 	// operational in Agones, and what their default configuration is.
 	// alpha features are disabled
 	featureDefaults = map[Feature]bool{
-		FeatureExample:                 true,
-		FeaturePlayerTracking:          false,
-		FeatureContainerPortAllocation: true,
-		FeatureSDKWatchSendOnExecute:   false,
-		FeatureRollingUpdateOnReady:    false,
+		FeatureExample:               true,
+		FeaturePlayerTracking:        false,
+		FeatureSDKWatchSendOnExecute: false,
+		FeatureRollingUpdateOnReady:  false,
 	}
 
 	// featureGates is the storage of what features are enabled
