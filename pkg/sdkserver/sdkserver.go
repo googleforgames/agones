@@ -568,7 +568,7 @@ func (s *SDKServer) stopReserveTimer() {
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Connected")
 
@@ -583,7 +583,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 	}
 
 	if int64(len(s.gsConnectedPlayers)) >= s.gsPlayerCapacity {
-		return &alpha.Bool{}, errors.New("players are already at capacity")
+		return &alpha.Bool{Bool: false}, errors.New("players are already at capacity")
 	}
 
 	// let's retain the original order, as it should be a smaller patch on data change
@@ -598,7 +598,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Disconnected")
 
@@ -629,7 +629,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.gsUpdateMutex.RLock()
 	defer s.gsUpdateMutex.RUnlock()
