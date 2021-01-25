@@ -63,7 +63,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.1
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&SDKWatchSendOnExecute=true&RollingUpdateOnReady=true"
+ALPHA_FEATURE_GATES ?= "PlayerTracking=true&RollingUpdateOnReady=true"
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -467,6 +467,10 @@ endif
 # push the gameservers sidecar image
 push-agones-sdk-linux-image: $(ensure-build-image)
 	docker push $(sidecar_linux_amd64_tag)
+
+# Generate the Embedded CRD openapi
+gen-embedded-openapi:
+	docker run --rm $(common_mounts) -w $(workdir_path)/build $(build_tag) ./export-openapi.sh
 
 # Generate the static install script
 gen-install: $(ensure-build-image)

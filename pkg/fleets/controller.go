@@ -157,7 +157,7 @@ func (c *Controller) creationMutationHandler(review admissionv1.AdmissionReview)
 		return review, errors.Wrapf(err, "error creating json for patch for Fleet %s", fleet.ObjectMeta.Name)
 	}
 
-	c.loggerForFleet(fleet).WithField("patch", string(jsn)).Infof("patch created!")
+	c.loggerForFleet(fleet).WithField("patch", string(jsn)).Debug("patch created!")
 
 	pt := admissionv1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt

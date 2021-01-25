@@ -57,6 +57,7 @@ Table of Contents
         * [make build-controller-image](#make-build-controller-image)
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
+        * [make gen-embedded-openapi](#make-gen-embedded-openapi)  
         * [make gen-crd-client](#make-gen-crd-client)
         * [make gen-sdk-grpc](#make-gen-sdk-grpc)
      * [Build Image Targets](#build-image-targets)
@@ -567,6 +568,9 @@ Compile the ping binary and then build the docker image
 
 #### `make gen-install`
 Generate the `/install/yaml/install.yaml` from the Helm template
+
+#### `gen-embedded-openapi`
+Generate the embedded OpenAPI specs for existing Kubernetes Objects, such as `PodTemplateSpec` and `ObjectMeta`
 
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
