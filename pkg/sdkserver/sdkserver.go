@@ -288,10 +288,12 @@ func (s *SDKServer) syncGameServer(key string) error {
 // updateState sets the GameServer Status's state to the one persisted in SDKServer,
 // i.e. SDKServer.gsState.
 func (s *SDKServer) updateState() error {
+	s.gsUpdateMutex.RLock()
 	s.logger.WithField("state", s.gsState).Debug("Updating state")
 	if len(s.gsState) == 0 {
 		return errors.Errorf("could not update GameServer %s/%s to empty state", s.namespace, s.gameServerName)
 	}
+	s.gsUpdateMutex.RUnlock()
 
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := s.gameServer()
