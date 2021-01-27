@@ -37,6 +37,7 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"go.opencensus.io/tag"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -188,7 +189,17 @@ func (c *Allocator) Sync(stop <-chan struct{}) error {
 }
 
 // Allocate CRDHandler for allocating a gameserver.
-func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (k8sruntime.Object, error) {
+func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (out k8sruntime.Object, err error) {
+	ctx := context.Background()
+	latency := c.newMetrics(ctx)
+	defer func() {
+		if err != nil {
+			latency.setError()
+		}
+		latency.record()
+	}()
+	latency.setRequest(gsa)
+
 	// server side validation
 	if causes, ok := gsa.Validate(); !ok {
 		s := &metav1.Status{
@@ -215,8 +226,6 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 	}
 
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
-	var out *allocationv1.GameServerAllocation
-	var err error
 	if gsa.Spec.MultiClusterSetting.Enabled {
 		out, err = c.applyMultiClusterAllocation(gsa, stop)
 	} else {
@@ -227,6 +236,7 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 		c.loggerForGameServerAllocation(gsa).WithError(err).Error("allocation failed")
 		return nil, err
 	}
+	latency.setResponse(out)
 
 	return out, nil
 }
@@ -609,6 +619,20 @@ func (c *Allocator) getRandomlySelectedGS(gsa *allocationv1.GameServerAllocation
 	bestGSList = bestGSList[startIndex:]
 	index := rand.New(rand.NewSource(int64(seed))).Intn(ln)
 	return &bestGSList[index]
+}
+
+// newMetrics creates a new gsa latency recorder.
+func (c *Allocator) newMetrics(ctx context.Context) *metrics {
+	ctx, err := tag.New(ctx, latencyTags...)
+	if err != nil {
+		c.baseLogger.WithError(err).Warn("failed to tag latency recorder.")
+	}
+	return &metrics{
+		ctx:              ctx,
+		gameServerLister: c.readyGameServerCache.gameServerLister,
+		logger:           c.baseLogger,
+		start:            time.Now(),
+	}
 }
 
 func addPort(ip string) string {

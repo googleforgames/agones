@@ -15,23 +15,14 @@
 package gameserverallocations
 
 import (
-	"context"
 	"io/ioutil"
 	"mime"
 	"net/http"
 	"time"
 
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	"agones.dev/agones/pkg/client/clientset/versioned"
-	"agones.dev/agones/pkg/client/informers/externalversions"
-	"agones.dev/agones/pkg/gameservers"
-	"agones.dev/agones/pkg/util/apiserver"
-	"agones.dev/agones/pkg/util/https"
-	"agones.dev/agones/pkg/util/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"go.opencensus.io/tag"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -41,6 +32,14 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/tools/record"
+
+	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/gameservers"
+	"agones.dev/agones/pkg/util/apiserver"
+	"agones.dev/agones/pkg/util/https"
+	"agones.dev/agones/pkg/util/runtime"
 )
 
 // Controller is a the GameServerAllocation controller
@@ -112,14 +111,6 @@ func (c *Controller) Run(_ int, stop <-chan struct{}) error {
 }
 
 func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Request, namespace string, stop <-chan struct{}) (err error) {
-	latency := c.newMetrics(r.Context())
-	defer func() {
-		if err != nil {
-			latency.setError()
-		}
-		latency.record()
-	}()
-
 	if r.Body != nil {
 		defer r.Body.Close() // nolint: errcheck
 	}
@@ -129,7 +120,6 @@ func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Req
 	if r.Method != http.MethodPost {
 		log.Warn("allocation handler only supports POST")
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
-		latency.setError()
 		return
 	}
 
@@ -137,8 +127,6 @@ func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Req
 	if err != nil {
 		return err
 	}
-
-	latency.setRequest(gsa)
 
 	result, err := c.allocator.Allocate(gsa, stop)
 	if err != nil {
@@ -148,23 +136,8 @@ func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Req
 		w.WriteHeader(int(status.Code))
 	}
 
-	latency.setResponse(result)
 	err = c.serialisation(r, w, result, scheme.Codecs)
 	return err
-}
-
-// newMetrics creates a new gsa latency recorder.
-func (c *Controller) newMetrics(ctx context.Context) *metrics {
-	ctx, err := tag.New(ctx, latencyTags...)
-	if err != nil {
-		c.baseLogger.WithError(err).Warn("failed to tag latency recorder.")
-	}
-	return &metrics{
-		ctx:              ctx,
-		gameServerLister: c.allocator.readyGameServerCache.gameServerLister,
-		logger:           c.baseLogger,
-		start:            time.Now(),
-	}
 }
 
 // allocationDeserialization processes the request and namespace, and attempts to deserialise its values
