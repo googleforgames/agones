@@ -9,7 +9,7 @@ description: >
 
 A full GameServer specification is available below and in the {{< ghlink href="examples/gameserver.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{< feature expiryVersion="1.12.0"  >}}
+{{% feature expiryVersion="1.12.0"  %}}
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
@@ -93,7 +93,7 @@ spec:
         image:  gcr.io/agones-images/udp-server:0.21
         imagePullPolicy: Always
 ```
-{{< /feature >}}
+{{% /feature %}}
 
 {{% feature publishVersion="1.12.0"  %}}
 ```yaml
@@ -177,7 +177,7 @@ spec:
         image:  gcr.io/agones-images/udp-server:0.21
         imagePullPolicy: Always
 ```
-{{< /feature >}}
+{{% /feature %}}
 
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
 

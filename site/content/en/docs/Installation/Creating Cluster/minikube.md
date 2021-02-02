@@ -17,8 +17,12 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 
 ## Creating an `agones` profile
 
-Let's use a minikube profile for `agones`, to make sure we don't overlap any
-existing Minikube clusters you may be running.
+Create a minikube profile for `agones` so you don't overlap any of the minikube clusters you are already running.
+
+```bash
+minikube start -p agones
+```
+Set the minkube profile to `agones`.
 
 ```bash
 minikube profile agones
