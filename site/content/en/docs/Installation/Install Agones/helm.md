@@ -172,9 +172,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
 | `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
 | `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
+| `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
 | `gameservers.minPort`                               | Minimum port to use for dynamic port allocation                                                 | `7000`                 |
 | `gameservers.maxPort`                               | Maximum port to use for dynamic port allocation                                                 | `8000`                 |
+| `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
 {{% feature publishVersion="1.12.0" %}}
@@ -182,8 +184,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
-| `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
+|                       |                           |                            |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
