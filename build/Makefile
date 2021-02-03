@@ -317,7 +317,7 @@ install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait --namespace=agones-system \
+		helm upgrade --install --atomic --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
