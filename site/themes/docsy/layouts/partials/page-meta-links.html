@@ -3,7 +3,7 @@
 {{ $gh_repo := ($.Param "github_repo") }}
 {{ $gh_subdir := ($.Param "github_subdir") }}
 {{ $gh_project_repo := ($.Param "github_project_repo") }}
-{{ $gh_branch := (default "master" ($.Param "github_branch")) }}
+{{ $gh_branch := (default "main" ($.Param "github_branch")) }}
 {{ if $gh_repo }}
 <div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
 {{ $editURL := printf "%s/edit/%s/content/%s" $gh_repo $gh_branch $pathFormatted }}

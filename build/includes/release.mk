@@ -25,7 +25,7 @@
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
-gen-changelog: RELEASE_BRANCH ?= master
+gen-changelog: RELEASE_BRANCH ?= main
 gen-changelog:
 	read -p 'Github Token: ' TOKEN && \
     docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.15.0 \

@@ -349,4 +349,4 @@ for all supported operating systems (64 bit windows, linux and osx).
 You can find the binaries in the `bin` folder in {{< ghlink href="cmd/sdk-server" >}}`cmd/sdk-server`{{< /ghlink >}}
 once compilation is complete.
 
-See {{< ghlink href="build" branch="master" >}}Developing, Testing and Building Agones{{< /ghlink >}} for more details.
+See {{< ghlink href="build" branch="main" >}}Developing, Testing and Building Agones{{< /ghlink >}} for more details.

@@ -14,7 +14,7 @@
 
 #
 # Google Cloud Builder -- Push site to production
-# on merge with master
+# on merge with main
 #
 
 steps:

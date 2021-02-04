@@ -4,7 +4,7 @@
 
 - Versioned releases will occur every 6 weeks
 - Releases occur on a Tuesday.
-- 5 week development cycle, at the end of a which a Release Candidate (RC) will be released with the contents of master.
+- 5 week development cycle, at the end of a which a Release Candidate (RC) will be released with the contents of main.
 - For the next week, the project is in "feature freeze". Only the following pull requests will be accepted during
   this time:
   - Bug fixes.

@@ -33,5 +33,5 @@ maintainers:
    email: agones-discuss@googlegroups.com
    url: https://groups.google.com/forum/#!forum/agones-discuss
 engine: gotpl
-icon: https://github.com/googleforgames/agones/raw/master/docs/agones.png
+icon: https://github.com/googleforgames/agones/raw/main/docs/agones.png
 tillerVersion: ">2.10.0"
