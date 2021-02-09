@@ -53,7 +53,7 @@ var (
 		FeatureExample:               true,
 		FeaturePlayerTracking:        false,
 		FeatureSDKWatchSendOnExecute: true,
-		FeatureRollingUpdateOnReady:  false,
+		FeatureRollingUpdateOnReady:  true,
 		NodeExternalDNS:              false,
 	}
 

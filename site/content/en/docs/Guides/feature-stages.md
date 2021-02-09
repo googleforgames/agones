@@ -29,7 +29,7 @@ The current set of `alpha` and `beta` feature gates are:
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
 | [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Enabled | `Beta` | 1.12.0 |
-| Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) and additional [details]({{< ref "/docs/Guides/fleet-updates.md#alpha-feature-rollingupdateonready" >}}) | `RollingUpdateOnReady` | Disabled | `Alpha` | 1.9.0 |
+| Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) and additional [details]({{< ref "/docs/Guides/fleet-updates.md#alpha-feature-rollingupdateonready" >}}) | `RollingUpdateOnReady` | Enabled | `Beta` | 1.9.0 |
 | [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
 
 ## Description of Stages

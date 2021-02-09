@@ -107,9 +107,9 @@ all `GameServers` with the `v2` `Fleet` label, and if not found, search through 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
 the rate that you deem fit for your specific rollout.
 
-## Alpha Feature RollingUpdateOnReady
+## Beta Feature RollingUpdateOnReady
 
-{{< alpha title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
+{{< beta title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
 
 When this feature is enabled, Fleets will wait for the new GameSevers to become Ready during a Rolling Update, to ensure there is always a set of Ready GameServers before attempting to shut down the previous version Fleet's GameServers.
 
