@@ -34,7 +34,7 @@ class UserBehavior(TaskSet):
             "apiVersion": "agones.dev/v1",
             "kind": "Fleet",
             "metadata": {
-                "generateName": "simple-game-server",
+                "generateName": "fleet-simple-game-server",
                 "namespace": "default"
             },
             "spec": {
