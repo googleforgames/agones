@@ -25,13 +25,13 @@ and you have a running fleet of game servers.
 Let's create a Fleet Autoscaler using the following command : 
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleetautoscaler.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleetautoscaler.yaml
 ```
 
 You should see a successful output similar to this :
 
 ```
-fleetautoscaler.autoscaling.agones.dev "simple-udp-autoscaler" created
+fleetautoscaler.autoscaling.agones.dev/simple-game-server-autoscaler created
 ```
 
 This has created a FleetAutoscaler record inside Kubernetes.
@@ -39,18 +39,18 @@ This has created a FleetAutoscaler record inside Kubernetes.
 ### 2. See the autoscaler status.
 
 ```
-kubectl describe fleetautoscaler simple-udp-autoscaler
+kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
 It should look something like this:
 
 ```
-Name:         simple-udp-autoscaler
+Name:         simple-game-server-autoscaler
 Namespace:    default
 Labels:       <none>
 Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"au
 toscaling.agones.dev/v1","kind":"FleetAutoscaler","metadata":{"annotations":{},
-"name":"simple-udp-autoscaler","namespace":"default"},...
+"name":"simple-game-server-autoscaler","namespace":"default"},...
 API Version:  autoscaling.agones.dev/v1
 Kind:         FleetAutoscaler
 Metadata:
@@ -62,14 +62,13 @@ Metadata:
     Block Owner Deletion:  true
     Controller:            true
     Kind:                  Fleet
-    Name:                  simple-udp
+    Name:                  simple-game-server
     UID:                   9960762e-c656-11e8-933e-fa163e07a1d4
   Resource Version:        6123197
-  Self Link:               /apis/autoscaling.agones.dev/v1/namespaces/default/f
-leetautoscalers/simple-udp-autoscaler
+  Self Link:               /apis/autoscaling.agones.dev/v1/namespaces/default/fleetautoscalers/simple-game-server-autoscaler
   UID:                     9fd0efa1-c656-11e8-933e-fa163e07a1d4
 Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Buffer:
       Buffer Size:   2
@@ -97,14 +96,14 @@ If you're interested in more details for game server allocation, you should cons
 In here we are only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:
 ```
 status:
   address: 34.94.118.237
-  gameServerName: simple-udp-v6jwb-6bzkz
+  gameServerName: simple-game-server-v6jwb-6bzkz
   nodeName: gke-test-cluster-default-f11755a7-5km3
   ports:
   - name: default
@@ -119,14 +118,14 @@ Note the address and port, you might need them later to connect to the server.
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
 ```
-kubectl describe fleetautoscaler simple-udp-autoscaler
+kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
 The last part should look something like this:
 
 ```
 Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Buffer:
       Buffer Size:   2
@@ -142,7 +141,7 @@ Status:
 Events:
   Type    Reason            Age   From                        Message
   ----    ------            ----  ----                        -------
-  Normal  AutoScalingFleet  2m    fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 3
+  Normal  AutoScalingFleet  2m    fleetautoscaler-controller  Scaling fleet simple-game-server from 2 to 3
 ```
 
 You can see that the fleet size has increased, the autoscaler having compensated for the allocated instance.
@@ -157,10 +156,10 @@ kubectl get gs
 This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
-NAME                     STATE       ADDRESS        PORT     NODE        AGE
-simple-udp-mzhrl-hz8wk   Allocated   10.30.64.99    7131     minikube    5m
-simple-udp-mzhrl-k6jg5   Ready       10.30.64.100   7243     minikube    5m  
-simple-udp-mzhrl-n2sk2   Ready       10.30.64.168   7658     minikube    5m
+NAME                             STATE       ADDRESS        PORT     NODE        AGE
+simple-game-server-mzhrl-hz8wk   Allocated   10.30.64.99    7131     minikube    5m
+simple-game-server-mzhrl-k6jg5   Ready       10.30.64.100   7243     minikube    5m  
+simple-game-server-mzhrl-n2sk2   Ready       10.30.64.168   7658     minikube    5m
 ``` 
 
 ### 5. Shut the allocated instance down
@@ -190,14 +189,14 @@ You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
 ```
-kubectl describe fleetautoscaler simple-udp-autoscaler
+kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
 It should look something like this:
 
 ```
 Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Buffer:
       Buffer Size:   2
@@ -213,12 +212,12 @@ Status:
 Events:
   Type    Reason            Age   From                        Message
   ----    ------            ----  ----                        -------
-  Normal  AutoScalingFleet  9m    fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 3
-  Normal  AutoScalingFleet  45s   fleetautoscaler-controller  Scaling fleet simple-udp from 3 to 2
+  Normal  AutoScalingFleet  9m    fleetautoscaler-controller  Scaling fleet simple-game-server from 2 to 3
+  Normal  AutoScalingFleet  45s   fleetautoscaler-controller  Scaling fleet simple-game-server from 3 to 2
 ```
 
 You can see that the fleet size has decreased, the autoscaler adjusting to game server instance being de-allocated,
-the Last Scale Time and the events have been updated. Note that simple-udp game server instance you just closed earlier
+the Last Scale Time and the events have been updated. Note that simple-game-server game server instance you just closed earlier
 might stay a bit in 'Unhealthy' state (and its pod in 'Terminating' until it gets removed.
 
 Double-check the actual number of game server instances and status by running
@@ -230,9 +229,9 @@ kubectl get gs
 This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
-NAME                     STATE     ADDRESS        PORT    NODE       AGE
-simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube   5m
-simple-udp-mzhrl-t7944   Ready     10.30.64.168   7561    minikube   5m
+NAME                             STATE     ADDRESS        PORT    NODE       AGE
+simple-game-server-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube   5m
+simple-game-server-mzhrl-t7944   Ready     10.30.64.168   7561    minikube   5m
 ``` 
 
 ### 7. Change autoscaling parameters
@@ -240,19 +239,19 @@ simple-udp-mzhrl-t7944   Ready     10.30.64.168   7561    minikube   5m
 We can also change the configuration of the `FleetAutoscaler` of the running `Fleet`, and have the changes
 applied live, without interruptions of service.
 
-Run `kubectl edit fleetautoscaler simple-udp-autoscaler` and set the `bufferSize` field to `5`. 
+Run `kubectl edit fleetautoscaler simple-game-server-autoscaler` and set the `bufferSize` field to `5`. 
 ]
 Let's look at the list of game servers again. Run `watch kubectl get gs`
 until you can see that are 5 ready server instances:
 
 ```
-NAME                     STATE     ADDRESS        PORT    NODE         AGE
-simple-udp-mzhrl-7jpkp   Ready     10.30.64.100   7019    minikube     5m
-simple-udp-mzhrl-czt8v   Ready     10.30.64.168   7556    minikube     5m
-simple-udp-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube     5m
-simple-udp-mzhrl-nb8h2   Ready     10.30.64.168   7357    minikube     5m
-simple-udp-mzhrl-qspb6   Ready     10.30.64.99    7859    minikube     5m
-simple-udp-mzhrl-zg9rq   Ready     10.30.64.99    7745    minikube     5m
+NAME                             STATE     ADDRESS        PORT    NODE         AGE
+simple-game-server-mzhrl-7jpkp   Ready     10.30.64.100   7019    minikube     5m
+simple-game-server-mzhrl-czt8v   Ready     10.30.64.168   7556    minikube     5m
+simple-game-server-mzhrl-k6jg5   Ready     10.30.64.100   7243    minikube     5m
+simple-game-server-mzhrl-nb8h2   Ready     10.30.64.168   7357    minikube     5m
+simple-game-server-mzhrl-qspb6   Ready     10.30.64.99    7859    minikube     5m
+simple-game-server-mzhrl-zg9rq   Ready     10.30.64.99    7745    minikube     5m
 ```
 
 {{< alert title="Note" color="info">}}

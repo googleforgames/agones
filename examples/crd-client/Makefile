@@ -25,7 +25,7 @@
 
 REPOSITORY ?= gcr.io/agones-images
 
-server_tag = $(REPOSITORY)/crd-client:0.4
+server_tag = $(REPOSITORY)/crd-client:0.5
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

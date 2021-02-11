@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC All Rights Reserved.
+# Copyright 2020 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,22 +15,24 @@
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  generateName: "simple-tcp-"
+  generateName: "simple-game-server-"
 spec:
   ports:
   - name: default
     portPolicy: Dynamic
     containerPort: 7654
-    protocol: TCP
   template:
     spec:
       containers:
-      - name: simple-tcp
-        image: gcr.io/agones-images/tcp-server:0.4
+      - name: simple-game-server
+        image: gcr.io/agones-images/simple-game-server:0.1
         resources:
           requests:
-            memory: "32Mi"
+            memory: "64Mi"
             cpu: "20m"
           limits:
-            memory: "32Mi"
+            memory: "64Mi"
             cpu: "20m"
+      # Limit this pod to Windows nodes.
+      nodeSelector:
+        kubernetes.io/os: windows

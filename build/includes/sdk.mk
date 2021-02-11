@@ -211,7 +211,7 @@ sdk-publish-csharp:
 	$(MAKE) run-sdk-command-csharp COMMAND=publish VERSION=$(RELEASE_VERSION) DOCKER_RUN_ARGS="$(DOCKER_RUN_ARGS) -it"
 
 # Perform make build for all examples
-build-examples: build-example-xonotic build-example-cpp-simple build-example-simple-udp build-example-autoscaler-webhook build-example-nodejs-simple
+build-examples: build-example-xonotic build-example-cpp-simple build-example-autoscaler-webhook build-example-nodejs-simple
 
 # Run "make build" command for one example directory
 build-example:
@@ -227,9 +227,6 @@ build-example-xonotic:
 
 build-example-cpp-simple:
 	$(MAKE) build-example EXAMPLE=cpp-simple
-
-build-example-simple-udp:
-	$(MAKE) build-example EXAMPLE=simple-udp
 
 build-example-rust-simple:
 	$(MAKE) build-example EXAMPLE=rust-simple

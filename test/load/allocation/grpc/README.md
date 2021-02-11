@@ -14,7 +14,8 @@ Here are the few important things:
 ## Fleet Setting
 
 We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000. 
-Also w set the `automaticShutdownDelayMin` parameter to 10 so simple-udp game servers shutdown after 10 minutes (see below).
+Also we set the `automaticShutdownDelayMin` parameter to 10 so simple-game-server game servers shutdown after 10 
+minutes (see below).
 This helps to easily re-run the test without having to delete the game servers and allows to run tests continously. 
 
 ```yaml
@@ -30,10 +31,10 @@ kind: Fleet
             spec:
                 containers:
                 - args:
-                  # We setup the simple-udp server to shutdown 10 mins after allocation 
+                  # We setup the simple-game-server server to shutdown 10 mins after allocation 
                   - -automaticShutdownDelayMin=10
-                  image: gcr.io/agones-images/udp-server:0.21
-                  name: simple-udp
+                  image: gcr.io/agones-images/simple-game-server:0.1
+                  name: simple-game-server
   ...
 ```
 
@@ -63,9 +64,9 @@ finished: 2020-10-22 23:34:18.381396416 -0700 PDT m=+52.558592912
 If some errors occurred, the error message will be printed:
 ```
 started: 2020-10-22 22:16:47.322731849 -0700 PDT m=+0.002953843
-(failed(client=3,allocation=43): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-udp-mlljx-g9crp": the object has been modified; please apply your changes to the latest version and try again
-(failed(client=2,allocation=47): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-udp-mlljx-rxflv": the object has been modified; please apply your changes to the latest version and try again
-(failed(client=7,allocation=45): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-udp-mlljx-x4khw": the object has been modified; please apply your changes to the latest version and try again
+(failed(client=3,allocation=43): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-game-server-mlljx-g9crp": the object has been modified; please apply your changes to the latest version and try again
+(failed(client=2,allocation=47): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-game-server-mlljx-rxflv": the object has been modified; please apply your changes to the latest version and try again
+(failed(client=7,allocation=45): rpc error: code = Unknown desc = error updating allocated gameserver: Operation cannot be fulfilled on gameservers.agones.dev "simple-game-server-mlljx-x4khw": the object has been modified; please apply your changes to the latest version and try again
 finished: 2020-10-22 22:17:18.822039094 -0700 PDT m=+31.502261092
 ```
 

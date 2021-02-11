@@ -29,7 +29,7 @@ For example:
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  generateName: "simple-udp-"
+  generateName: "simple-game-server-"
 spec:
   ports:
   - name: default
@@ -38,7 +38,7 @@ spec:
     spec:
       serviceAccountName: my-special-service-account # a custom service account
       containers:
-      - name: simple-udp
+      - name: simple-game-server
         image: {{% example-image %}}
 ```
 

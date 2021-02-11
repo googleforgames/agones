@@ -43,8 +43,6 @@ release-example-image-markdown: example-image-markdown.crd-client
 release-example-image-markdown: example-image-markdown.nodejs-simple
 release-example-image-markdown: example-image-markdown.rust-simple
 release-example-image-markdown: example-image-markdown.simple-game-server
-release-example-image-markdown: example-image-markdown.simple-tcp
-release-example-image-markdown: example-image-markdown.simple-udp
 release-example-image-markdown: example-image-markdown.supertuxkart
 release-example-image-markdown: example-image-markdown.unity-simple
 release-example-image-markdown: example-image-markdown.xonotic
