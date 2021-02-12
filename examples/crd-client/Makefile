@@ -25,7 +25,7 @@
 
 REPOSITORY ?= gcr.io/agones-images
 
-server_tag = $(REPOSITORY)/crd-client:0.3
+server_tag = $(REPOSITORY)/crd-client:0.4
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -44,3 +44,7 @@ push:
 # check if hosted on Google Cloud Registry
 gcr-check:
 	gcloud container images describe $(server_tag)
+
+#output the tag for this image
+echo-image-tag:
+	@echo $(server_tag)

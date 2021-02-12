@@ -18,7 +18,7 @@
 {{- $cert := genSignedCert $cn nil (list $altName1 $altName2) 3650 $ca }}
 ---
 {{- if .Values.agones.registerApiService }}
-apiVersion: apiregistration.k8s.io/v1beta1
+apiVersion: apiregistration.k8s.io/v1
 kind: APIService
 metadata:
   name: v1.allocation.agones.dev
@@ -44,7 +44,7 @@ spec:
 {{- end}}
 {{- if .Values.agones.registerWebhooks }}
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
@@ -56,6 +56,9 @@ metadata:
     heritage: {{ .Release.Service }}
 webhooks:
   - name: validations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
     failurePolicy: Fail
     clientConfig:
       service:
@@ -98,7 +101,7 @@ webhooks:
           - UPDATE
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
@@ -110,6 +113,9 @@ metadata:
     heritage: {{ .Release.Service }}
 webhooks:
   - name: mutations.agones.dev
+    admissionReviewVersions:
+      - v1
+    sideEffects: None
     failurePolicy: Fail
     clientConfig:
       service:

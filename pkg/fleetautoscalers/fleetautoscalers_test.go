@@ -27,7 +27,7 @@ import (
 
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"github.com/stretchr/testify/assert"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
@@ -407,7 +407,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		{
 			description: "URL and Service are not nil",
 			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
+				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "default",
 					Path:      &url,
@@ -447,7 +447,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		{
 			description: "Service name is empty",
 			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
+				Service: &admregv1.ServiceReference{
 					Name:      "",
 					Namespace: "default",
 					Path:      &url,
@@ -462,7 +462,7 @@ func TestApplyWebhookPolicy(t *testing.T) {
 		{
 			description: "No certs",
 			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
+				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "default",
 					Path:      &url,
@@ -559,7 +559,7 @@ func TestApplyWebhookPolicyNilFleet(t *testing.T) {
 
 	url := "scale"
 	w := &autoscalingv1.WebhookPolicy{
-		Service: &admregv1b.ServiceReference{
+		Service: &admregv1.ServiceReference{
 			Name:      "service1",
 			Namespace: "default",
 			Path:      &url,
@@ -651,7 +651,7 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 		{
 			description: "No namespace provided, default should be used",
 			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
+				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "",
 					Path:      &url,
@@ -665,7 +665,7 @@ func TestBuildURLFromWebhookPolicyNoNamespace(t *testing.T) {
 		{
 			description: "No url provided, empty string should be used",
 			webhookPolicy: &autoscalingv1.WebhookPolicy{
-				Service: &admregv1b.ServiceReference{
+				Service: &admregv1.ServiceReference{
 					Name:      "service1",
 					Namespace: "test",
 					Path:      nil,

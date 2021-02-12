@@ -18,6 +18,10 @@
 # multiple Fleets, or a self managed group of GameServers.
 #
 
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/gameserverallocation/
+#
+
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:

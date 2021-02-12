@@ -30,8 +30,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1betaext "k8s.io/api/extensions/v1beta1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,7 +61,7 @@ func TestFleetRequestsLimits(t *testing.T) {
 
 	client := framework.AgonesClient.AgonesV1()
 	flt, err := client.Fleets(framework.Namespace).Create(flt)
-	if assert.Nil(t, err) {
+	if assert.NoError(t, err) {
 		defer client.Fleets(framework.Namespace).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
@@ -242,6 +242,8 @@ func TestFleetRollingUpdate(t *testing.T) {
 				}
 
 				assert.Equal(t, int32(1), flt.Spec.Replicas)
+				assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxSurge.StrVal)
+				assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxUnavailable.StrVal)
 
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
@@ -300,13 +302,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 						if maxUnavailable == 0 {
 							maxUnavailable = 1
 						}
-						// This difference is inevitable, also could be seen with Deployments and ReplicaSeets
+						// This difference is inevitable, also could be seen with Deployments and ReplicaSets
 						shift = maxUnavailable
 					}
 					assert.Nil(t, err)
 
-					if len(list.Items) > targetScale+maxSurge+maxUnavailable+shift {
-						err = fmt.Errorf("New replicas should be less than target + maxSurge + maxUnavailable %d %d", len(list.Items), targetScale+maxSurge+maxUnavailable+shift)
+					expectedTotal := targetScale + maxSurge + maxUnavailable + shift
+					if len(list.Items) > expectedTotal {
+						err = fmt.Errorf("new replicas should be less than target + maxSurge + maxUnavailable + shift. Replicas: %d, Expected: %d", len(list.Items), expectedTotal)
 					}
 					if err != nil {
 						return false, err
@@ -600,11 +603,8 @@ func TestFleetGSSpecValidation(t *testing.T) {
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 
-	if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) && assert.Len(t, statusErr.Status().Details.Causes, 2) {
-		assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
-	} else {
-		assert.Len(t, statusErr.Status().Details.Causes, 1)
-	}
+	assert.Len(t, statusErr.Status().Details.Causes, 2)
+	assert.Equal(t, "Container must be empty or the name of a container in the pod template", statusErr.Status().Details.Causes[1].Message)
 
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "Could not find a container named testing", statusErr.Status().Details.Causes[0].Message)
@@ -1020,7 +1020,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	flt.Spec.Template.ObjectMeta.Labels = make(map[string]string)
 	flt.Spec.Template.ObjectMeta.Labels["label"] = longName
 	_, err := client.Fleets(framework.Namespace).Create(flt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
@@ -1032,7 +1032,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	flt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	flt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
 	_, err = client.Fleets(framework.Namespace).Create(flt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
@@ -1056,7 +1056,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	goodFlt.Spec.Template.ObjectMeta.Annotations = make(map[string]string)
 	goodFlt.Spec.Template.ObjectMeta.Annotations[longName] = normalLengthName
 	_, err = client.Fleets(framework.Namespace).Update(goodFlt)
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
 	assert.Len(t, statusErr.Status().Details.Causes, 1)
@@ -1193,10 +1193,13 @@ func TestFleetResourceValidation(t *testing.T) {
 				},
 			},
 		}
+	mi128 := resource.MustParse("128Mi")
+	m50 := resource.MustParse("50m")
+
 	flt.Spec.Template.Spec.Container = containerName
 	containers := flt.Spec.Template.Spec.Template.Spec.Containers
 	containers[1].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("64Mi")
-	containers[1].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
+	containers[1].Resources.Requests[corev1.ResourceMemory] = mi128
 
 	_, err := client.Fleets(framework.Namespace).Create(flt.DeepCopy())
 	assert.NotNil(t, err)
@@ -1220,12 +1223,16 @@ func TestFleetResourceValidation(t *testing.T) {
 	assertCausesContainsString(t, causes, "Resource cpu limit value must be non negative")
 	assertCausesContainsString(t, causes, "Request must be less than or equal to memory limit")
 
-	containers[1].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("128Mi")
-	containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse("50m")
+	containers[1].Resources.Limits[corev1.ResourceMemory] = mi128
+	containers[0].Resources.Limits[corev1.ResourceCPU] = m50
 	flt, err = client.Fleets(framework.Namespace).Create(flt.DeepCopy())
-	if assert.Nil(t, err) {
+	if assert.NoError(t, err) {
 		defer client.Fleets(framework.Namespace).Delete(flt.ObjectMeta.Name, nil) // nolint:errcheck
 	}
+
+	containers = flt.Spec.Template.Spec.Template.Spec.Containers
+	assert.Equal(t, mi128, containers[1].Resources.Limits[corev1.ResourceMemory])
+	assert.Equal(t, m50, containers[0].Resources.Limits[corev1.ResourceCPU])
 }
 
 func TestFleetAggregatedPlayerStatus(t *testing.T) {
@@ -1416,10 +1423,10 @@ func fleetWithGameServerSpec(gsSpec *agonesv1.GameServerSpec, namespace string) 
 }
 
 // newScale returns a scale with specified Replicas spec
-func newScale(fleetName string, newReplicas int32, resourceVersion string) *v1betaext.Scale {
-	return &v1betaext.Scale{
+func newScale(fleetName string, newReplicas int32, resourceVersion string) *autoscalingv1.Scale {
+	return &autoscalingv1.Scale{
 		ObjectMeta: metav1.ObjectMeta{Name: fleetName, Namespace: framework.Namespace, ResourceVersion: resourceVersion},
-		Spec: v1betaext.ScaleSpec{
+		Spec: autoscalingv1.ScaleSpec{
 			Replicas: newReplicas,
 		},
 	}

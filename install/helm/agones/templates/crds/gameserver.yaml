@@ -14,7 +14,7 @@
 
 {{- if .Values.agones.crds.install }}
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: gameservers.agones.dev
@@ -26,32 +26,36 @@ metadata:
     heritage: {{ .Release.Service }}
 spec:
   group: agones.dev
-  version: v1
-  scope: Namespaced
-  additionalPrinterColumns:
-  - JSONPath: .status.state
-    name: State
-    type: string
-  - JSONPath: .status.address
-    name: Address
-    type: string
-  - JSONPath: .status.ports[0].port
-    name: Port
-    type: string
-  - JSONPath: .status.nodeName
-    name: Node
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   names:
     kind: GameServer
     plural: gameservers
     shortNames:
-    - gs
+      - gs
     singular: gameserver
-  validation:
-    openAPIV3Schema:
-      {{- include "gameserver.validation" . | indent 6 }}
-
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .status.state
+          name: State
+          type: string
+        - jsonPath: .status.address
+          name: Address
+          type: string
+        - jsonPath: .status.ports[0].port
+          name: Port
+          type: string
+        - jsonPath: .status.nodeName
+          name: Node
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      schema:
+        openAPIV3Schema:
+          {{- $data := dict "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
+          {{- include "gameserver.schema" . | indent 9 }}
+          {{- include "gameserver.status" . | indent 11 }} # in an include, as it's easier to align
 {{- end }}

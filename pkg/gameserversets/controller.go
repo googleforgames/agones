@@ -35,10 +35,10 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -69,7 +69,7 @@ const (
 type Controller struct {
 	baseLogger          *logrus.Entry
 	counter             *gameservers.PerNodeCounter
-	crdGetter           v1beta1.CustomResourceDefinitionInterface
+	crdGetter           apiextclientv1.CustomResourceDefinitionInterface
 	gameServerGetter    getterv1.GameServersGetter
 	gameServerLister    listerv1.GameServerLister
 	gameServerSynced    cache.InformerSynced
@@ -98,7 +98,7 @@ func NewController(
 	gsSetInformer := gameServerSets.Informer()
 
 	c := &Controller{
-		crdGetter:           extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:           extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		counter:             counter,
 		gameServerGetter:    agonesClient.AgonesV1(),
 		gameServerLister:    gameServers.Lister(),
@@ -118,8 +118,8 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "gameserverset-controller"})
 
-	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admv1beta1.Create, c.creationValidationHandler)
-	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admv1beta1.Update, c.updateValidationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Create, c.creationValidationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("GameServerSet"), admissionv1.Update, c.updateValidationHandler)
 
 	gsSetInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -171,7 +171,7 @@ func (c *Controller) Run(workers int, stop <-chan struct{}) error {
 
 // updateValidationHandler that validates a GameServerSet when is updated
 // Should only be called on gameserverset update operations.
-func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) updateValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	c.baseLogger.WithField("review", review).Debug("updateValidationHandler")
 
 	newGss := &agonesv1.GameServerSet{}
@@ -212,7 +212,7 @@ func (c *Controller) updateValidationHandler(review admv1beta1.AdmissionReview) 
 
 // creationValidationHandler that validates a GameServerSet when is created
 // Should only be called on gameserverset create operations.
-func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) creationValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	c.baseLogger.WithField("review", review).Debug("creationValidationHandler")
 
 	newGss := &agonesv1.GameServerSet{}

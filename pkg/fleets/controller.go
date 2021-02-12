@@ -34,11 +34,11 @@ import (
 	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -54,7 +54,7 @@ import (
 // Controller is a the GameServerSet controller
 type Controller struct {
 	baseLogger          *logrus.Entry
-	crdGetter           v1beta1.CustomResourceDefinitionInterface
+	crdGetter           apiextclientv1.CustomResourceDefinitionInterface
 	gameServerSetGetter getterv1.GameServerSetsGetter
 	gameServerSetLister listerv1.GameServerSetLister
 	gameServerSetSynced cache.InformerSynced
@@ -81,7 +81,7 @@ func NewController(
 	fInformer := fleets.Informer()
 
 	c := &Controller{
-		crdGetter:           extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:           extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		gameServerSetGetter: agonesClient.AgonesV1(),
 		gameServerSetLister: gameServerSets.Lister(),
 		gameServerSetSynced: gsSetInformer.HasSynced,
@@ -99,9 +99,9 @@ func NewController(
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleet-controller"})
 
-	wh.AddHandler("/mutate", agonesv1.Kind("Fleet"), admv1beta1.Create, c.creationMutationHandler)
-	wh.AddHandler("/validate", agonesv1.Kind("Fleet"), admv1beta1.Create, c.creationValidationHandler)
-	wh.AddHandler("/validate", agonesv1.Kind("Fleet"), admv1beta1.Update, c.creationValidationHandler)
+	wh.AddHandler("/mutate", agonesv1.Kind("Fleet"), admissionv1.Create, c.creationMutationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("Fleet"), admissionv1.Create, c.creationValidationHandler)
+	wh.AddHandler("/validate", agonesv1.Kind("Fleet"), admissionv1.Update, c.creationValidationHandler)
 
 	fInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -128,7 +128,7 @@ func NewController(
 // the default values on the Fleet
 // Should only be called on fleet create operations.
 // nolint:dupl
-func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) creationMutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	c.baseLogger.WithField("review", review).Debug("creationMutationHandler")
 
 	obj := review.Request.Object
@@ -157,9 +157,9 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 		return review, errors.Wrapf(err, "error creating json for patch for Fleet %s", fleet.ObjectMeta.Name)
 	}
 
-	c.loggerForFleet(fleet).WithField("patch", string(jsn)).Infof("patch created!")
+	c.loggerForFleet(fleet).WithField("patch", string(jsn)).Debug("patch created!")
 
-	pt := admv1beta1.PatchTypeJSONPatch
+	pt := admissionv1.PatchTypeJSONPatch
 	review.Response.PatchType = &pt
 	review.Response.Patch = jsn
 
@@ -168,7 +168,7 @@ func (c *Controller) creationMutationHandler(review admv1beta1.AdmissionReview) 
 
 // creationValidationHandler that validates a Fleet when it is created
 // Should only be called on Fleet create and Update operations.
-func (c *Controller) creationValidationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) creationValidationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	c.baseLogger.WithField("review", review).Debug("creationValidationHandler")
 
 	obj := review.Request.Object

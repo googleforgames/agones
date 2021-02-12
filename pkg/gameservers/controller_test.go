@@ -33,7 +33,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -378,15 +378,15 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 			raw, err := json.Marshal(tc.fixture)
 			require.NoError(t, err)
 
-			review := admv1beta1.AdmissionReview{
-				Request: &admv1beta1.AdmissionRequest{
+			review := admissionv1.AdmissionReview{
+				Request: &admissionv1.AdmissionRequest{
 					Kind:      GameServerKind,
-					Operation: admv1beta1.Create,
+					Operation: admissionv1.Create,
 					Object: runtime.RawExtension{
 						Raw: raw,
 					},
 				},
-				Response: &admv1beta1.AdmissionResponse{Allowed: true},
+				Response: &admissionv1.AdmissionResponse{Allowed: true},
 			}
 
 			result, err := c.creationMutationHandler(review)
@@ -395,7 +395,7 @@ func TestControllerCreationMutationHandler(t *testing.T) {
 				require.Equal(t, tc.expected.err, err.Error())
 			} else {
 				assert.True(t, result.Response.Allowed)
-				assert.Equal(t, admv1beta1.PatchTypeJSONPatch, *result.Response.PatchType)
+				assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
 
 				patch := &jsonpatch.ByPath{}
 				err = json.Unmarshal(result.Response.Patch, patch)
@@ -428,15 +428,15 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      GameServerKind,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)
@@ -461,15 +461,15 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		}
 		raw, err := json.Marshal(fixture)
 		require.NoError(t, err)
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      GameServerKind,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)
@@ -486,15 +486,15 @@ func TestControllerCreationValidationHandler(t *testing.T) {
 		raw, err := json.Marshal("WRONG DATA")
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      GameServerKind,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err = c.creationValidationHandler(review)
@@ -1314,7 +1314,7 @@ func TestControllerSyncGameServerRequestReadyState(t *testing.T) {
 		defer cancel()
 
 		_, err = c.syncGameServerRequestReadyState(gsFixture)
-		assert.EqualError(t, err, "game server container is not currently running, try again")
+		assert.EqualError(t, err, "game server container for GameServer test in namespace default is not currently running, try again")
 		assert.False(t, gsUpdated, "GameServer was updated")
 	})
 

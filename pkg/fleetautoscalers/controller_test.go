@@ -28,8 +28,8 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -739,7 +739,7 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 	fas.Spec.Policy.Buffer = nil
 	url := "/autoscaler"
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
-		Service: &admregv1b.ServiceReference{
+		Service: &admregv1.ServiceReference{
 			Name: "fleetautoscaler-service",
 			Path: &url,
 		},
@@ -757,40 +757,40 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	return c, m
 }
 
-func newAdmissionReview(fas autoscalingv1.FleetAutoscaler) (admv1beta1.AdmissionReview, error) {
+func newAdmissionReview(fas autoscalingv1.FleetAutoscaler) (admissionv1.AdmissionReview, error) {
 	raw, err := json.Marshal(fas)
 	if err != nil {
-		return admv1beta1.AdmissionReview{}, err
+		return admissionv1.AdmissionReview{}, err
 	}
-	review := admv1beta1.AdmissionReview{
-		Request: &admv1beta1.AdmissionRequest{
+	review := admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Kind:      gvk,
-			Operation: admv1beta1.Create,
+			Operation: admissionv1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
 			Namespace: "default",
 		},
-		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		Response: &admissionv1.AdmissionResponse{Allowed: true},
 	}
 	return review, err
 }
 
-func newInvalidAdmissionReview() (admv1beta1.AdmissionReview, error) {
+func newInvalidAdmissionReview() (admissionv1.AdmissionReview, error) {
 	raw, err := json.Marshal([]byte(`1`))
 	if err != nil {
-		return admv1beta1.AdmissionReview{}, err
+		return admissionv1.AdmissionReview{}, err
 	}
-	review := admv1beta1.AdmissionReview{
-		Request: &admv1beta1.AdmissionRequest{
+	review := admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Kind:      gvk,
-			Operation: admv1beta1.Create,
+			Operation: admissionv1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
 			Namespace: "default",
 		},
-		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		Response: &admissionv1.AdmissionResponse{Allowed: true},
 	}
 	return review, nil
 }

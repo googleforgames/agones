@@ -1083,6 +1083,77 @@ func TestSDKServerPlayerCapacity(t *testing.T) {
 	agtesting.AssertEventContains(t, m.FakeRecorder.Events, "PlayerCapacity Set to 20")
 }
 
+func TestSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeaturePlayerTracking) + "=false")
+	require.NoError(t, err, "Can not parse FeaturePlayerTracking feature")
+
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
+
+	m := agtesting.NewMocks()
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}, nil
+	})
+
+	stop := make(chan struct{})
+	defer close(stop)
+
+	sc, err := defaultSidecar(m)
+	require.NoError(t, err)
+
+	sc.informerFactory.Start(stop)
+	assert.True(t, cache.WaitForCacheSync(stop, sc.gameServerSynced))
+
+	go func() {
+		err = sc.Run(stop)
+		assert.NoError(t, err)
+	}()
+
+	// check initial value comes through
+	// async, so check after a period
+	e := &alpha.Empty{}
+	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
+		count, err := sc.GetPlayerCapacity(context.Background(), e)
+
+		assert.Nil(t, count)
+		return false, err
+	})
+	assert.Error(t, err)
+
+	count, err := sc.GetPlayerCount(context.Background(), e)
+	require.Error(t, err)
+	assert.Nil(t, count)
+
+	list, err := sc.GetConnectedPlayers(context.Background(), e)
+	require.Error(t, err)
+	assert.Nil(t, list)
+
+	id := &alpha.PlayerID{PlayerID: "test-player"}
+
+	ok, err := sc.PlayerConnect(context.Background(), id)
+	require.Error(t, err)
+	assert.False(t, ok.Bool)
+
+	ok, err = sc.IsPlayerConnected(context.Background(), id)
+	require.Error(t, err)
+	assert.False(t, ok.Bool)
+
+	ok, err = sc.PlayerDisconnect(context.Background(), id)
+	require.Error(t, err)
+	assert.False(t, ok.Bool)
+}
+
 func TestSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	t.Parallel()
 	agruntime.FeatureTestMutex.Lock()

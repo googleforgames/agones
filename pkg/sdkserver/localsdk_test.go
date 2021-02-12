@@ -344,6 +344,44 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 	assert.Equal(t, int64(10), gs.Status.Players.Capacity)
 }
 
+func TestLocalSDKServerPlayerConnectAndDisconnectWithoutPlayerTracking(t *testing.T) {
+	t.Parallel()
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, runtime.ParseFeatures(string(runtime.FeaturePlayerTracking)+"=false"))
+
+	l, err := NewLocalSDKServer("")
+	assert.Nil(t, err)
+
+	e := &alpha.Empty{}
+	capacity, err := l.GetPlayerCapacity(context.Background(), e)
+	assert.Nil(t, capacity)
+	assert.Error(t, err)
+
+	count, err := l.GetPlayerCount(context.Background(), e)
+	assert.Error(t, err)
+	assert.Nil(t, count)
+
+	list, err := l.GetConnectedPlayers(context.Background(), e)
+	assert.Error(t, err)
+	assert.Nil(t, list)
+
+	id := &alpha.PlayerID{PlayerID: "test-player"}
+
+	ok, err := l.PlayerConnect(context.Background(), id)
+	assert.Error(t, err)
+	assert.False(t, ok.Bool)
+
+	ok, err = l.IsPlayerConnected(context.Background(), id)
+	assert.Error(t, err)
+	assert.False(t, ok.Bool)
+
+	ok, err = l.PlayerDisconnect(context.Background(), id)
+	assert.Error(t, err)
+	assert.False(t, ok.Bool)
+}
+
 func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 	t.Parallel()
 

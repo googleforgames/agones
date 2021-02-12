@@ -15,8 +15,11 @@
 package e2e
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -26,6 +29,7 @@ import (
 	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -495,10 +499,8 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
-		t.SkipNow()
-	}
 	t.Parallel()
+
 	firstContainerName := "udp-server"
 	secondContainerName := "second-udp-server"
 	firstPort := "gameport"
@@ -754,7 +756,8 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 func TestGameServerResourceValidation(t *testing.T) {
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = resource.MustParse("64Mi")
+	mi64 := resource.MustParse("64Mi")
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse("128Mi")
 
 	_, valid := gs.Validate()
@@ -778,6 +781,65 @@ func TestGameServerResourceValidation(t *testing.T) {
 	assert.Len(t, statusErr.Status().Details.Causes, 2)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
+
+	// test that values are still being set correctly
+	m50 := resource.MustParse("50m")
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = mi64
+	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = m50
+	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = m50
+
+	// confirm we have a valid GameServer before running the test
+	cause, valid := gs.Validate()
+	require.True(t, valid, cause)
+
+	gsCopy, err := gsClient.Create(gs.DeepCopy())
+	require.NoError(t, err)
+	assert.Equal(t, mi64, gsCopy.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory])
+	assert.Equal(t, mi64, gsCopy.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory])
+	assert.Equal(t, m50, gsCopy.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU])
+	assert.Equal(t, m50, gsCopy.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU])
+}
+
+func TestGameServerPodTemplateSpecFailSchemaValidation(t *testing.T) {
+	t.Parallel()
+
+	// The Kubernetes dynamic client skips schema validation (for reasons I'm not sure of), so the
+	// best way I could determine to test schema validation is via calling kubectl directly.
+	// The schema's from Kubernetes don't include anything like `pattern:` or `enum:` which would
+	// potentially make this easier to test.
+
+	gsYaml := `
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  name: "invalid-gameserver"
+spec:
+  ports:
+    - name: default
+      portPolicy: Dynamic
+      containerPort: 7654
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution: ERROR
+      containers:
+        - name: simple-game-server
+          image: gcr.io/agones-images/simple-game-server:0.1
+`
+	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0644)
+	require.NoError(t, err)
+
+	cmd := exec.Command("kubectl", "apply", "-f", "/tmp/invalid.yaml")
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	logrus.WithField("stdout", stdout.String()).WithField("stderr", stderr.String()).WithError(err).Info("Ran command!")
+	require.Error(t, err)
+	assert.Contains(t, stderr.String(), "ValidationError(GameServer.spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution)")
 }
 
 func TestGameServerSetPlayerCapacity(t *testing.T) {

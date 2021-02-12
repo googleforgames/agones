@@ -71,7 +71,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
-gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.16 \
+gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-version %}} \
   --tags=game-server \
   --scopes=gke-default \
   --num-nodes=4 \
@@ -81,7 +81,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version=1.16 \
 
 Flag explanations:
 
-* cluster-version: Agones requires Kubernetes version 1.16.
+* cluster-version: Agones requires Kubernetes version {{% k8s-version %}}.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.

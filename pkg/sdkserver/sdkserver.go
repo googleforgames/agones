@@ -288,10 +288,12 @@ func (s *SDKServer) syncGameServer(key string) error {
 // updateState sets the GameServer Status's state to the one persisted in SDKServer,
 // i.e. SDKServer.gsState.
 func (s *SDKServer) updateState() error {
+	s.gsUpdateMutex.RLock()
 	s.logger.WithField("state", s.gsState).Debug("Updating state")
 	if len(s.gsState) == 0 {
 		return errors.Errorf("could not update GameServer %s/%s to empty state", s.namespace, s.gameServerName)
 	}
+	s.gsUpdateMutex.RUnlock()
 
 	gameServers := s.gameServerGetter.GameServers(s.namespace)
 	gs, err := s.gameServer()
@@ -568,7 +570,7 @@ func (s *SDKServer) stopReserveTimer() {
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Connected")
 
@@ -583,7 +585,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 	}
 
 	if int64(len(s.gsConnectedPlayers)) >= s.gsPlayerCapacity {
-		return &alpha.Bool{}, errors.New("players are already at capacity")
+		return &alpha.Bool{Bool: false}, errors.New("players are already at capacity")
 	}
 
 	// let's retain the original order, as it should be a smaller patch on data change
@@ -598,7 +600,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Disconnected")
 
@@ -629,7 +631,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*
 // [FeatureFlag:PlayerTracking]
 func (s *SDKServer) IsPlayerConnected(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	s.gsUpdateMutex.RLock()
 	defer s.gsUpdateMutex.RUnlock()

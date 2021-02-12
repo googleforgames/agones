@@ -23,7 +23,7 @@ RUN apt-get update && \
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.14.4
+ENV GO_VERSION=1.14.12
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -45,7 +45,7 @@ RUN go get -u golang.org/x/tools/cmd/goimports
 RUN gcloud components update && gcloud components install app-engine-go
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.16.15
+ENV KUBERNETES_VER 1.18.15
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
@@ -58,7 +58,7 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
     git clone -b kubernetes-${KUBERNETES_VER} --depth=3 https://github.com/kubernetes/code-generator.git
 
 # install Helm package manager
-ENV HELM_VER 3.2.3
+ENV HELM_VER 3.5.0
 ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
@@ -94,7 +94,7 @@ RUN mkdir -p /go/src/github.com/ahmetb && \
 
 # html checker
 RUN mkdir /tmp/htmltest && \
-    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.10.1/htmltest_0.10.1_linux_amd64.tar.gz && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
     tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
     mv /tmp/htmltest/htmltest /usr/local/bin && \
     rm -r /tmp/htmltest

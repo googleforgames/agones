@@ -25,7 +25,7 @@ resource "google_container_cluster" "prow-build-cluster" {
   project = var.project
   location = "us-west1-c"
   description = "Prow cluster to run tests for Agones"
-  min_master_version = "1.16"
+  min_master_version = "1.18"
   initial_node_count = 8
   node_config {
     machine_type = "n1-standard-4"

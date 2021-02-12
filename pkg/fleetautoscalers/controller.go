@@ -36,10 +36,10 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +53,7 @@ import (
 // Controller is a the FleetAutoscaler controller
 type Controller struct {
 	baseLogger            *logrus.Entry
-	crdGetter             v1beta1.CustomResourceDefinitionInterface
+	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
 	fleetGetter           typedagonesv1.FleetsGetter
 	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
@@ -76,7 +76,7 @@ func NewController(
 	autoscaler := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
-		crdGetter:             extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -94,8 +94,8 @@ func NewController(
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
 	kind := autoscalingv1.Kind("FleetAutoscaler")
-	wh.AddHandler("/validate", kind, admv1beta1.Create, c.validationHandler)
-	wh.AddHandler("/validate", kind, admv1beta1.Update, c.validationHandler)
+	wh.AddHandler("/validate", kind, admissionv1.Create, c.validationHandler)
+	wh.AddHandler("/validate", kind, admissionv1.Update, c.validationHandler)
 
 	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -138,7 +138,7 @@ func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler
 
 // validationHandler will intercept when a FleetAutoscaler is created, and
 // validate its settings.
-func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) validationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object
 	fas := &autoscalingv1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)

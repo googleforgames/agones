@@ -50,7 +50,7 @@ Agones incorporates these abilities:
 
 ## Code of Conduct
 
-Participation in this project comes under the {{< ghlink href="code-of-conduct.md" branch="master" >}}Contributor Covenant Code of Conduct{{< /ghlink >}}
+Participation in this project comes under the {{< ghlink href="code-of-conduct.md" branch="main" >}}Contributor Covenant Code of Conduct{{< /ghlink >}}
 
 ## What Next?
 - Review our [Prerequisite Knowledge]({{% ref "/docs/Prerequisite Knowledge/_index.md" %}}). Especially if the above

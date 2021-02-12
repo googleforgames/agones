@@ -43,3 +43,7 @@ build-image:
 # check if hosted on Google Cloud Registry
 gcr-check:
 	gcloud container images describe $(server_tag)
+
+#output the server_tag
+echo-image-tag:
+	@echo $(server_tag)
