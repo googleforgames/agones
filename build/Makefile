@@ -53,7 +53,7 @@ WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
 BUILD_WINDOWS_IMAGE =
 
 # Specify stress test level 1..100
-# STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-udp Game Servers.
+# STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
 STRESS_TEST_LEVEL ?= 20
 
 # kind cluster name to use

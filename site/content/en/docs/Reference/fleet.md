@@ -66,8 +66,8 @@ spec:
       template:
         spec:
           containers:
-          - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.21
+          - name: simple-game-server
+            image: gcr.io/agones-images/simple-game-server:0.1
 ```
 
 Since Agones defines a new 
@@ -105,25 +105,25 @@ The `spec` field is the actual `Fleet` specification and it is composed as follo
 
 Scale subresource is defined for a Fleet. Please refer to [Kubernetes docs](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#subresources).
 
-You can use the following command to scale the fleet with name simple-udp:
+You can use the following command to scale the fleet with name simple-game-server:
 
 ```bash
-$ kubectl scale fleet simple-udp --replicas=10
-fleet.agones.dev/simple-udp scaled
+$ kubectl scale fleet simple-game-server --replicas=10
+fleet.agones.dev/simple-game-server scaled
 ```
 
 You can also use [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}) to get or update the Replicas count:
 
 ```
-curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/fleets/simple-udp/scale
+curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/fleets/simple-game-server/scale
 ...
 {
   "kind": "Scale",
   "apiVersion": "autoscaling/v1",
   "metadata": {
-    "name": "simple-udp",
+    "name": "simple-game-server",
     "namespace": "default",
-    "selfLink": "/apis/agones.dev/v1/namespaces/default/fleets/simple-udp/scale",
+    "selfLink": "/apis/agones.dev/v1/namespaces/default/fleets/simple-game-server/scale",
     "uid": "4dfaa310-2566-11e9-afd1-42010a8a0058",
     "resourceVersion": "292652",
     "creationTimestamp": "2019-01-31T14:41:33Z"

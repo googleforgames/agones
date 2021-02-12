@@ -29,7 +29,7 @@ we could do so as followed:
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  name: "simple-udp"
+  name: "simple-game-server"
 spec:
   ports:
   - name: default
@@ -37,7 +37,7 @@ spec:
   template:
     spec:
       containers:
-      - name: simple-udp
+      - name: simple-game-server
         image: {{% example-image %}}
         resources:
           limit:

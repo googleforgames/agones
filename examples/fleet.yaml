@@ -75,5 +75,5 @@ spec:
       template:
         spec:
           containers:
-          - name: simple-udp
-            image: gcr.io/agones-images/udp-server:0.21
+          - name: simple-game-server
+            image: gcr.io/agones-images/simple-game-server:0.1
