@@ -73,7 +73,7 @@ There are two scheduling strategies for Fleets - each designed for different typ
 apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
-  name: simple-udp
+  name: simple-game-server
 spec:
   replicas: 100
   scheduling: Packed
@@ -84,7 +84,7 @@ spec:
       template:
         spec:
           containers:
-          - name: simple-udp
+          - name: simple-game-server
             image: {{% example-image %}}
 ```
 
@@ -130,7 +130,7 @@ With the "Packed" strategy, Fleets will remove `Ready` `GameServers` from Nodes 
 apiVersion: "agones.dev/v1"
 kind: Fleet
 metadata:
-  name: simple-udp
+  name: simple-game-server
 spec:
   replicas: 100
   scheduling: Distributed
@@ -141,7 +141,7 @@ spec:
       template:
         spec:
           containers:
-          - name: simple-udp
+          - name: simple-game-server
             image: {{% example-image %}}
 ```
 

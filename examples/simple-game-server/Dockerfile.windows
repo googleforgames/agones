@@ -23,9 +23,9 @@ FROM mcr.microsoft.com/windows/servercore:${WINDOWS_VERSION}
 # Unlike the Linux image the binary is built on the host since buildx cannot
 # invoke RUN commands for Windows Containers and multi-stage images
 # cannot copy data between OSes.
-COPY ["bin/simple-udp.exe", "/server/simple-udp.exe"]
+COPY ["bin/simple-game-server.exe", "/server/simple-game-server.exe"]
 
 WORKDIR /server
 EXPOSE 7654
 USER ContainerUser
-ENTRYPOINT ["C:\\server\\simple-udp.exe"]
+ENTRYPOINT ["C:\\server\\simple-game-server.exe"]

@@ -34,7 +34,7 @@ class UserBehavior(TaskSet):
             "apiVersion": "agones.dev/v1",
             "kind": "Fleet",
             "metadata": {
-                "generateName": "fleet-simple-udp",
+                "generateName": "fleet-simple-game-server",
                 "namespace": "default"
             },
             "spec": {
@@ -56,10 +56,10 @@ class UserBehavior(TaskSet):
                             "spec": {
                                 "containers": [
                                     {
-                                        "name": "simple-udp",
+                                        "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.5")
+                                            "/simple-game-server:0.1")
                                     }
                                 ]
                             }
@@ -117,10 +117,10 @@ class UserBehavior(TaskSet):
                             "spec": {
                                 "containers": [
                                     {
-                                        "name": "simple-udp",
+                                        "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.5")
+                                            "/simple-game-server:0.1")
                                     }
                                 ]
                             }
@@ -171,10 +171,10 @@ class UserBehavior(TaskSet):
                             "spec": {
                                 "containers": [
                                     {
-                                        "name": "simple-udp",
+                                        "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.5")
+                                            "/simple-game-server:0.1")
                                     }
                                 ]
                             }

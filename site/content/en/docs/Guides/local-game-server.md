@@ -31,8 +31,8 @@ spec:
   template:
     spec:
       containers:
-      - name: simple-udp
-        image: gcr.io/agones-images/udp-server:0.21
+      - name: simple-game-server
+        image: gcr.io/agones-images/simple-game-server:0.1
 ```
 
 Once you save this to a file make sure you have `kubectl` configured to point to your Agones cluster and then run `kubectl apply -f dev-gameserver.yaml`. This will register your server with Agones.

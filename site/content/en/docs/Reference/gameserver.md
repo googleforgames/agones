@@ -32,7 +32,7 @@ spec:
     #      This will mean that users will need to lookup what port has been opened through the server side SDK.
     portPolicy: Static
     # The name of the container to open the port on. Defaults to the game server container if omitted or empty.
-    container: simple-udp
+    container: simple-game-server
     # the port that is being opened on the game server process
     containerPort: 7654
     # the port exposed on the host, only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic".
@@ -86,8 +86,8 @@ spec:
     # Pod Specification
     spec:
       containers:
-      - name: simple-udp
-        image:  gcr.io/agones-images/udp-server:0.21
+      - name: simple-game-server
+        image:  gcr.io/agones-images/simple-game-server:0.1
         imagePullPolicy: Always
 ```
 
