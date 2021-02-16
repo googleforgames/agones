@@ -70,9 +70,16 @@ Status:         Running
 
 Let's create a Fleet Autoscaler using the following command:
 
+{{% feature expiryVersion="1.13.0" %}}
+```
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/main/examples/webhookfleetautoscaler.yaml
+```
+{{% /feature %}}
+{{% feature publishVersion="1.13.0" %}}
 ```
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
 ```
+{{% /feature %}}
 
 You should see a successful output similar to this:
 
@@ -347,10 +354,19 @@ base64 -i ./rootCA.pem
 ```
 
 Copy the output of the command above and replace the caBundle field in your text editor (say vim) with the new value:
+
+{{% feature expiryVersion="1.13.0" %}}
+```
+wget https://raw.githubusercontent.com/googleforgames/agones/main/examples/webhookfleetautoscalertls.yaml
+vim ./webhookfleetautoscalertls.yaml
+```
+{{% /feature %}}
+{{% feature publishVersion="1.13.0" %}}
 ```
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscalertls.yaml
 vim ./webhookfleetautoscalertls.yaml
 ```
+{{% /feature %}}
 
 #### 3. Deploy a Webhook service for autoscaling
 
