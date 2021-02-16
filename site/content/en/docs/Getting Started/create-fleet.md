@@ -147,7 +147,7 @@ simple-game-server-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   5
 ### 4. Allocate a Game Server from the Fleet
 
 Since we have a fleet of warm gameservers, we need a way to request one of them for usage, and mark that it has
-players access it (and therefore, it should not be deleted until they are finished with it).
+players accessing it (and therefore, it should not be deleted until they are finished with it).
 
 {{< alert title="Note" color="info">}}
  In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
