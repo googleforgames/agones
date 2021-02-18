@@ -19,6 +19,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -61,13 +62,13 @@ func NewFilteredGameServerSetInformer(client versioned.Interface, namespace stri
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AgonesV1().GameServerSets(namespace).List(options)
+				return client.AgonesV1().GameServerSets(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AgonesV1().GameServerSets(namespace).Watch(options)
+				return client.AgonesV1().GameServerSets(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&agonesv1.GameServerSet{},
