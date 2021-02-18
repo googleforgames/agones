@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os/user"
 	"path/filepath"
@@ -81,7 +82,7 @@ func allocate(framework *e2eframework.Framework, numOfClients int, fleetName str
 		go func() {
 			defer wg.Done()
 			for j := 0; j < reqPerClient; j++ {
-				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
+				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(context.Background(), gsa.DeepCopy(), metav1.CreateOptions{})
 				if err != nil {
 					logrus.Errorf("could not completed gsa1 allocation : %v", err)
 				} else if gsa1.Status.State == "Contention" {
