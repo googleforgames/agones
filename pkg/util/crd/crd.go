@@ -17,6 +17,7 @@
 package crd
 
 import (
+	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -28,9 +29,9 @@ import (
 
 // WaitForEstablishedCRD blocks until CRD comes to an Established state.
 // Has a deadline of 60 seconds for this to occur.
-func WaitForEstablishedCRD(crdGetter apiextclientv1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
+func WaitForEstablishedCRD(ctx context.Context, crdGetter apiextclientv1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
 	return wait.PollImmediate(time.Second, 60*time.Second, func() (done bool, err error) {
-		crd, err := crdGetter.Get(name, metav1.GetOptions{})
+		crd, err := crdGetter.Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

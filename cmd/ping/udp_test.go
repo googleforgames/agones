@@ -15,14 +15,14 @@
 package main
 
 import (
+	"context"
 	"net"
 	"testing"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/wait"
-
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type mockAddr struct {
@@ -106,12 +106,12 @@ func TestUDPServerHealth(t *testing.T) {
 
 	assert.Error(t, u.Health())
 
-	stop := make(chan struct{})
-	u.run(stop)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	assert.Nil(t, u.Health())
+	u.run(ctx)
+	assert.NoError(t, u.Health())
 
-	close(stop)
+	cancel()
 
 	err = wait.PollImmediate(time.Second, 5*time.Second, func() (done bool, err error) {
 		return u.Health() != nil, nil

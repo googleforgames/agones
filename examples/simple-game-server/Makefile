@@ -30,7 +30,7 @@ WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REGISTRY)/simple-game-server:0.1
+server_tag = $(REGISTRY)/simple-game-server:0.2
 ifdef WITH_WINDOWS
 server_tag_linux_amd64 = $(server_tag)-linux_amd64
 else

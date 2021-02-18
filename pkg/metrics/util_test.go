@@ -54,7 +54,7 @@ func newFakeControllerWithMock(m agtesting.Mocks) *fakeController {
 	m.AgonesClient.AddWatchReactor("fleets", k8stesting.DefaultWatchReactor(fleetWatch, nil))
 	m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
 
 	return &fakeController{
 		Controller: c,
@@ -64,7 +64,7 @@ func newFakeControllerWithMock(m agtesting.Mocks) *fakeController {
 		fleetWatch: fleetWatch,
 		nodeWatch:  nodeWatch,
 		cancel:     cancel,
-		stop:       stop,
+		ctx:        ctx,
 	}
 }
 
@@ -76,14 +76,14 @@ func (c *fakeController) close() {
 
 func (c *fakeController) run(t *testing.T) {
 	go func() {
-		err := c.Controller.Run(1, c.stop)
+		err := c.Controller.Run(c.ctx, 1)
 		assert.Nil(t, err)
 	}()
 	c.sync()
 }
 
 func (c *fakeController) sync() bool {
-	return cache.WaitForCacheSync(c.stop, c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
+	return cache.WaitForCacheSync(c.ctx.Done(), c.gameServerSynced, c.fleetSynced, c.fasSynced, c.nodeSynced)
 }
 
 type fakeController struct {
@@ -93,7 +93,7 @@ type fakeController struct {
 	fasWatch   *watch.FakeWatcher
 	fleetWatch *watch.FakeWatcher
 	nodeWatch  *watch.FakeWatcher
-	stop       <-chan struct{}
+	ctx        context.Context
 	cancel     context.CancelFunc
 }
 

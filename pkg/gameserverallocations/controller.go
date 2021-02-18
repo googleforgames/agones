@@ -15,6 +15,7 @@
 package gameserverallocations
 
 import (
+	"context"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -82,7 +83,7 @@ func NewController(apiServer *apiserver.APIServer,
 }
 
 // registers the api resource for gameserverallocation
-func (c *Controller) registerAPIResource(stop <-chan struct{}) {
+func (c *Controller) registerAPIResource(ctx context.Context) {
 	resource := metav1.APIResource{
 		Name:         "gameserverallocations",
 		SingularName: "gameserverallocation",
@@ -94,23 +95,23 @@ func (c *Controller) registerAPIResource(stop <-chan struct{}) {
 		ShortNames: []string{"gsa"},
 	}
 	c.api.AddAPIResource(allocationv1.SchemeGroupVersion.String(), resource, func(w http.ResponseWriter, r *http.Request, n string) error {
-		return c.processAllocationRequest(w, r, n, stop)
+		return c.processAllocationRequest(ctx, w, r, n)
 	})
 }
 
 // Run runs this controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
-func (c *Controller) Run(_ int, stop <-chan struct{}) error {
-	if err := c.allocator.Start(stop); err != nil {
+func (c *Controller) Run(ctx context.Context, _ int) error {
+	if err := c.allocator.Start(ctx); err != nil {
 		return err
 	}
 
-	c.registerAPIResource(stop)
+	c.registerAPIResource(ctx)
 
 	return nil
 }
 
-func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Request, namespace string, stop <-chan struct{}) (err error) {
+func (c *Controller) processAllocationRequest(ctx context.Context, w http.ResponseWriter, r *http.Request, namespace string) (err error) {
 	if r.Body != nil {
 		defer r.Body.Close() // nolint: errcheck
 	}
@@ -128,7 +129,7 @@ func (c *Controller) processAllocationRequest(w http.ResponseWriter, r *http.Req
 		return err
 	}
 
-	result, err := c.allocator.Allocate(gsa, stop)
+	result, err := c.allocator.Allocate(ctx, gsa)
 	if err != nil {
 		return err
 	}
