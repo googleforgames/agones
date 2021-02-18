@@ -32,6 +32,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	pb "agones.dev/agones/pkg/allocation/go"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -58,7 +60,6 @@ const (
 )
 
 func TestAllocator(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 
 	ip, port := getAllocatorEndpoint(ctx, t)
@@ -107,7 +108,6 @@ func TestAllocator(t *testing.T) {
 }
 
 func TestRestAllocator(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 
 	ip, port := getAllocatorEndpoint(ctx, t)
@@ -175,7 +175,6 @@ func TestRestAllocator(t *testing.T) {
 // Multi-cluster is represented as two namespaces A and B in the same cluster.
 // Namespace A received the allocation request, but because namespace B has the highest priority, A will forward the request to B.
 func TestAllocatorCrossNamespace(t *testing.T) {
-	t.Parallel()
 	ctx := context.Background()
 
 	ip, port := getAllocatorEndpoint(ctx, t)
@@ -359,15 +358,23 @@ func refreshAllocatorTLSCerts(ctx context.Context, t *testing.T, host string) []
 	}
 
 	kubeCore := framework.KubeClient.CoreV1()
-	s, err := kubeCore.Secrets(agonesSystemNamespace).Get(ctx, allocatorTLSName, metav1.GetOptions{})
-	if err != nil {
-		t.Fatalf("getting secret %s/%s failed: %s", agonesSystemNamespace, allocatorTLSName, err)
-	}
-	s.Data[tlsCrtTag] = pub
-	s.Data[tlsKeyTag] = priv
-	if _, err := kubeCore.Secrets(agonesSystemNamespace).Update(ctx, s, metav1.UpdateOptions{}); err != nil {
-		t.Fatalf("updating secrets failed: %s", err)
-	}
+
+	require.Eventually(t, func() bool {
+		s, err := kubeCore.Secrets(agonesSystemNamespace).Get(ctx, allocatorTLSName, metav1.GetOptions{})
+		if err != nil {
+			t.Logf("failed getting secret %s/%s failed: %s", agonesSystemNamespace, allocatorTLSName, err)
+			return false
+		}
+
+		s.Data[tlsCrtTag] = pub
+		s.Data[tlsKeyTag] = priv
+		if _, err := kubeCore.Secrets(agonesSystemNamespace).Update(ctx, s, metav1.UpdateOptions{}); err != nil {
+			t.Logf("failed updating secrets failed: %s", err)
+			return false
+		}
+
+		return true
+	}, time.Minute, time.Second, "Could not update Secret")
 
 	t.Logf("Allocator TLS is refreshed with public CA: %s for endpoint %s", string(pub), host)
 	return pub

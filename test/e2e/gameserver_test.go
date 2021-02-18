@@ -481,32 +481,35 @@ func TestGameServerSelfAllocate(t *testing.T) {
 func TestGameServerReadyAllocateReady(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+	logger := logrus.WithField("test", t.Name())
+
 	gs := framework.DefaultGameServer(framework.Namespace)
+
+	logger.Info("Moving to Ready")
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
-	if err != nil {
-		t.Fatalf("Could not get a GameServer ready: %v", err)
-	}
+	require.NoError(t, err, "Could not get a GameServer ready")
+	logger = logger.WithField("gs", readyGs.ObjectMeta.Name)
+
 	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
-	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
+	require.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	logger.Info("Moving to Allocated")
 	reply, err := e2eframework.SendGameServerUDP(readyGs, "ALLOCATE")
-	if err != nil {
-		t.Fatalf("Could not message GameServer: %v", err)
-	}
-	assert.Equal(t, "ACK: ALLOCATE\n", reply)
-	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateAllocated, time.Minute)
-	assert.NoError(t, err)
-	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+	require.NoError(t, err, "Could not message GameServer")
 
+	require.Equal(t, "ACK: ALLOCATE\n", reply)
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, readyGs, agonesv1.GameServerStateAllocated, time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+
+	logger.Info("Moving to Ready again")
 	reply, err = e2eframework.SendGameServerUDP(readyGs, "READY")
-	if err != nil {
-		assert.FailNow(t, "Could not message GameServer")
-	}
-	assert.Equal(t, "ACK: READY\n", reply)
-	gs, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateReady, time.Minute)
-	if assert.NoError(t, err) {
-		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-	}
+	require.NoError(t, err, "Could not message GameServer")
+	require.Equal(t, "ACK: READY\n", reply)
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReady, time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {

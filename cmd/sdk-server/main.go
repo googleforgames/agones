@@ -100,7 +100,7 @@ func main() {
 		defer cancel()
 
 		if ctlConf.Timeout != 0 {
-			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout))
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout)*time.Second)
 			defer cancel()
 		}
 	case ctlConf.Test != "":
@@ -111,7 +111,7 @@ func main() {
 		defer cancel()
 
 		if ctlConf.Timeout != 0 {
-			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout))
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout)*time.Second)
 			defer cancel()
 		}
 	default:
