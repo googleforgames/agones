@@ -3,7 +3,7 @@ title: "Quickstart: Edit a Game Server"
 linkTitle: "Edit Your First Game Server (Go)"
 date: 2019-01-02T06:42:56Z
 description: >
-  The following guide is for developers without Docker or Kubernetes experience, that want to use the simple-udp example as a starting point for a custom game server. 
+  The following guide is for developers without Docker or Kubernetes experience, that want to use the simple-game-server example as a starting point for a custom game server. 
 ---
 
 This guide addresses Google Kubernetes Engine and Minikube.  We would welcome a Pull Request to expand this to include other platforms as well.
@@ -24,8 +24,8 @@ Also complete the "Enabling creation of RBAC resources" and "Installing Agones" 
 
 ## Modify the code and push another new image
 
-### Modify the simple-udp example source code
-Modify the {{< ghlink href="examples/simple-udp/main.go" >}}main.go{{< /ghlink >}} file. For example:
+### Modify the simple-game-server example source code
+Modify the {{< ghlink href="examples/simple-game-server/main.go" >}}main.go{{< /ghlink >}} file. For example:
 
 Change the following line in `main.go`:
 
@@ -51,14 +51,14 @@ Since Docker image is using Alpine Linux, the "go build" command has to include 
 
 ### Create a new docker image
 ```bash
->> docker build -t gcr.io/[PROJECT_ID]/agones-udp-server:modified .
+>> docker build -t gcr.io/[PROJECT_ID]/agones-simple-game-server:modified .
 ```
 
-Note: you can change the image name "agones-udp-server" to something else.
+Note: you can change the image name "agones-simple-game-server" to something else.
 
 ### If using GKE, push the image to GCP Registry
 ```bash
->> docker push gcr.io/[PROJECT_ID]/agones-udp-server:modified
+>> docker push gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
 ```
 
 Note: Review [Authentication Methods](https://cloud.google.com/container-registry/docs/advanced-authentication)
@@ -67,7 +67,7 @@ and advanced authentication methods to the Google Container Registry.
 
 ### If using Minikube, load the image into Minikube
 ```bash
->> docker save gcr.io/[PROJECT_ID]/agones-udp-server:modified | (eval $(minikube docker-env) && docker load)
+>> minikube cache add gcr.io/[PROJECT_ID]/agones-agones-simple-game-server:modified
 ```
 
 ### Modify gameserver.yaml
@@ -76,8 +76,8 @@ Modify the following line from gameserver.yaml to use the new configuration.
 ```yaml
     spec:
       containers:
-      - name: agones-simple-udp
-        image: gcr.io/[PROJECT_ID]/agones-udp-server:modified
+      - name: agones-simple-game-server
+        image: gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
 ```
 
 ### If using GKE, deploy Server to GKE
@@ -103,7 +103,7 @@ Apply the latest settings to the Kubernetes container.
 Let's retrieve the IP address and the allocated port of your Game Server:
 
 ```
-kubectl get gs simple-udp -o jsonpath='{.status.address}:{.status.ports[0].port}'
+kubectl get gs simple-game-server -o jsonpath='{.status.address}:{.status.ports[0].port}'
 ```
 
 You can now communicate with the Game Server :

@@ -15,7 +15,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
-- [ ] `git checkout master && git pull --rebase upstream master`
+- [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
@@ -42,7 +42,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
     - [ ] If full release, update documentation with updated example images tags.
 - [ ] Create PR with these changes, and merge them with an approval.
 - [ ] Confirm local git remote `upstream` points at `git@github.com:googleforgames/agones.git`
-- [ ] Run `git remote update && git checkout master && git reset --hard upstream/master` to ensure your code is in line with upstream  (unless this is a hotfix, then do the same, but for the release branch)
+- [ ] Run `git remote update && git checkout main && git reset --hard upstream/main` to ensure your code is in line 
+   with upstream  (unless this is a hotfix, then do the same, but for the release branch)
 - [ ] Publish SDK packages
    - [ ] Run `make sdk-shell-node` to get interactive shell to publish node package. Requires Google internal process
      to publish.
@@ -71,10 +72,10 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Close this issue.
 - [ ] If full release, close the current milestone. *Congratulations!* - the release is now complete! :tada: :clap: :smile: :+1:
 
-[values]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/values.yaml#L33
-[chart]: https://github.com/googleforgames/agones/blob/master/install/helm/agones/Chart.yaml
+[values]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/values.yaml#L33
+[chart]: https://github.com/googleforgames/agones/blob/main/install/helm/agones/Chart.yaml
 [list]: https://groups.google.com/forum/#!forum/agones-discuss
-[release-template]: https://github.com/googleforgames/agones/blob/master/docs/governance/templates/release.md
-[build-makefile]: https://github.com/googleforgames/agones/blob/master/build/Makefile
-[nodejs]: https://github.com/googleforgames/agones/blob/master/sdks/nodejs/package.json
-[csharp]: https://github.com/googleforgames/agones/blob/master/sdks/csharp/sdk/
+[release-template]: https://github.com/googleforgames/agones/blob/main/docs/governance/templates/release.md
+[build-makefile]: https://github.com/googleforgames/agones/blob/main/build/Makefile
+[nodejs]: https://github.com/googleforgames/agones/blob/main/sdks/nodejs/package.json
+[csharp]: https://github.com/googleforgames/agones/blob/main/sdks/csharp/sdk/

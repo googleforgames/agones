@@ -90,9 +90,9 @@ func main() {
 	}
 
 	// Create a GameServer
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: "default"},
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "simple-game-server", Namespace: "default"},
 		Spec: agonesv1.GameServerSpec{
-			Container: "udp-server",
+			Container: "simple-game-server",
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
 				HostPort:      7654,
@@ -102,7 +102,7 @@ func main() {
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{{Name: "udp-server", Image: "{{% example-image %}}"}},
+					Containers: []corev1.Container{{Name: "simple-game-server", Image: "{{% example-image %}}"}},
 				},
 			},
 		},
@@ -200,7 +200,7 @@ $ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
             "kind": "GameServer",
             "metadata": {
                 "annotations": {
-                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"agones.dev/v1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-udp\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"{{% example-image %}}\",\"name\":\"simple-udp\"}]}}}}\n"
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"agones.dev/v1\",\"kind\":\"GameServer\",\"metadata\":{\"annotations\":{},\"name\":\"simple-game-server\",\"namespace\":\"default\"},\"spec\":{\"containerPort\":7654,\"hostPort\":7777,\"portPolicy\":\"static\",\"template\":{\"spec\":{\"containers\":[{\"image\":\"{{% example-image %}}\",\"name\":\"simple-game-server\"}]}}}}\n"
                 },
                 "clusterName": "",
                 "creationTimestamp": "2018-03-02T21:41:05Z",
@@ -208,15 +208,15 @@ $ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
                     "agones.dev"
                 ],
                 "generation": 0,
-                "name": "simple-udp",
+                "name": "simple-game-server",
                 "namespace": "default",
                 "resourceVersion": "760",
-                "selfLink": "/apis/agones.dev/v1/namespaces/default/gameservers/simple-udp",
+                "selfLink": "/apis/agones.dev/v1/namespaces/default/gameservers/simple-game-server",
                 "uid": "692beea6-1e62-11e8-beb2-080027637781"
             },
             "spec": {
                 "PortPolicy": "Static",
-                "container": "simple-udp",
+                "container": "simple-game-server",
                 "containerPort": 7654,
                 "health": {
                     "failureThreshold": 3,
@@ -233,7 +233,7 @@ $ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
                         "containers": [
                             {
                                 "image": "{{% example-image %}}",
-                                "name": "simple-udp",
+                                "name": "simple-game-server",
                                 "resources": {}
                             }
                         ]
@@ -256,15 +256,15 @@ $ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
     }
 }
 
-# allocate a gameserver from a fleet named 'simple-udp', with GameServerAllocation
+# allocate a gameserver from a fleet named 'simple-game-server', with GameServerAllocation
 
-$ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"agones.dev/fleet":"simple-udp"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
+$ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"agones.dev/fleet":"simple-game-server"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
 
 {
     "kind": "GameServerAllocation",
     "apiVersion": "allocation.agones.dev/v1",
     "metadata": {
-        "name": "simple-udp-v6jwb-cmdcv",
+        "name": "simple-game-server-v6jwb-cmdcv",
         "namespace": "default",
         "creationTimestamp": "2019-07-03T17:19:47Z"
     },
@@ -274,7 +274,7 @@ $ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation
         },
         "required": {
             "matchLabels": {
-                "agones.dev/fleet": "simple-udp"
+                "agones.dev/fleet": "simple-game-server"
             }
         },
         "scheduling": "Packed",
@@ -282,7 +282,7 @@ $ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation
     },
     "status": {
         "state": "Allocated",
-        "gameServerName": "simple-udp-v6jwb-cmdcv",
+        "gameServerName": "simple-game-server-v6jwb-cmdcv",
         "ports": [
             {
                 "name": "default",

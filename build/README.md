@@ -759,7 +759,7 @@ port forwarding to the controller deployment.
 
 ## Dependencies
 
-This project uses the [go modules](https://github.com/golang/go/wiki/Modules) as its manager. You can see the list of dependencies [here](https://github.com/googleforgames/agones/blob/master/go.mod).
+This project uses the [go modules](https://github.com/golang/go/wiki/Modules) as its manager. You can see the list of dependencies [here](https://github.com/googleforgames/agones/blob/main/go.mod).
 
 #### Vendoring
 

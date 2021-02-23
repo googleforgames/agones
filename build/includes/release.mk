@@ -25,7 +25,7 @@
 
 # generate a changelog using github-changelog-generator
 gen-changelog: RELEASE_VERSION ?= $(base_version)
-gen-changelog: RELEASE_BRANCH ?= master
+gen-changelog: RELEASE_BRANCH ?= main
 gen-changelog:
 	read -p 'Github Token: ' TOKEN && \
     docker run -it --rm -v "$(agones_path)":/usr/local/src/your-app ferrarimarco/github-changelog-generator:1.15.0 \
@@ -43,8 +43,6 @@ release-example-image-markdown: example-image-markdown.crd-client
 release-example-image-markdown: example-image-markdown.nodejs-simple
 release-example-image-markdown: example-image-markdown.rust-simple
 release-example-image-markdown: example-image-markdown.simple-game-server
-release-example-image-markdown: example-image-markdown.simple-tcp
-release-example-image-markdown: example-image-markdown.simple-udp
 release-example-image-markdown: example-image-markdown.supertuxkart
 release-example-image-markdown: example-image-markdown.unity-simple
 release-example-image-markdown: example-image-markdown.xonotic

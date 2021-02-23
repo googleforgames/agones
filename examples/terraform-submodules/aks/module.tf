@@ -51,7 +51,7 @@ variable "feature_gates" {
 }
 
 module "aks_cluster" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=main"
 
   machine_type  = var.machine_type
   cluster_name  = var.cluster_name
@@ -62,7 +62,7 @@ module "aks_cluster" {
 }
 
 module "helm_agones" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
   agones_version         = var.agones_version
   values_file            = ""

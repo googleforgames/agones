@@ -313,10 +313,10 @@ data:
   tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
 {{- end }}
 
----
 # Default allocation client secret
 {{- if .Values.agones.allocator.generateClientTLS }}
 {{- range .Values.gameservers.namespaces }}
+---
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls

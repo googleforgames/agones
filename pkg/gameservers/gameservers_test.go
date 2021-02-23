@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -47,6 +48,7 @@ func TestAddress(t *testing.T) {
 	fixture := map[string]struct {
 		node            *corev1.Node
 		expectedAddress string
+		featureFlags    string
 	}{
 		"node with external ip": {
 			node:            &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName}, Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{{Address: "12.12.12.12", Type: corev1.NodeExternalIP}}}},
@@ -64,13 +66,39 @@ func TestAddress(t *testing.T) {
 				}}},
 			expectedAddress: "9.9.9.8",
 		},
+		"node with external and internal dns": {
+			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
+					{Address: "external.example.com", Type: corev1.NodeExternalDNS},
+					{Address: "internal.example.com", Type: corev1.NodeInternalDNS},
+				}}},
+			expectedAddress: "external.example.com",
+			featureFlags:    "NodeExternalDNS=true",
+		},
+		"node with external and internal dns without feature flag": {
+			node: &corev1.Node{ObjectMeta: metav1.ObjectMeta{Name: nodeFixtureName},
+				Status: corev1.NodeStatus{Addresses: []corev1.NodeAddress{
+					{Address: "external.example.com", Type: corev1.NodeExternalDNS},
+					{Address: "internal.example.com", Type: corev1.NodeInternalDNS},
+					{Address: "9.9.9.8", Type: corev1.NodeExternalIP},
+					{Address: "12.12.12.12", Type: corev1.NodeInternalIP},
+				}}},
+			expectedAddress: "9.9.9.8",
+			featureFlags:    "NodeExternalDNS=false",
+		},
 	}
 
 	dummyGS := &agonesv1.GameServer{}
 	dummyGS.Name = "some-gs"
 
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+
 	for name, fixture := range fixture {
 		t.Run(name, func(t *testing.T) {
+			err := runtime.ParseFeatures(fixture.featureFlags)
+			assert.NoError(t, err)
+
 			addr, err := address(fixture.node)
 			require.NoError(t, err)
 			assert.Equal(t, fixture.expectedAddress, addr)

@@ -47,7 +47,7 @@ kind: FleetAutoscaler
 metadata:
   name: webhook-fleet-autoscaler
 spec:
-  fleetName: simple-udp
+  fleetName: simple-game-server
   policy:
     # type of the policy - this example is Webhook
     type: Webhook

@@ -97,8 +97,8 @@ Configurable parameters:
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
 
 {{% alert title="Warning" color="warning"%}}
-On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=master"`
-make sure to change `?ref=master` to match your targeted Agones release, as Terraform modules can change between
+On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"`
+make sure to change `?ref=main` to match your targeted Agones release, as Terraform modules can change between
 releases.
 
 For example, if you are targeting {{< release-branch >}}, then you will want to have 

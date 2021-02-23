@@ -49,7 +49,7 @@ variable "feature_gates" {
 }
 
 module "eks_cluster" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=main"
 
   machine_type = var.machine_type
   cluster_name = var.cluster_name
@@ -64,7 +64,7 @@ data "aws_eks_cluster_auth" "example" {
 // Next Helm module cause "terraform destroy" timeout, unless helm release would be deleted first.
 // Therefore "helm delete --purge agones" should be executed from the CLI before executing "terraform destroy".
 module "helm_agones" {
-  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=master"
+  source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
   udp_expose             = "false"
   agones_version         = var.agones_version

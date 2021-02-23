@@ -24,20 +24,20 @@ The following prerequisites are required to create a GameServer :
 
 If you don't have a Kubernetes cluster you can follow [these instructions]({{< ref "/docs/Installation/_index.md" >}}) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
 
-For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
+For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-game-server/" >}}simple-game-server{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
 
 ### 1. Create a GameServer
 
 Let's create a GameServer using the following command :
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserver.yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
 ```
 
 You should see a successful output similar to this :
 
 ```
-gameserver "simple-udp" created
+gameserver.agones.dev/simple-game-server-4ss4j created
 ```
 
 This has created a GameServer record inside Kubernetes, which has also created a backing [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) to run our simple udp game server code in.
@@ -49,15 +49,15 @@ kubectl get gameservers
 It should look something like this:
 
 ```
-NAME               STATE     ADDRESS       PORT   NODE     AGE
-simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   3m
+NAME                       STATE     ADDRESS       PORT   NODE     AGE
+simple-game-server-7pjrq   Ready   35.233.183.43   7190   agones   3m
 ```
 
-You can also see the [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) that got created by running `kubectl get pods`, the Pod will be prefixed by `simple-udp`.
+You can also see the [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) that got created by running `kubectl get pods`, the Pod will be prefixed by `simple-game-server`.
 
 ```
-NAME                READY     STATUS    RESTARTS   AGE
-simple-udp-7pjrq    2/2       Running   0          5m
+NAME                        READY     STATUS    RESTARTS   AGE
+simple-game-server-7pjrq    2/2       Running   0          5m
 ```
 
 As you can see above it says `READY: 2/2` this means there are two containers running in this Pod, this is because Agones injected the SDK sidecar for readiness and health checking of your Game Server.
@@ -74,7 +74,7 @@ watch kubectl describe gameserver
 ```
 
 ```
-Name:         simple-udp-7pjrq
+Name:         simple-game-server-7pjrq
 Namespace:    default
 Labels:       <none>
 Annotations:  agones.dev/sdk-version: 0.9.0-764fa53
@@ -84,13 +84,13 @@ Metadata:
   Creation Timestamp:  2019-02-27T15:06:20Z
   Finalizers:
     agones.dev
-  Generate Name:     simple-udp-
+  Generate Name:     simple-game-server-
   Generation:        1
   Resource Version:  30377
-  Self Link:         /apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-7pjrq
+  Self Link:         /apis/agones.dev/v1/namespaces/default/gameservers/simple-game-server-7pjrq
   UID:               3d7ac3e1-3aa1-11e9-a4f5-42010a8a0019
 Spec:
-  Container:  simple-udp
+  Container:  simple-game-server
   Health:
     Failure Threshold:      3
     Initial Delay Seconds:  5
@@ -108,7 +108,7 @@ Spec:
     Spec:
       Containers:
         Image:  {{< example-image >}}
-        Name:   simple-udp
+        Name:   simple-game-server
         Resources:
           Limits:
             Cpu:     20m
@@ -127,7 +127,7 @@ Events:
   Type    Reason          Age   From                   Message
   ----    ------          ----  ----                   -------
   Normal  PortAllocation  34s   gameserver-controller  Port allocated
-  Normal  Creating        34s   gameserver-controller  Pod simple-udp-7pjrq created
+  Normal  Creating        34s   gameserver-controller  Pod simple-game-server-7pjrq created
   Normal  Scheduled       34s   gameserver-controller  Address and port populated
   Normal  Ready           27s   gameserver-controller  SDK.Ready() executed
 ```
@@ -146,8 +146,8 @@ kubectl get gs
 This should output your Game Server IP address and ports, eg:
 
 ```
-NAME               STATE   ADDRESS         PORT   NODE     AGE
-simple-udp-7pjrq   Ready   35.233.183.43   7190   agones   4m
+NAME                       STATE   ADDRESS         PORT   NODE     AGE
+simple-game-server-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
 
 {{< alert title="Note" color="info">}}

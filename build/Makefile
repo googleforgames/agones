@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.12.0
+base_version = 1.13.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -53,7 +53,7 @@ WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
 BUILD_WINDOWS_IMAGE =
 
 # Specify stress test level 1..100
-# STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-udp Game Servers.
+# STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
 STRESS_TEST_LEVEL ?= 20
 
 # kind cluster name to use
@@ -63,7 +63,7 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 # Game Server image to use while doing end-to-end tests
 GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.1
 
-ALPHA_FEATURE_GATES ?= "PlayerTracking=true&SDKWatchSendOnExecute=true&RollingUpdateOnReady=true"
+ALPHA_FEATURE_GATES ?= "PlayerTracking=true&RollingUpdateOnReady=true&NodeExternalDNS=true"
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -317,7 +317,7 @@ install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
-		helm upgrade --install --wait --namespace=agones-system \
+		helm upgrade --install --atomic --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
