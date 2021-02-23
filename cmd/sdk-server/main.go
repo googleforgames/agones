@@ -36,6 +36,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
@@ -87,7 +88,7 @@ func main() {
 	mux := gwruntime.NewServeMux()
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.HTTPPort),
-		Handler: mux,
+		Handler: wsproxy.WebsocketProxy(mux),
 	}
 	defer httpServer.Close() // nolint: errcheck
 	ctx, cancel := context.WithCancel(context.Background())

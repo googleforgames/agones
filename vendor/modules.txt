@@ -118,6 +118,8 @@ github.com/googleapis/gax-go/v2
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
+# github.com/gorilla/websocket v1.4.0
+github.com/gorilla/websocket
 # github.com/grpc-ecosystem/grpc-gateway v1.11.3
 ## explicit
 github.com/grpc-ecosystem/grpc-gateway/codegenerator
@@ -226,6 +228,9 @@ github.com/spf13/viper
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8
+## explicit
+github.com/tmc/grpc-websocket-proxy/wsproxy
 # go.opencensus.io v0.22.3
 ## explicit
 go.opencensus.io
