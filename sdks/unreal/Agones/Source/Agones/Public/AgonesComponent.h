@@ -281,7 +281,7 @@ public:
 	void SetPlayerCapacity(int64 Count, FSetPlayerCapacityDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 private:
-	TSharedRef<IHttpRequest> BuildAgonesRequest(
+	FHttpRequestRef BuildAgonesRequest(
 		FString Path = "", const FHttpVerb Verb = FHttpVerb::Post, const FString Content = "{}");
 
 	FTimerHandle ConnectDelTimerHandle;
