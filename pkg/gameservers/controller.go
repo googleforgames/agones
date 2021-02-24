@@ -754,6 +754,9 @@ func (c *Controller) syncGameServerStartingState(ctx context.Context, gs *agones
 	if err != nil {
 		return nil, err
 	}
+	if pod.Spec.NodeName == "" {
+		return gs, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+	}
 	node, err := c.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
@@ -803,6 +806,9 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 	addressPopulated := false
 	if gs.Status.NodeName == "" {
 		addressPopulated = true
+		if pod.Spec.NodeName == "" {
+			return gs, workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+		}
 		node, err := c.nodeLister.Get(pod.Spec.NodeName)
 		if err != nil {
 			return gs, errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
