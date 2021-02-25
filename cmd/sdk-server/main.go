@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -37,7 +38,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -77,8 +77,7 @@ func main() {
 		time.Sleep(time.Duration(ctlConf.Delay) * time.Second)
 	}
 
-	stop := signals.NewStopChannel()
-	timedStop := make(chan struct{})
+	ctx := signals.NewSigKillContext()
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a kill signal
 	// then the gameserver is being shut down, and we no longer
@@ -91,8 +90,6 @@ func main() {
 		Handler: wsproxy.WebsocketProxy(mux),
 	}
 	defer httpServer.Close() // nolint: errcheck
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	switch {
 	case ctlConf.IsLocal:
@@ -103,10 +100,8 @@ func main() {
 		defer cancel()
 
 		if ctlConf.Timeout != 0 {
-			go func() {
-				time.Sleep(time.Duration(ctlConf.Timeout) * time.Second)
-				close(timedStop)
-			}()
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout)*time.Second)
+			defer cancel()
 		}
 	case ctlConf.Test != "":
 		cancel, err := registerTestSdkServer(grpcServer, ctlConf)
@@ -116,10 +111,8 @@ func main() {
 		defer cancel()
 
 		if ctlConf.Timeout != 0 {
-			go func() {
-				time.Sleep(time.Duration(ctlConf.Timeout) * time.Second)
-				close(timedStop)
-			}()
+			ctx, cancel = context.WithTimeout(ctx, time.Duration(ctlConf.Timeout)*time.Second)
+			defer cancel()
 		}
 	default:
 		var config *rest.Config
@@ -148,7 +141,7 @@ func main() {
 		}
 
 		go func() {
-			err := s.Run(ctx.Done())
+			err := s.Run(ctx)
 			if err != nil {
 				logger.WithError(err).Fatalf("Could not run sidecar")
 			}
@@ -162,11 +155,7 @@ func main() {
 	go runGrpc(grpcServer, grpcEndpoint)
 	go runGateway(ctx, grpcEndpoint, mux, httpServer)
 
-	select {
-	case <-stop:
-	case <-timedStop:
-	}
-
+	<-ctx.Done()
 	logger.Info("shutting down sdk server")
 }
 

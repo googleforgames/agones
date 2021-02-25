@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -148,10 +149,10 @@ func TestMissingPodControllerSyncGameServer(t *testing.T) {
 				v.expected.updateTests(t, gs)
 				return true, gs, nil
 			})
-			_, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
+			ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced, c.podSynced)
 			defer cancel()
 
-			err = c.syncGameServer("default/test")
+			err = c.syncGameServer(ctx, "default/test")
 			assert.NoError(t, err)
 			assert.Equal(t, v.expected.updated, updated, "updated state")
 			v.expected.postTests(t, m)
@@ -168,7 +169,7 @@ func TestMissingPodControllerRun(t *testing.T) {
 	gs.ApplyDefaults()
 
 	received := make(chan string)
-	h := func(name string) error {
+	h := func(_ context.Context, name string) error {
 		assert.Equal(t, "default/test", name)
 		received <- name
 		return nil
@@ -179,16 +180,16 @@ func TestMissingPodControllerRun(t *testing.T) {
 
 	c.workerqueue.SyncHandler = h
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	go func() {
-		err := c.Run(stop)
+		err := c.Run(ctx)
 		assert.Nil(t, err, "Run should not error")
 	}()
 
 	noChange := func() {
-		assert.True(t, cache.WaitForCacheSync(stop, c.gameServerSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced))
 		select {
 		case <-received:
 			assert.FailNow(t, "should not run sync")

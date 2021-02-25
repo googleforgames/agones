@@ -15,6 +15,7 @@
 package https
 
 import (
+	"context"
 	"net/http"
 
 	"agones.dev/agones/pkg/util/runtime"
@@ -61,9 +62,9 @@ func NewServer(certFile, keyFile string) *Server {
 
 // Run runs the webhook server, starting a https listener.
 // Will close the http server on stop channel close.
-func (s *Server) Run(_ int, stop <-chan struct{}) error {
+func (s *Server) Run(ctx context.Context, _ int) error {
 	go func() {
-		<-stop
+		<-ctx.Done()
 		s.tls.Close() // nolint: errcheck,gosec
 	}()
 

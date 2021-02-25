@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"testing"
@@ -52,7 +53,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	if err = cleanupNamespaces(framework); err != nil {
+	if err = cleanupNamespaces(context.Background(), framework); err != nil {
 		log.WithError(err).Error("failed to cleanup e2e namespaces")
 		os.Exit(1)
 	}
@@ -93,10 +94,10 @@ func TestMain(m *testing.M) {
 	exitCode = m.Run()
 }
 
-func cleanupNamespaces(framework *e2eframework.Framework) error {
+func cleanupNamespaces(ctx context.Context, framework *e2eframework.Framework) error {
 	// list all e2e namespaces
 	opts := metav1.ListOptions{LabelSelector: labels.Set(e2eframework.NamespaceLabel).String()}
-	list, err := framework.KubeClient.CoreV1().Namespaces().List(opts)
+	list, err := framework.KubeClient.CoreV1().Namespaces().List(ctx, opts)
 	if err != nil {
 		return err
 	}

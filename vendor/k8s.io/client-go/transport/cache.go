@@ -25,6 +25,7 @@ import (
 	"time"
 
 	utilnet "k8s.io/apimachinery/pkg/util/net"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 // TlsTransportCache caches TLS http.RoundTrippers different configurations. The
@@ -44,6 +45,8 @@ type tlsCacheKey struct {
 	caData             string
 	certData           string
 	keyData            string
+	certFile           string
+	keyFile            string
 	serverName         string
 	nextProtos         string
 	disableCompression bool
@@ -91,6 +94,16 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 			KeepAlive: 30 * time.Second,
 		}).DialContext
 	}
+
+	// If we use are reloading files, we need to handle certificate rotation properly
+	// TODO(jackkleeman): We can also add rotation here when config.HasCertCallback() is true
+	if config.TLS.ReloadTLSFiles {
+		dynamicCertDialer := certRotatingDialer(tlsConfig.GetClientCertificate, dial)
+		tlsConfig.GetClientCertificate = dynamicCertDialer.GetClientCertificate
+		dial = dynamicCertDialer.connDialer.DialContext
+		go dynamicCertDialer.Run(wait.NeverStop)
+	}
+
 	transport := utilnet.SetTransportDefaults(&http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
 		TLSHandshakeTimeout: 10 * time.Second,
@@ -120,13 +133,21 @@ func tlsConfigKey(c *Config) (tlsCacheKey, bool, error) {
 		return tlsCacheKey{}, false, nil
 	}
 
-	return tlsCacheKey{
+	k := tlsCacheKey{
 		insecure:           c.TLS.Insecure,
 		caData:             string(c.TLS.CAData),
-		certData:           string(c.TLS.CertData),
-		keyData:            string(c.TLS.KeyData),
 		serverName:         c.TLS.ServerName,
 		nextProtos:         strings.Join(c.TLS.NextProtos, ","),
 		disableCompression: c.DisableCompression,
-	}, true, nil
+	}
+
+	if c.TLS.ReloadTLSFiles {
+		k.certFile = c.TLS.CertFile
+		k.keyFile = c.TLS.KeyFile
+	} else {
+		k.certData = string(c.TLS.CertData)
+		k.keyData = string(c.TLS.KeyData)
+	}
+
+	return k, true, nil
 }

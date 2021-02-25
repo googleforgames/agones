@@ -15,6 +15,7 @@
 package crd
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -44,7 +45,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 			return true, crd, nil
 		})
 
-		err := WaitForEstablishedCRD(extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
+		err := WaitForEstablishedCRD(context.Background(), extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
 		assert.Nil(t, err)
 	})
 
@@ -69,7 +70,7 @@ func TestWaitForEstablishedCRD(t *testing.T) {
 			established = true
 		}()
 
-		err := WaitForEstablishedCRD(extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
+		err := WaitForEstablishedCRD(context.Background(), extClient.ApiextensionsV1().CustomResourceDefinitions(), "test", logrus.WithField("test", "already-established"))
 		assert.Nil(t, err)
 	})
 }

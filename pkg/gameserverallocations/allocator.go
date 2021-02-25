@@ -164,33 +164,32 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 }
 
 // Start initiates the listeners.
-func (c *Allocator) Start(stop <-chan struct{}) error {
-	if err := c.Sync(stop); err != nil {
+func (c *Allocator) Start(ctx context.Context) error {
+	if err := c.Sync(ctx); err != nil {
 		return err
 	}
 
-	if err := c.readyGameServerCache.Start(stop); err != nil {
+	if err := c.readyGameServerCache.Start(ctx); err != nil {
 		return err
 	}
 
 	// workers and logic for batching allocations
-	go c.ListenAndAllocate(maxBatchQueue, stop)
+	go c.ListenAndAllocate(ctx, maxBatchQueue)
 
 	return nil
 }
 
 // Sync waits for cache to sync
-func (c *Allocator) Sync(stop <-chan struct{}) error {
+func (c *Allocator) Sync(ctx context.Context) error {
 	c.baseLogger.Debug("Wait for Allocator cache sync")
-	if !cache.WaitForCacheSync(stop, c.secretSynced, c.allocationPolicySynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), c.secretSynced, c.allocationPolicySynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 	return nil
 }
 
 // Allocate CRDHandler for allocating a gameserver.
-func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (out k8sruntime.Object, err error) {
-	ctx := context.Background()
+func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAllocation) (out k8sruntime.Object, err error) {
 	latency := c.newMetrics(ctx)
 	defer func() {
 		if err != nil {
@@ -227,9 +226,9 @@ func (c *Allocator) Allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
 	if gsa.Spec.MultiClusterSetting.Enabled {
-		out, err = c.applyMultiClusterAllocation(gsa, stop)
+		out, err = c.applyMultiClusterAllocation(ctx, gsa)
 	} else {
-		out, err = c.allocateFromLocalCluster(gsa, stop)
+		out, err = c.allocateFromLocalCluster(ctx, gsa)
 	}
 
 	if err != nil {
@@ -254,11 +253,11 @@ func (c *Allocator) loggerForGameServerAllocation(gsa *allocationv1.GameServerAl
 }
 
 // allocateFromLocalCluster allocates gameservers from the local cluster.
-func (c *Allocator) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (*allocationv1.GameServerAllocation, error) {
+func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*allocationv1.GameServerAllocation, error) {
 	var gs *agonesv1.GameServer
 	err := Retry(allocationRetry, func() error {
 		var err error
-		gs, err = c.allocate(gsa, stop)
+		gs, err = c.allocate(ctx, gsa)
 		if err != nil {
 			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying... ")
 		}
@@ -290,7 +289,7 @@ func (c *Allocator) allocateFromLocalCluster(gsa *allocationv1.GameServerAllocat
 
 // applyMultiClusterAllocation retrieves allocation policies and iterate on policies.
 // Then allocate gameservers from local or remote cluster accordingly.
-func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (result *allocationv1.GameServerAllocation, err error) {
+func (c *Allocator) applyMultiClusterAllocation(ctx context.Context, gsa *allocationv1.GameServerAllocation) (result *allocationv1.GameServerAllocation, err error) {
 	selector := labels.Everything()
 	if len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchLabels)+len(gsa.Spec.MultiClusterSetting.PolicySelector.MatchExpressions) != 0 {
 		selector, err = metav1.LabelSelectorAsSelector(&gsa.Spec.MultiClusterSetting.PolicySelector)
@@ -319,7 +318,7 @@ func (c *Allocator) applyMultiClusterAllocation(gsa *allocationv1.GameServerAllo
 				gsaCopy = gsa.DeepCopy()
 				gsaCopy.Namespace = connectionInfo.Namespace
 			}
-			result, err = c.allocateFromLocalCluster(gsaCopy, stop)
+			result, err = c.allocateFromLocalCluster(ctx, gsaCopy)
 			if err != nil {
 				c.loggerForGameServerAllocation(gsaCopy).WithError(err).Error("self-allocation failed")
 			}
@@ -440,7 +439,7 @@ func (c *Allocator) getClientCertificates(namespace, secretName string) (clientC
 
 // allocate allocated a GameServer from a given GameServerAllocation
 // this sets up allocation through a batch process.
-func (c *Allocator) allocate(gsa *allocationv1.GameServerAllocation, stop <-chan struct{}) (*agonesv1.GameServer, error) {
+func (c *Allocator) allocate(ctx context.Context, gsa *allocationv1.GameServerAllocation) (*agonesv1.GameServer, error) {
 	// creates an allocation request. This contains the requested GameServerAllocation, as well as the
 	// channel we expect the return values to come back for this GameServerAllocation
 	req := request{gsa: gsa, response: make(chan response)}
@@ -451,17 +450,17 @@ func (c *Allocator) allocate(gsa *allocationv1.GameServerAllocation, stop <-chan
 	select {
 	case res := <-req.response: // wait for the batch to be completed
 		return res.gs, res.err
-	case <-stop:
+	case <-ctx.Done():
 		return nil, errors.New("shutting down")
 	}
 }
 
 // ListenAndAllocate is a blocking function that runs in a loop
 // looking at c.requestBatches for batches of requests that are coming through.
-func (c *Allocator) ListenAndAllocate(updateWorkerCount int, stop <-chan struct{}) {
+func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int) {
 	// setup workers for allocation updates. Push response values into
 	// this queue for concurrent updating of GameServers to Allocated
-	updateQueue := c.allocationUpdateWorkers(updateWorkerCount, stop)
+	updateQueue := c.allocationUpdateWorkers(ctx, updateWorkerCount)
 
 	// Batch processing strategy:
 	// We constantly loop around the below for loop. If nothing is found in c.pendingRequests, we move to
@@ -527,7 +526,7 @@ func (c *Allocator) ListenAndAllocate(updateWorkerCount int, stop <-chan struct{
 
 			updateQueue <- response{request: req, gs: gs.DeepCopy(), err: nil}
 
-		case <-stop:
+		case <-ctx.Done():
 			return
 		default:
 			list = nil
@@ -543,7 +542,7 @@ func (c *Allocator) ListenAndAllocate(updateWorkerCount int, stop <-chan struct{
 // Each worker will concurrently attempt to move the GameServer to an Allocated
 // state and then respond to the initial request's response channel with the
 // details of that update
-func (c *Allocator) allocationUpdateWorkers(workerCount int, stop <-chan struct{}) chan<- response {
+func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int) chan<- response {
 	updateQueue := make(chan response)
 
 	for i := 0; i < workerCount; i++ {
@@ -551,7 +550,7 @@ func (c *Allocator) allocationUpdateWorkers(workerCount int, stop <-chan struct{
 			for {
 				select {
 				case res := <-updateQueue:
-					gs, err := c.readyGameServerCache.PatchGameServerMetadata(res.request.gsa.Spec.MetaPatch, res.gs)
+					gs, err := c.readyGameServerCache.PatchGameServerMetadata(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
 					if err != nil {
 						// since we could not allocate, we should put it back
 						c.readyGameServerCache.AddToReadyGameServer(gs)
@@ -562,7 +561,7 @@ func (c *Allocator) allocationUpdateWorkers(workerCount int, stop <-chan struct{
 					}
 
 					res.request.response <- res
-				case <-stop:
+				case <-ctx.Done():
 					return
 				}
 			}

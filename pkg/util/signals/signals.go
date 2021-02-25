@@ -17,20 +17,21 @@
 package signals
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-// NewStopChannel returns a channel that closes when os.Interrupt or os.Kill is received
-func NewStopChannel() <-chan struct{} {
-	stop := make(chan struct{})
+// NewSigKillContext returns a Context that cancels when os.Interrupt or os.Kill is received
+func NewSigKillContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-c
-		close(stop)
+		cancel()
 	}()
 
-	return stop
+	return ctx
 }
