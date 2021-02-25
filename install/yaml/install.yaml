@@ -1183,6 +1183,7 @@ spec:
                                      ports:
                                        description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                        type: array
+                                       nullable: true
                                        items:
                                          type: object
                                          required:
@@ -1878,6 +1879,7 @@ spec:
                                      ports:
                                        description: Ports are not allowed for ephemeral containers.
                                        type: array
+                                       nullable: true
                                        items:
                                          type: object
                                          required:
@@ -2580,6 +2582,7 @@ spec:
                                      ports:
                                        description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                        type: array
+                                       nullable: true
                                        items:
                                          type: object
                                          required:
@@ -3903,7 +3906,7 @@ spec:
                        ports:
                          title: array of ports to expose on the game server container
                          type: array
-                         minItems: 1
+                         nullable: true
                          items:
                            type: object
                            properties:
@@ -5051,6 +5054,7 @@ spec:
                              ports:
                                description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                type: array
+                               nullable: true
                                items:
                                  type: object
                                  required:
@@ -5746,6 +5750,7 @@ spec:
                              ports:
                                description: Ports are not allowed for ephemeral containers.
                                type: array
+                               nullable: true
                                items:
                                  type: object
                                  required:
@@ -6448,6 +6453,7 @@ spec:
                              ports:
                                description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                type: array
+                               nullable: true
                                items:
                                  type: object
                                  required:
@@ -7771,7 +7777,7 @@ spec:
                ports:
                  title: array of ports to expose on the game server container
                  type: array
-                 minItems: 1
+                 nullable: true
                  items:
                    type: object
                    properties:
@@ -9040,6 +9046,7 @@ spec:
                                       ports:
                                         description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                         type: array
+                                        nullable: true
                                         items:
                                           type: object
                                           required:
@@ -9735,6 +9742,7 @@ spec:
                                       ports:
                                         description: Ports are not allowed for ephemeral containers.
                                         type: array
+                                        nullable: true
                                         items:
                                           type: object
                                           required:
@@ -10437,6 +10445,7 @@ spec:
                                       ports:
                                         description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
                                         type: array
+                                        nullable: true
                                         items:
                                           type: object
                                           required:
@@ -11760,7 +11769,7 @@ spec:
                         ports:
                           title: array of ports to expose on the game server container
                           type: array
-                          minItems: 1
+                          nullable: true
                           items:
                             type: object
                             properties:
