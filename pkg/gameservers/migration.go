@@ -15,6 +15,8 @@
 package gameservers
 
 import (
+	"context"
+
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -29,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -101,13 +104,13 @@ func NewMigrationController(health healthcheck.Handler,
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (mc *MigrationController) Run(stop <-chan struct{}) error {
+func (mc *MigrationController) Run(ctx context.Context) error {
 	mc.baseLogger.Debug("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, mc.nodeSynced, mc.gameServerSynced, mc.podSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), mc.nodeSynced, mc.gameServerSynced, mc.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	mc.workerqueue.Run(1, stop)
+	mc.workerqueue.Run(ctx, 1)
 	return nil
 }
 
@@ -131,7 +134,7 @@ func isActiveGameServerWithNode(pod *corev1.Pod) bool {
 // syncGameServer will check if the Pod for the GameServer
 // has been migrated to a new node (or a node with the same name, but different address)
 // and will either update it, or move it to Unhealthy, depending on its State
-func (mc *MigrationController) syncGameServer(key string) error {
+func (mc *MigrationController) syncGameServer(ctx context.Context, key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
@@ -191,7 +194,7 @@ func (mc *MigrationController) syncGameServer(key string) error {
 			eventMsg = "Node migration occurred"
 		}
 
-		if _, err = mc.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gsCopy); err != nil {
+		if _, err = mc.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{}); err != nil {
 			return err
 		}
 

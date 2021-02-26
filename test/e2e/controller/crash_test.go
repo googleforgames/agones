@@ -15,6 +15,7 @@
 package controller
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -30,6 +31,8 @@ import (
 func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
 	logger := logrus.WithField("test", t.Name())
 	gs := framework.DefaultGameServer(defaultNs)
+	ctx := context.Background()
+
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
@@ -38,35 +41,35 @@ func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(defaultNs)
 	podClient := framework.KubeClient.CoreV1().Pods(defaultNs)
-	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer gsClient.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
-	pod, err := podClient.Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+	pod, err := podClient.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.True(t, metav1.IsControlledBy(pod, readyGs))
 
-	err = deleteAgonesControllerPods()
+	err = deleteAgonesControllerPods(ctx)
 	assert.NoError(t, err)
-	err = podClient.Delete(pod.ObjectMeta.Name, nil)
+	err = podClient.Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 
 	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
 	logger.Info("waiting for Agones controller to come back to running")
-	assert.NoError(t, waitForAgonesControllerRunning())
+	assert.NoError(t, waitForAgonesControllerRunning(ctx))
 }
 
 // deleteAgonesControllerPods deletes all the Controller pods for the Agones controller,
 // faking a controller crash.
-func deleteAgonesControllerPods() error {
-	list, err := getAgonesControllerPods()
+func deleteAgonesControllerPods(ctx context.Context) error {
+	list, err := getAgonesControllerPods(ctx)
 	if err != nil {
 		return err
 	}
 
 	policy := metav1.DeletePropagationBackground
 	for i := range list.Items {
-		err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(list.Items[i].ObjectMeta.Name,
-			&metav1.DeleteOptions{PropagationPolicy: &policy})
+		err = framework.KubeClient.CoreV1().Pods("agones-system").Delete(ctx, list.Items[i].ObjectMeta.Name,
+			metav1.DeleteOptions{PropagationPolicy: &policy})
 		if err != nil {
 			return err
 		}
@@ -74,9 +77,9 @@ func deleteAgonesControllerPods() error {
 	return nil
 }
 
-func waitForAgonesControllerRunning() error {
+func waitForAgonesControllerRunning(ctx context.Context) error {
 	return wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
-		list, err := getAgonesControllerPods()
+		list, err := getAgonesControllerPods(ctx)
 		if err != nil {
 			return true, err
 		}
@@ -94,7 +97,7 @@ func waitForAgonesControllerRunning() error {
 }
 
 // getAgonesControllerPods returns all the Agones controller pods
-func getAgonesControllerPods() (*corev1.PodList, error) {
+func getAgonesControllerPods(ctx context.Context) (*corev1.PodList, error) {
 	opts := metav1.ListOptions{LabelSelector: labels.Set{"agones.dev/role": "controller"}.String()}
-	return framework.KubeClient.CoreV1().Pods("agones-system").List(opts)
+	return framework.KubeClient.CoreV1().Pods("agones-system").List(ctx, opts)
 }

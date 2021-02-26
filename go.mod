@@ -12,7 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-openapi/spec v0.19.3
 	github.com/golang/protobuf v1.3.2
-	github.com/googleapis/gnostic v0.1.0 // indirect
+	github.com/gorilla/websocket v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
@@ -31,16 +31,16 @@ require (
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 	golang.org/x/tools v0.0.0-20190920225731-5eefd052ad72
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
-	google.golang.org/grpc v1.23.1
+	google.golang.org/grpc v1.26.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	k8s.io/api v0.17.14
-	k8s.io/apiextensions-apiserver v0.17.14
-	k8s.io/apimachinery v0.17.14
-	k8s.io/client-go v0.17.14
+	k8s.io/api v0.18.15
+	k8s.io/apiextensions-apiserver v0.18.15
+	k8s.io/apimachinery v0.18.15
+	k8s.io/client-go v0.18.15
 	k8s.io/kube-openapi v0.0.0-20200410163147-594e756bea31 // indirect
-	k8s.io/utils v0.0.0-20200124190032-861946025e34
+	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89
 )
 
-replace google.golang.org/grpc v1.23.1 => google.golang.org/grpc v1.20.1 // apiserver updated grpc, but we aren't using that, so it's fine.
+replace google.golang.org/grpc v1.26.0 => google.golang.org/grpc v1.20.1 // apiserver updated grpc, but we aren't using that, so it's fine.

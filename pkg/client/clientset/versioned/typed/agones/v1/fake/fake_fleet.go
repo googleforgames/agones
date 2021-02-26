@@ -19,6 +19,8 @@
 package fake
 
 import (
+	"context"
+
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,7 +42,7 @@ var fleetsResource = schema.GroupVersionResource{Group: "agones.dev", Version: "
 var fleetsKind = schema.GroupVersionKind{Group: "agones.dev", Version: "v1", Kind: "Fleet"}
 
 // Get takes name of the fleet, and returns the corresponding fleet object, and an error if there is any.
-func (c *FakeFleets) Get(name string, options v1.GetOptions) (result *agonesv1.Fleet, err error) {
+func (c *FakeFleets) Get(ctx context.Context, name string, options v1.GetOptions) (result *agonesv1.Fleet, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(fleetsResource, c.ns, name), &agonesv1.Fleet{})
 
@@ -51,7 +53,7 @@ func (c *FakeFleets) Get(name string, options v1.GetOptions) (result *agonesv1.F
 }
 
 // List takes label and field selectors, and returns the list of Fleets that match those selectors.
-func (c *FakeFleets) List(opts v1.ListOptions) (result *agonesv1.FleetList, err error) {
+func (c *FakeFleets) List(ctx context.Context, opts v1.ListOptions) (result *agonesv1.FleetList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(fleetsResource, fleetsKind, c.ns, opts), &agonesv1.FleetList{})
 
@@ -73,14 +75,14 @@ func (c *FakeFleets) List(opts v1.ListOptions) (result *agonesv1.FleetList, err 
 }
 
 // Watch returns a watch.Interface that watches the requested fleets.
-func (c *FakeFleets) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeFleets) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(fleetsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a fleet and creates it.  Returns the server's representation of the fleet, and an error, if there is any.
-func (c *FakeFleets) Create(fleet *agonesv1.Fleet) (result *agonesv1.Fleet, err error) {
+func (c *FakeFleets) Create(ctx context.Context, fleet *agonesv1.Fleet, opts v1.CreateOptions) (result *agonesv1.Fleet, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(fleetsResource, c.ns, fleet), &agonesv1.Fleet{})
 
@@ -91,7 +93,7 @@ func (c *FakeFleets) Create(fleet *agonesv1.Fleet) (result *agonesv1.Fleet, err 
 }
 
 // Update takes the representation of a fleet and updates it. Returns the server's representation of the fleet, and an error, if there is any.
-func (c *FakeFleets) Update(fleet *agonesv1.Fleet) (result *agonesv1.Fleet, err error) {
+func (c *FakeFleets) Update(ctx context.Context, fleet *agonesv1.Fleet, opts v1.UpdateOptions) (result *agonesv1.Fleet, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(fleetsResource, c.ns, fleet), &agonesv1.Fleet{})
 
@@ -103,7 +105,7 @@ func (c *FakeFleets) Update(fleet *agonesv1.Fleet) (result *agonesv1.Fleet, err 
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeFleets) UpdateStatus(fleet *agonesv1.Fleet) (*agonesv1.Fleet, error) {
+func (c *FakeFleets) UpdateStatus(ctx context.Context, fleet *agonesv1.Fleet, opts v1.UpdateOptions) (*agonesv1.Fleet, error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(fleetsResource, "status", c.ns, fleet), &agonesv1.Fleet{})
 
@@ -114,7 +116,7 @@ func (c *FakeFleets) UpdateStatus(fleet *agonesv1.Fleet) (*agonesv1.Fleet, error
 }
 
 // Delete takes name of the fleet and deletes it. Returns an error if one occurs.
-func (c *FakeFleets) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeFleets) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(fleetsResource, c.ns, name), &agonesv1.Fleet{})
 
@@ -122,15 +124,15 @@ func (c *FakeFleets) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeFleets) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(fleetsResource, c.ns, listOptions)
+func (c *FakeFleets) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(fleetsResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &agonesv1.FleetList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched fleet.
-func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agonesv1.Fleet, err error) {
+func (c *FakeFleets) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *agonesv1.Fleet, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(fleetsResource, c.ns, name, pt, data, subresources...), &agonesv1.Fleet{})
 
@@ -141,7 +143,7 @@ func (c *FakeFleets) Patch(name string, pt types.PatchType, data []byte, subreso
 }
 
 // GetScale takes name of the fleet, and returns the corresponding scale object, and an error if there is any.
-func (c *FakeFleets) GetScale(fleetName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
+func (c *FakeFleets) GetScale(ctx context.Context, fleetName string, options v1.GetOptions) (result *autoscalingv1.Scale, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetSubresourceAction(fleetsResource, c.ns, "scale", fleetName), &autoscalingv1.Scale{})
 
@@ -152,7 +154,7 @@ func (c *FakeFleets) GetScale(fleetName string, options v1.GetOptions) (result *
 }
 
 // UpdateScale takes the representation of a scale and updates it. Returns the server's representation of the scale, and an error, if there is any.
-func (c *FakeFleets) UpdateScale(fleetName string, scale *autoscalingv1.Scale) (result *autoscalingv1.Scale, err error) {
+func (c *FakeFleets) UpdateScale(ctx context.Context, fleetName string, scale *autoscalingv1.Scale, opts v1.UpdateOptions) (result *autoscalingv1.Scale, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateSubresourceAction(fleetsResource, "scale", c.ns, scale), &autoscalingv1.Scale{})
 

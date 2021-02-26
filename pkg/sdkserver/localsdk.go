@@ -15,6 +15,7 @@
 package sdkserver
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -32,7 +33,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 

@@ -16,6 +16,7 @@
 package sdk
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -23,7 +24,6 @@ import (
 
 	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
 

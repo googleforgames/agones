@@ -276,10 +276,10 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				return true, gsObj, nil
 			})
 
-			_, cancel := agtesting.StartInformers(m, hc.gameServerSynced, hc.podSynced)
+			ctx, cancel := agtesting.StartInformers(m, hc.gameServerSynced, hc.podSynced)
 			defer cancel()
 
-			err := hc.syncGameServer("default/test")
+			err := hc.syncGameServer(ctx, "default/test")
 			assert.Nil(t, err, err)
 			assert.True(t, got, "GameServers Should be got!")
 
@@ -313,10 +313,10 @@ func TestHealthControllerSyncGameServerUpdateFailed(t *testing.T) {
 		return true, gsObj, errors.New("update-err")
 	})
 
-	_, cancel := agtesting.StartInformers(m, hc.gameServerSynced, hc.podSynced)
+	ctx, cancel := agtesting.StartInformers(m, hc.gameServerSynced, hc.podSynced)
 	defer cancel()
 
-	err := hc.syncGameServer("default/test")
+	err := hc.syncGameServer(ctx, "default/test")
 
 	if assert.Error(t, err) {
 		assert.Equal(t, "error updating GameServer test/default to unhealthy: update-err", err.Error())

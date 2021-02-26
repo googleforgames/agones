@@ -15,6 +15,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -31,9 +32,10 @@ import (
 
 func TestPingHTTP(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
 	kubeCore := framework.KubeClient.CoreV1()
-	svc, err := kubeCore.Services("agones-system").Get("agones-ping-http-service", metav1.GetOptions{})
+	svc, err := kubeCore.Services("agones-system").Get(ctx, "agones-ping-http-service", metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	ip, err := externalIP(t, kubeCore, svc)
@@ -70,8 +72,10 @@ func externalPort(svc *corev1.Service, port corev1.ServicePort) (int32, error) {
 
 func TestPingUDP(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
+
 	kubeCore := framework.KubeClient.CoreV1()
-	svc, err := kubeCore.Services("agones-system").Get("agones-ping-udp-service", metav1.GetOptions{})
+	svc, err := kubeCore.Services("agones-system").Get(ctx, "agones-ping-udp-service", metav1.GetOptions{})
 	assert.Nil(t, err)
 
 	externalIP, err := externalIP(t, kubeCore, svc)
@@ -92,12 +96,13 @@ func TestPingUDP(t *testing.T) {
 
 func externalIP(t *testing.T, kubeCore typedv1.NodesGetter, svc *corev1.Service) (string, error) {
 	externalIP := ""
+	ctx := context.Background()
 
 	logrus.WithField("svc", svc).Info("load balancer")
 
 	// likely this is minikube, so go get the node ip
 	if svc.Spec.Type == corev1.ServiceTypeNodePort {
-		nodes, err := kubeCore.Nodes().List(metav1.ListOptions{})
+		nodes, err := kubeCore.Nodes().List(ctx, metav1.ListOptions{})
 		assert.Nil(t, err)
 		assert.Len(t, nodes.Items, 1, "Should only be 1 node on minikube")
 

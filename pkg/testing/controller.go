@@ -62,19 +62,18 @@ func NewMocks() Mocks {
 }
 
 // StartInformers starts new fake informers
-func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
+func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	stop := ctx.Done()
 
-	mocks.KubeInformerFactory.Start(stop)
-	mocks.AgonesInformerFactory.Start(stop)
+	mocks.KubeInformerFactory.Start(ctx.Done())
+	mocks.AgonesInformerFactory.Start(ctx.Done())
 
 	logrus.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, sync...) {
+	if !cache.WaitForCacheSync(ctx.Done(), sync...) {
 		panic("Cache never synced")
 	}
 
-	return stop, cancel
+	return ctx, cancel
 }
 
 // NewEstablishedCRD fakes CRD installation success.

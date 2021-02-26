@@ -19,7 +19,11 @@
 package v1
 
 import (
+	"context"
+
 	v1 "agones.dev/agones/pkg/apis/allocation/v1"
+	scheme "agones.dev/agones/pkg/client/clientset/versioned/scheme"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	rest "k8s.io/client-go/rest"
 )
 
@@ -31,7 +35,7 @@ type GameServerAllocationsGetter interface {
 
 // GameServerAllocationInterface has methods to work with GameServerAllocation resources.
 type GameServerAllocationInterface interface {
-	Create(*v1.GameServerAllocation) (*v1.GameServerAllocation, error)
+	Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (*v1.GameServerAllocation, error)
 	GameServerAllocationExpansion
 }
 
@@ -50,13 +54,14 @@ func newGameServerAllocations(c *AllocationV1Client, namespace string) *gameServ
 }
 
 // Create takes the representation of a gameServerAllocation and creates it.  Returns the server's representation of the gameServerAllocation, and an error, if there is any.
-func (c *gameServerAllocations) Create(gameServerAllocation *v1.GameServerAllocation) (result *v1.GameServerAllocation, err error) {
+func (c *gameServerAllocations) Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (result *v1.GameServerAllocation, err error) {
 	result = &v1.GameServerAllocation{}
 	err = c.client.Post().
 		Namespace(c.ns).
 		Resource("gameserverallocations").
+		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(gameServerAllocation).
-		Do().
+		Do(ctx).
 		Into(result)
 	return
 }

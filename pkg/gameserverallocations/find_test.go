@@ -167,14 +167,14 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				return true, &agonesv1.GameServerList{Items: v.list}, nil
 			})
 
-			stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+			ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 			defer cancel()
 
 			// This call initializes the cache
 			err := c.syncReadyGSServerCache()
 			assert.Nil(t, err)
 
-			err = c.counter.Run(0, stop)
+			err = c.counter.Run(ctx, 0)
 			assert.Nil(t, err)
 
 			list := c.ListSortedReadyGameServers()
@@ -221,14 +221,14 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	// This call initializes the cache
 	err := c.syncReadyGSServerCache()
 	assert.Nil(t, err)
 
-	err = c.counter.Run(0, stop)
+	err = c.counter.Run(ctx, 0)
 	assert.Nil(t, err)
 
 	list := c.ListSortedReadyGameServers()

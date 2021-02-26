@@ -49,9 +49,9 @@ func main() {
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
 		WithField("ctlConf", ctlConf).Info("starting ping...")
 
-	stop := signals.NewStopChannel()
+	ctx := signals.NewSigKillContext()
 
-	udpSrv := serveUDP(ctlConf, stop)
+	udpSrv := serveUDP(ctx, ctlConf)
 	defer udpSrv.close()
 
 	h := healthcheck.NewHandler()
@@ -60,13 +60,13 @@ func main() {
 	cancel := serveHTTP(ctlConf, h)
 	defer cancel()
 
-	<-stop
+	<-ctx.Done()
 	logger.Info("shutting down...")
 }
 
-func serveUDP(ctlConf config, stop <-chan struct{}) *udpServer {
+func serveUDP(ctx context.Context, ctlConf config) *udpServer {
 	s := newUDPServer(ctlConf.UDPRateLimit)
-	s.run(stop)
+	s.run(ctx)
 	return s
 }
 

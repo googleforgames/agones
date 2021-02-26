@@ -19,6 +19,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
@@ -61,13 +62,13 @@ func NewFilteredGameServerAllocationPolicyInformer(client versioned.Interface, n
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).List(options)
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(options)
+				return client.MulticlusterV1().GameServerAllocationPolicies(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&multiclusterv1.GameServerAllocationPolicy{},
