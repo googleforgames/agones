@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -229,10 +230,10 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 				return true, gs, nil
 			})
 
-			_, cancel := agtesting.StartInformers(m, c.nodeSynced, c.gameServerSynced, c.podSynced)
+			ctx, cancel := agtesting.StartInformers(m, c.nodeSynced, c.gameServerSynced, c.podSynced)
 			defer cancel()
 
-			err = c.syncGameServer("default/test")
+			err = c.syncGameServer(ctx, "default/test")
 			assert.NoError(t, err)
 			assert.Equal(t, v.expected.updated, updated)
 			v.expected.postTests(t, m)
@@ -251,7 +252,7 @@ func TestMigrationControllerRun(t *testing.T) {
 	gsPod.Spec.NodeName = nodeFixtureName
 
 	received := make(chan string)
-	h := func(name string) error {
+	h := func(_ context.Context, name string) error {
 		assert.Equal(t, "default/test", name)
 		received <- name
 		return nil
@@ -262,16 +263,16 @@ func TestMigrationControllerRun(t *testing.T) {
 
 	c.workerqueue.SyncHandler = h
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	go func() {
-		err := c.Run(stop)
+		err := c.Run(ctx)
 		assert.Nil(t, err, "Run should not error")
 	}()
 
 	noChange := func() {
-		assert.True(t, cache.WaitForCacheSync(stop, c.podSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), c.podSynced))
 		select {
 		case <-received:
 			assert.Fail(t, "should not be updated")

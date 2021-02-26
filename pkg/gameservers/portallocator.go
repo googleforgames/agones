@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"sort"
 	"sync"
 
@@ -90,10 +91,10 @@ func NewPortAllocator(minPort, maxPort int32,
 
 // Run sets up the current state of port allocations and
 // starts tracking Pod and Node changes
-func (pa *PortAllocator) Run(stop <-chan struct{}) error {
+func (pa *PortAllocator) Run(ctx context.Context) error {
 	pa.logger.Debug("Running")
 
-	if !cache.WaitForCacheSync(stop, pa.gameServerSynced, pa.nodeSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), pa.gameServerSynced, pa.nodeSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 

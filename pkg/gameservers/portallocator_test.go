@@ -52,14 +52,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		// (no longer an issue, but leave this here for posterity)
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -141,13 +141,13 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		morePortFixture := fixture.DeepCopy()
@@ -189,7 +189,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		// Make sure the add's don't corrupt the sync
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -268,14 +268,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		// (no longer an issue, but leave this here for posterity)
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)

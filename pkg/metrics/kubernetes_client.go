@@ -192,7 +192,10 @@ func init() {
 type clientGoMetricAdapter struct{}
 
 func (c *clientGoMetricAdapter) Register() {
-	metrics.Register(c, c)
+	metrics.Register(metrics.RegisterOpts{
+		RequestLatency: c,
+		RequestResult:  c,
+	})
 	cache.SetReflectorMetricsProvider(c)
 	workqueue.SetProvider(c)
 }

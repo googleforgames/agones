@@ -241,18 +241,18 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		remoteAllocationTimeout,
 		totalRemoteAllocationTimeout)
 
-	stop := signals.NewStopChannel()
+	ctx := signals.NewSigKillContext()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-			return allocator.Allocate(gsa, stop)
+			return allocator.Allocate(ctx, gsa)
 		},
 		mTLSDisabled: mTLSDisabled,
 		tlsDisabled:  tlsDisabled,
 	}
 
-	kubeInformerFactory.Start(stop)
-	agonesInformerFactory.Start(stop)
-	if err := allocator.Start(stop); err != nil {
+	kubeInformerFactory.Start(ctx.Done())
+	agonesInformerFactory.Start(ctx.Done())
+	if err := allocator.Start(ctx); err != nil {
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 

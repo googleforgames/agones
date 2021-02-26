@@ -112,8 +112,8 @@ func main() {
 
 // doSignal shutsdown on SIGTERM/SIGKILL
 func doSignal() {
-	stop := signals.NewStopChannel()
-	<-stop
+	ctx := signals.NewSigKillContext()
+	<-ctx.Done()
 	log.Println("Exit signal received. Shutting down.")
 	os.Exit(0)
 }

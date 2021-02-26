@@ -19,6 +19,7 @@
 package v1
 
 import (
+	"context"
 	time "time"
 
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
@@ -61,13 +62,13 @@ func NewFilteredFleetAutoscalerInformer(client versioned.Interface, namespace st
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AutoscalingV1().FleetAutoscalers(namespace).List(options)
+				return client.AutoscalingV1().FleetAutoscalers(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.AutoscalingV1().FleetAutoscalers(namespace).Watch(options)
+				return client.AutoscalingV1().FleetAutoscalers(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&autoscalingv1.FleetAutoscaler{},

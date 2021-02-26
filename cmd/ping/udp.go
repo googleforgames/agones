@@ -16,6 +16,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"math"
 	"net"
 	"sync"
@@ -67,7 +68,7 @@ func newUDPServer(rateLimit rate.Limit) *udpServer {
 }
 
 // run runs the udp server. Non blocking operation
-func (u *udpServer) run(stop <-chan struct{}) {
+func (u *udpServer) run(ctx context.Context) {
 	u.healthy()
 
 	logger.Info("starting UDP server")
@@ -79,10 +80,10 @@ func (u *udpServer) run(stop <-chan struct{}) {
 
 	go func() {
 		defer u.unhealthy()
-		wait.Until(u.cleanUp, time.Minute, stop)
+		wait.Until(u.cleanUp, time.Minute, ctx.Done())
 	}()
 
-	u.readWriteLoop(stop)
+	u.readWriteLoop(ctx)
 }
 
 // cleans up visitors, if they are more than a
@@ -99,12 +100,12 @@ func (u *udpServer) cleanUp() {
 
 // readWriteLoop reads the UDP packet in, and then echos the data back
 // in a rate limited way
-func (u *udpServer) readWriteLoop(stop <-chan struct{}) {
+func (u *udpServer) readWriteLoop(ctx context.Context) {
 	go func() {
 		defer u.unhealthy()
 		for {
 			select {
-			case <-stop:
+			case <-ctx.Done():
 				return
 			default:
 				b := make([]byte, 1024)

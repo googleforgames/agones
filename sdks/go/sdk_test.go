@@ -15,12 +15,12 @@
 package sdk
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

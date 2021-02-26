@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"strings"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -139,13 +140,13 @@ func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (hc *HealthController) Run(stop <-chan struct{}) error {
+func (hc *HealthController) Run(ctx context.Context) error {
 	hc.baseLogger.Debug("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, hc.gameServerSynced, hc.podSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), hc.gameServerSynced, hc.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	hc.workerqueue.Run(1, stop)
+	hc.workerqueue.Run(ctx, 1)
 
 	return nil
 }
@@ -163,7 +164,7 @@ func (hc *HealthController) loggerForGameServer(gs *agonesv1.GameServer) *logrus
 }
 
 // syncGameServer sets the GameServer to Unhealthy, if its state is Ready
-func (hc *HealthController) syncGameServer(key string) error {
+func (hc *HealthController) syncGameServer(ctx context.Context, key string) error {
 	hc.loggerForGameServerKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
@@ -196,7 +197,7 @@ func (hc *HealthController) syncGameServer(key string) error {
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
 
-	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gsCopy); err != nil {
+	if _, err := hc.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{}); err != nil {
 		return errors.Wrapf(err, "error updating GameServer %s/%s to unhealthy", gs.ObjectMeta.Name, gs.ObjectMeta.Namespace)
 	}
 

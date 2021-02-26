@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -67,6 +68,7 @@ func TestCreateConnect(t *testing.T) {
 // nolint:dupl
 func TestSDKSetLabel(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 	if err != nil {
@@ -84,7 +86,7 @@ func TestSDKSetLabel(t *testing.T) {
 
 	// the label is set in a queue, so it may take a moment
 	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -98,6 +100,7 @@ func TestSDKSetLabel(t *testing.T) {
 
 func TestHealthCheckDisable(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Health = agonesv1.Health{
 		Disabled:            true,
@@ -109,7 +112,7 @@ func TestHealthCheckDisable(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	_, err = e2eframework.SendGameServerUDP(readyGs, "UNHEALTHY")
 
@@ -119,7 +122,7 @@ func TestHealthCheckDisable(t *testing.T) {
 
 	time.Sleep(10 * time.Second)
 
-	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 	if err != nil {
 		assert.FailNow(t, "gameserver get failed", err.Error())
 	}
@@ -130,13 +133,14 @@ func TestHealthCheckDisable(t *testing.T) {
 // nolint:dupl
 func TestSDKSetAnnotation(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	annotation := "agones.dev/sdk-timestamp"
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 	reply, err := e2eframework.SendGameServerUDP(readyGs, "ANNOTATION")
@@ -149,7 +153,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 
 	// the label is set in a queue, so it may take a moment
 	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -189,7 +193,8 @@ func TestUnhealthyGameServerAfterHealthCheckFail(t *testing.T) {
 
 func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	t.Parallel()
-	nodes, err := framework.KubeClient.CoreV1().Nodes().List(metav1.ListOptions{})
+	ctx := context.Background()
+	nodes, err := framework.KubeClient.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		assert.FailNow(t, "Failed to list nodes", err.Error())
 	}
@@ -210,7 +215,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 		}
 	}
 
-	newGs, err := gameServers.Create(gs.DeepCopy())
+	newGs, err := gameServers.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
 	if err != nil {
 		assert.FailNow(t, "Failed to create a gameserver", err.Error())
 	}
@@ -221,6 +226,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 	if err != nil {
@@ -232,16 +238,16 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
 	podClient := framework.KubeClient.CoreV1().Pods(framework.Namespace)
 
-	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer gsClient.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
-	pod, err := podClient.Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+	pod, err := podClient.Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 	if err != nil {
 		assert.FailNow(t, "Failed to get a pod", err.Error())
 	}
 
 	assert.True(t, metav1.IsControlledBy(pod, readyGs))
 
-	err = podClient.Delete(pod.ObjectMeta.Name, nil)
+	err = podClient.Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 
 	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
@@ -250,6 +256,7 @@ func TestGameServerUnhealthyAfterDeletingPod(t *testing.T) {
 
 func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	logger := logrus.WithField("test", t.Name())
 
 	gs := framework.DefaultGameServer(framework.Namespace)
@@ -257,11 +264,11 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 	gs.Spec.Health.PeriodSeconds = 60 * 60
 	gs.Spec.Template.Spec.Containers[0].Env = append(gs.Spec.Template.Spec.Containers[0].Env, corev1.EnvVar{Name: "READY", Value: "FALSE"})
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
-	newGs, err := gsClient.Create(gs)
+	newGs, err := gsClient.Create(ctx, gs, metav1.CreateOptions{})
 	if err != nil {
 		assert.Fail(t, "could not create the gameserver", err.Error())
 	}
-	defer gsClient.Delete(newGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer gsClient.Delete(ctx, newGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	logger.Info("Waiting for us to have an address to send things to")
 	newGs, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateScheduled, time.Minute)
@@ -276,12 +283,12 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 
 	messageAndWait := func(gs *agonesv1.GameServer, msg string, check func(gs *agonesv1.GameServer, pod *corev1.Pod) bool) error {
 		return wait.PollImmediate(3*time.Second, 3*time.Minute, func() (bool, error) {
-			gs, err := gsClient.Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+			gs, err := gsClient.Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				logger.WithError(err).Warn("could not get gameserver")
 				return true, err
 			}
-			pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(newGs.ObjectMeta.Name, metav1.GetOptions{})
+			pod, err := framework.KubeClient.CoreV1().Pods(framework.Namespace).Get(ctx, newGs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				logger.WithError(err).Warn("could not get pod for gameserver")
 				return true, err
@@ -359,6 +366,7 @@ func TestGameServerRestartBeforeReadyCrash(t *testing.T) {
 
 func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
 	l := logrus.WithField("test", "TestGameServerUnhealthyAfterReadyCrash")
 
@@ -371,7 +379,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 	l.WithField("gs", readyGs.ObjectMeta.Name).Info("GameServer created")
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
-	defer gsClient.Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer gsClient.Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	address := fmt.Sprintf("%s:%d", readyGs.Status.Address, readyGs.Status.Ports[0].Port)
 
@@ -397,6 +405,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "udp-server",
@@ -430,11 +439,11 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
 	//confirm delete works, because if the finalisers don't get removed, this won't work.
-	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil)
+	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 
 	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
-		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if k8serrors.IsNotFound(err) {
 			return true, nil
@@ -448,12 +457,13 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 
 func TestGameServerSelfAllocate(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 	reply, err := e2eframework.SendGameServerUDP(readyGs, "ALLOCATE")
@@ -470,36 +480,41 @@ func TestGameServerSelfAllocate(t *testing.T) {
 
 func TestGameServerReadyAllocateReady(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
+	logger := logrus.WithField("test", t.Name())
+
 	gs := framework.DefaultGameServer(framework.Namespace)
+
+	logger.Info("Moving to Ready")
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
-	if err != nil {
-		t.Fatalf("Could not get a GameServer ready: %v", err)
-	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
-	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+	require.NoError(t, err, "Could not get a GameServer ready")
+	logger = logger.WithField("gs", readyGs.ObjectMeta.Name)
 
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
+
+	require.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
+
+	logger.Info("Moving to Allocated")
 	reply, err := e2eframework.SendGameServerUDP(readyGs, "ALLOCATE")
-	if err != nil {
-		t.Fatalf("Could not message GameServer: %v", err)
-	}
-	assert.Equal(t, "ACK: ALLOCATE\n", reply)
-	gs, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateAllocated, time.Minute)
-	assert.NoError(t, err)
-	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+	require.NoError(t, err, "Could not message GameServer")
 
+	require.Equal(t, "ACK: ALLOCATE\n", reply)
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, readyGs, agonesv1.GameServerStateAllocated, time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+
+	logger.Info("Moving to Ready again")
 	reply, err = e2eframework.SendGameServerUDP(readyGs, "READY")
-	if err != nil {
-		assert.FailNow(t, "Could not message GameServer")
-	}
-	assert.Equal(t, "ACK: READY\n", reply)
-	gs, err = framework.WaitForGameServerState(gs, agonesv1.GameServerStateReady, time.Minute)
-	if assert.NoError(t, err) {
-		assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-	}
+	require.NoError(t, err, "Could not message GameServer")
+	require.Equal(t, "ACK: READY\n", reply)
+	gs, err = framework.WaitForGameServerStateWithLogger(logger, gs, agonesv1.GameServerStateReady, time.Minute)
+	require.NoError(t, err)
+	require.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
 	firstContainerName := "udp-server"
 	secondContainerName := "second-udp-server"
@@ -544,7 +559,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(readyGs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
 	interval := 2 * time.Second
@@ -576,6 +591,7 @@ func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
 
 func TestGameServerReserve(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 
 	// We are deliberately not trying to test the transition between Reserved -> Ready.
 	//
@@ -591,7 +607,7 @@ func TestGameServerReserve(t *testing.T) {
 	if err != nil {
 		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(gs.ObjectMeta.Name, nil) // nolint: errcheck
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 	assert.Equal(t, gs.Status.State, agonesv1.GameServerStateReady)
 
 	reply, err := e2eframework.SendGameServerUDP(gs, "RESERVE 0")
@@ -631,6 +647,7 @@ func TestGameServerReserve(t *testing.T) {
 
 func TestGameServerShutdown(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 	if err != nil {
@@ -646,7 +663,7 @@ func TestGameServerShutdown(t *testing.T) {
 	assert.Equal(t, "ACK: EXIT\n", reply)
 
 	err = wait.PollImmediate(time.Second, 3*time.Minute, func() (bool, error) {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 
 		if k8serrors.IsNotFound(err) {
 			return true, nil
@@ -662,10 +679,11 @@ func TestGameServerShutdown(t *testing.T) {
 // Ephemeral Storage limit set to 0Mi
 func TestGameServerEvicted(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceEphemeralStorage] = resource.MustParse("0Mi")
 
-	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(gs)
+	newGs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Create(ctx, gs, metav1.CreateOptions{})
 	if err != nil {
 		assert.FailNow(t, fmt.Sprintf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err))
 	}
@@ -771,6 +789,7 @@ func TestGameServerWithoutPort(t *testing.T) {
 // invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
 func TestGameServerResourceValidation(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	gs := framework.DefaultGameServer(framework.Namespace)
 	mi64 := resource.MustParse("64Mi")
 	gs.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = mi64
@@ -781,7 +800,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 
 	gsClient := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
 
-	_, err := gsClient.Create(gs.DeepCopy())
+	_, err := gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
 	assert.NotNil(t, err)
 	statusErr, ok := err.(*k8serrors.StatusError)
 	assert.True(t, ok)
@@ -790,7 +809,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	assert.Equal(t, "container", statusErr.Status().Details.Causes[0].Field)
 
 	gs.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = resource.MustParse("-50m")
-	_, err = gsClient.Create(gs.DeepCopy())
+	_, err = gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
 	assert.NotNil(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
@@ -809,7 +828,7 @@ func TestGameServerResourceValidation(t *testing.T) {
 	cause, valid := gs.Validate()
 	require.True(t, valid, cause)
 
-	gsCopy, err := gsClient.Create(gs.DeepCopy())
+	gsCopy, err := gsClient.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
 	require.NoError(t, err)
 	assert.Equal(t, mi64, gsCopy.Spec.Template.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory])
 	assert.Equal(t, mi64, gsCopy.Spec.Template.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory])
@@ -863,6 +882,7 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
+	ctx := context.Background()
 
 	t.Run("no initial capacity set", func(t *testing.T) {
 		gs := framework.DefaultGameServer(framework.Namespace)
@@ -892,7 +912,7 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 		assert.Equal(t, "20\n", reply)
 
 		err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
-			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				return false, err
 			}
@@ -930,7 +950,7 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 		assert.Equal(t, "20\n", reply)
 
 		err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
-			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+			gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 			if err != nil {
 				return false, err
 			}
@@ -947,6 +967,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 		t.SkipNow()
 	}
 	t.Parallel()
+	ctx := context.Background()
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	playerCount := int64(3)
@@ -990,7 +1011,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	assert.Equal(t, "3\n", reply)
 
 	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -1026,7 +1047,7 @@ func TestPlayerConnectAndDisconnect(t *testing.T) {
 	assert.Equal(t, "2\n", reply)
 
 	err = wait.Poll(time.Second, time.Minute, func() (bool, error) {
-		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(gs.ObjectMeta.Name, metav1.GetOptions{})
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}

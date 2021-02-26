@@ -19,6 +19,8 @@
 package fake
 
 import (
+	"context"
+
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -39,7 +41,7 @@ var gameserversResource = schema.GroupVersionResource{Group: "agones.dev", Versi
 var gameserversKind = schema.GroupVersionKind{Group: "agones.dev", Version: "v1", Kind: "GameServer"}
 
 // Get takes name of the gameServer, and returns the corresponding gameServer object, and an error if there is any.
-func (c *FakeGameServers) Get(name string, options v1.GetOptions) (result *agonesv1.GameServer, err error) {
+func (c *FakeGameServers) Get(ctx context.Context, name string, options v1.GetOptions) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewGetAction(gameserversResource, c.ns, name), &agonesv1.GameServer{})
 
@@ -50,7 +52,7 @@ func (c *FakeGameServers) Get(name string, options v1.GetOptions) (result *agone
 }
 
 // List takes label and field selectors, and returns the list of GameServers that match those selectors.
-func (c *FakeGameServers) List(opts v1.ListOptions) (result *agonesv1.GameServerList, err error) {
+func (c *FakeGameServers) List(ctx context.Context, opts v1.ListOptions) (result *agonesv1.GameServerList, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewListAction(gameserversResource, gameserversKind, c.ns, opts), &agonesv1.GameServerList{})
 
@@ -72,14 +74,14 @@ func (c *FakeGameServers) List(opts v1.ListOptions) (result *agonesv1.GameServer
 }
 
 // Watch returns a watch.Interface that watches the requested gameServers.
-func (c *FakeGameServers) Watch(opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeGameServers) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
 		InvokesWatch(testing.NewWatchAction(gameserversResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a gameServer and creates it.  Returns the server's representation of the gameServer, and an error, if there is any.
-func (c *FakeGameServers) Create(gameServer *agonesv1.GameServer) (result *agonesv1.GameServer, err error) {
+func (c *FakeGameServers) Create(ctx context.Context, gameServer *agonesv1.GameServer, opts v1.CreateOptions) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(gameserversResource, c.ns, gameServer), &agonesv1.GameServer{})
 
@@ -90,7 +92,7 @@ func (c *FakeGameServers) Create(gameServer *agonesv1.GameServer) (result *agone
 }
 
 // Update takes the representation of a gameServer and updates it. Returns the server's representation of the gameServer, and an error, if there is any.
-func (c *FakeGameServers) Update(gameServer *agonesv1.GameServer) (result *agonesv1.GameServer, err error) {
+func (c *FakeGameServers) Update(ctx context.Context, gameServer *agonesv1.GameServer, opts v1.UpdateOptions) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewUpdateAction(gameserversResource, c.ns, gameServer), &agonesv1.GameServer{})
 
@@ -101,7 +103,7 @@ func (c *FakeGameServers) Update(gameServer *agonesv1.GameServer) (result *agone
 }
 
 // Delete takes name of the gameServer and deletes it. Returns an error if one occurs.
-func (c *FakeGameServers) Delete(name string, options *v1.DeleteOptions) error {
+func (c *FakeGameServers) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
 		Invokes(testing.NewDeleteAction(gameserversResource, c.ns, name), &agonesv1.GameServer{})
 
@@ -109,15 +111,15 @@ func (c *FakeGameServers) Delete(name string, options *v1.DeleteOptions) error {
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeGameServers) DeleteCollection(options *v1.DeleteOptions, listOptions v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(gameserversResource, c.ns, listOptions)
+func (c *FakeGameServers) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+	action := testing.NewDeleteCollectionAction(gameserversResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &agonesv1.GameServerList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched gameServer.
-func (c *FakeGameServers) Patch(name string, pt types.PatchType, data []byte, subresources ...string) (result *agonesv1.GameServer, err error) {
+func (c *FakeGameServers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *agonesv1.GameServer, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewPatchSubresourceAction(gameserversResource, c.ns, name, pt, data, subresources...), &agonesv1.GameServer{})
 

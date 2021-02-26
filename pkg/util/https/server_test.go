@@ -15,6 +15,7 @@
 package https
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -44,10 +45,10 @@ func TestServerRun(t *testing.T) {
 	ts := &testServer{server: httptest.NewUnstartedServer(s.Mux)}
 	s.tls = ts
 
-	stop := make(chan struct{})
-	defer close(stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	err := s.Run(0, stop)
+	err := s.Run(ctx, 0)
 	assert.Nil(t, err)
 
 	client := ts.server.Client()
