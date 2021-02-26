@@ -63,6 +63,7 @@ Agones:
 
 * [Dedicated Game Servers, Drawn Badly (video)](https://www.youtube.com/watch?v=Nl_FIGFtYdc)
 * [What Every Programmer Needs To Know About Game Networking](https://gafferongames.com/post/what_every_programmer_needs_to_know_about_game_networking/)
+* [Fast-Paced Multiplayer (Part I): Client-Server Game Architecture](https://www.gabrielgambetta.com/client-server-game-architecture.html)  
 * [Game Server (wikipedia)](https://en.wikipedia.org/wiki/Game_server)
 * {{< ghlink href="examples/simple-game-server" >}}Example simple gameserver that responds to UDP and/or
  TCP commands{{< /ghlink >}}
