@@ -751,6 +751,22 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 }
 
+func TestGameServerWithoutPort(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+	gs.Spec.Ports = nil
+
+	_, valid := gs.Validate()
+	assert.True(t, valid)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
+	if err != nil {
+		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
+	}
+
+	assert.Nil(t, readyGs.Spec.Ports)
+}
+
 // TestGameServerResourceValidation - check that we are not able to use
 // invalid PodTemplate for GameServer Spec with wrong Resource Requests and Limits
 func TestGameServerResourceValidation(t *testing.T) {
