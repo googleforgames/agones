@@ -332,7 +332,7 @@ func (c *Allocator) applyMultiClusterAllocation(ctx context.Context, gsa *alloca
 			return result, nil
 		}
 	}
-	return nil, err
+	return result, err
 }
 
 // allocateFromRemoteCluster allocates gameservers from a remote cluster by making
