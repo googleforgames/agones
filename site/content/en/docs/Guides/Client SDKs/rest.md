@@ -175,7 +175,7 @@ Response:
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 ```
 
-{{% feature publishVersion="1.3.0" %}}
+{{% feature publishVersion="1.13.0" %}}
 The Watch GameServer stream is also exposed as a WebSocket endpoint on the same URL and port as the HTTP `watch/gameserver` API. This endpoint is provided as a convienence for streaming data to clients such as Unreal that support WebSocket but not HTTP streaming, and HTTP streaming should be used instead if possible.
 
 An example command that uses the WebSocket endpoint instead of streaming over HTTP is:
