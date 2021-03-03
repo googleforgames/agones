@@ -6,6 +6,10 @@ description: "Community contributed libraries and tools on Agones."
 weight: 30
 ---
 
+## Client SDKs
+
+- [Cubxity/AgonesKt](https://github.com/Cubxity/AgonesKt) - Agones Client SDK for **Kotlin**  
+
 ## Messaging
 
 Libraries or applications that implement messaging systems.
