@@ -38,9 +38,13 @@ spec:
 EOF
 ```
 
-To define the local cluster priority, similarly, an allocation rule should be defined, while leaving allocationEndpoints unset. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
+To define the local cluster priority a GameServerAllocationPolicy should be defined _without_ an `allocationEndpoints` field. If the local cluster priority is not defined, the allocation from the local cluster happens only if allocation from other clusters with the existing allocation rules is unsuccessful.
 
-`serverCa` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed). If this field is not specified, the certificate can also be specified in the `ca.crt` field of the client secret (i.e. the secret referred to in the `secretName` field).
+Allocation requests with multi-cluster allocation enabled but with only the local cluster available (e.g. in development) _must_ have a local cluster priority defined, or the request fails with the error "no multi-cluster allocation policy is specified".
+
+The `namespace` field in `connectionInfo` is the namespace that the game servers will be allocated in, and must be a namespace in the target cluster that has been previously defined as allowed to host game servers. The `Namespace` specified in the allocation request (below) is used to refer to the namespace that the GameServerAllocationPolicy itself is located in.
+
+`serverCa` is the server TLS CA public certificate, set only if the remote server certificate is not signed by a public CA (e.g. self-signed). If this field is not specified, the certificate can also be specified in a field named `ca.crt` of the client secret (the secret referred to in the `secretName` field).
 
 ## Establish trust
 
@@ -122,7 +126,7 @@ If using REST use
 ```bash
 #!/bin/bash
 
-curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'", "multi_cluster_settings":{"enabled":"true"}}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
+curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'", "multiClusterSetting":{"enabled":true}}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
 ```
 
 ## Troubleshooting

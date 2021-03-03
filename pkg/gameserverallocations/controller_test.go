@@ -902,6 +902,71 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 		_, err = executeAllocation(gsa, c)
 		assert.Error(t, err)
 	})
+
+	t.Run("Could not find a Ready GameServer", func(t *testing.T) {
+		c, m := newFakeController()
+
+		m.AgonesClient.AddReactor("list", "gameserverallocationpolicies", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
+			return true, &multiclusterv1.GameServerAllocationPolicyList{
+				Items: []multiclusterv1.GameServerAllocationPolicy{
+					{
+						Spec: multiclusterv1.GameServerAllocationPolicySpec{
+							Priority: 1,
+							Weight:   200,
+							ConnectionInfo: multiclusterv1.ClusterConnectionInfo{
+								ClusterName: "multicluster",
+								SecretName:  "localhostsecret",
+								Namespace:   defaultNs,
+								ServerCA:    []byte("not-used"),
+							},
+						},
+						ObjectMeta: metav1.ObjectMeta{
+							Labels:    map[string]string{"cluster": "onprem"},
+							Namespace: defaultNs,
+						},
+					},
+				},
+			}, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m)
+		defer cancel()
+
+		if err := c.Run(ctx, 1); err != nil {
+			assert.FailNow(t, err.Error())
+		}
+		// wait for it to be up and running
+		err := wait.PollImmediate(time.Second, 10*time.Second, func() (done bool, err error) {
+			return c.allocator.readyGameServerCache.workerqueue.RunCount() == 1, nil
+		})
+		assert.NoError(t, err)
+
+		gsa := &allocationv1.GameServerAllocation{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:   defaultNs,
+				Name:        "alloc1",
+				ClusterName: "multicluster",
+			},
+			Spec: allocationv1.GameServerAllocationSpec{
+				MultiClusterSetting: allocationv1.MultiClusterSetting{
+					Enabled: true,
+					PolicySelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							"cluster": "onprem",
+						},
+					},
+				},
+				Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "empty-fleet"}},
+			},
+		}
+
+		ret, err := executeAllocation(gsa, c)
+		assert.NoError(t, err)
+		assert.Equal(t, gsa.Spec.Required, ret.Spec.Required)
+		assert.Equal(t, gsa.Namespace, ret.Namespace)
+		expectedState := allocationv1.GameServerAllocationUnAllocated
+		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
+	})
 }
 
 func TestMultiClusterAllocationFromRemote(t *testing.T) {
