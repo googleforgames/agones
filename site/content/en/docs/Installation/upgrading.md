@@ -75,6 +75,13 @@ Given the above, the steps for upgrade are simpler:
 1. Close your maintenance window.
 7. Congratulations - you have now upgraded to a new version of Agones! 👍
 
+{{< alert color="warning" title="Warning" >}}
+If you are getting an error of `cannot convert int64 to float64` on `helm upgrade` you will need to `helm uninstall` 
+the original installation and do a full `helm install` to the new version to upgrade Agones. 
+
+This is due to [helm/helm#5806](https://github.com/helm/helm/issues/5806) and will be resolved with Kubernetes 1.20
+{{< /alert >}}
+
 ## Upgrading Kubernetes
 
 The following are strategies for safely upgrading the underlying Kubernetes cluster from one version to another.
