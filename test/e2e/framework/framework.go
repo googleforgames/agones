@@ -210,6 +210,11 @@ func NewFromFlags() (*Framework, error) {
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
 func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	return f.CreateGameServerAndWaitUntilReadyWithOptionalPortCheck(ns, gs, true)
+}
+
+// CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
+func (f *Framework) CreateGameServerAndWaitUntilReadyWithOptionalPortCheck(ns string, gs *agonesv1.GameServer, portCheck bool) (*agonesv1.GameServer, error) {
 	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(context.Background(), gs, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
@@ -223,7 +228,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
 			gs.Spec, gs.Name, err)
 	}
-	if len(readyGs.Status.Ports) == 0 {
+	if portCheck && len(readyGs.Status.Ports) == 0 {
 		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
 	}
 
