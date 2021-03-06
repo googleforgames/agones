@@ -213,7 +213,7 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 	return f.CreateGameServerAndWaitUntilReadyWithOptionalPortCheck(ns, gs, true)
 }
 
-// CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
+// CreateGameServerAndWaitUntilReadyWithOptionalPortCheck Creates a GameServer and wait for its state to become ready.
 func (f *Framework) CreateGameServerAndWaitUntilReadyWithOptionalPortCheck(ns string, gs *agonesv1.GameServer, portCheck bool) (*agonesv1.GameServer, error) {
 	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(context.Background(), gs, metav1.CreateOptions{})
 	if err != nil {
