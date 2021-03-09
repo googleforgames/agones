@@ -20,5 +20,5 @@ set -e
 echo "installing current release"
 DOCKER_RUN= make install FEATURE_GATES='"'$FEATURES'"'
 echo "starting e2e test"
-DOCKER_RUN= make test-e2e ARGS=-parallel=64 FEATURE_GATES='"'$FEATURES'"'
+DOCKER_RUN= make test-e2e ARGS=-parallel=32 FEATURE_GATES='"'$FEATURES'"'
 echo "completed e2e test"

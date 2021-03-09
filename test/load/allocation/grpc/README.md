@@ -41,7 +41,7 @@ kind: Fleet
 ## Configuring the Allocator Service
 
 The allocator service uses gRPC. In order to be able to call the service, TLS and mTLS has to be setup.
-For more information visit [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service).
+For more information visit [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/).
 
 ## Running the test
 
