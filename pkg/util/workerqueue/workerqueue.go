@@ -37,6 +37,32 @@ const (
 	workFx = time.Second
 )
 
+// debugError is a marker type for errors that that should only be logged at a Debug level.
+// Useful if you want a Handler to be retried, but not logged at an Error level.
+type debugError struct {
+	err error
+}
+
+// NewDebugError returns a debugError wrapper around an error.
+func NewDebugError(err error) error {
+	return &debugError{err: err}
+}
+
+// Error returns the error string
+func (l *debugError) Error() string {
+	if l.err == nil {
+		return "<nil>"
+	}
+	return l.err.Error()
+}
+
+// isDebugError returns if the error is a debug error or not
+func isDebugError(err error) bool {
+	cause := errors.Cause(err)
+	_, ok := cause.(*debugError)
+	return ok
+}
+
 // Handler is the handler for processing the work queue
 // This is usually a syncronisation handler for a controller or related
 type Handler func(context.Context, string) error
@@ -153,7 +179,8 @@ func (wq *WorkerQueue) processNextWorkItem(ctx context.Context) bool {
 
 	if err := wq.SyncHandler(ctx, key); err != nil {
 		// Conflicts are expected, so only show them in debug operations.
-		if k8serror.IsConflict(errors.Cause(err)) {
+		// Also check is debugError for other expected errors.
+		if k8serror.IsConflict(errors.Cause(err)) || isDebugError(err) {
 			wq.logger.WithField(wq.keyName, obj).Debug(err)
 		} else {
 			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)

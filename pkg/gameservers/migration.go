@@ -168,6 +168,9 @@ func (mc *MigrationController) syncGameServer(ctx context.Context, key string) e
 		return nil
 	}
 
+	if pod.Spec.NodeName == "" {
+		return workerqueue.NewDebugError(errors.Errorf("node not yet populated for Pod %s", pod.ObjectMeta.Name))
+	}
 	node, err := mc.nodeLister.Get(pod.Spec.NodeName)
 	if err != nil {
 		return errors.Wrapf(err, "error retrieving node %s for Pod %s", pod.Spec.NodeName, pod.ObjectMeta.Name)
