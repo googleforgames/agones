@@ -777,7 +777,7 @@ func TestGameServerWithoutPort(t *testing.T) {
 	_, valid := gs.Validate()
 	assert.True(t, valid)
 
-	readyGs, err := framework.CreateGameServerAndWaitUntilReadyWithOptionalPortCheck(framework.Namespace, gs, false)
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
 
 	require.NoError(t, err, "Could not get a GameServer ready")
 	assert.Empty(t, readyGs.Spec.Ports)
