@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -193,4 +194,17 @@ func TestWorkerQueueEnqueueAfter(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		assert.Fail(t, "should have got a queue'd message by now")
 	}
+}
+
+func TestDebugError(t *testing.T) {
+	err := errors.New("not a debug error")
+	assert.False(t, isDebugError(err))
+
+	err = NewDebugError(err)
+	assert.True(t, isDebugError(err))
+	assert.EqualError(t, err, "not a debug error")
+
+	err = NewDebugError(nil)
+	assert.True(t, isDebugError(err))
+	assert.EqualError(t, err, "<nil>")
 }
