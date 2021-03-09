@@ -42,7 +42,7 @@ properties:
       ports:
         title: array of ports to expose on the game server container
         type: array
-        minItems: 1
+        nullable: true
         items:
           type: object
           properties:

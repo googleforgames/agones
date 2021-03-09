@@ -223,8 +223,18 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
 			gs.Spec, gs.Name, err)
 	}
-	if len(readyGs.Status.Ports) == 0 {
-		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
+
+	expectedPortCount := len(gs.Spec.Ports)
+	if expectedPortCount > 0 {
+		for _, port := range gs.Spec.Ports {
+			if port.Protocol == agonesv1.ProtocolTCPUDP {
+				expectedPortCount++
+			}
+		}
+	}
+
+	if len(readyGs.Status.Ports) != expectedPortCount {
+		return nil, fmt.Errorf("Ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
 	}
 
 	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer Ready")

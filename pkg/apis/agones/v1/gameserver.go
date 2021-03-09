@@ -145,7 +145,7 @@ type GameServerSpec struct {
 	// container defined
 	Container string `json:"container,omitempty"`
 	// Ports are the array of ports that can be exposed via the game server
-	Ports []GameServerPort `json:"ports"`
+	Ports []GameServerPort `json:"ports,omitempty"`
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
 	// Scheduling strategy. Defaults to "Packed"

@@ -124,6 +124,15 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.Equal(t, "gameport-tcp", gsCopy.Spec.Ports[0].Name)
 		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[1].Name)
 		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
+
+		// no port
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports = nil
+		assert.Len(t, gsCopy.Spec.Ports, 0)
+		pa.Allocate(gsCopy)
+		assert.Nil(t, gsCopy.Spec.Ports)
+		assert.Nil(t, err)
+		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
 	t.Run("ports are all allocated", func(t *testing.T) {
