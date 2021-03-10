@@ -61,7 +61,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.1
+GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.2
 
 ALPHA_FEATURE_GATES ?= "PlayerTracking=true&RollingUpdateOnReady=true&NodeExternalDNS=true"
 

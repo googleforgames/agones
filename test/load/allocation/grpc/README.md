@@ -33,7 +33,7 @@ kind: Fleet
                 - args:
                   # We setup the simple-game-server server to shutdown 10 mins after allocation 
                   - -automaticShutdownDelayMin=10
-                  image: gcr.io/agones-images/simple-game-server:0.1
+                  image: gcr.io/agones-images/simple-game-server:0.2
                   name: simple-game-server
   ...
 ```
