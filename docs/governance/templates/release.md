@@ -2,6 +2,8 @@
 
 This is the {version} release of Agones.
 
+{ write description of release }
+
 Check the <a href="https://github.com/googleforgames/agones/tree/release-{version}" data-proofer-ignore>README</a> for details on features, installation and usage.
 
 **Implemented enhancements:**

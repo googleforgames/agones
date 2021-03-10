@@ -59,7 +59,7 @@ class UserBehavior(TaskSet):
                                         "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/simple-game-server:0.1")
+                                            "/simple-game-server:0.2")
                                     }
                                 ]
                             }
@@ -120,7 +120,7 @@ class UserBehavior(TaskSet):
                                         "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/simple-game-server:0.1")
+                                            "/simple-game-server:0.2")
                                     }
                                 ]
                             }
@@ -174,7 +174,7 @@ class UserBehavior(TaskSet):
                                         "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/simple-game-server:0.1")
+                                            "/simple-game-server:0.2")
                                     }
                                 ]
                             }
