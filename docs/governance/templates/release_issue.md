@@ -51,13 +51,13 @@ and copy it into a release issue. Fill in relevant values, found inside {}
    `make sdk-publish-csharp RELEASE_VERSION={version}-rc`).
    Will need [NuGet API Key](https://www.nuget.org/account/apikeys) from Agones account.
 - [ ] Run `make do-release`. (if release candidate: `make do-release RELEASE_VERSION={version}-rc`) to create and push the docker images and helm chart.
-- [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `help repo update` and verify that the new
+- [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
  version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` 
     (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke
      test to confirm everything is working.
-- [ ] Attach all assets found in the `release` folder to the release.
-- [ ] Submit the Release.
+- [ ] Attach all assets found in the `release` folder to the draft Github Release.
+- [ ] Publish the draft Github Release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) twitter account.
