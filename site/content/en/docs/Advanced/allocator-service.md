@@ -171,6 +171,10 @@ You should expect to see the following output:
 {"gameServerName":"game-server-name","ports":[{"name":"default","port":7463}],"address":"1.2.3.4","nodeName":"node-name"}
 ```
 
+### Sending Data to the Game Server
+
+The service accepts a `metaPatch` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`.
+
 ## Secrets Explained
 
 `agones-allocator` has a dependency on three Kubernetes secrets:
@@ -225,3 +229,7 @@ If you encounter problems, explore the following potential root causes:
     kubectl get service agones-allocator -n agones-system
     agones-allocator   LoadBalancer   10.55.248.14   34.82.195.204    443:32468/TCP   6d23h
     ```
+
+## API Reference
+
+The AllocationService API is located as a gRPC service {{< ghlink href="proto/allocation/allocation.proto" >}}here{{< /ghlink >}}. Additionally, the REST API is available as a {{< ghlink href="pkg/allocation/go/allocation.swagger.json" >}}Swagger API{{< /ghlink >}}.
