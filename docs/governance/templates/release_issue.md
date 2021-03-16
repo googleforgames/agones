@@ -7,6 +7,16 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 *** VERSION SHOULD BE IN THE FORMAT OF 1.x.x NOT v1.x.x ***
 !-->
 
+## Prerequisites
+
+- [ ] Have at least `Editor` level access to `agones-images` project.
+- [ ] Have write access to Agones github repository.
+- [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
+- [ ] Have a [Github Personal Access Token](https://github.com/settings/tokens) with repo permissions.
+
+## Steps
+
+- [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
 - [ ] Review closed issues have been applied to the current milestone.
 - [ ] Review closed issues have appropriate tags.
 - [ ] Review closed PRs have been applied to the current milestone.
@@ -17,7 +27,9 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
-- [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate `make gen-changelog RELEASE_VERSION={version}-rc`)
+- [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate 
+  `make gen-changelog RELEASE_VERSION={version}-rc`). You will need your 
+  [Github Personal Access Token](https://github.com/settings/tokens) for this.
 - [ ] Ensure the [helm `tag` value][values] is correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Update SDK Package Versions
