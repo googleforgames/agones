@@ -73,6 +73,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
 - [ ] Paste the announcement blog post to the #users Slack group.
 - [ ] Post to the [agonesdev](https://twitter.com/agonesdev) twitter account.
+- [ ] If full release, run `git checkout main`.
 - [ ] If full release, then increment the `base_version` in [`build/Makefile`][build-makefile]
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1-dev
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1-dev
