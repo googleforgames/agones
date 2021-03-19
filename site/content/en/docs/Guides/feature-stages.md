@@ -11,7 +11,7 @@ description: >
 ## Supported Versions
 
 Agones versions are expressed as x.y.z, where x is the major version, y is the minor version, and z is the patch version
-, following [Semantic Versioning](http://semver.org/) terminology.
+following [Semantic Versioning](http://semver.org/) terminology.
 
 ## Agones Features
 
