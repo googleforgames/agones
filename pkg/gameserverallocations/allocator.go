@@ -43,6 +43,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
@@ -552,8 +553,12 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 				case res := <-updateQueue:
 					gs, err := c.readyGameServerCache.PatchGameServerMetadata(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
 					if err != nil {
-						// since we could not allocate, we should put it back
-						c.readyGameServerCache.AddToReadyGameServer(gs)
+						if !k8serrors.IsConflict(errors.Cause(err)) {
+							// since we could not allocate, we should put it back
+							// but not if it's a conflict, as the cache is no longer up to date, and
+							// we should wait for it to get updated with fresh info.
+							c.readyGameServerCache.AddToReadyGameServer(gs)
+						}
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
 						res.gs = gs
