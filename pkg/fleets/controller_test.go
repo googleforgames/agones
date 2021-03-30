@@ -196,7 +196,9 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
-		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeaturePlayerTracking)+"=true"))
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=true"))
 
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
@@ -241,7 +243,7 @@ func TestControllerSyncFleet(t *testing.T) {
 			}
 			// update main resource
 			gsSet := ua.GetObject().(*agonesv1.GameServerSet)
-			assert.Equal(t, int32(3), gsSet.Spec.Replicas)
+			assert.Equal(t, int32(4), gsSet.Spec.Replicas)
 			assert.Equal(t, "gsSet1", gsSet.ObjectMeta.Name)
 
 			return true, gsSet, nil
