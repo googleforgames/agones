@@ -29,9 +29,9 @@ tools need to be installed on your system.
 ## Testing locally with Docker
 
 If you want to run the example locally, you need to start an instance of the SDK-server. To run an SDK-server for
-120 seconds, run
+240 seconds, run
 ```bash
-$ cd ../../build; make run-sdk-conformance-local TIMEOUT=120 TESTS=ready,watch,health,gameserver
+$ cd ../../build; make run-sdk-conformance-local TIMEOUT=240 TESTS=ready,watch,health,gameserver
 ```
 
 In a separate terminal, while the SDK-server is still running, build and start a container with the example gameserver:
@@ -68,11 +68,11 @@ $ npm start -- --help
 ```
 
 You can optionally specify how long the server will stay up once the basic tests are complete with the `--timeout` option.
-To do this pass arguments through, e.g. to increase the shutdown duration to 120 seconds:
+To do this pass arguments through, e.g. to increase the shutdown duration to 90 seconds:
 ```
-$ make args="--timeout=120" run
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --timeout=120
-$ npm start -- --timeout=120
+$ make args="--timeout=90" run
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5 --timeout=90
+$ npm start -- --timeout=90
 ```
 
 To make run indefinitely use the special timeout value of 0:
@@ -84,7 +84,7 @@ $ npm start -- --timeout=0
 
 To enable alpha features ensure the feature gate is enabled:
 ```bash
-$ cd ../../build; make run-sdk-conformance-local TIMEOUT=120 FEATURE_GATES="PlayerTracking=true" TESTS=ready,watch,health,gameserver
+$ cd ../../build; make run-sdk-conformance-local TIMEOUT=240 FEATURE_GATES="PlayerTracking=true" TESTS=ready,watch,health,gameserver
 ```
 
 Then enable the alpha suite:
