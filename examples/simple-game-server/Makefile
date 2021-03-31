@@ -25,13 +25,18 @@
 
 REGISTRY = gcr.io/agones-images
 BUILDX_WINDOWS_BUILDER = windows-builder
-WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
+# Versions of Windows Server to support, default is Windows Server 2019.
+# For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
+# GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
+WINDOWS_VERSIONS = ltsc2019
 WINDOWS_DOCKER_PUSH_ARGS = # When pushing set to --push.
+# Build with Windows support
+WITH_WINDOWS=1
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
 server_tag = $(REGISTRY)/simple-game-server:0.2
-ifdef WITH_WINDOWS
+ifeq ($(WITH_WINDOWS), 1)
 server_tag_linux_amd64 = $(server_tag)-linux_amd64
 else
 server_tag_linux_amd64 = $(server_tag)
@@ -45,7 +50,7 @@ root_path = $(realpath $(project_path)/../..)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-ifdef WITH_WINDOWS
+ifeq ($(WITH_WINDOWS), 1)
 push: push-multi-arch-image
 build: build-linux-image $(foreach winver, $(WINDOWS_VERSIONS), build-windows-image-$(winver))
 else

@@ -49,8 +49,10 @@ MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
 WINDOWS_DOCKER_PUSH_ARGS =
-WINDOWS_VERSIONS = ltsc2019 # 1909 (For GKE WINDOWS_SAC support)
-BUILD_WINDOWS_IMAGE =
+# Versions of Windows Server to support, default is Windows Server 2019.
+# For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
+# GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
+WINDOWS_VERSIONS = ltsc2019
 
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
@@ -64,6 +66,9 @@ KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.2
 
 ALPHA_FEATURE_GATES ?= "PlayerTracking=true&NodeExternalDNS=true"
+
+# Build with Windows support
+WITH_WINDOWS=1
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -94,7 +99,7 @@ build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
-ifdef WITH_WINDOWS
+ifeq ($(WITH_WINDOWS), 1)
 sidecar_linux_amd64_tag = $(sidecar_tag)-linux_amd64
 else
 sidecar_linux_amd64_tag = $(sidecar_tag)
@@ -216,7 +221,7 @@ build: build-images build-sdks
 
 # build the docker images
 build-images: build-controller-image build-agones-sdk-image build-ping-image build-allocator-image
-ifdef WITH_WINDOWS
+ifeq ($(WITH_WINDOWS), 1)
 build-images: build-agones-sdk-image-windows
 endif
 
@@ -451,15 +456,17 @@ push-allocator-image: $(ensure-build-image)
 build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
 
-ifdef WITH_WINDOWS
+ifeq ($(WITH_WINDOWS), 1)
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image
+	# Ensure that the sidecar manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(sidecar_linux_amd64_tag) $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag) --purge
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
 push-agones-sdk-image: push-agones-sdk-linux-image
 endif
