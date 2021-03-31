@@ -48,12 +48,12 @@ const (
 var (
 	// featureDefaults is a map of all Feature Gates that are
 	// operational in Agones, and what their default configuration is.
-	// alpha features are disabled
+	// alpha features are disabled.
 	featureDefaults = map[Feature]bool{
 		FeatureExample:               true,
 		FeaturePlayerTracking:        false,
 		FeatureSDKWatchSendOnExecute: true,
-		FeatureRollingUpdateOnReady:  false,
+		FeatureRollingUpdateOnReady:  true,
 		NodeExternalDNS:              false,
 	}
 
