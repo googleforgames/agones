@@ -145,7 +145,7 @@ metadata:
   name: {{ template "agones.fullname" . }}-cert
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"

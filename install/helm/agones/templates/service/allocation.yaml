@@ -257,7 +257,7 @@ metadata:
   name: allocator-client-ca
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -281,7 +281,7 @@ metadata:
   name: allocator-tls
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -302,7 +302,7 @@ metadata:
   name: allocator-tls-ca
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -324,7 +324,7 @@ metadata:
   name: allocator-client.default
   namespace: {{ . }}
   labels:
-    app: {{ template "agones.fullname" $ }}
+    app: {{ template "agones.name" $ }}
     chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
     release: "{{ $.Release.Name }}"
     heritage: "{{ $.Release.Service }}"

@@ -69,7 +69,7 @@ metadata:
   name: agones-manual-cert
   namespace: agones-system
   labels:
-    app: agones-manual
+    app: agones
     chart: "agones-1.14.0-dev"
     release: "agones-manual"
     heritage: "Helm"
@@ -86,7 +86,7 @@ metadata:
   name: allocator-client-ca
   namespace: agones-system
   labels:
-    app: agones-manual
+    app: agones
     chart: "agones-1.14.0-dev"
     release: "agones-manual"
     heritage: "Helm"
@@ -102,7 +102,7 @@ metadata:
   name: allocator-tls
   namespace: agones-system
   labels:
-    app: agones-manual
+    app: agones
     chart: "agones-1.14.0-dev"
     release: "agones-manual"
     heritage: "Helm"
@@ -118,7 +118,7 @@ metadata:
   name: allocator-tls-ca
   namespace: agones-system
   labels:
-    app: agones-manual
+    app: agones
     chart: "agones-1.14.0-dev"
     release: "agones-manual"
     heritage: "Helm"
