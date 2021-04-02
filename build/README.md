@@ -392,7 +392,8 @@ and `default` (for pulling the sdk image) repositories.
 ### WITH_WINDOWS
 Build Windows container images for Agones.
 
-If set, `make WITH_WINDOWS=1 build-images` will build Windows images.
+This option is enabled by default via implicit `make WITH_WINDOWS=1 build-images`.
+To disable, use `make WITH_WINDOWS=0 build-images`.
 
 ### WINDOWS_VERSIONS
 List of Windows Server versions to build for. Defaults to `ltsc2019` for Windows Server 2019.
