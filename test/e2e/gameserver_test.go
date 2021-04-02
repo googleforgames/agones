@@ -722,6 +722,24 @@ func TestGameServerPassthroughPort(t *testing.T) {
 	assert.Equal(t, "ACK: Hello World !\n", reply)
 }
 
+func TestGameServerTcpProtocol(t *testing.T) {
+	t.Parallel()
+	gs := framework.DefaultGameServer(framework.Namespace)
+
+	gs.Spec.Ports[0].Protocol = corev1.ProtocolTCP
+	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+
+	_, valid := gs.Validate()
+	require.True(t, valid)
+
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
+	require.NoError(t, err)
+
+	replyTCP, err := e2eframework.SendGameServerTCP(readyGs, "Hello World !")
+	require.NoError(t, err)
+	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
+}
+
 func TestGameServerTcpUdpProtocol(t *testing.T) {
 	t.Parallel()
 	gs := framework.DefaultGameServer(framework.Namespace)
@@ -753,6 +771,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
 
 	replyUDP, err := e2eframework.SendGameServerUDPToPort(readyGs, udpPort.Name, "Hello World !")
+	require.NoError(t, err)
 	if err != nil {
 		t.Fatalf("Could not ping UDP GameServer: %v", err)
 	}
