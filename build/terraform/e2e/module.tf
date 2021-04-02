@@ -28,11 +28,11 @@ module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"              = "e2e-test-cluster"
-    "zone"              = "us-west1-c"
-    "machineType"       = "n1-standard-4"
-    "initialNodeCount"  = 8
-    "project"           = var.project
+    "name"             = "e2e-test-cluster"
+    "zone"             = "us-west1-c"
+    "machineType"      = "n1-standard-4"
+    "initialNodeCount" = 8
+    "project"          = var.project
   }
 
   firewallName = "gke-game-server-firewall"
@@ -50,15 +50,15 @@ provider "helm" {
 
 resource "helm_release" "consul" {
   chart = "stable/consul"
-  name = "consul"
+  name  = "consul"
 
   set {
-    name = "Replicas"
+    name  = "Replicas"
     value = "1"
   }
 
   set {
-    name = "uiService.type"
+    name  = "uiService.type"
     value = "ClusterIP"
   }
 }

@@ -18,11 +18,11 @@
 terraform {
   required_version = ">= 0.12.6"
   required_providers {
-    helm                   = {
+    helm = {
       version = "~> 1.2"
-      source = "hashicorp/helm"
+      source  = "hashicorp/helm"
     }
-  }     
+  }
 }
 provider "helm" {
   kubernetes {
@@ -34,13 +34,13 @@ provider "helm" {
 }
 
 resource "helm_release" "agones" {
-  name         = "agones"
-  repository   = "https://agones.dev/chart/stable"
-  force_update = var.force_update
-  chart        = var.chart
-  timeout      = 420
-  version      = var.agones_version
-  namespace    = "agones-system"
+  name             = "agones"
+  repository       = "https://agones.dev/chart/stable"
+  force_update     = var.force_update
+  chart            = var.chart
+  timeout          = 420
+  version          = var.agones_version
+  namespace        = "agones-system"
   create_namespace = true
 
   # Use terraform of the latest >=0.12 version
@@ -112,5 +112,5 @@ resource "helm_release" "agones" {
     name  = "gameservers.maxPort"
     value = var.gameserver_maxPort
   }
-  
+
 }
