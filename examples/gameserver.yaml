@@ -98,3 +98,9 @@ spec:
       - name: simple-game-server
         image:  gcr.io/agones-images/simple-game-server:0.3
         imagePullPolicy: Always
+      # nodeSelector is a label that can be used to tell Kubernetes which host
+      # OS to use. For Windows game servers uncomment the nodeSelector
+      # definition below.
+      # Details: https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/#ensuring-os-specific-workloads-land-on-the-appropriate-container-host
+      # nodeSelector:
+      #   kubernetes.io/os: windows

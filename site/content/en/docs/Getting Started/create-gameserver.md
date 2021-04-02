@@ -4,7 +4,7 @@ linkTitle: "Create a Game Server"
 date: 2019-01-02T06:35:31Z
 weight: 10
 description: >
-  This guide covers how you can quickly get started using Agones to create GameServers.  
+  This guide covers how you can quickly get started using Agones to create GameServers.
 ---
 
 ## Objectives
@@ -30,9 +30,15 @@ For the purpose of this guide we're going to use the {{< ghlink href="examples/s
 
 Let's create a GameServer using the following command :
 
+{{% feature publishVersion="1.14.0" %}}
 ```
+# Linux Game Server
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
+# Windows Game Server
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver-windows.yaml
 ```
+{{% /feature %}}
+
 
 You should see a successful output similar to this :
 
@@ -174,7 +180,7 @@ If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
 
-If you are on Windows, you can alternatively install netcat on 
+If you are on Windows, you can alternatively install netcat on
 [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
 or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
 {{< /alert >}}
@@ -194,5 +200,3 @@ If you run `kubectl describe gameserver` again - either the GameServer will be g
 ## Next Step
 
 If you want to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
-
-

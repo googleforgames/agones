@@ -38,7 +38,7 @@ If you prefer using your local shell, you must install the gcloud and kubectl co
 To launch Cloud Shell, perform the following steps:
 
 1. Go to [Google Cloud Platform Console][cloud]
-1. From the top-right corner of the console, click the 
+1. From the top-right corner of the console, click the
    **Activate Google Cloud Shell** button: ![cloud shell](../../../../images/cloud-shell.png)
 1. A Cloud Shell session opens inside a frame at the bottom of the console. Use this shell to run `gcloud` and `kubectl` commands.
 1. Set a compute zone in your geographical region with the following command. The compute zone will be something like `us-west1-a`. A full list can be found [here][zones].
@@ -79,6 +79,13 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-versio
   --machine-type=n1-standard-4
 ```
 
+{{% feature publishVersion="1.14.0" %}}
+{{< alert title="Note" color="info">}}
+If you're creating a cluster to run Windows game servers you'll also need to add `--enable-ip-alias`.
+{{< /alert >}}
+{{% /feature %}}
+
+{{% feature publishVersion="1.14.0" %}}
 Flag explanations:
 
 * cluster-version: Agones requires Kubernetes version {{% k8s-version %}}.
@@ -87,6 +94,8 @@ Flag explanations:
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: n1-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
+* enable-ip-alias: Use [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes based networking. This is required to create windows node pools.
+{{% /feature %}}
 
 _Optional_: Create a dedicated node pool for the Agones controllers. If you choose to skip this step, the Agones
 controllers will share the default node pool with your game servers which is fine for kicking the tires but is not
@@ -121,6 +130,21 @@ Flag explanations:
 * node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
 * num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
 
+{{% feature publishVersion="1.14.0" %}}
+_Optional_: Create a dedicated Windows node pool for game servers. If you need to run game servers on Windows you'll
+need to create a dedicated node pool for it. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
+game servers.
+
+```bash
+gcloud container node-pools create windows \
+  --cluster=[CLUSTER_NAME] \
+  --no-enable-autoupgrade \
+  --image-type WINDOWS_LTSC \
+  --machine-type n1-standard-4 \
+  --num-nodes=4
+```
+{{% /feature %}}
+
 Finally, let's tell `gcloud` that we are speaking with this cluster, and get auth credentials for `kubectl` to use.
 
 ```bash
@@ -143,14 +167,14 @@ gcloud compute firewall-rules create game-server-firewall \
 ```
 
 {{< alert title="Note" color="info">}}
-Before planning your production GKE infrastructure, it is worth reviewing the 
+Before planning your production GKE infrastructure, it is worth reviewing the
 [different types of GKE clusters that can be created](https://cloud.google.com/kubernetes-engine/docs/concepts/types-of-clusters),
 such as Zonal or Regional, as each has different reliability and cost values, and ensuring this aligns with your
-Service Level Objectives or Agreements. 
+Service Level Objectives or Agreements.
 
-This is particularly true for GKE masters, which can go down temporarily to adjust for cluster resizing,
+This is particularly true for a zonal GKE cluster control plane, which can go down temporarily to adjust for cluster resizing,
 [automatic upgrades](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-upgrades) and
-[repairs](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#repairs). 
+[repairs](https://cloud.google.com/kubernetes-engine/docs/concepts/maintenance-windows-and-exclusions#repairs).
 {{< /alert >}}
 
 ## Next Steps
