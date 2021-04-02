@@ -572,7 +572,7 @@ func (s *SDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alp
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
-	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Connected")
+	s.logger.WithField("playerID", id.PlayerID).Debug("Player Connected")
 
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
@@ -602,7 +602,7 @@ func (s *SDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
-	s.logger.WithField("PlayerId", id.PlayerID).Debug("Player Disconnected")
+	s.logger.WithField("playerID", id.PlayerID).Debug("Player Disconnected")
 
 	s.gsUpdateMutex.Lock()
 	defer s.gsUpdateMutex.Unlock()
