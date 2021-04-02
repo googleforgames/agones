@@ -42,6 +42,11 @@ Documentation can be found on the [Agones website](https://agones.dev/site/docs/
 
 Participation in this project comes under the [Contributor Covenant Code of Conduct](code-of-conduct.md)
 
+## Reporting Security Issues
+
+To report a security issue for this project, please follow the instructions in
+the [Project Security Policy](.github/SECURITY.md)
+
 ## Development and Contribution
 
 Please read the [contributing](CONTRIBUTING.md) guide for directions on submitting Pull Requests to Agones, and community membership governance.
