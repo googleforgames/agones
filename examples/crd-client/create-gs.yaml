@@ -28,5 +28,5 @@ spec:
         imagePullPolicy: Always
         env:
         - name: GAMESERVER_IMAGE
-          value: "gcr.io/agones-images/simple-game-server:0.2"
+          value: "gcr.io/agones-images/simple-game-server:0.3"
       restartPolicy: Never
