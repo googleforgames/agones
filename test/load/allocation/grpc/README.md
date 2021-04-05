@@ -13,17 +13,17 @@ Here are the few important things:
 
 ## Fleet Setting
 
-We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000. 
-Also we set the `automaticShutdownDelayMin` parameter to 10 so simple-game-server game servers shutdown after 10 
+We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000.
+Also we set the `automaticShutdownDelayMin` parameter to 10 so simple-game-server game servers shutdown after 10
 minutes (see below).
-This helps to easily re-run the test without having to delete the game servers and allows to run tests continously. 
+This helps to easily re-run the test without having to delete the game servers and allows to run tests continously.
 
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: Fleet
  ...
  spec:
-  # the number of GameServers to keep Ready 
+  # the number of GameServers to keep Ready
   replicas: 4000
   ...
         # The GameServer's Pod template
@@ -31,9 +31,9 @@ kind: Fleet
             spec:
                 containers:
                 - args:
-                  # We setup the simple-game-server server to shutdown 10 mins after allocation 
+                  # We setup the simple-game-server server to shutdown 10 mins after allocation
                   - -automaticShutdownDelayMin=10
-                  image: gcr.io/agones-images/simple-game-server:0.2
+                  image: gcr.io/agones-images/simple-game-server:0.3
                   name: simple-game-server
   ...
 ```
