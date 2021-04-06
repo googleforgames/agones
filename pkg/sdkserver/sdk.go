@@ -20,10 +20,16 @@ import (
 	"agones.dev/agones/pkg/util/runtime"
 )
 
-const (
+var (
 	// metadataPrefix prefix for labels and annotations
 	metadataPrefix = "agones.dev/sdk-"
 )
+
+// SetMetadataPrefix will change the prefix for new labels and annotations
+// This does not modify any previously existing labels or annotations
+func SetMetadataPrefix(prefix string) {
+	metadataPrefix = prefix
+}
 
 // convert converts a K8s GameServer object, into a gRPC SDK GameServer object
 func convert(gs *agonesv1.GameServer) *sdk.GameServer {
