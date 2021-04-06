@@ -96,7 +96,7 @@ dev_aks_minor_supported_k8s = "14"
 dev_minikube_minor_supported_k8s = "15"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/simple-game-server:0.2"
+example_image_tag = "gcr.io/agones-images/simple-game-server:0.3"
 
 # User interface configuration
 [params.ui]

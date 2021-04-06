@@ -83,7 +83,7 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/simple-game-server:0.2
+        Image:  {{< example-image >}}
         Name:   simple-game-server
         Resources:
           Limits:
@@ -114,7 +114,7 @@ Events:
 The backing Pod has the same name as the `GameServer` - so it's also worth looking at the
 details and events for the Pod to see if there are any issues there, such as restarts due to binary crashes etc.
 
-For example, you can see the restart count on the gcr.io/agones-images/simple-game-server:0.2 container
+For example, you can see the restart count on the {{< example-image >}} container
 is set to `1`, due to the game server binary crash
 
 ```
@@ -136,7 +136,7 @@ Controlled By:      GameServer/simple-game-server-zqppv
 Containers:
   simple-game-server:
     Container ID:   docker://69eacd03cc89b0636b78abe47926b02183ba84d18fa20649ca443f5232511661
-    Image:          gcr.io/agones-images/simple-game-server:0.2
+    Image:          {{< example-image >}}
     Image ID:       docker-pullable://gcr.io/agones-images/simple-game-server@sha256:6a60eff5e68b88b5ce75ae98082d79cff36cda411a090f3495760e5c3b6c3575
     Port:           7654/UDP
     Host Port:      7058/UDP
@@ -205,7 +205,7 @@ Events:
   Normal  Created    2m28s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Created    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Started    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Started container
-  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "gcr.io/agones-images/simple-game-server:0.2" already present on machine
+  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "{{< example-image >}}" already present on machine
 ```
 
 Finally, you can also get the logs of your `GameServer` `Pod` as well via `kubectl logs <pod name> -c <game server container name>`, for example:
@@ -238,7 +238,7 @@ root@c9a845c474c2:/go/src/agones.dev/agones# kubectl get events | grep simple-ga
 2m47s       Normal   Creating                gameserver/simple-game-server-v992s-jwpx2   Pod simple-game-server-v992s-jwpx2 created
 2m47s       Normal   Scheduled               pod/simple-game-server-v992s-jwpx2          Successfully assigned default/simple-game-server-v992s-jwpx2 to gke-test-cluster-default-77e7f57d-j1mp
 2m47s       Normal   Scheduled               gameserver/simple-game-server-v992s-jwpx2   Address and port populated
-2m46s       Normal   Pulled                  pod/simple-game-server-v992s-jwpx2          Container image "gcr.io/agones-images/simple-game-server:0.2" already present on machine
+2m46s       Normal   Pulled                  pod/simple-game-server-v992s-jwpx2          Container image "{{< example-image >}}" already present on machine
 2m46s       Normal   Created                 pod/simple-game-server-v992s-jwpx2          Created container simple-game-server
 2m45s       Normal   Started                 pod/simple-game-server-v992s-jwpx2          Started container simple-game-server
 2m45s       Normal   Pulled                  pod/simple-game-server-v992s-jwpx2          Container image "gcr.io/agones-images/agones-sdk:1.7.0" already present on machine
