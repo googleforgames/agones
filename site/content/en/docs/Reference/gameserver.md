@@ -12,7 +12,7 @@ A full GameServer specification is available below and in the {{< ghlink href="e
 ```yaml
 apiVersion: "agones.dev/v1"
 kind: GameServer
-# GameServer Metadata 
+# GameServer Metadata
 # {{< k8s-api href="#objectmeta-v1-meta" >}}
 metadata:
   # generateName: "gds-example" # generate a unique name, with the given prefix
@@ -87,13 +87,13 @@ spec:
     spec:
       containers:
       - name: simple-game-server
-        image:  gcr.io/agones-images/simple-game-server:0.2
+        image:  {{< example-image >}}
         imagePullPolicy: Always
 ```
 
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.
 
-You can use the metadata field to target a specific [namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/) 
+You can use the metadata field to target a specific [namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
 but also attach specific [annotations](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) and [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to your resource. This is a very common pattern in the Kubernetes ecosystem.
 
 The length of the `name` field of the Gameserver should not exceed 63 characters.

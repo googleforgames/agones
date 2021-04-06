@@ -67,7 +67,7 @@ spec:
         spec:
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.2
+            image: {{< example-image >}}
 ```
 
 Since Agones defines a new 
