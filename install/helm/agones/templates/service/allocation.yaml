@@ -71,25 +71,31 @@ spec:
       heritage: {{ .Release.Service }}
   template:
     metadata:
-      annotations:
-{{- if .Values.agones.allocator.generateTLS }}
-        revision/tls-cert: {{ .Release.Revision | quote }}
-{{- end }}
       labels:
         multicluster.agones.dev/role: allocator
         app: {{ template "agones.name" . }}
         release: {{ .Release.Name }}
         heritage: {{ .Release.Service }}
       annotations:
+{{- if .Values.agones.allocator.generateTLS }}
+        revision/tls-cert: {{ .Release.Revision | quote }}
+{{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
 {{- end }}
+{{- if .Values.agones.allocator.annotations }}
+{{- toYaml .Values.agones.allocator.annotations | nindent 8 }}
+{{- end }}
     spec:
       {{- if .Values.agones.allocator.affinity }}
       affinity:
 {{ toYaml .Values.agones.allocator.affinity | indent 8 }}
+      {{- end }}
+      {{- if .Values.agones.allocator.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.agones.allocator.nodeSelector | indent 8 }}
       {{- end }}
       {{- if .Values.agones.allocator.tolerations }}
       tolerations:
@@ -120,6 +126,10 @@ spec:
             path: /ready
             port: 8080
         env:
+        - name: API_SERVER_QPS
+          value: {{ .Values.agones.allocator.apiServerQPS | quote }}
+        - name: API_SERVER_QPS_BURST
+          value: {{ .Values.agones.allocator.apiServerQPSBurst | quote }}
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER
@@ -132,6 +142,10 @@ spec:
           value: {{ .Values.agones.allocator.disableMTLS | quote }}
         - name: DISABLE_TLS
           value: {{ .Values.agones.allocator.disableTLS | quote }}
+        - name: REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.remoteAllocationTimeout | quote }}
+        - name: TOTAL_REMOTE_ALLOCATION_TIMEOUT
+          value: {{ .Values.agones.allocator.totalRemoteAllocationTimeout | quote }}
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -142,6 +156,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-allocator"
+        - name: LOG_LEVEL
+          value: {{ .Values.agones.allocator.logLevel | quote }}
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
         ports:
@@ -154,6 +170,10 @@ spec:
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
+{{- if .Values.agones.allocator.resources }}
+        resources:
+{{ toYaml .Values.agones.allocator.resources | indent 10 }}
+{{- end }}
 {{- if .Values.agones.image.controller.pullSecret }}
       imagePullSecrets:
         - name: {{.Values.agones.image.controller.pullSecret}}
@@ -237,7 +257,7 @@ metadata:
   name: allocator-client-ca
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -261,7 +281,7 @@ metadata:
   name: allocator-tls
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -282,7 +302,7 @@ metadata:
   name: allocator-tls-ca
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ template "agones.fullname" . }}
+    app: {{ template "agones.name" . }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -293,10 +313,10 @@ data:
   tls-ca.crt: {{ .Files.Get "certs/allocator/server.crt" | b64enc }}
 {{- end }}
 
----
 # Default allocation client secret
 {{- if .Values.agones.allocator.generateClientTLS }}
 {{- range .Values.gameservers.namespaces }}
+---
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
@@ -304,7 +324,7 @@ metadata:
   name: allocator-client.default
   namespace: {{ . }}
   labels:
-    app: {{ template "agones.fullname" $ }}
+    app: {{ template "agones.name" $ }}
     chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
     release: "{{ $.Release.Name }}"
     heritage: "{{ $.Release.Service }}"

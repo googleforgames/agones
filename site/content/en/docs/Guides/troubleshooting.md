@@ -45,12 +45,12 @@ Depending on what is happening, you may want to run `kubectl describe <gameserve
 that are associated with that particular `GameServer` resource. This can give you insight into the lifecycle of the
 `GameServer` and if anything has gone wrong.
 
-For example, here we can see where the simple-udp example has been moved to the `Unhealthy` state
+For example, here we can see where the simple-game-server example has been moved to the `Unhealthy` state
 due to a crash in the backing `GameServer` Pod container's binary.
 
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe gs simple-udp-zqppv
-Name:         simple-udp-zqppv
+root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe gs simple-game-server-zqppv
+Name:         simple-game-server-zqppv
 Namespace:    default
 Labels:       <none>
 Annotations:  agones.dev/sdk-version: 1.0.0-dce1546
@@ -60,13 +60,13 @@ Metadata:
   Creation Timestamp:  2019-08-16T21:25:44Z
   Finalizers:
     agones.dev
-  Generate Name:     simple-udp-
+  Generate Name:     simple-game-server-
   Generation:        1
   Resource Version:  1378575
-  Self Link:         /apis/agones.dev/v1/namespaces/default/gameservers/simple-udp-zqppv
+  Self Link:         /apis/agones.dev/v1/namespaces/default/gameservers/simple-game-server-zqppv
   UID:               6818adc7-c06c-11e9-8dbd-42010a8a0109
 Spec:
-  Container:  simple-udp
+  Container:  simple-game-server
   Health:
     Failure Threshold:      3
     Initial Delay Seconds:  5
@@ -83,8 +83,8 @@ Spec:
       Creation Timestamp:  <nil>
     Spec:
       Containers:
-        Image:  gcr.io/agones-images/udp-server:0.21
-        Name:   simple-udp
+        Image:  gcr.io/agones-images/simple-game-server:0.2
+        Name:   simple-game-server
         Resources:
           Limits:
             Cpu:     20m
@@ -104,7 +104,7 @@ Events:
   Type     Reason          Age   From                   Message
   ----     ------          ----  ----                   -------
   Normal   PortAllocation  72s   gameserver-controller  Port allocated
-  Normal   Creating        72s   gameserver-controller  Pod simple-udp-zqppv created
+  Normal   Creating        72s   gameserver-controller  Pod simple-game-server-zqppv created
   Normal   Scheduled       72s   gameserver-controller  Address and port populated
   Normal   RequestReady    67s   gameserver-sidecar     SDK state change
   Normal   Ready           66s   gameserver-controller  SDK.Ready() complete
@@ -114,30 +114,30 @@ Events:
 The backing Pod has the same name as the `GameServer` - so it's also worth looking at the
 details and events for the Pod to see if there are any issues there, such as restarts due to binary crashes etc.
 
-For example, you can see the restart count on the gcr.io/agones-images/udp-server:0.21 container
+For example, you can see the restart count on the gcr.io/agones-images/simple-game-server:0.2 container
 is set to `1`, due to the game server binary crash
 
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe pod simple-udp-zqppv
-Name:               simple-udp-zqppv
+root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe pod simple-game-server-zqppv
+Name:               simple-game-server-zqppv
 Namespace:          default
 Priority:           0
 PriorityClassName:  <none>
 Node:               gke-test-cluster-default-590db5e4-4s6r/10.138.0.23
 Start Time:         Fri, 16 Aug 2019 21:25:44 +0000
-Labels:             agones.dev/gameserver=simple-udp-zqppv
+Labels:             agones.dev/gameserver=simple-game-server-zqppv
                     agones.dev/role=gameserver
-Annotations:        agones.dev/container: simple-udp
+Annotations:        agones.dev/container: simple-game-server
                     agones.dev/sdk-version: 1.0.0-dce1546
                     cluster-autoscaler.kubernetes.io/safe-to-evict: false
 Status:             Running
 IP:                 10.48.1.80
-Controlled By:      GameServer/simple-udp-zqppv
+Controlled By:      GameServer/simple-game-server-zqppv
 Containers:
-  simple-udp:
+  simple-game-server:
     Container ID:   docker://69eacd03cc89b0636b78abe47926b02183ba84d18fa20649ca443f5232511661
-    Image:          gcr.io/agones-images/udp-server:0.21
-    Image ID:       docker-pullable://gcr.io/agones-images/udp-server@sha256:6a60eff5e68b88b5ce75ae98082d79cff36cda411a090f3495760e5c3b6c3575
+    Image:          gcr.io/agones-images/simple-game-server:0.2
+    Image ID:       docker-pullable://gcr.io/agones-images/simple-game-server@sha256:6a60eff5e68b88b5ce75ae98082d79cff36cda411a090f3495760e5c3b6c3575
     Port:           7654/UDP
     Host Port:      7058/UDP
     State:          Running
@@ -173,7 +173,7 @@ Containers:
       cpu:     30m
     Liveness:  http-get http://:8080/healthz delay=3s timeout=1s period=3s #success=1 #failure=3
     Environment:
-      GAMESERVER_NAME:  simple-udp-zqppv
+      GAMESERVER_NAME:  simple-game-server-zqppv
       POD_NAMESPACE:    default (v1:metadata.namespace)
     Mounts:
       /var/run/secrets/kubernetes.io/serviceaccount from agones-sdk-token-vr6qq (ro)
@@ -198,20 +198,20 @@ Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
 Events:
   Type    Reason     Age                   From                                             Message
   ----    ------     ----                  ----                                             -------
-  Normal  Scheduled  2m32s                 default-scheduler                                Successfully assigned default/simple-udp-zqppv to gke-test-cluster-default-590db5e4-4s6r
+  Normal  Scheduled  2m32s                 default-scheduler                                Successfully assigned default/simple-game-server-zqppv to gke-test-cluster-default-590db5e4-4s6r
   Normal  Pulling    2m31s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  pulling image "gcr.io/agones-mark/agones-sdk:1.0.0-dce1546"
   Normal  Started    2m28s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  Started container
   Normal  Pulled     2m28s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  Successfully pulled image "gcr.io/agones-mark/agones-sdk:1.0.0-dce1546"
   Normal  Created    2m28s                 kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Created    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Created container
   Normal  Started    114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Started container
-  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "gcr.io/agones-images/udp-server:0.21" already present on machine
+  Normal  Pulled     114s (x2 over 2m31s)  kubelet, gke-test-cluster-default-590db5e4-4s6r  Container image "gcr.io/agones-images/simple-game-server:0.2" already present on machine
 ```
 
 Finally, you can also get the logs of your `GameServer` `Pod` as well via `kubectl logs <pod name> -c <game server container name>`, for example:
 
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl logs simple-udp-zqppv -c simple-udp
+root@6a71afd42291:/go/src/agones.dev/agones# kubectl logs simple-game-server-zqppv -c simple-game-server
 2019/08/16 21:26:23 Creating SDK instance
 2019/08/16 21:26:24 Starting Health Ping
 2019/08/16 21:26:24 Starting UDP server, listening on port 7654
@@ -219,7 +219,7 @@ root@6a71afd42291:/go/src/agones.dev/agones# kubectl logs simple-udp-zqppv -c si
 ```
 
 The above commands will only give the most recent container's logs (so we won't get the previous crash), but 
-you can use `kubectl logs --previous=true simple-udp-zqppv -c simple-udp` to get the previous instance of the containers logs, or 
+you can use `kubectl logs --previous=true simple-game-server-zqppv -c simple-game-server` to get the previous instance of the containers logs, or 
 use your Kubernetes platform of choice's logging aggregation tools to view the crash details.
 
 #### kubectl events
@@ -233,20 +233,20 @@ Therefore, even a `GameServer` or `Pod` resource is no longer available in the s
  all events across both the `GameServer` and its backing `Pod`, like so:
  
 ```shell script
-root@c9a845c474c2:/go/src/agones.dev/agones# kubectl get events | grep simple-udp-v992s-jwpx2
-2m47s       Normal   PortAllocation          gameserver/simple-udp-v992s-jwpx2   Port allocated
-2m47s       Normal   Creating                gameserver/simple-udp-v992s-jwpx2   Pod simple-udp-v992s-jwpx2 created
-2m47s       Normal   Scheduled               pod/simple-udp-v992s-jwpx2          Successfully assigned default/simple-udp-v992s-jwpx2 to gke-test-cluster-default-77e7f57d-j1mp
-2m47s       Normal   Scheduled               gameserver/simple-udp-v992s-jwpx2   Address and port populated
-2m46s       Normal   Pulled                  pod/simple-udp-v992s-jwpx2          Container image "gcr.io/agones-images/udp-server:0.21" already present on machine
-2m46s       Normal   Created                 pod/simple-udp-v992s-jwpx2          Created container simple-udp
-2m45s       Normal   Started                 pod/simple-udp-v992s-jwpx2          Started container simple-udp
-2m45s       Normal   Pulled                  pod/simple-udp-v992s-jwpx2          Container image "gcr.io/agones-images/agones-sdk:1.7.0" already present on machine
-2m45s       Normal   Created                 pod/simple-udp-v992s-jwpx2          Created container agones-gameserver-sidecar
-2m45s       Normal   Started                 pod/simple-udp-v992s-jwpx2          Started container agones-gameserver-sidecar
-2m45s       Normal   RequestReady            gameserver/simple-udp-v992s-jwpx2   SDK state change
-2m45s       Normal   Ready                   gameserver/simple-udp-v992s-jwpx2   SDK.Ready() complete
-2m47s       Normal   SuccessfulCreate        gameserverset/simple-udp-v992s      Created gameserver: simple-udp-v992s-jwpx2
+root@c9a845c474c2:/go/src/agones.dev/agones# kubectl get events | grep simple-game-server-v992s-jwpx2
+2m47s       Normal   PortAllocation          gameserver/simple-game-server-v992s-jwpx2   Port allocated
+2m47s       Normal   Creating                gameserver/simple-game-server-v992s-jwpx2   Pod simple-game-server-v992s-jwpx2 created
+2m47s       Normal   Scheduled               pod/simple-game-server-v992s-jwpx2          Successfully assigned default/simple-game-server-v992s-jwpx2 to gke-test-cluster-default-77e7f57d-j1mp
+2m47s       Normal   Scheduled               gameserver/simple-game-server-v992s-jwpx2   Address and port populated
+2m46s       Normal   Pulled                  pod/simple-game-server-v992s-jwpx2          Container image "gcr.io/agones-images/simple-game-server:0.2" already present on machine
+2m46s       Normal   Created                 pod/simple-game-server-v992s-jwpx2          Created container simple-game-server
+2m45s       Normal   Started                 pod/simple-game-server-v992s-jwpx2          Started container simple-game-server
+2m45s       Normal   Pulled                  pod/simple-game-server-v992s-jwpx2          Container image "gcr.io/agones-images/agones-sdk:1.7.0" already present on machine
+2m45s       Normal   Created                 pod/simple-game-server-v992s-jwpx2          Created container agones-gameserver-sidecar
+2m45s       Normal   Started                 pod/simple-game-server-v992s-jwpx2          Started container agones-gameserver-sidecar
+2m45s       Normal   RequestReady            gameserver/simple-game-server-v992s-jwpx2   SDK state change
+2m45s       Normal   Ready                   gameserver/simple-game-server-v992s-jwpx2   SDK.Ready() complete
+2m47s       Normal   SuccessfulCreate        gameserverset/simple-game-server-v992s      Created gameserver: simple-game-server-v992s-jwpx2
 ```
 
 #### Other techniques 
@@ -270,11 +270,11 @@ same network namespace as the game server container to connect to via the SDK.
 The logs from this SDK server are also useful for tracking down issues, especially if you are having trouble with a
 particular `GameServer`.   
    1. To find the `Pod` for the `GameServer` look for the pod with a name that is prefixed with the name of the 
-   owning `GameServer`. For example if you have a `GameServer` named `simple-udp`, it's pod could potentially be named
-   `simple-udp-dnbwj`.
+   owning `GameServer`. For example if you have a `GameServer` named `simple-game-server`, it's pod could potentially be named
+   `simple-game-server-dnbwj`.
    2. To get the logs from that `Pod`, we need to specify that we want the logs from the `agones-gameserver-sidecar`
    container. To do that, run the following:   
-   `kubectl logs simple-udp-dnbwj -c agones-gameserver-sidecar`
+   `kubectl logs simple-game-server-dnbwj -c agones-gameserver-sidecar`
 
 Agones uses JSON structured logging, therefore errors will be visible through the `"severity":"info"` key and value.       
 

@@ -18,6 +18,7 @@
 package workerqueue
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -36,9 +37,35 @@ const (
 	workFx = time.Second
 )
 
+// debugError is a marker type for errors that that should only be logged at a Debug level.
+// Useful if you want a Handler to be retried, but not logged at an Error level.
+type debugError struct {
+	err error
+}
+
+// NewDebugError returns a debugError wrapper around an error.
+func NewDebugError(err error) error {
+	return &debugError{err: err}
+}
+
+// Error returns the error string
+func (l *debugError) Error() string {
+	if l.err == nil {
+		return "<nil>"
+	}
+	return l.err.Error()
+}
+
+// isDebugError returns if the error is a debug error or not
+func isDebugError(err error) bool {
+	cause := errors.Cause(err)
+	_, ok := cause.(*debugError)
+	return ok
+}
+
 // Handler is the handler for processing the work queue
 // This is usually a syncronisation handler for a controller or related
-type Handler func(string) error
+type Handler func(context.Context, string) error
 
 // WorkerQueue is an opinionated queue + worker for use
 // with controllers and related and processing Kubernetes watched
@@ -125,14 +152,14 @@ func (wq *WorkerQueue) EnqueueAfter(obj interface{}, duration time.Duration) {
 // runWorker is a long-running function that will continually call the
 // processNextWorkItem function in order to read and process a message on the
 // workqueue.
-func (wq *WorkerQueue) runWorker() {
-	for wq.processNextWorkItem() {
+func (wq *WorkerQueue) runWorker(ctx context.Context) {
+	for wq.processNextWorkItem(ctx) {
 	}
 }
 
 // processNextWorkItem processes the next work item.
 // pretty self explanatory :)
-func (wq *WorkerQueue) processNextWorkItem() bool {
+func (wq *WorkerQueue) processNextWorkItem(ctx context.Context) bool {
 	obj, quit := wq.queue.Get()
 	if quit {
 		return false
@@ -150,9 +177,10 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 		return true
 	}
 
-	if err := wq.SyncHandler(key); err != nil {
+	if err := wq.SyncHandler(ctx, key); err != nil {
 		// Conflicts are expected, so only show them in debug operations.
-		if k8serror.IsConflict(errors.Cause(err)) {
+		// Also check is debugError for other expected errors.
+		if k8serror.IsConflict(errors.Cause(err)) || isDebugError(err) {
 			wq.logger.WithField(wq.keyName, obj).Debug(err)
 		} else {
 			runtime.HandleError(wq.logger.WithField(wq.keyName, obj), err)
@@ -169,22 +197,22 @@ func (wq *WorkerQueue) processNextWorkItem() bool {
 
 // Run the WorkerQueue processing via the Handler. Will block until stop is closed.
 // Runs a certain number workers to process the rate limited queue
-func (wq *WorkerQueue) Run(workers int, stop <-chan struct{}) {
+func (wq *WorkerQueue) Run(ctx context.Context, workers int) {
 	wq.setWorkerCount(workers)
 	wq.logger.WithField("workers", workers).Info("Starting workers...")
 	for i := 0; i < workers; i++ {
-		go wq.run(stop)
+		go wq.run(ctx)
 	}
 
-	<-stop
+	<-ctx.Done()
 	wq.logger.Info("...shutting down workers")
 	wq.queue.ShutDown()
 }
 
-func (wq *WorkerQueue) run(stop <-chan struct{}) {
+func (wq *WorkerQueue) run(ctx context.Context) {
 	wq.inc()
 	defer wq.dec()
-	wait.Until(wq.runWorker, workFx, stop)
+	wait.Until(func() { wq.runWorker(ctx) }, workFx, ctx.Done())
 }
 
 // Healthy reports whether all the worker goroutines are running.

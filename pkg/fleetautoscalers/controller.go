@@ -15,6 +15,7 @@
 package fleetautoscalers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -36,10 +37,10 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ import (
 // Controller is a the FleetAutoscaler controller
 type Controller struct {
 	baseLogger            *logrus.Entry
-	crdGetter             v1beta1.CustomResourceDefinitionInterface
+	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
 	fleetGetter           typedagonesv1.FleetsGetter
 	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
@@ -76,7 +77,7 @@ func NewController(
 	autoscaler := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
-		crdGetter:             extClient.ApiextensionsV1beta1().CustomResourceDefinitions(),
+		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -94,8 +95,8 @@ func NewController(
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
 	kind := autoscalingv1.Kind("FleetAutoscaler")
-	wh.AddHandler("/validate", kind, admv1beta1.Create, c.validationHandler)
-	wh.AddHandler("/validate", kind, admv1beta1.Update, c.validationHandler)
+	wh.AddHandler("/validate", kind, admissionv1.Create, c.validationHandler)
+	wh.AddHandler("/validate", kind, admissionv1.Update, c.validationHandler)
 
 	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: c.workerqueue.Enqueue,
@@ -109,18 +110,18 @@ func NewController(
 
 // Run the FleetAutoscaler controller. Will block until stop is closed.
 // Runs threadiness number workers to process the rate limited queue
-func (c *Controller) Run(workers int, stop <-chan struct{}) error {
-	err := crd.WaitForEstablishedCRD(c.crdGetter, "fleetautoscalers."+autoscaling.GroupName, c.baseLogger)
+func (c *Controller) Run(ctx context.Context, workers int) error {
+	err := crd.WaitForEstablishedCRD(ctx, c.crdGetter, "fleetautoscalers."+autoscaling.GroupName, c.baseLogger)
 	if err != nil {
 		return err
 	}
 
 	c.baseLogger.Debug("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.fleetSynced, c.fleetAutoscalerSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), c.fleetSynced, c.fleetAutoscalerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	c.workerqueue.Run(workers, stop)
+	c.workerqueue.Run(ctx, workers)
 	return nil
 }
 
@@ -138,7 +139,7 @@ func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler
 
 // validationHandler will intercept when a FleetAutoscaler is created, and
 // validate its settings.
-func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1beta1.AdmissionReview, error) {
+func (c *Controller) validationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 	obj := review.Request.Object
 	fas := &autoscalingv1.FleetAutoscaler{}
 	err := json.Unmarshal(obj.Raw, fas)
@@ -170,7 +171,7 @@ func (c *Controller) validationHandler(review admv1beta1.AdmissionReview) (admv1
 
 // syncFleetAutoscaler scales the attached fleet and
 // synchronizes the FleetAutoscaler CRD
-func (c *Controller) syncFleetAutoscaler(key string) error {
+func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error {
 	c.loggerForFleetAutoscalerKey(key).Debug("Synchronising")
 
 	// Convert the namespace/name string into a distinct namespace and name
@@ -203,7 +204,7 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 			err = nil
 		}
 
-		if err := c.updateStatusUnableToScale(fas); err != nil {
+		if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
 			return err
 		}
 
@@ -216,26 +217,26 @@ func (c *Controller) syncFleetAutoscaler(key string) error {
 		c.recorder.Eventf(fas, corev1.EventTypeWarning, "FleetAutoscaler",
 			"Error calculating desired fleet size on FleetAutoscaler %s. Error: %s", fas.ObjectMeta.Name, err.Error())
 
-		if err := c.updateStatusUnableToScale(fas); err != nil {
+		if err := c.updateStatusUnableToScale(ctx, fas); err != nil {
 			return err
 		}
 		return errors.Wrapf(err, "error calculating autoscaling fleet: %s", fleet.ObjectMeta.Name)
 	}
 
 	// Scale the fleet to the new size
-	if err = c.scaleFleet(fas, fleet, desiredReplicas); err != nil {
+	if err = c.scaleFleet(ctx, fas, fleet, desiredReplicas); err != nil {
 		return errors.Wrapf(err, "error autoscaling fleet %s to %d replicas", fas.Spec.FleetName, desiredReplicas)
 	}
 
-	return c.updateStatus(fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
+	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
 }
 
 // scaleFleet scales the fleet of the autoscaler to a new number of replicas
-func (c *Controller) scaleFleet(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet, replicas int32) error {
+func (c *Controller) scaleFleet(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, f *agonesv1.Fleet, replicas int32) error {
 	if replicas != f.Spec.Replicas {
 		fCopy := f.DeepCopy()
 		fCopy.Spec.Replicas = replicas
-		fCopy, err := c.fleetGetter.Fleets(f.ObjectMeta.Namespace).Update(fCopy)
+		fCopy, err := c.fleetGetter.Fleets(f.ObjectMeta.Namespace).Update(ctx, fCopy, metav1.UpdateOptions{})
 		if err != nil {
 			c.recorder.Eventf(fas, corev1.EventTypeWarning, "AutoScalingFleetError",
 				"Error on scaling fleet %s from %d to %d. Error: %s", fCopy.ObjectMeta.Name, f.Spec.Replicas, fCopy.Spec.Replicas, err.Error())
@@ -250,7 +251,7 @@ func (c *Controller) scaleFleet(fas *autoscalingv1.FleetAutoscaler, f *agonesv1.
 }
 
 // updateStatus updates the status of the given FleetAutoscaler
-func (c *Controller) updateStatus(fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
+func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetAutoscaler, currentReplicas int32, desiredReplicas int32, scaled bool, scalingLimited bool) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = true
 	fasCopy.Status.ScalingLimited = scalingLimited
@@ -266,7 +267,7 @@ func (c *Controller) updateStatus(fas *autoscalingv1.FleetAutoscaler, currentRep
 			c.recorder.Eventf(fas, corev1.EventTypeWarning, "ScalingLimited", "Scaling fleet %s was limited to maximum size of %d", fas.Spec.FleetName, desiredReplicas)
 		}
 
-		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(fasCopy)
+		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(ctx, fasCopy, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error updating status for fleetautoscaler %s", fas.ObjectMeta.Name)
 		}
@@ -276,7 +277,7 @@ func (c *Controller) updateStatus(fas *autoscalingv1.FleetAutoscaler, currentRep
 }
 
 // updateStatus updates the status of the given FleetAutoscaler in the case we're not able to scale
-func (c *Controller) updateStatusUnableToScale(fas *autoscalingv1.FleetAutoscaler) error {
+func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) error {
 	fasCopy := fas.DeepCopy()
 	fasCopy.Status.AbleToScale = false
 	fasCopy.Status.ScalingLimited = false
@@ -284,7 +285,7 @@ func (c *Controller) updateStatusUnableToScale(fas *autoscalingv1.FleetAutoscale
 	fasCopy.Status.DesiredReplicas = 0
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
-		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(fasCopy)
+		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(ctx, fasCopy, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error updating status for fleetautoscaler %s", fas.ObjectMeta.Name)
 		}

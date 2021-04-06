@@ -16,6 +16,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -209,27 +210,27 @@ func main() {
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory)
+	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
 	rs = append(rs,
 		httpsServer, gsCounter, gsController, gsSetController, fleetController, fasController, gasController, server)
 
-	stop := signals.NewStopChannel()
+	ctx := signals.NewSigKillContext()
 
-	kubeInformerFactory.Start(stop)
-	agonesInformerFactory.Start(stop)
+	kubeInformerFactory.Start(ctx.Done())
+	agonesInformerFactory.Start(ctx.Done())
 
 	for _, r := range rs {
 		go func(rr runner) {
-			if runErr := rr.Run(ctlConf.NumWorkers, stop); runErr != nil {
+			if runErr := rr.Run(ctx, ctlConf.NumWorkers); runErr != nil {
 				logger.WithError(runErr).Fatalf("could not start runner: %T", rr)
 			}
 		}(r)
 	}
 
-	<-stop
+	<-ctx.Done()
 	logger.Info("Shut down agones controllers")
 }
 
@@ -403,14 +404,14 @@ func (c *config) validate() []error {
 }
 
 type runner interface {
-	Run(workers int, stop <-chan struct{}) error
+	Run(ctx context.Context, workers int) error
 }
 
 type httpServer struct {
 	http.ServeMux
 }
 
-func (h *httpServer) Run(workers int, stop <-chan struct{}) error {
+func (h *httpServer) Run(_ context.Context, _ int) error {
 	logger.Info("Starting http server...")
 	srv := &http.Server{
 		Addr:    ":8080",

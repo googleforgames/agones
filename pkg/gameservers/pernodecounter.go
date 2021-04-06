@@ -15,6 +15,7 @@
 package gameservers
 
 import (
+	"context"
 	"sync"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -134,13 +135,13 @@ func NewPerNodeCounter(
 
 // Run sets up the current state GameServer counts across nodes
 // non blocking Run function.
-func (pnc *PerNodeCounter) Run(_ int, stop <-chan struct{}) error {
+func (pnc *PerNodeCounter) Run(ctx context.Context, _ int) error {
 	pnc.countMutex.Lock()
 	defer pnc.countMutex.Unlock()
 
 	pnc.logger.Debug("Running")
 
-	if !cache.WaitForCacheSync(stop, pnc.gameServerSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), pnc.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 

@@ -15,9 +15,16 @@
 #
 # This is a Helm 3.x module, and is the module that should be actively used.
 #
-
+terraform {
+  required_version = ">= 0.12.6"
+  required_providers {
+    helm                   = {
+      version = "~> 1.2"
+      source = "hashicorp/helm"
+    }
+  }     
+}
 provider "helm" {
-  version = "~> 1.2"
   kubernetes {
     load_config_file       = false
     host                   = var.host
@@ -29,7 +36,7 @@ provider "helm" {
 resource "helm_release" "agones" {
   name         = "agones"
   repository   = "https://agones.dev/chart/stable"
-  force_update = "true"
+  force_update = var.force_update
   chart        = var.chart
   timeout      = 420
   version      = var.agones_version

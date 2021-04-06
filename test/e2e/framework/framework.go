@@ -17,6 +17,8 @@
 package framework
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -153,7 +155,7 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, ".kube", "config"))
-	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/simple-game-server:0.1")
+	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/simple-game-server:0.3")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
@@ -162,7 +164,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetDefault(namespaceFlag, "")
 
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
-	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/simple-game-server:0.1")
+	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/simple-game-server:0.3")
 	pflag.String(pullSecretFlag, viper.GetString(pullSecretFlag), "optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
 	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
@@ -208,7 +210,7 @@ func NewFromFlags() (*Framework, error) {
 
 // CreateGameServerAndWaitUntilReady Creates a GameServer and wait for its state to become ready.
 func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
-	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(gs)
+	newGs, err := f.AgonesClient.AgonesV1().GameServers(ns).Create(context.Background(), gs, metav1.CreateOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("creating %v GameServer instances failed (%v): %v", gs.Spec, gs.Name, err)
 	}
@@ -221,8 +223,18 @@ func (f *Framework) CreateGameServerAndWaitUntilReady(ns string, gs *agonesv1.Ga
 		return nil, fmt.Errorf("waiting for %v GameServer instance readiness timed out (%v): %v",
 			gs.Spec, gs.Name, err)
 	}
-	if len(readyGs.Status.Ports) == 0 {
-		return nil, fmt.Errorf("Ready GameServer instance has no port: %v", readyGs.Status)
+
+	expectedPortCount := len(gs.Spec.Ports)
+	if expectedPortCount > 0 {
+		for _, port := range gs.Spec.Ports {
+			if port.Protocol == agonesv1.ProtocolTCPUDP {
+				expectedPortCount++
+			}
+		}
+	}
+
+	if len(readyGs.Status.Ports) != expectedPortCount {
+		return nil, fmt.Errorf("Ready GameServer instance has %d port(s), want %d", len(readyGs.Status.Ports), expectedPortCount)
 	}
 
 	logrus.WithField("gs", newGs.ObjectMeta.Name).Info("GameServer Ready")
@@ -237,7 +249,7 @@ func (f *Framework) WaitForGameServerStateWithLogger(logger *logrus.Entry, gs *a
 
 	err := wait.PollImmediate(1*time.Second, timeout, func() (bool, error) {
 		var err error
-		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(gs.Name, metav1.GetOptions{})
+		checkGs, err = f.AgonesClient.AgonesV1().GameServers(gs.Namespace).Get(context.Background(), gs.Name, metav1.GetOptions{})
 
 		if err != nil {
 			logrus.WithError(err).Warn("error retrieving gameserver")
@@ -280,7 +292,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 	t.Helper()
 	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
-		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(flt.ObjectMeta.Name, metav1.GetOptions{})
+		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(context.Background(), flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -300,7 +312,7 @@ func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscali
 	t.Helper()
 	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
-		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(fas.ObjectMeta.Name, metav1.GetOptions{})
+		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(context.Background(), fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
 			return true, err
 		}
@@ -318,7 +330,7 @@ func (f *Framework) ListGameServersFromFleet(flt *agonesv1.Fleet) ([]agonesv1.Ga
 	var results []agonesv1.GameServer
 
 	opts := metav1.ListOptions{LabelSelector: labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}.String()}
-	gsSetList, err := f.AgonesClient.AgonesV1().GameServerSets(flt.ObjectMeta.Namespace).List(opts)
+	gsSetList, err := f.AgonesClient.AgonesV1().GameServerSets(flt.ObjectMeta.Namespace).List(context.Background(), opts)
 	if err != nil {
 		return results, err
 	}
@@ -326,7 +338,7 @@ func (f *Framework) ListGameServersFromFleet(flt *agonesv1.Fleet) ([]agonesv1.Ga
 	for i := range gsSetList.Items {
 		gsSet := &gsSetList.Items[i]
 		opts := metav1.ListOptions{LabelSelector: labels.Set{agonesv1.GameServerSetGameServerLabel: gsSet.ObjectMeta.Name}.String()}
-		gsList, err := f.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).List(opts)
+		gsList, err := f.AgonesClient.AgonesV1().GameServers(flt.ObjectMeta.Namespace).List(context.Background(), opts)
 		if err != nil {
 			return results, err
 		}
@@ -391,12 +403,13 @@ func (f *Framework) CleanUp(ns string) error {
 	logrus.Info("Cleaning up now.")
 	defer logrus.Info("Finished cleanup.")
 	agonesV1 := f.AgonesClient.AgonesV1()
-	deleteOptions := &metav1.DeleteOptions{}
+	deleteOptions := metav1.DeleteOptions{}
 	listOptions := metav1.ListOptions{}
 
 	// find and delete pods created by tests and labeled with our special label
 	pods := f.KubeClient.CoreV1().Pods(ns)
-	podList, err := pods.List(metav1.ListOptions{
+	ctx := context.Background()
+	podList, err := pods.List(ctx, metav1.ListOptions{
 		LabelSelector: AutoCleanupLabelKey + "=" + AutoCleanupLabelValue,
 	})
 	if err != nil {
@@ -405,29 +418,29 @@ func (f *Framework) CleanUp(ns string) error {
 
 	for i := range podList.Items {
 		p := &podList.Items[i]
-		if err := pods.Delete(p.ObjectMeta.Name, deleteOptions); err != nil {
+		if err := pods.Delete(ctx, p.ObjectMeta.Name, deleteOptions); err != nil {
 			return err
 		}
 	}
 
-	err = agonesV1.Fleets(ns).DeleteCollection(deleteOptions, listOptions)
+	err = agonesV1.Fleets(ns).DeleteCollection(ctx, deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
-	err = f.AgonesClient.AutoscalingV1().FleetAutoscalers(ns).DeleteCollection(deleteOptions, listOptions)
+	err = f.AgonesClient.AutoscalingV1().FleetAutoscalers(ns).DeleteCollection(ctx, deleteOptions, listOptions)
 	if err != nil {
 		return err
 	}
 
 	return agonesV1.GameServers(ns).
-		DeleteCollection(deleteOptions, listOptions)
+		DeleteCollection(ctx, deleteOptions, listOptions)
 }
 
 // CreateAndApplyAllocation creates and applies an Allocation to a Fleet
 func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 	gsa := GetAllocation(flt)
-	gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(gsa)
+	gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
 	if !assert.NoError(t, err) {
 		assert.FailNow(t, "gameserverallocation could not be created")
 	}
@@ -436,13 +449,20 @@ func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) 
 }
 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
-// assumes the first port is the port to send the message to,
+// finds the first udp port from the spec to send the message to,
 // returns error if no Ports were allocated
 func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
-	return SendGameServerUDPToPort(gs, gs.Status.Ports[0].Name, msg)
+
+	// use first udp port
+	for _, p := range gs.Spec.Ports {
+		if p.Protocol == corev1.ProtocolUDP {
+			return SendGameServerUDPToPort(gs, p.Name, msg)
+		}
+	}
+	return "", errors.New("No UDP ports")
 }
 
 // SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
@@ -488,6 +508,68 @@ func SendUDP(address, msg string) (string, error) {
 	return string(b[:n]), nil
 }
 
+// SendGameServerTCP sends a message to a gameserver and returns its reply
+// finds the first tcp port from the spec to send the message to,
+// returns error if no Ports were allocated
+func SendGameServerTCP(gs *agonesv1.GameServer, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+
+	// use first tcp port
+	for _, p := range gs.Spec.Ports {
+		if p.Protocol == corev1.ProtocolTCP {
+			return SendGameServerTCPToPort(gs, p.Name, msg)
+		}
+	}
+	return "", errors.New("No UDP ports")
+}
+
+// SendGameServerTCPToPort sends a message to a gameserver at the named port and returns its reply
+// returns error if no Ports were allocated or a port of the specified name doesn't exist
+func SendGameServerTCPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	if len(gs.Status.Ports) == 0 {
+		return "", errors.New("Empty Ports array")
+	}
+	var port agonesv1.GameServerStatusPort
+	for _, p := range gs.Status.Ports {
+		if p.Name == portName {
+			port = p
+		}
+	}
+	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
+	return SendTCP(address, msg)
+}
+
+// SendTCP sends a message to an address, and returns its reply if
+// it returns one in 30 seconds
+func SendTCP(address, msg string) (string, error) {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return "", err
+	}
+
+	if err := conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+		return "", err
+	}
+
+	defer func() {
+		if err := conn.Close(); err != nil {
+			logrus.Warn("Could not close TCP connection")
+		}
+	}()
+
+	// writes to the tcp connection
+	fmt.Fprintf(conn, msg+"\n")
+
+	response, err := bufio.NewReader(conn).ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	return response, nil
+}
+
 // GetAllocation returns a GameServerAllocation that is looking for a Ready
 // GameServer from this fleet.
 func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
@@ -508,19 +590,22 @@ func (f *Framework) CreateNamespace(namespace string) error {
 		},
 	}
 
-	if _, err := kubeCore.Namespaces().Create(ns); err != nil {
+	ctx := context.Background()
+
+	options := metav1.CreateOptions{}
+	if _, err := kubeCore.Namespaces().Create(ctx, ns, options); err != nil {
 		return errors.Errorf("creating namespace %s failed: %s", namespace, err.Error())
 	}
 	logrus.Infof("Namespace %s is created", namespace)
 
 	saName := "agones-sdk"
-	if _, err := kubeCore.ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
+	if _, err := kubeCore.ServiceAccounts(namespace).Create(ctx, &corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      saName,
 			Namespace: namespace,
 			Labels:    map[string]string{"app": "agones"},
 		},
-	}); err != nil {
+	}, options); err != nil {
 		err = errors.Errorf("creating ServiceAccount %s in namespace %s failed: %s", saName, namespace, err.Error())
 		derr := f.DeleteNamespace(namespace)
 		if derr != nil {
@@ -549,7 +634,7 @@ func (f *Framework) CreateNamespace(namespace string) error {
 			},
 		},
 	}
-	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(rb); err != nil {
+	if _, err := f.KubeClient.RbacV1().RoleBindings(namespace).Create(ctx, rb, options); err != nil {
 		err = errors.Errorf("creating RoleBinding for service account %q in namespace %q failed: %s", saName, namespace, err.Error())
 		derr := f.DeleteNamespace(namespace)
 		if derr != nil {
@@ -565,9 +650,10 @@ func (f *Framework) CreateNamespace(namespace string) error {
 // DeleteNamespace deletes a namespace from the test cluster
 func (f *Framework) DeleteNamespace(namespace string) error {
 	kubeCore := f.KubeClient.CoreV1()
+	ctx := context.Background()
 
 	// Remove finalizers
-	pods, err := kubeCore.Pods(namespace).List(metav1.ListOptions{})
+	pods, err := kubeCore.Pods(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return errors.Errorf("listing pods in namespace %s failed: %s", namespace, err)
 	}
@@ -580,13 +666,13 @@ func (f *Framework) DeleteNamespace(namespace string) error {
 				Path: "/metadata/finalizers",
 			}}
 			payloadBytes, _ := json.Marshal(payload)
-			if _, err := kubeCore.Pods(namespace).Patch(pod.Name, types.JSONPatchType, payloadBytes); err != nil {
+			if _, err := kubeCore.Pods(namespace).Patch(ctx, pod.Name, types.JSONPatchType, payloadBytes, metav1.PatchOptions{}); err != nil {
 				return errors.Wrapf(err, "updating pod %s failed", pod.GetName())
 			}
 		}
 	}
 
-	if err := kubeCore.Namespaces().Delete(namespace, &metav1.DeleteOptions{}); err != nil {
+	if err := kubeCore.Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{}); err != nil {
 		return errors.Wrapf(err, "deleting namespace %s failed", namespace)
 	}
 	logrus.Infof("Namespace %s is deleted", namespace)
@@ -601,19 +687,19 @@ type patchRemoveNoValue struct {
 // DefaultGameServer provides a default GameServer fixture, based on parameters
 // passed to the Test Framework.
 func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
-	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "udp-server", Namespace: namespace},
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{GenerateName: "game-server", Namespace: namespace},
 		Spec: agonesv1.GameServerSpec{
-			Container: "udp-server",
+			Container: "game-server",
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
-				Name:          "gameport",
+				Name:          "udp-port",
 				PortPolicy:    agonesv1.Dynamic,
 				Protocol:      corev1.ProtocolUDP,
 			}},
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{{
-						Name:            "udp-server",
+						Name:            "game-server",
 						Image:           f.GameServerImage,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Resources: corev1.ResourceRequirements{

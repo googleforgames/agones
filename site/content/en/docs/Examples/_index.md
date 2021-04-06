@@ -10,6 +10,7 @@ weight: 120
 These are full examples for each of the resource types of Agones
 
 - {{< ghlink href="examples/gameserver.yaml" >}}Full GameServer Configuration{{< /ghlink >}}
+- {{< ghlink href="examples/gameserver-windows.yaml" >}}Full GameServer Configuration (for Windows){{< /ghlink >}}
 - {{< ghlink href="examples/fleet.yaml" >}}Full Fleet Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/gameserverallocation.yaml" >}}Full GameServer Allocation Configuration{{< /ghlink >}}
 - {{< ghlink href="examples/fleetautoscaler.yaml" >}}Full Autoscaler Configuration with Buffer Strategy{{< /ghlink >}}
@@ -20,20 +21,19 @@ These are full examples for each of the resource types of Agones
 
 These are all examples of simple game server implementations, that integrate the Agones game server SDK. 
 
-- {{< ghlink href="examples/simple-udp" >}}Simple UDP{{< /ghlink >}} (Go) - simple server and client that send UDP packets back and forth.
-- {{< ghlink href="examples/simple-tcp" >}}Simple TCP{{< /ghlink >}} (Go) - simple server that responds to new-line delimited messages sent over a TCP connection.
-{{% feature publishVersion="1.9.0" %}}
-- {{< ghlink href="examples/simple-game-server" >}}Simple gameserver{{< /ghlink >}} (Go) - simple server that responds to TCP connections or UDP packets on the same port.
-{{% /feature %}}
-- {{< ghlink href="examples/cpp-simple" >}}CPP Simple{{< /ghlink >}} (C++) - C++ example that starts up, stays healthy and then shuts down after 60 seconds.
-- {{< ghlink href="examples/nodejs-simple" >}}Node.js Simple{{< /ghlink >}} (Node.js) -
+* {{< ghlink href="examples/simple-game-server" >}}Simple gameserver{{< /ghlink >}} (Go) - simple server that 
+  responds to TCP connections or UDP packets on the same port.
+* {{< ghlink href="examples/cpp-simple" >}}CPP Simple{{< /ghlink >}} (C++) - C++ example that starts up, stays 
+  healthy and then shuts down after 60 seconds.
+* {{< ghlink href="examples/nodejs-simple" >}}Node.js Simple{{< /ghlink >}} (Node.js) -
   A simple Node.js example that marks itself as ready, sets some labels and then shutsdown.
-- {{< ghlink href="examples/rust-simple" >}}Rust Simple{{< /ghlink >}} (Rust) -
+* {{< ghlink href="examples/rust-simple" >}}Rust Simple{{< /ghlink >}} (Rust) -
   A simple Rust example that marks itself as ready, sets some labels and then shutsdown.
-- {{< ghlink href="examples/unity-simple" >}}Unity Simple{{< /ghlink >}} (Unity3d)  - 
+* {{< ghlink href="examples/unity-simple" >}}Unity Simple{{< /ghlink >}} (Unity3d)  -
   This is a very simple "unity server" that doesn't do much other than show how the SDK works in Unity.
-- {{< ghlink href="examples/xonotic" >}}Xonotic{{< /ghlink >}} - Wraps the SDK around the open source FPS game [Xonotic](http://www.xonotic.org) and hosts it on Agones.
-- {{< ghlink href="examples/supertuxkart" >}}SuperTuxKart{{< /ghlink >}} \- Wraps the SDK around the open source
+* {{< ghlink href="examples/xonotic" >}}Xonotic{{< /ghlink >}} - Wraps the SDK around the open source FPS game 
+  [Xonotic](http://www.xonotic.org) and hosts it on Agones.
+* {{< ghlink href="examples/supertuxkart" >}}SuperTuxKart{{< /ghlink >}} \- Wraps the SDK around the open source
   racing game [SuperTuxKart](https://supertuxkart.net/), and hosts it on Agones.
 
 ## Building on top of Agones

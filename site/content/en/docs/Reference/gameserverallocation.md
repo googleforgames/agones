@@ -25,8 +25,10 @@ spec:
       game: my-game
     matchExpressions:
       - {key: tier, operator: In, values: [cache]}
-  # ordered list of preferred allocations out of the `required` set.
+  # An ordered list of preferred GameServer label selectors
+  # that are optional to be fulfilled, but will be searched before the `required` selector.
   # If the first selector is not matched, the selection attempts the second selector, and so on.
+  # If any of the preferred selectors are matched, the required selector is not considered.
   # This is useful for things like smoke testing of new game servers.
   # This also support `matchExpressions`
   preferred:
@@ -55,13 +57,15 @@ name for the `GameServerAllocation` is generated when the `GameServerAllocation`
 
 The `spec` field is the actual `GameServerAllocation` specification and it is composed as follow:
 
-- `required` is a [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) 
-   (matchLabels and/or matchExpressions) from which to choose GameServers from.
-   GameServers still have the hard requirement to be `Ready` to be allocated from
-- `preferred` is an order list of [label selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
-   out of the `required` set.
-   If the first selector is not matched, the selection attempts the second selector, and so on.
-   This is useful for things like smoke testing of new game servers. 
+- `required` is a [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+  (matchLabels and/or matchExpressions) from which to choose GameServers from.
+  GameServers still have the hard requirement to be `Ready` to be allocated from
+- `preferred` is an ordered list of preferred
+  [label selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+  that are _optional_ to be fulfilled, but will be searched before the `required` selector.
+  If the first selector is not matched, the selection attempts the second selector, and so on.
+  If any of the `preferred` selectors are matched, the `required` selector is not considered.
+  This is useful for things like smoke testing of new game servers.
 - `scheduling` defines how GameServers are organised across the cluster, in this case specifically when allocating
   `GameServers` for usage.
    "Packed" (default) is aimed at dynamic Kubernetes clusters, such as cloud providers, wherein we want to bin pack

@@ -232,7 +232,7 @@ steps:
 #
 
 - name: 'e2e-runner'
-  args: ['PlayerTracking=true&ContainerPortAllocation=false&SDKWatchSendOnExecute=true', 'e2e-test-cluster']
+  args: ['PlayerTracking=true&SDKWatchSendOnExecute=false&RollingUpdateOnReady=false&NodeExternalDNS=true', 'e2e-test-cluster']
   id: e2e-feature-gates
   waitFor:
     - push-images
@@ -259,6 +259,7 @@ steps:
   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
     - build-images
+    - tests
 
 #
 # Cache the CPP conformance build directory, to speed up subsequent builds (considerably)
@@ -313,8 +314,8 @@ substitutions:
   _RUST_SDK_BUILD_CACHE_KEY: rust-sdk-build
 
 tags: ['ci']
-timeout: "2h"
-images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-sdk', 'gcr.io/$PROJECT_ID/agones-ping']
+timeout: 7200s
+images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
  machineType: 'N1_HIGHCPU_32'

@@ -125,10 +125,10 @@ class AgonesUser(HttpLocust):
                             "spec": {
                                 "containers": [
                                     {
-                                        "name": "simple-udp",
+                                        "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/udp-server:0.9"),
+                                            "/simple-game-server:0.3"),
                                         "resources": {
                                             "limits": {
                                                 "cpu": "20m",

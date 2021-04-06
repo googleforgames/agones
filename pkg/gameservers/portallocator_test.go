@@ -52,14 +52,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		// (no longer an issue, but leave this here for posterity)
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -110,6 +110,29 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		assert.NotEmpty(t, gsCopy.Spec.Ports[0].HostPort)
 		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[0].ContainerPort)
 		assert.Equal(t, 11, countTotalAllocatedPorts(pa))
+
+		// single port to two ports, tcpudp
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports[0] = agonesv1.GameServerPort{Name: "gameport", PortPolicy: agonesv1.Dynamic, Protocol: agonesv1.ProtocolTCPUDP}
+
+		gs = pa.Allocate(gsCopy)
+		require.NotNil(t, gs)
+		assert.Equal(t, gsCopy.Spec.Ports[0].HostPort, gsCopy.Spec.Ports[1].HostPort)
+
+		assert.Equal(t, corev1.ProtocolTCP, gsCopy.Spec.Ports[0].Protocol)
+		assert.Equal(t, corev1.ProtocolUDP, gsCopy.Spec.Ports[1].Protocol)
+		assert.Equal(t, "gameport-tcp", gsCopy.Spec.Ports[0].Name)
+		assert.Equal(t, "gameport-udp", gsCopy.Spec.Ports[1].Name)
+		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
+
+		// no port
+		gsCopy = fixture.DeepCopy()
+		gsCopy.Spec.Ports = nil
+		assert.Len(t, gsCopy.Spec.Ports, 0)
+		pa.Allocate(gsCopy)
+		assert.Nil(t, gsCopy.Spec.Ports)
+		assert.Nil(t, err)
+		assert.Equal(t, 12, countTotalAllocatedPorts(pa))
 	})
 
 	t.Run("ports are all allocated", func(t *testing.T) {
@@ -118,13 +141,13 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -154,7 +177,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		morePortFixture := fixture.DeepCopy()
@@ -166,7 +189,7 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		// Make sure the add's don't corrupt the sync
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)
@@ -245,14 +268,14 @@ func TestPortAllocatorAllocate(t *testing.T) {
 		nodeWatch := watch.NewFake()
 		m.KubeClient.AddWatchReactor("nodes", k8stesting.DefaultWatchReactor(nodeWatch, nil))
 
-		stop, cancel := agtesting.StartInformers(m, pa.nodeSynced)
+		ctx, cancel := agtesting.StartInformers(m, pa.nodeSynced)
 		defer cancel()
 
 		// Make sure the add's don't corrupt the sync
 		// (no longer an issue, but leave this here for posterity)
 		nodeWatch.Add(&n1)
 		nodeWatch.Add(&n2)
-		assert.True(t, cache.WaitForCacheSync(stop, pa.nodeSynced))
+		assert.True(t, cache.WaitForCacheSync(ctx.Done(), pa.nodeSynced))
 
 		err := pa.syncAll()
 		require.NoError(t, err)

@@ -1,0 +1,66 @@
+# Copyright 2020 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{/* schema for a gameserver status */}}
+{{- define "gameserver.status" }}
+status:
+  type: object
+  title: The status values for the GameServer
+  properties:
+    state:
+      type: string
+      enum:
+        - PortAllocation
+        - Creating
+        - Starting
+        - Scheduled
+        - RequestReady
+        - Ready
+        - Shutdown
+        - Error
+        - Unhealthy
+        - Reserved
+        - Allocated
+    ports:
+      type: array
+      nullable: true
+      items:
+        type: object
+        properties:
+          name:
+            type: string
+          port:
+            type: integer
+    address:
+      type: string
+    nodeName:
+      type: string
+    reservedUntil:
+      type: string
+      nullable: true
+      format: date-time
+    players:
+      type: object
+      nullable: true
+      properties:
+        count:
+          type: integer
+        capacity:
+          type: integer
+        ids:
+          type: array
+          nullable: true
+          items:
+            type: string
+{{- end}}

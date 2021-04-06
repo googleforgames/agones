@@ -15,6 +15,7 @@
 package sdkserver
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -32,7 +33,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -399,7 +399,7 @@ func (l *LocalSDKServer) stopReserveTimer() {
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Connected")
 	l.gsMutex.Lock()
@@ -417,7 +417,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 	}
 
 	if l.gs.Status.Players.Count >= l.gs.Status.Players.Capacity {
-		return &alpha.Bool{}, errors.New("Players are already at capacity")
+		return &alpha.Bool{Bool: false}, errors.New("Players are already at capacity")
 	}
 
 	l.gs.Status.Players.Ids = append(l.gs.Status.Players.Ids, id.PlayerID)
@@ -433,7 +433,7 @@ func (l *LocalSDKServer) PlayerConnect(ctx context.Context, id *alpha.PlayerID) 
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 	l.logger.WithField("playerID", id.PlayerID).Info("Player Disconnected")
 	l.gsMutex.Lock()
@@ -467,7 +467,7 @@ func (l *LocalSDKServer) PlayerDisconnect(ctx context.Context, id *alpha.PlayerI
 // [FeatureFlag:PlayerTracking]
 func (l *LocalSDKServer) IsPlayerConnected(c context.Context, id *alpha.PlayerID) (*alpha.Bool, error) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
-		return nil, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
+		return &alpha.Bool{Bool: false}, errors.Errorf("%s not enabled", runtime.FeaturePlayerTracking)
 	}
 
 	result := &alpha.Bool{Bool: false}

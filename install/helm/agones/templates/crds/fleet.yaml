@@ -14,7 +14,7 @@
 
 {{- if .Values.agones.crds.install }}
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: fleets.agones.dev
@@ -25,67 +25,113 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.scheduling
-    name: Scheduling
-    type: string
-  - JSONPath: .spec.replicas
-    name: Desired
-    type: integer
-  - JSONPath: .status.replicas
-    name: Current
-    type: integer
-  - JSONPath: .status.allocatedReplicas
-    name: Allocated
-    type: integer
-  - JSONPath: .status.readyReplicas
-    name: Ready
-    type: integer
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
   group: agones.dev
-  version: v1
-  scope: Namespaced
   names:
     kind: Fleet
     plural: fleets
     shortNames:
-    - flt
+      - flt
     singular: fleet
-  validation:
-    openAPIV3Schema:
-      properties:
-        spec:
-          required:
-            - template
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .spec.scheduling
+          name: Scheduling
+          type: string
+        - jsonPath: .spec.replicas
+          name: Desired
+          type: integer
+        - jsonPath: .status.replicas
+          name: Current
+          type: integer
+        - jsonPath: .status.allocatedReplicas
+          name: Allocated
+          type: integer
+        - jsonPath: .status.readyReplicas
+          name: Ready
+          type: integer
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      schema:
+        openAPIV3Schema:
+          type: object
           properties:
-            replicas:
-              type: integer
-              minimum: 0
-            scheduling:
-              type: string
-              enum:
-              - Packed
-              - Distributed
-            strategy:
+            spec:
+              type: object
+              required:
+                - template
               properties:
-                type:
+                replicas:
+                  type: integer
+                  minimum: 0
+                scheduling:
                   type: string
                   enum:
-                    - Recreate
-                    - RollingUpdate
-            template:
-              {{- include "gameserver.validation" . | indent 14 }}
-  subresources:
-    # status enables the status subresource.
-    status: {}
-    # scale enables the scale subresource.
-    scale:
-      # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
-      specReplicasPath: .spec.replicas
-      # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
-      statusReplicasPath: .status.replicas
-      # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
-      labelSelectorPath: .status.labelSelector
+                    - Packed
+                    - Distributed
+                strategy:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - Recreate
+                        - RollingUpdate
+                    rollingUpdate:
+                      type: object
+                      nullable: true
+                      properties:
+                        maxSurge:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                        maxUnavailable:
+                          x-kubernetes-int-or-string: true
+                          anyOf:
+                            - type: integer
+                            - type: string
+                template:
+                  {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
+                  {{- include "gameserver.schema" $data | indent 17 }}
+            status:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  minimum: 0
+                readyReplicas:
+                  type: integer
+                  minimum: 0
+                reservedReplicas:
+                  type: integer
+                  minimum: 0
+                allocatedReplicas:
+                  type: integer
+                  minimum: 0
+                players:
+                  type: object
+                  nullable: true
+                  properties:
+                    count:
+                      type: integer
+                      minimum: 0
+                    capacity:
+                      type: integer
+                      minimum: 0
+      subresources:
+        # status enables the status subresource.
+        status: { }
+        # scale enables the scale subresource.
+        scale:
+          # specReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Spec.Replicas.
+          specReplicasPath: .spec.replicas
+          # statusReplicasPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Replicas.
+          statusReplicasPath: .status.replicas
+          # labelSelectorPath defines the JSONPath inside of a custom resource that corresponds to Scale.Status.Selector.
+          labelSelectorPath: .status.labelSelector
 {{- end }}

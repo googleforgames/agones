@@ -19,7 +19,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -37,12 +36,13 @@ import (
 	"agones.dev/agones/pkg/gameservers"
 	"agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/signals"
+	gw_runtime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"gopkg.in/fsnotify.v1"
@@ -63,6 +63,19 @@ const (
 	sslPort = "8443"
 )
 
+// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
+// connections or otherHandler otherwise. Copied from https://github.com/philips/grpc-gateway-example.
+func grpcHandlerFunc(grpcServer http.Handler, otherHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This is a partial recreation of gRPC's internal checks https://github.com/grpc/grpc-go/pull/514/files#diff-95e9a25b738459a2d3030e1e6fa2a718R61
+		// We switch on HTTP/1.1 or HTTP/2 by checking the ProtoMajor
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
+}
 func main() {
 	conf := parseEnvFlags()
 
@@ -70,13 +83,22 @@ func main() {
 		WithField("featureGates", runtime.EncodeFeatures()).WithField("sslPort", sslPort).
 		Info("Starting agones-allocator")
 
+	logger.WithField("logLevel", conf.LogLevel).Info("Setting LogLevel configuration")
+	level, err := logrus.ParseLevel(strings.ToLower(conf.LogLevel))
+	if err == nil {
+		runtime.SetLevel(level)
+	} else {
+		logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
+		runtime.SetLevel(logrus.InfoLevel)
+	}
+
 	health, closer := setupMetricsRecorder(conf)
 	defer closer()
 
 	// http.DefaultServerMux is used for http connection, not for https
 	http.Handle("/", health)
 
-	kubeClient, agonesClient, err := getClients()
+	kubeClient, agonesClient, err := getClients(conf)
 	if err != nil {
 		logger.WithError(err).Fatal("could not create clients")
 	}
@@ -89,12 +111,7 @@ func main() {
 		return err
 	})
 
-	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled)
-
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", sslPort))
-	if err != nil {
-		logger.WithError(err).Fatalf("failed to listen on TCP port %s", sslPort)
-	}
+	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout)
 
 	if !h.tlsDisabled {
 		watcherTLS, err := fsnotify.NewWatcher()
@@ -169,11 +186,39 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
 
-	// serve GRPC for allocation
+	mux := gw_runtime.NewServeMux()
+	err = pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h)
+	if err != nil {
+		panic(err)
+	}
+
+	cfg := &tls.Config{}
+	if !h.tlsDisabled {
+		cfg.GetCertificate = h.getTLSCert
+	}
+	if !h.mTLSDisabled {
+		cfg.ClientAuth = tls.RequireAnyClientCert
+		cfg.VerifyPeerCertificate = h.verifyClientCertificate
+	}
+
+	// Create a Server instance to listen on port 8443 with the TLS config
+	server := &http.Server{
+		Addr:      ":8443",
+		TLSConfig: cfg,
+		Handler:   grpcHandlerFunc(grpcServer, mux),
+	}
+
 	go func() {
-		err := grpcServer.Serve(listener)
-		logger.WithError(err).Fatal("allocation service crashed")
-		os.Exit(1)
+		if !h.tlsDisabled {
+			err = server.ListenAndServeTLS("", "")
+		} else {
+			err = server.ListenAndServe()
+		}
+
+		if err != nil {
+			logger.WithError(err).Fatal("unable to start HTTP/HTTPS listener")
+			os.Exit(1)
+		}
 	}()
 
 	// Finally listen on 8080 (http) and block the main goroutine
@@ -182,7 +227,7 @@ func main() {
 	logger.WithError(err).Fatal("allocation service crashed")
 }
 
-func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool) *serviceHandler {
+func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -192,20 +237,22 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 		kubeInformerFactory.Core().V1().Secrets(),
 		kubeClient,
-		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health))
+		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health),
+		remoteAllocationTimeout,
+		totalRemoteAllocationTimeout)
 
-	stop := signals.NewStopChannel()
+	ctx := signals.NewSigKillContext()
 	h := serviceHandler{
 		allocationCallback: func(gsa *allocationv1.GameServerAllocation) (k8sruntime.Object, error) {
-			return allocator.Allocate(gsa, stop)
+			return allocator.Allocate(ctx, gsa)
 		},
 		mTLSDisabled: mTLSDisabled,
 		tlsDisabled:  tlsDisabled,
 	}
 
-	kubeInformerFactory.Start(stop)
-	agonesInformerFactory.Start(stop)
-	if err := allocator.Start(stop); err != nil {
+	kubeInformerFactory.Start(ctx.Done())
+	agonesInformerFactory.Start(ctx.Done())
+	if err := allocator.Start(ctx); err != nil {
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
@@ -241,26 +288,12 @@ func readTLSCert() (*tls.Certificate, error) {
 }
 
 // getServerOptions returns a list of GRPC server options.
-// Current options are TLS certs and opencensus stats handler.
+// Current options are opencensus stats handler.
 func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
-	if h.tlsDisabled {
-		return []grpc.ServerOption{grpc.StatsHandler(&ocgrpc.ServerHandler{})}
-	}
-
-	cfg := &tls.Config{
-		GetCertificate: h.getTLSCert,
-	}
-
-	if !h.mTLSDisabled {
-		cfg.ClientAuth = tls.RequireAnyClientCert
-		cfg.VerifyPeerCertificate = h.verifyClientCertificate
-	}
-
-	// Add options for creds and  OpenCensus stats handler to enable stats and tracing.
+	// Add options for  OpenCensus stats handler to enable stats and tracing.
 	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
 	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
 	return []grpc.ServerOption{
-		grpc.Creds(credentials.NewTLS(cfg)),
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
 			MinTime:             1 * time.Minute,
@@ -295,6 +328,7 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 
 	c, err := x509.ParseCertificate(rawCerts[0])
 	if err != nil {
+		logger.WithError(err).Warning("cannot parse client certificate")
 		return errors.New("bad client certificate: " + err.Error())
 	}
 
@@ -302,18 +336,22 @@ func (h *serviceHandler) verifyClientCertificate(rawCerts [][]byte, verifiedChai
 	defer h.certMutex.RUnlock()
 	_, err = c.Verify(opts)
 	if err != nil {
+		logger.WithError(err).Warning("failed to verify client certificate")
 		return errors.New("failed to verify client certificate: " + err.Error())
 	}
 	return nil
 }
 
 // Set up our client which we will use to call the API
-func getClients() (*kubernetes.Clientset, *versioned.Clientset, error) {
+func getClients(ctlConfig config) (*kubernetes.Clientset, *versioned.Clientset, error) {
 	// Create the in-cluster config
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, nil, errors.New("Could not create in cluster config")
 	}
+
+	config.QPS = float32(ctlConfig.APIServerSustainedQPS)
+	config.Burst = ctlConfig.APIServerBurstQPS
 
 	// Access to the Agones resources through the Agones Clientset
 	kubeClient, err := kubernetes.NewForConfig(config)

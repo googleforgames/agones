@@ -21,3 +21,5 @@ cd /go/src/agones.dev/agones/test/sdk/restapi
 cp ./model_xstreamdefinitionssdkgameserver.go.nolint ./swagger/model_xstreamdefinitionssdkgameserver.go
 cp ./http-api-test.go.nolint ./http-api-test.go
 go run http-api-test.go
+cd /go/src/agones.dev/agones/test/sdk/websocket-watch
+go run ws-watch-test.go

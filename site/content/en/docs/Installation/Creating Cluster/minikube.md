@@ -17,8 +17,12 @@ a virtualisation solution, such as [VirtualBox][vb] as well.
 
 ## Creating an `agones` profile
 
-Let's use a minikube profile for `agones`, to make sure we don't overlap any
-existing Minikube clusters you may be running.
+Create a minikube profile for `agones` so you don't overlap any of the minikube clusters you are already running.
+
+```bash
+minikube start -p agones
+```
+Set the minkube profile to `agones`.
 
 ```bash
 minikube profile agones
@@ -29,16 +33,9 @@ minikube profile agones
 The following command starts a local minikube cluster via virtualbox - but this can be
 replaced by a [vm-driver](https://github.com/kubernetes/minikube#requirements) of your choice.
 
-{{% feature expiryVersion="1.9.0" %}}
 ```bash
-minikube start --kubernetes-version v1.15.10 --vm-driver virtualbox
+minikube start --kubernetes-version v{{% k8s-version %}}.{{% minikube-k8s-minor-version %}} --vm-driver virtualbox
 ```
-{{% /feature %}}
-{{% feature publishVersion="1.9.0" %}}
-```bash
-minikube start --kubernetes-version v1.16.13 --vm-driver virtualbox
-```
-{{% /feature %}}
 
 ## Next Steps
 

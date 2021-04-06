@@ -172,7 +172,11 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-You can use `SDKWatchSendOnExecute` feature passed as a [feature gate]({{< ref "/docs/Guides/feature-stages.md#feature-gates" >}}) if you want a `GameServer` to be returned right after `SDK.WatchGameServer` is called.
+Currently, in [Beta]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}), and enabled by default, the current 
+state of the `GameServer` will be sent to the WatchGameServer function on first invocation.  
+
+Use the feature flag `SDKWatchSendOnExecute` to disable this feature if needed, but if you run into issues,
+please [file an issue](https://github.com/googleforgames/agones/issues).
 
 ### Metadata Management
 
@@ -258,9 +262,9 @@ If `GameServer.Status.Players.Capacity` is set manually through the Kubernetes A
 
 #### Alpha().GetPlayerCount()
 
-This function returns if the playerID is currently connected to the GameServer. 
-This is always accurate from what has been set through this SDK,
-even if the value has yet to be updated on the GameServer status resource.
+This function retrieves the current player count. 
+This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the 
+GameServer status resource.
 
 {{< alert title="Note" color="info">}}
 If `GameServer.Status.Players.IDs` is set manually through the Kubernetes API, use SDK.GameServer() 
@@ -345,4 +349,4 @@ for all supported operating systems (64 bit windows, linux and osx).
 You can find the binaries in the `bin` folder in {{< ghlink href="cmd/sdk-server" >}}`cmd/sdk-server`{{< /ghlink >}}
 once compilation is complete.
 
-See {{< ghlink href="build" branch="master" >}}Developing, Testing and Building Agones{{< /ghlink >}} for more details.
+See {{< ghlink href="build" branch="main" >}}Developing, Testing and Building Agones{{< /ghlink >}} for more details.

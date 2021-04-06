@@ -17,27 +17,28 @@
 package crd
 
 import (
+	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	apiv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	extv1beta1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextclientv1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 // WaitForEstablishedCRD blocks until CRD comes to an Established state.
 // Has a deadline of 60 seconds for this to occur.
-func WaitForEstablishedCRD(crdGetter extv1beta1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
+func WaitForEstablishedCRD(ctx context.Context, crdGetter apiextclientv1.CustomResourceDefinitionInterface, name string, logger *logrus.Entry) error {
 	return wait.PollImmediate(time.Second, 60*time.Second, func() (done bool, err error) {
-		crd, err := crdGetter.Get(name, metav1.GetOptions{})
+		crd, err := crdGetter.Get(ctx, name, metav1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
 
 		for _, cond := range crd.Status.Conditions {
-			if cond.Type == apiv1beta1.Established {
-				if cond.Status == apiv1beta1.ConditionTrue {
+			if cond.Type == apiextv1.Established {
+				if cond.Status == apiextv1.ConditionTrue {
 					logger.WithField("crd", crd.ObjectMeta.Name).Info("custom resource definition established")
 					return true, err
 				}

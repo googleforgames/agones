@@ -16,12 +16,17 @@
 # Full example of a FleetAutoscaler - this is used to scale a Fleet
 # automatically depending on load
 #
+
+#
+# For a full reference and details: https://agones.dev/site/docs/reference/fleetautoscaler/
+#
+
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
 metadata:
   name: webhook-fleet-autoscaler
 spec:
-  fleetName: simple-udp
+  fleetName: simple-game-server
   policy:
     # type of the policy - this example is Webhook
     type: Webhook

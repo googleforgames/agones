@@ -26,7 +26,7 @@
 
 # generate the latest website
 site-server: ARGS ?=-F
-site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=master
+site-server: ENV ?= RELEASE_VERSION="$(base_version)" RELEASE_BRANCH=main
 site-server: ensure-build-image
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) -p 1313:1313 $(build_tag) bash -c \
 	"$(ENV) hugo server --watch --baseURL=http://localhost:1313/ --bind=0.0.0.0 $(ARGS)"
@@ -35,10 +35,12 @@ site-static: ensure-build-image
 	-docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) rm -r ./public
 	-mkdir $(agones_path)/site/public
 	# for some reason, this only work locally
+	# postcss-cli@8.3.1 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list postcss-cli || npm install postcss-cli"
+		bash -c "npm list postcss-cli || npm install postcss-cli@8.3.0"
+	# autoprefixer 10.0.0 broke things, so pinning the version
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) \
-		bash -c "npm list autoprefixer || npm install autoprefixer"
+		bash -c "npm list autoprefixer || npm install autoprefixer@9.8.6"
 	docker run --rm $(common_mounts) --workdir=$(mount_path)/site $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		"$(ENV) hugo --config=config.toml $(ARGS)"
 
@@ -54,13 +56,13 @@ site-deploy: site-gen-app-yaml site-static
     gcloud app deploy .app.yaml --no-promote --quiet --version=$$SHORT_SHA'
 
 site-static-preview:
-	$(MAKE) site-static ARGS="-F" ENV="RELEASE_VERSION=$(base_version) RELEASE_BRANCH=master"
+	$(MAKE) site-static ARGS="-F" ENV="RELEASE_VERSION=$(base_version) RELEASE_BRANCH=main"
 
 site-deploy-preview: site-static-preview
 	$(MAKE) site-deploy SERVICE=preview
 
 hugo-test: site-static-preview
-	for i in 1 2 3 4 5; \
+	for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; \
 		do echo "Html Test: Attempt $$i" && \
 		  docker run --rm -t -e "TERM=xterm-256color" $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 			"mkdir -p /tmp/website && cp -r $(mount_path)/site/public /tmp/website/site && htmltest -c $(mount_path)/site/htmltest.yaml /tmp/website" && \

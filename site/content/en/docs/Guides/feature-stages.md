@@ -11,7 +11,7 @@ description: >
 ## Supported Versions
 
 Agones versions are expressed as x.y.z, where x is the major version, y is the minor version, and z is the patch version
-, following [Semantic Versioning](http://semver.org/) terminology.
+following [Semantic Versioning](http://semver.org/) terminology.
 
 ## Agones Features
 
@@ -24,16 +24,25 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates are:
 
+{{% feature expiryVersion="1.14.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
 |--------------|---------|---------|-------|-------|
-| Multicluster Allocation<sup>*</sup> | N/A | Enabled | `Beta` | 1.6.0 |
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
-| [Port Allocations to Multiple Containers]({{< ref "/docs/Reference/gameserver.md" >}}) | `ContainerPortAllocation` | Enabled | `Beta` | 1.7.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
-| [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Disabled | `Alpha` | 1.7.0 |
+| [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Enabled | `Beta` | 1.12.0 |
+| Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) and additional [details]({{< ref "/docs/Guides/fleet-updates.md#alpha-feature-rollingupdateonready" >}}) | `RollingUpdateOnReady` | Disabled | `Alpha` | 1.9.0 |
+| [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
+{{% /feature %}}
 
-<sup>*</sup>Multicluster Allocation was started before this process was in place, and therefore does not have a
- feature gate and cannot be disabled.
+{{% feature publishVersion="1.14.0" %}}
+| Feature Name | Gate    | Default | Stage | Since |
+|--------------|---------|---------|-------|-------|
+| Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
+| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
+| [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Enabled | `Beta` | 1.12.0 |
+| Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) | `RollingUpdateOnReady` | Enabled | `Beta` | 1.14.0 |
+| [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
+{{% /feature %}}
 
 ## Description of Stages
 

@@ -19,7 +19,10 @@
 package fake
 
 import (
+	"context"
+
 	v1 "agones.dev/agones/pkg/apis/allocation/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	testing "k8s.io/client-go/testing"
 )
@@ -35,7 +38,7 @@ var gameserverallocationsResource = schema.GroupVersionResource{Group: "allocati
 var gameserverallocationsKind = schema.GroupVersionKind{Group: "allocation.agones.dev", Version: "v1", Kind: "GameServerAllocation"}
 
 // Create takes the representation of a gameServerAllocation and creates it.  Returns the server's representation of the gameServerAllocation, and an error, if there is any.
-func (c *FakeGameServerAllocations) Create(gameServerAllocation *v1.GameServerAllocation) (result *v1.GameServerAllocation, err error) {
+func (c *FakeGameServerAllocations) Create(ctx context.Context, gameServerAllocation *v1.GameServerAllocation, opts metav1.CreateOptions) (result *v1.GameServerAllocation, err error) {
 	obj, err := c.Fake.
 		Invokes(testing.NewCreateAction(gameserverallocationsResource, c.ns, gameServerAllocation), &v1.GameServerAllocation{})
 

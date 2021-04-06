@@ -3,17 +3,17 @@ title: "Fleet Updates"
 date: 2019-08-27T03:58:19Z
 weight: 20
 description: >
-  Common patterns and approaches for updating Fleets with newer and/or different versions of your `GameServer` configuration. 
+  Common patterns and approaches for updating Fleets with newer and/or different versions of your `GameServer` configuration.
 ---
 
 ## Rolling Update Strategy
 
 When Fleets are edited and updated, the default strategy of Agones is to roll the new version of the `GameServer`
 out to the entire `Fleet`, in a step by step increment and decrement by adding a chunk of the new version and removing
-a chunk of the current set of `GameServers`. 
+a chunk of the current set of `GameServers`.
 
 This is done while ensuring that `Allocated` `GameServers` are not deleted
-until they are specifically shutdown through the game servers SDK, as they are expected to have players on them. 
+until they are specifically shutdown through the game servers SDK, as they are expected to have players on them.
 
 You can see this in the `Fleet.Spec.Strategy` [reference]({{< ref "/docs/Reference/fleet.md" >}}), with controls for how
 much of the `Fleet` is  incremented and decremented at one time:
@@ -31,6 +31,14 @@ So when a Fleet is edited (any field other than `replicas`, see note below), eit
 1. Adds the `maxSurge` number of `GameServers` to the Fleet.
 1. Shutdown the `maxUnavailable` number of `GameServers` in the Fleet, skipping `Allocated` `GameServers`.
 1. Repeat above steps until all the previous `GameServer` configurations have been `Shutdown` and deleted.
+
+{{% feature publishVersion="1.14.0" %}}
+By default, a Fleet will wait for new `GameSevers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
+This ensures that a Fleet cannot accidentally have zero `GameServers` in the `Ready` state if something goes wrong during a Rolling Update or if `GameServers` have a long delay before moving to the `Ready` state.
+
+{{< beta title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
+
+{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 When `Fleet` update contains only changes to the `replicas` parameter, then new GameServers will be created/deleted straight away,
@@ -63,15 +71,15 @@ So when a Fleet is edited, either through `kubectl` `edit`/`apply` or via the Ku
 
 ## Two (or more) Fleets Strategy
 
-If you want very fine-grained control over the rate that new versions of a `GameServer` configuration is rolled out, or 
+If you want very fine-grained control over the rate that new versions of a `GameServer` configuration is rolled out, or
 if you want to do some version of A/B testing or smoke test between different versions, running two (or more) `Fleets` at the same time is a
-good solution for this. 
+good solution for this.
 
 To do this, create a second `Fleet` inside your cluster, starting with zero replicas. From there you can scale this newer `Fleet`
 up and the older `Fleet` down as required by your specific rollout strategy.
 
 This also allows you to rollback if issues arise with the newer version, as you can delete the newer `Fleet`
-and scale up the old Fleet to its previous levels, resulting in minimal impact to the players. 
+and scale up the old Fleet to its previous levels, resulting in minimal impact to the players.
 
 {{< alert title="Note" color="info">}}
 For GameServerAllocation, you will need to have at least a single shared label between the `GameServers` in each
@@ -81,7 +89,7 @@ Fleet.
 ### GameServerAllocation Across Fleets
 
 Since `GameServerAllocation` is powered by label selectors, it is possible to allocate across multiple fleets, and/or
-give preference to particular sets of `GameServers` over others. You can see details of this in 
+give preference to particular sets of `GameServers` over others. You can see details of this in
 the `GameServerAllocation` [reference]({{< ref "/docs/Reference/gameserverallocation.md" >}}).
 
 In a scenario where a new `v2` version of a `Fleet` is being slowly scaled up in a separate Fleet from the previous `v1`
@@ -105,4 +113,14 @@ Fleets through that mechanism. The `preferred` label matching selector tells the
 all `GameServers` with the `v2` `Fleet` label, and if not found, search through the rest of the set.
 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
-the rate that you deem fit for your specific rollout. 
+the rate that you deem fit for your specific rollout.
+
+{{% feature expiryVersion="1.14.0" %}}
+## Alpha Feature RollingUpdateOnReady
+
+{{< alpha title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
+
+When this feature is enabled, Fleets will wait for the new GameSevers to become Ready during a Rolling Update, to ensure there is always a set of Ready GameServers before attempting to shut down the previous version Fleet's GameServers.
+
+This ensures a Fleet cannot accidentally have 0 GameServers Ready if something goes wrong during a Rolling Update, or GameServers have a long delay when moving to a Ready state.
+{{% /feature %}}

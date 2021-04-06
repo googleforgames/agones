@@ -29,7 +29,7 @@ locals {
   initialNodeCount  = lookup(var.cluster, "initialNodeCount", "4")
   network           = lookup(var.cluster, "network", "default")
   subnetwork        = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.16")
+  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.18")
 }
 
 # echo command used for debugging purpose
@@ -157,5 +157,6 @@ resource "google_compute_firewall" "default" {
     protocol = "udp"
     ports    = [var.ports]
   }
+
   target_tags = ["game-server"]
 }

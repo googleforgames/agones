@@ -18,7 +18,7 @@ terraform {
 }
 
 provider "aws" {
-  version = "= 2.51.0"
+  version = ">= 2.55.0"
   region  = var.region
 }
 
@@ -58,7 +58,7 @@ resource "aws_security_group" "worker_group_mgmt_one" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.21.0"
+  version = "2.47.0"
 
   name                 = "test-vpc-lt"
   cidr                 = "10.0.0.0/16"
@@ -77,11 +77,11 @@ module "vpc" {
 }
 
 module "eks" {
-  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v7.0.1"
+  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v12.2.0"
   cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
-  cluster_version = "1.15"
+  cluster_version = "1.18"
 
   worker_groups_launch_template = [
     {

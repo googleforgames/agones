@@ -32,11 +32,11 @@ spec:
         spec:
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.1
+            image: gcr.io/agones-images/simple-game-server:0.3
             resources:
               requests:
-                memory: "32Mi"
+                memory: "64Mi"
                 cpu: "20m"
               limits:
-                memory: "32Mi"
+                memory: "64Mi"
                 cpu: "20m"

@@ -19,8 +19,8 @@ Kubernetes documentation for more details on "requests" and "limits" to both CPU
 
 ## GameServers
 
-Since the `GameServer` specification provides a full [`PodSpecTemplate`](https://v1-15.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#podtemplatespec-v1-core),
-we can take advantage of both resource limits and requests in our `GameServer` configurations. 
+Since the `GameServer` specification provides a full [`PodSpecTemplate`]({{% k8s-api href="#podtemplatespec-v1-core" %}}),
+we can take advantage of both resource limits and requests in our `GameServer` configurations.
 
 For example, to set a CPU limit on our `GameServer` configuration of `250m/0.25` of a CPU,
 we could do so as followed:
@@ -29,7 +29,7 @@ we could do so as followed:
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  name: "simple-udp"
+  name: "simple-game-server"
 spec:
   ports:
   - name: default
@@ -37,7 +37,7 @@ spec:
   template:
     spec:
       containers:
-      - name: simple-udp
+      - name: simple-game-server
         image: {{% example-image %}}
         resources:
           limit:

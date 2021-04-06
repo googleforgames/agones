@@ -15,6 +15,8 @@
 package gameservers
 
 import (
+	"context"
+
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -30,6 +32,7 @@ import (
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -99,13 +102,13 @@ func NewMissingPodController(health healthcheck.Handler,
 
 // Run processes the rate limited queue.
 // Will block until stop is closed
-func (c *MissingPodController) Run(stop <-chan struct{}) error {
+func (c *MissingPodController) Run(ctx context.Context) error {
 	c.baseLogger.Debug("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced, c.podSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.podSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
-	c.workerqueue.Run(1, stop)
+	c.workerqueue.Run(ctx, 1)
 	return nil
 }
 
@@ -115,7 +118,7 @@ func (c *MissingPodController) loggerForGameServerKey(key string) *logrus.Entry 
 
 // syncGameServer checks if a GameServer has a backing Pod, and if not,
 // moves it to Unhealthy
-func (c *MissingPodController) syncGameServer(key string) error {
+func (c *MissingPodController) syncGameServer(ctx context.Context, key string) error {
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		// don't return an error, as we don't want this retried
@@ -151,7 +154,7 @@ func (c *MissingPodController) syncGameServer(key string) error {
 
 	gsCopy := gs.DeepCopy()
 	gsCopy.Status.State = agonesv1.GameServerStateUnhealthy
-	gs, err = c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(gsCopy)
+	gs, err = c.gameServerGetter.GameServers(gsCopy.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrap(err, "error updating GameServer to Unhealthy")
 	}

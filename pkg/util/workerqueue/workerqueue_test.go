@@ -15,6 +15,7 @@
 package workerqueue
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -22,6 +23,7 @@ import (
 	"time"
 
 	"github.com/heptiolabs/healthcheck"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -34,7 +36,7 @@ func TestWorkerQueueRun(t *testing.T) {
 	received := make(chan string)
 	defer close(received)
 
-	syncHandler := func(name string) error {
+	syncHandler := func(ctx context.Context, name string) error {
 		assert.Equal(t, "default/test", name)
 		received <- name
 		return nil
@@ -44,7 +46,7 @@ func TestWorkerQueueRun(t *testing.T) {
 	stop := make(chan struct{})
 	defer close(stop)
 
-	go wq.Run(1, stop)
+	go wq.Run(context.Background(), 1)
 
 	// no change, should be no value
 	select {
@@ -66,15 +68,15 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	t.Parallel()
 
 	done := make(chan struct{})
-	handler := func(string) error {
+	handler := func(context.Context, string) error {
 		<-done
 		return nil
 	}
 	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
 	wq.Enqueue(cache.ExplicitKey("default/test"))
 
-	stop := make(chan struct{})
-	go wq.Run(1, stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	go wq.Run(ctx, 1)
 
 	// Yield to the scheduler to ensure the worker queue goroutine can run.
 	err := wait.Poll(100*time.Millisecond, 3*time.Second, func() (done bool, err error) {
@@ -87,7 +89,7 @@ func TestWorkerQueueHealthy(t *testing.T) {
 	assert.Nil(t, err)
 
 	close(done) // Ensure the handler no longer blocks.
-	close(stop) // Stop the worker queue.
+	cancel()    // Stop the worker queue.
 
 	// Yield to the scheduler again to ensure the worker queue goroutine can
 	// finish.
@@ -105,7 +107,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	t.Parallel()
 
 	health := healthcheck.NewHandler()
-	handler := func(string) error {
+	handler := func(context.Context, string) error {
 		return nil
 	}
 	wq := NewWorkerQueue(handler, logrus.WithField("source", "test"), "testKey", "test")
@@ -115,8 +117,8 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	defer server.Close()
 
 	const workersCount = 1
-	stop := make(chan struct{})
-	go wq.Run(workersCount, stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	go wq.Run(ctx, workersCount)
 
 	// Wait for worker to actually start
 	err := wait.PollImmediate(100*time.Millisecond, 5*time.Second, func() (bool, error) {
@@ -151,7 +153,7 @@ func TestWorkQueueHealthCheck(t *testing.T) {
 	url := server.URL + "/live"
 	f(t, url, http.StatusOK)
 
-	close(stop)
+	cancel()
 	// closing can take a short while
 	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 		rc := wq.RunCount()
@@ -169,7 +171,7 @@ func TestWorkerQueueEnqueueAfter(t *testing.T) {
 	t.Parallel()
 
 	updated := make(chan bool)
-	syncHandler := func(s string) error {
+	syncHandler := func(ctx context.Context, s string) error {
 		updated <- true
 		return nil
 	}
@@ -177,7 +179,7 @@ func TestWorkerQueueEnqueueAfter(t *testing.T) {
 	stop := make(chan struct{})
 	defer close(stop)
 
-	go wq.Run(1, stop)
+	go wq.Run(context.Background(), 1)
 
 	wq.EnqueueAfter(cache.ExplicitKey("default/test"), 2*time.Second)
 
@@ -192,4 +194,17 @@ func TestWorkerQueueEnqueueAfter(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		assert.Fail(t, "should have got a queue'd message by now")
 	}
+}
+
+func TestDebugError(t *testing.T) {
+	err := errors.New("not a debug error")
+	assert.False(t, isDebugError(err))
+
+	err = NewDebugError(err)
+	assert.True(t, isDebugError(err))
+	assert.EqualError(t, err, "not a debug error")
+
+	err = NewDebugError(nil)
+	assert.True(t, isDebugError(err))
+	assert.EqualError(t, err, "<nil>")
 }

@@ -15,6 +15,7 @@
 package gameserversets
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -32,7 +33,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -352,16 +353,16 @@ func TestControllerWatchGameServers(t *testing.T) {
 	gsWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(gsWatch, nil))
 
-	c.workerqueue.SyncHandler = func(name string) error {
+	c.workerqueue.SyncHandler = func(_ context.Context, name string) error {
 		received <- name
 		return nil
 	}
 
-	stop, cancel := agtesting.StartInformers(m, c.gameServerSynced)
+	ctx, cancel := agtesting.StartInformers(m, c.gameServerSynced)
 	defer cancel()
 
 	go func() {
-		err := c.Run(1, stop)
+		err := c.Run(ctx, 1)
 		assert.Nil(t, err)
 	}()
 
@@ -461,10 +462,10 @@ func TestSyncGameServerSet(t *testing.T) {
 			return true, gs, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 6, count)
 		assert.True(t, updated, "A game servers should have been updated")
@@ -487,10 +488,10 @@ func TestSyncGameServerSet(t *testing.T) {
 			return true, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
 		defer cancel()
 
-		c.syncGameServerSet(gsSet.ObjectMeta.Namespace + "/" + gsSet.ObjectMeta.Name) // nolint: errcheck
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
 
 		assert.Equal(t, 5, count)
 	})
@@ -528,10 +529,10 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 			return true, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		err := c.deleteGameServers(gsSet, []*agonesv1.GameServer{gs1, gs2, gs3})
+		err := c.deleteGameServers(ctx, gsSet, []*agonesv1.GameServer{gs1, gs2, gs3})
 		assert.Nil(t, err)
 
 		assert.Equal(t, 3, updatedCount, "Updates should have occurred")
@@ -548,10 +549,10 @@ func TestControllerSyncUnhealthyGameServers(t *testing.T) {
 			return true, nil, errors.New("update-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		err := c.deleteGameServers(gsSet, []*agonesv1.GameServer{gs1, gs2, gs3})
+		err := c.deleteGameServers(ctx, gsSet, []*agonesv1.GameServer{gs1, gs2, gs3})
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "error updating gameserver")
 	})
@@ -577,10 +578,10 @@ func TestSyncMoreGameServers(t *testing.T) {
 			return true, gs, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		err := c.addMoreGameServers(gsSet, expected)
+		err := c.addMoreGameServers(ctx, gsSet, expected)
 		assert.Nil(t, err)
 		assert.Equal(t, expected, count)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "SuccessfulCreate")
@@ -599,10 +600,10 @@ func TestSyncMoreGameServers(t *testing.T) {
 			return true, gs, errors.New("create-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m)
+		ctx, cancel := agtesting.StartInformers(m)
 		defer cancel()
 
-		err := c.addMoreGameServers(gsSet, expected)
+		err := c.addMoreGameServers(ctx, gsSet, expected)
 		require.Error(t, err)
 		assert.Equal(t, "error creating gameserver for gameserverset test: create-err", err.Error())
 	})
@@ -629,7 +630,7 @@ func TestControllerSyncGameServerSetStatus(t *testing.T) {
 		})
 
 		list := []*agonesv1.GameServer{{Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateReady}}}
-		err := c.syncGameServerSetStatus(gsSet, list)
+		err := c.syncGameServerSetStatus(context.Background(), gsSet, list)
 		assert.Nil(t, err)
 		assert.True(t, updated)
 	})
@@ -661,7 +662,7 @@ func TestControllerSyncGameServerSetStatus(t *testing.T) {
 			{Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateAllocated}},
 			{Status: agonesv1.GameServerStatus{State: agonesv1.GameServerStateAllocated}},
 		}
-		err := c.syncGameServerSetStatus(gsSet, list)
+		err := c.syncGameServerSetStatus(context.Background(), gsSet, list)
 		assert.Nil(t, err)
 		assert.True(t, updated)
 	})
@@ -684,10 +685,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -695,7 +696,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.updateValidationHandler(review)
@@ -709,10 +710,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 	})
 
 	t.Run("new object is nil, err excpected", func(t *testing.T) {
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: nil,
 				},
@@ -720,7 +721,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err := c.updateValidationHandler(review)
@@ -734,10 +735,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -745,7 +746,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: nil,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err = c.updateValidationHandler(review)
@@ -765,10 +766,10 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 
 		assert.NotEqual(t, string(raw), string(newRaw))
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
@@ -776,7 +777,7 @@ func TestControllerUpdateValidationHandler(t *testing.T) {
 					Raw: raw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.updateValidationHandler(review)
@@ -820,15 +821,15 @@ func TestCreationValidationHandler(t *testing.T) {
 		newRaw, err := json.Marshal(newGSS)
 		require.NoError(t, err)
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)
@@ -842,15 +843,15 @@ func TestCreationValidationHandler(t *testing.T) {
 	})
 
 	t.Run("object is nil, err excpected", func(t *testing.T) {
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: nil,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		_, err := c.creationValidationHandler(review)
@@ -870,15 +871,15 @@ func TestCreationValidationHandler(t *testing.T) {
 
 		assert.NotEqual(t, string(raw), string(newRaw))
 
-		review := admv1beta1.AdmissionReview{
-			Request: &admv1beta1.AdmissionRequest{
+		review := admissionv1.AdmissionReview{
+			Request: &admissionv1.AdmissionRequest{
 				Kind:      gvk,
-				Operation: admv1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: newRaw,
 				},
 			},
-			Response: &admv1beta1.AdmissionResponse{Allowed: true},
+			Response: &admissionv1.AdmissionResponse{Allowed: true},
 		}
 
 		result, err := c.creationValidationHandler(review)

@@ -179,6 +179,7 @@ func ConvertAllocationResponseToGSA(in *pb.AllocationResponse) *allocationv1.Gam
 			Ports:          convertAllocationPortsToGSAAgonesPorts(in.Ports),
 		},
 	}
+	out.SetGroupVersionKind(allocationv1.SchemeGroupVersion.WithKind("GameServerAllocation"))
 
 	return out
 }

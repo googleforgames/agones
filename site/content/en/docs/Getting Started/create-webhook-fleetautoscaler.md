@@ -34,7 +34,7 @@ It is assumed that you have completed the instructions to [Create a Game Server 
 
 Run a fleet in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 #### 2. Deploy a Webhook service for autoscaling
@@ -117,7 +117,7 @@ etadata:
 autoscalers/webhook-fleet-autoscaler
   UID:                 6d03eae4-05e8-11e9-84c2-42010a8a01c9
 Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Type:  Webhook
     Webhook:
@@ -146,7 +146,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
 You should get in return the allocated game server details, which should end with something like:
@@ -154,7 +154,7 @@ You should get in return the allocated game server details, which should end wit
 ```
 status:
   address: 34.94.118.237
-  gameServerName: simple-udp-v6jwb-6bzkz
+  gameServerName: simple-game-server-v6jwb-6bzkz
   nodeName: gke-test-cluster-default-f11755a7-5km3
   ports:
   - name: default
@@ -166,7 +166,7 @@ Note the address and port, you might need them later to connect to the server.
 
 Run the kubectl command one more time so that we have both servers allocated:
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
 #### 6. Check new Autoscaler and Fleet status
@@ -181,7 +181,7 @@ The last part should look similar to this:
 
 ```
 Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Type:  Webhook
     Webhook:
@@ -199,7 +199,7 @@ Status:
 Events:
   Type    Reason            Age   From                        Message
   ----    ------            ----  ----                        -------
-  Normal  AutoScalingFleet  35s   fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 4
+  Normal  AutoScalingFleet  35s   fleetautoscaler-controller  Scaling fleet simple-game-server from 2 to 4
 ```
 
 You can see that the fleet size has increased in particular case doubled to 4 gameservers (based on our custom logic in our webhook), the autoscaler having compensated for the two allocated instances.
@@ -215,10 +215,10 @@ This will get you a list of all the current `GameServers` and their `Status > St
 
 ```
 NAME                     STATE       ADDRESS         PORT     NODE        AGE
-simple-udp-dmkp4-8pkk2   Ready       35.247.13.175   7386     minikube     5m
-simple-udp-dmkp4-b7x87   Allocated   35.247.13.175   7219     minikube     5m
-simple-udp-dmkp4-r4qtt   Allocated   35.247.13.175   7220     minikube     5m
-simple-udp-dmkp4-rsr6n   Ready       35.247.13.175   7297     minikube     5m
+simple-game-server-dmkp4-8pkk2   Ready       35.247.13.175   7386     minikube     5m
+simple-game-server-dmkp4-b7x87   Allocated   35.247.13.175   7219     minikube     5m
+simple-game-server-dmkp4-r4qtt   Allocated   35.247.13.175   7220     minikube     5m
+simple-game-server-dmkp4-rsr6n   Ready       35.247.13.175   7297     minikube     5m
 ```
 
 #### 7. Check downscaling using Webhook Autoscaler policy
@@ -242,8 +242,8 @@ kubectl describe fleetautoscaler webhook-fleet-autoscaler
 
 You should see these lines in events:
 ```
-  Normal   AutoScalingFleet  11m                fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 4
-  Normal   AutoScalingFleet  1m                 fleetautoscaler-controller  Scaling fleet simple-udp from 4 to 2
+  Normal   AutoScalingFleet  11m                fleetautoscaler-controller  Scaling fleet simple-game-server from 2 to 4
+  Normal   AutoScalingFleet  1m                 fleetautoscaler-controller  Scaling fleet simple-game-server from 4 to 2
 ```
 
 And get gameservers command output:
@@ -252,9 +252,9 @@ kubectl get gs -n default
 ```
 
 ```
-NAME                     STATUS      ADDRESS          PORT     NODE       AGE
-simple-udp-884fg-6q5sk   Ready       35.247.117.202   7373     minikube   5m
-simple-udp-884fg-b7l58   Allocated   35.247.117.202   7766     minikube   5m
+NAME                             STATUS      ADDRESS          PORT     NODE       AGE
+simple-game-server-884fg-6q5sk   Ready       35.247.117.202   7373     minikube   5m
+simple-game-server-884fg-b7l58   Allocated   35.247.117.202   7766     minikube   5m
 ```
 
 #### 8. Cleanup
@@ -267,7 +267,7 @@ kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< re
 
 Removing the fleet:
 ```
-kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 ## Chapter 2 Configuring HTTPS fleetautoscaler webhook with CA Bundle
@@ -283,7 +283,7 @@ the possibility of a man-in-the-middle attack between the fleetautoscaler and th
 
 Run a fleet in a cluster:
 ```
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 #### 2. Create X509 Root and Webhook certificates
@@ -307,14 +307,32 @@ Every webhook that you wish to install a trusted certificate will need to go thr
 openssl genrsa -out webhook.key 2048
 ```
 
-Once the key is created, you’ll generate the certificate signing request, use valid hostname which is `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` when prompted:
+Next create configuration file `cert.conf` for the certificate signing request:
 ```
-openssl req -new -key webhook.key -out webhook.csr
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+CN = autoscaler-tls-service.default.svc
+[v3_req]
+keyUsage = digitalSignature
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = autoscaler-tls-service.default.svc
+```
+
+Generate the certificate signing request, use valid hostname which in this case will be `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` as well as `DNS.1` in the `alt_names` section of the config file.
+
+Check the [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records) to see how Services get assigned DNS entries.
+```
+openssl req -new -out webhook.csr -key webhook.key -config cert.conf
 ```
 
 Once that’s done, you’ll sign the CSR, which requires the CA root key:
 ```
-openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256
+openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256 -extfile cert.conf -extensions v3_req
 ```
 This would generate webhook.crt certificate
 
@@ -329,6 +347,7 @@ base64 -i ./rootCA.pem
 ```
 
 Copy the output of the command above and replace the caBundle field in your text editor (say vim) with the new value:
+
 ```
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscalertls.yaml
 vim ./webhookfleetautoscalertls.yaml
@@ -376,7 +395,7 @@ If you're interested in more details for game server allocation, you should cons
 Here we only interested in triggering allocations to see the autoscaler in action.
 
 ```
-for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml ; done
+for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml ; done
 ```
 
 #### 7. Check new Autoscaler and Fleet status
@@ -390,7 +409,7 @@ kubectl describe fleetautoscaler  webhook-fleetautoscaler-tls
 The last part should look similar to this:
 
 ```Spec:
-  Fleet Name:  simple-udp
+  Fleet Name:  simple-game-server
   Policy:
     Type:  Webhook
     Webhook:
@@ -400,7 +419,7 @@ The last part should look similar to this:
 Events:
   Type    Reason            Age   From                        Message
   ----    ------            ----  ----                        -------
-  Normal  AutoScalingFleet  5s   fleetautoscaler-controller  Scaling fleet simple-udp from 2 to 4
+  Normal  AutoScalingFleet  5s   fleetautoscaler-controller  Scaling fleet simple-game-server from 2 to 4
 ```
 
 You can see that the fleet size has increased in particular case doubled to 4 gameservers (based on our custom logic in our webhook), the autoscaler having compensated for the two allocated instances.
@@ -416,8 +435,8 @@ This will get you a list of all the current `GameServers` and their `Status > St
 
 ```
 NAME                     STATE       ADDRESS         PORT      NODE      AGE
-simple-udp-njmr7-2t4nx   Ready       35.203.159.68   7330      minikube   1m
-simple-udp-njmr7-65rp6   Allocated   35.203.159.68   7294      minikube   4m
+simple-game-server-njmr7-2t4nx   Ready       35.203.159.68   7330      minikube   1m
+simple-game-server-njmr7-65rp6   Allocated   35.203.159.68   7294      minikube   4m
 ```
 
 #### 8. Cleanup
@@ -434,7 +453,7 @@ kubectl delete secret autoscalersecret
 
 Removing the fleet:
 ```
-kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 ### Comments

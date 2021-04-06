@@ -28,12 +28,11 @@ test-examples-on-gcr: example-image-test.autoscaler-webhook
 test-examples-on-gcr: example-image-test.cpp-simple
 test-examples-on-gcr: example-image-test.nodejs-simple
 test-examples-on-gcr: example-image-test.rust-simple
-test-examples-on-gcr: example-image-test.simple-tcp
-test-examples-on-gcr: example-image-test.simple-udp
 test-examples-on-gcr: example-image-test.unity-simple
 test-examples-on-gcr: example-image-test.xonotic
 test-examples-on-gcr: example-image-test.crd-client
 test-examples-on-gcr: example-image-test.supertuxkart
+test-examples-on-gcr: example-image-test.simple-game-server
 
 # Test to ensure the example image found in the % folder is on GCR. Fails if it is not.
 example-image-test.%:

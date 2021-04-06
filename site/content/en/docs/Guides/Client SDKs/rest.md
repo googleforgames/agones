@@ -174,6 +174,18 @@ Response:
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 {"result":{"object_meta":{"name":"local","namespace":"default","uid":"1234","resource_version":"v1","generation":"1","creation_timestamp":"1533766607","annotations":{"annotation":"true"},"labels":{"islocal":"true"}},"status":{"state":"Ready","address":"127.0.0.1","ports":[{"name":"default","port":7777}]}}}
 ```
+
+The Watch GameServer stream is also exposed as a WebSocket endpoint on the same URL and port as the HTTP `watch/gameserver` API. This endpoint is provided as a convienence for streaming data to clients such as Unreal that support WebSocket but not HTTP streaming, and HTTP streaming should be used instead if possible.
+
+An example command that uses the WebSocket endpoint instead of streaming over HTTP is:
+
+
+```bash
+curl -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Key: ExampleKey1234567890===" -H "Sec-WebSocket-Version: 13" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/watch/gameserver
+```
+
+The data returned from this endpoint is newline-delimited JSON objects and is identical to the response of the HTTP streaming watch endpoint shown above. When reading  from the websocket endpoint, make sure to wait for a delimiter before trying to deserialize the JSON, as client buffers may be smaller than the delimited messages.
+
 ### Metadata Management
 
 #### Set Label
@@ -262,9 +274,8 @@ Response:
 
 #### Alpha: GetPlayerCount
 
-This function returns if the playerID is currently connected to the GameServer. 
-This is always accurate from what has been set through this SDK,
-even if the value has yet to be updated on the GameServer status resource.
+This function retrieves the current player count. 
+This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 ```bash
 $ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count

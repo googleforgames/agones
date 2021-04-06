@@ -15,7 +15,10 @@
 package gameserverallocations
 
 import (
+	"context"
 	"sort"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -106,9 +109,9 @@ func (c *ReadyGameServerCache) RemoveFromReadyGameServer(gs *agonesv1.GameServer
 }
 
 // Sync waits for cache to sync
-func (c *ReadyGameServerCache) Sync(stop <-chan struct{}) error {
+func (c *ReadyGameServerCache) Sync(ctx context.Context) error {
 	c.baseLogger.Debug("Wait for ReadyGameServerCache cache sync")
-	if !cache.WaitForCacheSync(stop, c.gameServerSynced) {
+	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
@@ -123,13 +126,13 @@ func (c *ReadyGameServerCache) Resync() {
 }
 
 // Start prepares cache to start
-func (c *ReadyGameServerCache) Start(stop <-chan struct{}) error {
-	if err := c.Sync(stop); err != nil {
+func (c *ReadyGameServerCache) Start(ctx context.Context) error {
+	if err := c.Sync(ctx); err != nil {
 		return err
 	}
 	// we don't want mutiple workers refresh cache at the same time so one worker will be better.
 	// Also we don't expect to have too many failures when allocating
-	go c.workerqueue.Run(1, stop)
+	go c.workerqueue.Run(ctx, 1)
 	return nil
 }
 
@@ -202,11 +205,11 @@ func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServ
 }
 
 // PatchGameServerMetadata patches the input gameserver with allocation meta patch and returns the updated gameserver
-func (c *ReadyGameServerCache) PatchGameServerMetadata(fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (c *ReadyGameServerCache) PatchGameServerMetadata(ctx context.Context, fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	c.patchMetadata(gs, fam)
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
-	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(gs)
+	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
 }
 
 // patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation
@@ -233,7 +236,7 @@ func (c *ReadyGameServerCache) patchMetadata(gs *agonesv1.GameServer, fam alloca
 
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure
 // happened during the allocation. This method will sync and make sure the cache is up to date.
-func (c *ReadyGameServerCache) SyncGameServers(key string) error {
+func (c *ReadyGameServerCache) SyncGameServers(ctx context.Context, key string) error {
 	c.loggerForGameServerKey(key).Debug("Refreshing Ready Gameserver cache")
 
 	return c.syncReadyGSServerCache()

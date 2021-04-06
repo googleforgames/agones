@@ -25,7 +25,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -36,7 +36,7 @@ func TestWebHookAddHandler(t *testing.T) {
 
 	type testHandler struct {
 		gk schema.GroupKind
-		op v1beta1.Operation
+		op admissionv1.Operation
 	}
 	type expected struct {
 		count int
@@ -46,35 +46,35 @@ func TestWebHookAddHandler(t *testing.T) {
 		expected expected
 	}{
 		"single, matching": {
-			handlers: []testHandler{{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create}},
+			handlers: []testHandler{{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create}},
 			expected: expected{count: 1},
 		},
 		"double, one matching op": {
 			expected: expected{count: 1},
 			handlers: []testHandler{
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create},
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Update},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Update},
 			},
 		},
 		"double, one matching group": {
 			expected: expected{count: 1},
 			handlers: []testHandler{
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create},
-				{gk: schema.GroupKind{Group: "nope", Kind: "kind"}, op: v1beta1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create},
+				{gk: schema.GroupKind{Group: "nope", Kind: "kind"}, op: admissionv1.Create},
 			},
 		},
 		"double, one matching kind": {
 			expected: expected{count: 1},
 			handlers: []testHandler{
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create},
-				{gk: schema.GroupKind{Group: "group", Kind: "nope"}, op: v1beta1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "nope"}, op: admissionv1.Create},
 			},
 		},
 		"double, both matching": {
 			expected: expected{count: 2},
 			handlers: []testHandler{
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create},
-				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: v1beta1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create},
+				{gk: schema.GroupKind{Group: "group", Kind: "kind"}, op: admissionv1.Create},
 			},
 		},
 	}
@@ -85,9 +85,9 @@ func TestWebHookAddHandler(t *testing.T) {
 			stop := make(chan struct{})
 			defer close(stop)
 
-			fixture := v1beta1.AdmissionReview{Request: &v1beta1.AdmissionRequest{
+			fixture := admissionv1.AdmissionReview{Request: &admissionv1.AdmissionRequest{
 				Kind:      metav1.GroupVersionKind{Kind: "kind", Group: "group", Version: "version"},
-				Operation: v1beta1.Create,
+				Operation: admissionv1.Create,
 				UID:       "1234"}}
 
 			callCount := 0
@@ -96,7 +96,7 @@ func TestWebHookAddHandler(t *testing.T) {
 			wh := NewWebHook(mux)
 
 			for _, th := range handles.handlers {
-				wh.AddHandler("/test", th.gk, th.op, func(review v1beta1.AdmissionReview) (v1beta1.AdmissionReview, error) {
+				wh.AddHandler("/test", th.gk, th.op, func(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 					assert.Equal(t, fixture.Request, review.Request)
 					assert.True(t, review.Response.Allowed)
 					callCount++
@@ -132,7 +132,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 
 	type testHandler struct {
 		gk schema.GroupKind
-		op v1beta1.Operation
+		op admissionv1.Operation
 	}
 	type expected struct {
 		count int
@@ -142,7 +142,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 		expected expected
 	}{
 		"single, matching": {
-			handlers: []testHandler{{gk: schema.GroupKind{Group: "group", Kind: "fleet"}, op: v1beta1.Create}},
+			handlers: []testHandler{{gk: schema.GroupKind{Group: "group", Kind: "fleet"}, op: admissionv1.Create}},
 			expected: expected{count: 1},
 		},
 	}
@@ -163,7 +163,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "gcr.io/agones-images/udp-server:0.21",
+										"image": "gcr.io/agones-images/simple-game-server:0.3",
 										"name": false
 									}]
 								}
@@ -172,9 +172,9 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 					}
 				}
 			}`)
-			fixture := v1beta1.AdmissionReview{Request: &v1beta1.AdmissionRequest{
+			fixture := admissionv1.AdmissionReview{Request: &admissionv1.AdmissionRequest{
 				Kind:      metav1.GroupVersionKind{Kind: "fleet", Group: "group", Version: "version"},
-				Operation: v1beta1.Create,
+				Operation: admissionv1.Create,
 				Object: runtime.RawExtension{
 					Raw: raw,
 				},
@@ -186,7 +186,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 			wh := NewWebHook(mux)
 
 			for _, th := range handles.handlers {
-				wh.AddHandler("/test", th.gk, th.op, func(review v1beta1.AdmissionReview) (v1beta1.AdmissionReview, error) {
+				wh.AddHandler("/test", th.gk, th.op, func(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
 					fleet := &agonesv1.Fleet{}
 
 					callCount++

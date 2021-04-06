@@ -14,12 +14,10 @@
 
 {{- if .Values.agones.crds.install }}
 
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  creationTimestamp: null
   labels:
-    controller-tools.k8s.io: "1.0"
     component: crd
     app: {{ template "agones.name" . }}
     chart: {{ template "agones.chart" . }}
@@ -28,70 +26,51 @@ metadata:
   name: gameserverallocationpolicies.multicluster.agones.dev
 spec:
   group: multicluster.agones.dev
-  versions:
-  - name: v1
-    served: true
-    storage: true
-  - name: v1alpha1
-    # Disable the v1alpha1 version, but include it for inplace upgrade.
-    served: false
-    storage: false
   names:
     kind: GameServerAllocationPolicy
     plural: gameserverallocationpolicies
+    shortNames:
+      - gsap
   scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-          type: string
-        metadata:
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
           type: object
-        spec:
           properties:
-            connectionInfo:
-              properties:
-                secretName:
-                  type: string
-                serverCa:
-                  type: string
-                  format: byte
-                allocationEndpoints:
-                  items:
-                    type: string
-                  type: array
-                  minItems: 1
-                clusterName:
-                  type: string
-                namespace:
-                  type: string
-              required:
-              - namespace
+            spec:
               type: object
-            priority:
-              format: int32
-              minimum: 0
-              type: integer
-            weight:
-              format: int64
-              minimum: 0
-              type: integer
-          required:
-          - priority
-          - weight
-          type: object
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
+              required:
+                - priority
+                - weight
+              properties:
+                priority:
+                  format: int32
+                  minimum: 0
+                  type: integer
+                weight:
+                  format: int64
+                  minimum: 0
+                  type: integer
+                connectionInfo:
+                  type: object
+                  required:
+                    - namespace
+                  properties:
+                    clusterName:
+                      type: string
+                    allocationEndpoints:
+                      items:
+                        type: string
+                      type: array
+                      minItems: 1
+                    secretName:
+                      type: string
+                    namespace:
+                      type: string
+                    serverCa:
+                      type: string
+                      format: byte
 {{- end }}

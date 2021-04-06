@@ -24,7 +24,7 @@ import (
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	extfake "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
 	"k8s.io/client-go/informers"
 	kubefake "k8s.io/client-go/kubernetes/fake"
@@ -62,28 +62,27 @@ func NewMocks() Mocks {
 }
 
 // StartInformers starts new fake informers
-func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (<-chan struct{}, context.CancelFunc) {
+func StartInformers(mocks Mocks, sync ...cache.InformerSynced) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	stop := ctx.Done()
 
-	mocks.KubeInformerFactory.Start(stop)
-	mocks.AgonesInformerFactory.Start(stop)
+	mocks.KubeInformerFactory.Start(ctx.Done())
+	mocks.AgonesInformerFactory.Start(ctx.Done())
 
 	logrus.Info("Wait for cache sync")
-	if !cache.WaitForCacheSync(stop, sync...) {
+	if !cache.WaitForCacheSync(ctx.Done(), sync...) {
 		panic("Cache never synced")
 	}
 
-	return stop, cancel
+	return ctx, cancel
 }
 
 // NewEstablishedCRD fakes CRD installation success.
-func NewEstablishedCRD() *v1beta1.CustomResourceDefinition {
-	return &v1beta1.CustomResourceDefinition{
-		Status: v1beta1.CustomResourceDefinitionStatus{
-			Conditions: []v1beta1.CustomResourceDefinitionCondition{{
-				Type:   v1beta1.Established,
-				Status: v1beta1.ConditionTrue,
+func NewEstablishedCRD() *apiextv1.CustomResourceDefinition {
+	return &apiextv1.CustomResourceDefinition{
+		Status: apiextv1.CustomResourceDefinitionStatus{
+			Conditions: []apiextv1.CustomResourceDefinitionCondition{{
+				Type:   apiextv1.Established,
+				Status: apiextv1.ConditionTrue,
 			}},
 		},
 	}

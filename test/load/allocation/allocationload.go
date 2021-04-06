@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os/user"
 	"path/filepath"
@@ -37,7 +38,7 @@ func main() {
 	}
 	kubeconfig := flag.String("kubeconfig", filepath.Join(usr.HomeDir, ".kube", "config"),
 		"kube config path, e.g. $HOME/.kube/config")
-	fleetName := flag.String("fleet_name", "simple-udp", "The fleet name that the tests will run against")
+	fleetName := flag.String("fleet_name", "simple-game-server", "The fleet name that the tests will run against")
 	qps := flag.Int("qps", 1000, "The QPS value that will overwrite the default value")
 	burst := flag.Int("burst", 1000, "The Burst value that will overwrite the default value")
 	clientCnt := flag.Int("clients", 10, "The number of concurrent clients")
@@ -81,7 +82,7 @@ func allocate(framework *e2eframework.Framework, numOfClients int, fleetName str
 		go func() {
 			defer wg.Done()
 			for j := 0; j < reqPerClient; j++ {
-				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(gsa.DeepCopy())
+				gsa1, err := framework.AgonesClient.AllocationV1().GameServerAllocations(defaultNs).Create(context.Background(), gsa.DeepCopy(), metav1.CreateOptions{})
 				if err != nil {
 					logrus.Errorf("could not completed gsa1 allocation : %v", err)
 				} else if gsa1.Status.State == "Contention" {

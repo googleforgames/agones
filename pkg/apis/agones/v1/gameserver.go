@@ -71,6 +71,9 @@ const (
 	// This will mean that users will need to lookup what port has been opened through the server side SDK.
 	Passthrough PortPolicy = "Passthrough"
 
+	// ProtocolTCPUDP Protocol exposes the hostPort allocated for this container for both TCP and UDP.
+	ProtocolTCPUDP corev1.Protocol = "TCPUDP"
+
 	// SdkServerLogLevelInfo will cause the SDK server to output all messages except for debug messages.
 	SdkServerLogLevelInfo SdkServerLogLevel = "Info"
 	// SdkServerLogLevelDebug will cause the SDK server to output all messages including debug messages.
@@ -142,7 +145,7 @@ type GameServerSpec struct {
 	// container defined
 	Container string `json:"container,omitempty"`
 	// Ports are the array of ports that can be exposed via the game server
-	Ports []GameServerPort `json:"ports"`
+	Ports []GameServerPort `json:"ports,omitempty"`
 	// Health configures health checking
 	Health Health `json:"health,omitempty"`
 	// Scheduling strategy. Defaults to "Packed"
@@ -191,14 +194,13 @@ type GameServerPort struct {
 	// connect to
 	PortPolicy PortPolicy `json:"portPolicy,omitempty"`
 	// Container is the name of the container on which to open the port. Defaults to the game server container.
-	// This field is beta-level and is enabled by default, could be disabled by the "ContainerPortAllocation" feature.
 	// +optional
 	Container *string `json:"container,omitempty"`
 	// ContainerPort is the port that is being opened on the specified container's process
 	ContainerPort int32 `json:"containerPort,omitempty"`
 	// HostPort the port exposed on the host for clients to connect to
 	HostPort int32 `json:"hostPort,omitempty"`
-	// Protocol is the network protocol being used. Defaults to UDP. TCP is the only other option
+	// Protocol is the network protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
 	Protocol corev1.Protocol `json:"protocol,omitempty"`
 }
 
@@ -335,7 +337,7 @@ func (gss *GameServerSpec) applyPortDefaults() {
 			gss.Ports[i].Protocol = "UDP"
 		}
 
-		if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) && (p.Container == nil || *p.Container == "") {
+		if p.Container == nil || *p.Container == "" {
 			gss.Ports[i].Container = &gss.Container
 		}
 	}
@@ -361,18 +363,6 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				Field:   "players",
 				Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeaturePlayerTracking),
 			})
-		}
-	}
-
-	if !runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
-		for _, p := range gss.Ports {
-			if p.Container != nil {
-				causes = append(causes, metav1.StatusCause{
-					Type:    metav1.CauseTypeFieldValueNotSupported,
-					Field:   fmt.Sprintf("%s.container", p.Name),
-					Message: fmt.Sprintf("Value cannot be set unless feature flag %s is enabled", runtime.FeatureContainerPortAllocation),
-				})
-			}
 		}
 	}
 
@@ -450,7 +440,7 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 				})
 			}
 
-			if p.Container != nil && gss.Container != "" && runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
+			if p.Container != nil && gss.Container != "" {
 				_, _, err := gss.FindContainer(*p.Container)
 				if err != nil {
 					causes = append(causes, metav1.StatusCause{
@@ -601,38 +591,20 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 	}
 
 	gs.podObjectMeta(pod)
-	if runtime.FeatureEnabled(runtime.FeatureContainerPortAllocation) {
-		for _, p := range gs.Spec.Ports {
-			cp := corev1.ContainerPort{
-				ContainerPort: p.ContainerPort,
-				HostPort:      p.HostPort,
-				Protocol:      p.Protocol,
-			}
-			err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
-				c.Ports = append(c.Ports, cp)
-
-				return c
-			})
-			if err != nil {
-				return nil, err
-			}
+	for _, p := range gs.Spec.Ports {
+		cp := corev1.ContainerPort{
+			ContainerPort: p.ContainerPort,
+			HostPort:      p.HostPort,
+			Protocol:      p.Protocol,
 		}
-	} else {
-		i, gsContainer, err := gs.FindGameServerContainer()
-		// this shouldn't happen, but if it does.
+		err := gs.ApplyToPodContainer(pod, *p.Container, func(c corev1.Container) corev1.Container {
+			c.Ports = append(c.Ports, cp)
+
+			return c
+		})
 		if err != nil {
-			return pod, err
+			return nil, err
 		}
-
-		for _, p := range gs.Spec.Ports {
-			cp := corev1.ContainerPort{
-				ContainerPort: p.ContainerPort,
-				HostPort:      p.HostPort,
-				Protocol:      p.Protocol,
-			}
-			gsContainer.Ports = append(gsContainer.Ports, cp)
-		}
-		pod.Spec.Containers[i] = gsContainer
 	}
 	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
 

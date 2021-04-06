@@ -19,6 +19,27 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
 or {{< ghlink href="sdks/unreal" >}}directly from GitHub{{< /ghlink >}}.
 
+## Resources
+
+[Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbiests all the way through to huge AAA Game Stuidos.
+
+With this in mind there is a vast amount to learn to run a production game using Unreal, even before you get to learning how it integrates with Agones. If you want to kick the tires with a starter project you will probably be fine with one of the starter projects out of the box.
+
+However as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and how it can be used to integrate with this project. There will be different ways of interacting wether in Play In Editor (PIE) or running as an actual dedicated game server packaged into a container. 
+
+A few helpful links for Unreal:
+
+- [UE4 Documentation Site](https://docs.unrealengine.com/en-US/index.html)
+- [UE4 Dedicated Servers](https://docs.unrealengine.com/en-US/Gameplay/Networking/HowTo/DedicatedServers/index.html)
+  - useful guide to getting started with dedicated servers in Unreal
+- [UE4 Game Flow](https://docs.unrealengine.com/en-US/Gameplay/Framework/GameFlow/index.html)
+- [UE4 Game Mode](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html)
+  - useful for hooking up calls to Agones
+- [UE4 Game Session](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameSession/index.html)
+  - as above there are hooks in Game Session that can be used to call into Agones
+- [UE4 Building & Packaging Games](https://docs.unrealengine.com/en-US/Engine/Deployment/BuildOperations/index.html)
+  - only building out Unreal game servers / clients, will also need to package into a container
+
 ## Getting Started
 
 This is a SDK inspired by the REST API to the Agones sidecars that allows engineers to communicate with the sidecar from either C++ or Blueprints.

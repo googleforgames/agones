@@ -15,6 +15,7 @@
 package fleetautoscalers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -28,8 +29,8 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	admv1beta1 "k8s.io/api/admission/v1beta1"
-	admregv1b "k8s.io/api/admissionregistration/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
+	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -175,10 +176,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, f, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
@@ -233,10 +234,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, f, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
@@ -287,10 +288,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, f, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
@@ -324,10 +325,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return false, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler(fas.ObjectMeta.Name)
+		err := c.syncFleetAutoscaler(ctx, fas.ObjectMeta.Name)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
@@ -353,10 +354,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		assert.Nil(t, err)
 		assert.True(t, updated)
 
@@ -380,10 +381,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, errors.New("random-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating status for fleetautoscaler fas-1: random-err", err.Error())
 		}
@@ -409,10 +410,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error calculating autoscaling fleet: fleet-1: wrong policy type, should be one of: Buffer, Webhook", err.Error())
 		}
@@ -442,10 +443,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, fas, errors.New("random-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating status for fleetautoscaler fas-1: random-err", err.Error())
 		}
@@ -469,10 +470,10 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 			return true, ca.GetObject().(*agonesv1.Fleet), errors.New("random-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscaler("default/fas-1")
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error autoscaling fleet fleet-1 to 7 replicas: error updating replicas for fleet fleet-1: random-err", err.Error())
 		}
@@ -500,7 +501,7 @@ func TestControllerScaleFleet(t *testing.T) {
 			return true, f, nil
 		})
 
-		err := c.scaleFleet(fas, f, replicas)
+		err := c.scaleFleet(context.Background(), fas, f, replicas)
 		assert.Nil(t, err)
 		assert.True(t, update, "Fleet should be updated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingFleet")
@@ -516,7 +517,7 @@ func TestControllerScaleFleet(t *testing.T) {
 			return true, ca.GetObject().(*agonesv1.Fleet), errors.New("random-err")
 		})
 
-		err := c.scaleFleet(fas, f, replicas)
+		err := c.scaleFleet(context.Background(), fas, f, replicas)
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating replicas for fleet fleet-1: random-err", err.Error())
 		}
@@ -533,7 +534,7 @@ func TestControllerScaleFleet(t *testing.T) {
 			return false, nil, nil
 		})
 
-		err := c.scaleFleet(fas, f, replicas)
+		err := c.scaleFleet(context.Background(), fas, f, replicas)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
@@ -560,10 +561,10 @@ func TestControllerUpdateStatus(t *testing.T) {
 			return true, fas, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(fas, 10, 20, true, false)
+		err := c.updateStatus(ctx, fas, 10, 20, true, false)
 		assert.Nil(t, err)
 		assert.True(t, fasUpdated)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
@@ -584,10 +585,10 @@ func TestControllerUpdateStatus(t *testing.T) {
 			return false, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
+		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
@@ -600,10 +601,10 @@ func TestControllerUpdateStatus(t *testing.T) {
 			return true, nil, errors.New("random-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatus(fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
+		err := c.updateStatus(ctx, fas, fas.Status.CurrentReplicas, fas.Status.DesiredReplicas, false, fas.Status.ScalingLimited)
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating status for fleetautoscaler fas-1: random-err", err.Error())
 		}
@@ -614,7 +615,7 @@ func TestControllerUpdateStatus(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 
-		err := c.updateStatus(fas, 10, 20, true, true)
+		err := c.updateStatus(context.Background(), fas, 10, 20, true, true)
 		assert.Nil(t, err)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingLimited")
 	})
@@ -642,10 +643,10 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 			return true, fas, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatusUnableToScale(fas)
+		err := c.updateStatusUnableToScale(ctx, fas)
 		assert.Nil(t, err)
 		assert.True(t, fasUpdated)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
@@ -662,10 +663,10 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 			return true, fas, errors.New("random-err")
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatusUnableToScale(fas)
+		err := c.updateStatusUnableToScale(ctx, fas)
 		if assert.NotNil(t, err) {
 			assert.Equal(t, "error updating status for fleetautoscaler fas-1: random-err", err.Error())
 		}
@@ -685,10 +686,10 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 			return false, nil, nil
 		})
 
-		_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.updateStatusUnableToScale(fas)
+		err := c.updateStatusUnableToScale(ctx, fas)
 		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
@@ -739,7 +740,7 @@ func defaultWebhookFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) 
 	fas.Spec.Policy.Buffer = nil
 	url := "/autoscaler"
 	fas.Spec.Policy.Webhook = &autoscalingv1.WebhookPolicy{
-		Service: &admregv1b.ServiceReference{
+		Service: &admregv1.ServiceReference{
 			Name: "fleetautoscaler-service",
 			Path: &url,
 		},
@@ -757,40 +758,40 @@ func newFakeController() (*Controller, agtesting.Mocks) {
 	return c, m
 }
 
-func newAdmissionReview(fas autoscalingv1.FleetAutoscaler) (admv1beta1.AdmissionReview, error) {
+func newAdmissionReview(fas autoscalingv1.FleetAutoscaler) (admissionv1.AdmissionReview, error) {
 	raw, err := json.Marshal(fas)
 	if err != nil {
-		return admv1beta1.AdmissionReview{}, err
+		return admissionv1.AdmissionReview{}, err
 	}
-	review := admv1beta1.AdmissionReview{
-		Request: &admv1beta1.AdmissionRequest{
+	review := admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Kind:      gvk,
-			Operation: admv1beta1.Create,
+			Operation: admissionv1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
 			Namespace: "default",
 		},
-		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		Response: &admissionv1.AdmissionResponse{Allowed: true},
 	}
 	return review, err
 }
 
-func newInvalidAdmissionReview() (admv1beta1.AdmissionReview, error) {
+func newInvalidAdmissionReview() (admissionv1.AdmissionReview, error) {
 	raw, err := json.Marshal([]byte(`1`))
 	if err != nil {
-		return admv1beta1.AdmissionReview{}, err
+		return admissionv1.AdmissionReview{}, err
 	}
-	review := admv1beta1.AdmissionReview{
-		Request: &admv1beta1.AdmissionRequest{
+	review := admissionv1.AdmissionReview{
+		Request: &admissionv1.AdmissionRequest{
 			Kind:      gvk,
-			Operation: admv1beta1.Create,
+			Operation: admissionv1.Create,
 			Object: runtime.RawExtension{
 				Raw: raw,
 			},
 			Namespace: "default",
 		},
-		Response: &admv1beta1.AdmissionResponse{Allowed: true},
+		Response: &admissionv1.AdmissionResponse{Allowed: true},
 	}
 	return review, nil
 }

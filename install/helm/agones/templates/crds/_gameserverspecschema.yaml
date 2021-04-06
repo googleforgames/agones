@@ -1,0 +1,153 @@
+# Copyright 2018 Google LLC All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{{/* schema for a gameserver spec */}}
+{{- define "gameserver.schema" }}
+type: object
+required:
+- spec
+properties:
+  {{- if .metadata | default false }}
+  metadata:
+    {{- include "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta" . | indent 4 }}
+  {{- end}}
+  spec:
+    type: object
+    required:
+    - template
+    properties:
+      template:
+        {{- if .podPreserveUnknownFields }}
+        x-kubernetes-preserve-unknown-fields: true
+        {{- end }}
+        {{- include "io.k8s.api.core.v1.PodTemplateSpec" . | indent 8 }}
+      container:
+        title: The container name running the gameserver
+        description: if there is more than one container, specify which one is the game server
+        type: string
+        minLength: 0
+        maxLength: 63
+        pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+      ports:
+        title: array of ports to expose on the game server container
+        type: array
+        nullable: true
+        items:
+          type: object
+          properties:
+            name:
+              title: Name is the descriptive name of the port
+              type: string
+            portPolicy:
+              title: the port policy that will be applied to the game server
+              description: |
+                  portPolicy has three options:
+                  - "Dynamic" (default) the system allocates a random free hostPort for the gameserver, for game clients to connect to
+                  - "Static", user defines the hostPort that the game client will connect to. Then onus is on the user to ensure that the
+                  port is available. When static is the policy specified, `hostPort` is required to be populated
+                  - "Passthrough" dynamically sets the `containerPort` to the same value as the dynamically selected hostPort.
+                  This will mean that users will need to lookup what port has been opened through the server side SDK.
+              type: string
+              enum:
+              - Dynamic
+              - Static
+              - Passthrough
+            protocol:
+              title: Protocol being used. Defaults to UDP. TCP and TCPUDP are other options.
+              type: string
+              enum:
+              - UDP
+              - TCP
+              - TCPUDP
+            container:
+              title: |
+                Container is the name of the container on which to open the port. Defaults to the game server container.
+              type: string
+            containerPort:
+              title: The port that is being opened on the game server process
+              type: integer
+              minimum: 1
+              maximum: 65535
+            hostPort:
+              title: The port exposed on the host
+              description: Only required when `portPolicy` is "Static". Overwritten when portPolicy is "Dynamic" or "Passthrough".
+              type: integer
+              minimum: 1
+              maximum: 65535
+      sdkServer:
+        type: object
+        title: Parameters for the SDK Server (sidecar)
+        properties:
+          logLevel:
+            type: string 
+            description: |
+              sdkServer log level parameter has three options:
+              - "Info" (default) The SDK server will output all messages except for debug messages
+              - "Debug" The SDK server will output all messages including debug messages
+              - "Error" The SDK server will only output error messages
+            enum:
+            - Error
+            - Info
+            - Debug
+          grpcPort:
+            title: The port on which the SDK server binds the gRPC server to accept incoming connections
+            description: |
+              Starting with Agones 1.2 the default gRPC port is 9357. In earlier releases, the default was 59357.
+            type: integer
+            minimum: 1
+            maximum: 65535
+          httpPort:
+            title: The port on which the SDK server binds the HTTP gRPC gateway server to accept incoming connections
+            description: |
+              Starting with Agones 1.2 the default HTTP port is 9358. In earlier releases, the default was 59358.
+            type: integer
+            minimum: 1
+            maximum: 65535
+      scheduling:
+        type: string
+        enum:
+        - Packed
+        - Distributed
+      health:
+        type: object
+        title: Health checking for the running game server
+        properties:
+          disabled:
+            title: Disable health checking. defaults to false, but can be set to true
+            type: boolean
+          initialDelaySeconds:
+            title: Number of seconds after the container has started before health check is initiated. Defaults to 5 seconds
+            type: integer
+            minimum: 0
+            maximum: 2147483648
+          periodSeconds:
+            title: How long before the server is considered not healthy
+            type: integer
+            minimum: 0
+            maximum: 2147483648
+          failureThreshold:
+            title: Minimum consecutive failures for the health probe to be considered failed after having succeeded.
+            type: integer
+            minimum: 1
+            maximum: 2147483648
+      players:
+        type: object
+        title: Configuration of player capacity
+        nullable: true
+        properties:
+          initialCapacity:
+            type: integer
+            title: The initial player capacity of this Game Server
+            minimum: 0
+{{- end }}

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build go
-FROM golang:1.14.4 as go-builder
+FROM golang:1.14.12 as go-builder
 WORKDIR /go/src/supertuxkart
 
 RUN apt-get update && apt-get install -y curl tar xz-utils
@@ -62,5 +62,6 @@ COPY server_config.xml .
 
 RUN chown -R supertuxkart:supertuxkart /home/supertuxkart && chmod +x wrapper
 
+ENV ENABLE_PLAYER_TRACKING=false
 USER 1000
 ENTRYPOINT ["./entrypoint.sh"]

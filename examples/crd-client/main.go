@@ -89,7 +89,7 @@ func main() {
 			Namespace:    viper.GetString(gameserversNamespace),
 		},
 		Spec: agonesv1.GameServerSpec{
-			Container: "udp-server",
+			Container: "simple-game-server",
 			Ports: []agonesv1.GameServerPort{{
 				ContainerPort: 7654,
 				HostPort:      7654,
@@ -101,7 +101,7 @@ func main() {
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "udp-server",
+							Name:  "simple-game-server",
 							Image: viper.GetString(gameServerImage),
 						},
 					},

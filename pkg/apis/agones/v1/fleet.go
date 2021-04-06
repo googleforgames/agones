@@ -30,8 +30,8 @@ const (
 )
 
 // +genclient
-// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/extensions/v1beta1.Scale
-// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/extensions/v1beta1.Scale,result=k8s.io/api/extensions/v1beta1.Scale
+// +genclient:method=GetScale,verb=get,subresource=scale,result=k8s.io/api/autoscaling/v1.Scale
+// +genclient:method=UpdateScale,verb=update,subresource=scale,input=k8s.io/api/autoscaling/v1.Scale,result=k8s.io/api/autoscaling/v1.Scale
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Fleet is the data structure for a Fleet resource
@@ -236,4 +236,29 @@ func SumStatusReplicas(list []*GameServerSet) int32 {
 	}
 
 	return total
+}
+
+// SumSpecReplicas returns the total number of
+// Spec.Replicas in the list of GameServerSets
+func SumSpecReplicas(list []*GameServerSet) int32 {
+	total := int32(0)
+	for _, gsSet := range list {
+		if gsSet != nil {
+			total += gsSet.Spec.Replicas
+		}
+	}
+
+	return total
+}
+
+// GetReadyReplicaCountForGameServerSets returns the total number of
+// Status.ReadyReplicas in the list of GameServerSets
+func GetReadyReplicaCountForGameServerSets(gss []*GameServerSet) int32 {
+	totalReadyReplicas := int32(0)
+	for _, gss := range gss {
+		if gss != nil {
+			totalReadyReplicas += gss.Status.ReadyReplicas
+		}
+	}
+	return totalReadyReplicas
 }

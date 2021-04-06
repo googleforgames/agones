@@ -18,7 +18,7 @@ The following prerequisites are required to create a GameServer:
 
 If you don't have a Kubernetes cluster you can follow [these instructions]({{< ref "/docs/Installation/_index.md" >}}) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
 
-For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-udp/" >}}simple-udp{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
+For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-game-server/" >}}simple-game-server{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
 
 While not required, you may wish to go through the [Create a Game Server]({{< relref "create-gameserver.md" >}}) quickstart before this one.
 
@@ -35,13 +35,13 @@ While not required, you may wish to go through the [Create a Game Server]({{< re
 Let's create a Fleet using the following command :
 
 ```
-kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/fleet.yaml
+kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
 You should see a successful output similar to this :
 
 ```
-fleet "simple-udp" created
+fleet.agones.dev/simple-game-server created
 ```
 
 This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
@@ -53,17 +53,17 @@ kubectl get fleet
 It should look something like this:
 
 ```
-NAME         SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY     AGE
-simple-udp   Packed       2         3         0           2         9m
+NAME                 SCHEDULING   DESIRED   CURRENT   ALLOCATED   READY     AGE
+simple-game-server   Packed       2         3         0           2         9m
 ```
 
 You can also see the GameServers that have been created by the Fleet by running `kubectl get gameservers`,
-the GameServer will be prefixed by `simple-udp`.
+the GameServer will be prefixed by `simple-game-server`.
 
 ```
-NAME                     STATE     ADDRESS            PORT   NODE      AGE
-simple-udp-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
-simple-udp-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
+NAME                             STATE     ADDRESS            PORT   NODE      AGE
+simple-game-server-llg4x-rx6rc   Ready     192.168.122.205    7752   minikube   9m
+simple-game-server-llg4x-v6g2r   Ready     192.168.122.205    7623   minikube   9m
 ```
 
 For the full details of the YAML file head to the [Fleet Specification Guide]({{< ref "/docs/Reference/fleet.md" >}})
@@ -73,14 +73,14 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 Let's wait for the two `GameServers` to become ready.
 
 ```
-watch kubectl describe fleet simple-udp
+watch kubectl describe fleet simple-game-server
 ```
 
 ```
-Name:         simple-udp
+Name:         simple-game-server
 Namespace:    default
 Labels:       <none>
-Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"agones.dev/v1","kind":"Fleet","metadata":{"annotations":{},"name":"simple-udp","namespace":"default"},"spec":{"replicas":2,...
+Annotations:  kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"agones.dev/v1","kind":"Fleet","metadata":{"annotations":{},"name":"simple-game-server","namespace":"default"},"spec":{"replicas":2,...
 API Version:  agones.dev/v1
 Kind:         Fleet
 Metadata:
@@ -88,7 +88,7 @@ Metadata:
   Creation Timestamp:  2018-07-01T18:55:35Z
   Generation:          1
   Resource Version:    24685
-  Self Link:           /apis/agones.dev/v1/namespaces/default/fleets/simple-udp
+  Self Link:           /apis/agones.dev/v1/namespaces/default/fleets/simple-game-server
   UID:                 56710a91-7d60-11e8-b2dd-08002703ef08
 Spec:
   Replicas:  2
@@ -112,7 +112,7 @@ Spec:
         Spec:
           Containers:
             Image:  {{< example-image >}}
-            Name:   simple-udp
+            Name:   simple-game-server
             Resources:
 Status:
   Allocated Replicas:  0
@@ -121,7 +121,7 @@ Status:
 Events:
   Type    Reason                 Age   From              Message
   ----    ------                 ----  ----              -------
-  Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-udp-wlqnd
+  Normal  CreatingGameServerSet  13s   fleet-controller  Created GameServerSet simple-game-server-wlqnd
 ```
 
 If you look towards the bottom, you can see there is a section of `Status > Ready Replicas` which will tell you
@@ -131,23 +131,23 @@ how many `GameServers` are currently in a Ready state. After a short period, the
 
 Let's scale up the `Fleet` from 2 `replicates` to 5.
 
-Run `kubectl scale fleet simple-udp --replicas=5` to change Replicas count from 2 to 5.
+Run `kubectl scale fleet simple-game-server --replicas=5` to change Replicas count from 2 to 5.
 
-If we now run `kubectl get gameservers` we should see 5 `GameServers` prefixed by `simple-udp`.
+If we now run `kubectl get gameservers` we should see 5 `GameServers` prefixed by `simple-game-server`.
 
 ```
-NAME                     STATE    ADDRESS           PORT    NODE       AGE
-simple-udp-sdhzn-kcmh6   Ready    192.168.122.205   7191    minikube   52m
-simple-udp-sdhzn-pdpk5   Ready    192.168.122.205   7752    minikube   53m
-simple-udp-sdhzn-r4d6x   Ready    192.168.122.205   7623    minikube   52m
-simple-udp-sdhzn-wng5k   Ready    192.168.122.205   7709    minikube   53m
-simple-udp-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   52m
+NAME                             STATE    ADDRESS           PORT    NODE       AGE
+simple-game-server-sdhzn-kcmh6   Ready    192.168.122.205   7191    minikube   52m
+simple-game-server-sdhzn-pdpk5   Ready    192.168.122.205   7752    minikube   53m
+simple-game-server-sdhzn-r4d6x   Ready    192.168.122.205   7623    minikube   52m
+simple-game-server-sdhzn-wng5k   Ready    192.168.122.205   7709    minikube   53m
+simple-game-server-sdhzn-wnhsw   Ready    192.168.122.205   7478    minikube   52m
 ```
 
 ### 4. Allocate a Game Server from the Fleet
 
 Since we have a fleet of warm gameservers, we need a way to request one of them for usage, and mark that it has
-players access it (and therefore, it should not be deleted until they are finished with it).
+players accessing it (and therefore, it should not be deleted until they are finished with it).
 
 {{< alert title="Note" color="info">}}
  In production, you would likely do the following through a [Kubernetes API call]({{< ref "/docs/Guides/access-api.md" >}}), but we can also
@@ -163,10 +163,10 @@ A `GameServerAllocation` uses a [label selector](https://kubernetes.io/docs/conc
 to determine what group of `GameServers` it will attempt to allocate out of. That being said, a `Fleet` and `GameServerAllocation`
 are often used in conjunction.
 
-{{< ghlink href="/examples/simple-udp/gameserverallocation.yaml" >}}This example{{< /ghlink >}} uses the label selector to specifically target the `simple-udp` fleet that we just created.
+{{< ghlink href="/examples/simple-game-server/gameserverallocation.yaml" >}}This example{{< /ghlink >}} uses the label selector to specifically target the `simple-game-server` fleet that we just created.
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
 For the full details of the YAML file head to the [GameServerAllocation Specification Guide]({{< ref "/docs/Reference/gameserverallocation.md" >}})
@@ -178,17 +178,17 @@ apiVersion: allocation.agones.dev/v1
 kind: GameServerAllocation
 metadata:
   creationTimestamp: 2019-02-19T02:13:12Z
-  name: simple-udp-dph9b-hfk24
+  name: simple-game-server-dph9b-hfk24
   namespace: default
 spec:
   metadata: {}
   required:
     matchLabels:
-      agones.dev/fleet: simple-udp
+      agones.dev/fleet: simple-game-server
   scheduling: Packed
 status:
   address: 192.168.122.152
-  gameServerName: simple-udp-dph9b-hfk24
+  gameServerName: simple-game-server-dph9b-hfk24
   nodeName: minikube
   ports:
   - name: default
@@ -217,12 +217,12 @@ kubectl get gs
 This will get you a list of all the current `GameServers` and their `Status.State`.
 
 ```
-NAME                     STATE       ADDRESS           PORT   NODE      AGE
-simple-udp-sdhzn-kcmh6   Ready       192.168.122.205   7191   minikube  52m
-simple-udp-sdhzn-pdpk5   Ready       192.168.122.205   7752   minikube  53m
-simple-udp-sdhzn-r4d6x   Allocated   192.168.122.205   7623   minikube  52m
-simple-udp-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
-simple-udp-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
+NAME                             STATE       ADDRESS           PORT   NODE      AGE
+simple-game-server-sdhzn-kcmh6   Ready       192.168.122.205   7191   minikube  52m
+simple-game-server-sdhzn-pdpk5   Ready       192.168.122.205   7752   minikube  53m
+simple-game-server-sdhzn-r4d6x   Allocated   192.168.122.205   7623   minikube  52m
+simple-game-server-sdhzn-wng5k   Ready       192.168.122.205   7709   minikube  53m
+simple-game-server-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  52m
 ```
 
 {{< alert title="Note" color="info">}}
@@ -239,12 +239,12 @@ kubectl get gs
 This will get you a list of all the current `GameServers` and their `Status > State`.
 
 ```
-NAME                     STATE       ADDRESS          PORT   NODE        AGE
-simple-udp-tfqn7-c9tqz   Ready       192.168.39.150   7136   minikube    52m
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube    53m
-simple-udp-tfqn7-p8wnl   Ready       192.168.39.150   7453   minikube    52m
-simple-udp-tfqn7-t6bwp   Ready       192.168.39.150   7228   minikube    53m
-simple-udp-tfqn7-wkb7b   Ready       192.168.39.150   7226   minikube    52m
+NAME                             STATE       ADDRESS          PORT   NODE        AGE
+simple-game-server-tfqn7-c9tqz   Ready       192.168.39.150   7136   minikube    52m
+simple-game-server-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube    53m
+simple-game-server-tfqn7-p8wnl   Ready       192.168.39.150   7453   minikube    52m
+simple-game-server-tfqn7-t6bwp   Ready       192.168.39.150   7228   minikube    53m
+simple-game-server-tfqn7-wkb7b   Ready       192.168.39.150   7226   minikube    52m
 ```
 
 ### 5. Scale down the Fleet
@@ -257,7 +257,7 @@ and we shouldn't disconnect them!
 
 Let's scale down our Fleet to 0 (yep! you can do that!), and watch what happens.
 
-Run `kubectl scale fleet simple-udp --replicas=0` to change Replicas count from 5 to 0.
+Run `kubectl scale fleet simple-game-server --replicas=0` to change Replicas count from 5 to 0.
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
 ```
@@ -267,8 +267,8 @@ watch kubectl get gs
 Eventually, one by one they will be removed from the list, and you should simply see:
 
 ```
-NAME                     STATUS      ADDRESS          PORT    NODE       AGE
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148    minikube   55m
+NAME                             STATUS      ADDRESS          PORT    NODE       AGE
+simple-game-server-tfqn7-g8fhq   Allocated   192.168.39.150   7148    minikube   55m
 ```
 
 That lone `Allocated` `GameServer` is left all alone, but still running!
@@ -309,12 +309,12 @@ of `GameServers` in the pool in either a `Ready` or `Allocated` state.
 We can also change the configuration of the `GameServer` of the running `Fleet`, and have the changes
 roll out, without interrupting the currently `Allocated` `GameServers`.
 
-Let's take this for a spin! Run `kubectl scale fleet simple-udp --replicas=5` to return Replicas count back to 5.
+Let's take this for a spin! Run `kubectl scale fleet simple-game-server --replicas=5` to return Replicas count back to 5.
 
 Let's also allocate ourselves a `GameServer`
 
 ```
-kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-udp/gameserverallocation.yaml -o yaml
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
 We should now have four `Ready` `GameServers` and one `Allocated`.
@@ -322,25 +322,25 @@ We should now have four `Ready` `GameServers` and one `Allocated`.
 We can check this by running `kubectl get gs`.
 
 ```
-NAME                     STATE       ADDRESS          PORT   NODE       AGE 
-simple-udp-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m       
-simple-udp-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m   
-simple-udp-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m   
-simple-udp-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m   
-simple-udp-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m   
+NAME                             STATE       ADDRESS          PORT   NODE       AGE 
+simple-game-server-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m       
+simple-game-server-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m   
+simple-game-server-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m   
+simple-game-server-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m   
+simple-game-server-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m   
 ```
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
 to run a new game server process, but to make this example simple, change `containerPort` from `7654`
 to `6000`.
 
-Run `kubectl edit fleet simple-udp`, and make the necessary changes, and then save and exit your editor. 
+Run `kubectl edit fleet simple-game-server`, and make the necessary changes, and then save and exit your editor. 
 
 This will start the deployment of a new set of `GameServers` running
 with a Container Port of `6000`.
 
 {{< alert title="Warning" color="warning">}}
-This will make it such that you can no longer connect to the simple-udp game server.  
+This will make it such that you can no longer connect to the simple-game-server game server.  
 {{< /alert >}}
 
 Run `watch kubectl get gs`
