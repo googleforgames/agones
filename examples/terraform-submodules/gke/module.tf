@@ -69,6 +69,14 @@ variable "feature_gates" {
   default = ""
 }
 
+variable "windows_node_count" {
+  default = "0"
+}
+
+variable "windows_machine_type" {
+  default = "n1-standard-4"
+}
+
 module "gke_cluster" {
   // ***************************************************************************************************
   // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.8.0 corresponds
@@ -77,13 +85,15 @@ module "gke_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"
 
   cluster = {
-    "name"             = var.name
-    "zone"             = var.zone
-    "machineType"      = var.machine_type
-    "initialNodeCount" = var.node_count
-    "project"          = var.project
-    "network"          = var.network
-    "subnetwork"       = var.subnetwork
+    "name"                    = var.name
+    "zone"                    = var.zone
+    "machineType"             = var.machine_type
+    "initialNodeCount"        = var.node_count
+    "project"                 = var.project
+    "network"                 = var.network
+    "subnetwork"              = var.subnetwork
+    "windowsInitialNodeCount" = var.windows_node_count
+    "windowsMachineType"      = var.windows_machine_type
   }
 }
 

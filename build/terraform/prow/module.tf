@@ -21,10 +21,10 @@ variable "project" {
 }
 
 resource "google_container_cluster" "prow-build-cluster" {
-  name = "prow-build-cluster"
-  project = var.project
-  location = "us-west1-c"
-  description = "Prow cluster to run tests for Agones"
+  name               = "prow-build-cluster"
+  project            = var.project
+  location           = "us-west1-c"
+  description        = "Prow cluster to run tests for Agones"
   min_master_version = "1.18"
   initial_node_count = 8
   node_config {
