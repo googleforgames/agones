@@ -37,6 +37,8 @@ terraform-clean:
 # Alpha Feature gates are disabled
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= n1-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
 gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
@@ -52,7 +54,9 @@ gcloud-terraform-cluster:
 		-var feature_gates=$(FEATURE_GATES) \
 		-var zone="$(GCP_CLUSTER_ZONE)" -var project="$(GCP_PROJECT)" \
 		-var log_level="$(LOG_LEVEL)" \
-		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
+		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT) \
+		-var windows_node_count=$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT) \
+		-var windows_machine_type=$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
 # Creates a cluster and install current version of Agones controller
@@ -60,6 +64,8 @@ gcloud-terraform-cluster:
 # Unifies previous `make gcloud-test-cluster` and `make install` targets
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= n1-standard-4
 gcloud-terraform-install: ALWAYS_PULL_SIDECAR := true
 gcloud-terraform-install: IMAGE_PULL_POLICY := "Always"
 gcloud-terraform-install: PING_SERVICE_TYPE := "LoadBalancer"
@@ -82,7 +88,9 @@ gcloud-terraform-install:
 		-var zone=$(GCP_CLUSTER_ZONE) -var project=$(GCP_PROJECT) \
 		-var log_level=$(LOG_LEVEL) \
 		-var feature_gates=$(FEATURE_GATES) \
-		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT)'
+		-var node_count=$(GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT) \
+		-var windows_node_count=$(GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT) \
+		-var windows_machine_type=$(GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE)'
 	GCP_CLUSTER_NAME=$(GCP_TF_CLUSTER_NAME) $(MAKE) gcloud-auth-cluster
 
 gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)

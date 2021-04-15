@@ -27,11 +27,11 @@ variable "values_file" {
 
 
 module "gke_helm" {
-    source = "../../build/terraform/gke/"
+  source = "../../build/terraform/gke/"
 
-    values_file = var.values_file
-    project = var.project
-    name = var.name
+  values_file = var.values_file
+  project     = var.project
+  name        = var.name
 }
 
 // Additional resources for terratests
