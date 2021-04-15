@@ -79,6 +79,11 @@ through [SDK.WatchGameServer()]({{< ref "/docs/Guides/Client SDKs/_index.md#watc
 Combining these two features allows you to pass information such as map data, gameplay metadata and more to a game
 server binary at Allocation time, through Agones functionality.
 
+Do note, that if you wish to have either the labels or annotations that are set via `GameServerAllocation` to be 
+editable by the game server via the Agones SDK, the label key will need to be prefixed with `agones.dev/sdk-`. See
+[SDK.SetLabel()]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}})
+and [SDK.SetAnnotation()]({{< ref "/docs/Guides/Client SDKs/_index.md#setannotationkey-value" >}}) for more information.
+
 ### How can I expose information from my game server binary to an external service?
 
 The Agones game server SDK allows you to set custom 
