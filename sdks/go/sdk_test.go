@@ -108,7 +108,7 @@ func TestSDKSetLabel(t *testing.T) {
 	expected := "bar"
 	err := s.SetLabel("foo", expected)
 	assert.Nil(t, err)
-	assert.Equal(t, expected, sm.labels["foo"])
+	assert.Equal(t, expected, sm.labels["agones.dev/sdk-foo"])
 }
 
 func TestSDKSetAnnotation(t *testing.T) {
@@ -124,7 +124,7 @@ func TestSDKSetAnnotation(t *testing.T) {
 	expected := "bar"
 	err := s.SetAnnotation("foo", expected)
 	assert.Nil(t, err)
-	assert.Equal(t, expected, sm.annotations["foo"])
+	assert.Equal(t, expected, sm.annotations["agones.dev/sdk-foo"])
 }
 
 var _ sdk.SDKClient = &sdkMock{}
@@ -143,12 +143,12 @@ type sdkMock struct {
 }
 
 func (m *sdkMock) SetLabel(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
-	m.labels[in.Key] = in.Value
+	m.labels["agones.dev/sdk-"+in.Key] = in.Value
 	return &sdk.Empty{}, nil
 }
 
 func (m *sdkMock) SetAnnotation(ctx context.Context, in *sdk.KeyValue, opts ...grpc.CallOption) (*sdk.Empty, error) {
-	m.annotations[in.Key] = in.Value
+	m.annotations["agones.dev/sdk-"+in.Key] = in.Value
 	return &sdk.Empty{}, nil
 }
 

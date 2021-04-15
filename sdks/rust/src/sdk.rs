@@ -288,7 +288,7 @@ impl Sdk {
         }
     }
 
-    /// Set a Label value on the backing GameServer record that is stored in Kubernetes
+    /// Set a Label value on the backing GameServer record that is stored in Kubernetes with the prefix 'agones.dev/sdk-'
     pub async fn set_label_async<S>(&self, key: S, value: S) -> Result<()>
     where
         S: Into<String>,
@@ -300,7 +300,7 @@ impl Sdk {
         Ok(res)
     }
 
-    /// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes
+    /// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes with the prefix 'agones.dev/sdk-'
     pub async fn set_annotation_async<S>(&self, key: S, value: S) -> Result<()>
     where
         S: Into<String>,

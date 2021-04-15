@@ -191,7 +191,8 @@ public:
 	void Reserve(int64 Seconds, FReserveDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
-	 * \brief SetAnnotation sets a metadata annotation on the `GameServer` with the prefix stable.agones.dev/sdk-
+	 * \brief SetAnnotation sets a metadata annotation on the `GameServer` with the prefix 'agones.dev/sdk-'
+	 * calling SetAnnotation("foo", "bar", {}, {}) will result in the annotation "agones.dev/sdk-foo: bar".
 	 * \param Key
 	 * \param Value
 	 * \param SuccessDelegate - Called on Successful call.
@@ -201,7 +202,8 @@ public:
 	void SetAnnotation(FString& Key, FString& Value, FSetAnnotationDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
-	 * \brief SetLabel sets a metadata label on the `GameServer` with the prefix stable.agones.dev/sdk-.
+	 * \brief SetLabel sets a metadata label on the `GameServer` with the prefix 'agones.dev/sdk-'
+	 * calling SetLabel("foo", "bar", {}, {}) will result in the label "agones.dev/sdk-foo: bar".
 	 * \param Key
 	 * \param Value
 	 * \param SuccessDelegate - Called on Successful call.

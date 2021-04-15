@@ -231,7 +231,7 @@ namespace Agones
 		}
 
 		/// <summary>
-		/// Set a Label value on the backing GameServer record that is stored in Kubernetes.
+		/// Set a Label value on the backing GameServer record that is stored in Kubernetes, with the prefix 'agones.dev/sdk-'.
 		/// </summary>
 		/// <param name="key">Label key</param>
 		/// <param name="value">Label value</param>
@@ -255,7 +255,7 @@ namespace Agones
 		}
 
 		/// <summary>
-		/// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes.
+		/// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes, with the prefix 'agones.dev/sdk-'.
 		/// </summary>
 		/// <param name="key">Annotation key</param>
 		/// <param name="value">Annotation value</param>
