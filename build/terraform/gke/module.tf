@@ -37,6 +37,10 @@ variable "machine_type" {
   default = "n1-standard-4"
 }
 
+variable "windows_machine_type" {
+  default = "n1-standard-4"
+}
+
 variable "name" {
   default = "agones-tf-cluster"
 }
@@ -87,6 +91,10 @@ variable "log_level" {
 variable "node_count" {
   default = "4"
 }
+// Note: This is the number of gameserver Windows nodes.
+variable "windows_node_count" {
+  default = "0"
+}
 
 variable "network" {
   default     = "default"
@@ -101,12 +109,14 @@ module "gke_cluster" {
   source = "../../../install/terraform/modules/gke"
 
   cluster = {
-    "name"              = var.name
-    "zone"              = var.zone
-    "machineType"       = var.machine_type
-    "initialNodeCount"  = var.node_count
-    "project"           = var.project
-    "network"           = var.network
+    "name"                    = var.name
+    "zone"                    = var.zone
+    "machineType"             = var.machine_type
+    "initialNodeCount"        = var.node_count
+    "windowsMachineType"      = var.windows_machine_type
+    "windowsInitialNodeCount" = var.windows_node_count
+    "project"                 = var.project
+    "network"                 = var.network
   }
 }
 

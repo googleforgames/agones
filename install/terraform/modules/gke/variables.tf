@@ -25,14 +25,16 @@ variable "cluster" {
   type        = map
 
   default = {
-    "zone"              = "us-west1-c"
-    "name"              = "test-cluster"
-    "machineType"       = "n1-standard-4"
-    "initialNodeCount"  = "4"
-    "project"           = "agones"
-    "network"           = "default"
-    "subnetwork"        = ""
-    "kubernetesVersion" = "1.18"
+    "zone"                    = "us-west1-c"
+    "name"                    = "test-cluster"
+    "machineType"             = "n1-standard-4"
+    "initialNodeCount"        = "4"
+    "project"                 = "agones"
+    "network"                 = "default"
+    "subnetwork"              = ""
+    "kubernetesVersion"       = "1.18"
+    "windowsInitialNodeCount" = "0"
+    "windowsMachineType"      = "n1-standard-4"
   }
 }
 

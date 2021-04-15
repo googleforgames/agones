@@ -22,14 +22,16 @@ data "google_client_config" "default" {}
 # A list of all parameters used in interpolation var.cluster
 # Set values to default if not key was not set in original map
 locals {
-  project           = lookup(var.cluster, "project", "agones")
-  zone              = lookup(var.cluster, "zone", "us-west1-c")
-  name              = lookup(var.cluster, "name", "test-cluster")
-  machineType       = lookup(var.cluster, "machineType", "n1-standard-4")
-  initialNodeCount  = lookup(var.cluster, "initialNodeCount", "4")
-  network           = lookup(var.cluster, "network", "default")
-  subnetwork        = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion = lookup(var.cluster, "kubernetesVersion", "1.18")
+  project                 = lookup(var.cluster, "project", "agones")
+  zone                    = lookup(var.cluster, "zone", "us-west1-c")
+  name                    = lookup(var.cluster, "name", "test-cluster")
+  machineType             = lookup(var.cluster, "machineType", "n1-standard-4")
+  initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
+  network                 = lookup(var.cluster, "network", "default")
+  subnetwork              = lookup(var.cluster, "subnetwork", "")
+  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.18")
+  windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
+  windowsMachineType      = lookup(var.cluster, "windowsMachineType", "n1-standard-4")
 }
 
 # echo command used for debugging purpose
@@ -37,10 +39,16 @@ locals {
 resource "null_resource" "test-setting-variables" {
   provisioner "local-exec" {
     command = <<EOT
-    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s",
-    local.name, local.project,
-    local.machineType, local.initialNodeCount, local.network,
-local.zone)}
+    ${format("echo Current variables set as following - name: %s, project: %s, machineType: %s, initialNodeCount: %s, network: %s, zone: %s, windowsInitialNodeCount: %s, windowsMachineType: %s",
+    local.name,
+    local.project,
+    local.machineType,
+    local.initialNodeCount,
+    local.network,
+    local.zone,
+    local.windowsInitialNodeCount,
+    local.windowsMachineType,
+)}
     EOT
 }
 }
@@ -57,7 +65,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "default"
     node_count = local.initialNodeCount
-    version = local.kubernetesVersion
+    version    = local.kubernetesVersion
 
     management {
       auto_upgrade = false
@@ -81,7 +89,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-system"
     node_count = 1
-    version = local.kubernetesVersion
+    version    = local.kubernetesVersion
 
     management {
       auto_upgrade = false
@@ -113,7 +121,7 @@ resource "google_container_cluster" "primary" {
   node_pool {
     name       = "agones-metrics"
     node_count = 1
-    version = local.kubernetesVersion
+    version    = local.kubernetesVersion
 
     management {
       auto_upgrade = false
@@ -139,6 +147,42 @@ resource "google_container_cluster" "primary" {
         key    = "agones.dev/agones-metrics"
         value  = "true"
         effect = "NO_EXECUTE"
+      }
+    }
+  }
+  dynamic "ip_allocation_policy" {
+    for_each = tonumber(local.windowsInitialNodeCount) > 0 ? [1] : []
+    content {
+      # Enable Alias IPs to allow Windows Server networking.
+      cluster_ipv4_cidr_block  = "/14"
+      services_ipv4_cidr_block = "/20"
+    }
+  }
+  dynamic "node_pool" {
+    for_each = tonumber(local.windowsInitialNodeCount) > 0 ? [1] : []
+    content {
+      name       = "windows"
+      node_count = local.windowsInitialNodeCount
+      version    = local.kubernetesVersion
+
+      management {
+        auto_upgrade = false
+      }
+
+      node_config {
+        image_type   = "WINDOWS_LTSC"
+        machine_type = local.windowsMachineType
+
+        oauth_scopes = [
+          "https://www.googleapis.com/auth/devstorage.read_only",
+          "https://www.googleapis.com/auth/logging.write",
+          "https://www.googleapis.com/auth/monitoring",
+          "https://www.googleapis.com/auth/service.management.readonly",
+          "https://www.googleapis.com/auth/servicecontrol",
+          "https://www.googleapis.com/auth/trace.append",
+        ]
+
+        tags = ["game-server"]
       }
     }
   }

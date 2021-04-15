@@ -51,13 +51,13 @@ Table of Contents
         * [make grafana-portforward](#make-grafana-portforward)
         * [make controller-portforward](#make-controller-portforward)
         * [make pprof-cpu-web](#make-pprof-cpu-web)
-        * [make pprof-heap-web](#make-pprof-heap-web)          
+        * [make pprof-heap-web](#make-pprof-heap-web)
         * [make shell](#make-shell)
         * [make godoc](#make-godoc)
         * [make build-controller-image](#make-build-controller-image)
         * [make build-agones-sdk-image](#make-build-agones-sdk-image)
         * [make gen-install](#make-gen-install)
-        * [make gen-embedded-openapi](#make-gen-embedded-openapi)  
+        * [make gen-embedded-openapi](#make-gen-embedded-openapi)
         * [make gen-crd-client](#make-gen-crd-client)
         * [make gen-sdk-grpc](#make-gen-sdk-grpc)
      * [Build Image Targets](#build-image-targets)
@@ -201,12 +201,14 @@ configuration found in the `build/terraform/gke` directory.
 You can customize GKE cluster via environment variables or by using a [`local-includes`](./local-includes) file.
 See the table below for available customizations :
 
-| Parameter                             | Description                                                                   | Default       |
-|---------------------------------------|-------------------------------------------------------------------------------|---------------|
-| `GCP_CLUSTER_NAME`                    | The name of the cluster                                                       | `test-cluster`  |
-| `GCP_CLUSTER_ZONE`                    | The name of the Google Compute Engine zone in which the cluster will resides. |  `us-west1-c`   |
-| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`| The number of nodes to create in this cluster.                                |  `4`            |
-| `GCP_CLUSTER_NODEPOOL_MACHINETYPE`    | The name of a Google Compute Engine machine type.                             | `n1-standard-4` |
+| Parameter                                      | Description                                                                   | Default         |
+|------------------------------------------------|-------------------------------------------------------------------------------|-----------------|
+| `GCP_CLUSTER_NAME`                             | The name of the cluster                                                       | `test-cluster`  |
+| `GCP_CLUSTER_ZONE`                             | The name of the Google Compute Engine zone in which the cluster will resides. | `us-west1-c`    |
+| `GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT`        | The number of nodes to create in this cluster.                                | `4`             |
+| `GCP_CLUSTER_NODEPOOL_MACHINETYPE`             | The name of a Google Compute Engine machine type.                             | `n1-standard-4` |
+| `GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT` | The number of Windows nodes to create in this cluster.                        | `0`             |
+| `GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE`      | The name of a Google Compute Engine machine type for Windows nodes.           | `n1-standard-4` |
 
 If you would like to change more settings, feel free to edit the [`cluster.yml.jinja`](./gke-test-cluster/cluster.yml.jinja) file before running this command.
 
@@ -282,7 +284,7 @@ It's worth noting that Minikube does let you [reuse its Docker daemon](https://g
 and build directly on Minikube, but in this case this approach is far simpler,
 and makes cross-platform support for the build system much easier.
 
-To push your own images into the cluster, take a look at Minikube's 
+To push your own images into the cluster, take a look at Minikube's
 [Pushing Images](https://minikube.sigs.k8s.io/docs/handbook/pushing/) guide.
 
 Running end-to-end tests on Minikube is done via the `make minikube-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Minikube cluster.
@@ -670,7 +672,7 @@ Use this instead of `make install`, as it disables PullAlways on the install.yam
 
 #### `make minikube-push`
 
-Push the local Agones Docker images that have already been built 
+Push the local Agones Docker images that have already been built
 via `make build` or `make build-images` into the "agones" minikube instance with `minikube cache add`
 
 #### `make minikube-setup-prometheus`
