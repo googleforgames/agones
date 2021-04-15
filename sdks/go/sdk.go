@@ -104,7 +104,7 @@ func (s *SDK) Health() error {
 }
 
 // SetLabel sets a metadata label on the `GameServer` with the prefix
-// stable.agones.dev/sdk-
+// agones.dev/sdk-
 func (s *SDK) SetLabel(key, value string) error {
 	kv := &sdk.KeyValue{Key: key, Value: value}
 	_, err := s.client.SetLabel(s.ctx, kv)
@@ -112,7 +112,7 @@ func (s *SDK) SetLabel(key, value string) error {
 }
 
 // SetAnnotation sets a metadata annotation on the `GameServer` with the prefix
-// stable.agones.dev/sdk-
+// agones.dev/sdk-
 func (s *SDK) SetAnnotation(key, value string) error {
 	kv := &sdk.KeyValue{Key: key, Value: value}
 	_, err := s.client.SetAnnotation(s.ctx, kv)
