@@ -164,13 +164,13 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 	return ah
 }
 
-// Start initiates the listeners.
-func (c *Allocator) Start(ctx context.Context) error {
+// Run initiates the listeners.
+func (c *Allocator) Run(ctx context.Context) error {
 	if err := c.Sync(ctx); err != nil {
 		return err
 	}
 
-	if err := c.readyGameServerCache.Start(ctx); err != nil {
+	if err := c.readyGameServerCache.Run(ctx); err != nil {
 		return err
 	}
 
