@@ -18,8 +18,6 @@ import (
 	"context"
 	"sort"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -33,6 +31,7 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 )
@@ -125,8 +124,8 @@ func (c *ReadyGameServerCache) Resync() {
 	c.workerqueue.EnqueueImmediately(&agonesv1.GameServer{})
 }
 
-// Start prepares cache to start
-func (c *ReadyGameServerCache) Start(ctx context.Context) error {
+// Run prepares cache to start
+func (c *ReadyGameServerCache) Run(ctx context.Context) error {
 	if err := c.Sync(ctx); err != nil {
 		return err
 	}

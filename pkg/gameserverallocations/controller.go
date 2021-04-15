@@ -102,7 +102,7 @@ func (c *Controller) registerAPIResource(ctx context.Context) {
 // Run runs this controller. Will block until stop is closed.
 // Ignores threadiness, as we only needs 1 worker for cache sync
 func (c *Controller) Run(ctx context.Context, _ int) error {
-	if err := c.allocator.Start(ctx); err != nil {
+	if err := c.allocator.Run(ctx); err != nil {
 		return err
 	}
 

@@ -252,7 +252,7 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 
 	kubeInformerFactory.Start(ctx.Done())
 	agonesInformerFactory.Start(ctx.Done())
-	if err := allocator.Start(ctx); err != nil {
+	if err := allocator.Run(ctx); err != nil {
 		logger.WithError(err).Fatal("starting allocator failed.")
 	}
 
