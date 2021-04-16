@@ -1,7 +1,7 @@
 ---
 title: "Godot Game Server Client SDK"
 linkTitle: "Godot"
-date: 2021-04-15T10:17:50Z
+date: 2021-04-27T10:17:50Z
 weight: 15
 description: "This is the Godot version of the Agones Game Server Client SDK."
 ---
@@ -70,7 +70,7 @@ func log_request(path, params, method):
     print(path)
 ```
 
-### Error Handling
+If the request results in an error, the SDK will return an AgonesError object.
 
 ```gdscript
     var result = yield(agones.Ready(), "completed")

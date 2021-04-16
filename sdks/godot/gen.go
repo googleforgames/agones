@@ -31,8 +31,6 @@ func main() {
 
 	for _, swaggerFile := range swaggerFiles {
 
-		log.Println(strings.ToUpper(swaggerFile))
-
 		// Load swagger file
 		var swagger map[string]interface{}
 		in, _ := os.Open(fmt.Sprintf("../swagger/%s.swagger.json", swaggerFile))
@@ -115,7 +113,6 @@ func main() {
 				log.Fatalf("Parsing `%s` failed: %s", key, err)
 			}
 			requests += buffer.String()
-			log.Printf("Parsing %s", key)
 		}
 
 		// Load client template
@@ -130,7 +127,7 @@ func main() {
 			log.Fatalf("Failed to create Agones.gd: %s", err)
 		}
 		defer func() {
-			if err = out.Close(); err != nil {
+			if err := out.Close(); err != nil {
 				log.Fatalf("Defer close failed: %s", err)
 			}
 		}()
@@ -142,9 +139,8 @@ func main() {
 		})
 		if err != nil {
 			log.Panicf("Execution failed: %s", err)
-		} else {
-			log.Println("Complete!")
 		}
+		log.Println("Complete!")
 	}
 
 }
