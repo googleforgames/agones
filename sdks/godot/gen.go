@@ -23,7 +23,10 @@ var swaggerFiles = []string{"sdk", "alpha", "beta"}
 func main() {
 
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		os.MkdirAll(directory, os.ModePerm)
+		mkErr := os.MkdirAll(directory, os.ModePerm)
+		if !os.IsExist(mkErr) {
+			log.Fatalf("Failed to create directory: %s", mkErr)
+		}
 	}
 
 	for _, swaggerFile := range swaggerFiles {
@@ -126,7 +129,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to create Agones.gd: %s", err)
 		}
-		defer out.Close()
+		defer func() {
+			if err = out.Close(); err != nil {
+				log.Fatalf("Defer close failed: %s", err)
+			}
+		}()
 
 		// Write out final template
 		err = clientTemplate.Execute(out, map[string]interface{}{
