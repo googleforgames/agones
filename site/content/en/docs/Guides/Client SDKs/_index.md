@@ -192,7 +192,7 @@ two main reasons:
    SDK only gives you access to write to part of the set of labels and annotations that exist on a GameServer.
 *  The prefix allows for a smaller attack surface if the GameServer container gets compromised. Since the 
    game container is generally externally exposed, and the Agones project doesn't control the binary that is 
-   run within it, limiting exposure if something goes horribly wrong, and it becomes compromised is worth the extra 
+   run within it, limiting exposure if the game server becomes compromised is worth the extra 
    development friction that comes with having this prefix in place.
 
 {{< alert title="Warning" color="warning">}}
