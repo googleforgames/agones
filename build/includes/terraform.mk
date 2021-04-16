@@ -36,9 +36,9 @@ terraform-clean:
 # Version could be specified by AGONES_VERSION
 # Alpha Feature gates are disabled
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
-gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
 gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
-gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= n1-standard-4
+gcloud-terraform-cluster: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-terraform-cluster: AGONES_VERSION ?= ''
 gcloud-terraform-cluster: GCP_TF_CLUSTER_NAME ?= agones-tf-cluster
 gcloud-terraform-cluster: LOG_LEVEL ?= debug
@@ -63,9 +63,9 @@ gcloud-terraform-cluster:
 # Set all necessary variables as `make install` does
 # Unifies previous `make gcloud-test-cluster` and `make install` targets
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_INITIALNODECOUNT ?= 4
-gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= n1-standard-4
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_MACHINETYPE ?= e2-standard-4
 gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSINITIALNODECOUNT ?= 0
-gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= n1-standard-4
+gcloud-terraform-install: GCP_CLUSTER_NODEPOOL_WINDOWSMACHINETYPE ?= e2-standard-4
 gcloud-terraform-install: ALWAYS_PULL_SIDECAR := true
 gcloud-terraform-install: IMAGE_PULL_POLICY := "Always"
 gcloud-terraform-install: PING_SERVICE_TYPE := "LoadBalancer"
