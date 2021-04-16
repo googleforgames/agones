@@ -15,6 +15,26 @@ func _init():
 	api_endpoint = "http://127.0.0.1:%s" % agones_port
 
 
+# Retrieves the current player capacity. This is always accurate from what has been set through this SDK,
+# even if the value has yet to be updated on the GameServer status resource.
+func GetPlayerCapacity() -> Dictionary:
+	return yield(_api_request("/alpha/player/capacity", {}, HTTPClient.METHOD_GET), "completed")
+
+
+# Update the GameServer.Status.Players.Capacity value with a new capacity.
+func SetPlayerCapacity(body) -> Dictionary:
+	return yield(
+		_api_request(
+			"/alpha/player/capacity",
+			{
+				"body": body,
+			},
+			HTTPClient.METHOD_PUT
+		),
+		"completed"
+	)
+
+
 # PlayerConnect increases the SDK’s stored player count by one, and appends this playerID to GameServer.Status.Players.IDs.
 func PlayerConnect(body) -> Dictionary:
 	return yield(
@@ -59,26 +79,6 @@ func PlayerDisconnect(body) -> Dictionary:
 				"body": body,
 			},
 			HTTPClient.METHOD_POST
-		),
-		"completed"
-	)
-
-
-# Retrieves the current player capacity. This is always accurate from what has been set through this SDK,
-# even if the value has yet to be updated on the GameServer status resource.
-func GetPlayerCapacity() -> Dictionary:
-	return yield(_api_request("/alpha/player/capacity", {}, HTTPClient.METHOD_GET), "completed")
-
-
-# Update the GameServer.Status.Players.Capacity value with a new capacity.
-func SetPlayerCapacity(body) -> Dictionary:
-	return yield(
-		_api_request(
-			"/alpha/player/capacity",
-			{
-				"body": body,
-			},
-			HTTPClient.METHOD_PUT
 		),
 		"completed"
 	)

@@ -15,19 +15,18 @@ func _init():
 	api_endpoint = "http://127.0.0.1:%s" % agones_port
 
 
-# Send GameServer details whenever the GameServer is updated
-func WatchGameServer() -> Dictionary:
-	return yield(_api_request("/watch/gameserver", {}, HTTPClient.METHOD_GET), "completed")
-
-
-# Retrieve the current GameServer data
-func GetGameServer() -> Dictionary:
-	return yield(_api_request("/gameserver", {}, HTTPClient.METHOD_GET), "completed")
-
-
-# Send a Empty every d Duration to declare that this GameSever is healthy
-func Health() -> Dictionary:
-	return yield(_api_request("/health", {}, HTTPClient.METHOD_POST), "completed")
+# Apply a Annotation to the backing GameServer metadata
+func SetAnnotation(body) -> Dictionary:
+	return yield(
+		_api_request(
+			"/metadata/annotation",
+			{
+				"body": body,
+			},
+			HTTPClient.METHOD_PUT
+		),
+		"completed"
+	)
 
 
 # Apply a Label to the backing GameServer metadata
@@ -44,6 +43,11 @@ func SetLabel(body) -> Dictionary:
 	)
 
 
+# Call when the GameServer is ready
+func Ready() -> Dictionary:
+	return yield(_api_request("/ready", {}, HTTPClient.METHOD_POST), "completed")
+
+
 # Marks the GameServer as the Reserved state for Duration
 func Reserve(body) -> Dictionary:
 	return yield(
@@ -58,9 +62,9 @@ func Reserve(body) -> Dictionary:
 	)
 
 
-# Call when the GameServer is shutting down
-func Shutdown() -> Dictionary:
-	return yield(_api_request("/shutdown", {}, HTTPClient.METHOD_POST), "completed")
+# Send GameServer details whenever the GameServer is updated
+func WatchGameServer() -> Dictionary:
+	return yield(_api_request("/watch/gameserver", {}, HTTPClient.METHOD_GET), "completed")
 
 
 # Call to self Allocation the GameServer
@@ -68,23 +72,19 @@ func Allocate() -> Dictionary:
 	return yield(_api_request("/allocate", {}, HTTPClient.METHOD_POST), "completed")
 
 
-# Apply a Annotation to the backing GameServer metadata
-func SetAnnotation(body) -> Dictionary:
-	return yield(
-		_api_request(
-			"/metadata/annotation",
-			{
-				"body": body,
-			},
-			HTTPClient.METHOD_PUT
-		),
-		"completed"
-	)
+# Retrieve the current GameServer data
+func GetGameServer() -> Dictionary:
+	return yield(_api_request("/gameserver", {}, HTTPClient.METHOD_GET), "completed")
 
 
-# Call when the GameServer is ready
-func Ready() -> Dictionary:
-	return yield(_api_request("/ready", {}, HTTPClient.METHOD_POST), "completed")
+# Send a Empty every d Duration to declare that this GameSever is healthy
+func Health() -> Dictionary:
+	return yield(_api_request("/health", {}, HTTPClient.METHOD_POST), "completed")
+
+
+# Call when the GameServer is shutting down
+func Shutdown() -> Dictionary:
+	return yield(_api_request("/shutdown", {}, HTTPClient.METHOD_POST), "completed")
 
 
 func _api_request(path: String, params: Dictionary, method = HTTPClient.METHOD_GET) -> Dictionary:
