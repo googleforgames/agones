@@ -69,3 +69,12 @@ func _ready():
 func log_request(path, params, method):
     print(path)
 ```
+
+### Error Handling
+
+```gdscript
+    var result = yield(agones.Ready(), "completed")
+    if result is AgonesError:
+        print(result.message)
+        return
+```

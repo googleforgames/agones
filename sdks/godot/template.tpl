@@ -26,7 +26,7 @@ func _api_request(path : String, params : Dictionary, method = HTTPClient.METHOD
 	var error = self.request(request_string, headers, false, method)
 	if error != OK:
 		yield(get_tree().create_timer(0.001),"timeout")
-		return _build_error_message("Agones Client encounted an error Godot error code: %s" % error)
+		return AgonesError.new("Agones Client encounted an error Godot error code: %s" % error)
 
 	# Get and parse result
 	var result = yield(self, "request_completed")
@@ -34,12 +34,12 @@ func _api_request(path : String, params : Dictionary, method = HTTPClient.METHOD
 		if result[1] == 200:
 			var json : JSONParseResult = JSON.parse(result[3].get_string_from_utf8())
 			if json.error:
-				return _build_error_message("Failed to parse response: %s" % json.error_string)
+				return AgonesError.new("Failed to parse response: %s" % json.error_string)
 			return json.result
 		else: # Return response code in error message if possible
-			return _build_error_message("Request failed! Response code: %s\n%s" % [str(result[1]), str(result[3])])
+			return AgonesError.new("Request failed! Response code: %s\n%s" % [str(result[1]), str(result[3])])
 		
-	return _build_error_message("Request failed!")
+	return AgonesError.new("Request failed!")
 
 # Helper function for converting a dictionary into HTTP parameters
 func _params_to_string(params : Dictionary) -> String:
@@ -58,7 +58,3 @@ func _params_to_string(params : Dictionary) -> String:
 		if i != params.size():
 			params_string += "&"
 	return params_string
-
-# Helper function for generating client errors
-func _build_error_message(message):
-	return {"message":message, "success" : false}

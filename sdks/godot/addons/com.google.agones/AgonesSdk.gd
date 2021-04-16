@@ -15,38 +15,33 @@ func _init():
 	api_endpoint = "http://127.0.0.1:%s" % agones_port
 
 
-# Retrieve the current GameServer data
-func GetGameServer() -> Dictionary:
-	return yield(_api_request("/gameserver", {}, HTTPClient.METHOD_GET), "completed")
-
-
-# Apply a Label to the backing GameServer metadata
-func SetLabel(body) -> Dictionary:
-	return yield(
-		_api_request(
-			"/metadata/label",
-			{
-				"body": body,
-			},
-			HTTPClient.METHOD_PUT
-		),
-		"completed"
-	)
-
-
 # Call when the GameServer is ready
 func Ready() -> Dictionary:
 	return yield(_api_request("/ready", {}, HTTPClient.METHOD_POST), "completed")
 
 
-# Send GameServer details whenever the GameServer is updated
-func WatchGameServer() -> Dictionary:
-	return yield(_api_request("/watch/gameserver", {}, HTTPClient.METHOD_GET), "completed")
+# Marks the GameServer as the Reserved state for Duration
+func Reserve(body) -> Dictionary:
+	return yield(
+		_api_request(
+			"/reserve",
+			{
+				"body": body,
+			},
+			HTTPClient.METHOD_POST
+		),
+		"completed"
+	)
 
 
 # Call to self Allocation the GameServer
 func Allocate() -> Dictionary:
 	return yield(_api_request("/allocate", {}, HTTPClient.METHOD_POST), "completed")
+
+
+# Retrieve the current GameServer data
+func GetGameServer() -> Dictionary:
+	return yield(_api_request("/gameserver", {}, HTTPClient.METHOD_GET), "completed")
 
 
 # Send a Empty every d Duration to declare that this GameSever is healthy
@@ -68,15 +63,15 @@ func SetAnnotation(body) -> Dictionary:
 	)
 
 
-# Marks the GameServer as the Reserved state for Duration
-func Reserve(body) -> Dictionary:
+# Apply a Label to the backing GameServer metadata
+func SetLabel(body) -> Dictionary:
 	return yield(
 		_api_request(
-			"/reserve",
+			"/metadata/label",
 			{
 				"body": body,
 			},
-			HTTPClient.METHOD_POST
+			HTTPClient.METHOD_PUT
 		),
 		"completed"
 	)
@@ -85,6 +80,11 @@ func Reserve(body) -> Dictionary:
 # Call when the GameServer is shutting down
 func Shutdown() -> Dictionary:
 	return yield(_api_request("/shutdown", {}, HTTPClient.METHOD_POST), "completed")
+
+
+# Send GameServer details whenever the GameServer is updated
+func WatchGameServer() -> Dictionary:
+	return yield(_api_request("/watch/gameserver", {}, HTTPClient.METHOD_GET), "completed")
 
 
 func _api_request(path: String, params: Dictionary, method = HTTPClient.METHOD_GET) -> Dictionary:
@@ -98,7 +98,7 @@ func _api_request(path: String, params: Dictionary, method = HTTPClient.METHOD_G
 	var error = self.request(request_string, headers, false, method)
 	if error != OK:
 		yield(get_tree().create_timer(0.001), "timeout")
-		return _build_error_message("Agones Client encounted an error Godot error code: %s" % error)
+		return AgonesError.new("Agones Client encounted an error Godot error code: %s" % error)
 
 	# Get and parse result
 	var result = yield(self, "request_completed")
@@ -106,14 +106,14 @@ func _api_request(path: String, params: Dictionary, method = HTTPClient.METHOD_G
 		if result[1] == 200:
 			var json: JSONParseResult = JSON.parse(result[3].get_string_from_utf8())
 			if json.error:
-				return _build_error_message("Failed to parse response: %s" % json.error_string)
+				return AgonesError.new("Failed to parse response: %s" % json.error_string)
 			return json.result
 		else:  # Return response code in error message if possible
-			return _build_error_message(
+			return AgonesError.new(
 				"Request failed! Response code: %s\n%s" % [str(result[1]), str(result[3])]
 			)
 
-	return _build_error_message("Request failed!")
+	return AgonesError.new("Request failed!")
 
 
 # Helper function for converting a dictionary into HTTP parameters
@@ -132,8 +132,3 @@ func _params_to_string(params: Dictionary) -> String:
 		if i != params.size():
 			params_string += "&"
 	return params_string
-
-
-# Helper function for generating client errors
-func _build_error_message(message):
-	return {"message": message, "success": false}
