@@ -183,21 +183,38 @@ please [file an issue](https://github.com/googleforgames/agones/issues).
 #### SetLabel(key, value)
 
 This will set a [Label](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) value on the backing `GameServer`
-record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-".
+record that is stored in Kubernetes. 
+
+To maintain isolation, the `key` value is automatically prefixed with the value **"agones.dev/sdk-"**. This is done for 
+two main reasons:
+*  The prefix allows the developer to always know if they are accessing or reading a value that could have come, or 
+   may be changed by the client SDK. Much like `private` vs `public` scope in a programming language, the Agones 
+   SDK only gives you access to write to part of the set of labels and annotations that exist on a GameServer.
+*  The prefix allows for a smaller attack surface if the GameServer container gets compromised. Since the 
+   game container is generally externally exposed, and the Agones project doesn't control the binary that is 
+   run within it, limiting exposure if the game server becomes compromised is worth the extra 
+   development friction that comes with having this prefix in place.
 
 {{< alert title="Warning" color="warning">}}
 There are limits on the characters that be used for label keys and values. Details are [here](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set).
+
+You will need to take them into account when combined with the label prefix above. 
 {{< /alert >}}
 
-This can be useful if you want information from your running game server process to be observable or searchable through the Kubernetes API.  
+Setting `GameServer` labels can be useful if you want information from your running game server process to be 
+observable or searchable through the Kubernetes API.  
 
 #### SetAnnotation(key, value)
 
-This will set a [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value on the backing
-`GameServer` record that is stored in Kubernetes. To maintain isolation, the `key` value is automatically prefixed with "agones.dev/sdk-".
+This will set an [Annotation](https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/) value 
+on the backing `GameServer` record that is stored in Kubernetes. 
 
-This can be useful if you want information from your running game server process to be observable through the Kubernetes API.
+To maintain isolation, the `key` value is automatically prefixed with **"agones.dev/sdk-"** for the same reasons as 
+in [SetLabel(...)](#setlabelkey-value) above. The isolation is also important as Agones uses annotations on the 
+`GameServer` as part of its internal processing.
 
+Setting `GameServer` annotations can be useful if you want information from your running game server process to be 
+observable through the Kubernetes API.
 
 ### Player Tracking
 
