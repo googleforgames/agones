@@ -15,7 +15,7 @@
 apiVersion: "agones.dev/v1"
 kind: GameServer
 metadata:
-  generateName: "simple-game-server-"
+  generateName: "simple-game-server-windows-"
 spec:
   ports:
   - name: default
