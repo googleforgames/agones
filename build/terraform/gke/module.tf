@@ -34,11 +34,11 @@ variable "agones_version" {
 }
 
 variable "machine_type" {
-  default = "n1-standard-4"
+  default = "e2-standard-4"
 }
 
 variable "windows_machine_type" {
-  default = "n1-standard-4"
+  default = "e2-standard-4"
 }
 
 variable "name" {

@@ -30,7 +30,7 @@ module "gke_cluster" {
   cluster = {
     "name"             = "e2e-test-cluster"
     "zone"             = "us-west1-c"
-    "machineType"      = "n1-standard-4"
+    "machineType"      = "e2-standard-4"
     "initialNodeCount" = 8
     "project"          = var.project
   }

@@ -25,13 +25,13 @@ locals {
   project                 = lookup(var.cluster, "project", "agones")
   zone                    = lookup(var.cluster, "zone", "us-west1-c")
   name                    = lookup(var.cluster, "name", "test-cluster")
-  machineType             = lookup(var.cluster, "machineType", "n1-standard-4")
+  machineType             = lookup(var.cluster, "machineType", "e2-standard-4")
   initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
   kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.18")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
-  windowsMachineType      = lookup(var.cluster, "windowsMachineType", "n1-standard-4")
+  windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
 }
 
 # echo command used for debugging purpose
@@ -96,7 +96,7 @@ resource "google_container_cluster" "primary" {
     }
 
     node_config {
-      machine_type = "n1-standard-4"
+      machine_type = "e2-standard-4"
 
       oauth_scopes = [
         "https://www.googleapis.com/auth/devstorage.read_only",
@@ -128,7 +128,7 @@ resource "google_container_cluster" "primary" {
     }
 
     node_config {
-      machine_type = "n1-standard-4"
+      machine_type = "e2-standard-4"
 
       oauth_scopes = [
         "https://www.googleapis.com/auth/devstorage.read_only",

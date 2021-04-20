@@ -8,7 +8,7 @@ For the load test you can follow the regular Kubernetes and Agones setup. In ord
 the game servers to Ready state before starting a test.
 Here are the few important things:
 - If you are running in GCP, use a regional cluster instead of a zonal cluster to ensure high availability of the cluster control plane
-- Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `n1-standard-4'
+- Use a dedicated node pool for the Agones controllers with multiple CPUs per node, e.g. `e2-standard-4'
 - In the default node pool (where the Game Server pods are created), 75 nodes are required to make sure there are enough nodes available for all game servers to move into the ready state. When using a regional cluster, with three zones with the region, that will require a configuration of 25 nodes per zone.
 
 ## Fleet Setting
