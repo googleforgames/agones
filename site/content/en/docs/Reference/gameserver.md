@@ -89,6 +89,12 @@ spec:
       - name: simple-game-server
         image:  {{< example-image >}}
         imagePullPolicy: Always
+      # nodeSelector is a label that can be used to tell Kubernetes which host
+      # OS to use. For Windows game servers uncomment the nodeSelector
+      # definition below.
+      # Details: https://kubernetes.io/docs/setup/production-environment/windows/user-guide-windows-containers/#ensuring-os-specific-workloads-land-on-the-appropriate-container-host
+      # nodeSelector:
+      #   kubernetes.io/os: windows
 ```
 
 Since Agones defines a new [Custom Resources Definition (CRD)](https://kubernetes.io/docs/concepts/api-extension/custom-resources/) we can define a new resource using the kind `GameServer` with the custom group `agones.dev` and API version `v1`.

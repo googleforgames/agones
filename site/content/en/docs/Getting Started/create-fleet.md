@@ -9,16 +9,7 @@ description: >
 
 ## Prerequisites
 
-The following prerequisites are required to create a GameServer:
-
-1. A Kubernetes cluster with the UDP port range 7000-8000 open on each node.
-2. Agones controller installed in the targeted cluster
-3. kubectl properly configured
-4. Netcat which is already installed on most Linux/macOS distributions, for windows you can use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
-
-If you don't have a Kubernetes cluster you can follow [these instructions]({{< ref "/docs/Installation/_index.md" >}}) to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.
-
-For the purpose of this guide we're going to use the {{< ghlink href="examples/simple-game-server/" >}}simple-game-server{{< /ghlink >}} example as the GameServer container. This example is a very simple UDP server written in Go. Don't hesitate to look at the code of this example for more information.
+{{< gs-prerequisites >}}
 
 While not required, you may wish to go through the [Create a Game Server]({{< relref "create-gameserver.md" >}}) quickstart before this one.
 

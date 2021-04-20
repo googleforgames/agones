@@ -1,0 +1,14 @@
+{{- $branch := .Get "branch" | default (getenv "RELEASE_BRANCH") | default $.Page.Site.Params.release_branch }}
+{{- $test := eq (.Get "link_test") "true" | default true }}
+<p>The following prerequisites are required to create a GameServer:</p>
+<ol>
+<li>A Kubernetes cluster with the UDP port range 7000-8000 open on each node.</li>
+<li>Agones controller installed in the targeted cluster</li>
+<li>kubectl properly configured</li>
+<li>Netcat which is already installed on most Linux/macOS distributions, for windows you can use <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">WSL</a>.</li>
+</ol>
+<p>If you don’t have a Kubernetes cluster you can follow <a href="/site/docs/installation/">these instructions</a> to create a cluster on Google Kubernetes Engine (GKE), Minikube or Azure Kubernetes Service (AKS), and install Agones.</p>
+<p>For the purpose of this guide we’re going to use the
+<a href="{{$.Page.Site.Params.github_repo}}/blob/{{ $branch }}/examples/simple-game-server/" target="_blank" {{if not $test}}data-proofer-ignore{{end}}>simple-game-server</a>
+ example as the GameServer container. This example is a very simple UDP server written in Go. Don’t hesitate to look at the code of this example for more information.</p>
+
