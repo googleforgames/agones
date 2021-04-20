@@ -68,7 +68,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 ## Creating the cluster
 
-A [cluster][cluster] consists of at least one *cluster master* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
+A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 {{% feature expiryVersion="0.14.0" %}}
 ```bash
@@ -97,13 +97,22 @@ If you're creating a cluster to run Windows game servers you'll also need to add
 
 Flag explanations:
 
+{{% feature expiryVersion="0.14.0" %}}
 * cluster-version: Agones requires Kubernetes version {{% k8s-version %}}.
 * tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
 * scopes: Defines the Oauth scopes required by the nodes.
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
+{{% /feature %}}
+
 {{% feature publishVersion="1.14.0" %}}
+* cluster-version: Agones requires Kubernetes version {{% k8s-version %}}.
+* tags: Defines the tags that will be attached to new nodes in the cluster. This is to grant access through ports via the firewall created in the next step.
+* scopes: Defines the Oauth scopes required by the nodes.
+* num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
+* no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
+* machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 * enable-ip-alias: Use [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes based networking. This is required to create windows node pools.
 {{% /feature %}}
 
@@ -144,6 +153,11 @@ Flag explanations:
 _Optional_: Create a dedicated Windows node pool for game servers. If you need to run game servers on Windows you'll
 need to create a dedicated node pool for it. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
 game servers.
+
+{{< alert title="Warning" color="warning">}}
+Running `GameServers` on Windows nodes is currently Alpha, and any feedback
+would be appreciated.
+{{< /alert >}}
 
 ```bash
 gcloud container node-pools create windows \
