@@ -86,6 +86,16 @@ build system.
 See the [Container Builder documentation](https://cloud.google.com/container-builder/docs/) for more details on
 how to edit and expand the build process.
 
+## Community Meetings
+
+Community meetings occur every month, and are open to all who wish to attend!
+
+You can see them on our calendar 
+([web](https://calendar.google.com/calendar/embed?src=google.com_828n8f18hfbtrs4vu4h1sks218%40group.calendar.google.com&ctz=America%2FLos_Angeles), 
+[ical](https://calendar.google.com/calendar/ical/google.com_828n8f18hfbtrs4vu4h1sks218%40group.calendar.google.com/public/basic.ics)) and/or join the 
+[mailing list or Slack](https://agones.dev/site/community/)
+for notifications.
+
 ## Becoming an Approver on Agones
 
 If you are interested in becoming an Approver on the Agones project and getting commit access to the
