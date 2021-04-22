@@ -13,14 +13,16 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Have write access to Agones github repository.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Have a [Github Personal Access Token](https://github.com/settings/tokens) with repo permissions.
+- [ ] Edit access to the [Agones Release Calendar](https://calendar.google.com/calendar/u/0?cid=Z29vZ2xlLmNvbV84MjhuOGYxOGhmYnRyczR2dTRoMXNrczIxOEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t)
 
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
-- [ ] Review closed issues have been applied to the current milestone.
-- [ ] Review closed issues have appropriate tags.
-- [ ] Review closed PRs have been applied to the current milestone.
-- [ ] Review closed PRs have appropriate tags.
+- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone) and add relevant ones tothe current milestone.
+  - Issues tagged as `invalid`, `duplicate`, `question`, or `wontfix` can be ignored
+- [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
+- [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
+- [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
 - [ ] Ensure the next RC and stable releases in the Google Calendar have the correct version number.
 - [ ] Ensure the next version milestone is created.
 - [ ] Any issues in the current milestone that are not closed, move to next milestone.
@@ -34,8 +36,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Ensure the [helm `Chart` version values][chart] are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Update SDK Package Versions
     - [ ] Ensure the [`sdks/nodejs/package.json`][nodejs] version is correct (should be {version} if a full release, {version}-rc if release candidate)
-    - [ ] Ensure the [`sdks/csharp/AgonesSDK.nuspec` and `sdks/csharp/csharp-sdk.csproj`][csharp] versions 
-       are correct (should be {version} if a full release, {version}-rc if release candidate)
+    - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
 - [ ] Run `make gen-install`
 - [ ] Run `make test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
 - [ ] Create a *draft* release with the [release template][release-template]
