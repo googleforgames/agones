@@ -85,7 +85,7 @@ run-sdk-command-csharp:
 
 # Runs a command for a specific SDK if it exists.
 run-sdk-command:
-	cd $(sdk_build_folder); \
+	@cd $(sdk_build_folder); \
 	if [ "$(SDK_FOLDER)" != "tool" ] && [ -f $(SDK_FOLDER)/$(COMMAND).sh ] ; then \
 		cd - ; \
 		$(MAKE) ensure-build-sdk-image SDK_FOLDER=$(SDK_FOLDER) ; \
