@@ -29,11 +29,10 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8
 	go.opencensus.io v0.22.3
 	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
-	golang.org/x/sys v0.0.0-20210423185535-09eb48e85fd7 // indirect
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
-	golang.org/x/tools v0.1.0
-	google.golang.org/genproto v0.0.0-20210423144448-3a41ef94ed2b
-	google.golang.org/grpc v1.36.1
+	golang.org/x/tools v0.0.0-20190920225731-5eefd052ad72
+	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
+	google.golang.org/grpc v1.26.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
