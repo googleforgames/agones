@@ -17,7 +17,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
 	github.com/joonix/log v0.0.0-20200409080653-9c1d2ceb5f1d
-	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822
 	github.com/pkg/errors v0.8.1
