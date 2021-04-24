@@ -34,7 +34,7 @@ type stackTracer interface {
 
 // replace the standard glog error logger, with a logrus one
 func init() {
-	logrus.SetFormatter(&joonix.NewFormatter{})
+	logrus.SetFormatter(joonix.NewFormatter())
 
 	runtime.ErrorHandlers[0] = func(err error) {
 		if stackTrace, ok := err.(stackTracer); ok {
