@@ -19,6 +19,8 @@
 #include "Interfaces/IHttpResponse.h"
 #include "JsonUtilities/Public/JsonObjectConverter.h"
 #include "TimerManager.h"
+#include "WebSockets/Public/IWebSocket.h"
+#include "WebSockets/Public/WebSocketsModule.h"
 
 UAgonesComponent::UAgonesComponent()
 {
@@ -46,7 +48,13 @@ void UAgonesComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		World->GetTimerManager().ClearTimer(ConnectDelTimerHandle);
 		World->GetTimerManager().ClearTimer(HealthTimerHandler);
+	    World->GetTimerManager().ClearTimer(EnsureWebSocketTimerHandler);
 	}
+
+    if (WatchWebSocket != nullptr && WatchWebSocket->IsConnected())
+    {
+        WatchWebSocket->Close();
+    }
 }
 
 FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const FHttpVerb Verb, const FString Content)
@@ -108,7 +116,7 @@ void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgones
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -144,6 +152,101 @@ void UAgonesComponent::GameServer(const FGameServerDelegate SuccessDelegate, con
 			SuccessDelegate.ExecuteIfBound(FGameServerResponse(JsonObject));
 		});
 	Request->ProcessRequest();
+}
+
+void UAgonesComponent::EnsureWebSocketConnection()
+{
+    if (WatchWebSocket == nullptr)
+    {
+        if (!FModuleManager::LoadModulePtr<FWebSocketsModule>(TEXT("WebSockets")))
+        {
+            return;
+        }
+
+        TMap<FString, FString> Headers;
+
+        // Make up a WebSocket-Key value. It can be anything!
+        Headers.Add(TEXT("Sec-WebSocket-Key"), FGuid::NewGuid().ToString(EGuidFormats::Short));
+        Headers.Add(TEXT("Sec-WebSocket-Version"), TEXT("13"));
+        Headers.Add(TEXT("User-Agent"), TEXT("X-UnrealEngine-Agent"));
+
+        // Unreal WebSockets are not able to do DNS resolution for localhost for some reason
+        // so this is using the IPv4 Loopback Address instead.
+        WatchWebSocket = FWebSocketsModule::Get().CreateWebSocket(
+            FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"), {*HttpPort}), TEXT(""));
+
+        WatchWebSocket->OnRawMessage().AddUObject(this, &UAgonesComponent::HandleWatchMessage);
+    }
+
+    if (WatchWebSocket != nullptr)
+    {
+        if (!WatchWebSocket->IsConnected())
+        {
+            WatchWebSocket->Connect();
+        }
+
+        // Only start the timer if there is a websocket to check.
+        // This timer has nothing to do with health and only matters if the agent is somehow
+        // restarted, which would be a failure condition in normal operation.
+        if (!EnsureWebSocketTimerHandler.IsValid())
+        {
+            FTimerDelegate TimerDel;
+            TimerDel.BindUObject(this, &UAgonesComponent::EnsureWebSocketConnection);
+            GetWorld()->GetTimerManager().SetTimer(
+                EnsureWebSocketTimerHandler, TimerDel, 15.0f, true);
+        }
+    }
+}
+
+void UAgonesComponent::WatchGameServer(const FGameServerDelegate WatchDelegate)
+{
+    WatchGameServerCallbacks.Add(WatchDelegate);
+    EnsureWebSocketConnection();
+}
+
+ void UAgonesComponent::DeserializeAndBroadcastWatch(FString const& JsonString)
+{
+    TSharedRef<TJsonReader<TCHAR>> const JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonString);
+
+    TSharedPtr<FJsonObject> JsonObject;
+    const TSharedPtr<FJsonObject>* ResultObject = nullptr;
+
+    if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) ||
+        !JsonObject.IsValid() ||
+        !JsonObject->TryGetObjectField(TEXT("result"), ResultObject) ||
+        !ResultObject->IsValid())
+    {
+        return;
+    }
+
+    FGameServerResponse const Result = FGameServerResponse(*ResultObject);
+    for (FGameServerDelegate const& Callback : WatchGameServerCallbacks)
+    {
+        if (Callback.IsBound())
+        {
+            Callback.Execute(Result);
+        }
+    }
+}
+
+void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining)
+{
+    if (BytesRemaining > 0)
+    {
+        WatchMessageBuffer.Append(UTF8_TO_TCHAR(static_cast<const UTF8CHAR*>(Data)), Size);
+        return;
+    }
+
+    FString const Message = FString(Size, UTF8_TO_TCHAR(static_cast<const UTF8CHAR*>(Data)));
+
+    // If the LHS of FString + is empty, it just uses the RHS directly so there's no copy here with an empty buffer.
+    DeserializeAndBroadcastWatch(WatchMessageBuffer + Message);
+
+    // Faster to check and then empty vs blindly emptying - normal case is that the buffer is already empty
+    if (!WatchMessageBuffer.IsEmpty())
+    {
+        WatchMessageBuffer.Empty();
+    }
 }
 
 void UAgonesComponent::SetLabel(
@@ -217,7 +320,7 @@ void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const F
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -248,7 +351,7 @@ void UAgonesComponent::SetAnnotation(
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -270,7 +373,7 @@ void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const F
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -301,7 +404,7 @@ void UAgonesComponent::Reserve(
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();
@@ -420,7 +523,7 @@ void UAgonesComponent::SetPlayerCapacity(
 					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
-			
+
 			SuccessDelegate.ExecuteIfBound({});
 		});
 	Request->ProcessRequest();

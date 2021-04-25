@@ -18,6 +18,7 @@
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpRequest.h"
+#include "WebSockets/Public/IWebSocket.h"
 
 #include "AgonesComponent.generated.h"
 
@@ -166,6 +167,13 @@ public:
 	void GameServer(FGameServerDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
+	 * \brief WatchGameServer subscribes a delegate to be called whenever game server details change.
+	 * \param WatchDelegate - Called every time the game server data changes.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Agones | Configuration")
+	void WatchGameServer(FGameServerDelegate WatchDelegate);
+
+	/**
 	 * \brief Health sends a ping to the health check to indicate that this server is healthy.
 	 * \param SuccessDelegate - Called on Successful call.
 	 * \param ErrorDelegate - Called on Unsuccessful call.
@@ -286,9 +294,23 @@ private:
 	FHttpRequestRef BuildAgonesRequest(
 		FString Path = "", const FHttpVerb Verb = FHttpVerb::Post, const FString Content = "{}");
 
+	void HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T BytesRemaining);
+
+	void DeserializeAndBroadcastWatch(FString const& JsonString);
+
+	void EnsureWebSocketConnection();
+
 	FTimerHandle ConnectDelTimerHandle;
 
 	FTimerHandle HealthTimerHandler;
+
+	FTimerHandle EnsureWebSocketTimerHandler;
+
+	TSharedPtr<IWebSocket> WatchWebSocket;
+
+	FString WatchMessageBuffer;
+
+	TArray<FGameServerDelegate> WatchGameServerCallbacks;
 
 	UFUNCTION(BlueprintInternalUseOnly)
 	void ConnectSuccess(FGameServerResponse GameServerResponse);

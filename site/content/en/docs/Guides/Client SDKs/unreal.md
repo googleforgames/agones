@@ -7,33 +7,57 @@ weight: 10
 description: "This is the Unreal Engine 4 Agones Game Server Client Plugin. "
 ---
 
+{{% feature expiryVersion="1.15.0" %}}
 {{< alert title="Note" color="info" >}}
 The Unreal SDK is functional, but not yet feature complete.
 [Pull requests](https://github.com/googleforgames/agones/pulls) to finish the functionality are appreciated.
 {{< /alert >}}
+{{% /feature %}}
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
 ## SDK Functionality
 
+{{% feature expiryVersion="1.15.0" %}}
 | Area                 | Action                   | Implemented                   |
 |----------------------|--------------------------|-------------------------------|
 | Lifecycle            | Ready                    | ✔️                            |
-| Lifecycle            | Health                   | ✔️                            | 
-| Lifecycle            | Reserve                  | ✔️                            | 
-| Lifecycle            | Allocate                 | ✔️                            | 
-| Lifecycle            | Shutdown                 | ✔️                            | 
-| Configuration        | GameServer               | ✔️                            | 
-| Configuration        | Watch                    | ❌                             | 
-| Metadata             | SetAnnotation            | ✔️                            | 
-| Metadata             | SetLabel                 | ✔️                            | 
-| Player Tracking      | GetConnectedPlayers      | ✔️                            | 
-| Player Tracking      | GetPlayerCapacity        | ✔️                            | 
-| Player Tracking      | GetPlayerCount           | ✔️                            | 
-| Player Tracking      | IsPlayerConnected        | ✔️                            | 
-| Player Tracking      | PlayerConnect            | ✔️                            | 
-| Player Tracking      | PlayerDisconnect         | ✔️                            | 
-| Player Tracking      | SetPlayerCapacity        | ✔️                            | 
+| Lifecycle            | Health                   | ✔️                            |
+| Lifecycle            | Reserve                  | ✔️                            |
+| Lifecycle            | Allocate                 | ✔️                            |
+| Lifecycle            | Shutdown                 | ✔️                            |
+| Configuration        | GameServer               | ✔️                            |
+| Configuration        | Watch                    | ❌                            |
+| Metadata             | SetAnnotation            | ✔️                            |
+| Metadata             | SetLabel                 | ✔️                            |
+| Player Tracking      | GetConnectedPlayers      | ✔️                            |
+| Player Tracking      | GetPlayerCapacity        | ✔️                            |
+| Player Tracking      | GetPlayerCount           | ✔️                            |
+| Player Tracking      | IsPlayerConnected        | ✔️                            |
+| Player Tracking      | PlayerConnect            | ✔️                            |
+| Player Tracking      | PlayerDisconnect         | ✔️                            |
+| Player Tracking      | SetPlayerCapacity        | ✔️                            |
+{{% /feature %}}
+{{% feature publishVersion="1.15.0" %}}
+| Area                 | Action                   | Implemented                   |
+|----------------------|--------------------------|-------------------------------|
+| Lifecycle            | Ready                    | ✔️                            |
+| Lifecycle            | Health                   | ✔️                            |
+| Lifecycle            | Reserve                  | ✔️                            |
+| Lifecycle            | Allocate                 | ✔️                            |
+| Lifecycle            | Shutdown                 | ✔️                            |
+| Configuration        | GameServer               | ✔️                            |
+| Configuration        | Watch                    | ✔️                            |
+| Metadata             | SetAnnotation            | ✔️                            |
+| Metadata             | SetLabel                 | ✔️                            |
+| Player Tracking      | GetConnectedPlayers      | ✔️                            |
+| Player Tracking      | GetPlayerCapacity        | ✔️                            |
+| Player Tracking      | GetPlayerCount           | ✔️                            |
+| Player Tracking      | IsPlayerConnected        | ✔️                            |
+| Player Tracking      | PlayerConnect            | ✔️                            |
+| Player Tracking      | PlayerDisconnect         | ✔️                            |
+| Player Tracking      | SetPlayerCapacity        | ✔️                            |
+{{% /feature %}}
 
 Additional methods have been added for ease of use (both of which are enabled by default):
 
@@ -55,11 +79,11 @@ or {{< ghlink href="sdks/unreal" >}}directly from GitHub{{< /ghlink >}}.
 
 ## Resources
 
-[Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbiests all the way through to huge AAA Game Stuidos.
+[Unreal](https://www.unrealengine.com/) is a [game engine](https://en.wikipedia.org/wiki/Game_engine) that is used by anyone from hobbyists all the way through to huge AAA Game Stuidos.
 
 With this in mind there is a vast amount to learn to run a production game using Unreal, even before you get to learning how it integrates with Agones. If you want to kick the tires with a starter project you will probably be fine with one of the starter projects out of the box.
 
-However as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and how it can be used to integrate with this project. There will be different ways of interacting wether in Play In Editor (PIE) or running as an actual dedicated game server packaged into a container. 
+However as your Unreal/Agones project gets more advanced you will want to understand more about the engine itself and how it can be used to integrate with this project. There will be different ways of interacting via in Play In Editor (PIE) versus running as an actual dedicated game server packaged into a container.
 
 A few helpful links for Unreal:
 

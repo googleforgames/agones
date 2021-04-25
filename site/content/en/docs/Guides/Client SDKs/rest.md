@@ -184,13 +184,13 @@ An example command that uses the WebSocket endpoint instead of streaming over HT
 curl -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Key: ExampleKey1234567890===" -H "Sec-WebSocket-Version: 13" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/watch/gameserver
 ```
 
-The data returned from this endpoint is newline-delimited JSON objects and is identical to the response of the HTTP streaming watch endpoint shown above. When reading  from the websocket endpoint, make sure to wait for a delimiter before trying to deserialize the JSON, as client buffers may be smaller than the delimited messages.
+The data returned from this endpoint is delimited by the boundaries of a WebSocket payload as defined by [RFC 6455, section 5.2](https://tools.ietf.org/html/rfc6455#section-5.2). When reading from this endpoint, if your WebSocket client does not automatically handle frame reassembly (e.g. Unreal), make sure to read to the end of the WebSocket payload (as defined by the FIN bit) before attempting to parse the data returned. This is transparent in most clients.
 
 ### Metadata Management
 
 #### Set Label
 
-Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata. 
+Apply a Label with the prefix "agones.dev/sdk-" to the backing `GameServer` metadata.
 
 See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" >}}) documentation for restrictions.
 
