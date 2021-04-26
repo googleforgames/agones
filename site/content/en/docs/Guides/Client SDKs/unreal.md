@@ -14,6 +14,40 @@ The Unreal SDK is functional, but not yet feature complete.
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
+## SDK Functionality
+
+| Area                 | Action                   | Implemented                   |
+|----------------------|--------------------------|-------------------------------|
+| Lifecycle            | Ready                    | ✔️                            |
+| Lifecycle            | Health                   | ✔️                            | 
+| Lifecycle            | Reserve                  | ✔️                            | 
+| Lifecycle            | Allocate                 | ✔️                            | 
+| Lifecycle            | Shutdown                 | ✔️                            | 
+| Configuration        | GameServer               | ✔️                            | 
+| Configuration        | Watch                    | ❌                             | 
+| Metadata             | SetAnnotation            | ✔️                            | 
+| Metadata             | SetLabel                 | ✔️                            | 
+| Player Tracking      | GetConnectedPlayers      | ✔️                            | 
+| Player Tracking      | GetPlayerCapacity        | ✔️                            | 
+| Player Tracking      | GetPlayerCount           | ✔️                            | 
+| Player Tracking      | IsPlayerConnected        | ✔️                            | 
+| Player Tracking      | PlayerConnect            | ✔️                            | 
+| Player Tracking      | PlayerDisconnect         | ✔️                            | 
+| Player Tracking      | SetPlayerCapacity        | ✔️                            | 
+
+Additional methods have been added for ease of use (both of which are enabled by default):
+
+- Connect
+  - will call `/gameserver` till a succesful response is returned and then call `/ready`.
+  - disabled by setting `bDisableAutoConnect` to `true`.
+  - An event is broadcast with the `GameServer` data once the `/gameserver` call succeeds.
+- Health
+  - calls `/health` endpoint on supplied rate
+  - enabled by default with 10 second rate
+  - disabled by default by setting `HealthRateSeconds` to `0`.
+
+Both of the above are automatically kicked off in the `BeginPlay` of the component.
+
 ## Download
 
 Download the source from the [Releases Page](https://github.com/googleforgames/agones/releases)
@@ -113,51 +147,6 @@ HttpPort=1337
 HealthRateSeconds=5.0
 bDisableAutoConnect=true
 ```
-
-## SDK Functionality
-
-Additional methods have been added for ease of use (both of which are enabled by default):
-
-- Connect
-  - will call `/gameserver` till a succesful response is returned and then call `/ready`.
-  - disabled by setting `bDisableAutoConnect` to `true`.
-  - An event is broadcast with the `GameServer` data once the `/gameserver` call succeeds.
-- Health
-  - calls `/health` endpoint on supplied rate
-  - enabled by default with 10 second rate
-  - disabled by default by setting `HealthRateSeconds` to `0`.
-
-Both of the above are automatically kicked off in the `BeginPlay` of the component.
-
-This Agones SDK wraps the REST API and supports the following actions:
-
-Stable
-- Lifecycle
-  - Ready
-  - Health
-  - Reserve
-  - Allocate
-  - Shutdown
-- Configuration
-  - GameServer
-- Metadata
-  - SetAnnotation
-  - SetLabel
-
-Alpha
-- Player Tracking
-  - GetConnectedPlayers
-  - GetPlayerCapacity
-  - GetPlayerCount
-  - IsPlayerConnected
-  - PlayerConnect
-  - PlayerDisconnect
-  - SetPlayerCapacity
-
-Unimplemented
-  - WatchGameServer
-
-Current the only missing functionality is the `WatchGameServer` functionality. We welcome collaborators to help implement this, if people need it before we get around to implementing it ourselves.
 
 ## Unreal Hooks
 
