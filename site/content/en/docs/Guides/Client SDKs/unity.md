@@ -8,6 +8,31 @@ description: "This is the Unity version of the Agones Game Server Client SDK."
 
 Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more details on each of the SDK functions and how to run the SDK locally.
 
+## SDK Functionality
+
+| Area                 | Action                   | Implemented                   |
+|----------------------|--------------------------|-------------------------------|
+| Lifecycle            | Ready                    | ✔️                            |
+| Lifecycle            | Health                   | ✔️                            | 
+| Lifecycle            | Reserve                  | ✔️                            | 
+| Lifecycle            | Allocate                 | ✔️                            | 
+| Lifecycle            | Shutdown                 | ✔️                            | 
+| Configuration        | GameServer               | ✔️                            | 
+| Configuration        | Watch                    | ✔️                            | 
+| Metadata             | SetAnnotation            | ✔️                            | 
+| Metadata             | SetLabel                 | ✔️                            | 
+| Player Tracking      | GetConnectedPlayers      | ❌️                            | 
+| Player Tracking      | GetPlayerCapacity        | ❌️                            | 
+| Player Tracking      | GetPlayerCount           | ❌️                            | 
+| Player Tracking      | IsPlayerConnected        | ❌️                            | 
+| Player Tracking      | PlayerConnect            | ❌️                            | 
+| Player Tracking      | PlayerDisconnect         | ❌️                            | 
+| Player Tracking      | SetPlayerCapacity        | ❌️                            | 
+
+Additional methods have been added for ease of use:
+
+- Connect
+
 ## Download
 
 Download the source {{< ghlink href="sdks/unity" >}}directly from GitHub{{< /ghlink >}}.
