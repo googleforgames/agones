@@ -18,7 +18,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
-- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone) and add relevant ones tothe current milestone.
+- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone) and add relevant ones to the current milestone.
   - Issues tagged as `invalid`, `duplicate`, `question`, or `wontfix` can be ignored
 - [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
 - [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
@@ -67,8 +67,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Do a `helm repo add agones https://agones.dev/chart/stable` / `helm repo update` and verify that the new
  version is available via the command `helm search repo agones --versions --devel`.
 - [ ] Do a `helm install --namespace=agones-system agones agones/agones` 
-    (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke
-     test to confirm everything is working.
+    (`helm install --namespace=agones-system agones agones/agones --version={version}-rc` if release candidate) and a smoke test to confirm everything is working.
 - [ ] Attach all assets found in the `release` folder to the draft Github Release.
 - [ ] Publish the draft Github Release.
 - [ ] Send an email to the [mailing list][list] with the release details (copy-paste the release blog post)
@@ -79,7 +78,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release move [helm `tag` value][values] is set to {version}+1-dev
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1-dev
 - [ ] If full release move the [`sdks/nodejs/package.json`][nodejs] to {version}+1-dev
-- [ ] If full release move the [`sdks/csharp/AgonesSDK.nuspec` and `sdks/csharp/csharp-sdk.csproj`][csharp] to {version}+1-dev
+- [ ] If full release move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
 - [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
