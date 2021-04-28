@@ -17,12 +17,14 @@ package sdk
 import (
 	"context"
 
-	"agones.dev/agones/pkg/sdk/alpha"
 	"github.com/pkg/errors"
+
 	"google.golang.org/grpc"
+
+	"agones.dev/agones/pkg/sdk/alpha"
 )
 
-// Alpha is the struct for Alpha SDK functionality
+// Alpha is the struct for Alpha SDK functionality.
 type Alpha struct {
 	client alpha.SDKClient
 }
@@ -41,21 +43,21 @@ func (a *Alpha) GetPlayerCapacity() (int64, error) {
 	return c.Count, errors.Wrap(err, "could not get player capacity")
 }
 
-// SetPlayerCapacity changes the player capacity to a new value
+// SetPlayerCapacity changes the player capacity to a new value.
 func (a *Alpha) SetPlayerCapacity(capacity int64) error {
 	_, err := a.client.SetPlayerCapacity(context.Background(), &alpha.Count{Count: capacity})
 	return errors.Wrap(err, "could not set player capacity")
 }
 
 // PlayerConnect increases the SDK’s stored player count by one, and appends this playerID to status.players.id.
-// Returns true and adds the playerID to the list of playerIDs if the playerIDs was not already in the
+// Will return true and add the playerID to the list of playerIDs if the playerIDs was not already in the
 // list of connected playerIDs.
 func (a *Alpha) PlayerConnect(id string) (bool, error) {
 	ok, err := a.client.PlayerConnect(context.Background(), &alpha.PlayerID{PlayerID: id})
 	return ok.Bool, errors.Wrap(err, "could not register connected player")
 }
 
-// PlayerDisconnect Decreases the SDK’s stored player count by one, and removes the playerID from status.players.id
+// PlayerDisconnect Decreases the SDK’s stored player count by one, and removes the playerID from status.players.id.
 // Will return true and remove the supplied playerID from the list of connected playerIDs if the
 // playerID value exists within the list.
 func (a *Alpha) PlayerDisconnect(id string) (bool, error) {
@@ -63,7 +65,7 @@ func (a *Alpha) PlayerDisconnect(id string) (bool, error) {
 	return ok.Bool, errors.Wrap(err, "could not register disconnected player")
 }
 
-// GetPlayerCount returns the current player count
+// GetPlayerCount returns the current player count.
 func (a *Alpha) GetPlayerCount() (int64, error) {
 	count, err := a.client.GetPlayerCount(context.Background(), &alpha.Empty{})
 	return count.Count, errors.Wrap(err, "could not get player count")
