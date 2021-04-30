@@ -1,6 +1,34 @@
 # Changelog
 
-## [v1.14.0-rc](https://github.com/googleforgames/agones/tree/v1.14.0-rc) (2021-04-20)
+## [v1.14.0](https://github.com/googleforgames/agones/tree/v1.14.0) (2021-04-27)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.14.0-rc...v1.14.0)
+
+**Implemented enhancements:**
+
+- Migrate away from Pull Panda [\#1689](https://github.com/googleforgames/agones/issues/1689)
+- Document best practices for GameServer Allocation [\#1594](https://github.com/googleforgames/agones/issues/1594)
+- Document the Security and Disclosure process for Agones [\#745](https://github.com/googleforgames/agones/issues/745)
+- Support Multiple Cluster spanning the globe [\#301](https://github.com/googleforgames/agones/issues/301)
+- Easier to find out about Community Meetings [\#2069](https://github.com/googleforgames/agones/pull/2069) ([markmandel](https://github.com/markmandel))
+
+**Fixed bugs:**
+
+- build.sh is missing in go directory for SDK [\#1039](https://github.com/googleforgames/agones/issues/1039)
+
+**Closed issues:**
+
+- Release 1.14.0-rc [\#2066](https://github.com/googleforgames/agones/issues/2066)
+- GKE: Update documentation + Automation to disable node automatic updates for gameserver node pools [\#1137](https://github.com/googleforgames/agones/issues/1137)
+
+**Merged pull requests:**
+
+- Add table for all implemented SDK for Unreal [\#2074](https://github.com/googleforgames/agones/pull/2074) ([domgreen](https://github.com/domgreen))
+- Add Netspeak Games logo [\#2073](https://github.com/googleforgames/agones/pull/2073) ([domgreen](https://github.com/domgreen))
+- Suppress the long shell command to test for a file existence so that [\#2072](https://github.com/googleforgames/agones/pull/2072) ([roberthbailey](https://github.com/roberthbailey))
+- Updates to the release checklist, based on cutting my first release candidate. [\#2068](https://github.com/googleforgames/agones/pull/2068) ([roberthbailey](https://github.com/roberthbailey))
+
+## [v1.14.0-rc](https://github.com/googleforgames/agones/tree/v1.14.0-rc) (2021-04-21)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.13.0...v1.14.0-rc)
 
@@ -35,6 +63,7 @@
 
 **Merged pull requests:**
 
+- Release 1.14.0-rc [\#2067](https://github.com/googleforgames/agones/pull/2067) ([roberthbailey](https://github.com/roberthbailey))
 - Add docs for running windows game servers [\#2065](https://github.com/googleforgames/agones/pull/2065) ([roberthbailey](https://github.com/roberthbailey))
 - Updating code documentation for Labels [\#2060](https://github.com/googleforgames/agones/pull/2060) ([domgreen](https://github.com/domgreen))
 - Cleanup: Start ➡ Run for all components. [\#2058](https://github.com/googleforgames/agones/pull/2058) ([markmandel](https://github.com/markmandel))
@@ -785,7 +814,6 @@
 - Docs: add Grafana version explicitly [\#1487](https://github.com/googleforgames/agones/pull/1487) ([aLekSer](https://github.com/aLekSer))
 - Improved gameserver unit tests [\#1485](https://github.com/googleforgames/agones/pull/1485) ([akremsa](https://github.com/akremsa))
 - Allocator client tutorial: add steps for MacOS [\#1484](https://github.com/googleforgames/agones/pull/1484) ([aLekSer](https://github.com/aLekSer))
-- Preparation for 1.6.0 Release. [\#1474](https://github.com/googleforgames/agones/pull/1474) ([markmandel](https://github.com/markmandel))
 - Update Grafana to the  6.7 release. [\#1465](https://github.com/googleforgames/agones/pull/1465) ([cyriltovena](https://github.com/cyriltovena))
 - Refactor of localsdk tests [\#1464](https://github.com/googleforgames/agones/pull/1464) ([markmandel](https://github.com/markmandel))
 - SDK Conformance test - fix parallel recordRequests [\#1456](https://github.com/googleforgames/agones/pull/1456) ([aLekSer](https://github.com/aLekSer))
@@ -814,6 +842,7 @@
 
 **Merged pull requests:**
 
+- Preparation for 1.6.0 Release. [\#1474](https://github.com/googleforgames/agones/pull/1474) ([markmandel](https://github.com/markmandel))
 - Release 1.5.0 [\#1473](https://github.com/googleforgames/agones/pull/1473) ([markmandel](https://github.com/markmandel))
 - Website: A number of corrections in the docs [\#1466](https://github.com/googleforgames/agones/pull/1466) ([aLekSer](https://github.com/aLekSer))
 - Website: Fix path in swagger command [\#1462](https://github.com/googleforgames/agones/pull/1462) ([aLekSer](https://github.com/aLekSer))
@@ -826,6 +855,7 @@
 **Breaking changes:**
 
 - Upgrade to Kubernetes 1.14 [\#1329](https://github.com/googleforgames/agones/issues/1329)
+- Fix for critical GKE/GCP Terraform Bugs [\#1373](https://github.com/googleforgames/agones/pull/1373) ([markmandel](https://github.com/markmandel))
 
 **Implemented enhancements:**
 
@@ -905,7 +935,6 @@
 
 **Breaking changes:**
 
-- Fix for critical GKE/GCP Terraform Bugs [\#1373](https://github.com/googleforgames/agones/pull/1373) ([markmandel](https://github.com/markmandel))
 - Updated documentation for multi-cluster allocation [\#1365](https://github.com/googleforgames/agones/pull/1365) ([pooneh-m](https://github.com/pooneh-m))
 
 **Fixed bugs:**
@@ -1458,6 +1487,7 @@
 - add unity example [\#860](https://github.com/googleforgames/agones/pull/860) ([whisper0077](https://github.com/whisper0077))
 - SDK Conformance testing [\#848](https://github.com/googleforgames/agones/pull/848) ([aLekSer](https://github.com/aLekSer))
 - Reserve proto definition and generated code [\#820](https://github.com/googleforgames/agones/pull/820) ([markmandel](https://github.com/markmandel))
+- Batched Packed and Distributed Allocations [\#804](https://github.com/googleforgames/agones/pull/804) ([markmandel](https://github.com/markmandel))
 - Cpp prerequisities cmake [\#803](https://github.com/googleforgames/agones/pull/803) ([dsazonoff](https://github.com/dsazonoff))
 
 **Fixed bugs:**
@@ -1575,7 +1605,6 @@
 - Add Unity SDK [\#818](https://github.com/googleforgames/agones/pull/818) ([whisper0077](https://github.com/whisper0077))
 - PortPolicy of Passthrough - Same Port for Container and Host [\#817](https://github.com/googleforgames/agones/pull/817) ([markmandel](https://github.com/markmandel))
 - Add Fleet RollingUpdate strategy params validation [\#808](https://github.com/googleforgames/agones/pull/808) ([aLekSer](https://github.com/aLekSer))
-- Batched Packed and Distributed Allocations [\#804](https://github.com/googleforgames/agones/pull/804) ([markmandel](https://github.com/markmandel))
 - Add Events on FleetAutoscaler connection errors [\#794](https://github.com/googleforgames/agones/pull/794) ([aLekSer](https://github.com/aLekSer))
 - Expose allocate method in node sdk [\#774](https://github.com/googleforgames/agones/pull/774) ([rorygarand](https://github.com/rorygarand))
 - Adding an allocator service that acts as a reverse proxy. [\#768](https://github.com/googleforgames/agones/pull/768) ([pooneh-m](https://github.com/pooneh-m))

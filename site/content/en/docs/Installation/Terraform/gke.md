@@ -68,8 +68,8 @@ To install `gcloud` and `kubectl`, perform the following steps:
 ## Installation
 
 An example configuration can be found here:
- {{< ghlink href="examples/terraform-submodules/gke/module.tf" >}}Terraform configuration with Agones submodule{{< /ghlink >}}. 
- 
+ {{< ghlink href="examples/terraform-submodules/gke/module.tf" >}}Terraform configuration with Agones submodule{{< /ghlink >}}.
+
 Copy this file into a local directory where you will execute the terraform commands.
 
 The GKE cluster created from the example configuration will contain 3 Node Pools:
@@ -80,25 +80,6 @@ The GKE cluster created from the example configuration will contain 3 Node Pools
 
 Configurable parameters:
 
-{{% feature expiryVersion="0.14.0" %}}
-- project - your Google Cloud Project ID (required)
-- name - the name of the GKE cluster (default is "agones-terraform-example")
-- agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
-- machine_type - machine type for hosting game servers (default is "n1-standard-4")
-- node_count - count of game server nodes for the default node pool (default is "4")
-- zone - the name of the [zone](https://cloud.google.com/compute/docs/regions-zones) you want your cluster to be
-  created in (default is "us-west1-c")
-- network - the name of the VPC network you want your cluster and firewall rules to be connected to (default is "default")
-- subnetwork - the name of the subnetwork in which the cluster's instances are launched. (required when using non default network)
-- log_level - possible values: Fatal, Error, Warn, Info, Debug (default is "info")
-- feature_gates - a list of alpha and beta version features to enable. For example, "PlayerTracking=true&ContainerPortAllocation=true"
-- gameserver_minPort - the lower bound of the port range which gameservers will listen on (default is "7000")
-- gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
-- gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
-- force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
-{{% /feature %}}
-
-{{% feature publishVersion="0.14.0" %}}
 - project - your Google Cloud Project ID (required)
 - name - the name of the GKE cluster (default is "agones-terraform-example")
 - agones_version - the version of agones to install (an empty string, which is the default, is the latest version from the [Helm repository](https://agones.dev/chart/stable))
@@ -114,7 +95,6 @@ Configurable parameters:
 - gameserver_maxPort - the upper bound of the port range which gameservers will listen on (default is "8000")
 - gameserver_namespaces - a list of namespaces which will be used to run gameservers (default is `["default"]`). For example `["default", "xbox-gameservers", "mobile-gameservers"]`
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
-{{% /feature %}}
 
 {{% alert title="Warning" color="warning"%}}
 On the lines that read `source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"`

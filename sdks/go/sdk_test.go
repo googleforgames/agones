@@ -19,10 +19,12 @@ import (
 	"testing"
 	"time"
 
-	"agones.dev/agones/pkg/sdk"
 	"github.com/stretchr/testify/assert"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	"agones.dev/agones/pkg/sdk"
 )
 
 func TestSDK(t *testing.T) {
@@ -35,7 +37,6 @@ func TestSDK(t *testing.T) {
 		health: sm.hm,
 	}
 
-	// gate
 	assert.False(t, sm.ready)
 	assert.False(t, sm.shutdown)
 	assert.False(t, sm.hm.healthy)
