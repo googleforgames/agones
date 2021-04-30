@@ -32,13 +32,10 @@ So when a Fleet is edited (any field other than `replicas`, see note below), eit
 1. Shutdown the `maxUnavailable` number of `GameServers` in the Fleet, skipping `Allocated` `GameServers`.
 1. Repeat above steps until all the previous `GameServer` configurations have been `Shutdown` and deleted.
 
-{{% feature publishVersion="1.14.0" %}}
 By default, a Fleet will wait for new `GameSevers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
 This ensures that a Fleet cannot accidentally have zero `GameServers` in the `Ready` state if something goes wrong during a Rolling Update or if `GameServers` have a long delay before moving to the `Ready` state.
 
 {{< beta title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
-
-{{% /feature %}}
 
 {{< alert title="Note" color="info">}}
 When `Fleet` update contains only changes to the `replicas` parameter, then new GameServers will be created/deleted straight away,
@@ -115,12 +112,3 @@ all `GameServers` with the `v2` `Fleet` label, and if not found, search through 
 The above `GameServerAllocation` can then be used while you scale up the `v2` Fleet and scale down the original Fleet at
 the rate that you deem fit for your specific rollout.
 
-{{% feature expiryVersion="1.14.0" %}}
-## Alpha Feature RollingUpdateOnReady
-
-{{< alpha title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
-
-When this feature is enabled, Fleets will wait for the new GameSevers to become Ready during a Rolling Update, to ensure there is always a set of Ready GameServers before attempting to shut down the previous version Fleet's GameServers.
-
-This ensures a Fleet cannot accidentally have 0 GameServers Ready if something goes wrong during a Rolling Update, or GameServers have a long delay when moving to a Ready state.
-{{% /feature %}}

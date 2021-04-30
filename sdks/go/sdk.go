@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package sdk is the Go game server sdk
+// Package sdk is the Go game server sdk.
 package sdk
 
 import (
@@ -22,16 +22,18 @@ import (
 	"os"
 	"time"
 
-	"agones.dev/agones/pkg/sdk"
 	"github.com/pkg/errors"
+
 	"google.golang.org/grpc"
+
+	"agones.dev/agones/pkg/sdk"
 )
 
 // GameServerCallback is a function definition to be called
-// when a GameServer CRD has been changed
+// when a GameServer CRD has been changed.
 type GameServerCallback func(gs *sdk.GameServer)
 
-// SDK is an instance of the Agones SDK
+// SDK is an instance of the Agones SDK.
 type SDK struct {
 	client sdk.SDKClient
 	ctx    context.Context
@@ -39,8 +41,9 @@ type SDK struct {
 	alpha  *Alpha
 }
 
-// NewSDK starts a new SDK instance, and connects to
-// localhost on port 9357. Blocks until connection and handshake are made.
+// NewSDK starts a new SDK instance, and connects to localhost
+// on port "AGONES_SDK_GRPC_PORT" which by default is 9357.
+// Blocks until connection and handshake are made.
 // Times out after 30 seconds.
 func NewSDK() (*SDK, error) {
 	p := os.Getenv("AGONES_SDK_GRPC_PORT")
@@ -51,7 +54,7 @@ func NewSDK() (*SDK, error) {
 	s := &SDK{
 		ctx: context.Background(),
 	}
-	// block for at least 30 seconds
+	// Block for at least 30 seconds.
 	ctx, cancel := context.WithTimeout(s.ctx, 30*time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithBlock(), grpc.WithInsecure())
@@ -64,13 +67,12 @@ func NewSDK() (*SDK, error) {
 	return s, errors.Wrap(err, "could not set up health check")
 }
 
-// Alpha returns the Alpha SDK
+// Alpha returns the Alpha SDK.
 func (s *SDK) Alpha() *Alpha {
 	return s.alpha
 }
 
-// Ready marks the Game Server as ready to
-// receive connections
+// Ready marks the Game Server as ready to receive connections.
 func (s *SDK) Ready() error {
 	_, err := s.client.Ready(s.ctx, &sdk.Empty{})
 	return errors.Wrap(err, "could not send Ready message")
@@ -82,8 +84,7 @@ func (s *SDK) Allocate() error {
 	return errors.Wrap(err, "could not mark self as Allocated")
 }
 
-// Shutdown marks the Game Server as ready to
-// shutdown
+// Shutdown marks the Game Server as ready to shutdown.
 func (s *SDK) Shutdown() error {
 	_, err := s.client.Shutdown(s.ctx, &sdk.Empty{})
 	return errors.Wrapf(err, "could not send Shutdown message")
@@ -97,29 +98,26 @@ func (s *SDK) Reserve(d time.Duration) error {
 	return errors.Wrap(err, "could not send Reserve message")
 }
 
-// Health sends a ping to the health
-// check to indicate that this server is healthy
+// Health sends a ping to the sidecar health check to indicate that this Game Server is healthy.
 func (s *SDK) Health() error {
 	return errors.Wrap(s.health.Send(&sdk.Empty{}), "could not send Health ping")
 }
 
-// SetLabel sets a metadata label on the `GameServer` with the prefix
-// agones.dev/sdk-
+// SetLabel sets a metadata label on the `GameServer` with the prefix "agones.dev/sdk-".
 func (s *SDK) SetLabel(key, value string) error {
 	kv := &sdk.KeyValue{Key: key, Value: value}
 	_, err := s.client.SetLabel(s.ctx, kv)
 	return errors.Wrap(err, "could not set label")
 }
 
-// SetAnnotation sets a metadata annotation on the `GameServer` with the prefix
-// agones.dev/sdk-
+// SetAnnotation sets a metadata annotation on the `GameServer` with the prefix "agones.dev/sdk-".
 func (s *SDK) SetAnnotation(key, value string) error {
 	kv := &sdk.KeyValue{Key: key, Value: value}
 	_, err := s.client.SetAnnotation(s.ctx, kv)
 	return errors.Wrap(err, "could not set annotation")
 }
 
-// GameServer retrieve the GameServer details
+// GameServer retrieve the GameServer details.
 func (s *SDK) GameServer() (*sdk.GameServer, error) {
 	gs, err := s.client.GetGameServer(s.ctx, &sdk.Empty{})
 	return gs, errors.Wrap(err, "could not retrieve gameserver")
@@ -144,7 +142,7 @@ func (s *SDK) WatchGameServer(f GameServerCallback) error {
 					return
 				}
 				_, _ = fmt.Fprintf(os.Stderr, "error watching GameServer: %s\n", err.Error())
-				// This is to wait for the reconnection, and not peg the CPU at 100%
+				// This is to wait for the reconnection, and not peg the CPU at 100%.
 				time.Sleep(time.Second)
 				continue
 			}
