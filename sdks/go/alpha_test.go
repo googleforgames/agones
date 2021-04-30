@@ -18,9 +18,11 @@ import (
 	"context"
 	"testing"
 
-	"agones.dev/agones/pkg/sdk/alpha"
 	"github.com/stretchr/testify/assert"
+
 	"google.golang.org/grpc"
+
+	"agones.dev/agones/pkg/sdk/alpha"
 )
 
 func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
@@ -52,7 +54,7 @@ func TestAlphaGetAndSetPlayerCapacity(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, playerID, mock.playerDisconnected)
 
-	// put the player back in
+	// Put the player back in.
 	ok, err = a.PlayerConnect(playerID)
 	assert.NoError(t, err)
 	assert.True(t, ok)
