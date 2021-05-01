@@ -158,10 +158,54 @@ func TestAPIServerAddAPIResourceDiscovery(t *testing.T) {
 		_, _, err = info.Serializer.Decode(b, &gvk, list)
 		assert.NoError(t, err)
 
-		// not testing for version/kind, seems not to come through. Strange.
-		// we're not building anything that needs this, so not our issue.
+		assert.Equal(t, "v1", list.TypeMeta.APIVersion)
+		assert.Equal(t, "APIResourceList", list.TypeMeta.Kind)
 		assert.Equal(t, gv.String(), list.GroupVersion)
 		assert.Equal(t, resource, list.APIResources[0])
+	})
+}
+
+func TestAPIServerAddAPIResourceDiscoveryParallel(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	ts := httptest.NewUnstartedServer(mux)
+	api := NewAPIServer(mux)
+
+	api.AddAPIResource(gv.String(), resource, func(_ http.ResponseWriter, _ *http.Request, _ string) error {
+		return nil
+	})
+
+	ts.Start()
+	defer ts.Close()
+
+	t.Run("Parallel Tests", func(t *testing.T) {
+		// Run 10 concurrent requests to exercise multithreading
+		for i := 0; i < 10; i++ {
+			t.Run("Accept */*", func(t *testing.T) {
+				t.Parallel()
+				client := ts.Client()
+				path := ts.URL + "/apis/allocation.agones.dev/v1"
+				request, err := http.NewRequest(http.MethodGet, path, nil)
+				assert.NoError(t, err)
+
+				request.Header.Set("Accept", "*/*")
+				resp, err := client.Do(request)
+				assert.NoError(t, err)
+				if resp != nil {
+					defer resp.Body.Close() // nolint: errcheck
+				}
+				assert.Equal(t, k8sruntime.ContentTypeJSON, resp.Header.Get("Content-Type"))
+
+				list := &metav1.APIResourceList{}
+				err = json.NewDecoder(resp.Body).Decode(list)
+				assert.NoError(t, err)
+
+				assert.Equal(t, "v1", list.TypeMeta.APIVersion)
+				assert.Equal(t, "APIResourceList", list.TypeMeta.Kind)
+				assert.Equal(t, gv.String(), list.GroupVersion)
+				assert.Equal(t, resource, list.APIResources[0])
+			})
+		}
 	})
 }
 
