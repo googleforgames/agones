@@ -68,7 +68,10 @@ resource "azurerm_kubernetes_cluster" "agones" {
     vm_size             = var.machine_type
     os_disk_size_gb     = var.disk_size
     enable_auto_scaling = false
-    #enable_node_public_ip = true
+    # VMSS is used, so it is unpredictable how NICs will be given to VMs
+    # So let Azure to create NICs with Public IPs as games examples require
+    # Azure admin SDK can be used to obtain these IPs and map Agones GameServers to public view 
+    enable_node_public_ip = true
     #vnet_subnet_id     = azurerm_subnet.aks.id
   }
 
