@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"agones.dev/agones/pkg/util/https"
@@ -167,8 +168,9 @@ func (as *APIServer) addSerializedHandler(pattern string, m k8sruntime.Object) {
 				return err
 			}
 
+			shallowCopy := shallowCopyObjectForTargetKind(m)
 			w.Header().Set(ContentTypeHeader, info.MediaType)
-			err = Codecs.EncoderForVersion(info.Serializer, unversionedVersion).Encode(m, w)
+			err = Codecs.EncoderForVersion(info.Serializer, unversionedVersion).Encode(shallowCopy, w)
 			if err != nil {
 				return errors.New("error marshalling")
 			}
@@ -178,6 +180,16 @@ func (as *APIServer) addSerializedHandler(pattern string, m k8sruntime.Object) {
 
 		return nil
 	}))
+}
+
+// shallowCopyObjectForTargetKind ensures obj is unique by performing a shallow copy
+// of the struct Object points to (all Object must be a pointer to a struct in a scheme).
+// Copied from https://github.com/kubernetes/kubernetes/pull/101123 until the referenced PR is merged
+func shallowCopyObjectForTargetKind(obj k8sruntime.Object) k8sruntime.Object {
+	v := reflect.ValueOf(obj).Elem()
+	copied := reflect.New(v.Type())
+	copied.Elem().Set(v)
+	return copied.Interface().(k8sruntime.Object)
 }
 
 // AcceptedSerializer takes the request, and returns a serialiser (if it exists)
