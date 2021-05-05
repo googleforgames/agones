@@ -76,7 +76,7 @@ func TestAllocator(t *testing.T) {
 		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
-		MetaPatch:                    &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
+		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 
 	// wait for the allocation system to come online
@@ -124,7 +124,7 @@ func TestRestAllocator(t *testing.T) {
 		RequiredGameServerSelector:   &pb.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
 		PreferredGameServerSelectors: []*pb.LabelSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:                   pb.AllocationRequest_Packed,
-		MetaPatch:                    &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
+		Metadata:                     &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
 	}
 	tlsCfg, err := getTLSConfig(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
 	if !assert.Nil(t, err) {

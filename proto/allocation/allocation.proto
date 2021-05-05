@@ -48,9 +48,12 @@ message AllocationRequest {
     Distributed = 1;
   }
 
-  // MetaPatch is optional custom metadata that is added to the game server at
-  // allocation You can use this to tell the server necessary session data
+  // Deprecated: Please use metadata instead.
   MetaPatch metaPatch = 6;
+
+  // Metadata is optional custom metadata that is added to the game server at
+  // allocation. You can use this to tell the server necessary session data
+  MetaPatch metadata = 7;
 }
 
 message AllocationResponse {

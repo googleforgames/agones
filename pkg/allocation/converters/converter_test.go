@@ -15,6 +15,7 @@
 package converters
 
 import (
+	"errors"
 	"testing"
 
 	pb "agones.dev/agones/pkg/allocation/go"
@@ -33,6 +34,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		in                 *pb.AllocationRequest
 		want               *allocationv1.GameServerAllocation
 		skipConvertFromGSA bool
+		wantError          error
 	}{
 		{
 			name: "all fields are set",
@@ -64,7 +66,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					},
 				},
 				Scheduling: pb.AllocationRequest_Packed,
-				MetaPatch: &pb.MetaPatch{
+				Metadata: &pb.MetaPatch{
 					Labels: map[string]string{
 						"i": "j",
 					},
@@ -117,7 +119,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 				RequiredGameServerSelector:   &pb.LabelSelector{},
 				PreferredGameServerSelectors: []*pb.LabelSelector{},
 				Scheduling:                   pb.AllocationRequest_Distributed,
-				MetaPatch:                    &pb.MetaPatch{},
+				Metadata:                     &pb.MetaPatch{},
 			},
 			want: &allocationv1.GameServerAllocation{
 				ObjectMeta: metav1.ObjectMeta{
@@ -147,22 +149,74 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			in:   nil,
 			want: nil,
 		},
+		{
+			name: "accepts deprecated metapatch field",
+			in: &pb.AllocationRequest{
+				Namespace:                    "",
+				MultiClusterSetting:          &pb.MultiClusterSetting{},
+				RequiredGameServerSelector:   &pb.LabelSelector{},
+				PreferredGameServerSelectors: []*pb.LabelSelector{},
+				Scheduling:                   pb.AllocationRequest_Distributed,
+				MetaPatch: &pb.MetaPatch{
+					Labels: map[string]string{
+						"a": "b",
+					},
+				},
+			},
+			want: &allocationv1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "",
+				},
+				Spec: allocationv1.GameServerAllocationSpec{
+					MultiClusterSetting: allocationv1.MultiClusterSetting{
+						Enabled: false,
+					},
+					Scheduling: apis.Distributed,
+					MetaPatch: allocationv1.MetaPatch{
+						Labels: map[string]string{
+							"a": "b",
+						},
+					},
+				},
+			},
+			skipConvertFromGSA: true,
+		},
+		{
+			name: "Rejects both metadata and metapatch field",
+			in: &pb.AllocationRequest{
+				Namespace:                    "",
+				MultiClusterSetting:          &pb.MultiClusterSetting{},
+				RequiredGameServerSelector:   &pb.LabelSelector{},
+				PreferredGameServerSelectors: []*pb.LabelSelector{},
+				Scheduling:                   pb.AllocationRequest_Distributed,
+				Metadata: &pb.MetaPatch{
+					Labels: map[string]string{
+						"a": "b",
+					},
+				},
+				MetaPatch: &pb.MetaPatch{
+					Labels: map[string]string{
+						"c": "d",
+					},
+				},
+			},
+			want:               nil,
+			skipConvertFromGSA: true,
+			wantError:          errors.New("Allocation request cannot have both metadata and metapatch fields set"),
+		},
 	}
 	for _, tc := range tests {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out := ConvertAllocationRequestToGSA(tc.in)
-			if !assert.Equal(t, tc.want, out) {
-				t.Errorf("mismatch with want after conversion: \"%s\"", tc.name)
-			}
+			out, err := ConvertAllocationRequestToGSA(tc.in)
+			assert.Equal(t, tc.wantError, err, "\"%s\" error: got %v, want %v", tc.name, err, tc.wantError)
+			assert.Equal(t, tc.want, out, "mismatch with want after conversion: \"%s\"", tc.name)
 
 			if !tc.skipConvertFromGSA {
 				gsa := ConvertGSAToAllocationRequest(tc.want)
-				if !assert.Equal(t, tc.in, gsa) {
-					t.Errorf("mismatch with input after double conversion \"%s\"", tc.name)
-				}
+				assert.Equal(t, tc.in, gsa, "mismatch with input after double conversion \"%s\"", tc.name)
 			}
 		})
 	}
@@ -192,7 +246,7 @@ func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 				MultiClusterSetting:        &pb.MultiClusterSetting{},
 				RequiredGameServerSelector: &pb.LabelSelector{},
 				Scheduling:                 pb.AllocationRequest_Distributed,
-				MetaPatch:                  &pb.MetaPatch{},
+				Metadata:                   &pb.MetaPatch{},
 			},
 		}, {
 			name: "empty object",
@@ -204,7 +258,7 @@ func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 			want: &pb.AllocationRequest{
 				MultiClusterSetting:        &pb.MultiClusterSetting{},
 				RequiredGameServerSelector: &pb.LabelSelector{},
-				MetaPatch:                  &pb.MetaPatch{},
+				Metadata:                   &pb.MetaPatch{},
 			},
 		},
 	}

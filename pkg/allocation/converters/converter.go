@@ -16,6 +16,8 @@
 package converters
 
 import (
+	"errors"
+
 	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -26,9 +28,9 @@ import (
 )
 
 // ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
-func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameServerAllocation {
+func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) (*allocationv1.GameServerAllocation, error) {
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	gsa := &allocationv1.GameServerAllocation{
@@ -50,17 +52,26 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		}
 	}
 
-	if in.GetMetaPatch() != nil {
+	// Accept both metadata (preferred) and metapatch until metapatch is fully removed.
+	metadata := in.GetMetadata()
+	if metadata == nil {
+		metadata = in.GetMetaPatch()
+	} else if in.GetMetaPatch() != nil {
+		// If both are set, reject the call.
+		return nil, errors.New("Allocation request cannot have both metadata and metapatch fields set")
+	}
+
+	if metadata != nil {
 		gsa.Spec.MetaPatch = allocationv1.MetaPatch{
-			Labels:      in.GetMetaPatch().GetLabels(),
-			Annotations: in.GetMetaPatch().GetAnnotations(),
+			Labels:      metadata.GetLabels(),
+			Annotations: metadata.GetAnnotations(),
 		}
 	}
 
 	if ls := convertLabelSelectorToInternalLabelSelector(in.GetRequiredGameServerSelector()); ls != nil {
 		gsa.Spec.Required = *ls
 	}
-	return gsa
+	return gsa, nil
 }
 
 // ConvertGSAToAllocationRequest converts AllocationRequest to GameServerAllocation V1 (GSA)
@@ -77,7 +88,7 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
 		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
-		MetaPatch: &pb.MetaPatch{
+		Metadata: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
 		},

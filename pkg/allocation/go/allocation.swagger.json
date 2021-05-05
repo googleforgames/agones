@@ -91,7 +91,11 @@
         },
         "metaPatch": {
           "$ref": "#/definitions/allocationMetaPatch",
-          "title": "MetaPatch is optional custom metadata that is added to the game server at\nallocation You can use this to tell the server necessary session data"
+          "description": "Deprecated: Please use metadata instead."
+        },
+        "metadata": {
+          "$ref": "#/definitions/allocationMetaPatch",
+          "title": "Metadata is optional custom metadata that is added to the game server at\nallocation. You can use this to tell the server necessary session data"
         }
       }
     },
