@@ -2,7 +2,7 @@
 
 This sample serves as a gRPC C# client sample code for agones-allocator gRPC service.
 
-Follow instructions in [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service) to set up client and server certificate.
+Follow instructions in [Allocator Service](https://agones.dev/site/docs/advanced/allocator-service/) to set up client and server certificate.
 
 Run the following to allocate a game server:
 ```
