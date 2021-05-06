@@ -21,6 +21,9 @@ The current supported SDKs are:
 - [Rust]({{< relref "rust.md" >}})
 - [REST]({{< relref "rest.md" >}})
 
+You can also find some externally supported SDKs in our 
+[Third Party Content]({{% ref "/docs/Third Party Content/libraries-tools.md#client-sdks" %}}).
+
 The SDKs are relatively thin wrappers around [gRPC](https://grpc.io) generated clients,
 or an implementation of the REST API (exposed via [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)), 
 where gRPC client generation and compilation isn't well supported.
