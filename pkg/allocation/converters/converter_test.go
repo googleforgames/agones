@@ -15,7 +15,6 @@
 package converters
 
 import (
-	"errors"
 	"testing"
 
 	pb "agones.dev/agones/pkg/allocation/go"
@@ -34,7 +33,6 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		in                 *pb.AllocationRequest
 		want               *allocationv1.GameServerAllocation
 		skipConvertFromGSA bool
-		wantError          error
 	}{
 		{
 			name: "all fields are set",
@@ -67,6 +65,11 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 				},
 				Scheduling: pb.AllocationRequest_Packed,
 				Metadata: &pb.MetaPatch{
+					Labels: map[string]string{
+						"i": "j",
+					},
+				},
+				MetaPatch: &pb.MetaPatch{
 					Labels: map[string]string{
 						"i": "j",
 					},
@@ -182,7 +185,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 			skipConvertFromGSA: true,
 		},
 		{
-			name: "Rejects both metadata and metapatch field",
+			name: "Prefers metadata over metapatch field",
 			in: &pb.AllocationRequest{
 				Namespace:                    "",
 				MultiClusterSetting:          &pb.MultiClusterSetting{},
@@ -200,9 +203,23 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 					},
 				},
 			},
-			want:               nil,
+			want: &allocationv1.GameServerAllocation{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "",
+				},
+				Spec: allocationv1.GameServerAllocationSpec{
+					MultiClusterSetting: allocationv1.MultiClusterSetting{
+						Enabled: false,
+					},
+					Scheduling: apis.Distributed,
+					MetaPatch: allocationv1.MetaPatch{
+						Labels: map[string]string{
+							"a": "b",
+						},
+					},
+				},
+			},
 			skipConvertFromGSA: true,
-			wantError:          errors.New("Allocation request cannot have both metadata and metapatch fields set"),
 		},
 	}
 	for _, tc := range tests {
@@ -210,8 +227,7 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out, err := ConvertAllocationRequestToGSA(tc.in)
-			assert.Equal(t, tc.wantError, err, "\"%s\" error: got %v, want %v", tc.name, err, tc.wantError)
+			out := ConvertAllocationRequestToGSA(tc.in)
 			assert.Equal(t, tc.want, out, "mismatch with want after conversion: \"%s\"", tc.name)
 
 			if !tc.skipConvertFromGSA {
@@ -247,6 +263,7 @@ func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 				RequiredGameServerSelector: &pb.LabelSelector{},
 				Scheduling:                 pb.AllocationRequest_Distributed,
 				Metadata:                   &pb.MetaPatch{},
+				MetaPatch:                  &pb.MetaPatch{},
 			},
 		}, {
 			name: "empty object",
@@ -259,6 +276,7 @@ func TestConvertGSAToAllocationRequestEmpty(t *testing.T) {
 				MultiClusterSetting:        &pb.MultiClusterSetting{},
 				RequiredGameServerSelector: &pb.LabelSelector{},
 				Metadata:                   &pb.MetaPatch{},
+				MetaPatch:                  &pb.MetaPatch{},
 			},
 		},
 	}

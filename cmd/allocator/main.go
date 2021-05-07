@@ -412,11 +412,7 @@ type serviceHandler struct {
 // Allocate implements the Allocate gRPC method definition
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
-	gsa, err := converters.ConvertAllocationRequestToGSA(in)
-	if err != nil {
-		logger.WithField("request", in).WithError(err).Info("Failed to convert request to GSA")
-		return nil, err
-	}
+	gsa := converters.ConvertAllocationRequestToGSA(in)
 	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")

@@ -91,7 +91,7 @@
         },
         "metaPatch": {
           "$ref": "#/definitions/allocationMetaPatch",
-          "description": "Deprecated: Please use metadata instead."
+          "title": "Deprecated: Please use metadata instead. This field is ignored if the\nmetadata field is set"
         },
         "metadata": {
           "$ref": "#/definitions/allocationMetaPatch",

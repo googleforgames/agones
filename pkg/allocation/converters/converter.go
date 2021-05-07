@@ -16,8 +16,6 @@
 package converters
 
 import (
-	"errors"
-
 	pb "agones.dev/agones/pkg/allocation/go"
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -28,9 +26,9 @@ import (
 )
 
 // ConvertAllocationRequestToGSA converts AllocationRequest to GameServerAllocation V1 (GSA)
-func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) (*allocationv1.GameServerAllocation, error) {
+func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameServerAllocation {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
 	gsa := &allocationv1.GameServerAllocation{
@@ -56,9 +54,6 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) (*allocationv1.Game
 	metadata := in.GetMetadata()
 	if metadata == nil {
 		metadata = in.GetMetaPatch()
-	} else if in.GetMetaPatch() != nil {
-		// If both are set, reject the call.
-		return nil, errors.New("Allocation request cannot have both metadata and metapatch fields set")
 	}
 
 	if metadata != nil {
@@ -71,7 +66,7 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) (*allocationv1.Game
 	if ls := convertLabelSelectorToInternalLabelSelector(in.GetRequiredGameServerSelector()); ls != nil {
 		gsa.Spec.Required = *ls
 	}
-	return gsa, nil
+	return gsa
 }
 
 // ConvertGSAToAllocationRequest converts AllocationRequest to GameServerAllocation V1 (GSA)
@@ -89,6 +84,13 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 		},
 		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
 		Metadata: &pb.MetaPatch{
+			Labels:      in.Spec.MetaPatch.Labels,
+			Annotations: in.Spec.MetaPatch.Annotations,
+		},
+		// MetaPatch is deprecated, but we do a double write here to both metapatch and metadata
+		// to ensure that multi-cluster allocation still works when one cluster has the field
+		// and another one does not have the field yet.
+		MetaPatch: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
 		},

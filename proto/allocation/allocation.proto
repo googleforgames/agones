@@ -48,7 +48,8 @@ message AllocationRequest {
     Distributed = 1;
   }
 
-  // Deprecated: Please use metadata instead.
+  // Deprecated: Please use metadata instead. This field is ignored if the
+  // metadata field is set
   MetaPatch metaPatch = 6;
 
   // Metadata is optional custom metadata that is added to the game server at
