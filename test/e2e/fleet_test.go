@@ -30,6 +30,7 @@ import (
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -345,6 +346,56 @@ func TestFleetRollingUpdate(t *testing.T) {
 			})
 		}
 	}
+}
+
+func TestUpdateFleetReplicaAndSpec(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
+		t.SkipNow()
+	}
+	t.Parallel()
+
+	client := framework.AgonesClient.AgonesV1()
+	ctx := context.Background()
+
+	flt := defaultFleet(framework.Namespace)
+	flt.ApplyDefaults()
+
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	logrus.WithField("fleet", flt).Info("Created Fleet")
+
+	selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	require.Eventuallyf(t, func() bool {
+		list, err := client.GameServerSets(framework.Namespace).List(ctx,
+			metav1.ListOptions{LabelSelector: selector.String()})
+		require.NoError(t, err)
+		return len(list.Items) == 1
+	}, time.Minute, time.Second, "Wrong number of GameServerSets")
+
+	// update both replicas and template at the same time
+
+	flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
+	require.NoError(t, err)
+	fltCopy := flt.DeepCopy()
+	fltCopy.Spec.Replicas = 0
+	fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
+	require.NotEqual(t, flt.Spec.Template.Spec.Ports[0].ContainerPort, fltCopy.Spec.Template.Spec.Ports[0].ContainerPort)
+
+	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
+	require.NoError(t, err)
+	require.Empty(t, flt.Spec.Replicas)
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	require.Eventuallyf(t, func() bool {
+		list, err := client.GameServerSets(framework.Namespace).List(ctx,
+			metav1.ListOptions{LabelSelector: selector.String()})
+		require.NoError(t, err)
+		return len(list.Items) == 1 && list.Items[0].Spec.Replicas == 0
+	}, time.Minute, time.Second, "Wrong number of GameServerSets")
 }
 
 func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
