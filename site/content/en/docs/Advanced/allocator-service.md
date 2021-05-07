@@ -173,7 +173,12 @@ You should expect to see the following output:
 
 ### Sending Data to the Game Server
 
+{{% feature publishVersion="0.15.0" %}}
+The service accepts a `metadata` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`. The old `metaPatch` fields is now deprecated, but can still be used for compatibility. If both `metadata` and `metaPatch` fields are set, `metaPatch` is ignored.
+{{% /feature %}}
+{{% feature expiryVersion="0.15.0" %}}
 The service accepts a `metaPatch` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`.
+{{% /feature %}}
 
 ## Secrets Explained
 

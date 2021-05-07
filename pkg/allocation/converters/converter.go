@@ -50,10 +50,16 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		}
 	}
 
-	if in.GetMetaPatch() != nil {
+	// Accept both metadata (preferred) and metapatch until metapatch is fully removed.
+	metadata := in.GetMetadata()
+	if metadata == nil {
+		metadata = in.GetMetaPatch()
+	}
+
+	if metadata != nil {
 		gsa.Spec.MetaPatch = allocationv1.MetaPatch{
-			Labels:      in.GetMetaPatch().GetLabels(),
-			Annotations: in.GetMetaPatch().GetAnnotations(),
+			Labels:      metadata.GetLabels(),
+			Annotations: metadata.GetAnnotations(),
 		}
 	}
 
@@ -77,6 +83,13 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
 		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
+		Metadata: &pb.MetaPatch{
+			Labels:      in.Spec.MetaPatch.Labels,
+			Annotations: in.Spec.MetaPatch.Annotations,
+		},
+		// MetaPatch is deprecated, but we do a double write here to both metapatch and metadata
+		// to ensure that multi-cluster allocation still works when one cluster has the field
+		// and another one does not have the field yet.
 		MetaPatch: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
