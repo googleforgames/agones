@@ -9,7 +9,7 @@
     },
     "description": "Game Server SDK for Agones, the open source project for hosting dedicated game servers on Kubernetes",
     "devDependencies": {
-        "eslint": "^7.23.0",
+        "eslint": "^7.26.0",
         "jasmine": "^3.7.0",
         "nyc": "^15.1.0"
     },
