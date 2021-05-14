@@ -1,8 +1,8 @@
 /*!
- * Bootstrap v4.1.3 (https://getbootstrap.com/)
- * Copyright 2011-2018 The Bootstrap Authors
- * Copyright 2011-2018 Twitter, Inc.
- * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * Bootstrap v4.6.0 (https://getbootstrap.com/)
+ * Copyright 2011-2021 The Bootstrap Authors
+ * Copyright 2011-2021 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
 
 @import "functions";
@@ -34,9 +34,11 @@
 @import "media";
 @import "list-group";
 @import "close";
+@import "toasts";
 @import "modal";
 @import "tooltip";
 @import "popover";
 @import "carousel";
+@import "spinners";
 @import "utilities";
 @import "print";

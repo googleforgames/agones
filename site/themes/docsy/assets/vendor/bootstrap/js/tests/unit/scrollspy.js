@@ -31,8 +31,8 @@ $(function () {
     $el.bootstrapScrollspy()
     try {
       $el.bootstrapScrollspy('noMethod')
-    } catch (err) {
-      assert.strictEqual(err.message, 'No method named "noMethod"')
+    } catch (error) {
+      assert.strictEqual(error.message, 'No method named "noMethod"')
     }
   })
 
@@ -127,8 +127,106 @@ $(function () {
       .show()
       .find('#scrollspy-example')
       .bootstrapScrollspy({
-        target: document.getElementById('#ss-target')
+        target: document.getElementById('ss-target')
       })
+
+    $scrollspy.one('scroll', function () {
+      assert.ok($section.hasClass('active'), '"active" class still on root node')
+      done()
+    })
+
+    $scrollspy.scrollTop(350)
+  })
+
+  // This could be simplified/improved later
+  QUnit.test('should only switch "active" class on current target specified w jQuery element', function (assert) {
+    assert.expect(1)
+    var done = assert.async()
+
+    var sectionHTML = '<div id="root" class="active">' +
+        '<div class="topbar">' +
+        '<div class="topbar-inner">' +
+        '<div class="container" id="ss-target">' +
+        '<ul class="nav">' +
+        '<li class="nav-item"><a href="#masthead">Overview</a></li>' +
+        '<li class="nav-item"><a href="#detail">Detail</a></li>' +
+        '</ul>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div id="scrollspy-example" style="height: 100px; overflow: auto;">' +
+        '<div style="height: 200px;">' +
+        '<h4 id="masthead">Overview</h4>' +
+        '<p style="height: 200px">' +
+        'Ad leggings keytar, brunch id art party dolor labore.' +
+        '</p>' +
+        '</div>' +
+        '<div style="height: 200px;">' +
+        '<h4 id="detail">Detail</h4>' +
+        '<p style="height: 200px">' +
+        'Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard.' +
+        '</p>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    var $section = $(sectionHTML).appendTo('#qunit-fixture')
+
+    var $scrollspy = $section
+      .show()
+      .find('#scrollspy-example')
+      .bootstrapScrollspy({
+        target: $('#ss-target')
+      })
+
+    $scrollspy.one('scroll', function () {
+      assert.ok($section.hasClass('active'), '"active" class still on root node')
+      done()
+    })
+
+    $scrollspy.scrollTop(350)
+  })
+
+  // This could be simplified/improved later
+  QUnit.test('should only switch "active" class on current target specified without ID', function (assert) {
+    assert.expect(2)
+    var done = assert.async()
+
+    var sectionHTML = '<div id="root" class="active">' +
+        '<div class="topbar">' +
+        '<div class="topbar-inner">' +
+        '<div class="container">' +
+        '<ul class="nav">' +
+        '<li class="nav-item"><a href="#masthead">Overview</a></li>' +
+        '<li class="nav-item"><a href="#detail">Detail</a></li>' +
+        '</ul>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div id="scrollspy-example" style="height: 100px; overflow: auto;">' +
+        '<div style="height: 200px;">' +
+        '<h4 id="masthead">Overview</h4>' +
+        '<p style="height: 200px">' +
+        'Ad leggings keytar, brunch id art party dolor labore.' +
+        '</p>' +
+        '</div>' +
+        '<div style="height: 200px;">' +
+        '<h4 id="detail">Detail</h4>' +
+        '<p style="height: 200px">' +
+        'Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard.' +
+        '</p>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+    var $section = $(sectionHTML).appendTo('#qunit-fixture')
+
+    var $scrollspy = $section
+      .show()
+      .find('#scrollspy-example')
+      .bootstrapScrollspy({
+        target: $('.container')
+      })
+
+    assert.ok($('.container').attr('id').length > 0, '`target` has an ID attribute')
 
     $scrollspy.one('scroll', function () {
       assert.ok($section.hasClass('active'), '"active" class still on root node')
@@ -201,7 +299,9 @@ $(function () {
     var done = assert.async()
     var testElementIsActiveAfterScroll = function (element, target) {
       var deferred = $.Deferred()
-      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top)
+      // add top padding to fix Chrome on Android failures
+      var paddingTop = 5
+      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top) + paddingTop
       $content.one('scroll', function () {
         assert.ok($(element).hasClass('active'), 'target:' + target + ', element' + element)
         deferred.resolve()
@@ -245,7 +345,9 @@ $(function () {
     var done = assert.async()
     var testElementIsActiveAfterScroll = function (element, target) {
       var deferred = $.Deferred()
-      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top)
+      // add top padding to fix Chrome on Android failures
+      var paddingTop = 5
+      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top) + paddingTop
       $content.one('scroll', function () {
         assert.ok($(element).hasClass('active'), 'target:' + target + ', element' + element)
         deferred.resolve()
@@ -289,7 +391,9 @@ $(function () {
     var done = assert.async()
     var testElementIsActiveAfterScroll = function (element, target) {
       var deferred = $.Deferred()
-      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top)
+      // add top padding to fix Chrome on Android failures
+      var paddingTop = 5
+      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top) + paddingTop
       $content.one('scroll', function () {
         assert.ok($(element).hasClass('active'), 'target:' + target + ', element' + element)
         deferred.resolve()
@@ -503,11 +607,11 @@ $(function () {
     $(sectionHTML).appendTo('#qunit-fixture')
 
     var scrollspyHTML = '<div id="content" style="height: 200px; overflow-y: auto;">' +
-        '<div id="spacer" style="height: 100px;"/>' +
-        '<div id="one" style="height: 100px;"/>' +
-        '<div id="two" style="height: 100px;"/>' +
-        '<div id="three" style="height: 100px;"/>' +
-        '<div id="spacer" style="height: 100px;"/>' +
+        '<div id="spacer" style="height: 100px;"></div>' +
+        '<div id="one" style="height: 100px;"></div>' +
+        '<div id="two" style="height: 100px;"></div>' +
+        '<div id="three" style="height: 100px;"></div>' +
+        '<div id="spacer" style="height: 100px;"></div>' +
         '</div>'
     var $scrollspy = $(scrollspyHTML).appendTo('#qunit-fixture')
 
@@ -547,10 +651,10 @@ $(function () {
     var startOfSectionTwo = 101
 
     var scrollspyHTML = '<div id="content" style="height: 200px; overflow-y: auto;">' +
-        '<div id="one" style="height: 100px;"/>' +
-        '<div id="two" style="height: 100px;"/>' +
-        '<div id="three" style="height: 100px;"/>' +
-        '<div id="spacer" style="height: 100px;"/>' +
+        '<div id="one" style="height: 100px;"></div>' +
+        '<div id="two" style="height: 100px;"></div>' +
+        '<div id="three" style="height: 100px;"></div>' +
+        '<div id="spacer" style="height: 100px;"></div>' +
         '</div>'
     var $scrollspy = $(scrollspyHTML).appendTo('#qunit-fixture')
 
@@ -604,7 +708,9 @@ $(function () {
 
     var testElementIsActiveAfterScroll = function (element, target) {
       var deferred = $.Deferred()
-      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top)
+      // add top padding to fix Chrome on Android failures
+      var paddingTop = 5
+      var scrollHeight = Math.ceil($content.scrollTop() + $(target).position().top) + paddingTop
       $content.one('scroll', function () {
         assert.ok($(element).hasClass('active'), 'target:' + target + ', element: ' + element)
         deferred.resolve()
@@ -724,5 +830,44 @@ $(function () {
 
     testOffsetMethod('js')
     testOffsetMethod('data')
+  })
+
+  // This could be simplified/improved later
+  QUnit.test('should raise exception to avoid xss on target', function (assert) {
+    assert.expect(1)
+    assert.throws(function () {
+      var templateHTML = '<div id="root" class="active">' +
+        '<div class="topbar">' +
+        '<div class="topbar-inner">' +
+        '<div class="container" id="ss-target">' +
+        '<ul class="nav">' +
+        '<li class="nav-item"><a href="#masthead">Overview</a></li>' +
+        '<li class="nav-item"><a href="#detail">Detail</a></li>' +
+        '</ul>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div id="scrollspy-example" style="height: 100px; overflow: auto;">' +
+        '<div style="height: 200px;">' +
+        '<h4 id="masthead">Overview</h4>' +
+        '<p style="height: 200px">' +
+        'Ad leggings keytar, brunch id art party dolor labore.' +
+        '</p>' +
+        '</div>' +
+        '<div style="height: 200px;">' +
+        '<h4 id="detail">Detail</h4>' +
+        '<p style="height: 200px">' +
+        'Veniam marfa mustache skateboard, adipisicing fugiat velit pitchfork beard.' +
+        '</p>' +
+        '</div>' +
+        '</div>' +
+        '</div>'
+
+      $(templateHTML).appendTo(document.body)
+
+      $('#ss-target').bootstrapScrollspy({
+        target: '<img src=1 onerror=\'alert(0)\'>'
+      })
+    }, /SyntaxError/)
   })
 })

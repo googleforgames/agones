@@ -32,8 +32,8 @@ $(function () {
     $el.bootstrapPopover()
     try {
       $el.bootstrapPopover('noMethod')
-    } catch (err) {
-      assert.strictEqual(err.message, 'No method named "noMethod"')
+    } catch (error) {
+      assert.strictEqual(error.message, 'No method named "noMethod"')
     }
   })
 
@@ -51,11 +51,24 @@ $(function () {
     $('<a href="#" title="mdo" data-content="https://twitter.com/mdo">@mdo</a>')
       .appendTo('#qunit-fixture')
       .on('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         $(this).bootstrapPopover('hide')
       })
       .on('hidden.bs.popover', function () {
         assert.strictEqual($('.popover').length, 0, 'popover removed')
+        done()
+      })
+      .bootstrapPopover('show')
+  })
+
+  QUnit.test('should render popover element with additional classes', function (assert) {
+    assert.expect(2)
+    var done = assert.async()
+    $('<a href="#" title="mdo" data-content="https://twitter.com/mdo" data-custom-class="a b">@mdo</a>')
+      .appendTo('#qunit-fixture')
+      .on('shown.bs.popover', function () {
+        assert.strictEqual($('.popover').hasClass('popover fade bs-popover-right show'), true, 'has default classes')
+        assert.strictEqual($('.popover').hasClass('a b'), true, 'has custom classes')
         done()
       })
       .bootstrapPopover('show')
@@ -95,7 +108,7 @@ $(function () {
 
     $popover
       .one('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         assert.strictEqual($('.popover .popover-header').text(), '@fat', 'title correctly inserted')
         assert.strictEqual($('.popover .popover-body').text(), 'loves writing tests （╯°□°）╯︵ ┻━┻', 'content correctly inserted')
         $popover.bootstrapPopover('hide')
@@ -121,7 +134,7 @@ $(function () {
 
     $popover.bootstrapPopover('show')
 
-    assert.notEqual($('.popover').length, 0, 'popover inserted')
+    assert.notStrictEqual($('.popover').length, 0, 'popover inserted')
     assert.strictEqual($('.popover .popover-header').text(), '@glebm <3 writing tests', 'title inserted')
     assert.ok($.contains($('.popover').get(0), title), 'title node moved, not copied')
     // toLowerCase because IE8 will return <I>...</I>
@@ -142,7 +155,7 @@ $(function () {
 
     $popover.bootstrapPopover('show')
 
-    assert.notEqual($('.popover').length, 0, 'popover inserted')
+    assert.notStrictEqual($('.popover').length, 0, 'popover inserted')
     assert.strictEqual($('.popover .popover-header').text(), '@glebm <3 writing tests', 'title inserted')
     assert.ok(!$.contains($('.popover').get(0), title), 'title node copied, not moved')
     assert.strictEqual($('.popover .popover-body').html(), '¯\\_(ツ)_/¯', 'content inserted')
@@ -164,8 +177,8 @@ $(function () {
       })
 
     function popoverInserted() {
-      assert.notEqual($('.popover').length, 0, 'popover was inserted')
-      assert.equal($('.popover .popover-body').html(), $div[0].outerHTML, 'content correctly inserted')
+      assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
+      assert.strictEqual($('.popover .popover-body').html(), $div[0].outerHTML, 'content correctly inserted')
     }
 
     $popover
@@ -195,7 +208,7 @@ $(function () {
       .appendTo('#qunit-fixture')
       .bootstrapPopover()
       .one('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         assert.strictEqual($('.popover .popover-header').text(), '@mdo', 'title correctly inserted')
         assert.strictEqual($('.popover .popover-body').text(), 'loves data attributes (づ｡◕‿‿◕｡)づ ︵ ┻━┻', 'content correctly inserted')
         $popover.bootstrapPopover('hide')
@@ -217,7 +230,7 @@ $(function () {
         content: 'ignored content option'
       })
       .one('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         assert.strictEqual($('.popover .popover-header').text(), '@mdo', 'title correctly inserted')
         assert.strictEqual($('.popover .popover-body').text(), 'loves data attributes (づ｡◕‿‿◕｡)づ ︵ ┻━┻', 'content correctly inserted')
         $popover.bootstrapPopover('hide')
@@ -240,7 +253,7 @@ $(function () {
         template: '<div class="popover foobar"><div class="arrow"></div><div class="inner"><h3 class="title"/><div class="content"><p/></div></div></div>'
       })
       .one('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         assert.ok($('.popover').hasClass('foobar'), 'custom class is present')
         $popover.bootstrapPopover('hide')
       })
@@ -282,7 +295,7 @@ $(function () {
         trigger: 'click'
       })
       .one('shown.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         $div.find('a').trigger('click')
       })
       .one('hidden.bs.popover', function () {
@@ -352,7 +365,7 @@ $(function () {
     $('<a href="#">@Johann-S</a>')
       .appendTo('#qunit-fixture')
       .on('inserted.bs.popover', function () {
-        assert.notEqual($('.popover').length, 0, 'popover was inserted')
+        assert.notStrictEqual($('.popover').length, 0, 'popover was inserted')
         assert.ok(true, 'inserted event fired')
         done()
       })
@@ -369,8 +382,8 @@ $(function () {
 
     try {
       $('<div data-toggle="popover" data-title="some title" data-content="@Johann-S" style="display: none"/>').bootstrapPopover('show')
-    } catch (err) {
-      assert.strictEqual(err.message, 'Please use show on visible elements')
+    } catch (error) {
+      assert.strictEqual(error.message, 'Please use show on visible elements')
       done()
     }
   })

@@ -1,6 +1,26 @@
 $(function () {
   'use strict'
 
+  window.Carousel = typeof bootstrap !== 'undefined' ? bootstrap.Carousel : Carousel
+
+  var originWinPointerEvent = window.PointerEvent
+  window.MSPointerEvent = null
+  var supportPointerEvent = Boolean(window.PointerEvent || window.MSPointerEvent)
+
+  function clearPointerEvents() {
+    window.PointerEvent = null
+  }
+
+  function restorePointerEvents() {
+    window.PointerEvent = originWinPointerEvent
+  }
+
+  var stylesCarousel = [
+    '<style>',
+    '  .carousel.pointer-event { -ms-touch-action: none; touch-action: none; }',
+    '</style>'
+  ].join('')
+
   QUnit.module('carousel plugin')
 
   QUnit.test('should be defined on jQuery object', function (assert) {
@@ -25,14 +45,28 @@ $(function () {
     assert.strictEqual(typeof $.fn.carousel, 'undefined', 'carousel was set back to undefined (orig value)')
   })
 
+  QUnit.test('should return version', function (assert) {
+    assert.expect(1)
+
+    assert.strictEqual(typeof Carousel.VERSION, 'string')
+  })
+
+  QUnit.test('should return default parameters', function (assert) {
+    assert.expect(1)
+
+    var defaultConfig = Carousel.Default
+
+    assert.strictEqual(defaultConfig.touch, true)
+  })
+
   QUnit.test('should throw explicit error on undefined method', function (assert) {
     assert.expect(1)
     var $el = $('<div/>')
     $el.bootstrapCarousel()
     try {
       $el.bootstrapCarousel('noMethod')
-    } catch (err) {
-      assert.strictEqual(err.message, 'No method named "noMethod"')
+    } catch (error) {
+      assert.strictEqual(error.message, 'No method named "noMethod"')
     }
   })
 
@@ -55,8 +89,8 @@ $(function () {
 
     try {
       $('<div/>').bootstrapCarousel(config)
-    } catch (err) {
-      message = err.message
+    } catch (error) {
+      message = error.message
     }
 
     assert.ok(message === expectedMessage, 'correct error message')
@@ -68,8 +102,8 @@ $(function () {
 
     try {
       $('<div/>').bootstrapCarousel(config)
-    } catch (err) {
-      message = err.message
+    } catch (error) {
+      message = error.message
     }
 
     assert.ok(message === expectedMessage, 'correct error message')
@@ -100,13 +134,13 @@ $(function () {
         '</ol>' +
         '<div class="carousel-inner">' +
         '<div class="carousel-item active">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '</div>' +
         '<a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"/>' +
@@ -445,6 +479,67 @@ $(function () {
     $carousel.remove()
   })
 
+  QUnit.test('should set interval from data attribute on individual carousel-item', function (assert) {
+    assert.expect(4)
+    var templateHTML = '<div id="myCarousel" class="carousel slide" data-interval="1814">' +
+        '<div class="carousel-inner">' +
+        '<div class="carousel-item active" data-interval="2814">' +
+        '<img alt="">' +
+        '<div class="carousel-caption">' +
+        '<h4>First Thumbnail label</h4>' +
+        '<p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec ' +
+        'id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ' +
+        'ultricies vehicula ut id elit.</p>' +
+        '</div>' +
+        '</div>' +
+        '<div class="carousel-item" data-interval="3814">' +
+        '<img alt="">' +
+        '<div class="carousel-caption">' +
+        '<h4>Second Thumbnail label</h4>' +
+        '<p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec ' +
+        'id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ' +
+        'ultricies vehicula ut id elit.</p>' +
+        '</div>' +
+        '</div>' +
+        '<div class="carousel-item">' +
+        '<img alt="">' +
+        '<div class="carousel-caption">' +
+        '<h4>Third Thumbnail label</h4>' +
+        '<p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec ' +
+        'id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ' +
+        'ultricies vehicula ut id elit.</p>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<a class="left carousel-control" href="#myCarousel" data-slide="prev">&lsaquo;</a>' +
+        '<a class="right carousel-control" href="#myCarousel" data-slide="next">&rsaquo;</a>' +
+        '</div>'
+    var $carousel = $(templateHTML)
+
+    $carousel.appendTo('body')
+    $carousel.bootstrapCarousel()
+    assert.strictEqual($carousel.data('bs.carousel')._config.interval, 1814)
+    $carousel.remove()
+
+    $carousel.appendTo('body')
+    $carousel.bootstrapCarousel(0)
+    $carousel.data('bs.carousel').cycle()
+    assert.strictEqual($carousel.data('bs.carousel')._config.interval, 2814)
+    $carousel.remove()
+
+    $carousel.appendTo('body')
+    $carousel.bootstrapCarousel(1)
+    $carousel.data('bs.carousel').cycle()
+    assert.strictEqual($carousel.data('bs.carousel')._config.interval, 3814)
+    $carousel.remove()
+
+    $carousel.appendTo('body')
+    $carousel.bootstrapCarousel(2)
+    $carousel.data('bs.carousel').cycle()
+    assert.strictEqual($carousel.data('bs.carousel')._config.interval, 1814, 'reverts to default interval if no data-interval is set')
+    $carousel.remove()
+  })
+
   QUnit.test('should skip over non-items when using item indices', function (assert) {
     assert.expect(2)
     var templateHTML = '<div id="myCarousel" class="carousel" data-interval="1814">' +
@@ -452,7 +547,7 @@ $(function () {
         '<div class="carousel-item active">' +
         '<img alt="">' +
         '</div>' +
-        '<script type="text/x-metamorph" id="thingy"/>' +
+        '<script type="text/x-metamorph" id="thingy"></script>' +
         '<div class="carousel-item">' +
         '<img alt="">' +
         '</div>' +
@@ -478,7 +573,7 @@ $(function () {
         '<div class="carousel-item active">' +
         '<img alt="">' +
         '</div>' +
-        '<script type="text/x-metamorph" id="thingy"/>' +
+        '<script type="text/x-metamorph" id="thingy"></script>' +
         '<div class="carousel-item">' +
         '<img alt="">' +
         '</div>' +
@@ -570,7 +665,7 @@ $(function () {
     var eventArrowDown = $.Event('keydown', {
       which: 40
     })
-    var eventArrowUp   = $.Event('keydown', {
+    var eventArrowUp = $.Event('keydown', {
       which: 38
     })
 
@@ -681,13 +776,13 @@ $(function () {
         '</ol>' +
         '<div class="carousel-inner">' +
         '<div class="carousel-item active" id="one">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="two">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="three">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '</div>' +
         '<a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"/>' +
@@ -728,13 +823,13 @@ $(function () {
         '</ol>' +
         '<div class="carousel-inner">' +
         '<div class="carousel-item active" id="one">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="two">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="three">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '</div>' +
         '<a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"/>' +
@@ -762,13 +857,13 @@ $(function () {
         '</ol>' +
         '<div class="carousel-inner">' +
         '<div class="carousel-item active" id="one">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="two">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="three">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '</div>' +
         '<a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"/>' +
@@ -810,13 +905,13 @@ $(function () {
         '</ol>' +
         '<div class="carousel-inner">' +
         '<div class="carousel-item active" id="one">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="two">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '<div class="carousel-item" id="three">' +
-        '<div class="carousel-caption"/>' +
+        '<div class="carousel-caption"></div>' +
         '</div>' +
         '</div>' +
         '<a class="left carousel-control" href="#carousel-example-generic" data-slide="prev"/>' +
@@ -866,7 +961,7 @@ $(function () {
     $textArea.trigger(eventKeyDown)
   })
 
-  QUnit.test('Should not go to the next item when the carousel is not visible', function (assert) {
+  QUnit.test('should not go to the next item when the carousel is not visible', function (assert) {
     assert.expect(2)
     var done = assert.async()
     var html = '<div id="myCarousel" class="carousel slide" data-interval="50" style="display: none;">' +
@@ -903,7 +998,7 @@ $(function () {
     }, 80)
   })
 
-  QUnit.test('Should not go to the next item when the parent of the carousel is not visible', function (assert) {
+  QUnit.test('should not go to the next item when the parent of the carousel is not visible', function (assert) {
     assert.expect(2)
     var done = assert.async()
     var html = '<div id="parent" style="display: none;">' +
@@ -940,5 +1035,314 @@ $(function () {
         done()
       }, 80)
     }, 80)
+  })
+
+  QUnit.test('should allow swiperight and call prev with pointer events', function (assert) {
+    if (!supportPointerEvent) {
+      assert.expect(0)
+      return
+    }
+
+    document.documentElement.ontouchstart = $.noop
+    Simulator.setType('pointer')
+    assert.expect(3)
+    var $styles = $(stylesCarousel).appendTo('head')
+    var done = assert.async()
+
+    var carouselHTML =
+        '<div class="carousel" data-interval="false">' +
+        '  <div class="carousel-inner">' +
+        '    <div id="item" class="carousel-item">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '    <div class="carousel-item active">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+
+    var $carousel = $(carouselHTML).appendTo('#qunit-fixture')
+    var $item = $('#item')
+    $carousel.bootstrapCarousel()
+    var carousel = $carousel.data('bs.carousel')
+    var spy = sinon.spy(carousel, 'prev')
+
+    $carousel.one('slid.bs.carousel', function () {
+      assert.ok(true, 'slid event fired')
+      assert.ok($item.hasClass('active'))
+      assert.ok(spy.called)
+      $styles.remove()
+      delete document.documentElement.ontouchstart
+      done()
+    })
+
+    Simulator.gestures.swipe($carousel[0], {
+      deltaX: 300,
+      deltaY: 0
+    })
+  })
+
+  QUnit.test('should allow swiperight and call prev with touch events', function (assert) {
+    Simulator.setType('touch')
+    clearPointerEvents()
+
+    assert.expect(3)
+    var done = assert.async()
+    document.documentElement.ontouchstart = $.noop
+
+    var carouselHTML =
+        '<div class="carousel" data-interval="false">' +
+        '  <div class="carousel-inner">' +
+        '    <div id="item" class="carousel-item">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '    <div class="carousel-item active">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    var $item = $('#item')
+    $carousel.bootstrapCarousel()
+    var carousel = $carousel.data('bs.carousel')
+    var spy = sinon.spy(carousel, 'prev')
+
+    $carousel.one('slid.bs.carousel', function () {
+      assert.ok(true, 'slid event fired')
+      assert.ok($item.hasClass('active'))
+      assert.ok(spy.called)
+      delete document.documentElement.ontouchstart
+      restorePointerEvents()
+      done()
+    })
+
+    Simulator.gestures.swipe($carousel[0], {
+      deltaX: 300,
+      deltaY: 0
+    })
+  })
+
+  QUnit.test('should allow swipeleft and call next with pointer events', function (assert) {
+    if (!supportPointerEvent) {
+      assert.expect(0)
+      return
+    }
+
+    document.documentElement.ontouchstart = $.noop
+    assert.expect(4)
+    Simulator.setType('pointer')
+
+    var $styles = $(stylesCarousel).appendTo('head')
+    var done = assert.async()
+
+    var carouselHTML =
+        '<div class="carousel" data-interval="false">' +
+        '  <div class="carousel-inner">' +
+        '    <div id="item" class="carousel-item active">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '    <div class="carousel-item">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    var $item = $('#item')
+    $carousel.bootstrapCarousel()
+    var carousel = $carousel.data('bs.carousel')
+    var spy = sinon.spy(carousel, 'next')
+
+    $carousel.one('slid.bs.carousel', function () {
+      assert.ok(true, 'slid event fired')
+      assert.ok(!$item.hasClass('active'))
+      assert.ok(spy.called)
+      assert.strictEqual(carousel.touchDeltaX, 0)
+      $styles.remove()
+      delete document.documentElement.ontouchstart
+      done()
+    })
+
+    Simulator.gestures.swipe($carousel[0], {
+      pos: [300, 10],
+      deltaX: -300,
+      deltaY: 0
+    })
+  })
+
+  QUnit.test('should allow swipeleft and call next with touch events', function (assert) {
+    assert.expect(4)
+    clearPointerEvents()
+    Simulator.setType('touch')
+    document.documentElement.ontouchstart = $.noop
+
+    var done = assert.async()
+
+    var carouselHTML =
+        '<div class="carousel" data-interval="false">' +
+        '  <div class="carousel-inner">' +
+        '    <div id="item" class="carousel-item active">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '    <div class="carousel-item">' +
+        '      <img alt="">' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    var $item = $('#item')
+    $carousel.bootstrapCarousel()
+    var carousel = $carousel.data('bs.carousel')
+    var spy = sinon.spy(carousel, 'next')
+
+    $carousel.one('slid.bs.carousel', function () {
+      assert.ok(true, 'slid event fired')
+      assert.ok(!$item.hasClass('active'))
+      assert.ok(spy.called)
+      assert.strictEqual(carousel.touchDeltaX, 0)
+      restorePointerEvents()
+      delete document.documentElement.ontouchstart
+      done()
+    })
+
+    Simulator.gestures.swipe($carousel[0], {
+      pos: [300, 10],
+      deltaX: -300,
+      deltaY: 0
+    })
+  })
+
+  QUnit.test('should not allow pinch with touch events', function (assert) {
+    assert.expect(0)
+    clearPointerEvents()
+
+    Simulator.setType('touch')
+    var done = assert.async()
+    document.documentElement.ontouchstart = $.noop
+
+    var carouselHTML = '<div class="carousel" data-interval="false"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    Simulator.gestures.swipe($carousel[0], {
+      pos: [300, 10],
+      deltaX: -300,
+      deltaY: 0,
+      touches: 2
+    }, function () {
+      restorePointerEvents()
+      delete document.documentElement.ontouchstart
+      done()
+    })
+  })
+
+  QUnit.test('should not call _slide if the carousel is sliding', function (assert) {
+    assert.expect(1)
+
+    var carouselHTML = '<div class="carousel" data-interval="false"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    var carousel = $carousel.data('bs.carousel')
+
+    var spy = sinon.spy(carousel, '_slide')
+
+    carousel._isSliding = true
+
+    carousel.next()
+
+    assert.strictEqual(spy.called, false)
+  })
+
+  QUnit.test('should call next when the page is visible', function (assert) {
+    assert.expect(1)
+
+    var carouselHTML = '<div class="carousel" data-interval="false"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    var carousel = $carousel.data('bs.carousel')
+
+    var spy = sinon.spy(carousel, 'next')
+    var sandbox = sinon.createSandbox()
+
+    sandbox.replaceGetter(document, 'hidden', function () {
+      return false
+    })
+    sandbox.stub($carousel, 'is').returns(true)
+    sandbox.stub($carousel, 'css').returns('block')
+
+    carousel.nextWhenVisible()
+
+    assert.strictEqual(spy.called, true)
+    sandbox.restore()
+  })
+
+  QUnit.test('should not cycle when there is no attribute data-ride', function (assert) {
+    assert.expect(1)
+
+    var spy = sinon.spy(Carousel.prototype, 'cycle')
+
+    var carouselHTML = '<div class="carousel"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    assert.strictEqual(spy.called, false)
+    spy.restore()
+  })
+
+  QUnit.test('should cycle when there is data-ride attribute', function (assert) {
+    assert.expect(1)
+
+    var spy = sinon.spy(Carousel.prototype, 'cycle')
+
+    var carouselHTML = '<div class="carousel" data-ride="carousel"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    assert.strictEqual(spy.called, true)
+    spy.restore()
+  })
+
+  QUnit.test('should init carousels with data-ride on load event', function (assert) {
+    assert.expect(1)
+
+    var done = assert.async()
+    var spy = sinon.spy(Carousel, '_jQueryInterface')
+
+    var carouselHTML = '<div class="carousel" data-ride="carousel"></div>'
+    var $carousel = $(carouselHTML)
+    $carousel.appendTo('#qunit-fixture')
+
+    $(window).trigger($.Event('load'))
+
+    setTimeout(function () {
+      assert.strictEqual(spy.called, true)
+      spy.restore()
+      done()
+    }, 5)
+  })
+
+  QUnit.test('should not add touch event listeners when touch option set to false', function (assert) {
+    assert.expect(1)
+
+    var spy = sinon.spy(Carousel.prototype, '_addTouchEventListeners')
+    var $carousel = $('<div class="carousel" data-ride="carousel" data-touch="false"></div>')
+
+    $carousel.appendTo('#qunit-fixture')
+    $carousel.bootstrapCarousel()
+
+    assert.strictEqual(spy.called, false)
+    spy.restore()
   })
 })
