@@ -20,10 +20,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -109,8 +107,7 @@ func main() {
 	}
 
 	// prevents program from quitting as the server is listening on goroutines
-	for {
-	}
+	for {}
 }
 
 // doSignal shutsdown on SIGTERM/SIGKILL
@@ -164,29 +161,6 @@ func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string
 
 	case "ALLOCATE":
 		allocate(s)
-	case "PROBE": // is used to check that gameserver has access to HTTP(S)  resources
-		addACK = true // want to see
-		if len(parts) != 2 {
-			response = "Invalid PROBE, should have 1 argument"
-			responseError = fmt.Errorf("Invalid PROBE, should have 1 argument")
-		} else {
-			url := parts[1]
-			log.Printf("Calling %s", url)
-			resp, err := http.Get(url)
-			if err != nil {
-				response = fmt.Sprintf("%s\n", err)
-				responseError = err
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					response = fmt.Sprintf("%s %s\n", resp.Status, err)
-					responseError = err
-				} else {
-					body_top := string(body[1:20])
-					response = fmt.Sprintf("%s %s...\n", resp.Status, body_top)
-				}
-			}
-		}
 
 	case "RESERVE":
 		if len(parts) != 2 {
