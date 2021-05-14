@@ -35,9 +35,21 @@ other = "Crée"
 other = "Dernière modification"
 [post_edit_this]
 other = "Modifier cette page"
+[post_create_child_page]
+other = "Create child page"
 [post_create_issue]
 other = "Créer un problème dans la documentation"
 [post_create_project_issue]
 other = "Créer un problème dans le projet"
 [post_posts_in]
 other = "Messages dans"
+
+# Print support
+[print_printable_section]
+other = "This the multi-page printable view of this section."
+[print_click_to_print]
+other = "Click here to print"
+[print_show_regular]
+other = "Return to the regular view of this page"
+[print_entire_section]
+other = "Print entire section"

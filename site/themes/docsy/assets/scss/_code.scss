@@ -4,18 +4,13 @@
 	// Highlighted code.
     .highlight {
         @extend .card;
-        
+	
         margin: 2rem 0;
-        padding: 1rem;
-        background-color: $gray-100;
-
-        pre, div {
-            background-color: inherit !important;
-        }
-
+        padding: 0;
+	    
         pre {
             margin: 0;
-            padding: 0;
+            padding: 1rem;
         }
     }
 
@@ -43,6 +38,7 @@
      
 
         > code {
+	    background-color: inherit !important;
             padding: 0;
             margin: 0;
             font-size: 100%;
@@ -50,5 +46,10 @@
             white-space: pre;
             border: 0;
         }
+    }
+
+    pre.mermaid {
+        background-color: inherit;
+        font-size: 0;
     }
 }

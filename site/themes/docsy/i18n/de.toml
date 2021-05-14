@@ -3,10 +3,10 @@
 # UI strings. Buttons and similar.
 
 [ui_pager_prev]
-other = "Weiter"
+other = "Zurück"
 
 [ui_pager_next]
-other = "Zurück"
+other = "Weiter"
 
 [ui_read_more]
 other = "Weiterlesen"
@@ -35,9 +35,21 @@ other = "Erstellt"
 other = "Zuletzt geändert"
 [post_edit_this]
 other = "Diese Seite bearbeiten"
+[post_create_child_page]
+other = "Unterseite anlegen"
 [post_create_issue]
 other = "Problem zu dieser Seite melden"
 [post_create_project_issue]
 other = "Problem melden"
 [post_posts_in]
 other = "Einträge in"
+
+# Print support
+[print_printable_section]
+other = "Das ist eine für den Ausdruck optimierte Ansicht des gesamten Kapitels inkl. Unterseiten."
+[print_click_to_print]
+other = "Druckvorgang starten"
+[print_show_regular]
+other = "Zur Standardansicht zurückkehren"
+[print_entire_section]
+other = "Kapitel inkl. Unterseiten drucken"

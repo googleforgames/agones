@@ -7,9 +7,9 @@ See https://github.com/twbs/bootstrap/pull/23260
 @fa-font-path :        "../webfonts";
 
 // Bootstrap flags. For more, see https://getbootstrap.com/docs/4.0/getting-started/theming/
-$enable-gradients: true;
-$enable-rounded: true;
-$enable-shadows: true;
+$enable-gradients: true !default;
+$enable-rounded: true !default;
+$enable-shadows: true !default;
 
 // Theme flags.
 
@@ -35,7 +35,7 @@ $gray-200: #eee !default;
 $gray-300: #dee2e6 !default;
 $gray-400: #ccc !default;
 $gray-500: #adb5bd !default;
-$gray-600: #888 !default;
+$gray-600: #797676 !default;
 $gray-700: #495057 !default;
 $gray-800: #333 !default;
 $gray-900: #222 !default;
@@ -46,6 +46,7 @@ $code-color: darken($secondary, 20%) !default;
 // UI element colors
 
 $border-color: $gray-300 !default;
+$td-sidebar-tree-root-color: $primary !default;
 $td-sidebar-bg-color: rgba($primary, 0.03) !default;
 $td-sidebar-border-color: $border-color !default;
 
@@ -63,7 +64,7 @@ $link-hover-decoration: none !default;
 
 $google_font_name: "Open Sans" !default;
 $google_font_family: "Open+Sans:300,300i,400,400i,700,700i" !default;
-$web-font-path: "https://fonts.googleapis.com/css?family=#{$google_font_family}";
+$web-font-path: "https://fonts.googleapis.com/css?family=#{$google_font_family}&display=swap";
 
 $td-fonts-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 

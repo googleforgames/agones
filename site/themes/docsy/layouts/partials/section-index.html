@@ -1,5 +1,6 @@
 <div class="section-index">
     {{ $pages := (where .Site.Pages "Section" .Section).ByWeight }}
+    {{ $pages = (where $pages "Type" "!=" "search") }}
     {{ $parent := .Page }}
     {{ if $parent.Params.no_list }}
     {{/* If no_list is true we don't show a list of subpages */}}
@@ -8,7 +9,8 @@
         <ul>
             {{ range $pages }}
                 {{ if eq .Parent $parent }}
-                    <li><a href="{{ .RelPermalink }}">{{- .Title -}}</a></li>
+                    {{ $manualLink := cond (isset .Params "manuallink") .Params.manualLink ( cond (isset .Params "manuallinkrelref") (relref . .Params.manualLinkRelref) .RelPermalink) }}
+                    <li><a href="{{ $manualLink }}"{{ with .Params.manualLinkTitle }} title="{{ . }}"{{ end }}{{ with .Params.manualLinkTarget }} target="{{ . }}"{{ if eq . "_blank" }} rel="noopener"{{ end }}{{ end }}>{{- .Title -}}</a></li>
                 {{ end }}
             {{ end }}
         </ul>
@@ -17,9 +19,10 @@
     <hr class="panel-line">
         {{ range $pages }}
             {{ if eq .Parent $parent }}
+                {{ $manualLink := cond (isset .Params "manuallink") .Params.manualLink ( cond (isset .Params "manuallinkrelref") (relref . .Params.manualLinkRelref) .RelPermalink) }}
                 <div class="entry">
                     <h5>
-                        <a href="{{ .RelPermalink }}">{{- .Title -}}</a>
+                        <a href="{{ $manualLink }}"{{ with .Params.manualLinkTitle }} title="{{ . }}"{{ end }}{{ with .Params.manualLinkTarget }} target="{{ . }}"{{ if eq . "_blank" }} rel="noopener"{{ end }}{{ end }}>{{- .Title -}}</a>
                     </h5>
                     <p>{{ .Description | markdownify }}</p>
                 </div>

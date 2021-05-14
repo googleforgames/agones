@@ -35,7 +35,7 @@ footer {
     min-height: 150px;
 
     @include media-breakpoint-down(md) {
-         min-height: 200px;
+        min-height: 200px;
     }
 }
 
@@ -48,7 +48,10 @@ footer {
         visibility: hidden;
     }
 
-    h2[id]:before, h3[id]:before, h4[id]:before, h5[id]:before {
+    h2[id]:before,
+    h3[id]:before,
+    h4[id]:before,
+    h5[id]:before {
         display: block;
         content: " ";
         margin-top: -5rem;
@@ -57,4 +60,5 @@ footer {
     }
 }
 
+@import "rtl/main";
 @import "styles_project";

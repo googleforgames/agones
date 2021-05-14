@@ -37,6 +37,8 @@ other = "Elkészítve"
 other = "Utolsó módosítás"
 [post_edit_this]
 other = "Oldal szerkesztése"
+[post_create_child_page]
+other = "Create child page"
 [post_create_issue]
 other = "Dokumentáció issue létrehozása"
 [post_create_project_issue]
@@ -45,3 +47,13 @@ other = "Projekt issue létrehozása"
 #   so I left it as is
 [post_posts_in]
 other = "Posts in"
+
+# Print support
+[print_printable_section]
+other = "This the multi-page printable view of this section."
+[print_click_to_print]
+other = "Click here to print"
+[print_show_regular]
+other = "Return to the regular view of this page"
+[print_entire_section]
+other = "Print entire section"
