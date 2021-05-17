@@ -14,6 +14,8 @@
 
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
+metadata:
+  name: xonotic
 spec:
   # GameServer selector from which to choose GameServers from.
   # GameServers still have the hard requirement to be `Ready` to be allocated from
