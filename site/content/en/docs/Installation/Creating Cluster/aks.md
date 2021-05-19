@@ -67,7 +67,14 @@ az network nsg rule create \
 
 ### Getting Public IPs to Nodes
 
-Resource Group where the AKS resources are installed on the [portal](https://portal.azure.com) are named like `MC_resourceGroupName_AKSName_westeurope`). Find `Virtual machine scale set` -> `Instances` -> `Public IP address`. For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). 
+
+
+To find a resource's public IP, search for [Virtual Machine Scale Sets](https://portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.Compute%2FvirtualMachineScaleSets) -> click on the set name(inside  `MC_resourceGroupName_AKSName_westeurope` group) -> click `Instances` -> click on the instance name -> view `Public IP address`.
+
+To get public IP via API [look here](https://github.com/Azure/azure-libraries-for-net/issues/1185#issuecomment-747919226).
+
+
+For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). 
 
 ## Next Steps
 
