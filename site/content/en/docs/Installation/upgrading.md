@@ -125,7 +125,7 @@ upgrades.
 1. Start your maintenance window.
 1. Scale your Fleets down to 0 and/or delete your GameServers. This is a good safety measure so there aren't race conditions
    between the Agones controller being recreated and GameServers being deleted doesn't occur, and GameServers can end up stuck in erroneous states.
-1. Start and complete you master upgrade(s).
+1. Start and complete your control plane upgrade(s).
 1. Start and complete your node upgrades.
 1. Scale your Fleets back up and/or recreate your GameServers. 
 1. Run any other tests to ensure the Agones installation is still working as expected.

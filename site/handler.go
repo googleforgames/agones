@@ -72,7 +72,7 @@ func newHandler(config []byte) (*handler, error) {
 		case e.Display != "":
 			// Already filled in.
 		case strings.HasPrefix(e.Repo, "https://github.com/"):
-			pc.display = fmt.Sprintf("%v %v/tree/master{/dir} %v/blob/master{/dir}/{file}#L{line}", e.Repo, e.Repo, e.Repo)
+			pc.display = fmt.Sprintf("%v %v/tree/main{/dir} %v/blob/main{/dir}/{file}#L{line}", e.Repo, e.Repo, e.Repo)
 		case strings.HasPrefix(e.Repo, "https://bitbucket.org"):
 			pc.display = fmt.Sprintf("%v %v/src/default{/dir} %v/src/default{/dir}/{file}#{file}-{line}", e.Repo, e.Repo, e.Repo)
 		}

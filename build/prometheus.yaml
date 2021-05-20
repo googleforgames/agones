@@ -68,7 +68,7 @@ serverFiles:
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
           # If your node certificates are self-signed or use a different CA to the
-          # master CA, then disable certificate verification below. Note that
+          # Kubernetes control plane CA, then disable certificate verification below. Note that
           # certificate verification is an integral part of a secure infrastructure
           # so this should only be disabled in a controlled environment. You can
           # disable certificate verification by uncommenting the line below.
