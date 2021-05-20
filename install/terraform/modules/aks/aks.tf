@@ -63,12 +63,12 @@ resource "azurerm_kubernetes_cluster" "agones" {
   kubernetes_version = "1.18.14"
 
   default_node_pool {
-    name                = "default"
-    node_count          = var.node_count
-    vm_size             = var.machine_type
-    os_disk_size_gb     = var.disk_size
-    enable_auto_scaling = false
-    #enable_node_public_ip = true
+    name                  = "default"
+    node_count            = var.node_count
+    vm_size               = var.machine_type
+    os_disk_size_gb       = var.disk_size
+    enable_auto_scaling   = false
+    enable_node_public_ip = var.enable_node_public_ip
     #vnet_subnet_id     = azurerm_subnet.aks.id
   }
 

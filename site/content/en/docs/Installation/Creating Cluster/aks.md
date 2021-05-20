@@ -29,7 +29,7 @@ az group create --name $AKS_RESOURCE_GROUP --location $AKS_LOCATION
 # Create the AKS cluster - this might take some time. Type 'az aks create -h' to see all available options
 
 # The following command will create a four Node AKS cluster. Node size is Standard A1 v1 and Kubernetes version is {{% k8s-version %}}.{{% aks-k8s-minor-version %}}. Plus, SSH keys will be generated for you, use --ssh-key-value to provide your values
-az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version {{% k8s-version %}}.{{% aks-k8s-minor-version %}}
+az aks create --resource-group $AKS_RESOURCE_GROUP --name $AKS_NAME --node-count 4 --generate-ssh-keys --node-vm-size Standard_A4_v2 --kubernetes-version {{% k8s-version %}}.{{% aks-k8s-minor-version %}} --enable-node-public-ip
 
 # Install kubectl
 sudo az aks install-cli
@@ -65,9 +65,16 @@ az network nsg rule create \
   --destination-port-range 7000-8000
   ```
 
-### Creating and assigning Public IPs to Nodes
+### Getting Public IPs to Nodes
 
-Nodes in AKS don't get a Public IP by default. To assign a Public IP to a Node, find the Resource Group where the AKS resources are installed on the [portal](https://portal.azure.com) (it should have a name like `MC_resourceGroupName_AKSName_westeurope`). Then, you can follow the instructions [here](https://docs.microsoft.com/en-us/azure/site-recovery/concepts-public-ip-address-with-site-recovery) to create a new Public IP and assign it to the Node/VM. For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). If you are looking for an automated way to create and assign Public IPs for your AKS Nodes, check [this project](https://github.com/dgkanatsios/AksNodePublicIPController).
+
+
+To find a resource's public IP, search for [Virtual Machine Scale Sets](https://portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.Compute%2FvirtualMachineScaleSets) -> click on the set name(inside  `MC_resourceGroupName_AKSName_westeurope` group) -> click `Instances` -> click on the instance name -> view `Public IP address`.
+
+To get public IP via API [look here](https://github.com/Azure/azure-libraries-for-net/issues/1185#issuecomment-747919226).
+
+
+For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). 
 
 ## Next Steps
 
