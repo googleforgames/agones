@@ -280,7 +280,7 @@ Now that the images are pushed, to install the development version,
 run `make minikube-install` and Agones will install the images that you built and pushed to the Agones Minikube instance
 (if you want to see the resulting installation yaml, you can find it in `build/.install.yaml`).
 
-It's worth noting that Minikube does let you [reuse its Docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md),
+It's worth noting that Minikube does let you [reuse its Docker daemon](https://minikube.sigs.k8s.io/docs/handbook/pushing/#1-pushing-directly-to-the-in-cluster-docker-daemon-docker-env),
 and build directly on Minikube, but in this case this approach is far simpler,
 and makes cross-platform support for the build system much easier.
 
@@ -323,7 +323,7 @@ run `make kind-install` and Agones will install the images that you built and pu
 
 Running end-to-end tests on Kind is done via the `make kind-test-e2e` target. This target use the same `make test-e2e` but also setup some prerequisites for use with a Kind cluster.
 
-If you are having performance issues, check out these docs [here](https://github.com/kubernetes-sigs/kind/tree/master/docs/user#creating-a-cluster)
+If you are having performance issues, check out these docs [here](https://kind.sigs.k8s.io/docs/user/quick-start/#creating-a-cluster)
 
 ### Running a Custom Test Environment
 
@@ -503,7 +503,8 @@ Run controller failure portion of the end-to-end tests.
 
 #### `make setup-prometheus`
 
-Install Prometheus server using [stable/prometheus](https://github.com/helm/charts/tree/master/stable/prometheus) chart into the current cluster.
+Install Prometheus server using [Prometheus Community](https://prometheus-community.github.io/helm-charts) 
+chart into the current cluster.
 
 By default all exporters and alertmanager is disabled.
 
@@ -517,7 +518,8 @@ Run helm repo update to get the mose recent charts.
 
 #### `make setup-grafana`
 
-Install Gafrana server using [stable/grafana](https://github.com/helm/charts/tree/master/stable/grafana) chart into the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).
+Install Grafana server using [grafana community](https://grafana.github.io/helm-charts) chart into 
+the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).
 
 You can set your own password using the `PASSWORD` environment variable.
 
@@ -710,7 +712,6 @@ port forwarding to the controller deployment.
 ### Kind
 
 [Kind - kubernetes in docker](https://github.com/kubernetes-sigs/kind) is a tool for running local Kubernetes clusters using Docker container "nodes".
-Kind is primarily designed for testing Kubernetes 1.11+, initially targeting the [conformance tests](https://github.com/kubernetes/community/blob/master/contributors/devel/conformance-tests.md).
 
 Since Kind runs locally, there are some targets that need to be used instead of the standard ones above.
 

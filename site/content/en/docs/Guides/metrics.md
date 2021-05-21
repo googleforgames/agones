@@ -15,7 +15,7 @@ We plan to support multiple exporters in the future via environment variables an
 
 ### Prometheus
 
-If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/master/documentation/examples/kubernetes-rabbitmq))
+If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/main/documentation/examples/kubernetes-rabbitmq))
 
 ### Prometheus Operator
 
@@ -80,27 +80,27 @@ Follow the [Stackdriver Installation steps](#stackdriver-installation) to see yo
 
 ### Grafana Dashboards
 
-We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor Agones workload, they are located under the {{< ghlink href="/build/grafana" branch="master" >}}grafana folder{{< /ghlink >}}:
+We provide a set of useful [Grafana](https://grafana.com/) dashboards to monitor Agones workload, they are located under the {{< ghlink href="/build/grafana" branch="main" >}}grafana folder{{< /ghlink >}}:
 
-- {{< ghlink href="/build/grafana/dashboard-autoscalers.yaml" branch="master" >}}Agones Autoscalers{{< /ghlink >}} allows you to monitor your current autoscalers replicas request as well as fleet replicas allocation and readyness statuses. You can only select one autoscaler at the time using the provided dropdown.
+- {{< ghlink href="/build/grafana/dashboard-autoscalers.yaml" branch="main" >}}Agones Autoscalers{{< /ghlink >}} allows you to monitor your current autoscalers replicas request as well as fleet replicas allocation and readyness statuses. You can only select one autoscaler at the time using the provided dropdown.
 
-- {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="master" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations, game servers statuses, fleets replicas) with optional fleet name filtering.
+- {{< ghlink href="/build/grafana/dashboard-gameservers.yaml" branch="main" >}}Agones GameServers{{< /ghlink >}} displays your current game servers workload status (allocations, game servers statuses, fleets replicas) with optional fleet name filtering.
 
-- {{< ghlink href="/build/grafana/dashboard-allocations.yaml" branch="master" >}}Agones GameServer Allocations{{< /ghlink >}} displays Agones gameservers allocations rates and counts per fleet.
+- {{< ghlink href="/build/grafana/dashboard-allocations.yaml" branch="main" >}}Agones GameServer Allocations{{< /ghlink >}} displays Agones gameservers allocations rates and counts per fleet.
 
-- {{< ghlink href="/build/grafana/dashboard-allocator-usage.yaml" branch="master" >}}Agones Allocator Resource{{< /ghlink >}} displays Agones Allocators CPU, memory usage and also some useful Golang runtime metrics.
+- {{< ghlink href="/build/grafana/dashboard-allocator-usage.yaml" branch="main" >}}Agones Allocator Resource{{< /ghlink >}} displays Agones Allocators CPU, memory usage and also some useful Golang runtime metrics.
 
-- {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="master" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
+- {{< ghlink href="/build/grafana/dashboard-status.yaml" branch="main" >}}Agones Status{{< /ghlink >}} displays Agones controller health status.
 
-- {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="master" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
+- {{< ghlink href="/build/grafana/dashboard-controller-usage.yaml" branch="main" >}}Agones Controller Resource Usage{{< /ghlink >}} displays Agones Controller CPU and memory usage and also some Golang runtime metrics.
 
-- {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="master" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
+- {{< ghlink href="/build/grafana/dashboard-goclient-requests.yaml" branch="main" >}}Agones Controller go-client requests{{< /ghlink >}} displays Agones Controller Kubernetes API consumption.
 
-- {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="master" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
+- {{< ghlink href="/build/grafana/dashboard-goclient-caches.yaml" branch="main" >}}Agones Controller go-client caches{{< /ghlink >}} displays Agones Controller Kubernetes Watches/Lists operations used.
 
-- {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="master" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
+- {{< ghlink href="/build/grafana/dashboard-goclient-workqueues.yaml" branch="main" >}}Agones Controller go-client workqueues{{< /ghlink >}} displays Agones Controller workqueue processing time and rates.
 
-- {{< ghlink href="/build/grafana/dashboard-apiserver-requests.yaml" branch="master" >}}Agones Controller API Server requests{{< /ghlink >}} displays your current API server request rate, errors rate and request latencies with optional CustomResourceDefinition filtering by Types: fleets, gameserversets, gameservers, gameserverallocations.
+- {{< ghlink href="/build/grafana/dashboard-apiserver-requests.yaml" branch="main" >}}Agones Controller API Server requests{{< /ghlink >}} displays your current API server request rate, errors rate and request latencies with optional CustomResourceDefinition filtering by Types: fleets, gameserversets, gameservers, gameserverallocations.
 
 Dashboard screenshots :
 
@@ -109,7 +109,7 @@ Dashboard screenshots :
 ![grafana dashboard controller](../../../images/grafana-dashboard-controller.png)
 
 {{< alert title="Note" color="info">}}
-You can import our dashboards by copying the json content from {{< ghlink href="/build/grafana" branch="master" >}}each config map{{< /ghlink >}} into your own instance of Grafana (+ > Create > Import > Or paste json) or follow the [installation](#installation) guide.
+You can import our dashboards by copying the json content from {{< ghlink href="/build/grafana" branch="main" >}}each config map{{< /ghlink >}} into your own instance of Grafana (+ > Create > Import > Or paste json) or follow the [installation](#installation) guide.
 {{< /alert >}}
 
 ## Installation
@@ -122,7 +122,7 @@ Before attemping this guide you should make sure you have [kubectl](https://kube
 
 Prometheus is an open source monitoring solution, we will use it to store Agones controller metrics and query back the data.
 
-Let's install Prometheus using the [helm stable](https://github.com/helm/charts/tree/master/stable/prometheus) repository.
+Let's install Prometheus using the [Prometheus Community Kubernetes Helm Charts](https://prometheus-community.github.io/helm-charts/) repository.
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -136,7 +136,7 @@ helm upgrade --install --wait prom prometheus-community/prometheus --version 11.
 ```
 
 For resiliency it is recommended to run Prometheus on a dedicated node which is separate from nodes where Game Servers
-are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="master" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
+are scheduled. If you use the above command, with our {{< ghlink href="/build/prometheus.yaml" branch="main" >}}prometheus.yaml{{< /ghlink >}} to set up Prometheus, it will schedule Prometheus pods on nodes
 tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones.dev/agones-metrics=true` if available.
 
 As an example, to set up a dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
@@ -150,11 +150,13 @@ gcloud container node-pools create agones-metrics --cluster=... --zone=... \
 
 By default we will disable the push gateway (we don't need it for Agones) and other exporters.
 
-The helm [chart](https://github.com/helm/charts/tree/master/stable/prometheus) support [nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector), [affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity) and [toleration](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/), you can use them to schedule prometheus deployments on an isolated node(s) to have an homogeneous game servers workload.
+The helm chart supports
+[nodeSelector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector), 
+[affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity) and [toleration](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/), you can use them to schedule Prometheus deployments on an isolated node(s) to have an homogeneous game servers workload.
 
 This will install a Prometheus Server in your current cluster with [Persistent Volume Claim](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) (Deactivated for Minikube and Kind) for storing and querying time series, it will automatically start collecting metrics from Agones Controller.
 
-Finally to access Prometheus metrics, rules and alerts explorer use
+Finally, to access Prometheus metrics, rules and alerts explorer use
 
 ```bash
 kubectl port-forward deployments/prom-prometheus-server 9090 -n metrics
@@ -180,7 +182,9 @@ First we will install [Agones dashboard](#grafana-dashboards) as [config maps](h
 kubectl apply -f ./build/grafana/
 ```
 
-Now we can install [grafana chart](https://github.com/helm/charts/tree/master/stable/grafana) from stable repository. (Replace `<your-admin-password>` with the admin password of your choice)
+Now we can install the 
+[Grafana Community Kubernetes Helm Charts](https://grafana.github.io/helm-charts/) from  
+their repository. (Replace `<your-admin-password>` with the admin password of your choice)
 
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts

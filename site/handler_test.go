@@ -51,7 +51,7 @@ func TestHandler(t *testing.T) {
 				"    repo: https://github.com/rakyll/portmidi\n",
 			path:     "/portmidi",
 			goImport: "example.com/portmidi git https://github.com/rakyll/portmidi",
-			goSource: "example.com/portmidi https://github.com/rakyll/portmidi https://github.com/rakyll/portmidi/tree/master{/dir} https://github.com/rakyll/portmidi/blob/master{/dir}/{file}#L{line}",
+			goSource: "example.com/portmidi https://github.com/rakyll/portmidi https://github.com/rakyll/portmidi/tree/main{/dir} https://github.com/rakyll/portmidi/blob/main{/dir}/{file}#L{line}",
 		},
 		{
 			name: "Bitbucket Mercurial",

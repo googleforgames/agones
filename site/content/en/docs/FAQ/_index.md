@@ -119,12 +119,12 @@ The answer to this question is "it depends" 😁.
 
 As a rule of thumb, we recommend clusters no larger than 500 nodes, based on production workloads.
 
-That being said, this is highly dependent on Kubernetes hosting platform, master resources, nodes resources, resource
-requirements of your game server, game server session length, node spin up time, etc, and therefore you should run your
-own load tests against your hosting provider to determine the optimal cluster size for your game.
+That being said, this is highly dependent on Kubernetes hosting platform, control plane resources, node resources, 
+requirements of your game server, game server session length, node spin up time, etc, and therefore you 
+should run your own load tests against your hosting provider to determine the optimal cluster size for your game.
 
 We recommend running multiple clusters for your production GameServer workloads, to spread the load and
-provide extra redundancy across your entire game server fleet.  
+provide extra redundancy across your entire game server fleet.
 
 ## Network
 
