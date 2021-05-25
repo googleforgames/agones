@@ -18,12 +18,24 @@ version = "0.1.0"
 edition = "2018"
 
 [features]
-openssl = ["grpcio/openssl"]
-openssl-vendored = ["grpcio/openssl-vendored"]
+tls = ["tonic/tls"]
 
 [dependencies]
-grpcio = "0.6.0"
-protobuf = "2.16.2"
-futures = { version = "0.3", features = ["compat"] }
-futures01 = "0.1"
 error-chain = "0.12.3"
+
+[dependencies.tonic]
+version = "0.4"
+default-features = false
+features = [
+    "codegen",
+    "transport",
+    "prost",
+]
+
+[build-dependencies.tonic-build]
+version = "0.4"
+default-features = false
+features = [
+    "prost",
+    "transport",
+]

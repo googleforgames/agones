@@ -1,0 +1,162 @@
+// Copyright 2017 Google LLC All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package agones.dev.sdk;
+option go_package = "sdk";
+
+import "google/api/annotations.proto";
+
+// SDK service to be used in the GameServer SDK to the Pod Sidecar
+service SDK {
+    // Call when the GameServer is ready
+    rpc Ready (Empty) returns (Empty) {
+        option (google.api.http) = {
+            post: "/ready"
+            body: "*"
+        };
+    }
+
+    // Call to self Allocation the GameServer
+    rpc Allocate(Empty) returns (Empty) {
+        option (google.api.http) = {
+            post: "/allocate"
+            body: "*"
+        };
+    }
+
+    // Call when the GameServer is shutting down
+    rpc Shutdown (Empty) returns (Empty) {
+        option (google.api.http) = {
+            post: "/shutdown"
+            body: "*"
+        };
+    }
+    // Send a Empty every d Duration to declare that this GameSever is healthy
+    rpc Health (stream Empty) returns (Empty) {
+        option (google.api.http) = {
+			post: "/health"
+			body: "*"
+		};
+    }
+    // Retrieve the current GameServer data
+    rpc GetGameServer (Empty) returns (GameServer) {
+        option (google.api.http) = {
+            get: "/gameserver"
+        };
+    }
+    // Send GameServer details whenever the GameServer is updated
+    rpc WatchGameServer (Empty) returns (stream GameServer) {
+        option (google.api.http) = {
+            get: "/watch/gameserver"
+        };
+    }
+
+    // Apply a Label to the backing GameServer metadata
+    rpc SetLabel(KeyValue) returns (Empty) {
+        option (google.api.http) = {
+			put: "/metadata/label"
+			body: "*"
+		};
+    }
+
+    // Apply a Annotation to the backing GameServer metadata
+    rpc SetAnnotation(KeyValue) returns (Empty) {
+        option (google.api.http) = {
+			put: "/metadata/annotation"
+			body: "*"
+		};
+    }
+
+    // Marks the GameServer as the Reserved state for Duration
+    rpc Reserve(Duration) returns (Empty) {
+        option (google.api.http) = {
+            post: "/reserve"
+            body: "*"
+        };
+    }
+}
+
+// I am Empty
+message Empty {
+}
+
+// Key, Value entry
+message KeyValue {
+    string key = 1;
+    string value = 2;
+}
+
+// time duration, in seconds
+message Duration {
+    int64 seconds = 1;
+}
+
+// A GameServer Custom Resource Definition object
+// We will only export those resources that make the most
+// sense. Can always expand to more as needed.
+message GameServer {
+    ObjectMeta object_meta = 1;
+    Spec spec = 2;
+    Status status = 3;
+
+    // representation of the K8s ObjectMeta resource
+    message ObjectMeta {
+        string name = 1;
+        string namespace = 2;
+        string uid = 3;
+        string resource_version = 4;
+        int64 generation = 5;
+        // timestamp is in Epoch format, unit: seconds
+        int64 creation_timestamp = 6;
+        // optional deletion timestamp in Epoch format, unit: seconds
+        int64 deletion_timestamp = 7;
+        map<string, string> annotations = 8;
+        map<string, string> labels = 9;
+    }
+
+    message Spec {
+        Health health = 1;
+
+        message Health {
+            bool disabled = 1;
+            int32 period_seconds = 2;
+            int32 failure_threshold = 3;
+            int32 initial_delay_seconds = 4;
+        }
+    }
+
+    message Status {
+        message Port {
+            string name = 1;
+            int32 port = 2;
+        }
+        // [Stage:Alpha]
+        // [FeatureFlag:PlayerTracking]
+        message PlayerStatus {
+            int64 count = 1;
+            int64 capacity = 2;
+            repeated string ids = 3;
+        }
+
+        string state = 1;
+        string address = 2;
+        repeated Port ports = 3;
+
+        // [Stage:Alpha]
+        // [FeatureFlag:PlayerTracking]
+        PlayerStatus players = 4;
+    }
+}
