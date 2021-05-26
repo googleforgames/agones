@@ -17,11 +17,16 @@ name = "agones"
 version = "0.1.0"
 edition = "2018"
 
-[features]
-tls = ["tonic/tls"]
-
 [dependencies]
-error-chain = "0.12.3"
+async-stream = "0.3"
+http = "0.2"
+prost = "0.7"
+thiserror = "1.0"
+
+[dependencies.tokio]
+version = "1.0"
+default-features = false
+features = ["sync", "time"]
 
 [dependencies.tonic]
 version = "0.4"

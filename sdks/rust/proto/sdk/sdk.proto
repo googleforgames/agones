@@ -44,19 +44,22 @@ service SDK {
             body: "*"
         };
     }
+
     // Send a Empty every d Duration to declare that this GameSever is healthy
     rpc Health (stream Empty) returns (Empty) {
         option (google.api.http) = {
-			post: "/health"
-			body: "*"
-		};
+            post: "/health"
+            body: "*"
+        };
     }
+
     // Retrieve the current GameServer data
     rpc GetGameServer (Empty) returns (GameServer) {
         option (google.api.http) = {
             get: "/gameserver"
         };
     }
+
     // Send GameServer details whenever the GameServer is updated
     rpc WatchGameServer (Empty) returns (stream GameServer) {
         option (google.api.http) = {
@@ -67,17 +70,17 @@ service SDK {
     // Apply a Label to the backing GameServer metadata
     rpc SetLabel(KeyValue) returns (Empty) {
         option (google.api.http) = {
-			put: "/metadata/label"
-			body: "*"
-		};
+            put: "/metadata/label"
+            body: "*"
+        };
     }
 
     // Apply a Annotation to the backing GameServer metadata
     rpc SetAnnotation(KeyValue) returns (Empty) {
         option (google.api.http) = {
-			put: "/metadata/annotation"
-			body: "*"
-		};
+            put: "/metadata/annotation"
+            body: "*"
+        };
     }
 
     // Marks the GameServer as the Reserved state for Duration
