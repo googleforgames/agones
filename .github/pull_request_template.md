@@ -6,7 +6,7 @@
 -->
 
 **What type of PR is this?**
-> Uncomment only one ` /kind <>` line, hit enter to put that in a new line, and remove leading whitespace from that line:
+> Uncomment only one ` /kind <>` line, press enter to put that in a new line, and remove leading whitespace from that line:
 >
 > /kind breaking
 > /kind bug

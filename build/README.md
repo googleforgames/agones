@@ -178,7 +178,7 @@ You may note that docker images, and tar archives are tagged with a concatenatio
 upcoming release number and short git hash for the current commit. This has also been set in
 the code itself, so that it can be seen in via log statements.
 
-If you don't have a long time to kill, you can run `make build-images` to only build the images for running Agones
+If you don't have a long time to wait, you can run `make build-images` to only build the images for running Agones
 , which is often all you need for development.
 
 Congratulations! You have now successfully tested and built Agones!
