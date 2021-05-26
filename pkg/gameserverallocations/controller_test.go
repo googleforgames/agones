@@ -103,6 +103,7 @@ func TestControllerAllocator(t *testing.T) {
 			rec := httptest.NewRecorder()
 			err = c.processAllocationRequest(ctx, rec, r, "default")
 			assert.NoError(t, err)
+			assert.Equal(t, http.StatusCreated, rec.Code)
 			ret := &allocationv1.GameServerAllocation{}
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
 			assert.NoError(t, err)
