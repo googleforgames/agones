@@ -79,7 +79,7 @@ func main() {
 
 	ctx := signals.NewSigKillContext()
 	grpcServer := grpc.NewServer()
-	// don't graceful stop, because if we get a kill signal
+	// don't graceful stop, because if we get a SIGKILL signal
 	// then the gameserver is being shut down, and we no longer
 	// care about running RPC calls.
 	defer grpcServer.Stop()

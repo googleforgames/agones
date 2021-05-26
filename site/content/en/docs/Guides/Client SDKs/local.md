@@ -45,7 +45,7 @@ $ ./sdk-server.linux.amd64 --local
 
 ### Providing your own `GameServer` configuration for local development
 
-By default, the local sdk-server will create a dummy `GameServer` configuration that is used for `GameServer()`
+By default, the local sdk-server will create a default `GameServer` configuration that is used for `GameServer()`
 and `WatchGameServer()` SDK calls. If you wish to provide your own configuration, as either yaml or json, this
 can be passed through as either `--file` or `-f` along with the `--local` flag.
 

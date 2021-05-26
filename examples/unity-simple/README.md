@@ -17,7 +17,7 @@ Check out [these instructions](https://agones.dev/site/docs/installation/).
 
 ### Building a Server
 * Open this folder with UnityEditor.
-* Hit a `Build Tool/Build Server` menu item in the menu bar.
+* Click on the `Build Tool/Build Server` menu item in the menu bar.
   * The Builds are created in a `Builds/Server` Folder.
 
 ### Building a Docker Image and Running it
@@ -30,7 +30,7 @@ $ kubectl create -f gameserver.yaml
 
 ### Building a Client
 * Open this folder with UnityEditor.
-* Hit a `Build Tool/Build Client` menu item in the menu bar.
+* Click on the `Build Tool/Build Client` menu item in the menu bar.
 
 ### How to use a Client
 * Run `Builds/Client/UnitySimpleClient.exe`.
@@ -40,8 +40,8 @@ $ kubectl create -f gameserver.yaml
     NAME                        STATE   ADDRESS         PORT   NODE       AGE
     unity-simple-server-z7nln   Ready   192.168.*.*     7854   node-name  1m
     ```
-* Hit a `Change Server` Button.
-* Set any text to a center text filed and hit a `Send` button.
+* Click on the `Change Server` Button.
+* Set any text to a center text filed and click the `Send` button.
   * The Client will send the text to the Server.
 
   When a Server receives a text, it will send back "Echo : $text" as an echo.
