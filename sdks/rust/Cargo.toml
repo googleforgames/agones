@@ -18,7 +18,7 @@ version = "0.1.0"
 edition = "2018"
 license = "Apache-2.0"
 repository = "https://github.com/googleforgames/agones"
-docs = "https://docs.rs/agones"
+documentation = "https://docs.rs/agones"
 homepage = "https://agones.dev/site/"
 
 [dependencies]
