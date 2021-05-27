@@ -161,7 +161,7 @@ impl Sdk {
 
     /// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes
     #[inline]
-    pub async fn set_annotation<S>(
+    pub async fn set_annotation(
         &mut self,
         key: impl Into<String>,
         value: impl Into<String>,
