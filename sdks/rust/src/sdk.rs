@@ -87,8 +87,11 @@ impl Sdk {
         loop {
             connect_interval.tick().await;
 
-            if client.get_game_server(empty()).await.is_ok() {
-                break;
+            match client.get_game_server(empty()).await {
+                Err(e) => {
+                    println!("unable to retrieve game server: {:#?}", e);
+                }
+                Ok(_) => break,
             }
         }
 
