@@ -26,7 +26,7 @@ pub type WatchStream = tonic::Streaming<GameServer>;
 
 use crate::{
     alpha::Alpha,
-    errors::{Error, Result},
+    errors::{Result},
 };
 
 #[inline]
@@ -38,7 +38,6 @@ fn empty() -> api::Empty {
 #[derive(Clone)]
 pub struct Sdk {
     client: SdkClient<Channel>,
-    health: tokio::sync::mpsc::Sender<api::Empty>,
     alpha: Alpha,
 }
 
@@ -46,6 +45,10 @@ impl Sdk {
     /// Starts a new SDK instance, and connects to localhost on the port specified
     /// or else falls back to the `AGONES_SDK_GRPC_PORT` environment variable,
     /// or defaults to 9357.
+    ///
+    /// Note that this function will loop indefinitely until a connection is made
+    /// to the SDK server, so it is recommended to wrap this in a
+    /// [timeout](https://docs.rs/tokio/1.6.0/tokio/time/fn.timeout.html).
     pub async fn new(port: Option<u16>, keep_alive: Option<Duration>) -> Result<Self> {
         // TODO: Add TLS? For some reason the original Cargo.toml was enabling
         // grpcio's openssl features, but AFAICT the SDK and sidecar only ever
@@ -80,35 +83,19 @@ impl Sdk {
 
         // Loop until we connect. The original implementation just looped once
         // every second up to a maximum of 30 seconds, but it's better for the
-        // external caller to wrap this in their own timeout, eg
-        // https://docs.rs/tokio/1.6.0/tokio/time/fn.timeout.html
+        // external caller to wrap this in their own timeout
         let mut connect_interval = tokio::time::interval(Duration::from_millis(100));
 
         loop {
             connect_interval.tick().await;
 
-            match client.get_game_server(empty()).await {
-                Err(e) => {
-                    println!("unable to retrieve game server: {:#?}", e);
-                }
-                Ok(_) => break,
+            if client.get_game_server(empty()).await.is_ok() {
+                break;
             }
         }
 
-        // Keep both sender and receiver as RPC is canceled when sender or receiver is dropped
-        let (sender, mut receiver) = tokio::sync::mpsc::channel(10);
-
-        let health_stream = async_stream::stream! {
-            while let Some(item) = receiver.recv().await {
-                yield item;
-            }
-        };
-
-        client.health(health_stream).await?;
-
         Ok(Self {
             client,
-            health: sender,
             alpha,
         })
     }
@@ -137,12 +124,32 @@ impl Sdk {
         Ok(self.client.shutdown(empty()).await.map(|_| ())?)
     }
 
-    /// Sends a ping to the health check to indicate that this server is healthy
+    /// Creates a task that sends a health ping to the SDK server on every interval
+    /// tick. It is recommended to only have 1 of these at a time.
     #[inline]
-    pub async fn health(&self) -> Result<()> {
-        self.health.send(empty()).await.map(|_| ()).map_err(|_| {
-            Error::HealthPingConnectionFailure("tonic receiver was dropped".to_string())
-        })
+    pub fn spawn_health_task(&self, interval: Duration) -> tokio::sync::oneshot::Sender<()> {
+        let mut health_client = self.clone();
+        let (tx, mut rx) = tokio::sync::oneshot::channel();
+
+        tokio::task::spawn(async move {
+            let health_stream = async_stream::stream! {
+                let mut health_interval = tokio::time::interval(interval);
+                loop {
+                    tokio::select! {
+                        _ = health_interval.tick() => {
+                            yield empty();
+                        }
+                        _ = &mut rx => {
+                            break;
+                        }
+                    }
+                }
+            };
+
+            let _ = health_client.client.health(health_stream).await;
+        });
+
+        tx
     }
 
     /// Set a Label value on the backing GameServer record that is stored in Kubernetes
