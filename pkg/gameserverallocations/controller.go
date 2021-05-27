@@ -133,11 +133,17 @@ func (c *Controller) processAllocationRequest(ctx context.Context, w http.Respon
 	if err != nil {
 		return err
 	}
-	if status, ok := result.(*metav1.Status); ok {
-		w.WriteHeader(int(status.Code))
+	var code int
+	switch obj := result.(type) {
+	case *metav1.Status:
+		code = int(obj.Code)
+	case *allocationv1.GameServerAllocation:
+		code = http.StatusCreated
+	default:
+		code = http.StatusOK
 	}
 
-	err = c.serialisation(r, w, result, scheme.Codecs)
+	err = c.serialisation(r, w, result, code, scheme.Codecs)
 	return err
 }
 
@@ -182,14 +188,18 @@ func (c *Controller) allocationDeserialization(r *http.Request, namespace string
 	return gsa, nil
 }
 
-// serialisation takes a runtime.Object, and serislises it to the ResponseWriter in the requested format
-func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, codecs serializer.CodecFactory) error {
+// serialisation takes a runtime.Object, and serialise it to the ResponseWriter in the requested format
+func (c *Controller) serialisation(r *http.Request, w http.ResponseWriter, obj k8sruntime.Object, statusCode int, codecs serializer.CodecFactory) error {
 	info, err := apiserver.AcceptedSerializer(r, codecs)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to find serialisation info for %T object", obj)
 	}
 
 	w.Header().Set("Content-Type", info.MediaType)
+	// we have to do this here, so that the content type is set before we send a HTTP status header, as the WriteHeader
+	// call will send data to the client.
+	w.WriteHeader(statusCode)
+
 	err = info.Serializer.Encode(obj, w)
 	return errors.Wrapf(err, "error encoding %T", obj)
 }

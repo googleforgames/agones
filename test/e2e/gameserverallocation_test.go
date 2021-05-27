@@ -49,7 +49,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			fleet := defaultFleet(framework.Namespace)
 			fleet.Spec.Scheduling = strategy
 			flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
-			if assert.Nil(t, err) {
+			if assert.NoError(t, err) {
 				defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 			}
 
@@ -62,7 +62,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 				}}
 
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
-			if assert.Nil(t, err) {
+			if assert.NoError(t, err) {
 				assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
 			}
 		})
