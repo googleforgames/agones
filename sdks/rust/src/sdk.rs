@@ -44,18 +44,21 @@ pub struct Sdk {
 
 impl Sdk {
     /// Starts a new SDK instance, and connects to localhost on the port specified
-    /// in the `AGONES_SDK_GRPC_PORT` environment variable, or defaults to 9357.
-    pub async fn new(keep_alive: Option<Duration>) -> Result<Self> {
+    /// or else falls back to the `AGONES_SDK_GRPC_PORT` environment variable,
+    /// or defaults to 9357.
+    pub async fn new(port: Option<u16>, keep_alive: Option<Duration>) -> Result<Self> {
         // TODO: Add TLS? For some reason the original Cargo.toml was enabling
         // grpcio's openssl features, but AFAICT the SDK and sidecar only ever
         // communicate via a non-TLS connection, so seems like we could just
         // use the simpler client setup code if TLS is absolutely never needed
         let addr: http::Uri = format!(
             "http://localhost:{}",
-            env::var("AGONES_SDK_GRPC_PORT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(9357)
+            port.unwrap_or_else(|| {
+                env::var("AGONES_SDK_GRPC_PORT")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(9357)
+            })
         )
         .parse()?;
 
