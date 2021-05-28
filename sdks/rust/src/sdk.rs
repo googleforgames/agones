@@ -212,7 +212,7 @@ impl Sdk {
 
     /// Watch the backing GameServer configuration on updated
     #[inline]
-    pub async fn watch_gameserver<F>(&mut self) -> Result<WatchStream> {
+    pub async fn watch_gameserver(&mut self) -> Result<WatchStream> {
         Ok(self
             .client
             .watch_game_server(empty())
