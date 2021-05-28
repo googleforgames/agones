@@ -22,4 +22,13 @@ edition = "2018"
 
 [dependencies]
 agones = { path = "../../../sdks/rust" }
-async-std = "1.6.2"
+
+[dependencies.tokio]
+version = "1.6"
+default-features = false
+features = [
+    "macros",
+    "rt-multi-thread",
+    "sync",
+    "time",
+]
