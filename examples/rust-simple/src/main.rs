@@ -12,25 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-extern crate agones;
-
-use std::result::Result;
-use std::thread;
 use std::time::Duration;
 
-macro_rules! enclose {
-    ( ($( $x:ident ),*) $y:expr ) => {
-        {
-            $(let mut $x = $x.clone();)*
-            $y
-        }
-    };
-}
-
-fn main() {
+#[tokio::main(flavor = "multi_thread", worker_threads = 4)]
+async fn main() {
     println!("Rust Game Server has started!");
 
-    ::std::process::exit(match run() {
+    ::std::process::exit(match run().await {
         Ok(_) => {
             println!("Rust Game Server finished.");
             0
@@ -42,57 +30,89 @@ fn main() {
     });
 }
 
-fn run() -> Result<(), String> {
+async fn run() -> Result<(), String> {
     println!("Creating SDK instance");
-    let sdk = agones::Sdk::new().map_err(|_| "Could not connect to the sidecar. Exiting!")?;
-
-    let _health = thread::spawn(enclose! {(sdk) move || {
-        loop {
-            match sdk.health() {
-                (s, Ok(_)) => {
-                    println!("Health ping sent");
-                    sdk = s;
-                },
-                (s, Err(e)) => {
-                    println!("Health ping failed : {:?}", e);
-                    sdk = s;
-                }
-            }
-            thread::sleep(Duration::from_secs(2));
+    let mut sdk = match tokio::time::timeout(
+        Duration::from_secs(30),
+        agones::Sdk::new(None /* default port */, None /* keep_alive */),
+    )
+    .await
+    {
+        Ok(sdk) => sdk.map_err(|e| format!("unable to create sdk client: {}", e))?,
+        Err(_) => {
+            return Err("timed out attempting to connect to the sidecar".to_owned());
         }
-    }});
+    };
 
-    let _watch = thread::spawn(enclose! {(sdk) move || {
-        println!("Starting to watch GameServer updates...");
-        let _ = sdk.watch_gameserver(|gameserver| {
-            println!("GameServer Update, name: {}", gameserver.object_meta.unwrap().name);
-            println!("GameServer Update, state: {}", gameserver.status.unwrap().state);
+    let _health = sdk.spawn_health_task(Duration::from_secs(2));
+
+    let _watch = {
+        let mut watch_client = sdk.clone();
+        let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
+
+        tokio::task::spawn(async move {
+            println!("Starting to watch GameServer updates...");
+            match watch_client.watch_gameserver().await {
+                Err(e) => println!("Failed to watch for GameServer updates: {}", e),
+                Ok(mut stream) => loop {
+                    tokio::select! {
+                        gs = stream.message() => {
+                            match gs {
+                                Ok(Some(gs)) => {
+                                    println!("GameServer Update, name: {}", gs.object_meta.unwrap().name);
+                                    println!("GameServer Update, state: {}", gs.status.unwrap().state);
+                                }
+                                Ok(None) => {
+                                    println!("Server closed the GameServer watch stream");
+                                    break;
+                                }
+                                Err(e) => {
+                                    eprintln!("GameServer Update stream encountered an error: {}", e);
+                                }
+                            }
+
+                        }
+                        _ = &mut rx => {
+                            println!("Shutting down GameServer watch loop");
+                            break;
+                        }
+                    }
+                },
+            }
         });
-    }});
+
+        tx
+    };
 
     println!("Setting a label");
     sdk.set_label("test-label", "test-value")
+        .await
         .map_err(|e| format!("Could not run SetLabel(): {}. Exiting!", e))?;
 
     println!("Setting an annotation");
     sdk.set_annotation("test-annotation", "test value")
+        .await
         .map_err(|e| format!("Could not run SetAnnotation(): {}. Exiting!", e))?;
 
     println!("Marking server as ready...");
     sdk.ready()
+        .await
         .map_err(|e| format!("Could not run Ready(): {}. Exiting!", e))?;
 
     println!("...marked Ready");
 
     println!("Setting as Reserved for 5 seconds");
-    sdk.reserve(Duration::new(5, 0)).map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))?;
+    sdk.reserve(Duration::from_secs(5))
+        .await
+        .map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))?;
     println!("...Reserved");
 
-    thread::sleep(Duration::new(6, 0));
+    tokio::time::sleep(Duration::from_secs(6)).await;
 
     println!("Getting GameServer details...");
     let gameserver = sdk
         .get_gameserver()
+        .await
         .map_err(|e| format!("Could not run GameServer(): {}. Exiting!", e))?;
 
     println!("GameServer name: {}", gameserver.object_meta.unwrap().name);
@@ -101,11 +121,12 @@ fn run() -> Result<(), String> {
         let time = i * 10;
         println!("Running for {} seconds", time);
 
-        thread::sleep(Duration::from_secs(10));
+        tokio::time::sleep(Duration::from_secs(10)).await;
 
         if i == 5 {
             println!("Shutting down after 60 seconds...");
             sdk.shutdown()
+                .await
                 .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))?;
             println!("...marked for Shutdown");
         }
