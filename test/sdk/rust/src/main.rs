@@ -24,7 +24,7 @@ async fn main() {
             0
         }
         Err(msg) => {
-            println!("{}", msg);
+            println!("rust: {}", msg);
             1
         }
     });
@@ -33,7 +33,7 @@ async fn main() {
 async fn run() -> Result<(), String> {
     let env_run_async = env::var("RUN_ASYNC").unwrap_or_default();
     if env_run_async.contains("true") {
-        println!("RUN_ASYNC is set to true, so run test for async functions");
+        println!("rust: RUN_ASYNC is set to true, so run test for async functions");
         run_async().await
     } else {
         tokio::task::block_in_place(run_sync)
@@ -43,7 +43,7 @@ async fn run() -> Result<(), String> {
 fn run_sync() -> Result<(), String> {
     use tokio::runtime::Handle;
 
-    println!("Creating SDK instance");
+    println!("rust: Creating SDK instance");
     let mut sdk = Handle::current().block_on(async move {
         match tokio::time::timeout(
             Duration::from_secs(30),
@@ -63,29 +63,42 @@ fn run_sync() -> Result<(), String> {
         let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
 
         tokio::task::spawn(async move {
-            println!("Starting to watch GameServer updates...");
+            println!("rust: Starting to watch GameServer updates...");
+            let mut once = true;
             match watch_client.watch_gameserver().await {
-                Err(e) => println!("Failed to watch for GameServer updates: {}", e),
+                Err(e) => eprintln!("rust: Failed to watch for GameServer updates: {}", e),
                 Ok(mut stream) => loop {
                     tokio::select! {
                         gs = stream.message() => {
                             match gs {
                                 Ok(Some(gs)) => {
-                                    println!("GameServer Update, name: {}", gs.object_meta.unwrap().name);
-                                    println!("GameServer Update, state: {}", gs.status.unwrap().state);
+                                    let om = gs.object_meta.unwrap();
+                                    println!("rust: GameServer Update, name: {}", om.name);
+                                    println!("rust: GameServer Update, state: {}", gs.status.unwrap().state);
+
+                                    if once {
+                                        println!("rust: Setting an annotation");
+                                        let uid = om.uid.clone();
+
+                                        if let Err(e) = watch_client.set_annotation("test-annotation", uid).await {
+                                            eprintln!("rust: Failed to set annotation from watch task: {}", e);
+                                        }
+
+                                        once = false;
+                                    }
                                 }
                                 Ok(None) => {
-                                    println!("Server closed the GameServer watch stream");
+                                    println!("rust: Server closed the GameServer watch stream");
                                     break;
                                 }
                                 Err(e) => {
-                                    eprintln!("GameServer Update stream encountered an error: {}", e);
+                                    eprintln!("rust: GameServer Update stream encountered an error: {}", e);
                                 }
                             }
 
                         }
                         _ = &mut rx => {
-                            println!("Shutting down GameServer watch loop");
+                            println!("rust: Shutting down GameServer watch loop");
                             break;
                         }
                     }
@@ -99,33 +112,33 @@ fn run_sync() -> Result<(), String> {
     // Waiting for a thread to spawn
     thread::sleep(Duration::from_secs(2));
 
-    println!("Marking server as ready...");
+    println!("rust: Marking server as ready...");
     Handle::current().block_on(async {
         sdk.ready()
             .await
             .map_err(|e| format!("Could not run Ready(): {}. Exiting!", e))
     })?;
 
-    println!("...marked Ready");
+    println!("rust: ...marked Ready");
 
-    println!("Reserving for 5 seconds");
+    println!("rust: Reserving for 5 seconds");
     Handle::current().block_on(async {
         sdk.reserve(Duration::from_secs(5))
             .await
             .map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))
     })?;
-    println!("...Reserved");
+    println!("rust: ...Reserved");
 
-    println!("Allocate game server ...");
+    println!("rust: Allocate game server ...");
     Handle::current().block_on(async {
         sdk.allocate()
             .await
             .map_err(|e| format!("Could not run Allocate(): {}. Exiting!", e))
     })?;
 
-    println!("...marked Allocated");
+    println!("rust: ...marked Allocated");
 
-    println!("Getting GameServer details...");
+    println!("rust: Getting GameServer details...");
     let gameserver = Handle::current().block_on(async {
         sdk.get_gameserver()
             .await
@@ -133,11 +146,11 @@ fn run_sync() -> Result<(), String> {
     })?;
 
     println!(
-        "GameServer name: {}",
+        "rust: GameServer name: {}",
         gameserver.object_meta.clone().unwrap().name
     );
 
-    println!("Setting a label");
+    println!("rust: Setting a label");
     let creation_ts = gameserver.object_meta.unwrap().creation_timestamp;
     Handle::current().block_on(async {
         sdk.set_label("test-label", &creation_ts.to_string())
@@ -152,25 +165,26 @@ fn run_sync() -> Result<(), String> {
 
     for i in 0..1 {
         let time = i * 5;
-        println!("Running for {} seconds", time);
+        println!("rust: Running for {} seconds", time);
 
         thread::sleep(Duration::from_secs(5));
     }
 
-    println!("Shutting down...");
+    println!("rust: Shutting down...");
     Handle::current().block_on(async {
         sdk.shutdown()
             .await
             .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))
     })?;
-    println!("...marked for Shutdown");
+    println!("rust: ...marked for Shutdown");
+
     Ok(())
 }
 
 fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), String> {
     use tokio::runtime::Handle;
 
-    println!("Setting player capacity...");
+    println!("rust: Setting player capacity...");
     Handle::current().block_on(async {
         alpha
             .set_player_capacity(10)
@@ -178,16 +192,16 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .map_err(|e| format!("Could not run SetPlayerCapacity(): {:#?}. Exiting!", e))
     })?;
 
-    println!("Getting player capacity...");
+    println!("rust: Getting player capacity...");
     let capacity = Handle::current().block_on(async {
         alpha
             .get_player_capacity()
             .await
             .map_err(|e| format!("Could not run GetPlayerCapacity(): {}. Exiting!", e))
     })?;
-    println!("Player capacity: {}", capacity);
+    println!("rust: Player capacity: {}", capacity);
 
-    println!("Increasing the player count...");
+    println!("rust: Increasing the player count...");
     let player_id = "1234".to_string();
 
     let added = Handle::current().block_on(async {
@@ -197,9 +211,9 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .map_err(|e| format!("Could not run PlayerConnect(): {}. Exiting!", e))
     })?;
     if added {
-        println!("Added player");
+        println!("rust: Added player");
     } else {
-        panic!("Failed to add player. Exiting!");
+        panic!("rust: Failed to add player. Exiting!");
     }
 
     let connected = Handle::current().block_on(async {
@@ -209,9 +223,9 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .map_err(|e| format!("Could not run IsPlayerConnected(): {}. Exiting!", e))
     })?;
     if connected {
-        println!("{} is connected", player_id);
+        println!("rust: {} is connected", player_id);
     } else {
-        panic!("{} is not connected. Exiting!", player_id);
+        panic!("rust: {} is not connected. Exiting!", player_id);
     }
 
     let player_ids = Handle::current().block_on(async {
@@ -220,7 +234,7 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .await
             .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))
     })?;
-    println!("Connected players: {:?}", player_ids);
+    println!("rust: Connected players: {:?}", player_ids);
 
     let player_count = Handle::current().block_on(async {
         alpha
@@ -228,9 +242,9 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .await
             .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))
     })?;
-    println!("Current player count: {}", player_count);
+    println!("rust: Current player count: {}", player_count);
 
-    println!("Decreasing the player count...");
+    println!("rust: Decreasing the player count...");
     let removed = Handle::current().block_on(async {
         alpha
             .player_disconnect(&player_id)
@@ -238,9 +252,9 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .map_err(|e| format!("Could not run PlayerDisconnect(): {}. Exiting!", e))
     })?;
     if removed {
-        println!("Removed player");
+        println!("rust: Removed player");
     } else {
-        panic!("Failed to remove player. Exiting!");
+        panic!("rust: Failed to remove player. Exiting!");
     }
 
     let player_count = Handle::current().block_on(async {
@@ -249,7 +263,7 @@ fn run_player_tracking_features(mut alpha: agones::alpha::Alpha) -> Result<(), S
             .await
             .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))
     })?;
-    println!("Current player count: {}", player_count);
+    println!("rust: Current player count: {}", player_count);
 
     Ok(())
 }
@@ -272,42 +286,42 @@ async fn run_async() -> Result<(), String> {
         let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
 
         tokio::task::spawn(async move {
-            println!("Starting to watch GameServer updates...");
+            println!("rust_async: Starting to watch GameServer updates...");
             let mut once = true;
             match watch_client.watch_gameserver().await {
-                Err(e) => println!("Failed to watch for GameServer updates: {}", e),
+                Err(e) => eprintln!("rust_async: Failed to watch for GameServer updates: {}", e),
                 Ok(mut stream) => loop {
                     tokio::select! {
                         gs = stream.message() => {
                             match gs {
                                 Ok(Some(gs)) => {
                                     let om = gs.object_meta.unwrap();
-                                    println!("GameServer Update, name: {}", om.name);
-                                    println!("GameServer Update, state: {}", gs.status.unwrap().state);
+                                    println!("rust_async: GameServer Update, name: {}", om.name);
+                                    println!("rust_async: GameServer Update, state: {}", gs.status.unwrap().state);
 
                                     if once {
-                                        println!("Setting an annotation");
+                                        println!("rust_async: Setting an annotation");
                                         let uid = om.uid.clone();
 
                                         if let Err(e) = watch_client.set_annotation("test-annotation", uid).await {
-                                            eprintln!("Failed to set annotation from watch task: {}", e);
+                                            eprintln!("rust_async: Failed to set annotation from watch task: {}", e);
                                         }
 
                                         once = false;
                                     }
                                 }
                                 Ok(None) => {
-                                    println!("Server closed the GameServer watch stream");
+                                    println!("rust_async: Server closed the GameServer watch stream");
                                     break;
                                 }
                                 Err(e) => {
-                                    eprintln!("GameServer Update stream encountered an error: {}", e);
+                                    eprintln!("rust_async: GameServer Update stream encountered an error: {}", e);
                                 }
                             }
 
                         }
                         _ = &mut rx => {
-                            println!("Shutting down GameServer watch loop");
+                            println!("rust_async: Shutting down GameServer watch loop");
                             break;
                         }
                     }
@@ -320,37 +334,37 @@ async fn run_async() -> Result<(), String> {
 
     tokio::time::sleep(Duration::from_secs(2)).await;
 
-    println!("Marking server as ready...");
+    println!("rust_async: Marking server as ready...");
     sdk.ready()
         .await
         .map_err(|e| format!("Could not run Ready(): {}. Exiting!", e))?;
-    println!("...marked Ready");
+    println!("rust_async: ...marked Ready");
 
-    println!("Reserving for 5 seconds");
+    println!("rust_async: Reserving for 5 seconds");
     sdk.reserve(Duration::new(5, 0))
         .await
         .map_err(|e| format!("Could not run Reserve(): {}. Exiting!", e))?;
-    println!("...Reserved");
+    println!("rust_async: ...Reserved");
 
-    println!("Allocate game server ...");
+    println!("rust_async: Allocate game server ...");
     sdk.allocate()
         .await
         .map_err(|e| format!("Could not run Allocate(): {}. Exiting!", e))?;
 
-    println!("...marked Allocated");
+    println!("rust_async: ...marked Allocated");
 
-    println!("Getting GameServer details...");
+    println!("rust_async: Getting GameServer details...");
     let gameserver = sdk
         .get_gameserver()
         .await
         .map_err(|e| format!("Could not run GameServer(): {}. Exiting!", e))?;
 
     println!(
-        "GameServer name: {}",
+        "rust_async: GameServer name: {}",
         gameserver.object_meta.clone().unwrap().name
     );
 
-    println!("Setting a label");
+    println!("rust_async: Setting a label");
     let creation_ts = gameserver.object_meta.clone().unwrap().creation_timestamp;
     sdk.set_label("test-label", &creation_ts.to_string())
         .await
@@ -363,34 +377,35 @@ async fn run_async() -> Result<(), String> {
 
     for i in 0..1 {
         let time = i * 5;
-        println!("Running for {} seconds", time);
+        println!("rust_async: Running for {} seconds", time);
 
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
 
-    println!("Shutting down...");
+    println!("rust_async: Shutting down...");
     sdk.shutdown()
         .await
         .map_err(|e| format!("Could not run Shutdown: {}. Exiting!", e))?;
-    println!("...marked for Shutdown");
+    println!("rust_async: ...marked for Shutdown");
+
     Ok(())
 }
 
 async fn run_player_tracking_features_async(mut alpha: agones::alpha::Alpha) -> Result<(), String> {
-    println!("Setting player capacity...");
+    println!("rust_async: Setting player capacity...");
     alpha
         .set_player_capacity(10)
         .await
         .map_err(|e| format!("Could not run SetPlayerCapacity(): {}. Exiting!", e))?;
 
-    println!("Getting player capacity...");
+    println!("rust_async: Getting player capacity...");
     let capacity = alpha
         .get_player_capacity()
         .await
         .map_err(|e| format!("Could not run GetPlayerCapacity(): {}. Exiting!", e))?;
-    println!("Player capacity: {}", capacity);
+    println!("rust_async: Player capacity: {}", capacity);
 
-    println!("Increasing the player count...");
+    println!("rust_async: Increasing the player count...");
     let player_id = "1234".to_string();
     let added = alpha
         .player_connect(&player_id)
@@ -399,7 +414,7 @@ async fn run_player_tracking_features_async(mut alpha: agones::alpha::Alpha) -> 
     if added {
         println!("Added player");
     } else {
-        panic!("Failed to add player. Exiting!");
+        panic!("rust_async: Failed to add player. Exiting!");
     }
 
     let connected = alpha
@@ -407,39 +422,39 @@ async fn run_player_tracking_features_async(mut alpha: agones::alpha::Alpha) -> 
         .await
         .map_err(|e| format!("Could not run IsPlayerConnected(): {}. Exiting!", e))?;
     if connected {
-        println!("{} is connected", player_id);
+        println!("rust_async: {} is connected", player_id);
     } else {
-        panic!("{} is not connected. Exiting!", player_id);
+        panic!("rust_async: {} is not connected. Exiting!", player_id);
     }
 
     let player_ids = alpha
         .get_connected_players()
         .await
         .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))?;
-    println!("Connected players: {:?}", player_ids);
+    println!("rust_async: Connected players: {:?}", player_ids);
 
     let player_count = alpha
         .get_player_count()
         .await
         .map_err(|e| format!("Could not run GetConnectedPlayers(): {}. Exiting!", e))?;
-    println!("Current player count: {}", player_count);
+    println!("rust_async: Current player count: {}", player_count);
 
-    println!("Decreasing the player count...");
+    println!("rust_async: Decreasing the player count...");
     let removed = alpha
         .player_disconnect(&player_id)
         .await
         .map_err(|e| format!("Could not run PlayerDisconnect(): {}. Exiting!", e))?;
     if removed {
-        println!("Removed player");
+        println!("rust_async: Removed player");
     } else {
-        panic!("Failed to remove player. Exiting!");
+        panic!("rust_async: Failed to remove player. Exiting!");
     }
 
     let player_count = alpha
         .get_player_count()
         .await
         .map_err(|e| format!("Could not GetPlayerCount(): {}. Exiting!", e))?;
-    println!("Current player count: {}", player_count);
+    println!("rust_async: Current player count: {}", player_count);
 
     Ok(())
 }
