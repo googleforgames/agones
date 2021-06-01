@@ -266,7 +266,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(logDirFlag, "")
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
-	viper.SetDefault(fasResyncIntervalFlag, 30 * time.Second)
+	viper.SetDefault(fasResyncIntervalFlag, 30*time.Second)
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
