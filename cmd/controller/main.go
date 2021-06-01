@@ -26,6 +26,7 @@ import (
 
 	"agones.dev/agones/pkg"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	"agones.dev/agones/pkg/fleetautoscalers"
@@ -49,6 +50,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	extclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -77,6 +79,7 @@ const (
 	logLevelFlag                 = "log-level"
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
+	fasResyncIntervalFlag        = "fas-resync-interval"
 	defaultResync                = 30 * time.Second
 )
 
@@ -158,7 +161,9 @@ func main() {
 	wh := webhooks.NewWebHook(httpsServer.Mux)
 	api := apiserver.NewAPIServer(httpsServer.Mux)
 
-	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
+	logger.WithField("fasResyncInterval", ctlConf.FasResyncInterval).Info("Setting fleet autoscaler resync interval")
+	customResyncInterval := externalversions.WithCustomResyncConfig(map[v1.Object]time.Duration{&autoscalingv1.FleetAutoscaler{}: ctlConf.FasResyncInterval})
+	agonesInformerFactory := externalversions.NewSharedInformerFactoryWithOptions(agonesClient, defaultResync, customResyncInterval)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
 
 	server := &httpServer{}
@@ -261,6 +266,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(logDirFlag, "")
 	viper.SetDefault(logLevelFlag, "Info")
 	viper.SetDefault(logSizeLimitMBFlag, 10000) // 10 GB, will be split into 100 MB chunks
+	viper.SetDefault(fasResyncIntervalFlag, 30 * time.Second)
 
 	pflag.String(sidecarImageFlag, viper.GetString(sidecarImageFlag), "Flag to overwrite the GameServer sidecar image that is used. Can also use SIDECAR env variable")
 	pflag.String(sidecarCPULimitFlag, viper.GetString(sidecarCPULimitFlag), "Flag to overwrite the GameServer sidecar container's cpu limit. Can also use SIDECAR_CPU_LIMIT env variable")
@@ -284,6 +290,7 @@ func parseEnvFlags() config {
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
+	pflag.Duration(fasResyncIntervalFlag, viper.GetDuration(fasResyncIntervalFlag), "Resync interval")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -311,6 +318,7 @@ func parseEnvFlags() config {
 	runtime.Must(viper.BindEnv(logLevelFlag))
 	runtime.Must(viper.BindEnv(logDirFlag))
 	runtime.Must(viper.BindEnv(logSizeLimitMBFlag))
+	runtime.Must(viper.BindEnv(fasResyncIntervalFlag))
 	runtime.Must(runtime.FeaturesBindEnv())
 
 	runtime.Must(runtime.ParseFeaturesFromEnv())
@@ -358,6 +366,7 @@ func parseEnvFlags() config {
 		LogLevel:              viper.GetString(logLevelFlag),
 		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
 		StackdriverLabels:     viper.GetString(stackdriverLabels),
+		FasResyncInterval:     viper.GetDuration(fasResyncIntervalFlag),
 	}
 }
 
@@ -385,6 +394,7 @@ type config struct {
 	LogDir                string
 	LogLevel              string
 	LogSizeLimitMB        int
+	FasResyncInterval     time.Duration
 }
 
 // validate ensures the ctlConfig data is valid.
