@@ -55,6 +55,8 @@ type FleetList struct {
 
 // FleetSpec is the spec for a Fleet
 type FleetSpec struct {
+	// LazyReconcile whether to wait GameServers fully deleted before creating new replacements during reconcile. Default to false.
+	LazyReconcile bool `json:"lazyReconcile"`
 	// Replicas are the number of GameServers that should be in this set. Defaults to 0.
 	Replicas int32 `json:"replicas"`
 	// Deployment strategy
@@ -90,6 +92,7 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 		Spec: GameServerSetSpec{
 			Template:   f.Spec.Template,
 			Scheduling: f.Spec.Scheduling,
+			LazyReconcile: f.Spec.LazyReconcile,
 		},
 	}
 

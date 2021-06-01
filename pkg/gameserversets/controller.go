@@ -306,7 +306,8 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 	list = c.stateCache.forGameServerSet(gsSet).reconcileWithUpdatedServerList(list)
 
 	numServersToAdd, toDelete, isPartial := computeReconciliationAction(gsSet.Spec.Scheduling, list, c.counter.Counts(),
-		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
+		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount,
+		gsSet.Spec.LazyReconcile)
 	status := computeStatus(list)
 	fields := logrus.Fields{}
 
@@ -356,14 +357,14 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 // the list of game servers that were found and target replica count.
 func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agonesv1.GameServer,
 	counts map[string]gameservers.NodeCount, targetReplicaCount int, maxCreations int, maxDeletions int,
-	maxPending int) (int, []*agonesv1.GameServer, bool) {
+	maxPending int, lazyReconcile bool) (int, []*agonesv1.GameServer, bool) {
 	var upCount int     // up == Ready or will become ready
 	var deleteCount int // number of gameservers to delete
 
 	// track the number of pods that are being created at any given moment by the GameServerSet
 	// so we can limit it at a throughput that Kubernetes can handle
 	var podPendingCount int // podPending == "up" but don't have a Pod running yet
-
+	var isBeingDeletedCount int
 	var potentialDeletions []*agonesv1.GameServer
 	var toDelete []*agonesv1.GameServer
 
@@ -399,6 +400,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 		// GS being deleted don't count.
 		if gs.IsBeingDeleted() {
+			isBeingDeletedCount++
 			continue
 		}
 
@@ -437,6 +439,14 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 	if upCount < targetReplicaCount {
 		numServersToAdd = targetReplicaCount - upCount
+		if lazyReconcile {
+			// if lazy reconcile enabled, we won't create new replacements until game servers being deleted are fully deleted
+			numServersToAdd = numServersToAdd - isBeingDeletedCount
+			if numServersToAdd < 0 {
+				numServersToAdd = 0
+			}
+		}
+
 		originalNumServersToAdd := numServersToAdd
 
 		if numServersToAdd > maxCreations {

@@ -38,6 +38,9 @@ spec:
       served: true
       storage: true
       additionalPrinterColumns:
+        - jsonPath: .spec.lazyReconcile
+          name: LazyReconcile
+          type: boolean
         - jsonPath: .spec.scheduling
           name: Scheduling
           type: string
@@ -65,6 +68,9 @@ spec:
               required:
                 - template
               properties:
+                lazyReconcile:
+                  type: boolean
+                  default: false
                 replicas:
                   type: integer
                   minimum: 0

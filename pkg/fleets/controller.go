@@ -331,10 +331,11 @@ func (c *Controller) upsertGameServerSet(ctx context.Context, fleet *agonesv1.Fl
 		return nil
 	}
 
-	if replicas != active.Spec.Replicas || active.Spec.Scheduling != fleet.Spec.Scheduling {
+	if replicas != active.Spec.Replicas || active.Spec.Scheduling != fleet.Spec.Scheduling || active.Spec.LazyReconcile != fleet.Spec.LazyReconcile {
 		gsSetCopy := active.DeepCopy()
 		gsSetCopy.Spec.Replicas = replicas
 		gsSetCopy.Spec.Scheduling = fleet.Spec.Scheduling
+		gsSetCopy.Spec.LazyReconcile = fleet.Spec.LazyReconcile
 		gsSetCopy, err := c.gameServerSetGetter.GameServerSets(fleet.ObjectMeta.Namespace).Update(ctx, gsSetCopy, metav1.UpdateOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "error updating replicas for gameserverset for fleet %s", fleet.ObjectMeta.Name)

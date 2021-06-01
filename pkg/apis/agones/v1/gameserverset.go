@@ -55,6 +55,8 @@ type GameServerSetList struct {
 
 // GameServerSetSpec the specification for GameServerSet
 type GameServerSetSpec struct {
+	// LazyReconcile whether to wait GameServers fully deleted before creating new replacements during reconcile. Default to false.
+	LazyReconcile bool `json:"lazyReconcile"`
 	// Replicas are the number of GameServers that should be in this set
 	Replicas int32 `json:"replicas"`
 	// Scheduling strategy. Defaults to "Packed".

@@ -217,13 +217,28 @@ func TestComputeReconciliationAction(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
 			toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, tc.list, map[string]gameservers.NodeCount{},
-				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch)
+				tc.targetReplicaCount, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch, false)
 
 			assert.Equal(t, tc.wantNumServersToAdd, toAdd, "# of GameServers to add")
 			assert.Len(t, toDelete, tc.wantNumServersToDelete, "# of GameServers to delete")
 			assert.Equal(t, tc.wantIsPartial, isPartial, "is partial reconciliation")
 		})
 	}
+
+	t.Run("test laze reconcile", func(t *testing.T) {
+		list := []*agonesv1.GameServer{
+			// while lazy reconcile enabled, we should wait all deleting game servers terminated before creating new ones
+			gsPendingDeletionWithState(agonesv1.GameServerStateUnhealthy),
+			gsPendingDeletionWithState(agonesv1.GameServerStateUnhealthy),
+			gsWithState(agonesv1.GameServerStateReady),
+		}
+		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, list, map[string]gameservers.NodeCount{},
+			4, maxTestCreationsPerBatch, maxTestDeletionsPerBatch, maxTestPendingPerBatch, true)
+
+		assert.Equal(t, 1, toAdd, "# of GameServers to add")
+		assert.Len(t, toDelete, 0, "# of GameServers to delete")
+		assert.Equal(t, false, isPartial, "is partial reconciliation")
+	})
 
 	t.Run("test packed scale down", func(t *testing.T) {
 		list := []*agonesv1.GameServer{
@@ -235,7 +250,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 
 		counts := map[string]gameservers.NodeCount{"node1": {Ready: 1}, "node3": {Ready: 2}}
 		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Packed, list, counts, 2,
-			1000, 1000, 1000)
+			1000, 1000, 1000, false)
 
 		assert.Empty(t, toAdd)
 		assert.False(t, isPartial, "shouldn't be partial")
@@ -260,7 +275,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 		}
 
 		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, list, map[string]gameservers.NodeCount{},
-			2, 1000, 1000, 1000)
+			2, 1000, 1000, 1000, false)
 
 		assert.Empty(t, toAdd)
 		assert.False(t, isPartial, "shouldn't be partial")
