@@ -1,5 +1,48 @@
 # Changelog
 
+## [v1.15.0-rc](https://github.com/googleforgames/agones/tree/v1.15.0-rc) (2021-06-01)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.14.0...v1.15.0-rc)
+
+**Implemented enhancements:**
+
+- Azure AKS support for public IP per Node/VM [\#2083](https://github.com/googleforgames/agones/issues/2083)
+- Unreal plugin WatchGameServer implementation [\#2064](https://github.com/googleforgames/agones/pull/2064) ([highlyunavailable](https://github.com/highlyunavailable))
+
+**Fixed bugs:**
+
+- Creating a GameServerAllocation returns a 200 Ok instead of a 201 Created [\#2108](https://github.com/googleforgames/agones/issues/2108)
+- Nil Reference/massive log spam in Controller \[1.13\] [\#2086](https://github.com/googleforgames/agones/issues/2086)
+- Cannot update Fleet and set replicas to 0 in same transaction [\#2084](https://github.com/googleforgames/agones/issues/2084)
+- Flaky: Hugo occasionally fails: fatal error: concurrent map read and map write [\#1981](https://github.com/googleforgames/agones/issues/1981)
+- Return HTTP 201 on GameServerAllocation [\#2110](https://github.com/googleforgames/agones/pull/2110) ([markmandel](https://github.com/markmandel))
+- Update and audit fix Node.js dependencies [\#2099](https://github.com/googleforgames/agones/pull/2099) ([steven-supersolid](https://github.com/steven-supersolid))
+- Clone Kubernetes objects in API Server before encoding them [\#2089](https://github.com/googleforgames/agones/pull/2089) ([highlyunavailable](https://github.com/highlyunavailable))
+
+**Closed issues:**
+
+- Request Releaser role for Agones Repository [\#2115](https://github.com/googleforgames/agones/issues/2115)
+- Release 1.14.0 [\#2077](https://github.com/googleforgames/agones/issues/2077)
+- Allocation endpoint: Deprecate `metaPatch` for `metadata` [\#2042](https://github.com/googleforgames/agones/issues/2042)
+
+**Merged pull requests:**
+
+- Update link to contributing guide from the membership template. [\#2118](https://github.com/googleforgames/agones/pull/2118) ([roberthbailey](https://github.com/roberthbailey))
+- Update our community membership guidelines to add a Releaser role. [\#2111](https://github.com/googleforgames/agones/pull/2111) ([roberthbailey](https://github.com/roberthbailey))
+- Respectful code cleanup No.2 [\#2109](https://github.com/googleforgames/agones/pull/2109) ([markmandel](https://github.com/markmandel))
+- Respectful code cleanup No.1 [\#2107](https://github.com/googleforgames/agones/pull/2107) ([markmandel](https://github.com/markmandel))
+- aks setup improvements [\#2103](https://github.com/googleforgames/agones/pull/2103) ([dzmitry-lahoda](https://github.com/dzmitry-lahoda))
+- e2e test: Update Fleet replicas 0 with Spec change [\#2095](https://github.com/googleforgames/agones/pull/2095) ([markmandel](https://github.com/markmandel))
+- Link Client SDK page to Third Party SDKs [\#2094](https://github.com/googleforgames/agones/pull/2094) ([markmandel](https://github.com/markmandel))
+- Add Afterverse logo [\#2092](https://github.com/googleforgames/agones/pull/2092) ([jose-cieni-playkids](https://github.com/jose-cieni-playkids))
+- Upgrade to Hugo 0.82.1 [\#2085](https://github.com/googleforgames/agones/pull/2085) ([markmandel](https://github.com/markmandel))
+- Add rust SDK functionality table [\#2082](https://github.com/googleforgames/agones/pull/2082) ([domgreen](https://github.com/domgreen))
+- Adding Functionality table for go SDK [\#2081](https://github.com/googleforgames/agones/pull/2081) ([domgreen](https://github.com/domgreen))
+- Minor updates to the release checklist. [\#2080](https://github.com/googleforgames/agones/pull/2080) ([roberthbailey](https://github.com/roberthbailey))
+- Prep for the 1.15.0 release. [\#2079](https://github.com/googleforgames/agones/pull/2079) ([roberthbailey](https://github.com/roberthbailey))
+- Documenting unity SDK functionality [\#2076](https://github.com/googleforgames/agones/pull/2076) ([domgreen](https://github.com/domgreen))
+- Rename MetaPatch to Metadata for AllocationRequest [\#2070](https://github.com/googleforgames/agones/pull/2070) ([lambertwang](https://github.com/lambertwang))
+
 ## [v1.14.0](https://github.com/googleforgames/agones/tree/v1.14.0) (2021-04-27)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.14.0-rc...v1.14.0)
