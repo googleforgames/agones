@@ -60,7 +60,7 @@ resource "azurerm_kubernetes_cluster" "agones" {
   resource_group_name = azurerm_resource_group.agones_rg.name
   dns_prefix          = "agones"
 
-  kubernetes_version = "1.18.14"
+  kubernetes_version = var.kubernetes_version
 
   default_node_pool {
     name                  = "default"
@@ -107,36 +107,24 @@ resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
   }
 }
 
-resource "azurerm_network_security_group" "agones_sg" {
-  name                = "agonesSecurityGroup"
-  location            = azurerm_resource_group.agones_rg.location
-  resource_group_name = azurerm_resource_group.agones_rg.name
+data "azurerm_resources" "network_security_groups" {
+  resource_group_name = azurerm_kubernetes_cluster.agones.node_resource_group
+
+  type = "Microsoft.Network/networkSecurityGroups"
 }
 
 resource "azurerm_network_security_rule" "gameserver" {
-  name                        = "gameserver"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "UDP"
-  source_port_range           = "*"
-  destination_port_range      = "7000-8000"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.agones_rg.name
-  network_security_group_name = azurerm_network_security_group.agones_sg.name
-}
-
-resource "azurerm_network_security_rule" "outbound" {
-  name                        = "outbound"
-  priority                    = 100
-  direction                   = "Outbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.agones_rg.name
-  network_security_group_name = azurerm_network_security_group.agones_sg.name
+  name                       = "gameserver"
+  priority                   = 100
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Udp"
+  source_port_range          = "*"
+  destination_port_range     = "7000-8000"
+  source_address_prefix      = "*"
+  destination_address_prefix = "*"
+  # 2021.06.07-WeetA34: Force lowercase to avoid resource recreation due to attribute saved as lowercase
+  resource_group_name = lower(data.azurerm_resources.network_security_groups.resource_group_name)
+  # Ensure we get the first network security group named aks-agentpool-*******-nsg
+  network_security_group_name = [for network_security_group in data.azurerm_resources.network_security_groups.resources : network_security_group.name if length(regexall("^aks-agentpool-\\d+-nsg$", network_security_group.name)) > 0][0]
 }
