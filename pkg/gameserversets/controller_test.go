@@ -229,7 +229,7 @@ func TestComputeReconciliationAction(t *testing.T) {
 		list := []*agonesv1.GameServer{
 			// while lazy reconcile enabled, we should wait all deleting game servers terminated before creating new ones
 			gsPendingDeletionWithState(agonesv1.GameServerStateUnhealthy),
-			gsPendingDeletionWithState(agonesv1.GameServerStateUnhealthy),
+			gsPendingDeletionWithState(agonesv1.GameServerStateShutdown),
 			gsWithState(agonesv1.GameServerStateReady),
 		}
 		toAdd, toDelete, isPartial := computeReconciliationAction(apis.Distributed, list, map[string]gameservers.NodeCount{},

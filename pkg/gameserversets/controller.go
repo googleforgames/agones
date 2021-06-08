@@ -441,7 +441,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 		numServersToAdd = targetReplicaCount - upCount
 		if lazyReconcile {
 			// if lazy reconcile enabled, we won't create new replacements until game servers being deleted are fully deleted
-			numServersToAdd = numServersToAdd - isBeingDeletedCount
+			numServersToAdd -= isBeingDeletedCount
 			if numServersToAdd < 0 {
 				numServersToAdd = 0
 			}

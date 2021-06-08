@@ -90,8 +90,8 @@ func (f *Fleet) GameServerSet() *GameServerSet {
 	gsSet := &GameServerSet{
 		ObjectMeta: *f.Spec.Template.ObjectMeta.DeepCopy(),
 		Spec: GameServerSetSpec{
-			Template:   f.Spec.Template,
-			Scheduling: f.Spec.Scheduling,
+			Template:      f.Spec.Template,
+			Scheduling:    f.Spec.Scheduling,
 			LazyReconcile: f.Spec.LazyReconcile,
 		},
 	}
