@@ -86,14 +86,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.registerServiceAccounts`                    | Attempts to create service accounts for the controllers                                         | `true`                 |
 | `agones.createPriorityClass`                        | Attempts to create priority classes for the controllers                                         | `true`                 |
 | `agones.priorityClassName`                          | Name of the priority classes to create                                                          | `agones-system`        |
-| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | \`\` | 
+| `agones.featureGates`                               | A URL query encoded string of Flags to enable/disable e.g. `Example=true&OtherThing=false`. Any value accepted by [strconv.ParseBool(string)](https://golang.org/pkg/strconv/#ParseBool) can be used as a boolean value | \`\` |
 | `agones.crds.install`                               | Install the CRDs with this chart. Useful to disable if you want to subchart (since crd-install hook is broken), so you can copy the CRDs into your own chart. | `true` |
 | `agones.crds.cleanupOnDelete`                       | Run the pre-delete hook to delete all GameServers and their backing Pods when deleting the helm chart, so that all CRDs can be removed on chart deletion | `true`          |
 | `agones.metrics.prometheusServiceDiscovery`         | Adds annotations for Prometheus ServiceDiscovery (and also Strackdriver)                        | `true`                 |
 | `agones.metrics.prometheusEnabled`                  | Enables controller metrics on port `8080` and path `/metrics`                                   | `true`                 |
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | \`\`                   |
-| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` | 
+| `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` |
 | `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
@@ -179,7 +179,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.14.0" %}}
+{{% feature publishVersion="1.15.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
@@ -228,7 +228,7 @@ In order to use `helm test` command described in this section you need to set `h
 
 Check the Agones installation by running the following command:
 ```bash
-$ helm test my-release --cleanup                     
+$ helm test my-release --cleanup
 RUNNING: agones-test
 PASSED: agones-test
 ```
