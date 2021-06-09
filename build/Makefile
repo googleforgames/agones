@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.15.0
+base_version = 1.16.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
