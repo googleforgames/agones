@@ -23,6 +23,7 @@ spec:
       ports:
       - name: default
         containerPort: 7654
+        protocol: TCP
       template:
         spec:
           containers:
