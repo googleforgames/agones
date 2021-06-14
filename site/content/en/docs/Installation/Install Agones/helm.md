@@ -94,8 +94,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | \`\`                   |
 | `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` |
-| `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
-| `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
+| `agones.serviceaccount.controller`                  | Service account name for the controller. **Note**: Will be replaced with `agones.serviceaccount.controller.name` in Agones 1.16 | `agones-controller`    |
+| `agones.serviceaccount.sdk`                         | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16        | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
@@ -184,6 +184,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.serviceaccount.controller.name`             | Service account name for the controller                                                         | `agones-controller`    |
+| `agones.serviceaccount.sdk.name`                    | Service account name for the sdk                                                                | `agones-sdk`           |
+| `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`    |
+| `agones.serviceaccount.allocator.annotations`       | [Annotations][annotations] added to the Agones allocator service account                        | `{}`                   |
+| `agones.serviceaccount.controller.annotations`      | [Annotations][annotations] added to the Agones controller service account                       | `{}`                   |
 |                       |                           |                            |
 {{% /feature %}}
 
