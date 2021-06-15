@@ -31,8 +31,8 @@ $(function () {
     $el.bootstrapCollapse()
     try {
       $el.bootstrapCollapse('noMethod')
-    } catch (err) {
-      assert.strictEqual(err.message, 'No method named "noMethod"')
+    } catch (error) {
+      assert.strictEqual(error.message, 'No method named "noMethod"')
     }
   })
 
@@ -457,7 +457,7 @@ $(function () {
         '<div class="card"/>' +
         '</div>'
     var showFired = false
-    var $groups   = $(accordionHTML).appendTo('#qunit-fixture').find('.card')
+    var $groups = $(accordionHTML).appendTo('#qunit-fixture').find('.card')
 
     var $target1 = $('<a role="button" data-toggle="collapse" href="#body1"/>').appendTo($groups.eq(0))
 
@@ -468,7 +468,7 @@ $(function () {
       })
 
     var $target2 = $('<a role="button" data-toggle="collapse" href="#body2"/>').appendTo($groups.eq(1))
-    var $body2   = $('<div id="body2" class="collapse" data-parent="#accordion"/>').appendTo($groups.eq(1))
+    var $body2 = $('<div id="body2" class="collapse" data-parent="#accordion"/>').appendTo($groups.eq(1))
 
     $target2.trigger('click')
 
@@ -604,8 +604,8 @@ $(function () {
     var $collapseTwoOne = $('#collapseTwoOne')
     var $collapseTwoTwo = $('#collapseTwoTwo')
     var collapsedElements = {
-      one : false,
-      two : false
+      one: false,
+      two: false
     }
 
     function firstTest() {
@@ -757,7 +757,7 @@ $(function () {
     $trigger3.trigger('click')
   })
 
-  QUnit.test('should set aria-expanded="true" to triggers targeting shown collaspe and aria-expanded="false" only when all the targeted collapses are shown', function (assert) {
+  QUnit.test('should set aria-expanded="true" to triggers targeting shown collapse and aria-expanded="false" only when all the targeted collapses are shown', function (assert) {
     assert.expect(9)
     var done = assert.async()
 
@@ -830,7 +830,7 @@ $(function () {
         parent: $('.my-collapse')
       })
       assert.ok(true, 'collapse correctly created')
-    } catch (err) {
+    } catch (_) {
       assert.ok(false, 'collapse not created')
     }
   })
@@ -851,8 +851,42 @@ $(function () {
         parent: $('.my-collapse')[0]
       })
       assert.ok(true, 'collapse correctly created')
-    } catch (err) {
+    } catch (_) {
       assert.ok(false, 'collapse not created')
     }
+  })
+
+  QUnit.test('should find collapse children if they have collapse class too not only data-parent', function (assert) {
+    assert.expect(2)
+    var done = assert.async()
+
+    var html =
+    '<div class="my-collapse">' +
+    '  <div class="item">' +
+    '    <a data-toggle="collapse" href="#">Toggle item 1</a>' +
+    '    <div id="collapse1" class="collapse show">Lorem ipsum 1</div>' +
+    '  </div>' +
+    '  <div class="item">' +
+    '    <a id="triggerCollapse2" data-toggle="collapse" href="#">Toggle item 2</a>' +
+    '    <div id="collapse2" class="collapse">Lorem ipsum 2</div>' +
+    '  </div>' +
+    '</div>'
+
+    $(html).appendTo('#qunit-fixture')
+
+    var $parent = $('.my-collapse')
+    var $collapse2 = $('#collapse2')
+    $parent.find('.collapse').bootstrapCollapse({
+      parent: $parent,
+      toggle: false
+    })
+
+    $collapse2.on('shown.bs.collapse', function () {
+      assert.ok($collapse2.hasClass('show'))
+      assert.ok(!$('#collapse1').hasClass('show'))
+      done()
+    })
+
+    $collapse2.bootstrapCollapse('toggle')
   })
 })

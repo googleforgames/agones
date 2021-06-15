@@ -96,3 +96,36 @@
         }
     }
 }
+
+// Icons
+#main_navbar {
+    li i {
+    padding-right: 0.5em;
+
+        &:before {
+            display: inline-block;
+            text-align: center;
+            min-width: 1em;
+        }
+    }
+  .alert {
+    background-color: inherit;
+    padding:0;
+    color: $secondary;
+    border: 0;
+    font-weight: inherit;
+
+        &:before {
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900; 
+            content: "\f0d9";
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+    }  
+}

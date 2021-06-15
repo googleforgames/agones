@@ -1,4 +1,4 @@
-# Docsy
+# Docsy 
 
 Docsy is a [Hugo](https://gohugo.io/) theme for technical documentation sets, providing simple navigation, site structure, and more.
 
@@ -22,12 +22,12 @@ The following are basic prerequisites for using Docsy in your site:
 
 ## Example and usage
 
-You can find an example project that uses Docsy in the [Docsy Example Project repo](https://github.com/google/docsy-example). The Docsy Example Project is hosted at [https://example.docsy.dev/](https://example.docsy.dev/).
+You can find an example project that uses Docsy in the [Docsy Example Project repo](https://github.com/google/docsy-example).The Docsy Example Project is hosted at [https://example.docsy.dev/](https://example.docsy.dev/). For real-life examples of sites that use Docsy (and their source repos), see our [Examples](https://www.docsy.dev/docs/examples/) page.
 
 To use the Docsy theme for your own site:
 
-  - (Recommended) Copy the [example project](https://github.com/google/docsy-example),
-￼	   which includes the Docsy theme as a submodule.
+  - (Recommended) Use the [example project](https://github.com/google/docsy-example),
+     which includes the Docsy theme as a submodule, as a template to create your project.
     You can customize this pre-configured basic site into your own Docsy themed site. 
     [Learn more...](https://github.com/google/docsy-example)
   
@@ -47,4 +47,13 @@ cd docsy/userguide/
 hugo server --themesDir ../..
 ```
 
-Note that you need the `themesDir` flag when running Hugo because the site files are inside the theme repo.
+Note: you need the `themesDir` flag when running Hugo because the site files are inside the theme repo.
+
+## Contributing ![GitHub](https://img.shields.io/github/contributors/google/docsy)
+
+Please read [CONTRIBUTING.md](https://github.com/google/docsy/blob/master/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+See also the list of [contributors](https://github.com/google/docsy/graphs/contributors) who participated in this project.
+
+## License ![GitHub](https://img.shields.io/github/license/google/docsy)
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE.md](https://github.com/google/docsy/blob/master/LICENSE) file for details

@@ -35,9 +35,21 @@ other = "작성"
 other = "최종 수정"
 [post_edit_this]
 other = "페이지 편집"
+[post_create_child_page]
+other = "하부 페이지 생성"
 [post_create_issue]
 other = "문서에 이슈 생성"
 [post_create_project_issue]
 other = "프로젝트에 이슈 생성"
 [post_posts_in]
 other = "Posts in"
+
+# Print support
+[print_printable_section]
+other = "이 섹션의 다중 페이지 출력 화면임."
+[print_click_to_print]
+other = "여기를 클릭하여 프린트"
+[print_show_regular]
+other = "이 페이지의 일반 화면으로 돌아가기"
+[print_entire_section]
+other = "전체 섹션 프린트"
