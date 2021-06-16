@@ -12,26 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-variable "machine_type" {
-  default = "Standard_D2_v2"
+variable "client_id" {
 }
 
-variable "node_count" {
-  default = 4
-}
-
-variable "disk_size" {
-  default = 30
+variable "client_secret" {
 }
 
 variable "cluster_name" {
   default = "test-cluster"
 }
 
-variable "client_id" {
-}
-
-variable "client_secret" {
+variable "disk_size" {
+  default = 30
 }
 
 # VMSS is used, so it is unpredictable how NICs will be given to VMs
@@ -43,4 +35,20 @@ variable "enable_node_public_ip" {
 
 variable "kubernetes_version" {
   default = "1.18.19"
+}
+
+variable "machine_type" {
+  default = "Standard_D2_v2"
+}
+
+variable "node_count" {
+  default = 4
+}
+
+variable "resource_group_location" {
+  default = "East US"
+}
+
+variable "resource_group_name" {
+  default = "agonesRG"
 }

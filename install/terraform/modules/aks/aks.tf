@@ -12,46 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-provider "azuread" {
-  version = "=0.4.0"
+
+terraform {
+  required_providers {
+    # azuread = {
+    #   source = "hashicorp/azuread"
+    #   version = "~> 1.5"
+    # }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 2.63"
+    }
+    # random = {
+    #   source  = "hashicorp/random"
+    #   version = "~> 3.1"
+    # }
+  }
+  required_version = ">= 0.12.6"
 }
 
-provider "azurerm" {
-  version = "=2.2.0"
+# 2021.06.16-WeetA34: Commented because not used for now
+# # Create Service Principal password
+# resource "azuread_service_principal_password" "aks" {
+#   end_date             = "2299-12-30T23:00:00Z" # Forever
+#   service_principal_id = azuread_service_principal.aks.id
+#   value                = random_string.password.result
+# }
 
-  features {}
-}
+# # Create Azure AD Application for Service Principal
+# resource "azuread_application" "aks" {
+#   name = "agones-sp"
+# }
 
-provider "random" {
-  version = "~> 2.2"
-}
+# # Create Service Principal
+# resource "azuread_service_principal" "aks" {
+#   application_id = azuread_application.aks.application_id
+# }
 
-# Create Service Principal password
-resource "azuread_service_principal_password" "aks" {
-  end_date             = "2299-12-30T23:00:00Z" # Forever
-  service_principal_id = azuread_service_principal.aks.id
-  value                = random_string.password.result
-}
-
-# Create Azure AD Application for Service Principal
-resource "azuread_application" "aks" {
-  name = "agones-sp"
-}
-
-# Create Service Principal
-resource "azuread_service_principal" "aks" {
-  application_id = azuread_application.aks.application_id
-}
-
-# Generate random string to be used for Service Principal Password
-resource "random_string" "password" {
-  length  = 32
-  special = true
-}
+# # Generate random string to be used for Service Principal Password
+# resource "random_string" "password" {
+#   length  = 32
+#   special = true
+# }
 
 resource "azurerm_resource_group" "agones_rg" {
-  name     = "agonesRG"
-  location = "East US"
+  location = var.resource_group_location
+  name     = var.resource_group_name
 }
 
 resource "azurerm_kubernetes_cluster" "agones" {
@@ -69,7 +75,6 @@ resource "azurerm_kubernetes_cluster" "agones" {
     os_disk_size_gb       = var.disk_size
     enable_auto_scaling   = false
     enable_node_public_ip = var.enable_node_public_ip
-    #vnet_subnet_id     = azurerm_subnet.aks.id
   }
 
   service_principal {
