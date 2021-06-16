@@ -9,3 +9,16 @@ time_format_blog = "Monday, January 02, 2006"
 time_format_default = "January 2, 2006"
 # Sections to publish in the main RSS feed.
 rss_sections = ["blog"]
+
+
+# For a full list of parameters used in Docsy sites, see:
+# https://github.com/google/docsy-example/blob/master/config.toml
+
+
+[outputFormats]
+[outputFormats.PRINT]
+baseName = "index"
+isHTML = true
+mediaType = "text/html"
+path = "_print"
+permalinkable = false

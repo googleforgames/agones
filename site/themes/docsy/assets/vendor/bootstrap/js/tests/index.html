@@ -6,20 +6,8 @@
     <title>Bootstrap Plugin Test Suite</title>
 
     <!-- jQuery -->
-    <script>
-      (function () {
-        var path = '../../site/docs/4.1/assets/js/vendor/jquery-slim.min.js'
-        // get jquery param from the query string.
-        var jQueryVersion = location.search.match(/[?&]jquery=(.*?)(?=&|$)/)
-
-        // If a version was specified, use that version from jQuery CDN
-        if (jQueryVersion) {
-          path = 'https://code.jquery.com/jquery-' + jQueryVersion[1] + '.min.js'
-        }
-        document.write('<script src="' + path + '"><\/script>')
-      }())
-    </script>
-    <script src="../../site/docs/4.1/assets/js/vendor/popper.min.js"></script>
+    <script src="../../node_modules/jquery/dist/jquery.slim.min.js"></script>
+    <script src="../../node_modules/popper.js/dist/umd/popper.min.js"></script>
 
     <!-- QUnit -->
     <link rel="stylesheet" href="../../node_modules/qunit/qunit/qunit.css" media="screen">
@@ -27,6 +15,9 @@
 
     <!-- Sinon -->
     <script src="../../node_modules/sinon/pkg/sinon-no-sourcemaps.js"></script>
+
+    <!-- Hammer simulator -->
+    <script src="../../node_modules/hammer-simulator/index.js"></script>
 
     <script>
       // Disable jQuery event aliases to ensure we don't accidentally use any of them
@@ -55,7 +46,7 @@
         'contextmenu'
       ].forEach(function(eventAlias) {
         $.fn[eventAlias] = function() {
-          throw new Error('Using the ".' + eventAlias + '()" method is not allowed, so that Bootstrap can be compatible with custom jQuery builds which exclude the "event aliases" module that defines said method. See https://github.com/twbs/bootstrap/blob/master/CONTRIBUTING.md#js')
+          throw new Error('Using the ".' + eventAlias + '()" method is not allowed, so that Bootstrap can be compatible with custom jQuery builds which exclude the "event aliases" module that defines said method. See https://github.com/twbs/bootstrap/blob/v4-dev/.github/CONTRIBUTING.md#js')
         }
       })
 
@@ -117,6 +108,7 @@
     <script src="../dist/tab.js"></script>
     <script src="../dist/tooltip.js"></script>
     <script src="../dist/popover.js"></script>
+    <script src="../dist/toast.js"></script>
 
     <!-- Unit Tests -->
     <script src="unit/alert.js"></script>
@@ -130,6 +122,7 @@
     <script src="unit/tooltip.js"></script>
     <script src="unit/popover.js"></script>
     <script src="unit/util.js"></script>
+    <script src="unit/toast.js"></script>
   </head>
   <body>
     <div id="qunit-container">

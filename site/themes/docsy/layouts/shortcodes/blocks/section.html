@@ -6,7 +6,11 @@
 <section class="row td-box td-box--{{ $col_id }} td-box--gradient td-box--height-{{ $height }}">
 	<div class="col">
 		<div class="row {{ $type }}">
-			{{ .Inner | markdownify}}
+			{{ if eq .Page.File.Ext "md" }}
+				{{ .Inner | markdownify }}
+			{{ else }}
+				{{ .Inner | htmlUnescape | safeHTML }}
+			{{ end }}
 		</div>
 	</div>
 </section>

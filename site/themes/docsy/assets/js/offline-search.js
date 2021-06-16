@@ -45,7 +45,15 @@
             (data) => {
                 idx = lunr(function () {
                     this.ref('ref');
-                    this.field('title', { boost: 2 });
+
+                    // If you added more searchable fields to the search index, list them here.
+                    // Here you can specify searchable fields to the search index - e.g. individual toxonomies for you project
+                    // With "boost" you can add weighting for specific (default weighting without boost: 1)
+                    this.field('title', { boost: 5 });
+                    this.field('categories', { boost: 3 });
+                    this.field('tags', { boost: 3 });
+                    // this.field('projects', { boost: 3 }); // example for an individual toxonomy called projects
+                    this.field('description', { boost: 2 });
                     this.field('body');
 
                     data.forEach((doc) => {
@@ -100,7 +108,7 @@
                 })
                 .slice(
                     0,
-                    $targetSearchInput.data('offlnie-search-max-results')
+                    $targetSearchInput.data('offline-search-max-results')
                 );
 
             //
@@ -180,8 +188,13 @@
                 });
             });
 
+            // Enable inline styles in popover.
+            const whiteList = $.fn.tooltip.Constructor.Default.whiteList;
+            whiteList['*'].push('style');
+
             $targetSearchInput
                 .data('content', $html[0].outerHTML)
+                .popover({ whiteList: whiteList })
                 .popover('show');
         };
     });

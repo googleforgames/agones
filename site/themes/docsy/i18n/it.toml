@@ -35,9 +35,21 @@ other = "Creato"
 other = "Ultima modifica"
 [post_edit_this]
 other = "Modifica"
+[post_create_child_page]
+other = "Create child page"
 [post_create_issue]
 other = "Crea issue di documentazione"
 [post_create_project_issue]
 other = "Crea issue di progetto"
 [post_posts_in]
 other = "Post in"
+
+# Print support
+[print_printable_section]
+other = "This the multi-page printable view of this section."
+[print_click_to_print]
+other = "Click here to print"
+[print_show_regular]
+other = "Return to the regular view of this page"
+[print_entire_section]
+other = "Print entire section"

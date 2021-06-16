@@ -1,14 +1,23 @@
 {{/* The "active" toggle here may delay rendering, so we only cache this side bar menu for bigger sites. */}}
-{{ $shouldCache := ge (len .Site.Pages) 2000 }}
+{{ $sidebarCacheLimit := cond (isset .Site.Params.ui "sidebar_cache_limit") .Site.Params.ui.sidebar_cache_limit 2000 }}
+{{ $shouldCache := ge (len .Site.Pages) $sidebarCacheLimit }}
+{{ $sidebarCacheTypeRoot := cond (isset .Site.Params.ui "sidebar_cache_type_root") .Site.Params.ui.sidebar_cache_type_root false }}
 {{ if $shouldCache }}
-{{ $mid := printf "m-%s" (.RelPermalink | anchorize) }}
-<script>
- $(function() {
- $("#td-sidebar-menu #{{ $mid }}").toggleClass("active"); 
- $("#td-sidebar-menu").toggleClass("d-none"); 
-});
-</script>
-{{ partialCached "sidebar-tree.html" . .CurrentSection.RelPermalink }}
+  {{ $mid := printf "m-%s" (.RelPermalink | anchorize) }}
+  <script>
+    $(function() {
+    $("#td-sidebar-menu a").removeClass("active");
+    $("#td-sidebar-menu #{{ $mid }}").addClass("active"); 
+    $("#td-sidebar-menu #{{ $mid }}-li span").addClass("td-sidebar-nav-active-item"); 
+    $("#td-sidebar-menu #{{ $mid }}").parents("li").addClass("active-path"); 
+    $("#td-sidebar-menu li.active-path").addClass("show"); 
+    $("#td-sidebar-menu li.active-path").siblings("li").addClass("show"); 
+    $("#td-sidebar-menu #{{ $mid }}-li").siblings("li").addClass("show");  
+    $("#td-sidebar-menu #{{ $mid }}-li").children("ul").children("li").addClass("show");  
+    $("#td-sidebar-menu").toggleClass("d-none"); 
+    });
+  </script>
+  {{ partialCached "sidebar-tree.html" . .FirstSection.RelPermalink }}
 {{ else }}
-{{ partial "sidebar-tree.html" . }}
+  {{ partial "sidebar-tree.html" . }}
 {{ end }}
