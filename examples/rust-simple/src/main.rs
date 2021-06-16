@@ -44,7 +44,8 @@ async fn run() -> Result<(), String> {
         }
     };
 
-    let _health = sdk.spawn_health_task(Duration::from_secs(2));
+    let health = sdk.health_check();
+    health.send(()).await.map_err(|_| "health receiver closed".to_owned())?;
 
     let _watch = {
         let mut watch_client = sdk.clone();

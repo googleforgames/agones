@@ -108,24 +108,16 @@ impl Sdk {
         Ok(self.client.shutdown(empty()).await.map(|_| ())?)
     }
 
-    /// Creates a task that sends a health ping to the SDK server on every interval
-    /// tick. It is recommended to only have 1 of these at a time.
-    pub fn spawn_health_task(&self, interval: Duration) -> tokio::sync::oneshot::Sender<()> {
+    /// Returns a [`tokio::sync::mpsc::Sender`] that will emit a health check
+    /// every time a message is sent on the channel.
+    pub fn health_check(&self) -> tokio::sync::mpsc::Sender<()> {
         let mut health_client = self.clone();
-        let (tx, mut rx) = tokio::sync::oneshot::channel();
+        let (tx, mut rx) = tokio::sync::mpsc::channel(10);
 
         tokio::task::spawn(async move {
             let health_stream = async_stream::stream! {
-                let mut health_interval = tokio::time::interval(interval);
-                loop {
-                    tokio::select! {
-                        _ = health_interval.tick() => {
-                            yield empty();
-                        }
-                        _ = &mut rx => {
-                            break;
-                        }
-                    }
+                while rx.recv().await.is_some() {
+                    yield empty();
                 }
             };
 

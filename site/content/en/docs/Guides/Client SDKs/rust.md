@@ -77,11 +77,13 @@ async fn main() {
 }
 ```
 
-To send [health checks]({{< relref "_index.md#health" >}}), call `sdk.spawn_health_task`, which will create a [`tokio::task`](https://docs.rs/tokio/1.7.0/tokio/task/index.html) that will send a health ping at the specified cadence until the task is dropped/cancelled.
+To send [health checks]({{< relref "_index.md#health" >}}), call `sdk.health_check`, which will return a [`tokio::sync::mpsc::Sender::<()>`](https://docs.rs/tokio/1.7.0/tokio/sync/mpsc/struct.Sender.html) which will send a health check every time a message is posted to the channel.
 
 ```rust
-// Send a health ping ever 2 seconds
-let _health = sdk.spawn_health_task(Duration::from_secs(2));
+let health = sdk.health_check();
+if health.send(()).await.is_err() {
+    eprintln!("the health receiver was closed");
+}
 ```
 
 To mark the [game session as ready]({{< relref "_index.md#ready" >}}) call `sdk.ready()`.

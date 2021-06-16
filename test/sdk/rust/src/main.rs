@@ -56,7 +56,10 @@ fn run_sync() -> Result<(), String> {
         }
     })?;
 
-    let _health = sdk.spawn_health_task(Duration::from_secs(2));
+    let health = sdk.health_check();
+    Handle::current().block_on(async {
+        health.send(()).await.map_err(|_| "health receiver closed".to_owned())
+    })?;
 
     let _watch = {
         let mut watch_client = sdk.clone();
@@ -279,7 +282,8 @@ async fn run_async() -> Result<(), String> {
         Err(_) => return Err("timed out attempting to connect to the sidecar".to_owned()),
     };
 
-    let _health = sdk.spawn_health_task(Duration::from_secs(2));
+    let health = sdk.health_check();
+    health.send(()).await.map_err(|_| "health receiver closed".to_owned())?;
 
     let _watch = {
         let mut watch_client = sdk.clone();
