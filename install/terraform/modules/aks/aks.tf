@@ -15,45 +15,13 @@
 
 terraform {
   required_providers {
-    # azuread = {
-    #   source = "hashicorp/azuread"
-    #   version = "~> 1.5"
-    # }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 2.63"
     }
-    # random = {
-    #   source  = "hashicorp/random"
-    #   version = "~> 3.1"
-    # }
   }
   required_version = ">= 0.12.26"
 }
-
-# 2021.06.16-WeetA34: Commented because not used for now
-# # Create Service Principal password
-# resource "azuread_service_principal_password" "aks" {
-#   end_date             = "2299-12-30T23:00:00Z" # Forever
-#   service_principal_id = azuread_service_principal.aks.id
-#   value                = random_string.password.result
-# }
-
-# # Create Azure AD Application for Service Principal
-# resource "azuread_application" "aks" {
-#   name = "agones-sp"
-# }
-
-# # Create Service Principal
-# resource "azuread_service_principal" "aks" {
-#   application_id = azuread_application.aks.application_id
-# }
-
-# # Generate random string to be used for Service Principal Password
-# resource "random_string" "password" {
-#   length  = 32
-#   special = true
-# }
 
 resource "azurerm_resource_group" "agones_rg" {
   location = var.resource_group_location
