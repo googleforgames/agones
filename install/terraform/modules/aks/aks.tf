@@ -28,7 +28,7 @@ terraform {
     #   version = "~> 3.1"
     # }
   }
-  required_version = ">= 0.12.6"
+  required_version = ">= 0.12.26"
 }
 
 # 2021.06.16-WeetA34: Commented because not used for now
