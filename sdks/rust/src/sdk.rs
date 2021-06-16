@@ -50,10 +50,6 @@ impl Sdk {
     /// to the SDK server, so it is recommended to wrap this in a
     /// [timeout](https://docs.rs/tokio/1.6.0/tokio/time/fn.timeout.html).
     pub async fn new(port: Option<u16>, keep_alive: Option<Duration>) -> Result<Self> {
-        // TODO: Add TLS? For some reason the original Cargo.toml was enabling
-        // grpcio's openssl features, but AFAICT the SDK and sidecar only ever
-        // communicate via a non-TLS connection, so seems like we could just
-        // use the simpler client setup code if TLS is absolutely never needed
         let addr: http::Uri = format!(
             "http://localhost:{}",
             port.unwrap_or_else(|| {
@@ -67,15 +63,6 @@ impl Sdk {
 
         let builder = tonic::transport::channel::Channel::builder(addr)
             .keep_alive_timeout(keep_alive.unwrap_or_else(|| Duration::from_secs(30)));
-
-        // let mut root_store = rustls::RootCertStore::empty();
-        // root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-        // let mut rusttls_config = rustls::ClientConfig::new();
-        // rusttls_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
-        // rusttls_config.root_store = root_store;
-        // let tls_config =
-        //     tonic::transport::ClientTlsConfig::new().rustls_client_config(rusttls_config);
-        // builder = builder.tls_config(tls_config)?;
 
         let channel = builder.connect().await?;
         let mut client = SdkClient::new(channel.clone());
@@ -107,26 +94,22 @@ impl Sdk {
     }
 
     /// Marks the Game Server as ready to receive connections
-    #[inline]
     pub async fn ready(&mut self) -> Result<()> {
         Ok(self.client.ready(empty()).await.map(|_| ())?)
     }
 
     /// Allocate the Game Server
-    #[inline]
     pub async fn allocate(&mut self) -> Result<()> {
         Ok(self.client.allocate(empty()).await.map(|_| ())?)
     }
 
     /// Marks the Game Server as ready to shutdown
-    #[inline]
     pub async fn shutdown(&mut self) -> Result<()> {
         Ok(self.client.shutdown(empty()).await.map(|_| ())?)
     }
 
     /// Creates a task that sends a health ping to the SDK server on every interval
     /// tick. It is recommended to only have 1 of these at a time.
-    #[inline]
     pub fn spawn_health_task(&self, interval: Duration) -> tokio::sync::oneshot::Sender<()> {
         let mut health_client = self.clone();
         let (tx, mut rx) = tokio::sync::oneshot::channel();
@@ -153,7 +136,6 @@ impl Sdk {
     }
 
     /// Set a Label value on the backing GameServer record that is stored in Kubernetes
-    #[inline]
     pub async fn set_label(
         &mut self,
         key: impl Into<String>,
@@ -170,7 +152,6 @@ impl Sdk {
     }
 
     /// Set a Annotation value on the backing Gameserver record that is stored in Kubernetes
-    #[inline]
     pub async fn set_annotation(
         &mut self,
         key: impl Into<String>,
@@ -187,7 +168,6 @@ impl Sdk {
     }
 
     /// Returns most of the backing GameServer configuration and Status
-    #[inline]
     pub async fn get_gameserver(&mut self) -> Result<GameServer> {
         Ok(self
             .client
@@ -199,7 +179,6 @@ impl Sdk {
     /// Reserve marks the Game Server as Reserved for a given duration, at which point
     /// it will return the GameServer to a Ready state.
     /// Do note, the smallest unit available in the time.Duration argument is one second.
-    #[inline]
     pub async fn reserve(&mut self, duration: Duration) -> Result<()> {
         Ok(self
             .client
@@ -211,7 +190,6 @@ impl Sdk {
     }
 
     /// Watch the backing GameServer configuration on updated
-    #[inline]
     pub async fn watch_gameserver(&mut self) -> Result<WatchStream> {
         Ok(self
             .client
