@@ -32,20 +32,15 @@ async fn main() {
 
 async fn run() -> Result<(), String> {
     println!("Creating SDK instance");
-    let mut sdk = match tokio::time::timeout(
-        Duration::from_secs(30),
-        agones::Sdk::new(None /* default port */, None /* keep_alive */),
-    )
-    .await
-    {
-        Ok(sdk) => sdk.map_err(|e| format!("unable to create sdk client: {}", e))?,
-        Err(_) => {
-            return Err("timed out attempting to connect to the sidecar".to_owned());
-        }
-    };
+    let mut sdk = agones::Sdk::new(None /* default port */, None /* keep_alive */)
+        .await
+        .map_err(|e| format!("unable to create sdk client: {}", e))?;
 
     let health = sdk.health_check();
-    health.send(()).await.map_err(|_| "health receiver closed".to_owned())?;
+    health
+        .send(())
+        .await
+        .map_err(|_| "health receiver closed".to_owned())?;
 
     let _watch = {
         let mut watch_client = sdk.clone();

@@ -18,6 +18,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("health ping connection failure: `{0}`")]
     HealthPingConnectionFailure(String),
+    #[error(transparent)]
+    TimedOut(#[from] tokio::time::error::Elapsed),
     #[error("failed to parse connection uri")]
     InvalidUri(#[from] http::uri::InvalidUri),
     #[error("rpc failure")]

@@ -45,20 +45,15 @@ fn run_sync() -> Result<(), String> {
 
     println!("rust: Creating SDK instance");
     let mut sdk = Handle::current().block_on(async move {
-        match tokio::time::timeout(
-            Duration::from_secs(30),
-            agones::Sdk::new(None /* default port */, None /* keep_alive */),
-        )
-        .await
-        {
-            Ok(sdk) => sdk.map_err(|e| format!("unable to create sdk client: {}", e)),
-            Err(_) => Err("timed out attempting to connect to the sidecar".to_owned()),
-        }
+        agones::Sdk::new(None /* default port */, None /* keep_alive */)
+            .await
+            .map_err(|e| format!("unable to create sdk client: {}", e))
     })?;
 
     let health = sdk.health_check();
-    Handle::current().block_on(async {
-        health.send(()).await.map_err(|_| "health receiver closed".to_owned())
+    health.try_send(()).map_err(|e| match e {
+        tokio::sync::mpsc::error::TrySendError::Full(_) => "health receiver full".to_owned(),
+        tokio::sync::mpsc::error::TrySendError::Closed(_) => "health receiver closed".to_owned(),
     })?;
 
     let _watch = {
@@ -283,7 +278,10 @@ async fn run_async() -> Result<(), String> {
     };
 
     let health = sdk.health_check();
-    health.send(()).await.map_err(|_| "health receiver closed".to_owned())?;
+    health
+        .send(())
+        .await
+        .map_err(|_| "health receiver closed".to_owned())?;
 
     let _watch = {
         let mut watch_client = sdk.clone();

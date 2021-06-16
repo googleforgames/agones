@@ -46,9 +46,11 @@ impl Sdk {
     /// or else falls back to the `AGONES_SDK_GRPC_PORT` environment variable,
     /// or defaults to 9357.
     ///
-    /// Note that this function will loop indefinitely until a connection is made
-    /// to the SDK server, so it is recommended to wrap this in a
-    /// [timeout](https://docs.rs/tokio/1.6.0/tokio/time/fn.timeout.html).
+    /// # Errors
+    ///
+    /// - The port specified in `AGONES_SDK_GRPC_PORT` can't be parsed as a `u16`.
+    /// - A connection cannot be established with an Agones SDK server
+    /// - The handshake takes longer than 30 seconds
     pub async fn new(port: Option<u16>, keep_alive: Option<Duration>) -> Result<Self> {
         let addr: http::Uri = format!(
             "http://localhost:{}",
@@ -68,18 +70,17 @@ impl Sdk {
         let mut client = SdkClient::new(channel.clone());
         let alpha = Alpha::new(channel);
 
-        // Loop until we connect. The original implementation just looped once
-        // every second up to a maximum of 30 seconds, but it's better for the
-        // external caller to wrap this in their own timeout
-        let mut connect_interval = tokio::time::interval(Duration::from_millis(100));
+        tokio::time::timeout(Duration::from_secs(30), async {
+            let mut connect_interval = tokio::time::interval(Duration::from_millis(100));
 
-        loop {
-            connect_interval.tick().await;
+            loop {
+                connect_interval.tick().await;
 
-            if client.get_game_server(empty()).await.is_ok() {
-                break;
+                if client.get_game_server(empty()).await.is_ok() {
+                    break;
+                }
             }
-        }
+        }).await?;
 
         Ok(Self {
             client,

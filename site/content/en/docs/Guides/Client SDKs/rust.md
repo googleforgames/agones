@@ -57,23 +57,19 @@ Also note that the SDK is [`async`](https://doc.rust-lang.org/std/keyword.async.
 ```toml
 [dependencies]
 agones = { path = "../agones/sdks/rust" }
-tokio = { version = "1.7", features = ["macros", "sync", "time"] }
+tokio = { version = "1.7", features = ["macros", "sync"] }
 ```
 
-To begin working with the SDK, create an instance of it. Note that this function will try to connect and handshake indefinitely, so it's recommended to wrap it in a [`timeout`](https://docs.rs/tokio/1.7.0/tokio/time/fn.timeout.html).
+To begin working with the SDK, create an instance of it.
 
 ```rust
 use std::time::Duration;
 
 #[tokio::main]
 async fn main() {
-    let mut sdk = tokio::time::timeout(
-        Duration::from_secs(30),
-        agones::Sdk::new(None /* default port */, None /* keep_alive */),
-    )
-    .await
-    .expect("timed out connecting to SDK server")
-    .expect("failedt to connect to SDK server");
+    let mut sdk = agones::Sdk::new(None /* default port */, None /* keep_alive */)
+        .await
+        .expect("failedt to connect to SDK server");
 }
 ```
 
