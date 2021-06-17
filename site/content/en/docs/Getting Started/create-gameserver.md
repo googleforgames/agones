@@ -143,9 +143,9 @@ simple-game-server-7pjrq   Ready   35.233.183.43   7190   agones   4m
 ```
 
 {{< alert title="Note" color="info">}}
- If you have Agones installed on minikube the address printed will not be
-  reachable from the host machine. Instead, use the output of `minikube ip` for
-  the following section.
+If you have Agones installed on minikube, or other local Kubernetes tooling, and you are having issues connecting
+to the `GameServer`, please check the 
+[Minikube local connection workarounds]({{% ref "/docs/Installation/Creating Cluster/minikube.md#local-connection-workarounds" %}}).
 {{< /alert >}}
 
 ### 3. Connect to the GameServer
