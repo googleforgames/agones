@@ -16,4 +16,10 @@
 
 set -ex
 
+protos=/go/src/agones.dev/agones/proto
+dest=/go/src/agones.dev/agones/sdks/rust
+
+echo "Copying protobuffers to rust sdk"
+cp -r ${protos} ${dest}
+
 echo "Rust code is generated at build time"
