@@ -32,7 +32,7 @@ variable "cluster" {
     "project"                 = "agones"
     "network"                 = "default"
     "subnetwork"              = ""
-    "kubernetesVersion"       = "1.18"
+    "kubernetesVersion"       = "1.19"
     "windowsInitialNodeCount" = "0"
     "windowsMachineType"      = "e2-standard-4"
   }
