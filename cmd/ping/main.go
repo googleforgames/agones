@@ -91,7 +91,9 @@ func serveHTTP(ctlConf config, h healthcheck.Handler) func() {
 
 	go func() {
 		logger.Info("starting HTTP Server...")
-		logger.WithError(srv.ListenAndServe()).Fatal("could not start HTTP server")
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.WithError(err).Fatal("could not start HTTP server")
+		}
 	}()
 
 	return func() {
@@ -101,6 +103,7 @@ func serveHTTP(ctlConf config, h healthcheck.Handler) func() {
 		if err := srv.Shutdown(ctx); err != nil {
 			logger.WithError(err).Fatal("could not shut down HTTP server")
 		}
+		logger.Info("HTTP server was gracefully shut down")
 	}
 }
 

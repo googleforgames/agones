@@ -19,6 +19,7 @@ import (
 	"context"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -111,6 +112,9 @@ func (u *udpServer) readWriteLoop(ctx context.Context) {
 				b := make([]byte, 1024)
 				_, sender, err := u.conn.ReadFrom(b)
 				if err != nil {
+					if ctx.Err() != nil && err == os.ErrClosed {
+						return
+					}
 					u.logger.WithError(err).Error("error reading udp packet")
 					continue
 				}
