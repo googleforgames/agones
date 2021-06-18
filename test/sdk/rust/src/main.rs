@@ -50,11 +50,35 @@ fn run_sync() -> Result<(), String> {
             .map_err(|e| format!("unable to create sdk client: {}", e))
     })?;
 
-    let health = sdk.health_check();
-    health.try_send(()).map_err(|e| match e {
-        tokio::sync::mpsc::error::TrySendError::Full(_) => "health receiver full".to_owned(),
-        tokio::sync::mpsc::error::TrySendError::Closed(_) => "health receiver closed".to_owned(),
-    })?;
+    // Spawn a task that will send health checks every 2 seconds. If this current
+    // thread/task panics or dropped, the health check will also be stopped
+    let _health = {
+        let health_tx = sdk.health_check();
+        let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
+
+        Handle::current().spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(2));
+
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        if health_tx
+                            .send(())
+                            .await.is_err() {
+                            eprintln!("Health check receiver was dropped");
+                            break;
+                        }
+                    }
+                    _ = &mut rx => {
+                        println!("Health check task canceled");
+                        break;
+                    }
+                }
+            }
+        });
+
+        tx
+    };
 
     let _watch = {
         let mut watch_client = sdk.clone();
@@ -277,11 +301,33 @@ async fn run_async() -> Result<(), String> {
         Err(_) => return Err("timed out attempting to connect to the sidecar".to_owned()),
     };
 
-    let health = sdk.health_check();
-    health
-        .send(())
-        .await
-        .map_err(|_| "health receiver closed".to_owned())?;
+    let _health = {
+        let health_tx = sdk.health_check();
+        let (tx, mut rx) = tokio::sync::oneshot::channel::<()>();
+
+        tokio::task::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(2));
+
+            loop {
+                tokio::select! {
+                    _ = interval.tick() => {
+                        if health_tx
+                            .send(())
+                            .await.is_err() {
+                            eprintln!("Health check receiver was dropped");
+                            break;
+                        }
+                    }
+                    _ = &mut rx => {
+                        println!("Health check task canceled");
+                        break;
+                    }
+                }
+            }
+        });
+
+        tx
+    };
 
     let _watch = {
         let mut watch_client = sdk.clone();
