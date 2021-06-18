@@ -206,22 +206,36 @@ Open a web browser to [http://localhost:3000](http://localhost:3000), you should
 
 ### Stackdriver installation
 
-In order to use [Stackdriver monitoring](https://app.google.stackdriver.com) you should [enable Stackdriver Monitoring API](https://cloud.google.com/monitoring/api/enable-api) on Google Cloud Console. You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). Stackdriver exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details could be found here [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
+In order to use [Stackdriver monitoring](https://app.google.stackdriver.com) you must [enable the Monitoring API](https://cloud.google.com/monitoring/api/enable-api) in the Google Cloud Console. You need to grant all the necessary permissions to the users (see [Access Control Guide](https://cloud.google.com/monitoring/access-control)). Stackdriver exporter uses a strategy called Application Default Credentials (ADC) to find your application's credentials. Details can be found in [Setting Up Authentication for Server to Server Production Applications](https://cloud.google.com/docs/authentication/production).
 
-Note that Stackdriver monitoring is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/kubernetes-engine/docs/how-to/monitoring#enabling_stackdriver_monitoring) if it was disabled on your GKE cluster.
+{{< alert title="Note" color="info">}}
+Cloud Operations for GKE (including stackdriver monitoring) is enabled by default on GKE clusters, however you can follow this [guide](https://cloud.google.com/stackdriver/docs/solutions/gke/installing#upgrade-instructions) if it is currently disabled in your GKE cluster.
+{{< /alert >}}
 
-Default metrics exporter is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
+The default metrics exporter installed with Agones is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
 ```
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
 With this configuration only Stackdriver exporter would be used instead of Prometheus exporter.
 
-Create a Fleet or a Gameserver in order to check that connection with stackdriver API is configured properly and so that you will be able to see the metrics data.
+{{% feature publishVersion="1.16.0" %}}
+#### Using Stackdriver with Workload Identity
 
-Visit [Stackdriver monitoring](https://app.google.stackdriver.com) website, select your project, or choose `Create a new Workspace` and select GCP project where your cluster resides. In [Stackdriver metrics explorer](https://cloud.google.com/monitoring/charts/metrics-explorer) you should be able to find new metrics with prefix `agones/` after a couple of minutes. Choose the metrics you are interested in and add to a single or separate graphs. Select `Kubernetes Container` resource type for each of them. You can create multiple graphs, save them into your dashboard and use various aggregation parameters and reducers for each graph.
+If you would like to enable stackdriver in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
 
-Example of the dashboard appearance is provided below:
+1. When setting up the Google service account following the instructions for [Authenticating to Google Cloud](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity#authenticating_to), create two IAM policy bindings, one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-controller]` and one for `serviceAccount:PROJECT_ID.svc.id.goog[agones-system/agones-allocator]`.
+
+1. Pass parameters to helm when installing Agones to add annotations to the `agones-controller` and `agones-allocator` Kubernetes service accounts:
+
+```
+helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
+```
+{{% /feature %}}
+
+To verify that metrics are being sent to Stackdriver, create a Fleet or a Gameserver and look for the metrics to show up in the Stackdriver dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
+
+An example of a custom dashboard is:
 
 ![stackdriver monitoring dashboard](../../../images/stackdriver-metrics-dashboard.png)
 
