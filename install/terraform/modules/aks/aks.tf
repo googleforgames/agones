@@ -60,7 +60,7 @@ resource "azurerm_kubernetes_cluster" "agones" {
   resource_group_name = azurerm_resource_group.agones_rg.name
   dns_prefix          = "agones"
 
-  kubernetes_version = "1.18.14"
+  kubernetes_version = "1.19.11"
 
   default_node_pool {
     name                  = "default"

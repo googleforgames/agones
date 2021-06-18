@@ -25,7 +25,7 @@ While not required, you may wish to go through the [Create a Game Server]({{< re
 
 Let's create a Fleet using the following command :
 
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
@@ -38,7 +38,7 @@ fleet.agones.dev/simple-game-server created
 This has created a Fleet record inside Kubernetes, which in turn creates two warm [GameServers]({{< ref "/docs/Reference/gameserver.md" >}})
 that are available to be allocated for a game session.
 
-```
+```bash
 kubectl get fleet
 ```
 It should look something like this:
@@ -63,7 +63,7 @@ For the full details of the YAML file head to the [Fleet Specification Guide]({{
 
 Let's wait for the two `GameServers` to become ready.
 
-```
+```bash
 watch kubectl describe fleet simple-game-server
 ```
 
@@ -156,7 +156,7 @@ are often used in conjunction.
 
 {{< ghlink href="/examples/simple-game-server/gameserverallocation.yaml" >}}This example{{< /ghlink >}} uses the label selector to specifically target the `simple-game-server` fleet that we just created.
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
@@ -201,7 +201,7 @@ of the `GameServer`, in case you want to use it to retrieve more details.
 We can also check to see how many `GameServers` you have `Allocated` vs `Ready` with the following command
 ("gs" is shorthand for "gameserver").
 
-```
+```bash
 kubectl get gs
 ```
 
@@ -223,7 +223,7 @@ simple-game-server-sdhzn-wnhsw   Ready       192.168.122.205   7478   minikube  
 
 A handy trick for checking to see how many `GameServers` you have `Allocated` vs `Ready`, run the following:
 
-```
+```bash
 kubectl get gs
 ```
 
@@ -251,7 +251,7 @@ Let's scale down our Fleet to 0 (yep! you can do that!), and watch what happens.
 Run `kubectl scale fleet simple-game-server --replicas=0` to change Replicas count from 5 to 0.
 
 It may take a moment for all the `GameServers` to shut down, so let's watch them all and see what happens:
-```
+```bash
 watch kubectl get gs
 ```
 
@@ -272,7 +272,7 @@ grow and shrink.
 Since we've only got one allocation, we'll just grab the details of the IP and port of the
 only allocated `GameServer`:
 
-```
+```bash
 kubectl get gameservers | grep Allocated | awk '{print $3":"$4 }'
 ```
 
@@ -304,7 +304,7 @@ Let's take this for a spin! Run `kubectl scale fleet simple-game-server --replic
 
 Let's also allocate ourselves a `GameServer`
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 

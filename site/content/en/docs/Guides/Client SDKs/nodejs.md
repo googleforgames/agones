@@ -18,7 +18,7 @@ Check the [Client SDK Documentation]({{< relref "_index.md" >}}) for more detail
 Add the agones dependency to your project:
 
 ```sh
-$ npm install @google-cloud/agones-sdk
+npm install @google-cloud/agones-sdk
 ```
 
 If you need to download the source, rather than install from NPM, you can find it on 

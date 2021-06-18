@@ -117,11 +117,17 @@ func main() {
 ```
 In order to create GS using provided example, you can run it as a Kubernetes Job:
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/crd-client/create-gs.yaml --namespace agones-system
-$ kubectl get pods --namespace agones-system
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/crd-client/create-gs.yaml --namespace agones-system
+kubectl get pods --namespace agones-system
+```
+```
 NAME                                 READY   STATUS      RESTARTS   AGE
 create-gs-6wz86-7qsm5                0/1     Completed   0          6s
-$ kubectl logs create-gs-6wz86-7qsm5  --namespace agones-system
+```
+```bash
+kubectl logs create-gs-6wz86-7qsm5  --namespace agones-system
+```
+```
 {"message":"\u0026{0xc0001dde00 default}","severity":"info","source":"main","time":"2020-04-21T11:14:00.477576428Z"}
 {"message":"New GameServer name is: helm-test-server-fxfgg","severity":"info","time":"2020-04-21T11:14:00.516024697Z"}
 ```
@@ -139,30 +145,38 @@ The Kubernetes API can be authenticated and exposed locally through the
 For example:
 
 ```bash
-$ kubectl proxy &
+kubectl proxy &
+```
+```
 Starting to serve on 127.0.0.1:8001
+```
 
-# list all Agones endpoints
-$ curl http://localhost:8001/apis | grep agones -A 5 -B 5
-...
+### List all Agones endpoints
+```bash
+curl http://localhost:8001/apis | grep agones -A 5 -B 5
+```
+```
+{
+    "name": "agones.dev",
+    "versions": [
     {
-      "name": "agones.dev",
-      "versions": [
-        {
-          "groupVersion": "agones.dev/v1",
-          "version": "v1"
-        }
-      ],
-      "preferredVersion": {
         "groupVersion": "agones.dev/v1",
         "version": "v1"
-      },
-      "serverAddressByClientCIDRs": null
     }
-...
+    ],
+    "preferredVersion": {
+    "groupVersion": "agones.dev/v1",
+    "version": "v1"
+    },
+    "serverAddressByClientCIDRs": null
+}
+```
 
-# List Agones resources
-$ curl http://localhost:8001/apis/agones.dev/v1
+### List Agones resources
+```bash
+curl http://localhost:8001/apis/agones.dev/v1
+```
+```
 {
   "kind": "APIResourceList",
   "apiVersion": "v1",
@@ -189,9 +203,13 @@ $ curl http://localhost:8001/apis/agones.dev/v1
     }
   ]
 }
+```
 
-# list all gameservers in the default namespace
-$ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
+### List all gameservers in the default namespace
+```bash
+curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
+```
+```
 {
     "apiVersion": "agones.dev/v1",
     "items": [
@@ -255,11 +273,13 @@ $ curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/gameservers
         "selfLink": "/apis/agones.dev/v1/namespaces/default/gameservers"
     }
 }
+```
 
-# allocate a gameserver from a fleet named 'simple-game-server', with GameServerAllocation
-
-$ curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"agones.dev/fleet":"simple-game-server"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
-
+### Allocate a gameserver from a fleet named 'simple-game-server', with GameServerAllocation
+```bash
+curl -d '{"apiVersion":"allocation.agones.dev/v1","kind":"GameServerAllocation","spec":{"required":{"matchLabels":{"agones.dev/fleet":"simple-game-server"}}}}' -H "Content-Type: application/json" -X POST http://localhost:8001/apis/allocation.agones.dev/v1/namespaces/default/gameserverallocations
+```
+```
 {
     "kind": "GameServerAllocation",
     "apiVersion": "allocation.agones.dev/v1",

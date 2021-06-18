@@ -69,7 +69,7 @@ spec:
       {{- if .Values.agones.createPriorityClass }}
       priorityClassName: {{ .Values.agones.priorityClassName }}
       {{- end }}
-      serviceAccountName: {{ .Values.agones.serviceaccount.controller }}
+      serviceAccountName: {{ .Values.agones.serviceaccount.controller.name }}
       containers:
       - name: agones-controller
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.controller.name}}:{{ default .Values.agones.image.tag .Values.agones.image.controller.tag }}"
@@ -94,7 +94,7 @@ spec:
         - name: SIDECAR_MEMORY_LIMIT
           value: {{ .Values.agones.image.sdk.memoryLimit | quote }}
         - name: SDK_SERVICE_ACCOUNT
-          value: {{ .Values.agones.serviceaccount.sdk | quote }}
+          value: {{ .Values.agones.serviceaccount.sdk.name | quote }}
         - name: PROMETHEUS_EXPORTER
           value: {{ .Values.agones.metrics.prometheusEnabled | quote }}
         - name: STACKDRIVER_EXPORTER

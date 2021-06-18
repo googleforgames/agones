@@ -18,9 +18,9 @@ description: >
 To install the chart with the release name `my-release` using our stable helm repository:
 
 ```bash
-$ helm repo add agones https://agones.dev/chart/stable
-$ helm repo update
-$ helm install my-release --namespace agones-system --create-namespace agones/agones
+helm repo add agones https://agones.dev/chart/stable
+helm repo update
+helm install my-release --namespace agones-system --create-namespace agones/agones
 ```
 
 _We recommend installing Agones in its own namespaces, such as `agones-system` as shown above.
@@ -43,8 +43,8 @@ By default Agones is configured to work with game servers deployed in the `defau
 For example to use `default` **and** `xbox` namespaces:
 
 ```bash
-$ kubectl create namespace xbox
-$ helm install my-release agones/agones --set "gameservers.namespaces={default,xbox}" --namespace agones-system
+kubectl create namespace xbox
+helm install my-release agones/agones --set "gameservers.namespaces={default,xbox}" --namespace agones-system
 ```
 
 {{< alert title="Note" color="info">}}
@@ -54,8 +54,8 @@ You need to create your namespaces before installing Agones.
 If you want to add a new namespace afterward upgrade your release:
 
 ```bash
-$ kubectl create namespace ps4
-$ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" --namespace agones-system
+kubectl create namespace ps4
+helm upgrade my-release agones/agones --reuse-values --set "gameservers.namespaces={default,xbox,ps4}" --namespace agones-system
 ```
 
 ### Uninstalling the Chart
@@ -63,7 +63,7 @@ $ helm upgrade my-release agones/agones --reuse-values --set "gameservers.namesp
 To uninstall/delete the `my-release` deployment:
 
 ```bash
-$ helm uninstall my-release --namespace=agones-system
+helm uninstall my-release --namespace=agones-system
 ```
 
 ## RBAC
@@ -94,8 +94,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | \`\`                   |
 | `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` |
-| `agones.serviceaccount.controller`                  | Service account name for the controller                                                         | `agones-controller`    |
-| `agones.serviceaccount.sdk`                         | Service account name for the sdk                                                                | `agones-sdk`           |
+| `agones.serviceaccount.controller`                  | Service account name for the controller. **Note**: Will be replaced with `agones.serviceaccount.controller.name` in Agones 1.16 | `agones-controller`    |
+| `agones.serviceaccount.sdk`                         | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16        | `agones-sdk`           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
@@ -184,6 +184,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.serviceaccount.controller.name`             | Service account name for the controller                                                         | `agones-controller`    |
+| `agones.serviceaccount.sdk.name`                    | Service account name for the sdk                                                                | `agones-sdk`           |
+| `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`    |
+| `agones.serviceaccount.allocator.annotations`       | [Annotations][annotations] added to the Agones allocator service account                        | `{}`                   |
+| `agones.serviceaccount.controller.annotations`      | [Annotations][annotations] added to the Agones controller service account                       | `{}`                   |
 |                       |                           |                            |
 {{% /feature %}}
 
@@ -204,7 +209,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
-$ helm install my-release --namespace agones-system \
+helm install my-release --namespace agones-system \
   --set gameservers.minPort=1000,gameservers.maxPort=5000 agones
 ```
 
@@ -213,7 +218,7 @@ The above command will deploy Agones controllers to `agones-system` namespace. A
 Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
 
 ```bash
-$ helm install my-release --namespace agones-system -f values.yaml agones/agones
+helm install my-release --namespace agones-system -f values.yaml agones/agones
 ```
 
 {{< alert title="Tip" color="info">}}
@@ -228,7 +233,9 @@ In order to use `helm test` command described in this section you need to set `h
 
 Check the Agones installation by running the following command:
 ```bash
-$ helm test my-release --cleanup
+helm test my-release --cleanup
+```
+```
 RUNNING: agones-test
 PASSED: agones-test
 ```

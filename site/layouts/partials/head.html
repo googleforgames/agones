@@ -18,6 +18,10 @@
 {{ if eq (getenv "HUGO_ENV") "production" }}
 {{ template "_internal/google_analytics_async.html" . }}
 {{ end }}
+{{ if .Site.Params.prism_syntax_highlighting }}
+<!-- stylesheet for Prism -->
+<link rel="stylesheet" href="{{ "/css/prism.css" | relURL }}"/>
+{{ end }}
 {{ partialCached "head-css.html" . "asdf" }}
 <link rel="stylesheet" type="text/css" href={{ "css/asciinema-player.css" | absURL }} />
 <script
