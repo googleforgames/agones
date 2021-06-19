@@ -18,7 +18,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: agones-allocator
+  name: {{ $.Values.agones.serviceaccount.allocator.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     component: allocator
@@ -101,7 +101,7 @@ spec:
       tolerations:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
       {{- end }}
-      serviceAccountName: agones-allocator
+      serviceAccountName: {{ $.Values.agones.serviceaccount.allocator.name }}
       volumes:
       - name: tls
         secret:
@@ -223,7 +223,10 @@ metadata:
     chart: {{ template "agones.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
-
+{{- if .Values.agones.serviceaccount.allocator.annotations }}
+  annotations:
+{{- toYaml .Values.agones.serviceaccount.allocator.annotations | nindent 4 }}
+{{- end }}
 ---
 # Bind the agones-allocator ServiceAccount to the agones-allocator ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -238,7 +241,7 @@ metadata:
     heritage: {{ $.Release.Service }}
 subjects:
 - kind: ServiceAccount
-  name: agones-allocator
+  name: {{ $.Values.agones.serviceaccount.allocator.name }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
