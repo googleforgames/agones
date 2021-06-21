@@ -561,40 +561,6 @@ func TestControllerRunCacheSync(t *testing.T) {
 	assertCacheEntries(0)
 }
 
-func TestGetRandomlySelectedGS(t *testing.T) {
-	c, _ := newFakeController()
-	c.allocator.topNGameServerCount = 5
-	gsa := &allocationv1.GameServerAllocation{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: defaultNs,
-			Name:      "allocation",
-		},
-		Status: allocationv1.GameServerAllocationStatus{
-			State: allocationv1.GameServerAllocationUnAllocated,
-		},
-	}
-
-	_, gsList := defaultFixtures(10)
-
-	selectedGS := c.allocator.getRandomlySelectedGS(gsa, gsList)
-	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
-	for i := 1; i <= 5; i++ {
-		expectedName := "gs" + strconv.Itoa(i)
-		assert.NotEqual(t, expectedName, selectedGS.ObjectMeta.Name)
-	}
-
-	_, gsList = defaultFixtures(5)
-
-	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
-	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
-
-	_, gsList = defaultFixtures(1)
-
-	selectedGS = c.allocator.getRandomlySelectedGS(gsa, gsList)
-	assert.NotNil(t, "selectedGS can't be nil", selectedGS)
-	assert.Equal(t, "gs1", selectedGS.ObjectMeta.Name)
-}
-
 func TestControllerAllocationUpdateWorkers(t *testing.T) {
 	t.Run("no error", func(t *testing.T) {
 		c, m := newFakeController()
@@ -1553,7 +1519,6 @@ func newFakeControllerWithTimeout(remoteAllocationTimeout time.Duration, totalRe
 	counter := gameservers.NewPerNodeCounter(m.KubeInformerFactory, m.AgonesInformerFactory)
 	api := apiserver.NewAPIServer(m.Mux)
 	c := NewController(api, healthcheck.NewHandler(), counter, m.KubeClient, m.KubeInformerFactory, m.AgonesClient, m.AgonesInformerFactory, remoteAllocationTimeout, totalRemoteAllocationTimeout)
-	c.allocator.topNGameServerCount = 1
 	c.recorder = m.FakeRecorder
 	c.allocator.recorder = m.FakeRecorder
 	return c, m
