@@ -43,6 +43,13 @@ const (
 
 	// NodeExternalDNS is a feature flag to enable/disable node ExternalDNS and InternalDNS use as GameServer address
 	NodeExternalDNS Feature = "NodeExternalDNS"
+
+	// FeatureStateAllocationFilter is a feature flag that enables state filtering on Allocation.
+	FeatureStateAllocationFilter Feature = "StateAllocationFilter"
+
+	// FeaturePlayerAllocationFilter is a feature flag that enables the ability for Allocations to filter based on
+	// player capacity.
+	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
 )
 
 var (
@@ -50,11 +57,13 @@ var (
 	// operational in Agones, and what their default configuration is.
 	// alpha features are disabled.
 	featureDefaults = map[Feature]bool{
-		FeatureExample:               true,
-		FeaturePlayerTracking:        false,
-		FeatureSDKWatchSendOnExecute: true,
-		FeatureRollingUpdateOnReady:  true,
-		NodeExternalDNS:              false,
+		FeatureExample:                true,
+		FeaturePlayerTracking:         false,
+		FeatureSDKWatchSendOnExecute:  true,
+		FeatureRollingUpdateOnReady:   true,
+		NodeExternalDNS:               false,
+		FeatureStateAllocationFilter:  false,
+		FeaturePlayerAllocationFilter: false,
 	}
 
 	// featureGates is the storage of what features are enabled
