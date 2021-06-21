@@ -19,9 +19,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"math/rand"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -73,11 +71,6 @@ const (
 	secretClientKeyName  = "tls.key"
 	secretCACertName     = "ca.crt"
 	allocatorPort        = "443"
-
-	// Instead of selecting the top one, controller selects a random one
-	// from the topNGameServerCount of Ready gameservers
-	// to reduce the contention while allocating gameservers.
-	topNGameServerDefaultCount = 100
 )
 
 const (
@@ -109,7 +102,6 @@ type Allocator struct {
 	recorder                     record.EventRecorder
 	pendingRequests              chan request
 	readyGameServerCache         *ReadyGameServerCache
-	topNGameServerCount          int
 	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 	remoteAllocationTimeout      time.Duration
 	totalRemoteAllocationTimeout time.Duration
@@ -138,7 +130,6 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretLister:                 secretInformer.Lister(),
 		secretSynced:                 secretInformer.Informer().HasSynced,
 		readyGameServerCache:         readyGameServerCache,
-		topNGameServerCount:          topNGameServerDefaultCount,
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
@@ -605,24 +596,6 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 		err = lastConflictErr
 	}
 	return err
-}
-
-// getRandomlySelectedGS selects a GS from the set of Gameservers randomly. This will reduce the contentions
-func (c *Allocator) getRandomlySelectedGS(gsa *allocationv1.GameServerAllocation, bestGSList []agonesv1.GameServer) *agonesv1.GameServer {
-	seed, err := strconv.Atoi(gsa.ObjectMeta.ResourceVersion)
-	if err != nil {
-		seed = 1234567
-	}
-
-	ln := c.topNGameServerCount
-	if ln > len(bestGSList) {
-		ln = len(bestGSList)
-	}
-
-	startIndex := len(bestGSList) - ln
-	bestGSList = bestGSList[startIndex:]
-	index := rand.New(rand.NewSource(int64(seed))).Intn(ln)
-	return &bestGSList[index]
 }
 
 // newMetrics creates a new gsa latency recorder.
