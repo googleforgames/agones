@@ -109,7 +109,7 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 	}
 
 	if required == nil {
-		return nil, 0, ErrNoGameServerReady
+		return nil, 0, ErrNoGameServer
 	}
 
 	return required.gs, required.index, nil

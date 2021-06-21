@@ -28,6 +28,7 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	multiclusterv1 "agones.dev/agones/pkg/apis/multicluster/v1"
+	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	multiclusterinformerv1 "agones.dev/agones/pkg/client/informers/externalversions/multicluster/v1"
 	multiclusterlisterv1 "agones.dev/agones/pkg/client/listers/multicluster/v1"
 	"agones.dev/agones/pkg/util/apiserver"
@@ -57,9 +58,9 @@ import (
 )
 
 var (
-	// ErrNoGameServerReady is returned when there are no Ready GameServers
+	// ErrNoGameServer is returned when there are no Ready GameServers
 	// available
-	ErrNoGameServerReady = errors.New("Could not find a Ready GameServer")
+	ErrNoGameServer = errors.New("Could not find an Allocatable GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
 	ErrConflictInGameServerSelection = errors.New("The Gameserver was already allocated")
 	// ErrTotalTimeoutExceeded is used to signal that total retry timeout has been exceeded and no additional retries should be made
@@ -99,9 +100,10 @@ type Allocator struct {
 	allocationPolicySynced       cache.InformerSynced
 	secretLister                 corev1lister.SecretLister
 	secretSynced                 cache.InformerSynced
+	gameServerGetter             getterv1.GameServersGetter
 	recorder                     record.EventRecorder
 	pendingRequests              chan request
-	readyGameServerCache         *ReadyGameServerCache
+	allocationCache              *AllocationCache
 	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 	remoteAllocationTimeout      time.Duration
 	totalRemoteAllocationTimeout time.Duration
@@ -121,15 +123,16 @@ type response struct {
 }
 
 // NewAllocator creates an instance of Allocator
-func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer,
-	kubeClient kubernetes.Interface, readyGameServerCache *ReadyGameServerCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
+func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer, gameServerGetter getterv1.GameServersGetter,
+	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *Allocator {
 	ah := &Allocator{
 		pendingRequests:              make(chan request, maxBatchQueue),
 		allocationPolicyLister:       policyInformer.Lister(),
 		allocationPolicySynced:       policyInformer.Informer().HasSynced,
 		secretLister:                 secretInformer.Lister(),
 		secretSynced:                 secretInformer.Informer().HasSynced,
-		readyGameServerCache:         readyGameServerCache,
+		gameServerGetter:             gameServerGetter,
+		allocationCache:              allocationCache,
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
@@ -161,7 +164,7 @@ func (c *Allocator) Run(ctx context.Context) error {
 		return err
 	}
 
-	if err := c.readyGameServerCache.Run(ctx); err != nil {
+	if err := c.allocationCache.Run(ctx); err != nil {
 		return err
 	}
 
@@ -256,13 +259,13 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		return err
 	})
 
-	if err != nil && err != ErrNoGameServerReady && err != ErrConflictInGameServerSelection {
-		c.readyGameServerCache.Resync()
+	if err != nil && err != ErrNoGameServer && err != ErrConflictInGameServerSelection {
+		c.allocationCache.Resync()
 		return nil, err
 	}
 
 	switch err {
-	case ErrNoGameServerReady:
+	case ErrNoGameServer:
 		gsa.Status.State = allocationv1.GameServerAllocationUnAllocated
 	case ErrConflictInGameServerSelection:
 		gsa.Status.State = allocationv1.GameServerAllocationContention
@@ -499,7 +502,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			}
 
 			if list == nil {
-				list = c.readyGameServerCache.ListSortedReadyGameServers()
+				list = c.allocationCache.ListSortedGameServers()
 			}
 
 			gs, index, err := findGameServerForAllocation(req.gsa, list)
@@ -510,7 +513,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			// remove the game server that has been allocated
 			list = append(list[:index], list[index+1:]...)
 
-			if err := c.readyGameServerCache.RemoveFromReadyGameServer(gs); err != nil {
+			if err := c.allocationCache.RemoveGameServer(gs); err != nil {
 				// this seems unlikely, but lets handle it just in case
 				req.response <- response{request: req, gs: nil, err: err}
 				continue
@@ -542,13 +545,13 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 			for {
 				select {
 				case res := <-updateQueue:
-					gs, err := c.readyGameServerCache.PatchGameServerMetadata(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
+					gs, err := c.applyAllocationToGameServer(ctx, res.request.gsa.Spec.MetaPatch, res.gs)
 					if err != nil {
 						if !k8serrors.IsConflict(errors.Cause(err)) {
 							// since we could not allocate, we should put it back
 							// but not if it's a conflict, as the cache is no longer up to date, and
 							// we should wait for it to get updated with fresh info.
-							c.readyGameServerCache.AddToReadyGameServer(gs)
+							c.allocationCache.AddGameServer(gs)
 						}
 						res.err = errors.Wrap(err, "error updating allocated gameserver")
 					} else {
@@ -567,6 +570,34 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 	return updateQueue
 }
 
+// applyAllocationToGameServer patches the inputted GameServer with the allocation metadata changes, and updates it to the Allocated State.
+// Returns the updated GameServer.
+func (c *Allocator) applyAllocationToGameServer(ctx context.Context, fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+	// patch ObjectMeta labels
+	if fam.Labels != nil {
+		if gs.ObjectMeta.Labels == nil {
+			gs.ObjectMeta.Labels = make(map[string]string, len(fam.Labels))
+		}
+		for key, value := range fam.Labels {
+			gs.ObjectMeta.Labels[key] = value
+		}
+	}
+
+	if gs.ObjectMeta.Annotations == nil {
+		gs.ObjectMeta.Annotations = make(map[string]string, len(fam.Annotations))
+	}
+	// apply annotations patch
+	for key, value := range fam.Annotations {
+		gs.ObjectMeta.Annotations[key] = value
+	}
+
+	// add last allocated, so it always gets updated, even if it is already Allocated
+	gs.ObjectMeta.Annotations["agones.dev/last-allocated"] = time.Now().String()
+	gs.Status.State = agonesv1.GameServerStateAllocated
+
+	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
+}
+
 // Retry retries fn based on backoff provided.
 func Retry(backoff wait.Backoff, fn func() error) error {
 	var lastConflictErr error
@@ -583,7 +614,7 @@ func Retry(backoff wait.Backoff, fn func() error) error {
 		switch {
 		case err == nil:
 			return true, nil
-		case err == ErrNoGameServerReady:
+		case err == ErrNoGameServer:
 			return true, err
 		case err == ErrTotalTimeoutExceeded:
 			return true, err
@@ -606,7 +637,7 @@ func (c *Allocator) newMetrics(ctx context.Context) *metrics {
 	}
 	return &metrics{
 		ctx:              ctx,
-		gameServerLister: c.readyGameServerCache.gameServerLister,
+		gameServerLister: c.allocationCache.gameServerLister,
 		logger:           c.baseLogger,
 		start:            time.Now(),
 	}
