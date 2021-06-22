@@ -19,6 +19,8 @@ set -ex
 protos=/go/src/agones.dev/agones/proto
 dest=/go/src/agones.dev/agones/sdks/rust
 
+rm -rf ${dest}/proto
+
 echo "Copying protobuffers to rust sdk"
 cp -r ${protos} ${dest}
 

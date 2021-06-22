@@ -14,8 +14,3 @@ Cargo.lock
 **/*.rs.bk
 
 # End of https://www.gitignore.io/api/rust
-
-# The protocol buffers need to be adjacent to the cargo manifest when publishing
-# due to cargo protections, but for local iteration (without going through images)
-# we don't want to accidentally check them in
-/proto/
