@@ -96,7 +96,7 @@ EOF
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
 
 Set the environment variables and store the client secrets before allocating using gRPC or REST APIs
-```
+```none
 NAMESPACE=default # replace with any namespace
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 KEY_FILE=client.key
@@ -139,7 +139,7 @@ If you encounter problems, explore the following potential root causes:
 
 3. Inspect the `.spec.connectionInfo` for `GameServerAllocationPolicy` for each cluster. Use the cluster connection information in that field to verify that single cluster allocation works. Use the information to verify the connection:
 
-```bash
+```none
 POLICY_NAME=<policy-name>
 POLICY_NAMESPACE=<policy-namespace>
 
@@ -155,6 +155,10 @@ TLS_CA_FILE=ca.crt
 kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.tls\.crt}" | base64 -d > "${CERT_FILE}"
 kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.tls\.key}" | base64 -d > "${KEY_FILE}"
 kubectl get secret "${CLIENT_SECRET_NAME}" -n "${POLICY_NAMESPACE}" -ojsonpath="{.data.ca\.crt}" | base64 -d > "${TLS_CA_FILE}"
+```
+
+```bash
+#!/bin/bash
 
 go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
     --port 443 \

@@ -22,7 +22,7 @@ description: >
 
 Let's create a GameServer using the following command :
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
 ```
 
@@ -35,7 +35,7 @@ gameserver.agones.dev/simple-game-server-4ss4j created
 This has created a GameServer record inside Kubernetes, which has also created a backing [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) to run our simple udp game server code in.
 If you want to see all your running GameServers you can run:
 
-```
+```bash
 kubectl get gameservers
 ```
 It should look something like this:
@@ -61,7 +61,7 @@ For the full details of the YAML file head to the [GameServer Specification Guid
 
 Let's wait for the GameServer state to become `Ready`:
 
-```
+```bash
 watch kubectl describe gameserver
 ```
 
@@ -131,7 +131,7 @@ You might also be interested to see the `Events` section, which outlines when va
 
 Let's retrieve the IP address and the allocated port of your Game Server :
 
-```
+```bash
 kubectl get gs
 ```
 

@@ -141,7 +141,7 @@ tainted with `agones.dev/agones-metrics=true:NoExecute` and labeled with `agones
 
 As an example, to set up a dedicated node pool for Prometheus on GKE, run the following command before installing Prometheus. Alternatively you can taint and label nodes manually.
 
-```
+```bash
 gcloud container node-pools create agones-metrics --cluster=... --zone=... \
   --node-taints agones.dev/agones-metrics=true:NoExecute \
   --node-labels agones.dev/agones-metrics=true \
@@ -213,7 +213,7 @@ Cloud Operations for GKE (including stackdriver monitoring) is enabled by defaul
 {{< /alert >}}
 
 The default metrics exporter installed with Agones is Prometheus. If you are using the [Helm installation]({{< ref "/docs/Installation/Install Agones/helm.md" >}}), you can install or upgrade Agones to use Stackdriver, using the following chart parameters:
-```
+```bash
 helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false my-release-name agones/agones --namespace=agones-system
 ```
 
@@ -228,7 +228,7 @@ If you would like to enable stackdriver in conjunction with [Workload Identity](
 
 1. Pass parameters to helm when installing Agones to add annotations to the `agones-controller` and `agones-allocator` Kubernetes service accounts:
 
-```
+```bash
 helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
 ```
 {{% /feature %}}

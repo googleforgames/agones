@@ -32,8 +32,10 @@ To run in local mode, pass the flag `--local` to the executable.
 
 For example:
 
-```console
-$ ./sdk-server.linux.amd64 --local
+```bash
+./sdk-server.linux.amd64 --local
+```
+```
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:44:37.973139+03:00","version":"1.1.0"}
 {"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:44:37.974585+03:00"}
 {"httpEndpoint":"localhost:9358","message":"Starting SDKServer grpc-gateway...","severity":"info","source":"main","time":"2019-10-30T21:44:37.975086+03:00"}
@@ -62,9 +64,11 @@ happen when live as well.
 
 For example:
 
-```console
-$ wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
-$ ./sdk-server.linux.amd64 --local -f ./gameserver.yaml
+```bash
+wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver.yaml
+./sdk-server.linux.amd64 --local -f ./gameserver.yaml
+```
+```
 {"ctlConf":{"Address":"localhost","IsLocal":true,"LocalFile":"./gameserver.yaml","Delay":0,"Timeout":0,"Test":"","GRPCPort":9357,"HTTPPort":9358},"message":"Starting sdk sidecar","severity":"info","source":"main","time":"2019-10-30T21:47:45.742776+03:00","version":"1.1.0"}
 {"filePath":"/Users/alexander.apalikov/Downloads/agonessdk-server-1.1.0/gameserver.yaml","message":"Reading GameServer configuration","severity":"info","time":"2019-10-30T21:47:45.743369+03:00"}
 {"grpcEndpoint":"localhost:9357","message":"Starting SDKServer grpc service...","severity":"info","source":"main","time":"2019-10-30T21:47:45.759692+03:00"}
@@ -87,12 +91,22 @@ All changes to the GameServer state could be observed and retrieved using Watch(
 
 Example of using HTTP gateway locally:
 
-```console
-$ curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
+```bash
+curl -X POST "http://localhost:9358/ready" -H "accept: application/json" -H "Content-Type: application/json" -d "{}"
+```
+```
 {}
-$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
+```
+```bash
+curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
+```
+```
 {"object_meta":{"creation_timestamp":"-62135596800"},"spec":{"health":{}},"status":{"state":"Ready"}}
-$ curl -X PUT "http://localhost:9358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
-$ curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
+```
+```bash
+curl -X PUT "http://localhost:9358/metadata/label" -H "accept: application/json" -H "Content-Type: application/json" -d "{ \"key\": \"foo\", \"value\": \"bar\"}"
+curl -GET "http://localhost:9358/gameserver" -H "accept: application/json"
+```
+```
 {"object_meta":{"creation_timestamp":"-62135596800","labels":{"agones.dev/sdk-foo":"bar"}},"spec":{"health":{}},"status":{"state":"Ready"}}
 ```

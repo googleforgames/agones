@@ -24,7 +24,7 @@ and you have a running fleet of game servers.
 
 Let's create a Fleet Autoscaler using the following command : 
 
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleetautoscaler.yaml
 ```
 
@@ -38,7 +38,7 @@ This has created a FleetAutoscaler record inside Kubernetes.
 
 ### 2. See the autoscaler status.
 
-```
+```bash
 kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
@@ -95,7 +95,7 @@ to achieve that number. The convergence is achieved in time, which is usually me
 If you're interested in more details for game server allocation, you should consult the [Create a Game Server Fleet]({{< ref "create-fleet.md" >}}) page.
 In here we are only interested in triggering allocations to see the autoscaler in action.
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
@@ -117,7 +117,7 @@ Note the address and port, you might need them later to connect to the server.
 
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
-```
+```bash
 kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
@@ -149,7 +149,7 @@ Last Scale Time has been updated, and a scaling event has been logged.
 
 Double-check the actual number of game server instances and status by running
 
-```
+```bash
 kubectl get gs
 ``` 
 
@@ -167,7 +167,7 @@ simple-game-server-mzhrl-n2sk2   Ready       10.30.64.168   7658     minikube   
 Since we've only got one allocation, we'll just grab the details of the IP and port of the
 only allocated `GameServer`: 
 
-```
+```bash
 kubectl get gameservers | grep Allocated | awk '{print $3":"$4 }'
 ```
 
@@ -188,7 +188,7 @@ You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{
 
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
-```
+```bash
 kubectl describe fleetautoscaler simple-game-server-autoscaler
 ``` 
 
@@ -222,7 +222,7 @@ might stay a bit in 'Unhealthy' state (and its pod in 'Terminating' until it get
 
 Double-check the actual number of game server instances and status by running
 
-```
+```bash
 kubectl get gs
 ``` 
 
@@ -240,7 +240,7 @@ We can also change the configuration of the `FleetAutoscaler` of the running `Fl
 applied live, without interruptions of service.
 
 Run `kubectl edit fleetautoscaler simple-game-server-autoscaler` and set the `bufferSize` field to `5`. 
-]
+
 Let's look at the list of game servers again. Run `watch kubectl get gs`
 until you can see that are 5 ready server instances:
 

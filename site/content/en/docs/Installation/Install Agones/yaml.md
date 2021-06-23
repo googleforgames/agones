@@ -24,7 +24,7 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 If you want to change the parameters in the `install.yaml` file, you can use helm directly to generate a custom file locally, but make sure new parameters correspond to the [following ones](https://agones.dev/site/docs/installation/install-agones/helm/#configuration).
 
 Example of setting `featureGates` and `generateTLS` helm parameters in `install.yaml`:
-```
+```bash
 helm pull --untar https://agones.dev/chart/stable/agones-{{< release-version >}}.tgz && \
 cd agones && \
 helm template agones-manual --namespace agones-system  . \
@@ -43,10 +43,10 @@ You can also find the install.yaml in the latest `agones-install` zip from the [
 To uninstall/delete the `Agones` deployment and delete `agones-system` namespace:
 
 ```bash
-$ kubectl delete fleets --all --all-namespaces
-$ kubectl delete gameservers --all --all-namespaces
-$ kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
-$ kubectl delete namespace agones-system
+kubectl delete fleets --all --all-namespaces
+kubectl delete gameservers --all --all-namespaces
+kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
+kubectl delete namespace agones-system
 ```
 
 Note: you should wait up to a couple of minutes until all resources described in `install.yaml` file would be deleted.

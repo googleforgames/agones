@@ -109,7 +109,7 @@ as your source.
 ### Creating the cluster
 
 In the directory where you created `module.tf`, run:
-```
+```bash
 terraform init
 ```
 
@@ -117,30 +117,30 @@ This will cause terraform to clone the Agones repository and use the `./install/
 Agones submodule, which contains all necessary Terraform configuration files.
 
 Next, make sure that you can authenticate using gcloud:
-```
+```bash
 gcloud auth application-default login
 ```
 #### Option 1: Creating the cluster in the default VPC
 To create your GKE cluster in the default VPC just specify the project variable.
 
-```
+```bash
 terraform apply -var project="<YOUR_GCP_ProjectID>"
 ```
 
 #### Option 2: Creating the cluster in a custom VPC
 To create the cluster in a custom VPC you must specify the project, network and subnetwork variables.
 
-```
+```bash
 terraform apply -var project="<YOUR_GCP_ProjectID>" -var network="<YOUR_NETWORK_NAME>" -var subnetwork="<YOUR_SUBNETWORK_NAME>"
 ```
 
 To verify that the cluster was created successfully, set up your kubectl credentials:
-```
+```bash
 gcloud container clusters get-credentials --zone us-west1-c agones-terraform-example
 ```
 
 Then check that you have access to the Kubernetes cluster:
-```
+```bash
 kubectl get nodes
 ```
 
@@ -149,7 +149,7 @@ You should have 6 nodes in `Ready` state.
 ### Uninstall the Agones and delete GKE cluster
 
 To delete all resources provisioned by Terraform:
-```
+```bash
 terraform destroy -var project="<YOUR_GCP_ProjectID>"
 ```
 

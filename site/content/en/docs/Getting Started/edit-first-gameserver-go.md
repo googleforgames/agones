@@ -31,34 +31,34 @@ Change the following line in `main.go`:
 
 From:
 ```go
-		respond(conn, sender, "ACK: "+txt+"\n")
+respond(conn, sender, "ACK: "+txt+"\n")
 ```
 
 To:
 ```go
-		respond(conn, sender, "ACK: Echo says "+txt+"\n")
+respond(conn, sender, "ACK: Echo says "+txt+"\n")
 ```
 
 ### Build Server
 Since Docker image is using Alpine Linux, the "go build" command has to include few more environment variables.
 
 ```bash
->> go get agones.dev/agones/pkg/sdk
->> GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
+go get agones.dev/agones/pkg/sdk
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/server -a -v main.go
 ```
 
 ## Using Docker File
 
 ### Create a new docker image
 ```bash
->> docker build -t gcr.io/[PROJECT_ID]/agones-simple-game-server:modified .
+docker build -t gcr.io/[PROJECT_ID]/agones-simple-game-server:modified .
 ```
 
 Note: you can change the image name "agones-simple-game-server" to something else.
 
 ### If using GKE, push the image to GCP Registry
 ```bash
->> docker push gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
+docker push gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
 ```
 
 Note: Review [Authentication Methods](https://cloud.google.com/container-registry/docs/advanced-authentication)
@@ -67,42 +67,42 @@ and advanced authentication methods to the Google Container Registry.
 
 ### If using Minikube, load the image into Minikube
 ```bash
->> minikube cache add gcr.io/[PROJECT_ID]/agones-agones-simple-game-server:modified
+minikube cache add gcr.io/[PROJECT_ID]/agones-agones-simple-game-server:modified
 ```
 
 ### Modify gameserver.yaml
 Modify the following line from gameserver.yaml to use the new configuration.
 
 ```yaml
-    spec:
-      containers:
-      - name: agones-simple-game-server
-        image: gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
+spec:
+  containers:
+  - name: agones-simple-game-server
+    image: gcr.io/[PROJECT_ID]/agones-simple-game-server:modified
 ```
 
 ### If using GKE, deploy Server to GKE
 Apply the latest settings to the Kubernetes container.
 
 ```bash
->> gcloud config set container/cluster [CLUSTER_NAME]
->> gcloud container clusters get-credentials [CLUSTER_NAME]
->> kubectl apply -f gameserver.yaml
+gcloud config set container/cluster [CLUSTER_NAME]
+gcloud container clusters get-credentials [CLUSTER_NAME]
+kubectl apply -f gameserver.yaml
 ```
 
 ### If using Minikube, deploy the Server to Minikube
 ```bash
->> kubectl apply -f gameserver.yaml
+kubectl apply -f gameserver.yaml
 ```
 
 ### Check the GameServer Status
 ```bash
->> kubectl describe gameserver
+kubectl describe gameserver
 ```
 
 ### Verify
 Let's retrieve the IP address and the allocated port of your Game Server:
 
-```
+```bash
 kubectl get gs simple-game-server -o jsonpath='{.status.address}:{.status.ports[0].port}'
 ```
 
