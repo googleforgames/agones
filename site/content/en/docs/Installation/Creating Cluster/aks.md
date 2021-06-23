@@ -67,7 +67,7 @@ az network nsg rule create \
 
 ### Getting Public IPs to Nodes
 
-
+#### Kubernetes version prior to 1.18.19, 1.19.11 and 1.20.7
 
 To find a resource's public IP, search for [Virtual Machine Scale Sets](https://portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.Compute%2FvirtualMachineScaleSets) -> click on the set name(inside  `MC_resourceGroupName_AKSName_westeurope` group) -> click `Instances` -> click on the instance name -> view `Public IP address`.
 
@@ -75,6 +75,10 @@ To get public IP via API [look here](https://github.com/Azure/azure-libraries-fo
 
 
 For more information on Public IPs for VM NICs, see [this document](https://docs.microsoft.com/azure/virtual-network/virtual-network-network-interface-addresses). 
+
+#### Kubernetes version starting 1.18.19, 1.19.11 and 1.20.7
+
+Virtual Machines public IP is available directly in Kubernetes EXTERNAL-IP.
 
 ## Next Steps
 
