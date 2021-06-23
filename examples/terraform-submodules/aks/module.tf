@@ -16,8 +16,20 @@
 // Run:
 //  terraform apply [-var agones_version="1.3.0"]
 
+terraform {
+  required_version = ">= 0.12.26"
+}
+
 // Install latest version of agones
 variable "agones_version" {
+  default = ""
+}
+
+variable "client_id" {
+  default = ""
+
+}
+variable "client_secret" {
   default = ""
 }
 
@@ -25,60 +37,67 @@ variable "cluster_name" {
   default = "test-cluster"
 }
 
-variable "node_count" {
-  default = 4
-}
-
 variable "disk_size" {
   default = 30
-}
-
-variable "client_id" {
-  default = ""
-}
-variable "client_secret" {
-  default = ""
-}
-
-variable "machine_type" { default = "Standard_D2_v2" }
-
-variable "log_level" {
-  default = "info"
 }
 
 variable "feature_gates" {
   default = ""
 }
 
+variable "log_level" {
+  default = "info"
+}
+
+variable "machine_type" {
+  default = "Standard_D2_v2"
+}
+
+variable "node_count" {
+  default = 4
+}
+
+variable "resource_group_location" {
+  default = "East US"
+}
+
+variable "resource_group_name" {
+  default = "agonesRG"
+}
+
 module "aks_cluster" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/aks/?ref=main"
 
-  machine_type  = var.machine_type
-  cluster_name  = var.cluster_name
-  node_count    = var.node_count
-  disk_size     = var.disk_size
-  client_id     = var.client_id
-  client_secret = var.client_secret
+  client_id               = var.client_id
+  client_secret           = var.client_secret
+  cluster_name            = var.cluster_name
+  disk_size               = var.disk_size
+  machine_type            = var.machine_type
+  node_count              = var.node_count
+  resource_group_location = var.resource_group_location
+  resource_group_name     = var.resource_group_name
 }
 
 module "helm_agones" {
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
   agones_version         = var.agones_version
-  values_file            = ""
+  cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
   feature_gates          = var.feature_gates
   host                   = module.aks_cluster.host
-  token                  = module.aks_cluster.token
-  cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
   log_level              = var.log_level
+  token                  = module.aks_cluster.token
+  values_file            = ""
+}
+
+output "cluster_ca_certificate" {
+  value = module.aks_cluster.cluster_ca_certificate
 }
 
 output "host" {
   value = module.aks_cluster.host
 }
+
 output "token" {
   value = module.aks_cluster.token
-}
-output "cluster_ca_certificate" {
-  value = module.aks_cluster.cluster_ca_certificate
 }
