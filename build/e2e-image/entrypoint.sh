@@ -29,7 +29,7 @@ then
 fi
 gcloud container clusters get-credentials $TEST_CLUSTER_NAME \
         --zone=us-west1-c --project=agones-images
-kubectl port-forward statefulset/consul 8500:8500 &
+kubectl port-forward statefulset/consul-consul-server 8500:8500 &
 echo "Waiting consul port-forward to launch on 8500..."
 timeout 60 bash -c 'until printf "" 2>>/dev/null >>/dev/tcp/$0/$1; do sleep 1; done' 127.0.0.1 8500
 echo "consul port-forward launched. Starting e2e tests..."
