@@ -63,7 +63,7 @@ az network nsg rule create \
   --priority 520 \
   --source-port-range "*" \
   --destination-port-range 7000-8000
-  ```
+```
 
 ### Getting Public IPs to Nodes
 

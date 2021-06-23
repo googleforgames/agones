@@ -32,8 +32,8 @@ While not required, you may wish to review the [Create a Game Server]({{< relref
 First, run the pre-built version of the simple gameserver and take note of the name that was created:
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/rust-simple/gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/rust-simple/gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 The game server sets up the Agones SDK, calls `sdk.ready()` to inform Agones that it is ready to serve traffic,
@@ -43,7 +43,7 @@ is going to exit.
 You can follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} rust-simple -f
+kubectl logs ${GAMESERVER_NAME} rust-simple -f
 ```
 
 which should produce output similar to
@@ -92,7 +92,7 @@ If everything goes as expected, the gameserver will exit automatically after abo
 In some cases, the gameserver goes into an unhealthy state, in which case it will be restarted indefinitely. 
 If this happens, you can manually remove it by running
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```
 
 ### 2. Build a simple gameserver
@@ -107,9 +107,9 @@ thread::sleep(Duration::from_secs(20));
 
 Next build a new docker image by running
 ```bash
-$ cd examples/rust-simple
-$ REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
-$ make build-image REPOSITORY=${REPOSITORY}
+cd examples/rust-simple
+REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
+make build-image REPOSITORY=${REPOSITORY}
 ```
 
 The multi-stage Dockerfile will pull down all of the dependencies needed to build the image. Note that it is normal
@@ -117,7 +117,7 @@ for this to take several minutes to complete.
 
 Once the container has been built, push it to your repository
 ```bash
-$ docker push ${REPOSITORY}/rust-simple-server:0.4
+docker push ${REPOSITORY}/rust-simple-server:0.4
 ```
 
 ### 3. Run the customized gameserver
@@ -126,7 +126,7 @@ Now it is time to deploy your newly created gameserver container into your Agone
 
 First, you need to edit `examples/rust-simple/gameserver.yaml` to point to your new image:
 
-```
+```yaml
 containers:
 - name: rust-simple
   image: $(REPOSITORY)/rust-simple-server:0.4
@@ -136,14 +136,14 @@ containers:
 Then, deploy your gameserver
 
 ```bash
-$ kubectl create -f gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 Again, follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} rust-simple -f
+kubectl logs ${GAMESERVER_NAME} rust-simple -f
 ```
 
 which should produce output similar to
@@ -199,5 +199,5 @@ with the slower healthcheck interval, the gameserver gets automatically marked a
 
 To finish, clean up the gameserver by manually removing it
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```

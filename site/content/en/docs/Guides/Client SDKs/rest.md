@@ -51,7 +51,7 @@ Call when the GameServer is ready to accept connections
 ##### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/ready
+curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/ready
 ```
 
 #### Health
@@ -64,7 +64,7 @@ Send a Empty every d Duration to declare that this GameServer is healthy
 ##### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/health
+curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/health
 ```
 
 #### Reserve
@@ -78,7 +78,7 @@ Move Gameserver into a Reserved state for a certain amount of seconds for the fu
 ##### Example
 
 ```bash
-$ curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/reserve
+curl -d '{"seconds": "5"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/reserve
 ```
 
 #### Allocate
@@ -95,7 +95,7 @@ relinquish control to an external service which likely doesn't have as much info
 ##### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/allocate
+curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/allocate
 ```
 
 #### Shutdown
@@ -109,7 +109,7 @@ Call when the GameServer session is over and it's time to shut down
 ##### Example
 
 ```bash
-$ curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/shutdown
+curl -d "{}" -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/shutdown
 ```
 
 ### Configuration Retrieval 
@@ -123,7 +123,7 @@ Call when you want to retrieve the backing `GameServer` configuration details
 - Method: `GET`
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/gameserver
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/gameserver
 ```
 
 Response:
@@ -165,7 +165,7 @@ want to keep the http connection open, and read lines from the result stream and
 come in.
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/watch/gameserver
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/watch/gameserver
 ```
 
 Response:
@@ -197,7 +197,7 @@ See the SDK [SetLabel]({{< ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-v
 ##### Example
 
 ```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/label
+curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/label
 ```
 
 #### Set Annotation
@@ -207,7 +207,7 @@ Apply an Annotation with the prefix "agones.dev/sdk-" to the backing `GameServer
 ##### Example
 
 ```bash
-$ curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
+curl -d '{"key": "foo", "value": "bar"}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/metadata/annotation
 ```
 
 ### Player Tracking
@@ -222,7 +222,7 @@ This function increases the SDK’s stored player count by one, and appends this
 ##### Example    
 
 ```bash
-$ curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connect
+curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connect
 ```
 
 Response:
@@ -238,7 +238,7 @@ This function decreases the SDK’s stored player count by one, and removes the 
 ##### Example
 
 ```bash
-$ curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/disconnect
+curl -d '{"playerID": "uzh7i"}' -H "Content-Type: application/json" -X POST http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/disconnect
 ```
 
 Response:
@@ -253,7 +253,7 @@ Update the [`GameServer.Status.Players.Capacity`][playerstatus] value with a new
 ##### Example
 
 ```bash
-$ curl -d '{"count": 5}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
+curl -d '{"count": 5}' -H "Content-Type: application/json" -X PUT http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
 ```
 
 #### Alpha: GetPlayerCapacity
@@ -264,7 +264,7 @@ even if the value has yet to be updated on the GameServer status resource.
 ##### Example
 
 ```bash
-$ curl -d '{}' -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
+curl -d '{}' -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/capacity
 ```
 
 Response:
@@ -278,7 +278,7 @@ This function retrieves the current player count.
 This is always accurate from what has been set through this SDK, even if the value has yet to be updated on the GameServer status resource.
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/count
 ```
 
 Response:
@@ -297,7 +297,7 @@ even if the value has yet to be updated on the GameServer status resource.
 ##### Example
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected/uzh7i
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected/uzh7i
 ```
 
 Response:
@@ -313,7 +313,7 @@ through this SDK, even if the value has yet to be updated on the GameServer stat
 ##### Example
 
 ```bash
-$ curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected
+curl -H "Content-Type: application/json" -X GET http://localhost:${AGONES_SDK_HTTP_PORT}/alpha/player/connected
 ```
 
 Response:

@@ -48,8 +48,10 @@ that are associated with that particular `GameServer` resource. This can give yo
 For example, here we can see where the simple-game-server example has been moved to the `Unhealthy` state
 due to a crash in the backing `GameServer` Pod container's binary.
 
+```bash
+kubectl describe gs simple-game-server-zqppv
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe gs simple-game-server-zqppv
+```
 Name:         simple-game-server-zqppv
 Namespace:    default
 Labels:       <none>
@@ -117,8 +119,10 @@ details and events for the Pod to see if there are any issues there, such as res
 For example, you can see the restart count on the {{< example-image >}} container
 is set to `1`, due to the game server binary crash
 
+```bash
+kubectl describe pod simple-game-server-zqppv
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl describe pod simple-game-server-zqppv
+```
 Name:               simple-game-server-zqppv
 Namespace:          default
 Priority:           0
@@ -210,8 +214,10 @@ Events:
 
 Finally, you can also get the logs of your `GameServer` `Pod` as well via `kubectl logs <pod name> -c <game server container name>`, for example:
 
+```bash
+kubectl logs simple-game-server-zqppv -c simple-game-server
 ```
-root@6a71afd42291:/go/src/agones.dev/agones# kubectl logs simple-game-server-zqppv -c simple-game-server
+```
 2019/08/16 21:26:23 Creating SDK instance
 2019/08/16 21:26:24 Starting Health Ping
 2019/08/16 21:26:24 Starting UDP server, listening on port 7654
@@ -232,8 +238,10 @@ Therefore, even a `GameServer` or `Pod` resource is no longer available in the s
 `kubectl get events` can be used to see all these events. This can also be grepped with the GameServer name to see
  all events across both the `GameServer` and its backing `Pod`, like so:
  
-```shell script
-root@c9a845c474c2:/go/src/agones.dev/agones# kubectl get events | grep simple-game-server-v992s-jwpx2
+```bash
+kubectl get events | grep simple-game-server-v992s-jwpx2
+```
+```
 2m47s       Normal   PortAllocation          gameserver/simple-game-server-v992s-jwpx2   Port allocated
 2m47s       Normal   Creating                gameserver/simple-game-server-v992s-jwpx2   Pod simple-game-server-v992s-jwpx2 created
 2m47s       Normal   Scheduled               pod/simple-game-server-v992s-jwpx2          Successfully assigned default/simple-game-server-v992s-jwpx2 to gke-test-cluster-default-77e7f57d-j1mp
@@ -303,8 +311,9 @@ doesn't remove the finalizer for you (i.e. if it has been uninstalled),  it can 
 Thankfully, if we create a patch to remove the finalizers from all GameServers, we can delete them with impunity.
 
 A quick one liner to do this:
-
-`kubectl get gameserver -o name | xargs -n1 -P1 -I{} kubectl patch {} --type=merge -p '{"metadata": {"finalizers": []}}'`
+```bash
+kubectl get gameserver -o name | xargs -n1 -P1 -I{} kubectl patch {} --type=merge -p '{"metadata": {"finalizers": []}}'
+```
 
 Once this is done, you can `kubectl delete gs --all` and clean everything up (if it's not gone already).
 
@@ -336,6 +345,8 @@ end up in a `Terminating` state.
 
 ```bash
 kubectl get ns
+```
+```
 NAME              STATUS        AGE                                                                                                                                                    
 agones-system     Terminating   4d
 ```
@@ -344,21 +355,23 @@ Fixing this up requires us to bypass the finalizer in Kubernetes ([article link]
 
 First get the current state of the namespace:
 ```bash
- kubectl get namespace agones-system -o json >tmp.json
+kubectl get namespace agones-system -o json >tmp.json
 ```
 
 Edit the response `tmp.json` to remove the finalizer data, for example remove the following:
 ```json
-      "spec": {
-         "finalizers": [
-             "kubernetes"
-         ]
-      },
+"spec": {
+    "finalizers": [
+        "kubernetes"
+    ]
+},
 ```
 
 Open a new terminal to proxy traffic:
 ```bash
  kubectl proxy
+ ```
+ ```
  Starting to serve on 127.0.0.1:8001
 ```
 

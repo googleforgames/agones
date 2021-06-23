@@ -28,7 +28,8 @@ All this pods should be in a `RUNNING` state:
 
 ```bash
 kubectl get pods --namespace agones-system
-
+```
+```
 NAME                                 READY   STATUS    RESTARTS   AGE
 agones-allocator-5c988b7b8d-cgtbs    1/1     Running   0          8m47s
 agones-allocator-5c988b7b8d-hhhr5    1/1     Running   0          8m47s

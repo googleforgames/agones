@@ -17,12 +17,12 @@ An example of the EKS submodule config file can be found here:
 Copy this file into a separate folder.
 
 Configure your AWS CLI tool [CLI configure](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html):
-```
+```bash
 aws configure
 ```
 
 Initialise your terraform:
-```
+```bash
 terraform init
 ```
 
@@ -45,12 +45,12 @@ Configurable parameters:
 - force_update - whether or not to force the replacement/update of resource (default is true, false may be required to prevent immutability errors when updating the configuration)
 
 Now you can create an EKS cluster and deploy Agones on EKS:
-```
+```bash
 terraform apply [-var agones_version="{{< release-version >}}"]
 ```
 
 After deploying the cluster with Agones, you can get or update your kubeconfig by using:
-```
+```bash
 aws eks --region us-west-2 update-kubeconfig --name agones-cluster
 ```
 
@@ -60,19 +60,19 @@ Added new context arn:aws:eks:us-west-2:601646756426:cluster/agones-cluster to /
 ```
 
 Switch `kubectl` context to the recently created one:
-```
+```bash
 kubectl config use-context arn:aws:eks:us-west-2:601646756426:cluster/agones-cluster
 ```
 
 Check that you are authenticated against the recently created Kubernetes cluster:
-```
+```bash
 kubectl get nodes
 ```
 
 ### Uninstall the Agones and delete EKS cluster
 
 Run the following commands to delete all Terraform provisioned resources:
-```
+```bash
 terraform destroy -target module.helm_agones.helm_release.agones -auto-approve && sleep 60
 terraform destroy
 ```

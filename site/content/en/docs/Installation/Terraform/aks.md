@@ -16,32 +16,32 @@ The example of AKS submodule configuration could be found here:
 Copy `module.tf` file into a separate folder.
 
 Log in to Azure CLI:
-```
+```bash
 az login
 ```
 
 Configure your terraform:
-```
+```bash
 terraform init
 ```
 
 Create a service principal and configure its access to Azure resources: 
-```
+```bash
 az ad sp create-for-rbac
 ```
 
 Now you can deploy your cluster (use values from the above command output):
-```
+```bash
 terraform apply -var client_id="<appId>" -var client_secret="<password>"
 ```
 
 Once you created all resources on AKS you can get the credentials so that you can use `kubectl` to configure your cluster:
-```
+```bash
 az aks get-credentials --resource-group agonesRG --name test-cluster
 ```
 
 Check that you have access to the Kubernetes cluster:
-```
+```bash
 kubectl get nodes
 ```
 
@@ -63,7 +63,7 @@ Configurable parameters:
 ## Uninstall the Agones and delete AKS cluster
 
 Run next command to delete all Terraform provisioned resources:
-```
+```bash
 terraform destroy
 ```
 

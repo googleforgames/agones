@@ -108,15 +108,18 @@ Scale subresource is defined for a Fleet. Please refer to [Kubernetes docs](http
 You can use the following command to scale the fleet with name simple-game-server:
 
 ```bash
-$ kubectl scale fleet simple-game-server --replicas=10
+kubectl scale fleet simple-game-server --replicas=10
+```
+```
 fleet.agones.dev/simple-game-server scaled
 ```
 
 You can also use [Kubernetes API]({{< ref "/docs/Guides/access-api.md" >}}) to get or update the Replicas count:
 
-```
+```bash
 curl http://localhost:8001/apis/agones.dev/v1/namespaces/default/fleets/simple-game-server/scale
-...
+```
+```
 {
   "kind": "Scale",
   "apiVersion": "autoscaling/v1",
