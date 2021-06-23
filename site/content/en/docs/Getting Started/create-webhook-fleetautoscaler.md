@@ -33,7 +33,7 @@ It is assumed that you have completed the instructions to [Create a Game Server 
 #### 1. Deploy the fleet
 
 Run a fleet in a cluster:
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
@@ -49,12 +49,12 @@ with [`FleetAutoscaleResponse`]({{< relref "../Reference/fleetautoscaler.md#webh
 The `Scale` flag and `Replicas` values returned in the `FleetAutoscaleResponse` tells the FleetAutoscaler what target size the backing Fleet should be scaled up or down to. If `Scale` is false - no scaling occurs.
 
 Run next command to create a service and a Webhook pod in a cluster:
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service.yaml
 ```
 
 To check that it is running and liveness probe is fine:
-```
+```bash
 kubectl describe pod autoscaler-webhook
 ```
 
@@ -70,7 +70,7 @@ Status:         Running
 
 Let's create a Fleet Autoscaler using the following command:
 
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscaler.yaml
 ```
 
@@ -87,13 +87,13 @@ It has the link to Webhook service we deployed above.
 
 In order to track the list of gameservers which run in your fleet you can run this command in a separate terminal tab:
 
-```
+```bash
  watch "kubectl get gs -n default"
 ```
 
 In order to get autoscaler status use the following command:
 
-```
+```bash
 kubectl describe fleetautoscaler webhook-fleet-autoscaler
 ```
 
@@ -145,7 +145,7 @@ to achieve that number. The convergence is achieved in time, which is usually me
 If you're interested in more details for game server allocation, you should consult the [Create a Game Server Fleet]({{< relref "../Getting Started/create-fleet.md" >}}) page.
 Here we only interested in triggering allocations to see the autoscaler in action.
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
@@ -165,7 +165,7 @@ status:
 Note the address and port, you might need them later to connect to the server.
 
 Run the kubectl command one more time so that we have both servers allocated:
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
 ```
 
@@ -173,7 +173,7 @@ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< re
 
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
-```
+```bash
 kubectl describe fleetautoscaler webhook-fleet-autoscaler
 ```
 
@@ -207,7 +207,7 @@ Last Scale Time has been updated and a scaling event has been logged.
 
 Double-check the actual number of game server instances and status by running:
 
-```
+```bash
  kubectl get gs -n default
 ```
 
@@ -236,7 +236,7 @@ EXIT
 Server would be in shutdown state.
 Wait about 30 seconds.
 Then you should see scaling down event in the output of next command:
-```
+```bash
 kubectl describe fleetautoscaler webhook-fleet-autoscaler
 ```
 
@@ -247,7 +247,7 @@ You should see these lines in events:
 ```
 
 And get gameservers command output:
-```
+```bash
 kubectl get gs -n default
 ```
 
@@ -260,13 +260,13 @@ simple-game-server-884fg-b7l58   Allocated   35.247.117.202   7766     minikube 
 #### 8. Cleanup
 You can delete the autoscaler service and associated resources with the following commands.
 
-```
+```bash
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service.yaml
 ```
 
 
 Removing the fleet:
-```
+```bash
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
@@ -282,7 +282,7 @@ the possibility of a man-in-the-middle attack between the fleetautoscaler and th
 #### 1. Deploy the fleet
 
 Run a fleet in a cluster:
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
@@ -291,24 +291,24 @@ kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< rel
 The procedure of generating a Self-signed CA certificate taken from [here](https://datacenteroverlords.com/2012/03/01/creating-your-own-ssl-certificate-authority/)
 
 The first step is to create the private root key:
-```
+```bash
 openssl genrsa -out rootCA.key 2048
 ```
 
 The next step is to self-sign this certificate:
-```
+```bash
 openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -out rootCA.pem
 ```
 
 This will start an interactive script that will ask you for various bits of information. Fill it out as you see fit.
 
 Every webhook that you wish to install a trusted certificate will need to go through this process. First, just like with the root CA step, you’ll need to create a private key (different from the root CA):
-```
+```bash
 openssl genrsa -out webhook.key 2048
 ```
 
 Next create configuration file `cert.conf` for the certificate signing request:
-```
+```none
 [req]
 distinguished_name = req_distinguished_name
 req_extensions = v3_req
@@ -326,29 +326,29 @@ DNS.1 = autoscaler-tls-service.default.svc
 Generate the certificate signing request, use valid hostname which in this case will be `autoscaler-tls-service.default.svc` as `Common Name (eg, fully qualified host name)` as well as `DNS.1` in the `alt_names` section of the config file.
 
 Check the [Kubernetes documentation](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records) to see how Services get assigned DNS entries.
-```
+```bash
 openssl req -new -out webhook.csr -key webhook.key -config cert.conf
 ```
 
 Once that’s done, you’ll sign the CSR, which requires the CA root key:
-```
+```bash
 openssl x509 -req -in webhook.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out webhook.crt -days 500 -sha256 -extfile cert.conf -extensions v3_req
 ```
 This would generate webhook.crt certificate
 
 Add secret which later would be mounted to autoscaler-webhook-tls pod.
-```
+```bash
 kubectl create secret tls autoscalersecret --cert=webhook.crt --key=webhook.key
 ```
 
 You need to put Base64-encoded string into caBundle field in your fleetautoscaler yaml configuration:
-```
+```bash
 base64 -i ./rootCA.pem
 ```
 
 Copy the output of the command above and replace the caBundle field in your text editor (say vim) with the new value:
 
-```
+```bash
 wget https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/webhookfleetautoscalertls.yaml
 vim ./webhookfleetautoscalertls.yaml
 ```
@@ -356,12 +356,12 @@ vim ./webhookfleetautoscalertls.yaml
 #### 3. Deploy a Webhook service for autoscaling
 
 Run next command to create a service and a Webhook pod in a cluster:
-```
+```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service-tls.yaml
 ```
 
 To check that it is running and liveness probe is fine:
-```
+```bash
 kubectl describe pod autoscaler-webhook-tls
 ```
 
@@ -377,7 +377,7 @@ Status:         Running
 
 Let's create a Fleet Autoscaler using the following command (caBundle should be set properly on Step 2):
 
-```
+```bash
 kubectl apply -f ./webhookfleetautoscalertls.yaml
 ```
 
@@ -385,7 +385,7 @@ kubectl apply -f ./webhookfleetautoscalertls.yaml
 
 In order to track the list of gameservers which run in your fleet you can run this command in a separate terminal tab:
 
-```
+```bash
  watch "kubectl get gs -n default"
 ```
 
@@ -394,7 +394,7 @@ In order to track the list of gameservers which run in your fleet you can run th
 If you're interested in more details for game server allocation, you should consult the [Create a Game Server Fleet]({{< relref "create-fleet.md" >}}) page.
 Here we only interested in triggering allocations to see the autoscaler in action.
 
-```
+```bash
 for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml ; done
 ```
 
@@ -402,13 +402,14 @@ for i in {0..1} ; do kubectl create -f https://raw.githubusercontent.com/googlef
 
 Now let's wait a few seconds to allow the autoscaler to detect the change in the fleet and check again its status
 
-```
+```bash
 kubectl describe fleetautoscaler  webhook-fleetautoscaler-tls
 ```
 
 The last part should look similar to this:
 
-```Spec:
+```
+Spec:
   Fleet Name:  simple-game-server
   Policy:
     Type:  Webhook
@@ -427,7 +428,7 @@ Last Scale Time has been updated and a scaling event has been logged.
 
 Double-check the actual number of game server instances and status by running:
 
-```
+```bash
  kubectl get gs -n default
 ```
 
@@ -442,17 +443,17 @@ simple-game-server-njmr7-65rp6   Allocated   35.203.159.68   7294      minikube 
 #### 8. Cleanup
 You can delete the autoscaler service and associated resources with the following commands.
 
-```
+```bash
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/autoscaler-webhook/autoscaler-service-tls.yaml
 ```
 
 Removing x509 key secret:
-```
+```bash
 kubectl delete secret autoscalersecret
 ```
 
 Removing the fleet:
-```
+```bash
 kubectl delete -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
 ```
 
@@ -467,7 +468,7 @@ another root certificate authority as long as you put it into the caBundle param
 
 If you run into problems with the configuration of your fleetautoscaler and webhook service the easiest way to debug
 them is to run:
-```
+```bash
 kubectl describe fleetautoscaler <FleetAutoScalerName>
 ```
 and inspect the events at the bottom of the output.

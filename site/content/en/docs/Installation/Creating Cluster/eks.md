@@ -15,7 +15,7 @@ Possible steps are the following:
 1. Run `aws configure` to authorize your `awscli` with proper `AWS Access Key ID` and `AWS Secret Access Key`.
 1. Create an example cluster:
 
-```
+```bash
 eksctl create cluster \
 --name prod \
 --version {{% k8s-version %}} \

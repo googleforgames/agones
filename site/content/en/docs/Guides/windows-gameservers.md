@@ -31,7 +31,7 @@ Starting with version 0.3, the {{< ghlink href="examples/simple-game-server/" >}
 
 Create a GameServer using the following command:
 
-```
+```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserver-windows.yaml
 ```
 
@@ -43,7 +43,7 @@ gameserver.agones.dev/simple-game-server-4ss4j created
 
 Verify that the GameServer becomes Ready by running:
 
-```
+```bash
 kubectl get gameservers
 ```
 It should look something like this:

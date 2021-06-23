@@ -174,7 +174,7 @@ Following options are available:
 - **AGONES_OPENSSL_CONFIG_STRING** (default is VC-WIN64A) - arguments to configure OpenSSL build ([documentation](https://github.com/openssl/openssl/blob/OpenSSL_1_1_1-stable/INSTALL)). Used only if OpenSSL and gRPC is built by Agones.
 
 ## Linux / MacOS
-```
+```bash
 mkdir -p .build
 cd .build
 cmake .. -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=./install
@@ -183,14 +183,14 @@ cmake --build . --target install
 
 ## Windows
 Building with Visual Studio:
-```
+```bash
 md .build
 cd .build
 cmake .. -G "Visual Studio 15 2017 Win64" -DCMAKE_INSTALL_PREFIX=./install
 cmake --build . --config Release --target install
 ```
 Building with NMake
-```
+```bash
 md .build
 cd .build
 cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install

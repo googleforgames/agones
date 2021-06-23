@@ -81,7 +81,7 @@ We could however turn this into a marketplace plugin that can be retrived from t
 
 #### Using C++
 - Add Plugin (in your own `.uplugin` file)
-```
+```json
   "Plugins": [
     {
       "Enabled": true,
@@ -90,7 +90,7 @@ We could however turn this into a marketplace plugin that can be retrived from t
   ],
 ```
 - Add Plugin (in your own `*.Build.cs`)
-```
+```json
 PublicDependencyModuleNames.AddRange(
     new[]
     {

@@ -32,8 +32,8 @@ While not required, you may wish to review the [Create a Game Server]({{< relref
 First, run the pre-built version of the simple gameserver and take note of the name that was created:
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/cpp-simple/gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/cpp-simple/gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 The game server sets up the Agones SDK, calls `SDK::Ready()` to inform Agones that it is ready to serve traffic,
@@ -43,7 +43,7 @@ is going to exit.
 You can follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} cpp-simple -f
+kubectl logs ${GAMESERVER_NAME} cpp-simple -f
 ```
 
 which should produce output similar to
@@ -119,15 +119,15 @@ If everything goes as expected, the gameserver will exit automatically after abo
 In some cases, the gameserver goes into an unhealthy state, in which case it will be restarted indefinitely. 
 If this happens, you can manually remove it by running
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```
 
 ### 2. Run a fleet of simple gameservers
 
 Next, run a fleet of gameservers 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/cpp-simple/fleet.yaml
-$ FLEET_NAME=$(kubectl get fleets -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/cpp-simple/fleet.yaml
+FLEET_NAME=$(kubectl get fleets -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 You can again inspect the output of an individual gameserver (which will look the same as above), but what is more
@@ -136,7 +136,7 @@ is responsible for keeping a sufficient number of gameservers in the `Ready` sta
 is replaced by a new one. You can see this in action by running
 
 ```bash
-$ watch "kubectl get gameservers"
+watch "kubectl get gameservers"
 ```
 
 which should show how gameservers are constantly transitioning from `Scheduled` to `Ready` to `Shutdown` before
@@ -144,7 +144,7 @@ disappearing.
 
 When you are finished watching the fleet produce new gameservers you should remove the fleet by running
 ```bash
-$ kubectl delete fleet ${FLEET_NAME}
+kubectl delete fleet ${FLEET_NAME}
 ```
 
 ### 3. Build a simple gameserver
@@ -159,9 +159,9 @@ std::this_thread::sleep_for(std::chrono::seconds(20));
 
 Next build a new docker image by running
 ```bash
-$ cd examples/cpp-simple
-$ REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
-$ make build REPOSITORY=${REPOSITORY}
+cd examples/cpp-simple
+REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
+make build REPOSITORY=${REPOSITORY}
 ```
 
 The multi-stage Dockerfile will pull down all of the dependencies needed to build the image. Note that it is normal
@@ -169,7 +169,7 @@ for this to take several minutes to complete.
 
 Once the container has been built, push it to your repository
 ```bash
-$ docker push ${REPOSITORY}/cpp-simple-server:0.6
+docker push ${REPOSITORY}/cpp-simple-server:0.6
 ```
 
 ### 4. Run the customized gameserver
@@ -178,7 +178,7 @@ Now it is time to deploy your newly created gameserver container into your Agone
 
 First, you need to edit `examples/cpp-simple/gameserver.yaml` to point to your new image:
 
-```
+```yaml
 containers:
 - name: cpp-simple
   image: $(REPOSITORY)/cpp-simple-server:0.6
@@ -188,14 +188,14 @@ containers:
 Then, deploy your gameserver
 
 ```bash
-$ kubectl create -f gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 Again, follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} cpp-simple -f
+kubectl logs ${GAMESERVER_NAME} cpp-simple -f
 ```
 
 which should produce output similar to
@@ -260,5 +260,5 @@ with the slower healthcheck interval, the gameserver gets automatically marked a
 
 To finish, clean up the gameserver by manually removing it
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```

@@ -32,8 +32,8 @@ While not required, you may wish to review the [Create a Game Server]({{< relref
 First, run the pre-built version of the simple gameserver and take note of the name that was created:
 
 ```bash
-$ kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/nodejs-simple/gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/nodejs-simple/gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 The game server sets up the Agones SDK, calls `sdk.ready()` to inform Agones that it is ready to serve traffic,
@@ -43,7 +43,7 @@ is going to exit.
 You can follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} nodejs-simple -f
+kubectl logs ${GAMESERVER_NAME} nodejs-simple -f
 ```
 
 which should produce output similar to
@@ -143,7 +143,7 @@ If everything goes as expected, the gameserver will exit automatically after abo
 In some cases, the gameserver goes into an unhealthy state, in which case it will be restarted indefinitely. 
 If this happens, you can manually remove it by running
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```
 
 ### 2. Build a simple gameserver
@@ -152,7 +152,7 @@ Change directories to your local agones/examples/nodejs-simple directory. To exp
 `src/index.js` in your favorite editor and change the interval at which the gameserver calls `sdk.health()` from
 2 seconds to 20 seconds by modifying the lines in the health ping handler to be
 
-```
+```js
 setInterval(() => {
 	agonesSDK.health();
 	console.log('Health ping sent');
@@ -161,14 +161,14 @@ setInterval(() => {
 
 Next build a new docker image by running
 ```bash
-$ cd examples/nodejs-simple
-$ REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
-$ make build REPOSITORY=${REPOSITORY}
+cd examples/nodejs-simple
+REPOSITORY=<your-repository> # e.g. gcr.io/agones-images
+make build REPOSITORY=${REPOSITORY}
 ```
 
 Once the container has been built, push it to your repository
 ```bash
-$ docker push ${REPOSITORY}/nodejs-simple-server:0.1
+docker push ${REPOSITORY}/nodejs-simple-server:0.1
 ```
 
 ### 3. Run the customized gameserver
@@ -177,7 +177,7 @@ Now it is time to deploy your newly created gameserver container into your Agone
 
 First, you need to edit `examples/nodejs-simple/gameserver.yaml` to point to your new image:
 
-```
+```yaml
 containers:
 - name: nodejs-simple
   image: $(REPOSITORY)/nodejs-simple-server:0.1
@@ -187,14 +187,14 @@ containers:
 Then, deploy your gameserver
 
 ```bash
-$ kubectl create -f gameserver.yaml
-$ GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+kubectl create -f gameserver.yaml
+GAMESERVER_NAME=$(kubectl get gs -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
 ```
 
 Again, follow along with the lifecycle of the gameserver by running
 
 ```bash
-$ kubectl logs ${GAMESERVER_NAME} nodejs-simple -f
+kubectl logs ${GAMESERVER_NAME} nodejs-simple -f
 ```
 
 which should produce output similar to
@@ -253,5 +253,5 @@ with the slower healthcheck interval, the gameserver gets automatically marked a
 
 To finish, clean up the gameserver by manually removing it
 ```bash
-$ kubectl delete gs ${GAMESERVER_NAME}
+kubectl delete gs ${GAMESERVER_NAME}
 ```
