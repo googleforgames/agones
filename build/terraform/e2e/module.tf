@@ -49,16 +49,16 @@ provider "helm" {
 }
 
 resource "helm_release" "consul" {
-  chart = "stable/consul"
+  chart = "hashicorp/consul"
   name  = "consul"
 
   set {
-    name  = "Replicas"
+    name  = "server.replicas"
     value = "1"
   }
 
   set {
-    name  = "uiService.type"
+    name  = "ui.service.type"
     value = "ClusterIP"
   }
 }
