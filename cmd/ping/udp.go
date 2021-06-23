@@ -19,6 +19,7 @@ import (
 	"context"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -71,11 +72,11 @@ func newUDPServer(rateLimit rate.Limit) *udpServer {
 func (u *udpServer) run(ctx context.Context) {
 	u.healthy()
 
-	logger.Info("starting UDP server")
+	logger.Info("Starting UDP server")
 	var err error
 	u.conn, err = net.ListenPacket("udp", ":8080")
 	if err != nil {
-		logger.WithError(err).Fatal("could not start udp server")
+		logger.WithError(err).Fatal("Could not start udp server")
 	}
 
 	go func() {
@@ -111,7 +112,10 @@ func (u *udpServer) readWriteLoop(ctx context.Context) {
 				b := make([]byte, 1024)
 				_, sender, err := u.conn.ReadFrom(b)
 				if err != nil {
-					u.logger.WithError(err).Error("error reading udp packet")
+					if ctx.Err() != nil && err == os.ErrClosed {
+						return
+					}
+					u.logger.WithError(err).Error("Error reading udp packet")
 					continue
 				}
 				go u.rateLimitedEchoResponse(b, sender)
@@ -137,17 +141,17 @@ func (u *udpServer) rateLimitedEchoResponse(b []byte, sender net.Addr) {
 	if vis.limit.Allow() {
 		b = bytes.TrimRight(b, "\x00")
 		if _, err := u.conn.WriteTo(b, sender); err != nil {
-			u.logger.WithError(err).Error("error sending returning udp packet")
+			u.logger.WithError(err).Error("Error sending returning udp packet")
 		}
 	} else {
-		logger.WithField("addr", sender.String()).Warn("rate limited. No response sent.")
+		logger.WithField("addr", sender.String()).Warn("Rate limited. No response sent")
 	}
 }
 
 // close closes and shutdown the udp server
 func (u *udpServer) close() {
 	if err := u.conn.Close(); err != nil {
-		logger.WithError(err).Error("error closing udp connection")
+		logger.WithError(err).Error("Error closing udp connection")
 	}
 }
 

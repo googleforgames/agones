@@ -43,11 +43,11 @@ var (
 func main() {
 	ctlConf := parseEnvFlags()
 	if err := ctlConf.validate(); err != nil {
-		logger.WithError(err).Fatal("could not create controller from environment or flags")
+		logger.WithError(err).Fatal("Could not create controller from environment or flags")
 	}
 
 	logger.WithField("version", pkg.Version).WithField("featureGates", runtime.EncodeFeatures()).
-		WithField("ctlConf", ctlConf).Info("starting ping...")
+		WithField("ctlConf", ctlConf).Info("Starting ping...")
 
 	ctx := signals.NewSigKillContext()
 
@@ -61,7 +61,7 @@ func main() {
 	defer cancel()
 
 	<-ctx.Done()
-	logger.Info("shutting down...")
+	logger.Info("Shutting down...")
 }
 
 func serveUDP(ctx context.Context, ctlConf config) *udpServer {
@@ -85,13 +85,15 @@ func serveHTTP(ctlConf config, h healthcheck.Handler) func() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte(ctlConf.HTTPResponse)); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			logger.WithError(err).Error("error responding to http request")
+			logger.WithError(err).Error("Error responding to http request")
 		}
 	})
 
 	go func() {
-		logger.Info("starting HTTP Server...")
-		logger.WithError(srv.ListenAndServe()).Fatal("could not start HTTP server")
+		logger.Info("Starting HTTP Server...")
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logger.WithError(err).Fatal("Could not start HTTP server")
+		}
 	}()
 
 	return func() {
@@ -99,8 +101,9 @@ func serveHTTP(ctlConf config, h healthcheck.Handler) func() {
 		defer cancel()
 
 		if err := srv.Shutdown(ctx); err != nil {
-			logger.WithError(err).Fatal("could not shut down HTTP server")
+			logger.WithError(err).Fatal("Could not shut down HTTP server")
 		}
+		logger.Info("HTTP server was gracefully shut down")
 	}
 }
 
