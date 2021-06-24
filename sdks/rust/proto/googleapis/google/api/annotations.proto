@@ -1,4 +1,4 @@
-// Copyright 2017 Google LLC All Rights Reserved.
+// Copyright (c) 2015, Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-pub mod alpha;
-pub mod alpha_grpc;
-pub mod sdk;
-pub mod sdk_grpc;
+syntax = "proto3";
+
+package google.api;
+
+import "google/api/http.proto";
+import "google/protobuf/descriptor.proto";
+
+option go_package = "google.golang.org/genproto/googleapis/api/annotations;annotations";
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationsProto";
+option java_package = "com.google.api";
+option objc_class_prefix = "GAPI";
+
+extend google.protobuf.MethodOptions {
+  // See `HttpRule`.
+  HttpRule http = 72295728;
+}

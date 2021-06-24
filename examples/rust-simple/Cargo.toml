@@ -15,6 +15,17 @@
 [package]
 name = "rust-simple"
 version = "0.1.0"
+edition = "2018"
 
 [dependencies]
 agones = { path = "../../sdks/rust" }
+
+[dependencies.tokio]
+version = "1.6"
+default-features = false
+features = [
+    "macros",
+    "rt-multi-thread",
+    "sync",
+    "time",
+]

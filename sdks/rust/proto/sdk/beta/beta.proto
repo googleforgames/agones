@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC All Rights Reserved.
+// Copyright 2020 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! the Rust game server SDK
+syntax = "proto3";
 
-pub mod alpha;
-pub mod errors;
-mod sdk;
+package agones.dev.sdk.beta;
+option go_package = "beta";
 
-pub use sdk::Sdk;
+import "google/api/annotations.proto";
+
+// SDK service to be used in the GameServer SDK to the Pod Sidecar
+service SDK {}

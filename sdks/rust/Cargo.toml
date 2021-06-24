@@ -16,14 +16,35 @@
 name = "agones"
 version = "0.1.0"
 edition = "2018"
-
-[features]
-openssl = ["grpcio/openssl"]
-openssl-vendored = ["grpcio/openssl-vendored"]
+license = "Apache-2.0"
+repository = "https://github.com/googleforgames/agones"
+documentation = "https://docs.rs/agones"
+homepage = "https://agones.dev/site/"
 
 [dependencies]
-grpcio = "0.6.0"
-protobuf = "2.16.2"
-futures = { version = "0.3", features = ["compat"] }
-futures01 = "0.1"
-error-chain = "0.12.3"
+async-stream = "0.3"
+http = "0.2"
+prost = "0.7"
+thiserror = "1.0"
+
+[dependencies.tokio]
+version = "1.0"
+default-features = false
+features = ["sync", "time"]
+
+[dependencies.tonic]
+version = "0.4"
+default-features = false
+features = [
+    "codegen",
+    "transport",
+    "prost",
+]
+
+[build-dependencies.tonic-build]
+version = "0.4"
+default-features = false
+features = [
+    "prost",
+    "transport",
+]
