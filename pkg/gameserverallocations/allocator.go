@@ -58,7 +58,7 @@ import (
 )
 
 var (
-	// ErrNoGameServer is returned when there are no Ready GameServers
+	// ErrNoGameServer is returned when there are no Allocatable GameServers
 	// available
 	ErrNoGameServer = errors.New("Could not find an Allocatable GameServer")
 	// ErrConflictInGameServerSelection is returned when the candidate gameserver already allocated
@@ -68,16 +68,14 @@ var (
 )
 
 const (
-	secretClientCertName = "tls.crt"
-	secretClientKeyName  = "tls.key"
-	secretCACertName     = "ca.crt"
-	allocatorPort        = "443"
-)
-
-const (
-	maxBatchQueue         = 100
-	maxBatchBeforeRefresh = 100
-	batchWaitTime         = 500 * time.Millisecond
+	secretClientCertName       = "tls.crt"
+	secretClientKeyName        = "tls.key"
+	secretCACertName           = "ca.crt"
+	allocatorPort              = "443"
+	maxBatchQueue              = 100
+	maxBatchBeforeRefresh      = 100
+	batchWaitTime              = 500 * time.Millisecond
+	lastAllocatedAnnotationKey = "agones.dev/last-allocated"
 )
 
 var allocationRetry = wait.Backoff{
@@ -592,7 +590,7 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, fam allocat
 	}
 
 	// add last allocated, so it always gets updated, even if it is already Allocated
-	gs.ObjectMeta.Annotations["agones.dev/last-allocated"] = time.Now().String()
+	gs.ObjectMeta.Annotations[lastAllocatedAnnotationKey] = time.Now().String()
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
 	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})

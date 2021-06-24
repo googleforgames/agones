@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -60,7 +61,7 @@ const (
 func TestControllerAllocator(t *testing.T) {
 	t.Parallel()
 
-	// TODO:(markmandel) remove once GameServerSelector is in place, since right now enabling the feature flag causes flaky tests
+	// TODO:(markmandel) remove once feature complete with `StateAllocationFilter` feature flag, as then the test will pass with or without the flag enabled.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
 	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureStateAllocationFilter)+"=false"))
@@ -164,6 +165,11 @@ func TestControllerAllocator(t *testing.T) {
 func TestControllerAllocate(t *testing.T) {
 	t.Parallel()
 
+	// TODO:(markmandel) remove once feature complete with `StateAllocationFilter` feature flag, as then the test will pass with or without the flag enabled.
+	runtime.FeatureTestMutex.Lock()
+	defer runtime.FeatureTestMutex.Unlock()
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=false", runtime.FeatureStateAllocationFilter)))
+
 	f, gsList := defaultFixtures(4)
 	c, m := newFakeController()
 	n := metav1.Now()
@@ -247,10 +253,10 @@ func TestControllerAllocate(t *testing.T) {
 func TestControllerAllocatePriority(t *testing.T) {
 	t.Parallel()
 
-	// TODO:(markmandel) remove once GameServerSelector is in place, since right now enabling the feature flag causes flaky tests
+	// TODO:(markmandel) remove once feature complete with `StateAllocationFilter` feature flag, as then the test will pass with or without the flag enabled.
 	runtime.FeatureTestMutex.Lock()
 	defer runtime.FeatureTestMutex.Unlock()
-	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureStateAllocationFilter)+"=false"))
+	require.NoError(t, runtime.ParseFeatures(fmt.Sprintf("%s=false", runtime.FeatureStateAllocationFilter)))
 
 	run := func(t *testing.T, name string, test func(t *testing.T, c *Controller, gas *allocationv1.GameServerAllocation)) {
 		f, gsList := defaultFixtures(4)

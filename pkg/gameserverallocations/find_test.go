@@ -168,11 +168,8 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 		t.Run(k, func(t *testing.T) {
 			runtime.FeatureTestMutex.Lock()
 			defer runtime.FeatureTestMutex.Unlock()
-			// deliberately not resetting the Feature state, to catch any possible unknown regressions with the
-			// new feature flags
-			if v.features != "" {
-				require.NoError(t, runtime.ParseFeatures(v.features))
-			}
+			// we always set the feature flag in all these tests, so always process it.
+			require.NoError(t, runtime.ParseFeatures(v.features))
 
 			controller, m := newFakeController()
 			c := controller.allocator.allocationCache

@@ -80,18 +80,16 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			list:     []agonesv1.GameServer{gs1, gs2, gs3},
 			features: fmt.Sprintf("%s=true", runtime.FeatureStateAllocationFilter),
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
-				require.Len(t, list, 3)
-				assert.Equal(t, "gs3", list[0].ObjectMeta.Name)
-				assert.Equal(t, "gs1", list[1].ObjectMeta.Name)
-				assert.Equal(t, "gs2", list[2].ObjectMeta.Name)
+				assert.Equal(t, []*agonesv1.GameServer{&gs3, &gs1, &gs2}, list)
 			},
 		},
 		"nil player status (PlayerAllocationFilter)": {
-			list: []agonesv1.GameServer{gs1, gs2, gs4},
+			list:     []agonesv1.GameServer{gs1, gs2, gs4},
+			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				require.Len(t, list, 3)
-				assert.Contains(t, []string{"gs2", "gs4"}, list[0].ObjectMeta.Name)
-				assert.Contains(t, []string{"gs2", "gs4"}, list[1].ObjectMeta.Name)
+				// first two items can come in any order
+				assert.ElementsMatchf(t, []*agonesv1.GameServer{&gs2, &gs4}, list[:2], "GameServer Names")
 				assert.Equal(t, &gs1, list[2])
 			},
 		},
@@ -99,9 +97,7 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			list:     []agonesv1.GameServer{gs5, gs6},
 			features: fmt.Sprintf("%s=true", runtime.FeaturePlayerAllocationFilter),
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
-				require.Len(t, list, 2)
-				assert.Equal(t, "gs6", list[0].ObjectMeta.Name)
-				assert.Equal(t, "gs5", list[1].ObjectMeta.Name)
+				assert.Equal(t, []*agonesv1.GameServer{&gs6, &gs5}, list)
 			},
 		},
 		"list ready": {
@@ -109,8 +105,8 @@ func TestAllocationCacheListSortedGameServers(t *testing.T) {
 			list: []agonesv1.GameServer{gs1, gs2, gs4},
 			test: func(t *testing.T, list []*agonesv1.GameServer) {
 				assert.Len(t, list, 3)
-				assert.Contains(t, []string{"gs2", "gs4"}, list[0].ObjectMeta.Name)
-				assert.Contains(t, []string{"gs2", "gs4"}, list[1].ObjectMeta.Name)
+				// first two items can come in any order
+				assert.ElementsMatchf(t, []*agonesv1.GameServer{&gs2, &gs4}, list[:2], "GameServer Names")
 				assert.Equal(t, &gs1, list[2])
 			},
 		},
