@@ -26,8 +26,10 @@ import (
 )
 
 // GameServerLister helps list GameServers.
+// All objects returned here must be treated as read-only.
 type GameServerLister interface {
 	// List lists all GameServers in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.GameServer, err error)
 	// GameServers returns an object that can list and get GameServers.
 	GameServers(namespace string) GameServerNamespaceLister
@@ -58,10 +60,13 @@ func (s *gameServerLister) GameServers(namespace string) GameServerNamespaceList
 }
 
 // GameServerNamespaceLister helps list and get GameServers.
+// All objects returned here must be treated as read-only.
 type GameServerNamespaceLister interface {
 	// List lists all GameServers in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.GameServer, err error)
 	// Get retrieves the GameServer from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.GameServer, error)
 	GameServerNamespaceListerExpansion
 }

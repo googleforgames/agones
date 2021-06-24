@@ -26,8 +26,10 @@ import (
 )
 
 // FleetAutoscalerLister helps list FleetAutoscalers.
+// All objects returned here must be treated as read-only.
 type FleetAutoscalerLister interface {
 	// List lists all FleetAutoscalers in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.FleetAutoscaler, err error)
 	// FleetAutoscalers returns an object that can list and get FleetAutoscalers.
 	FleetAutoscalers(namespace string) FleetAutoscalerNamespaceLister
@@ -58,10 +60,13 @@ func (s *fleetAutoscalerLister) FleetAutoscalers(namespace string) FleetAutoscal
 }
 
 // FleetAutoscalerNamespaceLister helps list and get FleetAutoscalers.
+// All objects returned here must be treated as read-only.
 type FleetAutoscalerNamespaceLister interface {
 	// List lists all FleetAutoscalers in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.FleetAutoscaler, err error)
 	// Get retrieves the FleetAutoscaler from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.FleetAutoscaler, error)
 	FleetAutoscalerNamespaceListerExpansion
 }
