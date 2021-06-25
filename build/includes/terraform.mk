@@ -95,6 +95,7 @@ gcloud-terraform-install:
 
 gcloud-terraform-destroy-cluster: GCP_PROJECT ?= $(current_project)
 gcloud-terraform-destroy-cluster:
+	$(MAKE) terraform-init DIRECTORY=gke
 	$(DOCKER_RUN) bash -c 'cd $(mount_path)/build/terraform/gke && terraform destroy -var project=$(GCP_PROJECT) -auto-approve'
 
 terraform-test: $(ensure-build-image)
