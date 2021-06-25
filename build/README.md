@@ -574,8 +574,10 @@ Compile the ping binary and then build the docker image
 #### `make gen-install`
 Generate the `/install/yaml/install.yaml` from the Helm template
 
-#### `gen-embedded-openapi`
-Generate the embedded OpenAPI specs for existing Kubernetes Objects, such as `PodTemplateSpec` and `ObjectMeta`
+#### `make gen-embedded-openapi`
+Generate the embedded OpenAPI specs for existing Kubernetes Objects, such as `PodTemplateSpec` and `ObjectMeta`.
+
+This should be run against a clean or brand new cluster, as external CRD's or schemas could cause errors to occur.
 
 #### `make gen-crd-client`
 Generate the Custom Resource Definition client(s)
