@@ -26,8 +26,10 @@ import (
 )
 
 // FleetLister helps list Fleets.
+// All objects returned here must be treated as read-only.
 type FleetLister interface {
 	// List lists all Fleets in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.Fleet, err error)
 	// Fleets returns an object that can list and get Fleets.
 	Fleets(namespace string) FleetNamespaceLister
@@ -58,10 +60,13 @@ func (s *fleetLister) Fleets(namespace string) FleetNamespaceLister {
 }
 
 // FleetNamespaceLister helps list and get Fleets.
+// All objects returned here must be treated as read-only.
 type FleetNamespaceLister interface {
 	// List lists all Fleets in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.Fleet, err error)
 	// Get retrieves the Fleet from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.Fleet, error)
 	FleetNamespaceListerExpansion
 }
