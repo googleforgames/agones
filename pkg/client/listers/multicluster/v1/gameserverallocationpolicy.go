@@ -26,8 +26,10 @@ import (
 )
 
 // GameServerAllocationPolicyLister helps list GameServerAllocationPolicies.
+// All objects returned here must be treated as read-only.
 type GameServerAllocationPolicyLister interface {
 	// List lists all GameServerAllocationPolicies in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error)
 	// GameServerAllocationPolicies returns an object that can list and get GameServerAllocationPolicies.
 	GameServerAllocationPolicies(namespace string) GameServerAllocationPolicyNamespaceLister
@@ -58,10 +60,13 @@ func (s *gameServerAllocationPolicyLister) GameServerAllocationPolicies(namespac
 }
 
 // GameServerAllocationPolicyNamespaceLister helps list and get GameServerAllocationPolicies.
+// All objects returned here must be treated as read-only.
 type GameServerAllocationPolicyNamespaceLister interface {
 	// List lists all GameServerAllocationPolicies in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1.GameServerAllocationPolicy, err error)
 	// Get retrieves the GameServerAllocationPolicy from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1.GameServerAllocationPolicy, error)
 	GameServerAllocationPolicyNamespaceListerExpansion
 }

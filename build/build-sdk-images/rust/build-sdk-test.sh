@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -ex
+
 mkdir -p /go/src/agones.dev/agones/test/sdk/rust/.cargo
 mkdir -p /go/src/agones.dev/agones/test/sdk/rust/.cargo-targets
 cd /go/src/agones.dev/agones/test/sdk/rust

@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Wrap in a new error
-error_chain! {
-    foreign_links {
-        Grpc(::grpcio::Error);
-    }
+pub type Result<T> = std::result::Result<T, Error>;
 
-    errors {
-        HealthPingConnectionFailure(t: String) {
-            description("health ping connection failure"),
-            display("health ping connection failure: '{}'", t),
-        }
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("health ping connection failure: `{0}`")]
+    HealthPingConnectionFailure(String),
+    #[error(transparent)]
+    TimedOut(#[from] tokio::time::error::Elapsed),
+    #[error("failed to parse connection uri")]
+    InvalidUri(#[from] http::uri::InvalidUri),
+    #[error("rpc failure")]
+    Rpc(#[from] tonic::Status),
+    #[error("transport failure")]
+    Transport(#[from] tonic::transport::Error),
 }

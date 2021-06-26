@@ -13,13 +13,9 @@
 // limitations under the License.
 
 //! the Rust game server SDK
-#[macro_use]
-extern crate error_chain;
 
 pub mod alpha;
 pub mod errors;
-mod grpc;
 mod sdk;
-pub mod types;
 
 pub use sdk::Sdk;

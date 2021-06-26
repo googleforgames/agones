@@ -16,25 +16,12 @@
 
 set -ex
 
-googleapis=/go/src/agones.dev/agones/proto/googleapis
+protos=/go/src/agones.dev/agones/proto
+dest=/go/src/agones.dev/agones/sdks/rust
 
-sdk=/go/src/agones.dev/agones/proto/sdk
-cd /go/src/agones.dev/agones
+rm -rf ${dest}/proto
 
-protoc \
-    -I ${googleapis} -I ${sdk} sdk.proto \
-    --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \
-    --plugin=protoc-gen-grpc=`which grpc_rust_plugin`
-protoc \
-    -I ${googleapis} -I ${sdk}/alpha alpha.proto \
-    --rust_out=sdks/rust/src/grpc --grpc_out=sdks/rust/src/grpc \
-    --plugin=protoc-gen-grpc=`which grpc_rust_plugin`
+echo "Copying protobuffers to rust sdk"
+cp -r ${protos} ${dest}
 
-cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk.rs >> ./sdk.rs
-cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/sdk_grpc.rs >> ./sdk_grpc.rs
-cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/alpha.rs >> ./alpha.rs
-cat ./build/boilerplate.go.txt ./sdks/rust/src/grpc/alpha_grpc.rs >> ./alpha_grpc.rs
-mv ./sdk.rs ./sdks/rust/src/grpc/
-mv ./sdk_grpc.rs ./sdks/rust/src/grpc/
-mv ./alpha.rs ./sdks/rust/src/grpc/
-mv ./alpha_grpc.rs ./sdks/rust/src/grpc/
+echo "Rust code is generated at build time"
