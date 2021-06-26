@@ -15,16 +15,18 @@
 package gameserverallocations
 
 import (
+	"fmt"
 	"testing"
 
 	"agones.dev/agones/pkg/apis"
-
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	k8stesting "k8s.io/client-go/testing"
 )
 
@@ -51,8 +53,9 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 	})
 
 	fixtures := map[string]struct {
-		list []agonesv1.GameServer
-		test func(*testing.T, []*agonesv1.GameServer)
+		list     []agonesv1.GameServer
+		test     func(*testing.T, []*agonesv1.GameServer)
+		features string
 	}{
 		"required": {
 			list: []agonesv1.GameServer{
@@ -95,9 +98,10 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				list = nil
 				gs, _, err = findGameServerForAllocation(gsa, list)
 				assert.Error(t, err)
-				assert.Equal(t, ErrNoGameServerReady, err)
+				assert.Equal(t, ErrNoGameServer, err)
 				assert.Nil(t, gs)
 			},
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
 		},
 		"preferred": {
 			list: []agonesv1.GameServer{
@@ -134,6 +138,7 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, gs, list[index])
 				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
 		},
 		"allocation trap": {
 			list: []agonesv1.GameServer{
@@ -155,15 +160,21 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 				assert.Equal(t, gs, list[index])
 				assert.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
 			},
+			features: fmt.Sprintf("%s=false&%s=false", runtime.FeaturePlayerAllocationFilter, runtime.FeatureStateAllocationFilter),
 		},
 	}
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
-			controller, m := newFakeController()
-			c := controller.allocator.readyGameServerCache
+			runtime.FeatureTestMutex.Lock()
+			defer runtime.FeatureTestMutex.Unlock()
+			// we always set the feature flag in all these tests, so always process it.
+			require.NoError(t, runtime.ParseFeatures(v.features))
 
-			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			controller, m := newFakeController()
+			c := controller.allocator.allocationCache
+
+			m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 				return true, &agonesv1.GameServerList{Items: v.list}, nil
 			})
 
@@ -171,13 +182,13 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 			defer cancel()
 
 			// This call initializes the cache
-			err := c.syncReadyGSServerCache()
+			err := c.syncCache()
 			assert.Nil(t, err)
 
 			err = c.counter.Run(ctx, 0)
 			assert.Nil(t, err)
 
-			list := c.ListSortedReadyGameServers()
+			list := c.ListSortedGameServers()
 			v.test(t, list)
 		})
 	}
@@ -187,7 +198,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	t.Parallel()
 
 	controller, m := newFakeController()
-	c := controller.allocator.readyGameServerCache
+	c := controller.allocator.allocationCache
 	labels := map[string]string{"role": "gameserver"}
 
 	gsa := &allocationv1.GameServerAllocation{
@@ -217,7 +228,7 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 			Status: agonesv1.GameServerStatus{NodeName: "node3", State: agonesv1.GameServerStateReady}},
 	}
 
-	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, k8sruntime.Object, error) {
 		return true, &agonesv1.GameServerList{Items: gsList}, nil
 	})
 
@@ -225,13 +236,13 @@ func TestFindGameServerForAllocationDistributed(t *testing.T) {
 	defer cancel()
 
 	// This call initializes the cache
-	err := c.syncReadyGSServerCache()
+	err := c.syncCache()
 	assert.Nil(t, err)
 
 	err = c.counter.Run(ctx, 0)
 	assert.Nil(t, err)
 
-	list := c.ListSortedReadyGameServers()
+	list := c.ListSortedGameServers()
 	assert.Len(t, list, 6)
 
 	gs, index, err := findGameServerForAllocation(gsa, list)

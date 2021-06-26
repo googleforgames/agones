@@ -236,8 +236,9 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 	allocator := gameserverallocations.NewAllocator(
 		agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 		kubeInformerFactory.Core().V1().Secrets(),
+		agonesClient.AgonesV1(),
 		kubeClient,
-		gameserverallocations.NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), gsCounter, health),
+		gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
 		remoteAllocationTimeout,
 		totalRemoteAllocationTimeout)
 

@@ -67,8 +67,9 @@ func NewController(apiServer *apiserver.APIServer,
 		allocator: NewAllocator(
 			agonesInformerFactory.Multicluster().V1().GameServerAllocationPolicies(),
 			kubeInformerFactory.Core().V1().Secrets(),
+			agonesClient.AgonesV1(),
 			kubeClient,
-			NewReadyGameServerCache(agonesInformerFactory.Agones().V1().GameServers(), agonesClient.AgonesV1(), counter, health),
+			NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), counter, health),
 			remoteAllocationTimeout,
 			totalAllocationTimeout),
 	}

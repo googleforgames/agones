@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC All Rights Reserved.
+// Copyright 2021 Google LLC All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import (
 
 	"agones.dev/agones/pkg/apis/agones"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
-	getterv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	informerv1 "agones.dev/agones/pkg/client/informers/externalversions/agones/v1"
 	listerv1 "agones.dev/agones/pkg/client/listers/agones/v1"
 	"agones.dev/agones/pkg/gameservers"
@@ -31,29 +29,45 @@ import (
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/tools/cache"
 )
 
-// ReadyGameServerCache handles the gameserver sync operations for cache
-type ReadyGameServerCache struct {
+type matcher func(*agonesv1.GameServer) bool
+
+// readyGameServerMatcher return true when a GameServer is in a Ready state.
+func readyGameServerMatcher(gs *agonesv1.GameServer) bool {
+	return gs.Status.State == agonesv1.GameServerStateReady
+}
+
+// readyOrAllocatedGameServerMatcher returns true when a GameServer is in a Ready or Allocated state.
+func readyOrAllocatedGameServerMatcher(gs *agonesv1.GameServer) bool {
+	return gs.Status.State == agonesv1.GameServerStateReady || gs.Status.State == agonesv1.GameServerStateAllocated
+}
+
+// AllocationCache maintains a cache of GameServers that could potentially be allocated.
+type AllocationCache struct {
 	baseLogger       *logrus.Entry
-	readyGameServers gameServerCacheEntry
-	gameServerGetter getterv1.GameServersGetter
+	cache            gameServerCacheEntry
 	gameServerLister listerv1.GameServerLister
 	gameServerSynced cache.InformerSynced
 	workerqueue      *workerqueue.WorkerQueue
 	counter          *gameservers.PerNodeCounter
+	matcher          matcher
 }
 
-// NewReadyGameServerCache creates a new instance of ReadyGameServerCache
-func NewReadyGameServerCache(informer informerv1.GameServerInformer, gameServerGetter getterv1.GameServersGetter, counter *gameservers.PerNodeCounter, health healthcheck.Handler) *ReadyGameServerCache {
-	c := &ReadyGameServerCache{
+// NewAllocationCache creates a new instance of AllocationCache
+func NewAllocationCache(informer informerv1.GameServerInformer, counter *gameservers.PerNodeCounter, health healthcheck.Handler) *AllocationCache {
+	c := &AllocationCache{
 		gameServerSynced: informer.Informer().HasSynced,
-		gameServerGetter: gameServerGetter,
 		gameServerLister: informer.Lister(),
 		counter:          counter,
+		matcher:          readyGameServerMatcher,
+	}
+
+	// if we can do state filtering, then cache both Ready and Allocated GameServers
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		c.matcher = readyOrAllocatedGameServerMatcher
 	}
 
 	informer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -66,12 +80,12 @@ func NewReadyGameServerCache(informer informerv1.GameServerInformer, gameServerG
 				return
 			}
 			if newGs.IsBeingDeleted() {
-				c.readyGameServers.Delete(key)
-			} else if oldGs.Status.State == agonesv1.GameServerStateReady || newGs.Status.State == agonesv1.GameServerStateReady {
-				if newGs.Status.State == agonesv1.GameServerStateReady {
-					c.readyGameServers.Store(key, newGs)
+				c.cache.Delete(key)
+			} else if c.matcher(oldGs) || c.matcher(newGs) {
+				if c.matcher(newGs) {
+					c.cache.Store(key, newGs)
 				} else {
-					c.readyGameServers.Delete(key)
+					c.cache.Delete(key)
 				}
 			}
 		},
@@ -82,50 +96,50 @@ func NewReadyGameServerCache(informer informerv1.GameServerInformer, gameServerG
 			}
 			var key string
 			if key, ok = c.getKey(gs); ok {
-				c.readyGameServers.Delete(key)
+				c.cache.Delete(key)
 			}
 		},
 	})
 
 	c.baseLogger = runtime.NewLoggerWithType(c)
-	c.workerqueue = workerqueue.NewWorkerQueue(c.SyncGameServers, c.baseLogger, logfields.GameServerKey, agones.GroupName+".GameServerUpdateController")
-	health.AddLivenessCheck("gameserverallocation-gameserver-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
+	c.workerqueue = workerqueue.NewWorkerQueue(c.SyncGameServers, c.baseLogger, logfields.GameServerKey, agones.GroupName+".AllocationCache")
+	health.AddLivenessCheck("allocationcache-workerqueue", healthcheck.Check(c.workerqueue.Healthy))
 
 	return c
 }
 
-func (c *ReadyGameServerCache) loggerForGameServerKey(key string) *logrus.Entry {
+func (c *AllocationCache) loggerForGameServerKey(key string) *logrus.Entry {
 	return logfields.AugmentLogEntry(c.baseLogger, logfields.GameServerKey, key)
 }
 
-// RemoveFromReadyGameServer removes a gameserver from the list of ready game server list
-func (c *ReadyGameServerCache) RemoveFromReadyGameServer(gs *agonesv1.GameServer) error {
+// RemoveGameServer removes a gameserver from the cache of game servers
+func (c *AllocationCache) RemoveGameServer(gs *agonesv1.GameServer) error {
 	key, _ := cache.MetaNamespaceKeyFunc(gs)
-	if ok := c.readyGameServers.Delete(key); !ok {
+	if ok := c.cache.Delete(key); !ok {
 		return ErrConflictInGameServerSelection
 	}
 	return nil
 }
 
-// Sync waits for cache to sync
-func (c *ReadyGameServerCache) Sync(ctx context.Context) error {
-	c.baseLogger.Debug("Wait for ReadyGameServerCache cache sync")
+// Sync builds the initial cache from the current set GameServers in the cluster
+func (c *AllocationCache) Sync(ctx context.Context) error {
+	c.baseLogger.Debug("Wait for AllocationCache cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
 
 	// build the cache
-	return c.syncReadyGSServerCache()
+	return c.syncCache()
 }
 
 // Resync enqueues an empty game server to be synced. Using queue helps avoiding multiple threads syncing at the same time.
-func (c *ReadyGameServerCache) Resync() {
+func (c *AllocationCache) Resync() {
 	// this will trigger syncing of the cache (assuming cache might not be up to date)
 	c.workerqueue.EnqueueImmediately(&agonesv1.GameServer{})
 }
 
 // Run prepares cache to start
-func (c *ReadyGameServerCache) Run(ctx context.Context) error {
+func (c *AllocationCache) Run(ctx context.Context) error {
 	if err := c.Sync(ctx); err != nil {
 		return err
 	}
@@ -135,32 +149,32 @@ func (c *ReadyGameServerCache) Run(ctx context.Context) error {
 	return nil
 }
 
-// AddToReadyGameServer adds a gameserver to the list of ready game server list
-func (c *ReadyGameServerCache) AddToReadyGameServer(gs *agonesv1.GameServer) {
+// AddGameServer adds a gameserver to the cache of allocatable GameServers
+func (c *AllocationCache) AddGameServer(gs *agonesv1.GameServer) {
 	key, _ := cache.MetaNamespaceKeyFunc(gs)
 
-	c.readyGameServers.Store(key, gs)
+	c.cache.Store(key, gs)
 }
 
-// getReadyGameServers returns a list of ready game servers
-func (c *ReadyGameServerCache) getReadyGameServers() []*agonesv1.GameServer {
-	length := c.readyGameServers.Len()
+// getGameServers returns a list of game servers in the cache.
+func (c *AllocationCache) getGameServers() []*agonesv1.GameServer {
+	length := c.cache.Len()
 	if length == 0 {
 		return nil
 	}
 
 	list := make([]*agonesv1.GameServer, 0, length)
-	c.readyGameServers.Range(func(_ string, gs *agonesv1.GameServer) bool {
+	c.cache.Range(func(_ string, gs *agonesv1.GameServer) bool {
 		list = append(list, gs)
 		return true
 	})
 	return list
 }
 
-// ListSortedReadyGameServers returns a list of the cache ready gameservers
-// sorted by most allocated to least
-func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServer {
-	list := c.getReadyGameServers()
+// ListSortedGameServers returns a list of the cached gameservers
+// sorted by most allocated to least.
+func (c *AllocationCache) ListSortedGameServers() []*agonesv1.GameServer {
+	list := c.getGameServers()
 	if list == nil {
 		return []*agonesv1.GameServer{}
 	}
@@ -169,6 +183,13 @@ func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServ
 	sort.Slice(list, func(i, j int) bool {
 		gs1 := list[i]
 		gs2 := list[j]
+
+		if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+			// Search Allocated GameServers first.
+			if gs1.Status.State != gs2.Status.State {
+				return gs1.Status.State == agonesv1.GameServerStateAllocated
+			}
+		}
 
 		c1, ok := counts[gs1.Status.NodeName]
 		if !ok {
@@ -196,6 +217,21 @@ func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServ
 			return true
 		}
 
+		// if player tracking is enabled, prefer game servers with the least amount of room left
+		if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+			if gs1.Status.Players != nil && gs2.Status.Players != nil {
+				cap1 := gs1.Status.Players.Capacity - gs1.Status.Players.Count
+				cap2 := gs2.Status.Players.Capacity - gs2.Status.Players.Count
+
+				// if they are equal, pass the comparison through.
+				if cap1 < cap2 {
+					return true
+				} else if cap2 < cap1 {
+					return false
+				}
+			}
+		}
+
 		// finally sort lexicographically, so we have a stable order
 		return gs1.Status.NodeName < gs2.Status.NodeName
 	})
@@ -203,46 +239,16 @@ func (c *ReadyGameServerCache) ListSortedReadyGameServers() []*agonesv1.GameServ
 	return list
 }
 
-// PatchGameServerMetadata patches the input gameserver with allocation meta patch and returns the updated gameserver
-func (c *ReadyGameServerCache) PatchGameServerMetadata(ctx context.Context, fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
-	c.patchMetadata(gs, fam)
-	gs.Status.State = agonesv1.GameServerStateAllocated
-
-	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
-}
-
-// patch the labels and annotations of an allocated GameServer with metadata from a GameServerAllocation
-func (c *ReadyGameServerCache) patchMetadata(gs *agonesv1.GameServer, fam allocationv1.MetaPatch) {
-	// patch ObjectMeta labels
-	if fam.Labels != nil {
-		if gs.ObjectMeta.Labels == nil {
-			gs.ObjectMeta.Labels = make(map[string]string, len(fam.Labels))
-		}
-		for key, value := range fam.Labels {
-			gs.ObjectMeta.Labels[key] = value
-		}
-	}
-	// apply annotations patch
-	if fam.Annotations != nil {
-		if gs.ObjectMeta.Annotations == nil {
-			gs.ObjectMeta.Annotations = make(map[string]string, len(fam.Annotations))
-		}
-		for key, value := range fam.Annotations {
-			gs.ObjectMeta.Annotations[key] = value
-		}
-	}
-}
-
 // SyncGameServers synchronises the GameServers to Gameserver cache. This is called when a failure
 // happened during the allocation. This method will sync and make sure the cache is up to date.
-func (c *ReadyGameServerCache) SyncGameServers(ctx context.Context, key string) error {
-	c.loggerForGameServerKey(key).Debug("Refreshing Ready Gameserver cache")
+func (c *AllocationCache) SyncGameServers(ctx context.Context, key string) error {
+	c.loggerForGameServerKey(key).Debug("Refreshing Allocation Gameserver cache")
 
-	return c.syncReadyGSServerCache()
+	return c.syncCache()
 }
 
-// syncReadyGSServerCache syncs the gameserver cache and updates the local cache for any changes.
-func (c *ReadyGameServerCache) syncReadyGSServerCache() error {
+// syncCache syncs the gameserver cache and updates the local cache for any changes.
+func (c *AllocationCache) syncCache() error {
 	// build the cache
 	gsList, err := c.gameServerLister.List(labels.Everything())
 	if err != nil {
@@ -259,7 +265,7 @@ func (c *ReadyGameServerCache) syncReadyGSServerCache() error {
 
 	// first remove the gameservers are not in the list anymore
 	tobeDeletedGSInCache := make([]string, 0)
-	c.readyGameServers.Range(func(key string, gs *agonesv1.GameServer) bool {
+	c.cache.Range(func(key string, gs *agonesv1.GameServer) bool {
 		if _, ok := currGameservers[key]; !ok {
 			tobeDeletedGSInCache = append(tobeDeletedGSInCache, key)
 		}
@@ -267,19 +273,19 @@ func (c *ReadyGameServerCache) syncReadyGSServerCache() error {
 	})
 
 	for _, staleGSKey := range tobeDeletedGSInCache {
-		c.readyGameServers.Delete(staleGSKey)
+		c.cache.Delete(staleGSKey)
 	}
 
 	// refresh the cache of possible allocatable GameServers
 	for key, gs := range currGameservers {
-		if gsCache, ok := c.readyGameServers.Load(key); ok {
-			if !(gs.DeletionTimestamp.IsZero() && gs.Status.State == agonesv1.GameServerStateReady) {
-				c.readyGameServers.Delete(key)
+		if gsCache, ok := c.cache.Load(key); ok {
+			if !(gs.DeletionTimestamp.IsZero() && c.matcher(gs)) {
+				c.cache.Delete(key)
 			} else if gs.ObjectMeta.ResourceVersion != gsCache.ObjectMeta.ResourceVersion {
-				c.readyGameServers.Store(key, gs)
+				c.cache.Store(key, gs)
 			}
-		} else if gs.DeletionTimestamp.IsZero() && gs.Status.State == agonesv1.GameServerStateReady {
-			c.readyGameServers.Store(key, gs)
+		} else if gs.DeletionTimestamp.IsZero() && c.matcher(gs) {
+			c.cache.Store(key, gs)
 		}
 	}
 
@@ -287,7 +293,7 @@ func (c *ReadyGameServerCache) syncReadyGSServerCache() error {
 }
 
 // getKey extract the key of gameserver object
-func (c *ReadyGameServerCache) getKey(gs *agonesv1.GameServer) (string, bool) {
+func (c *AllocationCache) getKey(gs *agonesv1.GameServer) (string, bool) {
 	var key string
 	ok := true
 	var err error
