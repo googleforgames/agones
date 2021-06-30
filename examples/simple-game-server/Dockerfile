@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # build
-FROM golang:1.14.12 as builder
+FROM golang:1.16.5 as builder
 WORKDIR /go/src/simple-game-server
 
 COPY examples/simple-game-server/main.go .

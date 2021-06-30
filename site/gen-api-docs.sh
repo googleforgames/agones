@@ -22,8 +22,8 @@ echo "using go proxy as a workaround for git.agache.org being down: $GOPROXY"
 cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
-go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
-go build
+go mod edit -require agones.dev/agones@v0.0.0-local --replace=agones.dev/agones@v0.0.0-local=../../../agones.dev/agones/
+go build -mod=mod
 
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
 
@@ -41,7 +41,7 @@ RESULT="/tmp/agones_crd_api_reference.html"
 # Version to compare
 OLD="/tmp/old_docs.html"
 
-./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
+./gen-crd-api-reference-docs --config ../../../agones.dev/agones/site/assets/templates/crd-doc-config.json --v=10 --api-dir ../../../agones.dev/agones/pkg/apis/ --out-file $RESULT
 awk '/\ feature\ publishVersion/{flag=1;next}/\ \/feature/{flag=0}flag' $FILE > $OLD
 
 # Get the title lines from +++ till empty string
