@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Gather dependencies and build the executable
-FROM golang:1.14.12 as builder
+FROM golang:1.16.5 as builder
 WORKDIR /go/src/crd-client
 
 COPY ./main.go .
