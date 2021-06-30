@@ -58,7 +58,7 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 				}}
 
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
@@ -170,7 +170,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: true,
 						PolicySelector: metav1.LabelSelector{
@@ -230,7 +230,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 				}}
 
 			for i := 0; i < replicasCount; i++ {
@@ -268,7 +268,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}},
+			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}}},
 			MetaPatch: allocationv1.MetaPatch{
 				Labels:      map[string]string{"red": "blue"},
 				Annotations: map[string]string{"dog": "good"},
@@ -330,9 +330,9 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: label},
-			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}},
+			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
+			Preferred: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}}},
 			},
 		}}
 
@@ -395,7 +395,7 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}},
+			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}}},
 		}}
 
 	gsa, err := allocations.Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
@@ -429,9 +429,9 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: label},
-			Preferred: []metav1.LabelSelector{
-				{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}},
+			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
+			Preferred: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}}},
 			},
 		}}
 

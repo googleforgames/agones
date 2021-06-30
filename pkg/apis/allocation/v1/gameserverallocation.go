@@ -19,7 +19,7 @@ import (
 
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"github.com/pkg/errors"
+	"agones.dev/agones/pkg/util/runtime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -67,12 +67,12 @@ type GameServerAllocationSpec struct {
 	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty"`
 
 	// Required The required allocation. Defaults to all GameServers.
-	Required metav1.LabelSelector `json:"required,omitempty"`
+	Required GameServerSelector `json:"required,omitempty"`
 
 	// Preferred ordered list of preferred allocations out of the `required` set.
 	// If the first selector is not matched,
 	// the selection attempts the second selector, and so on.
-	Preferred []metav1.LabelSelector `json:"preferred,omitempty"`
+	Preferred []GameServerSelector `json:"preferred,omitempty"`
 
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling"`
@@ -80,6 +80,137 @@ type GameServerAllocationSpec struct {
 	// MetaPatch is optional custom metadata that is added to the game server at allocation
 	// You can use this to tell the server necessary session data
 	MetaPatch MetaPatch `json:"metadata,omitempty"`
+}
+
+// GameServerSelector contains all the filter options for selecting
+// a GameServer for allocation.
+type GameServerSelector struct {
+	metav1.LabelSelector
+	// [Stage:Alpha]
+	// [FeatureFlag:StateAllocationFilter]
+	// +optional
+	GameServerState *agonesv1.GameServerState `json:"gameServerState,omitempty"`
+	// [Stage:Alpha]
+	// [FeatureFlag:PlayerAllocationFilter]
+	// +optional
+	Players *PlayerSelector `json:"players,omitempty"`
+}
+
+// PlayerSelector is the filter options for a GameServer based on player counts
+type PlayerSelector struct {
+	MinAvailable int64 `json:"minAvailable,omitempty"`
+	MaxAvailable int64 `json:"maxAvailable,omitempty"`
+}
+
+// ApplyDefaults applies default values to the PlayerSelector
+func (s *GameServerSelector) ApplyDefaults() {
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		if s.GameServerState == nil {
+			state := agonesv1.GameServerStateReady
+			s.GameServerState = &state
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		if s.Players == nil {
+			s.Players = &PlayerSelector{}
+		}
+	}
+}
+
+// Matches checks to see if a GameServer matches a given GameServerSelector's criteria
+func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
+
+	// Assume at this point, this has already been run through Validate(), and it can be converted.
+	// We end up running LabelSelectorAsSelector twice for each allocation, but if we store the results of this
+	// function within the GameServerSelector, we can't fuzz the GameServerAllocation as reflect.DeepEqual
+	// will fail due to the unexported field.
+	selector, _ := metav1.LabelSelectorAsSelector(&s.LabelSelector) // nolint: error
+	if selector == nil {
+		return false
+	}
+
+	// first check labels
+	if !selector.Matches(labels.Set(gs.ObjectMeta.Labels)) {
+		return false
+	}
+
+	// then if state is being checked, check state
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		if s.GameServerState != nil && gs.Status.State != *s.GameServerState {
+			return false
+		}
+	}
+
+	// then if player count is being checked, check that
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) {
+		// 0 is unlimited number of players
+		if s.Players != nil && gs.Status.Players != nil && s.Players.MaxAvailable != 0 {
+			available := gs.Status.Players.Capacity - gs.Status.Players.Count
+			if !(available >= s.Players.MinAvailable && available <= s.Players.MaxAvailable) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// Validate validates that the selection fields have valid values
+func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause) ([]metav1.StatusCause, bool) {
+	valid := true
+
+	_, err := metav1.LabelSelectorAsSelector(&s.LabelSelector)
+	if err != nil {
+		valid = false
+		causes = append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Message: fmt.Sprintf("Error converting label selector: %s", err),
+			Field:   field,
+		})
+	}
+
+	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
+			valid = false
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "GameServerState value can only be Allocated or Ready",
+				Field:   field,
+			})
+		}
+	}
+
+	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
+		if s.Players.MinAvailable < 0 {
+			valid = false
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "Players.MinAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+
+		if s.Players.MaxAvailable < 0 {
+			valid = false
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "Players.MaxAvailable must be greater than zero",
+				Field:   field,
+			})
+		}
+
+		if s.Players.MinAvailable > s.Players.MaxAvailable {
+			valid = false
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Message: "Players.MinAvailable must be less than Players.MaxAvailable",
+				Field:   field,
+			})
+		}
+	}
+
+	return causes, valid
 }
 
 // MultiClusterSetting specifies settings for multi-cluster allocation.
@@ -92,23 +223,6 @@ type MultiClusterSetting struct {
 type MetaPatch struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
-}
-
-// PreferredSelectors converts all the preferred label selectors into an array of
-// labels.Selectors. This is useful as they all have `Match()` functions!
-func (gsas *GameServerAllocationSpec) PreferredSelectors() ([]labels.Selector, error) {
-	list := make([]labels.Selector, len(gsas.Preferred))
-
-	var err error
-	for i, p := range gsas.Preferred {
-		p := p
-		list[i], err = metav1.LabelSelectorAsSelector(&p)
-		if err != nil {
-			break
-		}
-	}
-
-	return list, errors.WithStack(err)
 }
 
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
@@ -126,9 +240,16 @@ func (gsa *GameServerAllocation) ApplyDefaults() {
 	if gsa.Spec.Scheduling == "" {
 		gsa.Spec.Scheduling = apis.Packed
 	}
+
+	gsa.Spec.Required.ApplyDefaults()
+
+	for i := range gsa.Spec.Preferred {
+		gsa.Spec.Preferred[i].ApplyDefaults()
+	}
 }
 
 // Validate validation for the GameServerAllocation
+// Validate should be called before attempting to Match any of the GameServer selectors.
 func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 	var causes []metav1.StatusCause
 
@@ -142,6 +263,11 @@ func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 		causes = append(causes, metav1.StatusCause{Type: metav1.CauseTypeFieldValueInvalid,
 			Field:   "spec.scheduling",
 			Message: fmt.Sprintf("Invalid value: %s, value must be either Packed or Distributed", gsa.Spec.Scheduling)})
+	}
+
+	causes, _ = gsa.Spec.Required.Validate("spec.required", causes)
+	for i := range gsa.Spec.Preferred {
+		causes, _ = gsa.Spec.Preferred[i].Validate(fmt.Sprintf("spec.preferred[%d]", i), causes)
 	}
 
 	return causes, len(causes) == 0

@@ -3726,6 +3726,7 @@ PlayersSpec
 (<code>string</code> alias)</p></h3>
 <p>
 (<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>, 
 <a href="#agones.dev/v1.GameServerStatus">GameServerStatus</a>)
 </p>
 <p>
@@ -4300,8 +4301,8 @@ Otherwise, allocation will happen locally.</p>
 <td>
 <code>required</code></br>
 <em>
-<a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+GameServerSelector
 </a>
 </em>
 </td>
@@ -4313,8 +4314,8 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>preferred</code></br>
 <em>
-<a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
-[]Kubernetes meta/v1.LabelSelector
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+[]GameServerSelector
 </a>
 </em>
 </td>
@@ -4401,8 +4402,8 @@ Otherwise, allocation will happen locally.</p>
 <td>
 <code>required</code></br>
 <em>
-<a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+GameServerSelector
 </a>
 </em>
 </td>
@@ -4414,8 +4415,8 @@ Kubernetes meta/v1.LabelSelector
 <td>
 <code>preferred</code></br>
 <em>
-<a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
-[]Kubernetes meta/v1.LabelSelector
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+[]GameServerSelector
 </a>
 </em>
 </td>
@@ -4535,6 +4536,68 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="allocation.agones.dev/v1.GameServerSelector">GameServerSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerAllocationSpec">GameServerAllocationSpec</a>)
+</p>
+<p>
+<p>GameServerSelector contains all the filter options for selecting
+a GameServer for allocation.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>LabelSelector</code></br>
+<em>
+<a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>gameServerState</code></br>
+<em>
+<a href="#agones.dev/v1.GameServerState">
+GameServerState
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:StateAllocationFilter]</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>players</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.PlayerSelector">
+PlayerSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:PlayerAllocationFilter]</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="allocation.agones.dev/v1.MetaPatch">MetaPatch
 </h3>
 <p>
@@ -4608,6 +4671,45 @@ bool
 <a href="https://v1-19.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta">
 Kubernetes meta/v1.LabelSelector
 </a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="allocation.agones.dev/v1.PlayerSelector">PlayerSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">GameServerSelector</a>)
+</p>
+<p>
+<p>PlayerSelector is the filter options for a GameServer based on player counts</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>minAvailable</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxAvailable</code></br>
+<em>
+int64
 </em>
 </td>
 <td>

@@ -21,8 +21,6 @@ import (
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
 	"github.com/pkg/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 // findGameServerForAllocation finds an optimal gameserver, given the
@@ -37,18 +35,8 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 		index int
 	}
 
-	requiredSelector, err := metav1.LabelSelectorAsSelector(&gsa.Spec.Required)
-	if err != nil {
-		return nil, -1, errors.Wrap(err, "could not convert GameServerAllocation selector")
-	}
-
-	preferredSelector, err := gsa.Spec.PreferredSelectors()
-	if err != nil {
-		return nil, -1, errors.Wrap(err, "could not convert preferred selectors for GameServerAllocation")
-	}
-
 	var required *result
-	preferred := make([]*result, len(preferredSelector))
+	preferred := make([]*result, len(gsa.Spec.Preferred))
 
 	var loop func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer))
 
@@ -87,17 +75,15 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 			return
 		}
 
-		set := labels.Set(gs.ObjectMeta.Labels)
-
 		// first look at preferred
-		for j, sel := range preferredSelector {
-			if preferred[j] == nil && sel.Matches(set) {
+		for j, sel := range gsa.Spec.Preferred {
+			if preferred[j] == nil && sel.Matches(gs) {
 				preferred[j] = &result{gs: gs, index: i}
 			}
 		}
 
 		// then look at required
-		if required == nil && requiredSelector.Matches(set) {
+		if required == nil && gsa.Spec.Required.Matches(gs) {
 			required = &result{gs: gs, index: i}
 		}
 	})
