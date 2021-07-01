@@ -17,10 +17,14 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 2.63"
+      version = "= 2.63.0"
     }
   }
   required_version = ">= 0.12.26"
+}
+
+provider "azurerm" {
+  features {}
 }
 
 resource "azurerm_resource_group" "agones_rg" {
@@ -61,7 +65,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "system" {
   node_count            = 1
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
-  node_taints           = ["agones.dev/agones-system=true:NoExecute"]
+  node_taints = [
+    "agones.dev/agones-system=true:NoExecute"
+  ]
   node_labels = {
     "agones.dev/agones-system" : "true"
   }
@@ -74,7 +80,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
   node_count            = 1
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
-  node_taints           = ["agones.dev/agones-metrics=true:NoExecute"]
+  node_taints = [
+    "agones.dev/agones-metrics=true:NoExecute"
+  ]
   node_labels = {
     "agones.dev/agones-metrics" : "true"
   }
@@ -82,8 +90,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
 
 data "azurerm_resources" "network_security_groups" {
   resource_group_name = azurerm_kubernetes_cluster.agones.node_resource_group
-
-  type = "Microsoft.Network/networkSecurityGroups"
+  type                = "Microsoft.Network/networkSecurityGroups"
 }
 
 resource "azurerm_network_security_rule" "gameserver" {
@@ -99,5 +106,6 @@ resource "azurerm_network_security_rule" "gameserver" {
   # 2021.06.07-WeetA34: Force lowercase to avoid resource recreation due to attribute saved as lowercase
   resource_group_name = lower(data.azurerm_resources.network_security_groups.resource_group_name)
   # Ensure we get the first network security group named aks-agentpool-*******-nsg
+  # If an error is raised here, wait few minutes and retry. It seems Azure doesn't always return all resources just after creation.
   network_security_group_name = [for network_security_group in data.azurerm_resources.network_security_groups.resources : network_security_group.name if length(regexall("^aks-agentpool-\\d+-nsg$", network_security_group.name)) > 0][0]
 }
