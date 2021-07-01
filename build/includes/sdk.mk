@@ -129,7 +129,7 @@ run-sdk-conformance-local: TESTS ?= ready,allocate,setlabel,setannotation,gamese
 run-sdk-conformance-local: FEATURE_GATES ?=
 run-sdk-conformance-local: ensure-agones-sdk-image
 	docker run -e "ADDRESS=" -p 9357:9357 -p 9358:9358 \
-	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "FEATURE_GATES=$(FEATURE_GATES)" $(sidecar_tag)
+	 -e "TEST=$(TESTS)" -e "TIMEOUT=$(TIMEOUT)" -e "FEATURE_GATES=$(FEATURE_GATES)" $(sidecar_linux_amd64_tag)
 
 # Run SDK conformance test, previously built, for a specific SDK_FOLDER
 # Sleeps the start of the sidecar to test that the SDK blocks on connection correctly
@@ -144,7 +144,7 @@ run-sdk-conformance-no-build: ensure-agones-sdk-image
 run-sdk-conformance-no-build: ensure-build-sdk-image
 	DOCKER_RUN_ARGS="--net host -e AGONES_SDK_GRPC_PORT=$(GRPC_PORT) -e AGONES_SDK_HTTP_PORT=$(HTTP_PORT) -e FEATURE_GATES=$(FEATURE_GATES) $(DOCKER_RUN_ARGS)" COMMAND=sdktest $(MAKE) run-sdk-command & \
 	docker run -p $(GRPC_PORT):$(GRPC_PORT) -p $(HTTP_PORT):$(HTTP_PORT) -e "FEATURE_GATES=$(FEATURE_GATES)" -e "ADDRESS=" -e "TEST=$(TESTS)" -e "SDK_NAME=$(SDK_FOLDER)" -e "TIMEOUT=$(TIMEOUT)" -e "DELAY=$(DELAY)" \
-	--net=host $(sidecar_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
+	--net=host $(sidecar_linux_amd64_tag) --grpc-port $(GRPC_PORT) --http-port $(HTTP_PORT)
 
 # Run SDK conformance test for a specific SDK_FOLDER
 run-sdk-conformance-test: ensure-agones-sdk-image

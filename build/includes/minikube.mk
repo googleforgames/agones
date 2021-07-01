@@ -38,7 +38,7 @@ minikube-shell: $(ensure-build-image)
 # Push the local Agones Docker images that have already been built
 # via `make build` or `make build-images` into the "agones" minikube instance.
 minikube-push:
-	$(MINIKUBE) cache add $(sidecar_tag)
+	$(MINIKUBE) cache add $(sidecar_linux_amd64_tag)
 	$(MINIKUBE) cache add $(controller_tag)
 	$(MINIKUBE) cache add $(ping_tag)
 	$(MINIKUBE) cache add $(allocator_tag)
