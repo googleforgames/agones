@@ -66,4 +66,4 @@ pull-remote-build-image:
 	-docker pull $(REMOTE_TAG) && docker tag $(REMOTE_TAG) $(LOCAL_TAG)
 
 ensure-agones-sdk-image:
-	$(MAKE) ensure-image IMAGE_TAG=$(sidecar_tag) BUILD_TARGET=build-agones-sdk-server-image
+	$(MAKE) ensure-image IMAGE_TAG=$(sidecar_linux_amd64_tag) BUILD_TARGET=build-agones-sdk-server-image
