@@ -51,10 +51,17 @@ import (
 	"k8s.io/client-go/tools/record"
 )
 
+// fasThread is used for tracking each Fleet's autoscaling jobs
+type fasThread struct {
+	resourceVersion string
+	terminateSignal chan struct{}
+}
+
 // Controller is a the FleetAutoscaler controller
 type Controller struct {
 	baseLogger            *logrus.Entry
 	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
+	fasThreads            map[string]fasThread
 	fleetGetter           typedagonesv1.FleetsGetter
 	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
@@ -78,6 +85,7 @@ func NewController(
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
+		fasThreads:            map[string]fasThread{},
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -103,6 +111,7 @@ func NewController(
 		UpdateFunc: func(_, newObj interface{}) {
 			c.workerqueue.Enqueue(newObj)
 		},
+		DeleteFunc: c.workerqueue.Enqueue,
 	})
 
 	return c
@@ -147,7 +156,7 @@ func (c *Controller) validationHandler(review admissionv1.AdmissionReview) (admi
 		c.baseLogger.WithField("review", review).WithError(err).Error("validationHandler")
 		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
 	}
-
+	fas.ApplyDefaults()
 	var causes []metav1.StatusCause
 	causes = fas.Validate(causes)
 	if len(causes) != 0 {
