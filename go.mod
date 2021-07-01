@@ -1,6 +1,6 @@
 module agones.dev/agones
 
-go 1.16
+go 1.15
 
 require (
 	cloud.google.com/go v0.51.0
