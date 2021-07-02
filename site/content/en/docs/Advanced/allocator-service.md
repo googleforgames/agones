@@ -96,6 +96,9 @@ EOF
 # Add ca.crt to the allocator-tls-ca Secret
 TLS_CA_VALUE=$(kubectl get secret allocator-tls -n agones-system -ojsonpath='{.data.ca\.crt}')
 kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CA_VALUE}'"' | kubectl apply -f -
+echo $TLS_CA_VALUE | base64 -d > ca.crt
+# In case of MacOS
+# echo $TLS_CA_VALUE | base64 -D > ca.crt
 ```
 
 ## Client Certificate
@@ -109,12 +112,14 @@ Otherwise, here is an example of generating a client certificate using openssl.
 ```bash
 #!/bin/bash
 
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout client.key -out client.crt
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
-CERT_FILE_VALUE=$(cat ${CERT_FILE} | base64 -w 0)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout client.key -out client.crt -addext 'subjectAltName=IP:'${EXTERNAL_IP}''
+
+CERT_FILE_VALUE=$(cat client.crt | base64 -w 0)
 
 # In case of MacOS
-# CERT_FILE_VALUE=$(cat ${CERT_FILE} | base64)
+# CERT_FILE_VALUE=$(cat client.crt | base64)
 
 # allowlist client certificate
 kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["client_trial.crt"]="'${CERT_FILE_VALUE}'"' | kubectl apply -f -
