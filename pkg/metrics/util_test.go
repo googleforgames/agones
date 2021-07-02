@@ -185,6 +185,12 @@ func fleetAutoScaler(fleetName string, fasName string) *autoscalingv1.FleetAutos
 					BufferSize:  intstr.FromInt(11),
 				},
 			},
+			Sync: autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: &autoscalingv1.FixedIntervalSync{
+					Seconds: 30,
+				},
+			},
 		},
 		Status: autoscalingv1.FleetAutoscalerStatus{
 			AbleToScale:     true,

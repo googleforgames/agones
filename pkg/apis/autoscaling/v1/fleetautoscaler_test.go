@@ -238,7 +238,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 			Sync: FleetAutoscalerSync{
 				Type: FixedIntervalSyncType,
 				FixedInterval: &FixedIntervalSync{
-					Seconds: 10,
+					Seconds: 30,
 				},
 			},
 		},

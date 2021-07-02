@@ -350,6 +350,12 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.
 					MaxReplicas: 10,
 				},
 			},
+			Sync: autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: &autoscalingv1.FixedIntervalSync{
+					Seconds: 30,
+				},
+			},
 		},
 	}
 }
