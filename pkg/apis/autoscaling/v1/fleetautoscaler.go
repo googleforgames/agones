@@ -326,8 +326,8 @@ func (i *FixedIntervalSync)ValidateFixedIntervalSync(causes []metav1.StatusCause
 	if i == nil {
 		return append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
-			Field:   "interval",
-			Message: "Sync interval config params are missing",
+			Field:   "fixedInterval",
+			Message: "fixedInterval config params are missing",
 		})
 	}
 	if i.Seconds <= 0 {
