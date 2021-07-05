@@ -100,6 +100,7 @@ resource "azurerm_network_security_rule" "gameserver" {
   source_address_prefix      = "*"
   destination_address_prefix = "*"
   resource_group_name        = azurerm_kubernetes_cluster.agones.node_resource_group
+  # We don't use azurerm_resources datasource to get the security group as it's not reliable: random empty resource array
   # 55978144 are the first 8 characters of the fnv64a hash's UInt32 of master node's dns prefix ("agones")
   network_security_group_name = "aks-agentpool-55978144-nsg"
 
