@@ -54,7 +54,9 @@ type FleetAutoscalerSpec struct {
 	// Autoscaling policy
 	Policy FleetAutoscalerPolicy `json:"policy"`
 	// Sync policy
-	Sync FleetAutoscalerSync `json:"sync"`
+	// This field is alpha-level and is only applied for FleetAutoscalers when the CustomFasRsyncInterval feature is enabled
+	// +optional
+	Sync FleetAutoscalerSync `json:"sync,omitempty"`
 }
 
 // FleetAutoscalerPolicy describes how to scale a fleet

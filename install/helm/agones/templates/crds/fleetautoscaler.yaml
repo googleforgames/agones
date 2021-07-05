@@ -46,7 +46,6 @@ spec:
               required:
                 - fleetName
                 - policy
-                - sync
               properties:
                 fleetName:
                   type: string
