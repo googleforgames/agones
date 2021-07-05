@@ -31,7 +31,7 @@ The current set of `alpha` and `beta` feature gates are:
 | [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Enabled | `Beta` | 1.12.0 |
 | Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) | `RollingUpdateOnReady` | Enabled | `Beta` | 1.14.0 |
 | [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
-| [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955) | `CustomFasRsyncInterval` | Disabled | `Alpha` | 1.16.0 |
+| [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955) | `CustomFasSyncInterval` | Disabled | `Alpha` | 1.16.0 |
 
 ## Description of Stages
 

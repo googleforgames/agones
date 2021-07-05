@@ -205,7 +205,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		return errors.Wrapf(err, "error retrieving FleetAutoscaler %s from namespace %s", name, namespace)
 	}
 
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasRsyncInterval) {
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
 		return c.syncFleetAutoscalerWithCustomRsyncInterval(ctx, fas)
 	}
 	return c.fleetAutoScale(ctx, fas)

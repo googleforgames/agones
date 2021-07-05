@@ -51,8 +51,8 @@ const (
 	// player capacity.
 	FeaturePlayerAllocationFilter Feature = "PlayerAllocationFilter"
 
-	// FeatureCustomFasRsyncInterval is a feature flag that enables custom the FleetAutoscaler rsync interval
-	FeatureCustomFasRsyncInterval Feature = "CustomFasRsyncInterval"
+	// FeatureCustomFasSyncInterval is a feature flag that enables custom the FleetAutoscaler rsync interval
+	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 )
 
 var (
@@ -67,7 +67,7 @@ var (
 		NodeExternalDNS:               false,
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
-		FeatureCustomFasRsyncInterval: false,
+		FeatureCustomFasSyncInterval:  false,
 	}
 
 	// featureGates is the storage of what features are enabled
