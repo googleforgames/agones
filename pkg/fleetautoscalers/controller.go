@@ -85,7 +85,7 @@ func NewController(
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
-		fasThreads:            map[string]fasThread{},
+		fasThreads:            make(map[string]fasThread),
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -206,7 +206,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	}
 
 	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		return c.syncFleetAutoscalerWithCustomRsyncInterval(ctx, fas)
+		return c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fas)
 	}
 	return c.fleetAutoScale(ctx, fas)
 }
@@ -326,39 +326,46 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 		resourceVersion: fas.ResourceVersion,
 	}
 	// scale immediately when an FAS is created or updated
-	c.fleetAutoScale(ctx, fas)
-	for {
-		select {
-		case <- c.fasThreads[key].terminateSignal:
-			return nil
-		case <-ticker.C:
-			c.loggerForFleetAutoscalerKey(key).Debug("fleet auto scaled")
-			c.fleetAutoScale(ctx, fas)
-		}
+	if err := c.fleetAutoScale(ctx, fas); err != nil {
+		return err
 	}
-}
 
-// removeFasThread remove a FleetAutoScaler sync routine
-func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) error{
-	key := fas.Namespace + "/" + fas.Name
-	if _, ok := c.fasThreads[key]; ok {
-		c.fasThreads[key].terminateSignal <- struct{}{}
-	}
-	delete(c.fasThreads, key)
+	go func() {
+		for {
+			select {
+			case <-c.fasThreads[key].terminateSignal:
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				c.loggerForFleetAutoscalerKey(key).Debug("fleet auto scaled")
+				err := c.fleetAutoScale(ctx, fas)
+				if err != nil {
+					c.loggerForFleetAutoscaler(fas).WithError(err).Error("fleet auto scale failed")
+				}
+			}
+		}
+	}()
 	return nil
 }
 
-// syncFleetAutoscalerWithCustomRsyncInterval syncs the fleet based on a custom interval configured in Fas
-func (c *Controller) syncFleetAutoscalerWithCustomRsyncInterval(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) error {
+// removeFasThread remove a FleetAutoScaler sync routine
+func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) {
+	key := fas.Namespace + "/" + fas.Name
+	if _, ok := c.fasThreads[key]; ok {
+		c.fasThreads[key].terminateSignal <- struct{}{}
+		delete(c.fasThreads, key)
+	}
+}
+
+// syncFleetAutoscalerWithCustomSyncInterval syncs the fleet based on a custom interval configured in Fas
+func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) error {
 	key := fas.Namespace + "/" + fas.Name
 	thread, ok := c.fasThreads[key]
 	if !ok {
 		return c.createFasThread(ctx, fas)
 	}
 	if fas.ResourceVersion != thread.resourceVersion {
-		if err := c.removeFasThread(fas); err != nil {
-			return err
-		}
+		c.removeFasThread(fas)
 		return c.createFasThread(ctx, fas)
 	}
 	// do nothing if the FAS doesn't change
