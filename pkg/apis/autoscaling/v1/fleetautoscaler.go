@@ -135,7 +135,7 @@ type WebhookPolicy admregv1.WebhookClientConfig
 // FixedIntervalSync controls the desired behavior of the fixed interval based sync.
 type FixedIntervalSync struct {
 	// Seconds defines how often we run fleet autoscaling in seconds
-    Seconds int32 `json:"seconds"`
+	Seconds int32 `json:"seconds"`
 }
 
 // FleetAutoscalerStatus defines the current status of a FleetAutoscaler
@@ -325,7 +325,7 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 	return causes
 }
 
-func (i *FixedIntervalSync)ValidateFixedIntervalSync(causes []metav1.StatusCause) []metav1.StatusCause{
+func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCause) []metav1.StatusCause {
 	if i == nil {
 		return append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
@@ -344,7 +344,7 @@ func (i *FixedIntervalSync)ValidateFixedIntervalSync(causes []metav1.StatusCause
 }
 
 // ApplyDefaults applies default values to the FleetAutoscaler
-func (fas *FleetAutoscaler)ApplyDefaults() {
+func (fas *FleetAutoscaler) ApplyDefaults() {
 	if fas.Spec.Sync.Type == "" {
 		fas.Spec.Sync.Type = FixedIntervalSyncType
 	}
