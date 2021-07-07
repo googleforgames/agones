@@ -325,6 +325,7 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 	return causes
 }
 
+// ValidateFixedIntervalSync validates the FixedIntervalSync settings
 func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCause) []metav1.StatusCause {
 	if i == nil {
 		return append(causes, metav1.StatusCause{
