@@ -27,6 +27,7 @@ You will find the executables for the SDK server, one for each type of operating
 - `sdk-server.windows.amd64.exe` - Windows
 - `sdk-server.darwin.amd64` - macOS
 - `sdk-server.linux.amd64` - Linux
+- `docker run --env local=true gcr.io/agones-images/agones-sdk:1.15.0` - Docker (runs in Windows container)
 
 To run in local mode, pass the flag `--local` to the executable.
 
