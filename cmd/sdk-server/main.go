@@ -275,6 +275,7 @@ func parseEnvFlags() config {
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	runtime.Must(viper.BindEnv(localFlag))
+	runtime.Must(viper.BindEnv(fileFlag))
 	runtime.Must(viper.BindEnv(addressFlag))
 	runtime.Must(viper.BindEnv(testFlag))
 	runtime.Must(viper.BindEnv(testSdkNameFlag))
