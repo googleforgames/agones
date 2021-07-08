@@ -103,7 +103,7 @@ spec:
                           type: string
                           format: byte
                 sync:
-                  type: string
+                  type: object
                   required:
                     - type
                   properties:
