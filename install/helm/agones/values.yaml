@@ -153,6 +153,7 @@ agones:
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+    disableSecretCreation: false
     generateTLS: true
     generateClientTLS: true
     disableMTLS: false
