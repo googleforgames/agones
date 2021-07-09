@@ -132,14 +132,14 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			}},
 			expected: expected{
 				valid:    true,
-				causeLen: 1,
+				causeLen: 0,
 			},
 		},
 		"nil values": {
 			selector: &GameServerSelector{},
 			expected: expected{
 				valid:    true,
-				causeLen: 1,
+				causeLen: 0,
 			},
 		},
 		"invalid state": {
@@ -148,8 +148,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			},
 			expected: expected{
 				valid:    false,
-				causeLen: 2,
-				fields:   []string{"inject", "fieldName"},
+				causeLen: 1,
+				fields:   []string{"fieldName"},
 			},
 		},
 		"invalid min value": {
@@ -160,8 +160,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			},
 			expected: expected{
 				valid:    false,
-				causeLen: 2,
-				fields:   []string{"inject", "fieldName"},
+				causeLen: 1,
+				fields:   []string{"fieldName"},
 			},
 		},
 		"invalid max value": {
@@ -173,8 +173,8 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			},
 			expected: expected{
 				valid:    false,
-				causeLen: 3,
-				fields:   []string{"inject", "fieldName", "fieldName"},
+				causeLen: 2,
+				fields:   []string{"fieldName", "fieldName"},
 			},
 		},
 		"invalid min/max value": {
@@ -186,20 +186,16 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			},
 			expected: expected{
 				valid:    false,
-				causeLen: 2,
-				fields:   []string{"inject", "fieldName"},
+				causeLen: 1,
+				fields:   []string{"fieldName"},
 			},
 		},
 	}
 
 	for k, v := range fixtures {
 		t.Run(k, func(t *testing.T) {
-			causes := []metav1.StatusCause{{
-				Type:  metav1.CauseTypeFieldValueNotFound,
-				Field: "inject",
-			}}
 			v.selector.ApplyDefaults()
-			causes, valid := v.selector.Validate("fieldName", causes)
+			causes, valid := v.selector.Validate("fieldName")
 			assert.Equal(t, v.expected.valid, valid)
 			assert.Len(t, causes, v.expected.causeLen)
 

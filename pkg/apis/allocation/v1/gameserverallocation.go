@@ -118,16 +118,17 @@ func (s *GameServerSelector) ApplyDefaults() {
 	}
 }
 
-// Matches checks to see if a GameServer matches a given GameServerSelector's criteria
+// Matches checks to see if a GameServer matches a given GameServerSelector's criteria.
+// Will panic if the `GameServerSelector` has not passed `Validate()`.
 func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
 
 	// Assume at this point, this has already been run through Validate(), and it can be converted.
 	// We end up running LabelSelectorAsSelector twice for each allocation, but if we store the results of this
 	// function within the GameServerSelector, we can't fuzz the GameServerAllocation as reflect.DeepEqual
 	// will fail due to the unexported field.
-	selector, _ := metav1.LabelSelectorAsSelector(&s.LabelSelector) // nolint: error
-	if selector == nil {
-		return false
+	selector, err := metav1.LabelSelectorAsSelector(&s.LabelSelector)
+	if err != nil {
+		panic("GameServerSelector.Validate() has not been called before calling GameServerSelector.Matches(...)")
 	}
 
 	// first check labels
@@ -157,12 +158,11 @@ func (s *GameServerSelector) Matches(gs *agonesv1.GameServer) bool {
 }
 
 // Validate validates that the selection fields have valid values
-func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause) ([]metav1.StatusCause, bool) {
-	valid := true
+func (s *GameServerSelector) Validate(field string) ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
 
 	_, err := metav1.LabelSelectorAsSelector(&s.LabelSelector)
 	if err != nil {
-		valid = false
 		causes = append(causes, metav1.StatusCause{
 			Type:    metav1.CauseTypeFieldValueInvalid,
 			Message: fmt.Sprintf("Error converting label selector: %s", err),
@@ -172,7 +172,6 @@ func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause)
 
 	if runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
 		if s.GameServerState != nil && !(*s.GameServerState == agonesv1.GameServerStateAllocated || *s.GameServerState == agonesv1.GameServerStateReady) {
-			valid = false
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Message: "GameServerState value can only be Allocated or Ready",
@@ -183,7 +182,6 @@ func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause)
 
 	if runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter) && s.Players != nil {
 		if s.Players.MinAvailable < 0 {
-			valid = false
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Message: "Players.MinAvailable must be greater than zero",
@@ -192,7 +190,6 @@ func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause)
 		}
 
 		if s.Players.MaxAvailable < 0 {
-			valid = false
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Message: "Players.MaxAvailable must be greater than zero",
@@ -201,7 +198,6 @@ func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause)
 		}
 
 		if s.Players.MinAvailable > s.Players.MaxAvailable {
-			valid = false
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,
 				Message: "Players.MinAvailable must be less than Players.MaxAvailable",
@@ -210,7 +206,7 @@ func (s *GameServerSelector) Validate(field string, causes []metav1.StatusCause)
 		}
 	}
 
-	return causes, valid
+	return causes, len(causes) == 0
 }
 
 // MultiClusterSetting specifies settings for multi-cluster allocation.
@@ -265,9 +261,13 @@ func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 			Message: fmt.Sprintf("Invalid value: %s, value must be either Packed or Distributed", gsa.Spec.Scheduling)})
 	}
 
-	causes, _ = gsa.Spec.Required.Validate("spec.required", causes)
+	if c, ok := gsa.Spec.Required.Validate("spec.required"); !ok {
+		causes = append(causes, c...)
+	}
 	for i := range gsa.Spec.Preferred {
-		causes, _ = gsa.Spec.Preferred[i].Validate(fmt.Sprintf("spec.preferred[%d]", i), causes)
+		if c, ok := gsa.Spec.Preferred[i].Validate(fmt.Sprintf("spec.preferred[%d]", i)); !ok {
+			causes = append(causes, c...)
+		}
 	}
 
 	return causes, len(causes) == 0
