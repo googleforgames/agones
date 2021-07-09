@@ -706,10 +706,14 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
 		defer cancel()
 
-		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fas)
+		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
 	})
@@ -720,7 +724,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		c.fasThreads[fasKey] = fasThread{
-			resourceVersion: fas.ResourceVersion,
+			resourceVersion: "00000000", // an older version than fas
 			terminateSignal: make(chan struct{}),
 		}
 		go func() {
@@ -728,15 +732,14 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 			<-c.fasThreads[fasKey].terminateSignal
 		}()
 
-		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
-		defer cancel()
-
 		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
 		})
 
-		fas.ResourceVersion = "00000002"
-		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fas)
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
 		assert.Equal(t, fas.ResourceVersion, c.fasThreads[fasKey].resourceVersion)
