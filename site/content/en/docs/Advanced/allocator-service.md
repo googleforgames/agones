@@ -101,6 +101,12 @@ echo $TLS_CA_VALUE | base64 -d > ca.crt
 # echo $TLS_CA_VALUE | base64 -D > ca.crt
 ```
 
+{{% feature publishVersion="0.16.0" %}}
+### Bring Your Own Certificates (advanced)
+
+If you would like to completely manage the tls secrets outside of helm, you can create them in the namespace where agones is going to be installed, and then set the helm value `agones.allocator.disableSecretCreation` to `true`. This method will also work with the cert-manager method, as long as your certificate and secret are created ahead of time, and you populate the `allocator-tls-ca` and `allocator-client-ca` yourself.
+{{% /feature %}}
+
 ## Client Certificate
 
 Because agones-allocator uses an mTLS authentication mechanism, a client must provide a certificate that is accepted by the server.
