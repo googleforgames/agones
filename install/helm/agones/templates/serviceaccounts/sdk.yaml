@@ -26,6 +26,7 @@ metadata:
 {{- if .Values.agones.serviceaccount.sdk.annotations }}
   annotations:
 {{- toYaml .Values.agones.serviceaccount.sdk.annotations | nindent 4 }}
+{{- end }}
 ---
 {{- end }}
 {{- if .Values.agones.rbacEnabled }}
