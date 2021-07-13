@@ -250,6 +250,7 @@ roleRef:
 
 {{- end }}
 
+{{- if not .Values.agones.allocator.disableSecretCreation }}
 ---
 # Allocation CA
 {{- $selfSigned := genSelfSignedCert "" nil nil 3650 }}
@@ -334,5 +335,6 @@ metadata:
 data:
   tls.crt: {{ b64enc $selfSigned.Cert }}
   tls.key: {{ b64enc $selfSigned.Key }}
+{{- end }}
 {{- end }}
 {{- end }}
