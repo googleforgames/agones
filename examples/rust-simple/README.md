@@ -12,7 +12,7 @@ To learn how to deploy this example service to GKE, please see the tutorial [Bui
 
 ## Building
 
-If you have a local rust developer environment installed locally, you can run `make build` to compile the code and
+If you have a local rust developer environment installed locally, you can run `make build-server` to compile the code and
 `make run` to execute the resulting binary.
 
 If you want to build an updated container image or want to build the source code without installing the rust developer

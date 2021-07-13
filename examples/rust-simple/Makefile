@@ -48,8 +48,7 @@ build-server:
 build-image:
 	# Docker does not allow to copy outside files
 	mkdir -p $(project_path)sdk
-	cp -rf $(project_path)../../sdks/rust/src $(project_path)sdk/src
-	cp -rf $(project_path)../../sdks/rust/Cargo.* $(project_path)sdk
+	cp -rf $(project_path)../../sdks/rust/* $(project_path)sdk
 	docker build $(project_path) --tag=$(server_tag)
 
 # Run Rust Gameserver binary
