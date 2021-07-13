@@ -190,6 +190,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.disableSecretCreation`            | Disables the creation of any allocator secrets. If true, you MUST provide the `allocator-tls`, `allocator-tls-ca`, and `allocator-client-ca` secrets before installation. | `false` |
+| `agones.serviceaccount.sdk.annotations`             | Annotations to add to the sdk service account in each gameserver namespace. | `{}` |
 |                       |                           |                            |
 {{% /feature %}}
 
