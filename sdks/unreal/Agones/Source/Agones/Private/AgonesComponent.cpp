@@ -61,7 +61,12 @@ FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const F
 {
 	FHttpModule* Http = &FHttpModule::Get();
 	FHttpRequestRef Request = Http->CreateRequest();
-	Request->SetURL(FString::Format(TEXT("http://localhost:{0}/{1}"), {*HttpPort, *Path}));
+
+	TArray<FStringFormatArg> FormatArgs;
+	FormatArgs.Add(HttpPort);
+	FormatArgs.Add(Path);
+
+	Request->SetURL(FString::Format(TEXT("http://localhost:{0}/{1}"), FormatArgs));
 	Request->SetVerb(Verb.ToString());
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->SetHeader(TEXT("User-Agent"), TEXT("X-UnrealEngine-Agent"));
@@ -256,7 +261,10 @@ void UAgonesComponent::SetLabel(
 	FString Json;
 	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), {*Key, *Value})});
+		TArray<FStringFormatArg> FormatArgs;
+		FormatArgs.Add(Key);
+		FormatArgs.Add(Value);
+		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), FormatArgs)});
 		return;
 	}
 
@@ -333,7 +341,10 @@ void UAgonesComponent::SetAnnotation(
 	FString Json;
 	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), {*Key, *Value})});
+		TArray<FStringFormatArg> FormatArgs;
+		FormatArgs.Add(Key);
+		FormatArgs.Add(Value);
+		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), FormatArgs)});
 		return;
 	}
 
