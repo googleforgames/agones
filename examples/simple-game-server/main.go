@@ -110,7 +110,7 @@ func main() {
 	for {}
 }
 
-// doSignal shutsdown on SIGTERM/SIGKILL
+// doSignal shutsdown on SIGKILL
 func doSignal() {
 	ctx := signals.NewSigKillContext()
 	<-ctx.Done()
