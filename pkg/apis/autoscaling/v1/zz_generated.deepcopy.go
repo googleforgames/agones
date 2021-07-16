@@ -213,7 +213,7 @@ func (in *FleetAutoscalerSync) DeepCopy() *FleetAutoscalerSync {
 func (in *FleetAutoscalerSpec) DeepCopyInto(out *FleetAutoscalerSpec) {
 	*out = *in
 	in.Policy.DeepCopyInto(&out.Policy)
-	in.Sync.DeepCopyInto(&out.Sync)
+	in.Sync.DeepCopyInto(out.Sync)
 	return
 }
 

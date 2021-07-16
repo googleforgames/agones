@@ -57,7 +57,7 @@ type FleetAutoscalerSpec struct {
 	// [FeatureFlag:CustomFasSyncInterval]
 	// Sync defines when FleetAutoscalers runs autoscaling
 	// +optional
-	Sync FleetAutoscalerSync `json:"sync,omitempty"`
+	Sync *FleetAutoscalerSync `json:"sync,omitempty"`
 }
 
 // FleetAutoscalerPolicy describes how to scale a fleet

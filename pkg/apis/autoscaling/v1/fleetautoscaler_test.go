@@ -235,7 +235,7 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 					MaxReplicas: 10,
 				},
 			},
-			Sync: FleetAutoscalerSync{
+			Sync: &FleetAutoscalerSync{
 				Type: FixedIntervalSyncType,
 				FixedInterval: &FixedIntervalSync{
 					Seconds: 30,

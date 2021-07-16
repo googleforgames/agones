@@ -797,7 +797,7 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 					MaxReplicas: 100,
 				},
 			},
-			Sync: autoscalingv1.FleetAutoscalerSync{
+			Sync: &autoscalingv1.FleetAutoscalerSync{
 				Type: autoscalingv1.FixedIntervalSyncType,
 				FixedInterval: &autoscalingv1.FixedIntervalSync{
 					Seconds: 30,
