@@ -19,6 +19,7 @@ import (
 	"net/url"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -346,10 +347,15 @@ func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCaus
 
 // ApplyDefaults applies default values to the FleetAutoscaler
 func (fas *FleetAutoscaler) ApplyDefaults() {
-	if fas.Spec.Sync.Type == "" {
-		fas.Spec.Sync.Type = FixedIntervalSyncType
-	}
-	if fas.Spec.Sync.FixedInterval.Seconds == 0 {
-		fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		if fas.Spec.Sync.Type == "" {
+			fas.Spec.Sync.Type = FixedIntervalSyncType
+		}
+		if fas.Spec.Sync == nil {
+			fas.Spec.Sync = &FleetAutoscalerSync{}
+		}
+		if fas.Spec.Sync.FixedInterval.Seconds == 0 {
+			fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds
+		}
 	}
 }
