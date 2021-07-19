@@ -309,9 +309,9 @@ func TestAutoscalerStressCreate(t *testing.T) {
 	}
 }
 
-// TestAutoscalerWithDifferentInterval creates two fleetautoscalers with different sync interval,
-// verify the fleet is scaled as expected
-func TestAutoscalerWithDifferentInterval(t *testing.T) {
+// TestAutoscalerWithCustomInterval create a fleetautoscaler with custom sync interval,
+// verify the fleet is scaled in time.
+func TestAutoscalerWithCustomInterval(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
 		t.SkipNow()
 	}
@@ -353,7 +353,7 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Do an allocation and watch scale up
-	gsa := framework.CreateAndApplyAllocation(t, flt)
+	_ = framework.CreateAndApplyAllocation(t, flt)
 	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
@@ -363,14 +363,6 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	})
 	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 	assert.Nil(t, err)
-
-	// Delete allocated game server, Fleetautoscaler desired replicas should be updated in time
-	gp := int64(1)
-	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
-	assert.Nil(t, err)
-	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize
-	})
 
 	// patch the autoscaler to increase buffersize
 	bufferSize++
@@ -383,7 +375,7 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	// Do an allocation again after one sync, make sure the fleet autoscaler wouldn't be updated before next sync
 	_ = framework.CreateAndApplyAllocation(t, flt)
 	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval-1*time.Second, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize
+		return fas.Status.DesiredReplicas == bufferSize+1
 	})
 }
 
