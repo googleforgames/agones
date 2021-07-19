@@ -724,8 +724,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		c.fasThreads[fasKey] = fasThread{
-			resourceVersion: "00000000", // an older version than fas
-			terminateSignal: make(chan struct{}),
+			resourceGeneration: 1, // an older version than fas
+			terminateSignal:    make(chan struct{}),
 		}
 		go func() {
 			// start a mock function for receiving the terminate signal
@@ -742,7 +742,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
-		assert.Equal(t, fas.ResourceVersion, c.fasThreads[fasKey].resourceVersion)
+		assert.Equal(t, fas.Generation, c.fasThreads[fasKey].resourceGeneration)
 	})
 
 	t.Run("delete fas thread", func(t *testing.T) {
@@ -751,8 +751,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		c.fasThreads[fasKey] = fasThread{
-			resourceVersion: fas.ResourceVersion,
-			terminateSignal: make(chan struct{}),
+			resourceGeneration: fas.Generation,
+			terminateSignal:    make(chan struct{}),
 		}
 		go func() {
 			// start a mock function for receiving the terminate signal
@@ -784,9 +784,9 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 
 	fas := &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            "fas-1",
-			Namespace:       "default",
-			ResourceVersion: "00000001",
+			Name:       "fas-1",
+			Namespace:  "default",
+			Generation: 2,
 		},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,

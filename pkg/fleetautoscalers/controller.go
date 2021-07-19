@@ -53,8 +53,8 @@ import (
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
 type fasThread struct {
-	resourceVersion string
-	terminateSignal chan struct{}
+	resourceGeneration int64
+	terminateSignal    chan struct{}
 }
 
 // Controller is a the FleetAutoscaler controller
@@ -330,8 +330,8 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 	key := fas.Namespace + "/" + fas.Name
 	ticker := time.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 	c.fasThreads[key] = fasThread{
-		terminateSignal: make(chan struct{}),
-		resourceVersion: fas.ResourceVersion,
+		terminateSignal:    make(chan struct{}),
+		resourceGeneration: fas.Generation,
 	}
 	// scale immediately when an FAS is created or updated
 	if err := c.fleetAutoScale(ctx, key); err != nil {
@@ -345,10 +345,10 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				c.loggerForFleetAutoscalerKey(key).Debug("fleet auto scaled")
+				c.loggerForFleetAutoscalerKey(key).Debug("run routine sync")
 				err := c.fleetAutoScale(ctx, key)
 				if err != nil {
-					c.loggerForFleetAutoscaler(fas).WithError(err).Error("fleet auto scale failed")
+					c.loggerForFleetAutoscaler(fas).WithError(err).Error("routine sync failed")
 				}
 			}
 		}
@@ -375,8 +375,8 @@ func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Conte
 	if !ok {
 		return c.createFasThread(ctx, fas)
 	}
-	if fas.ResourceVersion != thread.resourceVersion {
-		c.loggerForFleetAutoscalerKey(key).Info("fleet autoscaler updated")
+	if fas.Generation != thread.resourceGeneration {
+		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.resourceGeneration, fas.Generation)
 		c.removeFasThread(fas)
 		return c.createFasThread(ctx, fas)
 	}
