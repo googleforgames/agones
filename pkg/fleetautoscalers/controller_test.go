@@ -724,8 +724,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		c.fasThreads[fasKey] = fasThread{
-			resourceGeneration: 1, // an older version than fas
-			terminateSignal:    make(chan struct{}),
+			generation:      1, // an older version than fas
+			terminateSignal: make(chan struct{}),
 		}
 		go func() {
 			// start a mock function for receiving the terminate signal
@@ -742,7 +742,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
-		assert.Equal(t, fas.Generation, c.fasThreads[fasKey].resourceGeneration)
+		assert.Equal(t, fas.Generation, c.fasThreads[fasKey].generation)
 	})
 
 	t.Run("delete fas thread", func(t *testing.T) {
@@ -751,8 +751,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		c.fasThreads[fasKey] = fasThread{
-			resourceGeneration: fas.Generation,
-			terminateSignal:    make(chan struct{}),
+			generation:      fas.Generation,
+			terminateSignal: make(chan struct{}),
 		}
 		go func() {
 			// start a mock function for receiving the terminate signal

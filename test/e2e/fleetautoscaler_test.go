@@ -364,7 +364,6 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
 	assert.Nil(t, err)
 
-
 	// Delete allocated game server, Fleetautoscaler desired replicas should be updated in time
 	gp := int64(1)
 	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})

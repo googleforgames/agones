@@ -53,8 +53,8 @@ import (
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
 type fasThread struct {
-	resourceGeneration int64
-	terminateSignal    chan struct{}
+	generation      int64
+	terminateSignal chan struct{}
 }
 
 // Controller is a the FleetAutoscaler controller
@@ -330,8 +330,8 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 	key := fas.Namespace + "/" + fas.Name
 	ticker := time.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 	c.fasThreads[key] = fasThread{
-		terminateSignal:    make(chan struct{}),
-		resourceGeneration: fas.Generation,
+		terminateSignal: make(chan struct{}),
+		generation:      fas.Generation,
 	}
 	// scale immediately when an FAS is created or updated
 	if err := c.fleetAutoScale(ctx, key); err != nil {
@@ -375,8 +375,8 @@ func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Conte
 	if !ok {
 		return c.createFasThread(ctx, fas)
 	}
-	if fas.Generation != thread.resourceGeneration {
-		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.resourceGeneration, fas.Generation)
+	if fas.Generation != thread.generation {
+		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.generation, fas.Generation)
 		c.removeFasThread(fas)
 		return c.createFasThread(ctx, fas)
 	}
