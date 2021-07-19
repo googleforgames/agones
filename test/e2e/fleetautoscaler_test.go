@@ -349,7 +349,8 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	})
 
 	// Wait for gameserver ready
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	assert.Nil(t, err)
 
 	// Do an allocation and watch scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
@@ -360,15 +361,20 @@ func TestAutoscalerWithDifferentInterval(t *testing.T) {
 	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
 		return fas.Status.DesiredReplicas == bufferSize+1
 	})
-	framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
+	assert.Nil(t, err)
+
 
 	// Delete allocated game server, Fleetautoscaler desired replicas should be updated in time
 	gp := int64(1)
 	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
-	time.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
+	assert.Nil(t, err)
+	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+		return fas.Status.DesiredReplicas == bufferSize
+	})
 
 	// patch the autoscaler to increase buffersize
-	bufferSize += 1
+	bufferSize++
 	fas, err = patchFleetAutoscaler(ctx, fas, intstr.FromInt(int(bufferSize)), bufferSize, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
