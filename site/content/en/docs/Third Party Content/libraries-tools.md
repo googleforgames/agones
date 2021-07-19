@@ -9,6 +9,7 @@ weight: 30
 ## Client SDKs
 
 - [Cubxity/AgonesKt](https://github.com/Cubxity/AgonesKt) - Agones Client SDK for **Kotlin**  
+- [AndreMicheletti/godot-agones-sdk](https://github.com/AndreMicheletti/godot-agones-sdk) - Agones Client SDK for **Godot Engine**
 
 ## Messaging
 
