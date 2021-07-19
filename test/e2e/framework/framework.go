@@ -306,6 +306,19 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 	return nil
 }
 
+// WaitAndAssertFleetAutoScalerCondition waits a few time and check a specific FleetAutoscaler condition at that time
+func (f *Framework) WaitAndAssertFleetAutoScalerCondition(t *testing.T, duration time.Duration, fas *autoscaling.FleetAutoscaler, condition func(fas *autoscaling.FleetAutoscaler) bool) {
+	t.Helper()
+	time.Sleep(duration)
+	logrus.WithField("fleetautoscaler", fas.Name).Infof("Checking fleetautoscaler condition after %v seconds", duration.Seconds())
+	fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(context.Background(), fas.ObjectMeta.Name, metav1.GetOptions{})
+	if err != nil {
+		logrus.WithField("fleetautoscaler", fas.Name).WithError(err).Info("error getting fleetautoscaler condition")
+		t.Fatalf("error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
+	}
+	assert.True(t, condition(fleetautoscaler))
+}
+
 // WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.
 // nolint: dupl
 func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(fas *autoscaling.FleetAutoscaler) bool) {
