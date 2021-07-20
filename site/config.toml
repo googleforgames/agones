@@ -82,14 +82,14 @@ github_repo = "https://github.com/googleforgames/agones"
 gcs_engine_id = "016691298986124624340:x7qv2dywdao"
 
 # current release branch. Never is rc.
-release_branch = "release-1.15.0"
+release_branch = "release-1.16.0"
 # the main version. Never is rc.
-release_version = "1.15.0"
+release_version = "1.16.0"
 
 # shown for production
-supported_k8s = "1.18"
-aks_minor_supported_k8s = "14"
-minikube_minor_supported_k8s = "15"
+supported_k8s = "1.19"
+aks_minor_supported_k8s = "11"
+minikube_minor_supported_k8s = "12"
 # shown in development (or the next version that will be supported)
 dev_supported_k8s = "1.19"
 dev_aks_minor_supported_k8s = "11"
