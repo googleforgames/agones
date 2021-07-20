@@ -219,7 +219,6 @@ helm upgrade --install --wait --set agones.metrics.stackdriverEnabled=true --set
 
 With this configuration only Stackdriver exporter would be used instead of Prometheus exporter.
 
-{{% feature publishVersion="1.16.0" %}}
 #### Using Stackdriver with Workload Identity
 
 If you would like to enable stackdriver in conjunction with [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity), there are a few extra steps you need to follow:
@@ -231,7 +230,6 @@ If you would like to enable stackdriver in conjunction with [Workload Identity](
 ```bash
 helm install my-release --namespace agones-system --create-namespace agones/agones --set agones.metrics.stackdriverEnabled=true --set agones.metrics.prometheusEnabled=false --set agones.metrics.prometheusServiceDiscovery=false --set agones.serviceaccount.allocator.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com" --set agones.serviceaccount.controller.annotations."iam\.gke\.io/gcp-service-account"="GSA_NAME@PROJECT_ID\.iam\.gserviceaccount\.com"
 ```
-{{% /feature %}}
 
 To verify that metrics are being sent to Stackdriver, create a Fleet or a Gameserver and look for the metrics to show up in the Stackdriver dashboard. Navigate to the [Metrics explorer](https://console.cloud.google.com/monitoring/metrics-explorer) and search for metrics with the prefix `agones/`. Select a metric and look for data to be plotted in the graph to the right.
 
