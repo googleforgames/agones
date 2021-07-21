@@ -85,7 +85,7 @@ type FleetAutoscalerSync struct {
 
 	// FixedInterval config params. Present only if FleetAutoscalerSyncType = FixedInterval.
 	// +optional
-	FixedInterval *FixedIntervalSync `json:"fixedInterval"`
+	FixedInterval FixedIntervalSync `json:"fixedInterval"`
 }
 
 // FleetAutoscalerSyncType is the sync strategy for a given Fleet
@@ -348,11 +348,11 @@ func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCaus
 // ApplyDefaults applies default values to the FleetAutoscaler
 func (fas *FleetAutoscaler) ApplyDefaults() {
 	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		if fas.Spec.Sync.Type == "" {
-			fas.Spec.Sync.Type = FixedIntervalSyncType
-		}
 		if fas.Spec.Sync == nil {
 			fas.Spec.Sync = &FleetAutoscalerSync{}
+		}
+		if fas.Spec.Sync.Type == "" {
+			fas.Spec.Sync.Type = FixedIntervalSyncType
 		}
 		if fas.Spec.Sync.FixedInterval.Seconds == 0 {
 			fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds

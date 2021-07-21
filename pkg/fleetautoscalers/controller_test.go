@@ -799,7 +799,7 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 			},
 			Sync: &autoscalingv1.FleetAutoscalerSync{
 				Type: autoscalingv1.FixedIntervalSyncType,
-				FixedInterval: &autoscalingv1.FixedIntervalSync{
+				FixedInterval: autoscalingv1.FixedIntervalSync{
 					Seconds: 30,
 				},
 			},
