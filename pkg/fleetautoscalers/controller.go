@@ -136,6 +136,14 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 		return errors.New("failed to wait for caches to sync")
 	}
 
+	go func() {
+		// clean all go routines when ctx is Done
+		<-ctx.Done()
+		for _, v := range c.fasThreads{
+			v.terminateSignal <- struct{}{}
+		}
+	}()
+
 	c.workerqueue.Run(ctx, workers)
 	return nil
 }
