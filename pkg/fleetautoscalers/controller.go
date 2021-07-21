@@ -327,7 +327,10 @@ func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autosca
 
 // createFasThread creates a FleetAutoScaler sync routine
 func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) error {
-	key := fas.Namespace + "/" + fas.Name
+	key, err := cache.MetaNamespaceKeyFunc(fas)
+	if err != nil {
+		return err
+	}
 	ticker := time.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 	c.fasThreads[key] = fasThread{
 		terminateSignal: make(chan struct{}),
@@ -358,7 +361,10 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 
 // removeFasThread remove a FleetAutoScaler sync routine
 func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) {
-	key := fas.Namespace + "/" + fas.Name
+	key, err := cache.MetaNamespaceKeyFunc(fas)
+	if err != nil {
+		return
+	}
 	if _, ok := c.fasThreads[key]; ok {
 		c.fasThreads[key].terminateSignal <- struct{}{}
 		delete(c.fasThreads, key)
