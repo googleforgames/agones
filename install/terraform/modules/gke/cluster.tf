@@ -29,7 +29,7 @@ locals {
   initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.19")
+  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.20")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
 }
