@@ -24,7 +24,6 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
-	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -307,76 +306,6 @@ func TestAutoscalerStressCreate(t *testing.T) {
 			}
 		}()
 	}
-}
-
-// TestAutoscalerWithCustomInterval create a fleetautoscaler with custom sync interval,
-// verify the fleet is scaled in time.
-func TestAutoscalerWithCustomInterval(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		t.SkipNow()
-	}
-	t.Parallel()
-	ctx := context.Background()
-
-	stable := framework.AgonesClient.AgonesV1()
-	fleets := stable.Fleets(framework.Namespace) // fleet with 3 default replicas
-	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	}
-
-	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
-
-	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-
-	// fleetautoscaler with 10s sync interval, 4 buffer size
-	fas := defaultFleetAutoscaler(flt, framework.Namespace)
-	fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(4)
-	fas.Spec.Sync.FixedInterval.Seconds = 10
-	fas, err = fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
-	if assert.Nil(t, err) {
-		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-	} else {
-		// if we could not create the autoscaler, their is no point going further
-		logrus.Error("Failed creating autoscaler, aborting TestAutoscalerWithDifferentInterval")
-		return
-	}
-	bufferSize := int32(fas.Spec.Policy.Buffer.BufferSize.IntValue())
-	syncInterval := time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second
-	// fleet autoscaler should be synced immediately
-	framework.WaitAndAssertFleetAutoScalerCondition(t, 1*time.Second, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize
-	})
-
-	// Wait for gameserver ready
-	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err)
-
-	// Do an allocation and watch scale up
-	_ = framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
-		return fleet.Status.AllocatedReplicas == 1
-	})
-	// Fleetautoscaler desired replicas should be updated in time
-	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize+1
-	})
-	err = framework.WaitForFleetCondition(t, flt, e2e.FleetReadyCount(bufferSize))
-	assert.Nil(t, err)
-
-	// patch the autoscaler to increase buffersize
-	bufferSize++
-	fas, err = patchFleetAutoscaler(ctx, fas, intstr.FromInt(int(bufferSize)), bufferSize, fas.Spec.Policy.Buffer.MaxReplicas)
-	assert.Nil(t, err, "could not patch fleetautoscaler")
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize
-	})
-
-	// Do an allocation again after one sync, make sure the fleet autoscaler wouldn't be updated before next sync
-	_ = framework.CreateAndApplyAllocation(t, flt)
-	framework.WaitAndAssertFleetAutoScalerCondition(t, syncInterval-1*time.Second, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
-		return fas.Status.DesiredReplicas == bufferSize+1
-	})
 }
 
 // scaleFleet creates a patch to apply to a Fleet.
