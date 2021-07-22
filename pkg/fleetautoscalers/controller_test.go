@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
@@ -703,11 +704,27 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 	t.Run("create fas thread", func(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
-		fas, _ := defaultFixtures()
+		fas, f := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
+		fas.Spec.Sync.FixedInterval.Seconds = 10
+		var latestUpdatedTime time.Time
 
 		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ca := action.(k8stesting.UpdateAction)
+			fas := ca.GetObject().(*autoscalingv1.FleetAutoscaler)
+			if !latestUpdatedTime.IsZero() {
+				assert.Equal(t, fas.Spec.Sync.FixedInterval.Seconds, int32(time.Since(latestUpdatedTime).Seconds()))
+			}
+			latestUpdatedTime = time.Now()
+			return true, fas, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
 		})
 
 		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
@@ -716,6 +733,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
+		// wait one sync interval, the fas update function should be called twice
+		time.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds+1) * time.Second)
 	})
 
 	t.Run("update fas thread", func(t *testing.T) {
