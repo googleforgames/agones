@@ -139,7 +139,7 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	go func() {
 		// clean all go routines when ctx is Done
 		<-ctx.Done()
-		for _, v := range c.fasThreads{
+		for _, v := range c.fasThreads {
 			v.terminateSignal <- struct{}{}
 		}
 	}()

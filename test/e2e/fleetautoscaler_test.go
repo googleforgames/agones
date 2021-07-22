@@ -423,7 +423,7 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.
 			},
 			Sync: &autoscalingv1.FleetAutoscalerSync{
 				Type: autoscalingv1.FixedIntervalSyncType,
-				FixedInterval: &autoscalingv1.FixedIntervalSync{
+				FixedInterval: autoscalingv1.FixedIntervalSync{
 					Seconds: 30,
 				},
 			},
