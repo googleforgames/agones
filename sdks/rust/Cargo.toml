@@ -24,7 +24,7 @@ homepage = "https://agones.dev/site/"
 [dependencies]
 async-stream = "0.3"
 http = "0.2"
-prost = "0.7"
+prost = "0.8"
 thiserror = "1.0"
 
 [dependencies.tokio]
@@ -33,7 +33,7 @@ default-features = false
 features = ["sync", "time"]
 
 [dependencies.tonic]
-version = "0.4"
+version = "0.5"
 default-features = false
 features = [
     "codegen",
@@ -42,7 +42,7 @@ features = [
 ]
 
 [build-dependencies.tonic-build]
-version = "0.4"
+version = "0.5"
 default-features = false
 features = [
     "prost",
