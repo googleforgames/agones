@@ -28,7 +28,7 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 # of the right version.
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image)
-	$(MINIKUBE) start --kubernetes-version v1.19.12 -p $(MINIKUBE_PROFILE) --vm-driver $(MINIKUBE_DRIVER)
+	$(MINIKUBE) start --kubernetes-version v1.20.9 -p $(MINIKUBE_PROFILE) --vm-driver $(MINIKUBE_DRIVER)
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
