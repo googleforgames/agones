@@ -66,12 +66,15 @@ type GameServerAllocationSpec struct {
 	// Otherwise, allocation will happen locally.
 	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty"`
 
-	// Required The required allocation. Defaults to all GameServers.
+	// Required is the GameServer selector from which to choose GameServers from.
+	// Defaults to all GameServers.
 	Required GameServerSelector `json:"required,omitempty"`
 
-	// Preferred ordered list of preferred allocations out of the `required` set.
-	// If the first selector is not matched,
-	// the selection attempts the second selector, and so on.
+	// Preferred is an ordered list of preferred GameServer selectors
+	// that are optional to be fulfilled, but will be searched before the `required` selector.
+	// If the first selector is not matched, the selection attempts the second selector, and so on.
+	// If any of the preferred selectors are matched, the required selector is not considered.
+	// This is useful for things like smoke testing of new game servers.
 	Preferred []GameServerSelector `json:"preferred,omitempty"`
 
 	// Scheduling strategy. Defaults to "Packed".
@@ -85,14 +88,20 @@ type GameServerAllocationSpec struct {
 // GameServerSelector contains all the filter options for selecting
 // a GameServer for allocation.
 type GameServerSelector struct {
+	// See: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 	metav1.LabelSelector
 	// [Stage:Alpha]
 	// [FeatureFlag:StateAllocationFilter]
 	// +optional
+	// GameServerState specifies which State is the filter to be used when attempting to retrieve a GameServer
+	// via Allocation. Defaults to "Ready". The only other option is "Allocated", which can be used in conjunction with
+	// label/annotation/player selectors to retrieve an already Allocated GameServer.
 	GameServerState *agonesv1.GameServerState `json:"gameServerState,omitempty"`
 	// [Stage:Alpha]
 	// [FeatureFlag:PlayerAllocationFilter]
 	// +optional
+	// Players provides a filter on minimum and maximum values for player capacity when retrieving a GameServer
+	// through Allocation. Defaults to no limits.
 	Players *PlayerSelector `json:"players,omitempty"`
 }
 
