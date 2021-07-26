@@ -169,7 +169,7 @@ The `spec` field is the actual `FleetAutoscaler` specification and it is compose
     - `url` gives the location of the webhook, in standard URL form (`[scheme://]host:port/path`). Exactly one of `url` or `service` must be specified. The `host` should not refer to a service running in the cluster; use the `service` field instead.  (optional, instead of service)
     - `caBundle` is a PEM encoded certificate authority bundle which is used to issue and then validate the webhook's server certificate. Base64 encoded PEM string. Required only for HTTPS. If not present HTTP client would be used.
   - Note: only one `buffer` or `webhook` could be defined for FleetAutoscaler which is based on the `type` field.
-{{% feature publishVersion="1.16.0" %}}
+{{% feature publishVersion="1.17.0" %}}
 - `sync` is autoscaling sync strategy. It defines when to run the autoscaling
   - `type` is type of the sync. For now only "FixedInterval" is available
   - `fixedInterval` parameters of the fixedInterval sync
