@@ -9,7 +9,7 @@ weight: 30
 A full `FleetAutoscaler` specification is available below and in the 
 {{< ghlink href="examples/fleetautoscaler.yaml" >}}example folder{{< /ghlink >}} for reference :
 
-{{% feature expiryVersion="1.16.0" %}}
+{{% feature expiryVersion="1.17.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -40,7 +40,7 @@ spec:
       maxReplicas: 20
 ```
 {{% /feature %}}
-{{% feature publishVersion="1.16.0" %}}
+{{% feature publishVersion="1.17.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -82,7 +82,7 @@ spec:
 
 Or for Webhook FleetAutoscaler below and in {{< ghlink href="examples/webhookfleetautoscaler.yaml" >}}example folder{{< /ghlink >}}:
 
-{{% feature expiryVersion="1.16.0" %}}
+{{% feature expiryVersion="1.17.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -105,7 +105,7 @@ spec:
       # caBundle:  optional, used for HTTPS webhook type
 ```
 {{% /feature %}}
-{{% feature publishVersion="1.16.0" %}}
+{{% feature publishVersion="1.17.0" %}}
 ```yaml
 apiVersion: "autoscaling.agones.dev/v1"
 kind: FleetAutoscaler
@@ -237,4 +237,3 @@ For Webhook Fleetautoscaler Policy either HTTP or HTTPS could be used. Switching
 The example of the webhook written in Go could be found {{< ghlink href="examples/autoscaler-webhook/main.go" >}}here{{< /ghlink >}}.
 
 It implements the {{< ghlink href="examples/autoscaler-webhook/" >}}scaling logic{{< /ghlink >}} based on the percentage of allocated gameservers in a fleet.
-

@@ -201,6 +201,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 }
 
 // getFleetAutoscalerByKey get the Fleet Autoscaler by key
+// a nil FleetAutoscaler returned indicates that an attempt to sync should not be retried, e.g.  if the FleetAutoscaler no longer exists.
 func (c *Controller) getFleetAutoscalerByKey(key string) (*autoscalingv1.FleetAutoscaler, error) {
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
