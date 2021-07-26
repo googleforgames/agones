@@ -88,22 +88,25 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 							},
 						},
 					},
-					Required: metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							"c": "d",
-						},
-					},
-					Preferred: []metav1.LabelSelector{
-						{
+					Required: allocationv1.GameServerSelector{
+						LabelSelector: metav1.LabelSelector{
 							MatchLabels: map[string]string{
-								"e": "f",
+								"c": "d",
 							},
-						},
+						}},
+					Preferred: []allocationv1.GameServerSelector{
 						{
-							MatchLabels: map[string]string{
-								"g": "h",
-							},
-						},
+							LabelSelector: metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"e": "f",
+								},
+							}},
+						{
+							LabelSelector: metav1.LabelSelector{
+								MatchLabels: map[string]string{
+									"g": "h",
+								},
+							}},
 					},
 					Scheduling: apis.Packed,
 					MetaPatch: allocationv1.MetaPatch{

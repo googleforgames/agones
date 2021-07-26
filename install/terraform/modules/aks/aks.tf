@@ -17,22 +17,27 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 2.63"
+      version = "~> 2.66"
     }
   }
   required_version = ">= 0.12.26"
 }
 
-resource "azurerm_resource_group" "agones_rg" {
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "agones" {
   location = var.resource_group_location
   name     = var.resource_group_name
 }
 
 resource "azurerm_kubernetes_cluster" "agones" {
   name                = var.cluster_name
-  location            = azurerm_resource_group.agones_rg.location
-  resource_group_name = azurerm_resource_group.agones_rg.name
-  dns_prefix          = "agones"
+  location            = azurerm_resource_group.agones.location
+  resource_group_name = azurerm_resource_group.agones.name
+  # don't change dns_prefix as node pool Network Security Group name uses a hash of dns_prefix on on its name
+  dns_prefix = "agones"
 
   kubernetes_version = var.kubernetes_version
 
@@ -61,7 +66,9 @@ resource "azurerm_kubernetes_cluster_node_pool" "system" {
   node_count            = 1
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
-  node_taints           = ["agones.dev/agones-system=true:NoExecute"]
+  node_taints = [
+    "agones.dev/agones-system=true:NoExecute"
+  ]
   node_labels = {
     "agones.dev/agones-system" : "true"
   }
@@ -74,16 +81,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "metrics" {
   node_count            = 1
   os_disk_size_gb       = var.disk_size
   enable_auto_scaling   = false
-  node_taints           = ["agones.dev/agones-metrics=true:NoExecute"]
+  node_taints = [
+    "agones.dev/agones-metrics=true:NoExecute"
+  ]
   node_labels = {
     "agones.dev/agones-metrics" : "true"
   }
-}
-
-data "azurerm_resources" "network_security_groups" {
-  resource_group_name = azurerm_kubernetes_cluster.agones.node_resource_group
-
-  type = "Microsoft.Network/networkSecurityGroups"
 }
 
 resource "azurerm_network_security_rule" "gameserver" {
@@ -96,8 +99,21 @@ resource "azurerm_network_security_rule" "gameserver" {
   destination_port_range     = "7000-8000"
   source_address_prefix      = "*"
   destination_address_prefix = "*"
-  # 2021.06.07-WeetA34: Force lowercase to avoid resource recreation due to attribute saved as lowercase
-  resource_group_name = lower(data.azurerm_resources.network_security_groups.resource_group_name)
-  # Ensure we get the first network security group named aks-agentpool-*******-nsg
-  network_security_group_name = [for network_security_group in data.azurerm_resources.network_security_groups.resources : network_security_group.name if length(regexall("^aks-agentpool-\\d+-nsg$", network_security_group.name)) > 0][0]
+  resource_group_name        = azurerm_kubernetes_cluster.agones.node_resource_group
+  # We don't use azurerm_resources datasource to get the security group as it's not reliable: random empty resource array
+  # 55978144 are the first 8 characters of the fnv64a hash's UInt32 of master node's dns prefix ("agones")
+  network_security_group_name = "aks-agentpool-55978144-nsg"
+
+  depends_on = [
+    azurerm_kubernetes_cluster.agones,
+    azurerm_kubernetes_cluster_node_pool.metrics,
+    azurerm_kubernetes_cluster_node_pool.system
+  ]
+
+  # Ignore resource_group_name changes because of random case returned by AKS Api (MC_* or mc_*)
+  lifecycle {
+    ignore_changes = [
+      resource_group_name
+    ]
+  }
 }
