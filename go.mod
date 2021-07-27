@@ -12,7 +12,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-openapi/spec v0.19.3
 	github.com/golang/protobuf v1.4.3
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/heptiolabs/healthcheck v0.0.0-20171201210846-da5fdee475fb
