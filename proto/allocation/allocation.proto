@@ -35,11 +35,11 @@ message AllocationRequest {
   MultiClusterSetting multiClusterSetting = 2;
 
   // The required allocation. Defaults to all GameServers.
-  LabelSelector requiredGameServerSelector = 3;
+  GameServerSelector requiredGameServerSelector = 3;
 
   // The ordered list of preferred allocations out of the `required` set.
   // If the first selector is not matched, the selection attempts the second selector, and so on.
-  repeated LabelSelector preferredGameServerSelectors = 4;
+  repeated GameServerSelector preferredGameServerSelectors = 4;
 
   // Scheduling strategy. Defaults to "Packed".
   SchedulingStrategy scheduling = 5;
@@ -78,7 +78,7 @@ message MultiClusterSetting {
     // Selects multi-cluster allocation policies to apply. If not specified, all multi-cluster allocation policies are to be applied.
     LabelSelector policySelector = 2;
 }
-   
+
 // MetaPatch is the metadata used to patch the GameServer metadata on allocation
 message MetaPatch {
     map<string, string> labels = 1;
@@ -88,5 +88,23 @@ message MetaPatch {
 // LabelSelector used for finding a GameServer with matching labels.
 message LabelSelector {
   // Labels to match.
+  map<string, string> matchLabels = 1;
+}
+
+// GameServerSelector used for finding a GameServer with matching filters.
+message GameServerSelector {
+  // Labels to match.
 	map<string, string> matchLabels = 1;
+  enum GameServerState {
+     READY = 0;
+     ALLOCATED = 1;
+  };
+  GameServerState gameServerState = 2;
+  PlayerSelector players = 3;
+}
+
+// PlayerSelector is filter for player capacity values.
+message PlayerSelector {
+  uint64 minAvailable = 1;
+  uint64 maxAvailable = 2;
 }
