@@ -414,6 +414,7 @@ type serviceHandler struct {
 func (h *serviceHandler) Allocate(ctx context.Context, in *pb.AllocationRequest) (*pb.AllocationResponse, error) {
 	logger.WithField("request", in).Infof("allocation request received.")
 	gsa := converters.ConvertAllocationRequestToGSA(in)
+	gsa.ApplyDefaults()
 	resultObj, err := h.allocationCallback(gsa)
 	if err != nil {
 		logger.WithField("gsa", gsa).WithError(err).Info("allocation failed")
