@@ -64,7 +64,7 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 	}
 
 	if ls := convertLabelSelectorToInternalLabelSelector(in.GetRequiredGameServerSelector()); ls != nil {
-		gsa.Spec.Required = *ls
+		gsa.Spec.Required = allocationv1.GameServerSelector{LabelSelector: *ls}
 	}
 	return gsa
 }
@@ -82,7 +82,7 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
-		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required),
+		RequiredGameServerSelector: convertInternalLabelSelectorToLabelSelector(&in.Spec.Required.LabelSelector),
 		Metadata: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
@@ -139,21 +139,21 @@ func convertInternalLabelSelectorToLabelSelector(in *metav1.LabelSelector) *pb.L
 	return &pb.LabelSelector{MatchLabels: in.MatchLabels}
 }
 
-func convertInternalLabelSelectorsToLabelSelectors(in []metav1.LabelSelector) []*pb.LabelSelector {
+func convertInternalLabelSelectorsToLabelSelectors(in []allocationv1.GameServerSelector) []*pb.LabelSelector {
 	var result []*pb.LabelSelector
 	for _, l := range in {
 		l := l
-		c := convertInternalLabelSelectorToLabelSelector(&l)
+		c := convertInternalLabelSelectorToLabelSelector(&l.LabelSelector)
 		result = append(result, c)
 	}
 	return result
 }
 
-func convertLabelSelectorsToInternalLabelSelectors(in []*pb.LabelSelector) []metav1.LabelSelector {
-	var result []metav1.LabelSelector
+func convertLabelSelectorsToInternalLabelSelectors(in []*pb.LabelSelector) []allocationv1.GameServerSelector {
+	var result []allocationv1.GameServerSelector
 	for _, l := range in {
 		if c := convertLabelSelectorToInternalLabelSelector(l); c != nil {
-			result = append(result, *c)
+			result = append(result, allocationv1.GameServerSelector{LabelSelector: *c})
 		}
 	}
 	return result
