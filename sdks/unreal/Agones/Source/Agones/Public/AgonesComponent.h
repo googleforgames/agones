@@ -311,6 +311,10 @@ private:
 	FString WatchMessageBuffer;
 
 	TArray<FGameServerDelegate> WatchGameServerCallbacks;
+	
+	static bool IsValidResponse(const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate);
+
+	static bool IsValidJsonResponse(TSharedPtr<FJsonObject>& JsonObject, const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate);
 
 	UFUNCTION(BlueprintInternalUseOnly)
 	void ConnectSuccess(FGameServerResponse GameServerResponse);
