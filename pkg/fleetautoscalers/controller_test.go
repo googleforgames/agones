@@ -731,7 +731,6 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fasKey := fas.Namespace + "/" + fas.Name
 		fas.Spec.Sync.FixedInterval.Seconds = 10
 
-		var latestUpdatedTime time.Time
 		fasUpdatedCount := counter{v: 0}
 
 		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -741,10 +740,6 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			ca := action.(k8stesting.UpdateAction)
 			fas := ca.GetObject().(*autoscalingv1.FleetAutoscaler)
-			if !latestUpdatedTime.IsZero() {
-				assert.Equal(t, fas.Spec.Sync.FixedInterval.Seconds, int32(time.Since(latestUpdatedTime).Seconds()))
-			}
-			latestUpdatedTime = time.Now()
 			fasUpdatedCount.Inc()
 			return true, fas, nil
 		})
@@ -759,8 +754,10 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
-		// wait one sync interval, the fas update function should be called twice
-		fc.Step(time.Duration(fas.Spec.Sync.FixedInterval.Seconds+1) * time.Second)
+		// set the clock forward by one sync interval forward, the fas update function should be called twice
+		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
+		// we need a small block here so that autoscale rountine can run
+		time.Sleep(1 * time.Second)
 		assert.Equal(t, uint32(2), fasUpdatedCount.Value())
 	})
 
