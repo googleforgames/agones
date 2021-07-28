@@ -36,6 +36,7 @@ import (
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8stesting "k8s.io/client-go/testing"
 )
@@ -723,6 +724,9 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 	t.Run("create fas thread", func(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
+		fc := clock.NewFakeClock(time.Now())
+		c.clock = fc
+
 		fas, f := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		fas.Spec.Sync.FixedInterval.Seconds = 10
@@ -756,7 +760,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Contains(t, c.fasThreads, fasKey)
 		// wait one sync interval, the fas update function should be called twice
-		time.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds+1) * time.Second)
+		fc.Step(time.Duration(fas.Spec.Sync.FixedInterval.Seconds+1) * time.Second)
 		assert.Equal(t, uint32(2), fasUpdatedCount.Value())
 	})
 

@@ -44,6 +44,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -60,6 +61,7 @@ type fasThread struct {
 // Controller is a the FleetAutoscaler controller
 type Controller struct {
 	baseLogger            *logrus.Entry
+	clock                 clock.Clock
 	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
 	fasThreads            map[string]fasThread
 	fleetGetter           typedagonesv1.FleetsGetter
@@ -84,6 +86,7 @@ func NewController(
 	autoscaler := agonesInformerFactory.Autoscaling().V1().FleetAutoscalers()
 	fleetInformer := agonesInformerFactory.Agones().V1().Fleets()
 	c := &Controller{
+		clock:                 clock.RealClock{},
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
 		fasThreads:            make(map[string]fasThread),
 		fleetGetter:           agonesClient.AgonesV1(),
@@ -340,7 +343,7 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 	if err != nil {
 		return err
 	}
-	ticker := time.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
+	ticker := c.clock.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 	c.fasThreads[key] = fasThread{
 		terminateSignal: make(chan struct{}),
 		generation:      fas.Generation,
@@ -356,7 +359,7 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 			case <-c.fasThreads[key].terminateSignal:
 				ticker.Stop()
 				return
-			case <-ticker.C:
+			case <-ticker.C():
 				c.loggerForFleetAutoscalerKey(key).Debug("run routine sync")
 				err := c.fleetAutoScale(ctx, key)
 				if err != nil {
