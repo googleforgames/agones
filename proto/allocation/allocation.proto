@@ -94,16 +94,17 @@ message LabelSelector {
 // GameServerSelector used for finding a GameServer with matching filters.
 message GameServerSelector {
   // Labels to match.
-	map<string, string> matchLabels = 1;
+  map<string, string> matchLabels = 1;
   enum GameServerState {
-     READY = 0;
-     ALLOCATED = 1;
+    READY = 0;
+    ALLOCATED = 1;
   };
   GameServerState gameServerState = 2;
   PlayerSelector players = 3;
 }
 
 // PlayerSelector is filter for player capacity values.
+// minAvailable should always be less or equal to maxAvailable.
 message PlayerSelector {
   uint64 minAvailable = 1;
   uint64 maxAvailable = 2;

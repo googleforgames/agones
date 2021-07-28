@@ -204,7 +204,7 @@
           "format": "uint64"
         }
       },
-      "description": "PlayerSelector is filter for player capacity values."
+      "description": "PlayerSelector is filter for player capacity values.\nminAvailable should always be less or equal to maxAvailable."
     }
   }
 }

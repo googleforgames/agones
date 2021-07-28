@@ -36,10 +36,10 @@ func TestConvertAllocationRequestToGameServerAllocation(t *testing.T) {
 
 	tests := []struct {
 		name               string
+		features           string
 		in                 *pb.AllocationRequest
 		want               *allocationv1.GameServerAllocation
 		skipConvertFromGSA bool
-		features           string
 	}{
 		{
 			name:     "all fields are set (StateAllocationFilter, PlayerAllocationFilter)",
