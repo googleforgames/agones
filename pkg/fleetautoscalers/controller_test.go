@@ -46,13 +46,13 @@ type counter struct {
 	v  uint32
 }
 
-func (c *counter)Inc() {
+func (c *counter) Inc() {
 	c.mu.Lock()
 	c.v++
 	c.mu.Unlock()
 }
 
-func (c *counter)Value() uint32 {
+func (c *counter) Value() uint32 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.v
