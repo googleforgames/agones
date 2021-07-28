@@ -101,11 +101,9 @@ echo $TLS_CA_VALUE | base64 -d > ca.crt
 # echo $TLS_CA_VALUE | base64 -D > ca.crt
 ```
 
-{{% feature publishVersion="0.16.0" %}}
 ### Bring Your Own Certificates (advanced)
 
 If you would like to completely manage the tls secrets outside of helm, you can create them in the namespace where agones is going to be installed, and then set the helm value `agones.allocator.disableSecretCreation` to `true`. This method will also work with the cert-manager method, as long as your certificate and secret are created ahead of time, and you populate the `allocator-tls-ca` and `allocator-client-ca` yourself.
-{{% /feature %}}
 
 ## Client Certificate
 
@@ -184,12 +182,7 @@ You should expect to see the following output:
 
 ### Sending Data to the Game Server
 
-{{% feature publishVersion="0.15.0" %}}
 The service accepts a `metadata` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`. The old `metaPatch` fields is now deprecated, but can still be used for compatibility. If both `metadata` and `metaPatch` fields are set, `metaPatch` is ignored.
-{{% /feature %}}
-{{% feature expiryVersion="0.15.0" %}}
-The service accepts a `metaPatch` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`.
-{{% /feature %}}
 
 ## Secrets Explained
 
