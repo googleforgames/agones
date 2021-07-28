@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -38,6 +39,24 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8stesting "k8s.io/client-go/testing"
 )
+
+// counter defines a thread-safe counter used in tests
+type counter struct {
+	mu sync.Mutex
+	v  uint32
+}
+
+func (c *counter)Inc() {
+	c.mu.Lock()
+	c.v++
+	c.mu.Unlock()
+}
+
+func (c *counter)Value() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.v
+}
 
 var (
 	gvk = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
@@ -707,7 +726,9 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		fas, f := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
 		fas.Spec.Sync.FixedInterval.Seconds = 10
+
 		var latestUpdatedTime time.Time
+		fasUpdatedCount := counter{v: 0}
 
 		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
@@ -720,6 +741,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 				assert.Equal(t, fas.Spec.Sync.FixedInterval.Seconds, int32(time.Since(latestUpdatedTime).Seconds()))
 			}
 			latestUpdatedTime = time.Now()
+			fasUpdatedCount.Inc()
 			return true, fas, nil
 		})
 
@@ -735,6 +757,7 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		assert.Contains(t, c.fasThreads, fasKey)
 		// wait one sync interval, the fas update function should be called twice
 		time.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds+1) * time.Second)
+		assert.Equal(t, uint32(2), fasUpdatedCount.Value())
 	})
 
 	t.Run("update fas thread", func(t *testing.T) {
