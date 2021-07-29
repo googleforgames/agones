@@ -763,8 +763,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 		// we need a small block here so that autoscale rountine can run
 		assert.Eventually(t, func() bool {
-		   return uint32(2) == fasUpdatedCount.Value()
-		}, 10 * time.Second, 500 * time.Milliseconds)
+			return uint32(2) == fasUpdatedCount.Value()
+		}, 10*time.Second, 500*time.Millisecond)
 	})
 
 	t.Run("update fas thread", func(t *testing.T) {
