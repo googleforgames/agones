@@ -68,8 +68,7 @@ func allocate(framework *e2eframework.Framework, numOfClients int, fleetName str
 	gsa := &allocationv1.GameServerAllocation{
 		ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
-			Preferred: []allocationv1.GameServerSelector{
+			Selectors: []allocationv1.GameServerSelector{
 				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
 			},
 		},

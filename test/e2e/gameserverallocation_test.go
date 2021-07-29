@@ -57,15 +57,22 @@ func TestCreateFleetAndGameServerAllocate(t *testing.T) {
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-			gsa := &allocationv1.GameServerAllocation{
-				Spec: allocationv1.GameServerAllocationSpec{
+			gsaList := []*allocationv1.GameServerAllocation{
+				{Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
-				}}
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}}},
+				},
+				{Spec: allocationv1.GameServerAllocationSpec{
+					Scheduling: strategy,
+					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
+				},
+			}
 
-			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
-			if assert.NoError(t, err) {
-				assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+			for _, gsa := range gsaList {
+				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+				if assert.NoError(t, err) {
+					assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+				}
 			}
 		})
 	}
@@ -90,7 +97,7 @@ func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
 	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
 	gsa := &allocationv1.GameServerAllocation{
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: fleetSelector},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: fleetSelector}},
 		}}
 
 	// standard allocation
@@ -103,10 +110,10 @@ func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs1.Status.State)
 	assert.NotNil(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"])
 
-	// now let's get it back again as required
+	// now let's get it back again
 	gsa = gsa.DeepCopy()
 	allocated := agonesv1.GameServerStateAllocated
-	gsa.Spec.Required.GameServerState = &allocated
+	gsa.Spec.Selectors[0].GameServerState = &allocated
 
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -120,23 +127,6 @@ func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
 	require.Equal(t, gs1.ObjectMeta.Name, gs2.ObjectMeta.Name)
 	require.NotEqual(t, gs1.ObjectMeta.ResourceVersion, gs2.ObjectMeta.ResourceVersion)
 	require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
-
-	// and again as preferred
-	gsa = &allocationv1.GameServerAllocation{
-		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: fleetSelector},
-			Preferred: []allocationv1.GameServerSelector{
-				{
-					LabelSelector:   fleetSelector,
-					GameServerState: &allocated,
-				},
-			},
-		}}
-
-	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
-	require.NoError(t, err)
-	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
-	assert.Equal(t, gs1.ObjectMeta.Name, gsa.Status.GameServerName)
 }
 
 func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
@@ -160,8 +150,7 @@ func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
 	allocated := agonesv1.GameServerStateAllocated
 	gsa := &allocationv1.GameServerAllocation{
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: fleetSelector, Players: &allocationv1.PlayerSelector{MinAvailable: 5, MaxAvailable: 10}},
-			Preferred: []allocationv1.GameServerSelector{
+			Selectors: []allocationv1.GameServerSelector{
 				{
 					LabelSelector:   fleetSelector,
 					GameServerState: &allocated,
@@ -170,6 +159,7 @@ func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
 						MaxAvailable: 99,
 					},
 				},
+				{LabelSelector: fleetSelector, Players: &allocationv1.PlayerSelector{MinAvailable: 5, MaxAvailable: 10}},
 			},
 		}}
 
@@ -299,7 +289,7 @@ func TestMultiClusterAllocationOnLocalCluster(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
 					MultiClusterSetting: allocationv1.MultiClusterSetting{
 						Enabled: true,
 						PolicySelector: metav1.LabelSelector{
@@ -359,7 +349,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 			gsa := &allocationv1.GameServerAllocation{
 				Spec: allocationv1.GameServerAllocationSpec{
 					Scheduling: strategy,
-					Required:   allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
+					Selectors:  []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}}},
 				}}
 
 			for i := 0; i < replicasCount; i++ {
@@ -397,7 +387,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}}},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}}}},
 			MetaPatch: allocationv1.MetaPatch{
 				Labels:      map[string]string{"red": "blue"},
 				Annotations: map[string]string{"dog": "good"},
@@ -459,9 +449,9 @@ func TestGameServerAllocationPreferredSelection(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
-			Preferred: []allocationv1.GameServerSelector{
+			Selectors: []allocationv1.GameServerSelector{
 				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: preferred.ObjectMeta.Name}}},
+				{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
 			},
 		}}
 
@@ -524,7 +514,7 @@ func TestGameServerAllocationDeletionOnUnAllocate(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}}},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"never": "goingtohappen"}}}},
 		}}
 
 	gsa, err := allocations.Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
@@ -558,9 +548,9 @@ func TestGameServerAllocationDuringMultipleAllocationClients(t *testing.T) {
 
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
-			Preferred: []allocationv1.GameServerSelector{
+			Selectors: []allocationv1.GameServerSelector{
 				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "preferred"}}},
+				{LabelSelector: metav1.LabelSelector{MatchLabels: label}},
 			},
 		}}
 

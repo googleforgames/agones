@@ -84,14 +84,14 @@
         },
         "requiredGameServerSelector": {
           "$ref": "#/definitions/allocationGameServerSelector",
-          "description": "The required allocation. Defaults to all GameServers."
+          "description": "Deprecated: Please use gameServerSelectors instead. This field is ignored if the\ngameServerSelectors field is set\nThe required allocation. Defaults to all GameServers."
         },
         "preferredGameServerSelectors": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/allocationGameServerSelector"
           },
-          "description": "The ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
+          "description": "Deprecated: Please use gameServerSelectors instead. This field is ignored if the\ngameServerSelectors field is set\nThe ordered list of preferred allocations out of the `required` set.\nIf the first selector is not matched, the selection attempts the second selector, and so on."
         },
         "scheduling": {
           "$ref": "#/definitions/AllocationRequestSchedulingStrategy",
@@ -104,6 +104,13 @@
         "metadata": {
           "$ref": "#/definitions/allocationMetaPatch",
           "title": "Metadata is optional custom metadata that is added to the game server at\nallocation. You can use this to tell the server necessary session data"
+        },
+        "gameServerSelectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/allocationGameServerSelector"
+          },
+          "description": "Ordered list of GameServer label selectors.\nIf the first selector is not matched, the selection attempts the second selector, and so on.\nThis is useful for things like smoke testing of new game servers.\nNote: This field can only be set if neither Required or Preferred is set."
         }
       }
     },

@@ -50,6 +50,7 @@ func TestGameServerAllocationApplyDefaults(t *testing.T) {
 	assert.Equal(t, int64(0), gsa.Spec.Required.Players.MinAvailable)
 }
 
+//nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecSelectors
 func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {
 	t.Parallel()
 
@@ -75,6 +76,34 @@ func TestGameServerAllocationSpecPreferredSelectors(t *testing.T) {
 	gs.ObjectMeta.Labels["check"] = "red"
 	assert.False(t, gsas.Preferred[0].Matches(gs))
 	assert.True(t, gsas.Preferred[1].Matches(gs))
+}
+
+//nolint // Current lint duplicate threshold will consider this function is a duplication of the function TestGameServerAllocationSpecPreferredSelectors
+func TestGameServerAllocationSpecSelectors(t *testing.T) {
+	t.Parallel()
+
+	gsas := &GameServerAllocationSpec{
+		Selectors: []GameServerSelector{
+			{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"check": "blue"}}},
+			{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"check": "red"}}},
+		},
+	}
+
+	require.Len(t, gsas.Selectors, 2)
+
+	gs := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{}}}
+
+	for _, s := range gsas.Selectors {
+		assert.False(t, s.Matches(gs))
+	}
+
+	gs.ObjectMeta.Labels["check"] = "blue"
+	assert.True(t, gsas.Selectors[0].Matches(gs))
+	assert.False(t, gsas.Selectors[1].Matches(gs))
+
+	gs.ObjectMeta.Labels["check"] = "red"
+	assert.False(t, gsas.Selectors[0].Matches(gs))
+	assert.True(t, gsas.Selectors[1].Matches(gs))
 }
 
 func TestGameServerSelectorApplyDefaults(t *testing.T) {
@@ -434,4 +463,49 @@ func TestGameServerAllocationValidate(t *testing.T) {
 	assert.Equal(t, "spec.required", causes[0].Field)
 	assert.Equal(t, "spec.preferred[0]", causes[1].Field)
 	assert.Equal(t, "spec.preferred[0]", causes[2].Field)
+}
+
+func TestGameServerAllocationConverter(t *testing.T) {
+	t.Parallel()
+
+	gsa := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Scheduling: "Packed",
+			Required: GameServerSelector{
+				Players: &PlayerSelector{
+					MinAvailable: 5,
+					MaxAvailable: 10,
+				},
+			},
+			Preferred: []GameServerSelector{
+				{Players: &PlayerSelector{MinAvailable: 10,
+					MaxAvailable: 20}},
+			},
+		},
+	}
+	gsaExpected := &GameServerAllocation{
+		Spec: GameServerAllocationSpec{
+			Scheduling: "Packed",
+			Required: GameServerSelector{
+				Players: &PlayerSelector{
+					MinAvailable: 5,
+					MaxAvailable: 10,
+				},
+			},
+			Preferred: []GameServerSelector{
+				{Players: &PlayerSelector{MinAvailable: 10,
+					MaxAvailable: 20}},
+			},
+			Selectors: []GameServerSelector{
+				{Players: &PlayerSelector{MinAvailable: 10,
+					MaxAvailable: 20}},
+				{Players: &PlayerSelector{
+					MinAvailable: 5,
+					MaxAvailable: 10}},
+			},
+		},
+	}
+
+	gsa.Converter()
+	assert.Equal(t, gsaExpected, gsa)
 }

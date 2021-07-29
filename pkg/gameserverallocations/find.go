@@ -35,8 +35,7 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 		index int
 	}
 
-	var required *result
-	preferred := make([]*result, len(gsa.Spec.Preferred))
+	selectors := make([]*result, len(gsa.Spec.Selectors))
 
 	var loop func(list []*agonesv1.GameServer, f func(i int, gs *agonesv1.GameServer))
 
@@ -75,28 +74,18 @@ func findGameServerForAllocation(gsa *allocationv1.GameServerAllocation, list []
 			return
 		}
 
-		// first look at preferred
-		for j, sel := range gsa.Spec.Preferred {
-			if preferred[j] == nil && sel.Matches(gs) {
-				preferred[j] = &result{gs: gs, index: i}
+		for j, sel := range gsa.Spec.Selectors {
+			if selectors[j] == nil && sel.Matches(gs) {
+				selectors[j] = &result{gs: gs, index: i}
 			}
-		}
-
-		// then look at required
-		if required == nil && gsa.Spec.Required.Matches(gs) {
-			required = &result{gs: gs, index: i}
 		}
 	})
 
-	for _, r := range preferred {
+	for _, r := range selectors {
 		if r != nil {
 			return r.gs, r.index, nil
 		}
 	}
 
-	if required == nil {
-		return nil, 0, ErrNoGameServer
-	}
-
-	return required.gs, required.index, nil
+	return nil, 0, ErrNoGameServer
 }
