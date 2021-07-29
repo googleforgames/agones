@@ -721,6 +721,11 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 }
 
 func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=true"))
+
 	t.Run("create fas thread", func(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()

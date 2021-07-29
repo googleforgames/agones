@@ -230,7 +230,7 @@ func (c *Controller) fleetAutoScale(ctx context.Context, key string) error {
 	c.loggerForFleetAutoscalerKey(key).Debug("Synchronising")
 
 	fas, err := c.getFleetAutoscalerByKey(key)
-	if fas == nil {
+	if fas == nil || err != nil {
 		return err
 	}
 
@@ -386,7 +386,7 @@ func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) {
 // syncFleetAutoscalerWithCustomSyncInterval syncs the fleet based on a custom interval configured in Fas
 func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Context, key string) error {
 	fas, err := c.getFleetAutoscalerByKey(key)
-	if fas == nil {
+	if fas == nil || err != nil {
 		return err
 	}
 	thread, ok := c.fasThreads[key]
