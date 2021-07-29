@@ -757,8 +757,9 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		// set the clock forward by one sync interval forward, the fas update function should be called twice
 		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 		// we need a small block here so that autoscale rountine can run
-		time.Sleep(1 * time.Second)
-		assert.Equal(t, uint32(2), fasUpdatedCount.Value())
+		assert.Eventually(t, func() bool {
+		   return uint32(2) == fasUpdatedCount.Value()
+		}, 10 * time.Second, 500 * time.Milliseconds)
 	})
 
 	t.Run("update fas thread", func(t *testing.T) {
