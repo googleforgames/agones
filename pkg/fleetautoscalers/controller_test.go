@@ -758,7 +758,8 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
-		assert.Contains(t, c.fasThreads, fasKey)
+		_, ok := c.fasThreads.Load(fasKey)
+		assert.True(t, ok)
 		// set the clock forward by one sync interval forward, the fas update function should be called twice
 		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
 		// we need a small block here so that autoscale rountine can run
@@ -772,13 +773,15 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		c, m := newFakeController()
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
-		c.fasThreads[fasKey] = fasThread{
+		c.fasThreads.Store(fasKey, fasThread{
 			generation:      1, // an older version than fas
 			terminateSignal: make(chan struct{}),
-		}
+		})
 		go func() {
 			// start a mock function for receiving the terminate signal
-			<-c.fasThreads[fasKey].terminateSignal
+			thread, ok := c.fasThreads.Load(fasKey)
+			assert.True(t, ok)
+			<-thread.(fasThread).terminateSignal
 		}()
 
 		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
@@ -790,8 +793,9 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 
 		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
 		assert.Nil(t, err)
-		assert.Contains(t, c.fasThreads, fasKey)
-		assert.Equal(t, fas.Generation, c.fasThreads[fasKey].generation)
+		thread, ok := c.fasThreads.Load(fasKey)
+		assert.True(t, ok)
+		assert.Equal(t, fas.Generation, thread.(fasThread).generation)
 	})
 
 	t.Run("delete fas thread", func(t *testing.T) {
@@ -799,16 +803,19 @@ func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
 		c, _ := newFakeController()
 		fas, _ := defaultFixtures()
 		fasKey := fas.Namespace + "/" + fas.Name
-		c.fasThreads[fasKey] = fasThread{
+		c.fasThreads.Store(fasKey, fasThread{
 			generation:      fas.Generation,
 			terminateSignal: make(chan struct{}),
-		}
+		})
 		go func() {
 			// start a mock function for receiving the terminate signal
-			<-c.fasThreads[fasKey].terminateSignal
+			thread, ok := c.fasThreads.Load(fasKey)
+			assert.True(t, ok)
+			<-thread.(fasThread).terminateSignal
 		}()
 		c.removeFasThread(fas)
-		assert.NotContains(t, c.fasThreads, fasKey)
+		_, ok := c.fasThreads.Load(fasKey)
+		assert.False(t, ok)
 	})
 }
 

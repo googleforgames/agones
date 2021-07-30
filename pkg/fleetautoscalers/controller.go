@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
@@ -63,7 +64,7 @@ type Controller struct {
 	baseLogger            *logrus.Entry
 	clock                 clock.Clock
 	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
-	fasThreads            map[string]fasThread
+	fasThreads            sync.Map
 	fleetGetter           typedagonesv1.FleetsGetter
 	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
@@ -88,7 +89,7 @@ func NewController(
 	c := &Controller{
 		clock:                 clock.RealClock{},
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
-		fasThreads:            make(map[string]fasThread),
+		fasThreads:            sync.Map{},
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -142,9 +143,10 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	go func() {
 		// clean all go routines when ctx is Done
 		<-ctx.Done()
-		for _, v := range c.fasThreads {
-			v.terminateSignal <- struct{}{}
-		}
+		c.fasThreads.Range(func(k, v interface{}) bool {
+			v.(fasThread).terminateSignal <- struct{}{}
+			return true
+		})
 	}()
 
 	c.workerqueue.Run(ctx, workers)
@@ -344,19 +346,23 @@ func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.Fle
 		return err
 	}
 	ticker := c.clock.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
-	c.fasThreads[key] = fasThread{
+	c.fasThreads.Store(key, fasThread{
 		terminateSignal: make(chan struct{}),
 		generation:      fas.Generation,
-	}
+	})
 	// scale immediately when an FAS is created or updated
 	if err := c.fleetAutoScale(ctx, key); err != nil {
 		return err
 	}
 
 	go func() {
+		thread, ok := c.fasThreads.Load(key)
+		if !ok {
+			return
+		}
 		for {
 			select {
-			case <-c.fasThreads[key].terminateSignal:
+			case <-thread.(fasThread).terminateSignal:
 				ticker.Stop()
 				return
 			case <-ticker.C():
@@ -377,9 +383,9 @@ func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) {
 	if err != nil {
 		return
 	}
-	if _, ok := c.fasThreads[key]; ok {
-		c.fasThreads[key].terminateSignal <- struct{}{}
-		delete(c.fasThreads, key)
+	if thread, ok := c.fasThreads.Load(key); ok {
+		thread.(fasThread).terminateSignal <- struct{}{}
+		c.fasThreads.Delete(key)
 	}
 }
 
@@ -389,12 +395,12 @@ func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Conte
 	if fas == nil || err != nil {
 		return err
 	}
-	thread, ok := c.fasThreads[key]
+	thread, ok := c.fasThreads.Load(key)
 	if !ok {
 		return c.createFasThread(ctx, fas)
 	}
-	if fas.Generation != thread.generation {
-		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.generation, fas.Generation)
+	if fas.Generation != thread.(fasThread).generation {
+		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.(fasThread).generation, fas.Generation)
 		c.removeFasThread(fas)
 		return c.createFasThread(ctx, fas)
 	}
