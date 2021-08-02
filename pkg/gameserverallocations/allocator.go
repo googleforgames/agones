@@ -570,22 +570,22 @@ func (c *Allocator) allocationUpdateWorkers(ctx context.Context, workerCount int
 
 // applyAllocationToGameServer patches the inputted GameServer with the allocation metadata changes, and updates it to the Allocated State.
 // Returns the updated GameServer.
-func (c *Allocator) applyAllocationToGameServer(ctx context.Context, fam allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
+func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocationv1.MetaPatch, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	// patch ObjectMeta labels
-	if fam.Labels != nil {
+	if mp.Labels != nil {
 		if gs.ObjectMeta.Labels == nil {
-			gs.ObjectMeta.Labels = make(map[string]string, len(fam.Labels))
+			gs.ObjectMeta.Labels = make(map[string]string, len(mp.Labels))
 		}
-		for key, value := range fam.Labels {
+		for key, value := range mp.Labels {
 			gs.ObjectMeta.Labels[key] = value
 		}
 	}
 
 	if gs.ObjectMeta.Annotations == nil {
-		gs.ObjectMeta.Annotations = make(map[string]string, len(fam.Annotations))
+		gs.ObjectMeta.Annotations = make(map[string]string, len(mp.Annotations))
 	}
 	// apply annotations patch
-	for key, value := range fam.Annotations {
+	for key, value := range mp.Annotations {
 		gs.ObjectMeta.Annotations[key] = value
 	}
 
