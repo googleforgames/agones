@@ -71,6 +71,8 @@ spec:
       maxReplicas: 20
   # The autoscaling sync strategy
   sync:
+  # [Stage:Alpha]
+  # [FeatureFlag:CustomFasSyncInterval]
     # type of the sync. for now, only FixedInterval is available
     type: FixedInterval
     # parameters of the fixedInterval sync
