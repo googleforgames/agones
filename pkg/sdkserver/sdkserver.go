@@ -830,7 +830,7 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 	return nil
 }
 
-// NewControllerSigKillContext returns a Context that cancels when os.Kill is received
+// NewSDKServerContext returns a Context that cancels when os.Kill is received
 // or when os.Interrupt is received and the GameServer's Status is shutdown
 func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 	ctx, cancel := context.WithCancel(ctx)
