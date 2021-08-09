@@ -834,26 +834,19 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 // or when os.Interrupt is received and the GameServer's Status is shutdown
 func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 	ctx, cancel := context.WithCancel(ctx)
-	c := make(chan os.Signal, 3)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		for {
-			sig := <-c
-			switch sig {
-			case syscall.SIGTERM | syscall.SIGINT:
-				go func() {
-					for {
-						gsState := <-s.gsStateChannel
-						if gsState == agonesv1.GameServerStateShutdown {
-							cancel()
-						}
-					}
-				}()
-			case syscall.SIGKILL:
-				cancel()
+		<-c
+		go func() {
+			for {
+				gsState := <-s.gsStateChannel
+				if gsState == agonesv1.GameServerStateShutdown {
+					cancel()
+				}
 			}
-		}
+		}()
 	}()
 
 	return ctx
