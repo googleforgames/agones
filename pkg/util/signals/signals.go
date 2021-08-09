@@ -23,19 +23,14 @@ import (
 	"syscall"
 )
 
-// NewSigKillContext returns a Context that cancels when os.Kill is received
+// NewSigKillContext returns a Context that cancels when os.Interrupt or os.Kill is received
 func NewSigKillContext() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 2)
-	signal.Notify(c, syscall.SIGKILL)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		for {
-			s := <-c
-			switch s {
-			case syscall.SIGKILL:
-				cancel()
-			}
-		}
+		<-c
+		cancel()
 	}()
 
 	return ctx
