@@ -845,8 +845,7 @@ func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 				go func() {
 					for {
 						gsState := <-s.gsStateChannel
-						switch gsState {
-						case agonesv1.GameServerStateShutdown:
+						if gsState == agonesv1.GameServerStateShutdown {
 							cancel()
 						}
 					}
