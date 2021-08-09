@@ -33,7 +33,8 @@ makes sense for your GameServer to return to the pool of potentially Allocatable
 ### What steps do I need to take to integrate my GameServer?
 
 1. Integrate your game server binary with the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}), 
-   calling the appropriate [lifecycle event]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) hooks.
+   calling the appropriate [lifecycle event]({{< ref "/docs/Guides/Client SDKs/_index.md#lifecycle-management" >}}) 
+   hooks.
 1. Containerize your game server binary with [Docker](https://www.docker.com/)
 1. Publish your Docker image in a [container registry/repository](https://docs.docker.com/docker-hub/repos/).
 1. Create a [gameserver.yaml]({{< ref "/docs/Reference/gameserver.md" >}}) file for your container image.

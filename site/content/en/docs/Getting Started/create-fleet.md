@@ -347,7 +347,7 @@ You have now deployed a new version of your game!
     how the extra functionality can enable smoke testing, server information communication, and more.
 - You can now create a fleet autoscaler to automatically resize your fleet based on the actual usage.
   See [Create a Fleet Autoscaler]({{< relref "create-fleetautoscaler.md" >}}).
-- Have a look at the [GameServer Creation, Allocation and Shutdown Lifecycle]({{< ref "/docs/Guides/gameserver-lifecycle.md" >}}) diagram,
-    to give you a good overview of how all the pieces fit together - from creating to integrating with a matchmaker.
+- Have a look at the [GameServer Integration Patterns]({{< ref "/docs/Integration Patterns/_index.md" >}}),
+    to give you a set of examples on how all the pieces fit together with your matchmaker and other systems.
 - Or if you want to try to use your own GameServer container make sure you have properly integrated the [Agones SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}).
 - If you would like to learn how to programmatically allocate a Game Server from the fleet, see how to [Access Agones via the Kubernetes API]({{< relref "../Guides/access-api.md" >}}) or alternatively use the [Allocator Service]({{< relref "../Advanced/allocator-service.md" >}}), depending on your needs.
