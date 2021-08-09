@@ -186,10 +186,7 @@ therefore we recommend you always run your own load tests for your specific game
 
 ### Are Windows Container game servers supported by Agones?
 
-As of Kubernetes 1.14, Windows Container support
-[has been released as GA](https://kubernetes.io/blog/2019/03/25/kubernetes-1-14-release-announcement/).
-
-That being said, Agones has yet to be tested with Windows Nodes and work on this feature has not been started.
+The Agones community has an alpha feature for [Windows Gameservers](https://agones.dev/site/docs/guides/windows-gameservers/).
 
 If you are interested in this feature and/or contributing, please add a comment to the 
 [Running windows game server](https://github.com/googleforgames/agones/issues/54) ticket.
