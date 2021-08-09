@@ -27,7 +27,7 @@ import (
 func NewSigKillContext() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 2)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(c, syscall.SIGKILL)
 	go func() {
 		for {
 			s := <-c
