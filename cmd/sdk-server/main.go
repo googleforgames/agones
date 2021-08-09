@@ -32,7 +32,6 @@ import (
 	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
-	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -77,7 +76,7 @@ func main() {
 		time.Sleep(time.Duration(ctlConf.Delay) * time.Second)
 	}
 
-	ctx := signals.NewSigKillContext()
+	ctx := context.Background()
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal
 	// then the gameserver is being shut down, and we no longer
@@ -139,7 +138,7 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-
+		ctx = s.NewSDKServerContext(ctx)
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {

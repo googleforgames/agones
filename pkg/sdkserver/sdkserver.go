@@ -19,8 +19,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -94,6 +97,7 @@ type SDKServer struct {
 	gsLabels           map[string]string
 	gsAnnotations      map[string]string
 	gsState            agonesv1.GameServerState
+	gsStateChannel     chan agonesv1.GameServerState
 	gsUpdateMutex      sync.RWMutex
 	gsWaitForSync      sync.WaitGroup
 	reserveTimer       *time.Timer
@@ -134,6 +138,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsUpdateMutex:      sync.RWMutex{},
 		gsWaitForSync:      sync.WaitGroup{},
 		gsConnectedPlayers: []string{},
+		gsStateChannel:     make(chan agonesv1.GameServerState, 2),
 	}
 
 	s.informerFactory = factory
@@ -439,6 +444,7 @@ func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
+	s.gsStateChannel <- agonesv1.GameServerStateShutdown
 	return e, nil
 }
 
@@ -822,4 +828,34 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 	}
 	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
 	return nil
+}
+
+// NewControllerSigKillContext returns a Context that cancels when os.Kill is received
+// or when os.Interrupt is received and the GameServer's Status is shutdown
+func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
+	ctx, cancel := context.WithCancel(ctx)
+	c := make(chan os.Signal, 3)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
+	go func() {
+		for {
+			sig := <-c
+			switch sig {
+			case syscall.SIGTERM | syscall.SIGINT:
+				go func() {
+					for {
+						gsState := <-s.gsStateChannel
+						switch gsState {
+						case agonesv1.GameServerStateShutdown:
+							cancel()
+						}
+					}
+				}()
+			case syscall.SIGKILL:
+				cancel()
+			}
+		}
+	}()
+
+	return ctx
 }
