@@ -19,6 +19,7 @@ import (
 	"net/url"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -53,6 +54,11 @@ type FleetAutoscalerSpec struct {
 
 	// Autoscaling policy
 	Policy FleetAutoscalerPolicy `json:"policy"`
+	// [Stage:Alpha]
+	// [FeatureFlag:CustomFasSyncInterval]
+	// Sync defines when FleetAutoscalers runs autoscaling
+	// +optional
+	Sync *FleetAutoscalerSync `json:"sync,omitempty"`
 }
 
 // FleetAutoscalerPolicy describes how to scale a fleet
@@ -72,6 +78,19 @@ type FleetAutoscalerPolicy struct {
 // for a given Fleet
 type FleetAutoscalerPolicyType string
 
+// FleetAutoscalerSync describes when to sync a fleet
+type FleetAutoscalerSync struct {
+	// Type of autoscaling sync.
+	Type FleetAutoscalerSyncType `json:"type"`
+
+	// FixedInterval config params. Present only if FleetAutoscalerSyncType = FixedInterval.
+	// +optional
+	FixedInterval FixedIntervalSync `json:"fixedInterval"`
+}
+
+// FleetAutoscalerSyncType is the sync strategy for a given Fleet
+type FleetAutoscalerSyncType string
+
 const (
 	// BufferPolicyType FleetAutoscalerPolicyType is a simple buffering strategy for Ready
 	// GameServers
@@ -79,6 +98,10 @@ const (
 	// WebhookPolicyType is a simple webhook strategy used for horizontal fleet scaling
 	// GameServers
 	WebhookPolicyType FleetAutoscalerPolicyType = "Webhook"
+	// FixedIntervalSyncType is a simple fixed interval based strategy for trigger autoscaling
+	FixedIntervalSyncType FleetAutoscalerSyncType = "FixedInterval"
+
+	defaultIntervalSyncSeconds = 30
 )
 
 // BufferPolicy controls the desired behavior of the buffer policy.
@@ -109,6 +132,12 @@ type BufferPolicy struct {
 // It contains the description of the webhook autoscaler service
 // used to form url which is accessible inside the cluster
 type WebhookPolicy admregv1.WebhookClientConfig
+
+// FixedIntervalSync controls the desired behavior of the fixed interval based sync.
+type FixedIntervalSync struct {
+	// Seconds defines how often we run fleet autoscaling in seconds
+	Seconds int32 `json:"seconds"`
+}
 
 // FleetAutoscalerStatus defines the current status of a FleetAutoscaler
 type FleetAutoscalerStatus struct {
@@ -174,6 +203,8 @@ func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.Statu
 	case WebhookPolicyType:
 		causes = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(causes)
 	}
+
+	causes = fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(causes)
 	return causes
 }
 
@@ -293,4 +324,38 @@ func (b *BufferPolicy) ValidateBufferPolicy(causes []metav1.StatusCause) []metav
 		}
 	}
 	return causes
+}
+
+// ValidateFixedIntervalSync validates the FixedIntervalSync settings
+func (i *FixedIntervalSync) ValidateFixedIntervalSync(causes []metav1.StatusCause) []metav1.StatusCause {
+	if i == nil {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "fixedInterval",
+			Message: "fixedInterval config params are missing",
+		})
+	}
+	if i.Seconds <= 0 {
+		return append(causes, metav1.StatusCause{
+			Type:    metav1.CauseTypeFieldValueInvalid,
+			Field:   "seconds",
+			Message: "seconds should be bigger than 0",
+		})
+	}
+	return causes
+}
+
+// ApplyDefaults applies default values to the FleetAutoscaler
+func (fas *FleetAutoscaler) ApplyDefaults() {
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		if fas.Spec.Sync == nil {
+			fas.Spec.Sync = &FleetAutoscalerSync{}
+		}
+		if fas.Spec.Sync.Type == "" {
+			fas.Spec.Sync.Type = FixedIntervalSyncType
+		}
+		if fas.Spec.Sync.FixedInterval.Seconds == 0 {
+			fas.Spec.Sync.FixedInterval.Seconds = defaultIntervalSyncSeconds
+		}
+	}
 }

@@ -102,6 +102,25 @@ spec:
                         caBundle:
                           type: string
                           format: byte
+                sync:
+                  type: object
+                  required:
+                    - type
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - FixedInterval
+                    fixedInterval:
+                      type: object
+                      nullable: true
+                      required:
+                        - seconds
+                      properties:
+                        seconds:
+                          type: integer
+                          minimum: 0
+                          exclusiveMinimum: true
             status:
               type: object
               properties:

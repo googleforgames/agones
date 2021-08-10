@@ -112,6 +112,16 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 		assert.Len(t, causes, 1)
 		assert.Equal(t, "minReplicas", causes[0].Field)
 	})
+
+	t.Run("bad sync interval seconds", func(t *testing.T) {
+		fas := defaultFixture()
+		fas.Spec.Sync.FixedInterval.Seconds = 0
+
+		causes := fas.Validate(nil)
+
+		assert.Len(t, causes, 1)
+		assert.Equal(t, "seconds", causes[0].Field)
+	})
 }
 func TestFleetAutoscalerWebhookValidateUpdate(t *testing.T) {
 	t.Parallel()
@@ -223,6 +233,12 @@ func customFixture(t FleetAutoscalerPolicyType) *FleetAutoscaler {
 				Buffer: &BufferPolicy{
 					BufferSize:  intstr.FromInt(5),
 					MaxReplicas: 10,
+				},
+			},
+			Sync: &FleetAutoscalerSync{
+				Type: FixedIntervalSyncType,
+				FixedInterval: FixedIntervalSync{
+					Seconds: 30,
 				},
 			},
 		},

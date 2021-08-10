@@ -2964,6 +2964,22 @@ FleetAutoscalerPolicy
 <p>Autoscaling policy</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sync</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSync">
+FleetAutoscalerSync
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:CustomFasSyncInterval]
+Sync defines when FleetAutoscalers runs autoscaling</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -3041,6 +3057,36 @@ Must be bigger than 0
 Note: by &ldquo;ready&rdquo; we understand in this case &ldquo;non-allocated&rdquo;; this is done to ensure robustness
 and computation stability in different edge case (fleet just created, not enough
 capacity in the cluster etc)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="autoscaling.agones.dev/v1.FixedIntervalSync">FixedIntervalSync
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSync">FleetAutoscalerSync</a>)
+</p>
+<p>
+<p>FixedIntervalSync controls the desired behavior of the fixed interval based sync.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>seconds</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Seconds defines how often we run fleet autoscaling in seconds</p>
 </td>
 </tr>
 </tbody>
@@ -3316,6 +3362,22 @@ FleetAutoscalerPolicy
 <p>Autoscaling policy</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>sync</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSync">
+FleetAutoscalerSync
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>[Stage:Alpha]
+[FeatureFlag:CustomFasSyncInterval]
+Sync defines when FleetAutoscalers runs autoscaling</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="autoscaling.agones.dev/v1.FleetAutoscalerStatus">FleetAutoscalerStatus
@@ -3398,6 +3460,61 @@ defined by MinReplicas and MaxReplicas, and has thus been capped.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="autoscaling.agones.dev/v1.FleetAutoscalerSync">FleetAutoscalerSync
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSpec">FleetAutoscalerSpec</a>)
+</p>
+<p>
+<p>FleetAutoscalerSync describes when to sync a fleet</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSyncType">
+FleetAutoscalerSyncType
+</a>
+</em>
+</td>
+<td>
+<p>Type of autoscaling sync.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>fixedInterval</code></br>
+<em>
+<a href="#autoscaling.agones.dev/v1.FixedIntervalSync">
+FixedIntervalSync
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FixedInterval config params. Present only if FleetAutoscalerSyncType = FixedInterval.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="autoscaling.agones.dev/v1.FleetAutoscalerSyncType">FleetAutoscalerSyncType
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#autoscaling.agones.dev/v1.FleetAutoscalerSync">FleetAutoscalerSync</a>)
+</p>
+<p>
+<p>FleetAutoscalerSyncType is the sync strategy for a given Fleet</p>
+</p>
 <h3 id="autoscaling.agones.dev/v1.WebhookPolicy">WebhookPolicy
 </h3>
 <p>
