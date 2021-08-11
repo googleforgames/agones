@@ -435,7 +435,7 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 			// get an allocation
 			gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 				Spec: allocationv1.GameServerAllocationSpec{
-					Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+					Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 				}}
 
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
@@ -556,7 +556,7 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	// get an allocation
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+			Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		}}
 
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
@@ -719,19 +719,14 @@ func TestFleetNameValidation(t *testing.T) {
 
 	flt := defaultFleet(framework.Namespace)
 	nameLen := validation.LabelValueMaxLength + 1
-	bytes := make([]byte, nameLen)
-	for i := 0; i < nameLen; i++ {
-		bytes[i] = 'f'
-	}
-	flt.Name = string(bytes)
+	flt.Name = strings.Repeat("f", nameLen)
 	_, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
-	assert.NotNil(t, err)
-	statusErr, ok := err.(*k8serrors.StatusError)
-	assert.True(t, ok)
+	require.NotNil(t, err)
+	statusErr := err.(*k8serrors.StatusError)
 	assert.True(t, len(statusErr.Status().Details.Causes) > 0)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 	goodFlt := defaultFleet(framework.Namespace)
-	goodFlt.Name = string(bytes[0 : nameLen-1])
+	goodFlt.Name = flt.Name[0 : nameLen-1]
 	goodFlt, err = client.Fleets(framework.Namespace).Create(ctx, goodFlt, metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		defer client.Fleets(framework.Namespace).Delete(ctx, goodFlt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
@@ -779,7 +774,7 @@ func TestGameServerAllocationDuringGameServerDeletion(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 				gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 					Spec: allocationv1.GameServerAllocationSpec{
-						Required: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}},
+						Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 					}}
 				gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 				if err != nil || gsa.Status.State == allocationv1.GameServerAllocationUnAllocated {

@@ -61,7 +61,11 @@ FHttpRequestRef UAgonesComponent::BuildAgonesRequest(const FString Path, const F
 {
 	FHttpModule* Http = &FHttpModule::Get();
 	FHttpRequestRef Request = Http->CreateRequest();
-	Request->SetURL(FString::Format(TEXT("http://localhost:{0}/{1}"), {*HttpPort, *Path}));
+
+	Request->SetURL(FString::Format(
+		TEXT("http://localhost:{0}/{1}"), 
+{FStringFormatArg(HttpPort), FStringFormatArg(Path)}	
+	));
 	Request->SetVerb(Verb.ToString());
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->SetHeader(TEXT("User-Agent"), TEXT("X-UnrealEngine-Agent"));
@@ -105,15 +109,8 @@ void UAgonesComponent::Ready(const FReadyDelegate SuccessDelegate, const FAgones
 	FHttpRequestRef Request = BuildAgonesRequest("ready");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -127,28 +124,13 @@ void UAgonesComponent::GameServer(const FGameServerDelegate SuccessDelegate, con
 	FHttpRequestRef Request = BuildAgonesRequest("gameserver", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse JSON - {0}"), {*Json})});
-				ErrorDelegate.ExecuteIfBound({});
 				return;
 			}
+
 			SuccessDelegate.ExecuteIfBound(FGameServerResponse(JsonObject));
 		});
 	Request->ProcessRequest();
@@ -173,7 +155,15 @@ void UAgonesComponent::EnsureWebSocketConnection()
         // Unreal WebSockets are not able to do DNS resolution for localhost for some reason
         // so this is using the IPv4 Loopback Address instead.
         WatchWebSocket = FWebSocketsModule::Get().CreateWebSocket(
-            FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"), {*HttpPort}), TEXT(""));
+            FString::Format(TEXT("ws://127.0.0.1:{0}/watch/gameserver"),
+            	static_cast<FStringFormatOrderedArguments>(
+                    TArray<FStringFormatArg, TFixedAllocator<1>>{
+                         FStringFormatArg(HttpPort)
+                    }
+                )
+            ),
+            TEXT("")
+        );
 
         WatchWebSocket->OnRawMessage().AddUObject(this, &UAgonesComponent::HandleWatchMessage);
     }
@@ -256,23 +246,21 @@ void UAgonesComponent::SetLabel(
 	FString Json;
 	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), {*Key, *Value})});
+		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"),
+			static_cast<FStringFormatOrderedArguments>(
+			TArray<FStringFormatArg, TFixedAllocator<2>>{
+				FStringFormatArg(Key),
+				FStringFormatArg(Value)
+			})
+		)});
 		return;
 	}
 
 	FHttpRequestRef Request = BuildAgonesRequest("metadata/label", FHttpVerb::Put, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -286,16 +274,8 @@ void UAgonesComponent::Health(const FHealthDelegate SuccessDelegate, const FAgon
 	FHttpRequestRef Request = BuildAgonesRequest("health");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -309,15 +289,8 @@ void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const F
 	FHttpRequestRef Request = BuildAgonesRequest("shutdown");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -333,22 +306,22 @@ void UAgonesComponent::SetAnnotation(
 	FString Json;
 	if (!FJsonObjectConverter::UStructToJsonObjectString(Label, Json))
 	{
-		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"), {*Key, *Value})});
+		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("error serializing key-value pair ({0}: {1}})"),
+			static_cast<FStringFormatOrderedArguments>(
+    			TArray<FStringFormatArg, TFixedAllocator<2>>{
+    				FStringFormatArg(Key),
+    				FStringFormatArg(Value)
+    			}
+    		)
+		)});
 		return;
 	}
 
 	FHttpRequestRef Request = BuildAgonesRequest("metadata/annotation", FHttpVerb::Put, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -362,15 +335,8 @@ void UAgonesComponent::Allocate(const FAllocateDelegate SuccessDelegate, const F
 	FHttpRequestRef Request = BuildAgonesRequest("allocate");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -393,15 +359,8 @@ void UAgonesComponent::Reserve(
 	FHttpRequestRef Request = BuildAgonesRequest("reserve", FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -427,25 +386,10 @@ void UAgonesComponent::PlayerConnect(
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/connect", FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
 
@@ -471,25 +415,10 @@ void UAgonesComponent::PlayerDisconnect(
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/disconnect", FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
 
@@ -512,15 +441,8 @@ void UAgonesComponent::SetPlayerCapacity(
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Post, Json);
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
+			if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
 				return;
 			}
 
@@ -534,24 +456,10 @@ void UAgonesComponent::GetPlayerCapacity(FGetPlayerCapacityDelegate SuccessDeleg
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/capacity", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
 
@@ -565,25 +473,10 @@ void UAgonesComponent::GetPlayerCount(FGetPlayerCountDelegate SuccessDelegate, F
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/count", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
 
@@ -595,29 +488,24 @@ void UAgonesComponent::GetPlayerCount(FGetPlayerCountDelegate SuccessDelegate, F
 void UAgonesComponent::IsPlayerConnected(
 	const FString PlayerId, const FIsPlayerConnectedDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
-	FHttpRequestRef Request =
-		BuildAgonesRequest(FString::Format(TEXT("alpha/player/connected/{0}"), {*PlayerId}), FHttpVerb::Get, "");
+	FHttpRequestRef Request = BuildAgonesRequest(
+		FString::Format(TEXT("alpha/player/connected/{0}"),
+			static_cast<FStringFormatOrderedArguments>(
+				TArray<FStringFormatArg, TFixedAllocator<1>>{
+					FStringFormatArg(PlayerId)
+				}
+			)
+		),
+		FHttpVerb::Get,
+		""
+	);
+	
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+            
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
 
@@ -632,29 +520,65 @@ void UAgonesComponent::GetConnectedPlayers(
 	FHttpRequestRef Request = BuildAgonesRequest("alpha/player/connected/{0}", FHttpVerb::Get, "");
 	Request->OnProcessRequestComplete().BindWeakLambda(this,
 		[SuccessDelegate, ErrorDelegate](FHttpRequestPtr HttpRequest, const FHttpResponsePtr HttpResponse, const bool bSucceeded) {
-			if (!bSucceeded)
-			{
-				ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
-				return;
-			}
-
-			if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
-			{
-				ErrorDelegate.ExecuteIfBound(
-					{FString::Format(TEXT("Error Code - {0}"), {FString::FromInt(HttpResponse->GetResponseCode())})});
-				return;
-			}
-
-			const FString Json = HttpResponse->GetContentAsString();
 			TSharedPtr<FJsonObject> JsonObject;
-			const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
-			if (!FJsonSerializer::Deserialize(JsonReader, JsonObject) || !JsonObject.IsValid())
+
+			if (!IsValidJsonResponse(JsonObject, bSucceeded, HttpResponse, ErrorDelegate))
 			{
-				ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"), {*Json})});
 				return;
 			}
-
+			
 			SuccessDelegate.ExecuteIfBound(FConnectedPlayersResponse(JsonObject));
 		});
 	Request->ProcessRequest();
+}
+
+bool UAgonesComponent::IsValidResponse(const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
+{
+	if (!bSucceeded)
+	{
+		ErrorDelegate.ExecuteIfBound({"Unsuccessful Call"});
+		return false;
+	}
+
+	if (!EHttpResponseCodes::IsOk(HttpResponse->GetResponseCode()))
+	{
+		ErrorDelegate.ExecuteIfBound(
+			{FString::Format(TEXT("Error Code - {0}"),
+				static_cast<FStringFormatOrderedArguments>(
+					TArray<FStringFormatArg, TFixedAllocator<1>>{
+						FStringFormatArg(FString::FromInt(HttpResponse->GetResponseCode()))
+                    })
+                )
+			}
+		);
+		return false;
+	}
+
+	return true;
+}
+
+bool UAgonesComponent::IsValidJsonResponse(TSharedPtr<FJsonObject>& JsonObject, const bool bSucceeded, const FHttpResponsePtr HttpResponse, FAgonesErrorDelegate ErrorDelegate)
+{
+	if (!IsValidResponse(bSucceeded, HttpResponse, ErrorDelegate))
+	{
+		return false;
+	}
+
+	TSharedPtr<FJsonObject> OutObject;
+	const FString Json = HttpResponse->GetContentAsString();
+	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Json);
+	if (!FJsonSerializer::Deserialize(JsonReader, OutObject) || !OutObject.IsValid())
+	{
+		ErrorDelegate.ExecuteIfBound({FString::Format(TEXT("Failed to parse response - {0}"),
+			static_cast<FStringFormatOrderedArguments>(
+				TArray<FStringFormatArg, TFixedAllocator<1>>{
+					FStringFormatArg(Json)
+                })
+            )
+		});
+		return false;
+	}
+
+	JsonObject = OutObject.ToSharedRef();
+	return true;
 }

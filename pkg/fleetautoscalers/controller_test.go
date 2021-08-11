@@ -20,11 +20,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
 	agtesting "agones.dev/agones/pkg/testing"
+	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
 	"github.com/pkg/errors"
@@ -33,9 +36,28 @@ import (
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	k8stesting "k8s.io/client-go/testing"
 )
+
+// counter defines a thread-safe counter used in tests
+type counter struct {
+	mu sync.Mutex
+	v  uint32
+}
+
+func (c *counter) Inc() {
+	c.mu.Lock()
+	c.v++
+	c.mu.Unlock()
+}
+
+func (c *counter) Value() uint32 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.v
+}
 
 var (
 	gvk = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
@@ -132,7 +154,10 @@ func TestWebhookControllerCreationValidationHandler(t *testing.T) {
 
 // nolint:dupl
 func TestControllerSyncFleetAutoscaler(t *testing.T) {
-	t.Parallel()
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=false"))
 
 	t.Run("scaling up, buffer policy", func(t *testing.T) {
 		t.Parallel()
@@ -695,6 +720,105 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 	})
 }
 
+func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=true"))
+
+	t.Run("create fas thread", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fc := clock.NewFakeClock(time.Now())
+		c.clock = fc
+
+		fas, f := defaultFixtures()
+		fasKey := fas.Namespace + "/" + fas.Name
+		fas.Spec.Sync.FixedInterval.Seconds = 10
+
+		fasUpdatedCount := counter{v: 0}
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ca := action.(k8stesting.UpdateAction)
+			fas := ca.GetObject().(*autoscalingv1.FleetAutoscaler)
+			fasUpdatedCount.Inc()
+			return true, fas, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
+		assert.Nil(t, err)
+		_, ok := c.fasThreads.Load(fasKey)
+		assert.True(t, ok)
+		// set the clock forward by one sync interval forward, the fas update function should be called twice
+		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
+		// we need a small block here so that autoscale rountine can run
+		assert.Eventually(t, func() bool {
+			return uint32(2) == fasUpdatedCount.Value()
+		}, 10*time.Second, 500*time.Millisecond)
+	})
+
+	t.Run("update fas thread", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+		fasKey := fas.Namespace + "/" + fas.Name
+		c.fasThreads.Store(fasKey, fasThread{
+			generation:      1, // an older version than fas
+			terminateSignal: make(chan struct{}),
+		})
+		go func() {
+			// start a mock function for receiving the terminate signal
+			thread, ok := c.fasThreads.Load(fasKey)
+			assert.True(t, ok)
+			<-thread.(fasThread).terminateSignal
+		}()
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
+		assert.Nil(t, err)
+		thread, ok := c.fasThreads.Load(fasKey)
+		assert.True(t, ok)
+		assert.Equal(t, fas.Generation, thread.(fasThread).generation)
+	})
+
+	t.Run("delete fas thread", func(t *testing.T) {
+		t.Parallel()
+		c, _ := newFakeController()
+		fas, _ := defaultFixtures()
+		fasKey := fas.Namespace + "/" + fas.Name
+		c.fasThreads.Store(fasKey, fasThread{
+			generation:      fas.Generation,
+			terminateSignal: make(chan struct{}),
+		})
+		go func() {
+			// start a mock function for receiving the terminate signal
+			thread, ok := c.fasThreads.Load(fasKey)
+			assert.True(t, ok)
+			<-thread.(fasThread).terminateSignal
+		}()
+		c.removeFasThread(fas)
+		_, ok := c.fasThreads.Load(fasKey)
+		assert.False(t, ok)
+	})
+}
+
 func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 	f := &agonesv1.Fleet{
 		ObjectMeta: metav1.ObjectMeta{
@@ -716,8 +840,9 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 
 	fas := &autoscalingv1.FleetAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "fas-1",
-			Namespace: "default",
+			Name:       "fas-1",
+			Namespace:  "default",
+			Generation: 2,
 		},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,
@@ -726,6 +851,12 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 				Buffer: &autoscalingv1.BufferPolicy{
 					BufferSize:  intstr.FromInt(5),
 					MaxReplicas: 100,
+				},
+			},
+			Sync: &autoscalingv1.FleetAutoscalerSync{
+				Type: autoscalingv1.FixedIntervalSyncType,
+				FixedInterval: autoscalingv1.FixedIntervalSync{
+					Seconds: 30,
 				},
 			},
 		},
