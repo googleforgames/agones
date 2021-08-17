@@ -18,8 +18,8 @@ FROM $BASE_IMAGE
 # This should contains tooling required to generate GRPC code, build (if distribution is required) 
 # and test your integration.
 
-RUN  apt-get update \
-    && apt-get install -y wget
+RUN apt-get --allow-releaseinfo-change update && \
+    apt-get install -y wget
 
 RUN apt-get update \
     && apt-get install -y apt-transport-https 
