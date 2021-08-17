@@ -25,6 +25,8 @@ import (
 	"strings"
 	"time"
 
+	"agones.dev/agones/pkg/util/signals"
+
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
@@ -138,7 +140,11 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-		ctx = s.NewSDKServerContext(ctx)
+		if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
+			ctx = s.NewSDKServerContext(ctx)
+		} else {
+			ctx = signals.NewSigKillContext()
+		}
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {

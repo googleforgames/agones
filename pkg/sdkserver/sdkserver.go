@@ -444,7 +444,9 @@ func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
-	s.gsStateChannel <- agonesv1.GameServerStateShutdown
+	if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
+		s.gsStateChannel <- agonesv1.GameServerStateShutdown
+	}
 	return e, nil
 }
 
