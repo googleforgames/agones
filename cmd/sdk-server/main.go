@@ -79,6 +79,10 @@ func main() {
 	}
 
 	ctx := context.Background()
+	if !runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
+		ctx = signals.NewSigKillContext()
+	}
+
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal
 	// then the gameserver is being shut down, and we no longer
@@ -142,8 +146,6 @@ func main() {
 		}
 		if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
 			ctx = s.NewSDKServerContext(ctx)
-		} else {
-			ctx = signals.NewSigKillContext()
 		}
 		go func() {
 			err := s.Run(ctx)
