@@ -116,11 +116,11 @@ spec:
   preferred:
     - matchLabels:
         agones.dev/fleet: green-fleet
-        # [Stage:Alpha]
-        # [FeatureFlag:PlayerAllocationFilter]    
-        players:
-          minAvailable: 0
-          maxAvailable: 99
+      # [Stage:Alpha]
+      # [FeatureFlag:PlayerAllocationFilter]    
+      players:
+        minAvailable: 0
+        maxAvailable: 99
     - matchLabels:
         agones.dev/fleet: blue-fleet
   # defines how GameServers are organised across the cluster.
