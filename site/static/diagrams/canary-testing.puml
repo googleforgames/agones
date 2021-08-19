@@ -25,7 +25,7 @@ end note
 else None available in Canary Fleet
 Agones -> StableFleet: Check if <i>GameServer<i> is available
 note right
-  When the Canary <i>Fleet</i> is all full allocated, the
+  When the Canary <i>Fleet</i> is fully allocated, the
   allocation falls over to the Stable <i>Fleet</i>.
 end note
 end group

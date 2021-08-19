@@ -15,10 +15,16 @@ production version.
 `Allocations` can then `prefer` to come from the canary `Fleet`, but if all `GameServers` are already allocated from the 
 canary `Fleet`, players will be allocated to the current stable Fleets.
 
-Over time, if monitoring those playing on the canary `Fleet` is working as expected, the size of the canary `Fleet` can be 
-grown until you feel confident that it can replace the existing stable, production `Fleet`.   
+Over time, if the monitoring of those playing on the canary `Fleet` is working as expected, the size of the canary 
+`Fleet` can be grown until you feel confident in its stability. 
 
-![Canary Fleet Diagram](../../../diagrams/canary-testing.puml.png)
+Once confidence has been achieved, the configuration for stable `Fleet` can be updated to match the canary (usually 
+triggering a [rolling update]({{% ref "/docs/Guides/fleet-updates.md#rolling-update-strategy" %}})). The 
+canary `Fleet` can then be deleted or updated to a new testing version of the game server process.
+
+<a href="../../../diagrams/canary-testing.puml.png" target="_blank">
+<img src="../../../diagrams/canary-testing.puml.png" alt="Canary Fleet Diagram" />
+</a>
 
 ## Sample `GameServerAllocation`
 
@@ -43,5 +49,8 @@ value of`canary:"true"`, if it exists, and has remaining Ready `GameServers`, an
 
 ## Next Steps
 
+* Read about different [`Fleet` update]({{% ref "/docs/Guides/fleet-updates.md" %}}) options and strategies that are 
+  available.
+* Have a look at all the options available on a 
+  [`GameServerAllocation`]({{% ref "/docs/Reference/gameserverallocation.md" %}}).
 * Review the [`Fleet` reference]({{% ref "/docs/Reference/fleet.md" %}}).
-* Check all the options available on [`GameServerAllocation`]({{% ref "/docs/Reference/gameserverallocation.md" %}}).
