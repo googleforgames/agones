@@ -7,7 +7,9 @@ description: >
   Find a `GameServer` that has room for a specific number of players.
 ---
 
-{{< alpha title="Player Tracking, Allocation Player Filter and Allocation State Filter" gate="PlayerTracking,PlayerAllocationFilter,StateAllocationFilter" >}}
+{{< alpha 
+    title="Player Tracking, Allocation Player Filter, and Allocation State Filter" 
+    gate="PlayerTracking,PlayerAllocationFilter,StateAllocationFilter" >}}
 
 Using this approach, we are able to be able to make a request that is akin to: "Find me a `GameServer` that is already
 allocated, with room for _n_ number of players, and if one is not available, allocate me a `Ready` `GameServer`".
@@ -42,13 +44,13 @@ spec:
 
 {{< alert title="Note" color="info">}}
 We recommend doing an extra check when players connect to a `GameServer` that there is the expected player capacity
-om the `GameServer` as there can be a small delay between a player connecting and it being reported
+on the `GameServer` as there can be a small delay between a player connecting and it being reported
 to Agones.
 {{< /alert >}}
 
-## What's Next?
+## Next Steps
 
 - Have a look at all commands the [Client SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) provides.
-* Check all the options available on [`GameServerAllocation`]({{% ref "/docs/Reference/gameserverallocation.md" %}}).
+- Check all the options available on [`GameServerAllocation`]({{% ref "/docs/Reference/gameserverallocation.md" %}}).
 - If you aren't familiar with the term [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/), this should
   provide a reference.

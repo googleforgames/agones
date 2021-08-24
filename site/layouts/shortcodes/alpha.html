@@ -7,9 +7,7 @@
         not enabled by default, and may change in the future.</p>
     <p>Use the Feature
         {{ if gt $len_gate 1 }}Gates{{else}}Gate{{ end }}
-        {{- range $index, $value := first (sub $len_gate 1) $gate }}
-        {{ if ne $index 0 }},{{ end }} <code>{{ $value }}</code>
-        {{- end}}
+        {{- range $index, $value := first (sub $len_gate 1) $gate }} <code>{{ $value }}</code>, {{- end}}
         {{ if gt $len_gate 1 }}and{{ end }}
         {{ range (last 1 $gate) }}
         <code>{{ . }}</code>
