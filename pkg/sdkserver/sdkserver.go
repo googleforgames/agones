@@ -291,6 +291,7 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	s.gsUpdateMutex.RLock()
 	s.logger.WithField("state", s.gsState).Debug("Updating state")
 	if len(s.gsState) == 0 {
+		s.gsUpdateMutex.RUnlock()
 		return errors.Errorf("could not update GameServer %s/%s to empty state", s.namespace, s.gameServerName)
 	}
 	s.gsUpdateMutex.RUnlock()
