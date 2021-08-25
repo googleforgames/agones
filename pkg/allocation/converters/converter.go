@@ -37,7 +37,9 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 			Namespace: in.GetNamespace(),
 		},
 		Spec: allocationv1.GameServerAllocationSpec{
+			// nolint:staticcheck
 			Preferred:  convertGameServerSelectorsToInternalGameServerSelectors(in.GetPreferredGameServerSelectors()),
+			Selectors:  convertGameServerSelectorsToInternalGameServerSelectors(in.GetGameServerSelectors()),
 			Scheduling: convertAllocationSchedulingToGSASchedulingStrategy(in.GetScheduling()),
 		},
 	}
@@ -64,7 +66,9 @@ func ConvertAllocationRequestToGSA(in *pb.AllocationRequest) *allocationv1.GameS
 		}
 	}
 
+	// nolint:staticcheck
 	if selector := convertGameServerSelectorToInternalGameServerSelector(in.GetRequiredGameServerSelector()); selector != nil {
+		// nolint:staticcheck
 		gsa.Spec.Required = *selector
 	}
 	return gsa
@@ -77,13 +81,12 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 	}
 
 	out := &pb.AllocationRequest{
-		Namespace:                    in.GetNamespace(),
-		PreferredGameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Preferred),
-		Scheduling:                   convertGSASchedulingStrategyToAllocationScheduling(in.Spec.Scheduling),
+		Namespace:           in.GetNamespace(),
+		Scheduling:          convertGSASchedulingStrategyToAllocationScheduling(in.Spec.Scheduling),
+		GameServerSelectors: convertInternalLabelSelectorsToLabelSelectors(in.Spec.Selectors),
 		MultiClusterSetting: &pb.MultiClusterSetting{
 			Enabled: in.Spec.MultiClusterSetting.Enabled,
 		},
-		RequiredGameServerSelector: convertInternalGameServerSelectorToGameServer(&in.Spec.Required),
 		Metadata: &pb.MetaPatch{
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
@@ -95,6 +98,14 @@ func ConvertGSAToAllocationRequest(in *allocationv1.GameServerAllocation) *pb.Al
 			Labels:      in.Spec.MetaPatch.Labels,
 			Annotations: in.Spec.MetaPatch.Annotations,
 		},
+	}
+
+	l := len(out.GameServerSelectors)
+	if l > 0 {
+		// nolint:staticcheck
+		out.PreferredGameServerSelectors = out.GameServerSelectors[:l-1]
+		// nolint:staticcheck
+		out.RequiredGameServerSelector = out.GameServerSelectors[l-1]
 	}
 
 	if in.Spec.MultiClusterSetting.Enabled {

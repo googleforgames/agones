@@ -67,9 +67,13 @@ func TestControllerAllocator(t *testing.T) {
 	require.NoError(t, runtime.ParseFeatures(string(runtime.FeatureStateAllocationFilter)+"=false"))
 
 	t.Run("successful allocation", func(t *testing.T) {
-		f, gsList := defaultFixtures(3)
+		f, gsList := defaultFixtures(4)
 
-		gsa := &allocationv1.GameServerAllocation{
+		gsaSelectors := &allocationv1.GameServerAllocation{
+			Spec: allocationv1.GameServerAllocationSpec{
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
+			}}
+		gsaRequired := &allocationv1.GameServerAllocation{
 			Spec: allocationv1.GameServerAllocationSpec{
 				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
 			}}
@@ -114,14 +118,22 @@ func TestControllerAllocator(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), ret)
 			assert.NoError(t, err)
 
-			assert.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Required.LabelSelector)
+			if len(gsa.Spec.Selectors) != 0 {
+				assert.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
+			} else {
+				// nolint:staticcheck
+				assert.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Selectors[0].LabelSelector)
+			}
+
 			assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
 		}
 
-		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), allocationv1.GameServerAllocationAllocated)
-		test(gsa.DeepCopy(), allocationv1.GameServerAllocationUnAllocated)
+		test(gsaSelectors.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsaRequired.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsaSelectors.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsaRequired.DeepCopy(), allocationv1.GameServerAllocationAllocated)
+		test(gsaSelectors.DeepCopy(), allocationv1.GameServerAllocationUnAllocated)
+		test(gsaRequired.DeepCopy(), allocationv1.GameServerAllocationUnAllocated)
 	})
 
 	t.Run("method not allowed", func(t *testing.T) {
@@ -211,7 +223,7 @@ func TestControllerAllocate(t *testing.T) {
 
 	gsa := allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "gsa-1", Namespace: defaultNs},
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required:  allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
+			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
 			MetaPatch: fam,
 		}}
 	gsa.ApplyDefaults()
@@ -297,7 +309,7 @@ func TestControllerAllocatePriority(t *testing.T) {
 
 		gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{Name: "fa-1", Namespace: defaultNs},
 			Spec: allocationv1.GameServerAllocationSpec{
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
 			}}
 		gsa.ApplyDefaults()
 		_, ok := gsa.Validate()
@@ -400,7 +412,7 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 				Namespace: defaultNs,
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}}},
 			}}
 		gsa.ApplyDefaults()
 		_, ok := gsa.Validate()
@@ -457,7 +469,7 @@ func TestControllerRunLocalAllocations(t *testing.T) {
 				Namespace: defaultNs,
 			},
 			Spec: allocationv1.GameServerAllocationSpec{
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "thereisnofleet"}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "thereisnofleet"}}}},
 			}}
 		gsa.ApplyDefaults()
 		_, ok := gsa.Validate()
@@ -677,13 +689,13 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 						},
 					},
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
 		ret, err := executeAllocation(gsa, c)
 		assert.NoError(t, err)
-		assert.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Required.LabelSelector)
+		assert.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 		assert.Equal(t, gsa.Namespace, ret.Namespace)
 		expectedState := allocationv1.GameServerAllocationAllocated
 		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
@@ -726,7 +738,7 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 						},
 					},
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
@@ -787,13 +799,13 @@ func TestMultiClusterAllocationFromLocal(t *testing.T) {
 						},
 					},
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "empty-fleet"}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: "empty-fleet"}}}},
 			},
 		}
 
 		ret, err := executeAllocation(gsa, c)
 		assert.NoError(t, err)
-		assert.Equal(t, gsa.Spec.Required.LabelSelector, ret.Spec.Required.LabelSelector)
+		assert.Equal(t, gsa.Spec.Selectors[0].LabelSelector, ret.Spec.Selectors[0].LabelSelector)
 		assert.Equal(t, gsa.Namespace, ret.Namespace)
 		expectedState := allocationv1.GameServerAllocationUnAllocated
 		assert.True(t, expectedState == ret.Status.State, "Failed: %s vs %s", expectedState, ret.Status.State)
@@ -860,7 +872,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
@@ -964,7 +976,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
@@ -1043,7 +1055,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
@@ -1111,7 +1123,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
@@ -1185,7 +1197,7 @@ func TestMultiClusterAllocationFromRemote(t *testing.T) {
 				MultiClusterSetting: allocationv1.MultiClusterSetting{
 					Enabled: true,
 				},
-				Required: allocationv1.GameServerSelector{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}},
+				Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: fleetName}}}},
 			},
 		}
 
