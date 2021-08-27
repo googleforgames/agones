@@ -1,8 +1,16 @@
 # Unreal Engine Example
 This is an example unreal engine game to show how the Agones Unreal Engine plugin can interact with Agones. This example is working on Unreal Engine 2.26.2 but the general principals apply to older builds and Unreal Engine 5 going into the future. To keep file sizes as small as possible and to minimize content being reliant on versions, no compiled content has been.
 
+## Overview
+This example contains a simple login interface which takes in an IP to connect to. The IP can be gathered from your cluster or will be your localhost in the case of purely local development. Use the following command to get the IP address of any available gameservers in the default namespace.
+
+```
+kubectl get gs
+```
+
 ## Prerequisites
-We will be assuming you have an Unreal Engine version of choice installed and working
+- Unreal Engine version of choice installed and working
+- Agones configured and working in a kubernetes cluster
 
 ## Getting Started
 ### Compiling and Packaging
