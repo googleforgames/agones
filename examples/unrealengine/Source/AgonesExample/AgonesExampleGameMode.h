@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "AgonesComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "AgonesExampleGameMode.generated.h"
 
@@ -12,7 +14,13 @@ class AAgonesExampleGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAgonesComponent* AgonesSDK;
+
 	AAgonesExampleGameMode();
+	
+	UFUNCTION()
+	virtual void BeginDestroy() override;
 };
 
 

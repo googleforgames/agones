@@ -3,6 +3,7 @@
 #include "AgonesExampleGameMode.h"
 #include "AgonesExampleHUD.h"
 #include "AgonesExampleCharacter.h"
+#include "AgonesExampleGameSession.h"
 #include "UObject/ConstructorHelpers.h"
 
 AAgonesExampleGameMode::AAgonesExampleGameMode()
@@ -14,4 +15,13 @@ AAgonesExampleGameMode::AAgonesExampleGameMode()
 
 	// use our custom HUD class
 	HUDClass = AAgonesExampleHUD::StaticClass();
+
+	GameSessionClass = AAgonesExampleGameSession::StaticClass();
+
+	AgonesSDK = CreateDefaultSubobject<UAgonesComponent>(TEXT("AgonesSDK"));
+}
+
+void AAgonesExampleGameMode::BeginDestroy()
+{
+	AgonesSDK->Shutdown({}, {});
 }
