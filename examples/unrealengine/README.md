@@ -1,5 +1,5 @@
 # Unreal Engine Example
-This is an example unreal engine game to show how the Agones Unreal Engine plugin can interact with Agones. This example is working on Unreal Engine 2.26.2 but the general principals apply to older builds and Unreal Engine 5 going into the future. To keep file sizes as small as possible and to minimize content being reliant on versions, no compiled content has been. If you would like to follow along and not use the prebuilt system, please refer to the [Following Along Documentation](FollowAlong.md)
+This is an example unreal engine game to show how the Agones Unreal Engine plugin can interact with Agones. This example is working on Unreal Engine 2.26.2 but the general principals apply to older builds and Unreal Engine 5 going into the future. To keep file sizes as small as possible and to minimize content being reliant on versions, no compiled content has been.
 
 ## Prerequisites
 We will be assuming you have an Unreal Engine version of choice installed and working
