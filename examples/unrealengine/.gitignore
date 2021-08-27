@@ -85,9 +85,6 @@ DerivedDataCache/*
 # Packaged Files
 Package/
 
-# Content
-Content/
-
 # Zip files
 *.zip
 
