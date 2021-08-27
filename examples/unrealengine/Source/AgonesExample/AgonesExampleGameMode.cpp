@@ -20,8 +20,3 @@ AAgonesExampleGameMode::AAgonesExampleGameMode()
 
 	AgonesSDK = CreateDefaultSubobject<UAgonesComponent>(TEXT("AgonesSDK"));
 }
-
-void AAgonesExampleGameMode::BeginDestroy()
-{
-	AgonesSDK->Shutdown({}, {});
-}

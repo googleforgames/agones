@@ -26,11 +26,20 @@ void AAgonesExampleGameSession::RegisterServer()
 
 void AAgonesExampleGameSession::PostLogin(APlayerController* NewPlayer)
 {
+	if (NewPlayer->IsLocalController())
+	{
+		return;
+	}
+	
 	AgonesSDK->PlayerConnect(NewPlayer->GetNetConnection()->PlayerId.ToString(), PlayerConnectDelegate, AgonesErrorDelegate);
 }
 
 void AAgonesExampleGameSession::NotifyLogout(const APlayerController* PC)
 {
+	if (PC->IsLocalController())
+ 	{
+ 		return;
+ 	}
 	AgonesSDK->PlayerDisconnect(PC->GetNetConnection()->PlayerId.ToString(), {}, AgonesErrorDelegate);
 }
 

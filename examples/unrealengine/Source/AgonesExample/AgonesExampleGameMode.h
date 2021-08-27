@@ -18,10 +18,4 @@ public:
 	UAgonesComponent* AgonesSDK;
 
 	AAgonesExampleGameMode();
-	
-	UFUNCTION()
-	virtual void BeginDestroy() override;
 };
-
-
-
