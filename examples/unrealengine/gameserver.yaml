@@ -1,0 +1,18 @@
+apiVersion: "agones.dev/v1"
+kind: GameServer
+metadata:
+  generateName: "unrealexample-"
+spec:
+  ports:
+  - name: default
+    portPolicy: Dynamic
+    containerPort: 7777
+  health:
+    disabled: false
+    periodSeconds: 10
+    failureThreshold: 3
+    initialDelaySeconds: 60
+    spec:
+      containers:
+      - name: unrealexample
+        image: <your public docker image>
