@@ -24,6 +24,7 @@ import (
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	autoscalingv1 "agones.dev/agones/pkg/apis/autoscaling/v1"
+	"agones.dev/agones/pkg/util/runtime"
 	e2e "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -60,13 +61,19 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
-	fas, err := fleetautoscalers.Create(ctx, defaultFleetAutoscaler(flt, framework.Namespace), metav1.CreateOptions{})
+	defaultFas := defaultFleetAutoscaler(flt, framework.Namespace)
+	fas, err := fleetautoscalers.Create(ctx, defaultFas, metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	} else {
 		// if we could not create the autoscaler, their is no point going further
 		logrus.Error("Failed creating autoscaler, aborting TestAutoscalerBasicFunctions")
 		return
+	}
+
+	// If the CustomFasSyncInterval feature flag is enabled, the value of fas.spec.sync are equal
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		assert.Equal(t, defaultFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
 	}
 
 	// the fleet autoscaler should scale the fleet up now up to BufferSize
@@ -130,6 +137,54 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
 	})
+}
+
+func TestFleetAutoscalerDefaultSyncInterval(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	stable := framework.AgonesClient.AgonesV1()
+	fleets := stable.Fleets(framework.Namespace)
+	flt, err := fleets.Create(ctx, defaultFleet(framework.Namespace), metav1.CreateOptions{})
+	if assert.Nil(t, err) {
+		defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	}
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetautoscalers := framework.AgonesClient.AutoscalingV1().FleetAutoscalers(framework.Namespace)
+	dummyFleetName := "dummy-fleet"
+	defaultFas := &autoscalingv1.FleetAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      dummyFleetName + "-autoscaler",
+			Namespace: framework.Namespace,
+		},
+		Spec: autoscalingv1.FleetAutoscalerSpec{
+			FleetName: dummyFleetName,
+			Policy: autoscalingv1.FleetAutoscalerPolicy{
+				Type: autoscalingv1.BufferPolicyType,
+				Buffer: &autoscalingv1.BufferPolicy{
+					BufferSize:  intstr.FromInt(3),
+					MaxReplicas: 10,
+				},
+			},
+		},
+	}
+	fas, err := fleetautoscalers.Create(ctx, defaultFas, metav1.CreateOptions{})
+	if assert.Nil(t, err) {
+		defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+	} else {
+		// if we could not create the autoscaler, their is no point going further
+		logrus.Error("Failed creating autoscaler, aborting TestFleetAutoscalerDefaultSyncInterval")
+		return
+	}
+
+	// If the CustomFasSyncInterval feature flag is enabled, fas.spec.sync should be set to its default value
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		defaultSyncIntervalFas := &autoscalingv1.FleetAutoscaler{}
+		defaultSyncIntervalFas.ApplyDefaults()
+		assert.Equal(t, defaultSyncIntervalFas.Spec.Sync.FixedInterval.Seconds, fas.Spec.Sync.FixedInterval.Seconds)
+	}
 }
 
 // TestFleetAutoScalerRollingUpdate - test fleet with RollingUpdate strategy work with
