@@ -137,6 +137,15 @@ webhooks:
           - "v1"
         operations:
           - CREATE
+      - apiGroups:
+          - autoscaling.agones.dev
+        resources:
+          - "fleetautoscalers"
+        apiVersions:
+          - "v1"
+        operations:
+          - CREATE
+          - UPDATE
 {{- end }}
 ---
 apiVersion: v1

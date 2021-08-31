@@ -17,6 +17,7 @@ package v1
 import (
 	"testing"
 
+	"agones.dev/agones/pkg/util/runtime"
 	"github.com/stretchr/testify/assert"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -114,6 +115,11 @@ func TestFleetAutoscalerValidateUpdate(t *testing.T) {
 	})
 
 	t.Run("bad sync interval seconds", func(t *testing.T) {
+		if !runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+			// Do not run test if FeatureCustomFasSyncInterval is not enabled
+			t.Skip()
+		}
+
 		fas := defaultFixture()
 		fas.Spec.Sync.FixedInterval.Seconds = 0
 
