@@ -79,6 +79,7 @@ site-images: $(site_path)/static/diagrams/gameserver-lifecycle.puml.png
 site-images: $(site_path)/static/diagrams/gameserver-reserved.puml.png
 site-images: $(site_path)/static/diagrams/canary-testing.puml.png
 site-images: $(site_path)/static/diagrams/allocation-player-capacity.puml.png
+site-images: $(site_path)/static/diagrams/reusing-gameservers.puml.png
 
 # generate pngs from dot files
 %.dot.png: %.dot
