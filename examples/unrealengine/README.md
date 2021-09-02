@@ -9,7 +9,7 @@ kubectl get gs
 ```
 
 ## Prerequisites
-- Unreal Engine version of choice installed and working
+- Unreal Engine version of choice built from source code and working
 - Agones configured and working in a kubernetes cluster
 
 ## Getting Started
