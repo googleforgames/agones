@@ -20,12 +20,12 @@ state after the `GameServer` has been allocated.
 It is then up to the game developer to ensure that the game server process returns to a zero state once a game 
 session has been completed. 
 
-![Reserved Lifecycle Sequence Diagram](../../../diagrams/reusing-gameservers.puml.png)
+<a href="../../../diagrams/reusing-gameservers.puml.png" target="_blank">
+<img src="../../../diagrams/reusing-gameservers.puml.png" alt="Reserved Lifecycle Sequence Diagram" />
+</a>
 
 ## Next Steps
 
 - Have a look at all commands the [Client SDK]({{< ref "/docs/Guides/Client SDKs/_index.md" >}}) provides.
-- Check out the answer to the FAQ's question:
-  [How can I return an Allocated GameServer to the Ready state?]({{% ref "/docs/FAQ/_index.md#how-can-i-return-an-allocated-gameserver-to-the-ready-state" %}})
-- If you aren't familiar with the term [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/), this should
+- If you aren't familiar with the term [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/), this shouldw
   provide a reference.

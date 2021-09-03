@@ -39,6 +39,12 @@ Matchmaker <-- Agones : <i>GameServerAllocation</i> is returned\nwith <i>GameSer
 
 == Players Finish Game ==
 
+Binary -> Binary: this.ResetGameServer()
+note right
+Resets the game server process
+back to a zero state.
+end note
+
 Binary -> SDK: SDK.Ready()
 note right
   Process calls <i>Ready()</i> so that
@@ -52,12 +58,14 @@ end loop
 
 == GameServer has completed <i>n</i> number of complete sessions ==
 
-Binary -> GameServer: SDK.Shutdown()
+Binary -> SDK: SDK.Shutdown()
 note left
 The <i>GameServer</i> process tracks the number of sessions
 that it hosts, and after <i>n</i> number, calls <i>Shutdown()</i>
 to delete the <i>GameServer</i> resource and backing Pod.
 end note
+SDK --> GameServer: Update to <i>Shutdown</i> state.
+Agones -> GameServer: Deletes GameServer resource\n and backing Pod.
 destroy Binary
 destroy SDK
 destroy GameServer
