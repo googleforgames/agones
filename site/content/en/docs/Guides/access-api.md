@@ -57,6 +57,7 @@ package main
 
 import (
 	"fmt"
+	"context"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/client/clientset/versioned"
@@ -107,7 +108,7 @@ func main() {
 			},
 		},
 	}
-	newGS, err := agonesClient.AgonesV1().GameServers("default").Create(gs)
+	newGS, err := agonesClient.AgonesV1().GameServers("default").Create(context.TODO(), gs, metav1.CreateOptions{})
 	if err != nil {
 		panic(err)
 	}
