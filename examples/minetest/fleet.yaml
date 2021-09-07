@@ -33,3 +33,4 @@ spec:
           containers:
           - name: minetest
             image: gcr.io/agones-images/minetest-example:5.4.1
+            
