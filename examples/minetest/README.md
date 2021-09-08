@@ -1,4 +1,4 @@
-# Minetest Game Server Example 
+# Minetest Game Server Example  
 
 Example using a [Minetest](https://www.minetest.net/) dedicated game server.
 

@@ -1,4 +1,6 @@
-# Copyright 2020 Google LLC All Rights Reserved.
+#!/bin/sh
+
+# Copyright 2021 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "agones.dev/v1"
-kind: Fleet
-metadata:
-  name: minetest
-spec:
-  replicas: 2
-  strategy:
-    type: Recreate
-  template:
-    spec:
-      ports:
-      - name: default
-        containerPort: 30000
-      health:
-        initialDelaySeconds: 30
-        periodSeconds: 60
-      template:
-        spec:
-          containers:
-          - name: minetest
-            image: gcr.io/agones-images/minetest-example:1.0.0
-            
+while true; do
+    /usr/local/bin/minetestserver --gameid devtest --worldname devtest --config /etc/minetest/minetest.conf 2>&1
+    sleep 10
+done

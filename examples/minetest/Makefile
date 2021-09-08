@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #
-# Makefile for building the SuperTuxKart server
+# Makefile for building the Minetest server
 #
 
 #  __     __         _       _     _
@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-image_tag = $(REPOSITORY)/minetest-example:5.4.1
+image_tag = $(REPOSITORY)/minetest-example:1.0.0
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___

@@ -90,8 +90,7 @@ func main() {
 			}
 		}}
 
-	err = cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Fatalf(">>> Error Starting Cmd %v", err)
 	}
 	err = cmd.Wait()
@@ -102,8 +101,7 @@ func main() {
 func doHealth(sdk *sdk.SDK) {
 	tick := time.Tick(2 * time.Second)
 	for {
-		err := sdk.Health()
-		if err != nil {
+		if err := sdk.Health(); err != nil {
 			log.Fatalf("[wrapper] Could not send health ping, %v", err)
 		}
 		<-tick
