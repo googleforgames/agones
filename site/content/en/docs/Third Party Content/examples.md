@@ -8,4 +8,6 @@ weight: 20
 
 ## Minetest
 
-[Minetest Game Server for Agones](https://github.com/paulhkim80/agones-example-minetest) - [Minetest](https://www.minetest.net/) example
+[Minetest](https://www.minetest.net/) is a free and open-source sandbox video game available for Linux, FreeBSD, Microsoft Windows, MacOS, and Android. Minetest game play is very similar to that of Minecraft. Players explore a blocky 3D world, discover and extract raw materials, craft tools and items, and build structures and ladscapes. 
+
+[Minetest Game Server for Agones](https://github.com/paulhkim80/agones-example-minetest) is an example of the Minetest Game Server hosting on Kubernetes using Agones. It wraps the Minetest server with a [Go](https://golang.org) binary, and introspects stdout to provide the event hooks for the SDK integration. The wrapper is from [Xonotic Example](https://github.com/googleforgames/agones/blob/main/examples/xonotic/main.go) with a few changes to look for the Minetest ready output message. It is not a direct integration, but is an approach for to integrate with existing dedicated game servers. You will need to download the Minetest client separately to play.
