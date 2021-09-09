@@ -28,6 +28,10 @@ If you wish to return an `Allocated` GameServer to the `Ready` state, you can us
 [SDK.Ready()]({{< ref "/docs/Guides/Client SDKs/_index.md#ready" >}}) command whenever it
 makes sense for your GameServer to return to the pool of potentially Allocatable and/or scaled down GameServers.
 
+Have a look at the integration pattern
+["Reusing Allocated GameServers for more than one game session"]({{% ref "/docs/Integration Patterns/reusing-gameservers.md" %}}) 
+for more details.
+
 ## Integration
 
 ### What steps do I need to take to integrate my GameServer?
