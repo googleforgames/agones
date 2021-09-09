@@ -150,11 +150,10 @@ The `spec` field is the actual `GameServerAllocation` specification, and it is c
 - `metadata` is an optional list of custom labels and/or annotations that will be used to patch
   the game server's metadata in the moment of allocation. This can be used to tell the server necessary session data
 
-Each `GameServerAllocation` also considers [namespaces][namespace] when allocating GameServers. Agones will only
-attempt to allocate GameServers from the specified namespace. The [namespace][namespace] can be specified outside of
-the spec, either with the `--namespace` flag when using the command line or
+Each `GameServerAllocation` will allocate from a single [namespace][namespace]. The namespace can be specified outside of
+the spec, either with the `--namespace` flag when using the command line / `kubectl` or
 [in the url]({{% ref "/docs/Guides/access-api.md#allocate-a-gameserver-from-a-fleet-named-simple-game-server-with-gameserverallocation"  %}})
-when using an API call. If not specified, the [namespace][namespace] will be set to `default`.
+when using an API call. If not specified when using the command line, the [namespace][namespace] will be automatically set to `default`.
 
 [gameserverselector]: {{% ref "/docs/Reference/agones_crd_api_reference.html#allocation.agones.dev/v1.GameServerSelector"  %}}
 [namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
