@@ -42,7 +42,7 @@ type GameServerAllocationState string
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GameServerAllocation is the data structure for allocating against a set of
-// GameServers, defined `required` and `preferred` selectors
+// GameServers, defined `selectors` selectors
 type GameServerAllocation struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -66,16 +66,24 @@ type GameServerAllocationSpec struct {
 	// Otherwise, allocation will happen locally.
 	MultiClusterSetting MultiClusterSetting `json:"multiClusterSetting,omitempty"`
 
+	// Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
 	// Required is the GameServer selector from which to choose GameServers from.
 	// Defaults to all GameServers.
 	Required GameServerSelector `json:"required,omitempty"`
 
+	// Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
 	// Preferred is an ordered list of preferred GameServer selectors
 	// that are optional to be fulfilled, but will be searched before the `required` selector.
 	// If the first selector is not matched, the selection attempts the second selector, and so on.
 	// If any of the preferred selectors are matched, the required selector is not considered.
 	// This is useful for things like smoke testing of new game servers.
 	Preferred []GameServerSelector `json:"preferred,omitempty"`
+
+	// Ordered list of GameServer label selectors.
+	// If the first selector is not matched, the selection attempts the second selector, and so on.
+	// This is useful for things like smoke testing of new game servers.
+	// Note: This field can only be set if neither Required or Preferred is set.
+	Selectors []GameServerSelector `json:"selectors,omitempty"`
 
 	// Scheduling strategy. Defaults to "Packed".
 	Scheduling apis.SchedulingStrategy `json:"scheduling"`
@@ -246,10 +254,16 @@ func (gsa *GameServerAllocation) ApplyDefaults() {
 		gsa.Spec.Scheduling = apis.Packed
 	}
 
-	gsa.Spec.Required.ApplyDefaults()
+	if len(gsa.Spec.Selectors) == 0 {
+		gsa.Spec.Required.ApplyDefaults()
 
-	for i := range gsa.Spec.Preferred {
-		gsa.Spec.Preferred[i].ApplyDefaults()
+		for i := range gsa.Spec.Preferred {
+			gsa.Spec.Preferred[i].ApplyDefaults()
+		}
+	} else {
+		for i := range gsa.Spec.Selectors {
+			gsa.Spec.Selectors[i].ApplyDefaults()
+		}
 	}
 }
 
@@ -278,6 +292,21 @@ func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 			causes = append(causes, c...)
 		}
 	}
+	for i := range gsa.Spec.Selectors {
+		if c, ok := gsa.Spec.Selectors[i].Validate(fmt.Sprintf("spec.selectors[%d]", i)); !ok {
+			causes = append(causes, c...)
+		}
+	}
 
 	return causes, len(causes) == 0
+}
+
+// Converter converts game server allocation required and preferred fields to selectors field.
+func (gsa *GameServerAllocation) Converter() {
+	if len(gsa.Spec.Selectors) == 0 {
+		var selectors []GameServerSelector
+		selectors = append(selectors, gsa.Spec.Preferred...)
+		selectors = append(selectors, gsa.Spec.Required)
+		gsa.Spec.Selectors = selectors
+	}
 }

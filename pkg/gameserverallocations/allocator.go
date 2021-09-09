@@ -217,6 +217,9 @@ func (c *Allocator) Allocate(ctx context.Context, gsa *allocationv1.GameServerAl
 		return s, nil
 	}
 
+	// Convert gsa required and preferred fields to selectors field
+	gsa.Converter()
+
 	// If multi-cluster setting is enabled, allocate base on the multicluster allocation policy.
 	if gsa.Spec.MultiClusterSetting.Enabled {
 		out, err = c.applyMultiClusterAllocation(ctx, gsa)

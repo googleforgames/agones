@@ -1474,7 +1474,7 @@ Resource Types:
 </h3>
 <p>
 <p>GameServerAllocation is the data structure for allocating against a set of
-GameServers, defined <code>required</code> and <code>preferred</code> selectors</p>
+GameServers, defined <code>selectors</code> selectors</p>
 </p>
 <table>
 <thead>
@@ -1544,20 +1544,7 @@ Otherwise, allocation will happen locally.</p>
 </tr>
 <tr>
 <td>
-<code>required</code></br>
-<em>
-<a href="#allocation.agones.dev/v1.GameServerSelector">
-GameServerSelector
-</a>
-</em>
-</td>
-<td>
-<p>Required The required allocation. Defaults to all GameServers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preferred</code></br>
+<code>selectors</code></br>
 <em>
 <a href="#allocation.agones.dev/v1.GameServerSelector">
 []GameServerSelector
@@ -1565,7 +1552,7 @@ GameServerSelector
 </em>
 </td>
 <td>
-<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
+<p>An ordered list of allocations set.
 If the first selector is not matched,
 the selection attempts the second selector, and so on.</p>
 </td>
@@ -1645,20 +1632,7 @@ Otherwise, allocation will happen locally.</p>
 </tr>
 <tr>
 <td>
-<code>required</code></br>
-<em>
-<a href="#allocation.agones.dev/v1.GameServerSelector">
-GameServerSelector
-</a>
-</em>
-</td>
-<td>
-<p>Required The required allocation. Defaults to all GameServers.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>preferred</code></br>
+<code>selectors</code></br>
 <em>
 <a href="#allocation.agones.dev/v1.GameServerSelector">
 []GameServerSelector
@@ -1666,7 +1640,7 @@ GameServerSelector
 </em>
 </td>
 <td>
-<p>Preferred ordered list of preferred allocations out of the <code>required</code> set.
+<p>An ordered list of allocations set.
 If the first selector is not matched,
 the selection attempts the second selector, and so on.</p>
 </td>
@@ -5341,7 +5315,7 @@ Resource Types:
 </h3>
 <p>
 <p>GameServerAllocation is the data structure for allocating against a set of
-GameServers, defined <code>required</code> and <code>preferred</code> selectors</p>
+GameServers, defined <code>selectors</code> selectors</p>
 </p>
 <table>
 <thead>
@@ -5419,7 +5393,8 @@ GameServerSelector
 </em>
 </td>
 <td>
-<p>Required is the GameServer selector from which to choose GameServers from.
+<p>Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
+Required is the GameServer selector from which to choose GameServers from.
 Defaults to all GameServers.</p>
 </td>
 </tr>
@@ -5433,11 +5408,28 @@ Defaults to all GameServers.</p>
 </em>
 </td>
 <td>
-<p>Preferred is an ordered list of preferred GameServer selectors
+<p>Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
+Preferred is an ordered list of preferred GameServer selectors
 that are optional to be fulfilled, but will be searched before the <code>required</code> selector.
 If the first selector is not matched, the selection attempts the second selector, and so on.
 If any of the preferred selectors are matched, the required selector is not considered.
 This is useful for things like smoke testing of new game servers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+[]GameServerSelector
+</a>
+</em>
+</td>
+<td>
+<p>Ordered list of GameServer label selectors.
+If the first selector is not matched, the selection attempts the second selector, and so on.
+This is useful for things like smoke testing of new game servers.
+Note: This field can only be set if neither Required or Preferred is set.</p>
 </td>
 </tr>
 <tr>
@@ -5523,7 +5515,8 @@ GameServerSelector
 </em>
 </td>
 <td>
-<p>Required is the GameServer selector from which to choose GameServers from.
+<p>Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
+Required is the GameServer selector from which to choose GameServers from.
 Defaults to all GameServers.</p>
 </td>
 </tr>
@@ -5537,11 +5530,28 @@ Defaults to all GameServers.</p>
 </em>
 </td>
 <td>
-<p>Preferred is an ordered list of preferred GameServer selectors
+<p>Deprecated: use field Selectors instead. If Selectors is set, this field is ignored.
+Preferred is an ordered list of preferred GameServer selectors
 that are optional to be fulfilled, but will be searched before the <code>required</code> selector.
 If the first selector is not matched, the selection attempts the second selector, and so on.
 If any of the preferred selectors are matched, the required selector is not considered.
 This is useful for things like smoke testing of new game servers.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>selectors</code></br>
+<em>
+<a href="#allocation.agones.dev/v1.GameServerSelector">
+[]GameServerSelector
+</a>
+</em>
+</td>
+<td>
+<p>Ordered list of GameServer label selectors.
+If the first selector is not matched, the selection attempts the second selector, and so on.
+This is useful for things like smoke testing of new game servers.
+Note: This field can only be set if neither Required or Preferred is set.</p>
 </td>
 </tr>
 <tr>

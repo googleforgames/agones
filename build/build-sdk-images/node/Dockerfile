@@ -14,7 +14,9 @@
 ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
+## --allow-releaseinfo-change is a workaround for the new debian release
+## Can be removed when upgrading to bullseye
+RUN apt-get --allow-releaseinfo-change update && curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y nodejs
 
 # Installing request is to address a bug with node-pre-gyp

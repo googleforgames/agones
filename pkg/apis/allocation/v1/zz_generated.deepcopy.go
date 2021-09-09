@@ -98,6 +98,13 @@ func (in *GameServerAllocationSpec) DeepCopyInto(out *GameServerAllocationSpec) 
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Selectors != nil {
+		in, out := &in.Selectors, &out.Selectors
+		*out = make([]GameServerSelector, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	in.MetaPatch.DeepCopyInto(&out.MetaPatch)
 	return
 }

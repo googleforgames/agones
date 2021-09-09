@@ -1,0 +1,72 @@
+@startuml
+participant Matchmaker
+participant Agones
+participant "Game Server\nProcess" as Binary
+participant SDK
+participant "GameServer\nResource" as GameServer
+box "Game Server Pod"
+  participant Binary
+  participant SDK
+end box
+
+== GameServer Start ==
+
+Agones -> GameServer: GameServer created through\na <i>Fleet</i> configuration
+activate GameServer
+GameServer -> Binary: Agones creates a Pod with the\nconfigured Game Server Container
+activate Binary
+activate SDK
+Binary -> SDK: SDK.Ready()
+note right
+  Call <i>Ready()</i> when the
+  Game Server can take player
+  connections and is able to
+  be allocated.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+== Matchmaker requesting GameServer ==
+loop <i>n</i> times
+Matchmaker -> Agones: Create: <i>GameServerAllocation</i>
+note left
+  Allocation atomically provides
+  a GameServer from a pool
+  of existing GameServers
+  (Usually a <i>Fleet</i>)
+end note
+"Agones" -> GameServer: Finds a Ready <i>GameServer</i>,\nsets it to <i>Allocated</i> State
+Matchmaker <-- Agones : <i>GameServerAllocation</i> is returned\nwith <i>GameServer</i> details\nincluding IP and port to connect to.
+
+== Players Finish Game ==
+
+Binary -> Binary: this.ResetGameServer()
+note right
+Resets the game server process
+back to a zero state.
+end note
+
+Binary -> SDK: SDK.Ready()
+note right
+  Process calls <i>Ready()</i> so that
+  the <i>GameServer</i> is moved back to
+  the <i>Ready</i> state, and can be allocated
+  once more.
+end note
+GameServer <-- SDK: Update to <i>Ready</i> State
+
+end loop
+
+== GameServer has completed <i>n</i> number of complete sessions ==
+
+Binary -> SDK: SDK.Shutdown()
+note left
+The <i>GameServer</i> process tracks the number of sessions
+that it hosts, and after <i>n</i> number, calls <i>Shutdown()</i>
+to delete the <i>GameServer</i> resource and backing Pod.
+end note
+SDK --> GameServer: Update to <i>Shutdown</i> state.
+Agones -> GameServer: Deletes GameServer resource\n and backing Pod.
+destroy Binary
+destroy SDK
+destroy GameServer
+@enduml

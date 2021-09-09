@@ -576,8 +576,8 @@ func GetAllocation(f *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 	// get an allocation
 	return &allocationv1.GameServerAllocation{
 		Spec: allocationv1.GameServerAllocationSpec{
-			Required: allocationv1.GameServerSelector{
-				LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: f.ObjectMeta.Name}}},
 			},
 		}}
 }
