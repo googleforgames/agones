@@ -13,8 +13,7 @@ Table of Contents
   * [Building on Different Platforms](#building-on-different-platforms)
      * [Linux](#linux)
      * [Windows](#windows)
-     * [macOS](#macos)
-  * [GOPATH](#gopath)
+     * [macOS](#macos)  
   * [Testing and Building](#testing-and-building)
      * [Running a Test Google Kubernetes Engine Cluster](#running-a-test-google-kubernetes-engine-cluster)
      * [Running a Test Minikube cluster](#running-a-test-minikube-cluster)
@@ -129,23 +128,6 @@ as this makes it easy to create a (relatively) cross platform development and bu
 
 - Install Make, `brew install make`, if it's not installed already
 - Install [Docker for Mac](https://docs.docker.com/docker-for-mac/install/)
-
-## GOPATH
-
-This project should be cloned to the directory `$GOPATH/src/agones.dev/agones`
-for when you are developing locally, and require package resolution in your IDE.
-
-If you have a working [Go environment](https://golang.org/doc/install), you can also do this through:
-
-```bash
-go get -d agones.dev/agones
-cd $GOPATH/src/agones.dev/agones
-```
-
-This is not required if you are simply building using the `make` targets, and do not plan to edit the code
-in an IDE.
-
-If you are not familiar with GOPATHs, you can read [How to Write Go Code](https://golang.org/doc/code.html).
 
 ## Testing and Building
 
