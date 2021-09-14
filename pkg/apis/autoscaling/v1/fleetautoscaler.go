@@ -204,7 +204,9 @@ func (fas *FleetAutoscaler) Validate(causes []metav1.StatusCause) []metav1.Statu
 		causes = fas.Spec.Policy.Webhook.ValidateWebhookPolicy(causes)
 	}
 
-	causes = fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(causes)
+	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) && fas.Spec.Sync != nil {
+		causes = fas.Spec.Sync.FixedInterval.ValidateFixedIntervalSync(causes)
+	}
 	return causes
 }
 

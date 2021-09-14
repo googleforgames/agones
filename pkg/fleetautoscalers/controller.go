@@ -36,6 +36,7 @@ import (
 	"agones.dev/agones/pkg/util/webhooks"
 	"agones.dev/agones/pkg/util/workerqueue"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -107,6 +108,8 @@ func NewController(
 	c.recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: "fleetautoscaler-controller"})
 
 	kind := autoscalingv1.Kind("FleetAutoscaler")
+	wh.AddHandler("/mutate", kind, admissionv1.Create, c.mutationHandler)
+	wh.AddHandler("/mutate", kind, admissionv1.Update, c.mutationHandler)
 	wh.AddHandler("/validate", kind, admissionv1.Create, c.validationHandler)
 	wh.AddHandler("/validate", kind, admissionv1.Update, c.validationHandler)
 
@@ -163,6 +166,41 @@ func (c *Controller) loggerForFleetAutoscaler(fas *autoscalingv1.FleetAutoscaler
 		fasName = fas.Namespace + "/" + fas.Name
 	}
 	return c.loggerForFleetAutoscalerKey(fasName).WithField("fas", fas)
+}
+
+// creationMutationHandler is the handler for the mutating webhook that sets the
+// the default values on the FleetAutoscaler
+func (c *Controller) mutationHandler(review admissionv1.AdmissionReview) (admissionv1.AdmissionReview, error) {
+	obj := review.Request.Object
+	fas := &autoscalingv1.FleetAutoscaler{}
+	err := json.Unmarshal(obj.Raw, fas)
+	if err != nil {
+		c.baseLogger.WithField("review", review).WithError(err).Error("validationHandler")
+		return review, errors.Wrapf(err, "error unmarshalling original FleetAutoscaler json: %s", obj.Raw)
+	}
+
+	fas.ApplyDefaults()
+
+	newFas, err := json.Marshal(fas)
+	if err != nil {
+		return review, errors.Wrapf(err, "error marshalling default applied FleetAutoscaler %s to json", fas.ObjectMeta.Name)
+	}
+
+	patch, err := jsonpatch.CreatePatch(obj.Raw, newFas)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating patch for FleetAutoscaler %s", fas.ObjectMeta.Name)
+	}
+
+	jsonPatch, err := json.Marshal(patch)
+	if err != nil {
+		return review, errors.Wrapf(err, "error creating json for patch for FleetAutoScaler %s", fas.ObjectMeta.Name)
+	}
+
+	pt := admissionv1.PatchTypeJSONPatch
+	review.Response.PatchType = &pt
+	review.Response.Patch = jsonPatch
+
+	return review, nil
 }
 
 // validationHandler will intercept when a FleetAutoscaler is created, and

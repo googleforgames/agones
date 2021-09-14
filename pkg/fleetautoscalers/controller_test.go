@@ -30,8 +30,10 @@ import (
 	utilruntime "agones.dev/agones/pkg/util/runtime"
 	"agones.dev/agones/pkg/util/webhooks"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/mattbaird/jsonpatch"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admissionv1 "k8s.io/api/admission/v1"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,6 +64,142 @@ func (c *counter) Value() uint32 {
 var (
 	gvk = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
 )
+
+func TestControllerCreationMutationHandler(t *testing.T) {
+	t.Parallel()
+
+	type expected struct {
+		responseAllowed bool
+		patches         []jsonpatch.JsonPatchOperation
+		err             string
+	}
+
+	var testCases = []struct {
+		description string
+		fixture     interface{}
+		expected    expected
+	}{
+		{
+			description: "OK",
+			fixture: &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "fas-1",
+					Namespace:  "default",
+					Generation: 2,
+				},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: "fleet-1",
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type: autoscalingv1.BufferPolicyType,
+						Buffer: &autoscalingv1.BufferPolicy{
+							BufferSize:  intstr.FromInt(5),
+							MaxReplicas: 100,
+						},
+					},
+					Sync: &autoscalingv1.FleetAutoscalerSync{
+						Type: autoscalingv1.FixedIntervalSyncType,
+						FixedInterval: autoscalingv1.FixedIntervalSync{
+							Seconds: 30,
+						},
+					},
+				},
+			},
+			expected: expected{
+				responseAllowed: true,
+				patches:         []jsonpatch.JsonPatchOperation{},
+			},
+		},
+		{
+			description: "OK",
+			// Spec.Sync is not defined
+			fixture: &autoscalingv1.FleetAutoscaler{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:       "fas-1",
+					Namespace:  "default",
+					Generation: 2,
+				},
+				Spec: autoscalingv1.FleetAutoscalerSpec{
+					FleetName: "fleet-1",
+					Policy: autoscalingv1.FleetAutoscalerPolicy{
+						Type: autoscalingv1.BufferPolicyType,
+						Buffer: &autoscalingv1.BufferPolicy{
+							BufferSize:  intstr.FromInt(5),
+							MaxReplicas: 100,
+						},
+					},
+				},
+			},
+			expected: expected{
+				responseAllowed: true,
+				patches: []jsonpatch.JsonPatchOperation{
+					{
+						Operation: "add",
+						Path:      "/spec/sync",
+						Value: map[string]interface{}{
+							"fixedInterval": map[string]interface{}{
+								"seconds": float64(30),
+							},
+							"type": "FixedInterval",
+						},
+					},
+				},
+			},
+		},
+		{
+			description: "Wrong request object, err expected",
+			fixture:     "WRONG DATA",
+			expected: expected{
+				err: `error unmarshalling original FleetAutoscaler json: "WRONG DATA": json: cannot unmarshal string into Go value of type v1.FleetAutoscaler`,
+			},
+		},
+	}
+
+	c, _ := newFakeController()
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			raw, err := json.Marshal(tc.fixture)
+			require.NoError(t, err)
+
+			review := admissionv1.AdmissionReview{
+				Request: &admissionv1.AdmissionRequest{
+					Kind:      gvk,
+					Operation: admissionv1.Create,
+					Object: runtime.RawExtension{
+						Raw: raw,
+					},
+				},
+				Response: &admissionv1.AdmissionResponse{Allowed: true},
+			}
+
+			result, err := c.mutationHandler(review)
+
+			if err != nil && tc.expected.err != "" {
+				require.Equal(t, tc.expected.err, err.Error())
+			} else {
+				assert.True(t, result.Response.Allowed)
+				assert.Equal(t, admissionv1.PatchTypeJSONPatch, *result.Response.PatchType)
+
+				patch := &jsonpatch.ByPath{}
+				err = json.Unmarshal(result.Response.Patch, patch)
+				require.NoError(t, err)
+
+				if utilruntime.FeatureEnabled(utilruntime.FeatureCustomFasSyncInterval) {
+					found := false
+
+					for _, expected := range tc.expected.patches {
+						for _, p := range *patch {
+							if assert.ObjectsAreEqual(p, expected) {
+								found = true
+							}
+						}
+						assert.True(t, found, "Could not find operation %#v in patch %v", expected, *patch)
+					}
+				}
+			}
+		})
+	}
+}
 
 func TestControllerCreationValidationHandler(t *testing.T) {
 	t.Parallel()
