@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{{- $useLoadBalancerIP := and (ne .Values.agones.allocator.http.loadBalancerIP "") (eq .Values.agones.allocator.http.serviceType "LoadBalancer") }}
+{{- $useLoadBalancerIP := and (ne .Values.agones.allocator.service.loadBalancerIP "") (eq .Values.agones.allocator.service.serviceType "LoadBalancer") }}
 {{- if .Values.agones.allocator.install }}
 # Define a Service for the agones-allocator
 apiVersion: v1
@@ -26,31 +26,46 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.allocator.http.annotations }}
+{{- if .Values.agones.allocator.service.annotations }}
   annotations:
-{{ toYaml .Values.agones.allocator.http.annotations | indent 4 }}
+{{ toYaml .Values.agones.allocator.service.annotations | indent 4 }}
 {{- end }}
 spec:
   selector:
     multicluster.agones.dev/role: allocator
   ports:
-    - port: {{ .Values.agones.allocator.http.port }}
+{{- if .Values.agones.allocator.service.http.enabled }}
+    - port: {{ .Values.agones.allocator.service.http.port }}
       name: https
-      targetPort: 8443
+      targetPort: {{ .Values.agones.allocator.service.http.targetPort }}
       protocol: TCP
-  type: {{ .Values.agones.allocator.http.serviceType }}
-{{- if $useLoadBalancerIP }}
-  loadBalancerIP: {{ .Values.agones.allocator.http.loadBalancerIP }}
+{{- if .Values.agones.allocator.service.grpc.enabled }}
+{{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
+    - port: {{ .Values.agones.allocator.service.grpc.port }}
+      name: grpc
+      targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      protocol: TCP
 {{- end }}
-{{- if eq .Values.agones.allocator.http.serviceType "LoadBalancer" }}
-  {{- if .Values.agones.allocator.http.loadBalancerSourceRanges }}
+{{- end }}
+{{- else if .Values.agones.allocator.service.grpc.enabled }}
+    - port: {{ .Values.agones.allocator.service.grpc.port }}
+      name: grpc
+      targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      protocol: TCP
+{{- end }}
+  type: {{ .Values.agones.allocator.service.serviceType }}
+{{- if $useLoadBalancerIP }}
+  loadBalancerIP: {{ .Values.agones.allocator.service.loadBalancerIP }}
+{{- end }}
+{{- if eq .Values.agones.allocator.service.serviceType "LoadBalancer" }}
+  {{- if .Values.agones.allocator.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges:
-{{ toYaml .Values.agones.allocator.http.loadBalancerSourceRanges | indent 4 }}
+{{ toYaml .Values.agones.allocator.service.loadBalancerSourceRanges | indent 4 }}
   {{- end }}
 {{- end }}
 
 ---
-# Deploy a pod to run the agones-allocator code
+# Deploy pods to run the agones-allocator code
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -126,6 +141,14 @@ spec:
             path: /ready
             port: 8080
         env:
+        {{- if .Values.agones.allocator.service.http.enabled }}
+        - name: HTTP_PORT
+          value: {{ .Values.agones.allocator.service.http.targetPort | quote }}
+        {{- end }}
+        {{- if .Values.agones.allocator.service.grpc.enabled }}
+        - name: GRPC_PORT
+          value: {{ .Values.agones.allocator.service.grpc.targetPort | quote }}
+        {{- end }}
         - name: API_SERVER_QPS
           value: {{ .Values.agones.allocator.apiServerQPS | quote }}
         - name: API_SERVER_QPS_BURST
@@ -161,8 +184,19 @@ spec:
         - name: FEATURE_GATES
           value: {{ .Values.agones.featureGates | quote }}
         ports:
+        {{- if .Values.agones.allocator.service.http.enabled }}
         - name: https
-          containerPort: 8443
+          containerPort: {{ .Values.agones.allocator.service.http.targetPort }}
+        {{- if .Values.agones.allocator.service.grpc.enabled }}
+        {{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
+        - name: grpc
+          containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+        {{- end }}
+        {{- end }}
+        {{- else if .Values.agones.allocator.service.grpc.enabled }}
+        - name: grpc
+          containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+        {{- end }}
         volumeMounts:
         - mountPath: /home/allocator/tls
           name: tls
@@ -277,7 +311,7 @@ data:
 
 ---
 # Allocation TLS certs
-{{- $cert := genSignedCert "" ($useLoadBalancerIP | ternary (list .Values.agones.allocator.http.loadBalancerIP) nil) nil 3650 $ca }}
+{{- $cert := genSignedCert "" ($useLoadBalancerIP | ternary (list .Values.agones.allocator.service.loadBalancerIP) nil) nil 3650 $ca }}
 apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
