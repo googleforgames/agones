@@ -30,6 +30,7 @@ cd agones && \
 helm template agones-manual --namespace agones-system  . \
   --set agones.controller.generateTLS=false \
   --set agones.allocator.generateTLS=false \
+  --set agones.allocator.generateClientTLS=false \
   --set agones.crds.cleanupOnDelete=false \
   --set agones.featureGates="PlayerTracking=true" \
   > install-custom.yaml
