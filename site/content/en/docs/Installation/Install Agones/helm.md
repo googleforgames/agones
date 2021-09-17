@@ -174,9 +174,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
 | `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
 | `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
+| `agones.allocator.serviceName         `             | Service name for the allocator                                                                  | `agones-allocator`     |
 | `agones.serviceaccount.controller.name`             | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk.name`                    | Service account name for the sdk                                                                | `agones-sdk`           |
-| `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`    |
+| `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`     |
 | `agones.serviceaccount.allocator.annotations`       | [Annotations][annotations] added to the Agones allocator service account                        | `{}`                   |
 | `agones.serviceaccount.controller.annotations`      | [Annotations][annotations] added to the Agones controller service account                       | `{}`                   |
 | `gameservers.namespaces`                            | a list of namespaces you are planning to use to deploy game servers                             | `["default"]`          |
