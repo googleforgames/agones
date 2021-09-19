@@ -35,6 +35,7 @@ So when a Fleet is edited (any field other than `replicas`, see note below), eit
 By default, a Fleet will wait for new `GameSevers` to become `Ready` during a Rolling Update before continuing to shutdown additional `GameServers`, only counting `GameServers` that are `Ready` as being available when calculating the current `maxUnavailable` value which controls the rate at which `GameServers` are updated.
 This ensures that a Fleet cannot accidentally have zero `GameServers` in the `Ready` state if something goes wrong during a Rolling Update or if `GameServers` have a long delay before moving to the `Ready` state.
 
+update?
 {{< beta title="Rolling Update on Ready" gate="RollingUpdateOnReady" >}}
 
 {{< alert title="Note" color="info">}}
