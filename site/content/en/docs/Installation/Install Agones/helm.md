@@ -174,7 +174,6 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
 | `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
 | `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
-| `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
 | `agones.serviceaccount.controller.name`             | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk.name`                    | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`     |
@@ -191,6 +190,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
 |                                                     |                                                                                                 |         |
 |                       |                           |                            |
 {{% /feature %}}
