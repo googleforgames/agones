@@ -159,6 +159,8 @@ agones:
     disableMTLS: false
     disableTLS: false
     remoteAllocationTimeout: 10s
+    service:
+      name: agones-allocator
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
