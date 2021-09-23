@@ -113,7 +113,7 @@ This information is then queryable via the [Kubernetes API]({{< ref "/docs/Guide
 can be used for game specific state integrations with systems like matchmakers and more.
 
 Custom labels could also potentially be utilised with [GameServerAllocation required and/or preferred label
-selectors](http://localhost:1313/docs/reference/gameserverallocation/), to further refine `Ready` GameServer
+selectors]({{< ref "/docs/Reference/gameserverallocation.md" >}}), to further refine `Ready` GameServer
 selection on Allocation.
 
 ## Scaling
