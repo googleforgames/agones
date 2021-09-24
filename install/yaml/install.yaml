@@ -13409,7 +13409,7 @@ spec:
             value: ""
 ---
 # Source: agones/templates/service/allocation.yaml
-# Deploy a pod to run the agones-allocator code
+# Deploy pods to run the agones-allocator code
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13478,6 +13478,10 @@ spec:
             path: /ready
             port: 8080
         env:
+        - name: HTTP_PORT
+          value: "8443"
+        - name: GRPC_PORT
+          value: "8443"
         - name: API_SERVER_QPS
           value: "400"
         - name: API_SERVER_QPS_BURST

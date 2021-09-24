@@ -147,20 +147,28 @@ agones:
               - key: agones.dev/agones-system
                 operator: Exists
     replicas: 3
-    http:
-      port: 443
+    service:
+      name: agones-allocator
       serviceType: LoadBalancer
       loadBalancerIP: ""
       loadBalancerSourceRanges: []
       annotations: {}
+      http:
+        enabled: true
+        port: 443
+        portName: https
+        targetPort: 8443
+      grpc:
+        enabled: true
+        port: 443
+        portName: grpc
+        targetPort: 8443
     disableSecretCreation: false
     generateTLS: true
     generateClientTLS: true
     disableMTLS: false
     disableTLS: false
     remoteAllocationTimeout: 10s
-    service:
-      name: agones-allocator
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images

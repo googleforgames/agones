@@ -191,7 +191,16 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
-|                                                     |                                                                                                 |         |
+| `agones.allocator.service.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.allocator.service.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
+| `agones.allocator.service.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
+| `agones.allocator.service.annotations`                      | [Annotations][annotations] added to the Agones allocator service                                | `{}`                   |
+| `agones.allocator.service.http.enabled`                        | If true the [allocator service][allocator] will respond to [REST requests][rest-requests] | `true`                  |
+| `agones.allocator.service.http.port`                        | The port that is exposed externally by the [allocator service][allocator] for [REST requests][rest-requests] | `443`                  |
+| `agones.allocator.service.http.targetPort`                        | The port that is used by the allocator pod to listen for [REST requests][rest-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
+| `agones.allocator.service.grpc.enabled`                        | If true the [allocator service][allocator] will respond to [gRPC requests][grpc-requests] | `true`                  |
+| `agones.allocator.service.grpc.port`                        | The port that is exposed externally by the [allocator service][allocator] for [gRPC requests][grpc-requests] | `443`                  |
+| `agones.allocator.service.grpc.targetPort`                        | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
 |                       |                           |                            |
 {{% /feature %}}
 
@@ -208,6 +217,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 [resources]: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 [pruning]: https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/#field-pruning
 [gameserver]: {{< ref "/docs/Reference/gameserver.md" >}}
+[rest-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-rest" >}}
+[grpc-requests]: {{< ref "/docs/Advanced/allocator-service.md#using-grpc" >}}
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
