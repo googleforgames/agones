@@ -36,20 +36,20 @@ spec:
   ports:
 {{- if .Values.agones.allocator.service.http.enabled }}
     - port: {{ .Values.agones.allocator.service.http.port }}
-      name: https
+      name: {{ .Values.agones.allocator.service.http.portName }}
       targetPort: {{ .Values.agones.allocator.service.http.targetPort }}
       protocol: TCP
 {{- if .Values.agones.allocator.service.grpc.enabled }}
 {{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
     - port: {{ .Values.agones.allocator.service.grpc.port }}
-      name: grpc
+      name: {{ .Values.agones.allocator.service.grpc.portName }}
       targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
       protocol: TCP
 {{- end }}
 {{- end }}
 {{- else if .Values.agones.allocator.service.grpc.enabled }}
     - port: {{ .Values.agones.allocator.service.grpc.port }}
-      name: grpc
+      name: {{ .Values.agones.allocator.service.grpc.portName }}
       targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
       protocol: TCP
 {{- end }}
@@ -185,16 +185,16 @@ spec:
           value: {{ .Values.agones.featureGates | quote }}
         ports:
         {{- if .Values.agones.allocator.service.http.enabled }}
-        - name: https
+        - name: {{ .Values.agones.allocator.service.http.portName }}
           containerPort: {{ .Values.agones.allocator.service.http.targetPort }}
         {{- if .Values.agones.allocator.service.grpc.enabled }}
         {{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
-        - name: grpc
+        - name: {{ .Values.agones.allocator.service.grpc.portName }}
           containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
         {{- end }}
         {{- end }}
         {{- else if .Values.agones.allocator.service.grpc.enabled }}
-        - name: grpc
+        - name: {{ .Values.agones.allocator.service.grpc.portName }}
           containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
         {{- end }}
         volumeMounts:

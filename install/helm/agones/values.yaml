@@ -156,10 +156,12 @@ agones:
       http:
         enabled: true
         port: 443
+        portName: https
         targetPort: 8443
       grpc:
         enabled: true
         port: 443
+        portName: grpc
         targetPort: 8443
     disableSecretCreation: false
     generateTLS: true
