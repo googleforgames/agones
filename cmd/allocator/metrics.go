@@ -29,6 +29,8 @@ import (
 )
 
 const (
+	httpPortFlag                     = "http-port"
+	grpcPortFlag                     = "grpc-port"
 	enableStackdriverMetricsFlag     = "stackdriver-exporter"
 	enablePrometheusMetricsFlag      = "prometheus-exporter"
 	projectIDFlag                    = "gcp-project-id"
@@ -47,6 +49,8 @@ func init() {
 }
 
 type config struct {
+	GRPCPort                     int
+	HTTPPort                     int
 	APIServerSustainedQPS        int
 	APIServerBurstQPS            int
 	TLSDisabled                  bool
@@ -62,6 +66,8 @@ type config struct {
 
 func parseEnvFlags() config {
 
+	viper.SetDefault(httpPortFlag, -1)
+	viper.SetDefault(grpcPortFlag, -1)
 	viper.SetDefault(apiServerSustainedQPSFlag, 400)
 	viper.SetDefault(apiServerBurstQPSFlag, 500)
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
@@ -74,6 +80,8 @@ func parseEnvFlags() config {
 	viper.SetDefault(totalRemoteAllocationTimeoutFlag, 30*time.Second)
 	viper.SetDefault(logLevelFlag, "Info")
 
+	pflag.Int32(httpPortFlag, viper.GetInt32(httpPortFlag), "Port to listen on for REST requests")
+	pflag.Int32(grpcPortFlag, viper.GetInt32(grpcPortFlag), "Port to listen on for gRPC requests")
 	pflag.Int32(apiServerSustainedQPSFlag, viper.GetInt32(apiServerSustainedQPSFlag), "Maximum sustained queries per second to send to the API server")
 	pflag.Int32(apiServerBurstQPSFlag, viper.GetInt32(apiServerBurstQPSFlag), "Maximum burst queries per second to send to the API server")
 	pflag.Bool(enablePrometheusMetricsFlag, viper.GetBool(enablePrometheusMetricsFlag), "Flag to activate metrics of Agones. Can also use PROMETHEUS_EXPORTER env variable.")
@@ -89,6 +97,8 @@ func parseEnvFlags() config {
 	pflag.Parse()
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	runtime.Must(viper.BindEnv(httpPortFlag))
+	runtime.Must(viper.BindEnv(grpcPortFlag))
 	runtime.Must(viper.BindEnv(apiServerSustainedQPSFlag))
 	runtime.Must(viper.BindEnv(apiServerBurstQPSFlag))
 	runtime.Must(viper.BindEnv(enablePrometheusMetricsFlag))
@@ -104,6 +114,8 @@ func parseEnvFlags() config {
 	runtime.Must(runtime.ParseFeaturesFromEnv())
 
 	return config{
+		HTTPPort:                     int(viper.GetInt32(httpPortFlag)),
+		GRPCPort:                     int(viper.GetInt32(grpcPortFlag)),
 		APIServerSustainedQPS:        int(viper.GetInt32(apiServerSustainedQPSFlag)),
 		APIServerBurstQPS:            int(viper.GetInt32(apiServerBurstQPSFlag)),
 		PrometheusMetrics:            viper.GetBool(enablePrometheusMetricsFlag),

@@ -6,16 +6,31 @@ description: >
   Agones provides an mTLS based allocator service that is accessible from outside the cluster using a load balancer. The service is deployed and scales independent to Agones controller.
 ---
 
-To allocate a game server, Agones in addition to {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}, provides a gRPC and REST service with mTLS authentication, called `agones-allocator`.
+To allocate a game server, Agones provides a gRPC and REST service with mTLS authentication, called `agones-allocator` that can be used instead of {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}.
 
+{{% feature expiryVersion="1.18.0" %}}
 Both services are accessible through a Kubernetes service that is externalized using a load balancer and they run on the same port. For requests to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
-The remainder of this article describes how to manually make a successful allocation request using the API. 
+The remainder of this article describes how to manually make a successful allocation request using the API.
+{{% /feature %}}
+
+{{% feature publishVersion="1.18.0" %}}
+Both gRPC and REST are accessible through a Kubernetes service that can be externalized using a load balancer. By default, gRPC and REST are served from the same port. However, either service can be disabled or the services can be served from separate ports using the [helm configuration]({{< relref "/docs/Installation/Install Agones/helm.md" >}}).
+
+{{< alert title="Warning" color="warning" >}}
+If gRPC and REST are served using the same port, then an http multi-plexer is used along with an [experimental gRPC server](https://github.com/grpc/grpc-go/blob/2608e38e6386be7400720fecf2ece176c4cbc1b2/server.go#L933-L960) which has [noticeably worse performance](https://github.com/grpc/grpc-go/issues/586#issuecomment-286257439) than using the standard gRPC server.
+
+If you require a fully compatible or feature compatible gRPC server implementation, you must separate the gRPC port from the REST port or disable the REST service.
+{{< /alert >}}
+
+For requests to either service to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
+The remainder of this article describes how to manually make a successful allocation request using the API.
+{{% /feature %}}
 
 The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
 ## `GameServerAllocation` vs Allocator Service
 
-There are several reasons you may prefer to use the Allocator Service over the `GameServerAllocation` custom resource 
+There are several reasons you may prefer to use the Allocator Service over the `GameServerAllocation` custom resource
 definition, depending on your architecture and requirements:
 
 * A requirement to do [multi-cluster allocation]({{% relref "multi-cluster-allocation.md" %}}).
@@ -41,6 +56,7 @@ agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b> 
 
 ## Server TLS certificate
 
+{{% feature expiryVersion="1.18.0" %}}
 If the `agones-allocator` service is installed as a `LoadBalancer` [using a reserved IP]({{< relref "/docs/Installation/Install Agones/helm.md#reserved-allocator-load-balancer-ip" >}}), a valid self-signed server TLS certificate is generated using the IP provided. Otherwise, the server TLS certificate should be replaced. If you installed Agones using [helm]({{< relref "/docs/Installation/Install Agones/helm.md" >}}), you can easily reconfigure the allocator service with a preset IP address by setting the `agones.allocator.http.loadBalancerIP` parameter to the address that was automatically assigned to the service and `helm upgrade`:
 
 ```bash
@@ -49,6 +65,19 @@ helm upgrade --install --wait \
    --set agones.allocator.http.loadBalancerIP=${EXTERNAL_IP} \
    ...
 ```
+
+{{% /feature %}}
+{{% feature publishVersion="1.18.0" %}}
+If the `agones-allocator` service is installed as a `LoadBalancer` [using a reserved IP]({{< relref "/docs/Installation/Install Agones/helm.md#reserved-allocator-load-balancer-ip" >}}), a valid self-signed server TLS certificate is generated using the IP provided. Otherwise, the server TLS certificate should be replaced. If you installed Agones using [helm]({{< relref "/docs/Installation/Install Agones/helm.md" >}}), you can easily reconfigure the allocator service with a preset IP address by setting the `agones.allocator.service.loadBalancerIP` parameter to the address that was automatically assigned to the service and `helm upgrade`:
+
+```bash
+EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+helm upgrade --install --wait \
+   --set agones.allocator.service.loadBalancerIP=${EXTERNAL_IP} \
+   ...
+```
+
+{{% /feature %}}
 
 Another approach is to replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
 
@@ -131,7 +160,7 @@ kubectl get secret allocator-client-ca -o json -n agones-system | jq '.data["cli
 
 The last command creates a new entry in the secret data map for `allocator-client-ca` for the client CA. This is for the `agones-allocator` service to accept the newly generated client certificate.
 
-## Send allocation request 
+## Send allocation request
 
 After setting up `agones-allocator` with server certificate and allowlisting the client certificate, the service can be used to allocate game servers. Make sure you have a [fleet]({{< ref "/docs/Getting Started/create-fleet.md" >}}) with ready game servers in the game server namespace.
 
@@ -152,7 +181,7 @@ kubectl get secret allocator-tls-ca -n agones-system -ojsonpath="{.data.tls-ca\.
 ```
 
 ### Using gRPC
- 
+
 To start, take a look at the allocation gRPC client examples in {{< ghlink href="examples/allocator-client/main.go" >}}golang{{< /ghlink >}} and {{< ghlink href="examples/allocator-client-csharp/Program.cs" >}}C#{{< /ghlink >}} languages. In the following, the {{< ghlink href="examples/allocator-client/main.go" >}}golang gRPC client example{{< /ghlink >}} is used to allocate a Game Server in the `default` namespace.
 
 ```bash
