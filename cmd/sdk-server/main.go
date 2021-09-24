@@ -78,10 +78,7 @@ func main() {
 		time.Sleep(time.Duration(ctlConf.Delay) * time.Second)
 	}
 
-	ctx := context.Background()
-	if !runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
-		ctx = signals.NewSigKillContext()
-	}
+	ctx := signals.NewSigKillContext()
 
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal
@@ -145,7 +142,7 @@ func main() {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
 		if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
-			ctx = s.NewSDKServerContext(ctx)
+			ctx = s.NewSDKServerContext(context.Background())
 		}
 		go func() {
 			err := s.Run(ctx)

@@ -440,7 +440,8 @@ func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 }
 
 // Shutdown enters the Shutdown state change for this GameServer into
-// the workqueue so it can be updated
+// the workqueue so it can be updated. If gracefulTermination feature is enabled,
+// Shutdown will block on GameServer being shutdown.
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
@@ -833,8 +834,8 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 	return nil
 }
 
-// NewSDKServerContext returns a Context that cancels when os.Kill is received
-// or when os.Interrupt is received and the GameServer's Status is shutdown
+// NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
+// is received and the GameServer's Status is shutdown
 func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
 	ctx, cancel := context.WithCancel(ctx)
 	c := make(chan os.Signal, 2)
