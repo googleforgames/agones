@@ -54,8 +54,8 @@ const (
 	// FeatureCustomFasSyncInterval is a feature flag that enables custom the FleetAutoscaler rsync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
 
-	// FeatureGracefulTerminationFilter is a feature flag that enables SDK to support gracefulTermination
-	FeatureGracefulTerminationFilter Feature = "GracefulTerminationFilter"
+	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
+	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 )
 
 var (
@@ -63,15 +63,15 @@ var (
 	// operational in Agones, and what their default configuration is.
 	// alpha features are disabled.
 	featureDefaults = map[Feature]bool{
-		FeatureExample:                   true,
-		FeaturePlayerTracking:            false,
-		FeatureSDKWatchSendOnExecute:     true,
-		FeatureRollingUpdateOnReady:      true,
-		NodeExternalDNS:                  false,
-		FeatureStateAllocationFilter:     false,
-		FeaturePlayerAllocationFilter:    false,
-		FeatureCustomFasSyncInterval:     false,
-		FeatureGracefulTerminationFilter: false,
+		FeatureExample:                true,
+		FeaturePlayerTracking:         false,
+		FeatureSDKWatchSendOnExecute:  true,
+		FeatureRollingUpdateOnReady:   true,
+		NodeExternalDNS:               false,
+		FeatureStateAllocationFilter:  false,
+		FeaturePlayerAllocationFilter: false,
+		FeatureCustomFasSyncInterval:  false,
+		FeatureSDKGracefulTermination: false,
 	}
 
 	// featureGates is the storage of what features are enabled

@@ -19,11 +19,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"agones.dev/agones/pkg/apis/agones"
@@ -446,7 +443,7 @@ func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
-	if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
+	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
 		s.gsStateChannel <- agonesv1.GameServerStateShutdown
 	}
 	return e, nil
@@ -837,21 +834,15 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 // NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
 // is received and the GameServer's Status is shutdown
 func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
-	ctx, cancel := context.WithCancel(ctx)
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-
+	sdkCtx, cancel := context.WithCancel(context.Background())
 	go func() {
-		<-c
-		go func() {
-			for {
-				gsState := <-s.gsStateChannel
-				if gsState == agonesv1.GameServerStateShutdown {
-					cancel()
-				}
+		<-ctx.Done()
+		for {
+			gsState := <-s.gsStateChannel
+			if gsState == agonesv1.GameServerStateShutdown {
+				cancel()
 			}
-		}()
+		}
 	}()
-
-	return ctx
+	return sdkCtx
 }

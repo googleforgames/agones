@@ -25,8 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"agones.dev/agones/pkg/util/signals"
-
 	"agones.dev/agones/pkg"
 	"agones.dev/agones/pkg/client/clientset/versioned"
 	"agones.dev/agones/pkg/sdk"
@@ -34,6 +32,7 @@ import (
 	sdkbeta "agones.dev/agones/pkg/sdk/beta"
 	"agones.dev/agones/pkg/sdkserver"
 	"agones.dev/agones/pkg/util/runtime"
+	"agones.dev/agones/pkg/util/signals"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
@@ -141,8 +140,8 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-		if runtime.FeatureEnabled(runtime.FeatureGracefulTerminationFilter) {
-			ctx = s.NewSDKServerContext(context.Background())
+		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
+			ctx = s.NewSDKServerContext(ctx)
 		}
 		go func() {
 			err := s.Run(ctx)
