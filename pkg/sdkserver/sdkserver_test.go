@@ -16,6 +16,7 @@ package sdkserver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -1473,6 +1474,62 @@ func TestSDKServerGracefulTerminationShutdown(t *testing.T) {
 	assertContextCancelled(context.Canceled, 2*time.Second, ctx)
 	assertContextCancelled(context.Canceled, 2*time.Second, sdkCtx)
 	wg.Wait()
+}
+
+func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
+	t.Parallel()
+	agruntime.FeatureTestMutex.Lock()
+	defer agruntime.FeatureTestMutex.Unlock()
+
+	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKGracefulTermination) + "=true")
+	require.NoError(t, err, "Can not parse FeatureSDKGracefulTermination feature")
+
+	m := agtesting.NewMocks()
+
+	m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		gs := agonesv1.GameServer{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "test", Namespace: "default",
+			},
+			Spec: agonesv1.GameServerSpec{Health: agonesv1.Health{Disabled: true}},
+		}
+		gs.ApplyDefaults()
+		return true, &agonesv1.GameServerList{Items: []agonesv1.GameServer{gs}}, nil
+	})
+
+	sc, err := defaultSidecar(m)
+	assert.Nil(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sdkCtx := sc.NewSDKServerContext(ctx)
+	sc.informerFactory.Start(sdkCtx.Done())
+	assert.True(t, cache.WaitForCacheSync(sdkCtx.Done(), sc.gameServerSynced))
+
+	go func() {
+		err = sc.Run(sdkCtx)
+		assert.Nil(t, err)
+	}()
+	assertGameServerStateChannel := func(expected agonesv1.GameServerState, timeout time.Duration, gsStateChannel chan agonesv1.GameServerState) {
+		select {
+		case current := <-gsStateChannel:
+			fmt.Println(current)
+			assert.Equal(t, expected, current)
+		case <-time.After(timeout):
+			assert.Fail(t, "should have gone to Reserved by now")
+		}
+	}
+	_, err = sc.Ready(sdkCtx, &sdk.Empty{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateRequestReady, sc.gsState)
+	// gs Shutdown
+	_, err = sc.Shutdown(sdkCtx, &sdk.Empty{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateShutdown, sc.gsState)
+	// assert none of the context have been cancelled
+	assert.Nil(t, sdkCtx.Err())
+	assert.Nil(t, ctx.Err())
+	assertGameServerStateChannel(agonesv1.GameServerStateShutdown, 1*time.Second, sc.gsStateChannel)
 }
 
 func defaultSidecar(m agtesting.Mocks) (*SDKServer, error) {
