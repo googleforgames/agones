@@ -300,12 +300,11 @@ func TestFleetRollingUpdate(t *testing.T) {
 					roundUp := false
 					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
 
-					shift := 0
 					if maxUnavailable == 0 {
 						maxUnavailable = 1
 					}
 					// This difference is inevitable, also could be seen with Deployments and ReplicaSets
-					shift = maxUnavailable
+					shift := maxUnavailable
 					assert.Nil(t, err)
 
 					expectedTotal := targetScale + maxSurge + maxUnavailable + shift
