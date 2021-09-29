@@ -25,7 +25,7 @@ end note
 GameServer <-- SDK: Maintains Healthy status
 
 == Match Maker Registration ==
-group loop
+loop
 Binary -> SDK: SDK.GameServer()
 note left
 Matchmaker registration
@@ -50,7 +50,7 @@ note left
   available to host a game session
   with details from SDK.GameServer()
 end note
-end
+end loop
 
 == Matchmaker allocates GameServer ==
 Matchmaker -> Binary: StartGameSession()
