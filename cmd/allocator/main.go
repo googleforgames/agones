@@ -19,6 +19,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -43,6 +44,7 @@ import (
 	"go.opencensus.io/plugin/ocgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 	"gopkg.in/fsnotify.v1"
@@ -53,14 +55,11 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-var (
-	logger = runtime.NewLoggerWithSource("main")
-)
+var logger = runtime.NewLoggerWithSource("main")
 
 const (
 	certDir = "/home/allocator/client-ca/"
 	tlsDir  = "/home/allocator/tls/"
-	sslPort = "8443"
 )
 
 // grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
@@ -80,7 +79,7 @@ func main() {
 	conf := parseEnvFlags()
 
 	logger.WithField("version", pkg.Version).WithField("ctlConf", conf).
-		WithField("featureGates", runtime.EncodeFeatures()).WithField("sslPort", sslPort).
+		WithField("featureGates", runtime.EncodeFeatures()).
 		Info("Starting agones-allocator")
 
 	logger.WithField("logLevel", conf.LogLevel).Info("Setting LogLevel configuration")
@@ -90,6 +89,10 @@ func main() {
 	} else {
 		logger.WithError(err).Info("Specified wrong Logging.SdkServer. Setting default loglevel - Info")
 		runtime.SetLevel(logrus.InfoLevel)
+	}
+
+	if !validPort(conf.GRPCPort) && !validPort(conf.HTTPPort) {
+		logger.WithField("grpc-port", conf.GRPCPort).WithField("http-port", conf.HTTPPort).Fatal("Must specify a valid gRPC port or an HTTP port for the allocator service")
 	}
 
 	health, closer := setupMetricsRecorder(conf)
@@ -181,17 +184,53 @@ func main() {
 		}
 	}
 
-	opts := h.getServerOptions()
+	// If grpc and http use the same port then use a mux.
+	if conf.GRPCPort == conf.HTTPPort {
+		runMux(h, conf.HTTPPort)
+	} else {
+		// Otherwise, run each on a dedicated port.
+		if validPort(conf.HTTPPort) {
+			runREST(h, conf.HTTPPort)
+		}
+		if validPort(conf.GRPCPort) {
+			runGRPC(h, conf.GRPCPort)
+		}
+	}
 
-	grpcServer := grpc.NewServer(opts...)
+	// Finally listen on 8080 (http) and block the main goroutine
+	// this is used to serve /live and /ready handlers for Kubernetes probes.
+	err = http.ListenAndServe(":8080", http.DefaultServeMux)
+	logger.WithError(err).Fatal("allocation service crashed")
+}
+
+func validPort(port int) bool {
+	const maxPort = 65535
+	return port >= 0 && port < maxPort
+}
+
+func runMux(h *serviceHandler, httpPort int) {
+	logger.Infof("Running the mux handler on port %d", httpPort)
+	grpcServer := grpc.NewServer(h.getMuxServerOptions()...)
 	pb.RegisterAllocationServiceServer(grpcServer, h)
 
 	mux := gw_runtime.NewServeMux()
-	err = pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h)
-	if err != nil {
+	if err := pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h); err != nil {
 		panic(err)
 	}
 
+	runHTTP(h, httpPort, grpcHandlerFunc(grpcServer, mux))
+}
+
+func runREST(h *serviceHandler, httpPort int) {
+	logger.WithField("port", httpPort).Info("Running the rest handler")
+	mux := gw_runtime.NewServeMux()
+	if err := pb.RegisterAllocationServiceHandlerServer(context.Background(), mux, h); err != nil {
+		panic(err)
+	}
+	runHTTP(h, httpPort, mux)
+}
+
+func runHTTP(h *serviceHandler, httpPort int, handler http.Handler) {
 	cfg := &tls.Config{}
 	if !h.tlsDisabled {
 		cfg.GetCertificate = h.getTLSCert
@@ -201,14 +240,15 @@ func main() {
 		cfg.VerifyPeerCertificate = h.verifyClientCertificate
 	}
 
-	// Create a Server instance to listen on port 8443 with the TLS config
+	// Create a Server instance to listen on the http port with the TLS config.
 	server := &http.Server{
-		Addr:      ":8443",
+		Addr:      fmt.Sprintf(":%d", httpPort),
 		TLSConfig: cfg,
-		Handler:   grpcHandlerFunc(grpcServer, mux),
+		Handler:   handler,
 	}
 
 	go func() {
+		var err error
 		if !h.tlsDisabled {
 			err = server.ListenAndServeTLS("", "")
 		} else {
@@ -216,15 +256,28 @@ func main() {
 		}
 
 		if err != nil {
-			logger.WithError(err).Fatal("unable to start HTTP/HTTPS listener")
+			logger.WithError(err).Fatal("Unable to start HTTP/HTTPS listener")
 			os.Exit(1)
 		}
 	}()
+}
 
-	// Finally listen on 8080 (http) and block the main goroutine
-	// this is used to serve /live and /ready handlers for Kubernetes probes.
-	err = http.ListenAndServe(":8080", http.DefaultServeMux)
-	logger.WithError(err).Fatal("allocation service crashed")
+func runGRPC(h *serviceHandler, grpcPort int) {
+	logger.WithField("port", grpcPort).Info("Running the grpc handler on port")
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	if err != nil {
+		logger.WithError(err).Fatalf("failed to listen on TCP port %d", grpcPort)
+		os.Exit(1)
+	}
+
+	grpcServer := grpc.NewServer(h.getGRPCServerOptions()...)
+	pb.RegisterAllocationServiceServer(grpcServer, h)
+
+	go func() {
+		err := grpcServer.Serve(listener)
+		logger.WithError(err).Fatal("allocation service crashed")
+		os.Exit(1)
+	}()
 }
 
 func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *serviceHandler {
@@ -288,9 +341,10 @@ func readTLSCert() (*tls.Certificate, error) {
 	return &tlsCert, nil
 }
 
-// getServerOptions returns a list of GRPC server options.
+// getMuxServerOptions returns a list of GRPC server option to use when
+// serving gRPC and REST over an HTTP multiplexer.
 // Current options are opencensus stats handler.
-func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
+func (h *serviceHandler) getMuxServerOptions() []grpc.ServerOption {
 	// Add options for  OpenCensus stats handler to enable stats and tracing.
 	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
 	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
@@ -305,6 +359,40 @@ func (h *serviceHandler) getServerOptions() []grpc.ServerOption {
 			Timeout:           10 * time.Minute,
 		}),
 	}
+}
+
+// getGRPCServerOptions returns a list of GRPC server options to use when
+// only serving gRPC requests.
+// Current options are TLS certs and opencensus stats handler.
+func (h *serviceHandler) getGRPCServerOptions() []grpc.ServerOption {
+	// Add options for  OpenCensus stats handler to enable stats and tracing.
+	// The keepalive options are useful for efficiency purposes (keeping a single connection alive
+	// instead of constantly recreating connections), when placing the Agones allocator behind load balancers.
+	opts := []grpc.ServerOption{
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             1 * time.Minute,
+			PermitWithoutStream: true,
+		}),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionIdle: 5 * time.Minute,
+			Timeout:           10 * time.Minute,
+		}),
+	}
+	if h.tlsDisabled {
+		return opts
+	}
+
+	cfg := &tls.Config{
+		GetCertificate: h.getTLSCert,
+	}
+
+	if !h.mTLSDisabled {
+		cfg.ClientAuth = tls.RequireAnyClientCert
+		cfg.VerifyPeerCertificate = h.verifyClientCertificate
+	}
+
+	return append([]grpc.ServerOption{grpc.Creds(credentials.NewTLS(cfg))}, opts...)
 }
 
 func (h *serviceHandler) getTLSCert(ch *tls.ClientHelloInfo) (*tls.Certificate, error) {
