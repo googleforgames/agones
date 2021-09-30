@@ -78,6 +78,7 @@ func main() {
 	}
 
 	ctx := signals.NewSigKillContext()
+
 	grpcServer := grpc.NewServer()
 	// don't graceful stop, because if we get a SIGKILL signal
 	// then the gameserver is being shut down, and we no longer
@@ -139,7 +140,9 @@ func main() {
 		if err != nil {
 			logger.WithError(err).Fatalf("Could not start sidecar")
 		}
-
+		if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
+			ctx = s.NewSDKServerContext(ctx)
+		}
 		go func() {
 			err := s.Run(ctx)
 			if err != nil {
