@@ -136,6 +136,9 @@ from Kubernetes when the backing Pod goes into Termination state.
 Be aware that if you use a variation of `System.exit(0)` after calling SDK.Shutdown(), your game server container may
 restart for a brief period, inline with our [Health Checking]({{% ref "/docs/Guides/health-checking.md#health-failure-strategy" %}}) policies. 
 
+If the `SDKGracefulTermination` alpha feature is enabled, when the SDK server receives the TERM signal before calling SDK.Shutdown(),
+the SDK server would stay alive for the period of the terminationGracePeriodSeconds until SDK.Shutdown() has been called
+
 ### Configuration Retrieval 
 
 #### GameServer()
