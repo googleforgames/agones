@@ -35,3 +35,4 @@ build/allocation
 /release
 debug.test
 obj
+test/sdk/cpp/sdk/
