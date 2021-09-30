@@ -182,7 +182,7 @@ func TestAllocatorWithSelectors(t *testing.T) {
 		Namespace:           framework.Namespace,
 		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:          pb.AllocationRequest_Packed,
-		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
+		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest", "blue-frog.fred_thing": "test.dog_fred-blue"}},
 	}
 
 	var response *pb.AllocationResponse
@@ -326,7 +326,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 		Namespace:           framework.Namespace,
 		GameServerSelectors: []*pb.GameServerSelector{{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}},
 		Scheduling:          pb.AllocationRequest_Packed,
-		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest"}},
+		Metadata:            &pb.MetaPatch{Labels: map[string]string{"gslabel": "allocatedbytest", "blue-frog.fred_thing": "test.dog_fred-blue"}},
 	}
 	tlsCfg, err := getTLSConfig(ctx, allocatorClientSecretNamespace, allocatorClientSecretName, tlsCA)
 	if !assert.Nil(t, err) {
@@ -348,6 +348,7 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 	}
 
 	// wait for the allocation system to come online
+	var response pb.AllocationResponse
 	err = wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		resp, err := client.Do(req)
 		if err != nil {
@@ -360,7 +361,6 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 			return false, nil
 		}
 		defer resp.Body.Close() // nolint: errcheck
-		var response pb.AllocationResponse
 		err = json.Unmarshal(body, &response)
 		if err != nil {
 			logrus.WithError(err).Info("failed to unmarshal Allocate response")
@@ -369,8 +369,13 @@ func TestRestAllocatorWithSelectors(t *testing.T) {
 		validateAllocatorResponse(t, &response)
 		return true, nil
 	})
+	require.NoError(t, err)
 
-	assert.NoError(t, err)
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, response.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
+	assert.Equal(t, "allocatedbytest", gs.ObjectMeta.Labels["gslabel"])
+	assert.Equal(t, "test.dog_fred-blue", gs.ObjectMeta.Labels["blue-frog.fred_thing"])
 }
 
 // Tests multi-cluster allocation by reusing the same cluster but across namespace.
