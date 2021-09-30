@@ -117,13 +117,17 @@ spec:
 {{ toYaml .Values.agones.allocator.tolerations | indent 8 }}
       {{- end }}
       serviceAccountName: {{ $.Values.agones.serviceaccount.allocator.name }}
+      {{- if eq .Values.agones.allocator.disableTLS false }}
       volumes:
       - name: tls
         secret:
           secretName: allocator-tls
+      {{- if eq .Values.agones.allocator.disableMTLS false }}
       - name: client-ca
         secret:
           secretName: allocator-client-ca
+      {{- end }}
+      {{- end }}
       containers:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
@@ -197,13 +201,17 @@ spec:
         - name: {{ .Values.agones.allocator.service.grpc.portName }}
           containerPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
         {{- end }}
+        {{- if eq .Values.agones.allocator.disableTLS false }}
         volumeMounts:
         - mountPath: /home/allocator/tls
           name: tls
           readOnly: true
+        {{- if eq .Values.agones.allocator.disableMTLS false }}
         - mountPath: /home/allocator/client-ca
           name: client-ca
           readOnly: true
+        {{- end }}
+        {{- end }}
 {{- if .Values.agones.allocator.resources }}
         resources:
 {{ toYaml .Values.agones.allocator.resources | indent 10 }}
