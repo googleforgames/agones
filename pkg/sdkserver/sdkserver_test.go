@@ -16,7 +16,6 @@ package sdkserver
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 	"sync"
@@ -1513,7 +1512,6 @@ func TestSDKServerGracefulTerminationGameServerStateChannel(t *testing.T) {
 	assertGameServerStateChannel := func(expected agonesv1.GameServerState, timeout time.Duration, gsStateChannel chan agonesv1.GameServerState) {
 		select {
 		case current := <-gsStateChannel:
-			fmt.Println(current)
 			assert.Equal(t, expected, current)
 		case <-time.After(timeout):
 			assert.Fail(t, "should have gone to Reserved by now")
