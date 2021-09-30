@@ -94,6 +94,7 @@ type SDKServer struct {
 	gsLabels           map[string]string
 	gsAnnotations      map[string]string
 	gsState            agonesv1.GameServerState
+	gsStateChannel     chan agonesv1.GameServerState
 	gsUpdateMutex      sync.RWMutex
 	gsWaitForSync      sync.WaitGroup
 	reserveTimer       *time.Timer
@@ -134,6 +135,7 @@ func NewSDKServer(gameServerName, namespace string, kubeClient kubernetes.Interf
 		gsUpdateMutex:      sync.RWMutex{},
 		gsWaitForSync:      sync.WaitGroup{},
 		gsConnectedPlayers: []string{},
+		gsStateChannel:     make(chan agonesv1.GameServerState, 2),
 	}
 
 	s.informerFactory = factory
@@ -435,11 +437,15 @@ func (s *SDKServer) Allocate(ctx context.Context, e *sdk.Empty) (*sdk.Empty, err
 }
 
 // Shutdown enters the Shutdown state change for this GameServer into
-// the workqueue so it can be updated
+// the workqueue so it can be updated. If gracefulTermination feature is enabled,
+// Shutdown will block on GameServer being shutdown.
 func (s *SDKServer) Shutdown(ctx context.Context, e *sdk.Empty) (*sdk.Empty, error) {
 	s.logger.Debug("Received Shutdown request, adding to queue")
 	s.stopReserveTimer()
 	s.enqueueState(agonesv1.GameServerStateShutdown)
+	if runtime.FeatureEnabled(runtime.FeatureSDKGracefulTermination) {
+		s.gsStateChannel <- agonesv1.GameServerStateShutdown
+	}
 	return e, nil
 }
 
@@ -823,4 +829,20 @@ func (s *SDKServer) updateConnectedPlayers(ctx context.Context) error {
 	}
 	s.recorder.Event(gs, corev1.EventTypeNormal, "PlayerCount", fmt.Sprintf("Set to %d", gs.Status.Players.Count))
 	return nil
+}
+
+// NewSDKServerContext returns a Context that cancels when SIGTERM or os.Interrupt
+// is received and the GameServer's Status is shutdown
+func (s *SDKServer) NewSDKServerContext(ctx context.Context) context.Context {
+	sdkCtx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-ctx.Done()
+		for {
+			gsState := <-s.gsStateChannel
+			if gsState == agonesv1.GameServerStateShutdown {
+				cancel()
+			}
+		}
+	}()
+	return sdkCtx
 }

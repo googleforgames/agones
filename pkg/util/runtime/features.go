@@ -53,6 +53,9 @@ const (
 
 	// FeatureCustomFasSyncInterval is a feature flag that enables custom the FleetAutoscaler rsync interval
 	FeatureCustomFasSyncInterval Feature = "CustomFasSyncInterval"
+
+	// FeatureSDKGracefulTermination is a feature flag that enables SDK to support gracefulTermination
+	FeatureSDKGracefulTermination Feature = "SDKGracefulTermination"
 )
 
 var (
@@ -68,6 +71,7 @@ var (
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
 		FeatureCustomFasSyncInterval:  false,
+		FeatureSDKGracefulTermination: false,
 	}
 
 	// featureGates is the storage of what features are enabled
