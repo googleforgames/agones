@@ -23,8 +23,7 @@ eksctl create cluster \
 --node-type t3.medium \
 --nodes 3 \
 --nodes-min 3 \
---nodes-max 4 \
---node-ami auto
+--nodes-max 4
 ```
 
 {{< alert title="Note" color="info">}}
