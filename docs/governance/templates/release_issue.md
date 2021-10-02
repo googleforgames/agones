@@ -18,8 +18,8 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Steps
 
 - [ ] Run `make shell` and run `gcloud config configurations activate agones-images`.
-- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone) and add relevant ones to the current milestone.
-  - Issues tagged as `invalid`, `duplicate`, `question`, or `wontfix` can be ignored
+- [ ] Review [closed issues with no milestone](https://github.com/googleforgames/agones/issues?q=is%3Aissue+is%3Aclosed+no%3Amilestone++-label%3Ainvalid+-label%3Aduplicate+-label%3Aquestion+-label%3Awontfix++-label%3Aarea%2Fmeta) and add relevant ones to the current milestone.
+  - Issues tagged as `invalid`, `duplicate`, `question`, `wontfix`, or `area/meta` can be ignored
 - [ ] Review closed issues in the current milestone to ensure that they have appropriate tags.
 - [ ] Review [merged PRs that have no milestone](https://github.com/googleforgames/agones/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+) and add them to the current milestone.
 - [ ] Review merged PRs in the current milestone to ensure that they have appropriate tags.
