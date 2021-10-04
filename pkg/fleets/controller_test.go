@@ -196,10 +196,6 @@ func TestControllerSyncFleet(t *testing.T) {
 	})
 
 	t.Run("gameserverset with different image details", func(t *testing.T) {
-		utilruntime.FeatureTestMutex.Lock()
-		defer utilruntime.FeatureTestMutex.Unlock()
-		assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=true"))
-
 		f := defaultFixture()
 		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
@@ -1006,12 +1002,7 @@ func TestControllerRollingUpdateDeploymentGSSUpdateFailedErrExpected(t *testing.
 	assert.EqualError(t, err, "error updating gameserverset inactive: random-err")
 }
 
-func TestFeatureRollingUpdateOnReady(t *testing.T) {
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
-
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=true"))
-
+func TestRollingUpdateOnReady(t *testing.T) {
 	type expected struct {
 		inactiveSpecReplicas int32
 		replicas             int32
@@ -1118,11 +1109,6 @@ func TestFeatureRollingUpdateOnReady(t *testing.T) {
 func TestControllerRollingUpdateDeployment(t *testing.T) {
 	t.Parallel()
 
-	utilruntime.FeatureTestMutex.Lock()
-	defer utilruntime.FeatureTestMutex.Unlock()
-
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureRollingUpdateOnReady)+"=false"))
-
 	type expected struct {
 		inactiveSpecReplicas int32
 		replicas             int32
@@ -1197,21 +1183,9 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveSpecReplicas:   95,
 			inactiveStatusReplicas: 95,
 			expected: expected{
-				inactiveSpecReplicas: 65,
+				inactiveSpecReplicas: 45,
 				replicas:             30,
 				updated:              true,
-			},
-		},
-		"statuses don't match the spec. nothing should happen": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     75,
-			activeStatusReplicas:   70,
-			inactiveSpecReplicas:   15,
-			inactiveStatusReplicas: 10,
-			expected: expected{
-				inactiveSpecReplicas: 15,
-				replicas:             75,
-				updated:              false,
 			},
 		},
 		"test smalled numbers of active and allocated": {
@@ -1223,7 +1197,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusAllocationReplicas: 2,
 
 			expected: expected{
-				inactiveSpecReplicas: 3,
+				inactiveSpecReplicas: 4,
 				replicas:             2,
 				updated:              true,
 			},
