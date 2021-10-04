@@ -1183,21 +1183,9 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveSpecReplicas:   95,
 			inactiveStatusReplicas: 95,
 			expected: expected{
-				inactiveSpecReplicas: 65,
+				inactiveSpecReplicas: 45,
 				replicas:             30,
 				updated:              true,
-			},
-		},
-		"statuses don't match the spec. nothing should happen": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     75,
-			activeStatusReplicas:   70,
-			inactiveSpecReplicas:   15,
-			inactiveStatusReplicas: 10,
-			expected: expected{
-				inactiveSpecReplicas: 15,
-				replicas:             75,
-				updated:              false,
 			},
 		},
 		"test smalled numbers of active and allocated": {
@@ -1209,7 +1197,7 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 			inactiveStatusAllocationReplicas: 2,
 
 			expected: expected{
-				inactiveSpecReplicas: 3,
+				inactiveSpecReplicas: 4,
 				replicas:             2,
 				updated:              true,
 			},
