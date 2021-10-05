@@ -438,7 +438,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
-	//confirm delete works, because if the finalisers don't get removed, this won't work.
+	// confirm delete works, because if the finalisers don't get removed, this won't work.
 	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 

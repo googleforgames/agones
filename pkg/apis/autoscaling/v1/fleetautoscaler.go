@@ -235,7 +235,7 @@ func (w *WebhookPolicy) ValidateWebhookPolicy(causes []metav1.StatusCause) []met
 	}
 	if w.CABundle != nil {
 		rootCAs := x509.NewCertPool()
-		//Check that CABundle provided is correctly encoded certificate
+		// Check that CABundle provided is correctly encoded certificate
 		if ok := rootCAs.AppendCertsFromPEM(w.CABundle); !ok {
 			causes = append(causes, metav1.StatusCause{
 				Type:    metav1.CauseTypeFieldValueInvalid,

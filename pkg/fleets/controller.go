@@ -522,7 +522,8 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 
 	totalScaleDownCount := int32(0)
 	// Check if we can scale down.
-	allGSS := append(rest, active)
+	allGSS := rest
+	allGSS = append(allGSS, active)
 	readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
 	minAvailable := fleet.Spec.Replicas - unavailable
 
