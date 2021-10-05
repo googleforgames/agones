@@ -182,7 +182,7 @@ agones:
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
-    tag: 1.18.0-dev
+    tag: 1.18.0-rc
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
