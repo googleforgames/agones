@@ -63,7 +63,54 @@ spec:
 {{ toYaml .Values.agones.allocator.service.loadBalancerSourceRanges | indent 4 }}
   {{- end }}
 {{- end }}
-
+{{- if .Values.agones.allocator.service2.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.agones.allocator.service2.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.agones.allocator.service2.annotations }}
+  annotations:
+{{ toYaml .Values.agones.allocator.service2.annotations | indent 4 }}
+{{- end }}
+spec:
+  selector:
+    multicluster.agones.dev/role: allocator
+  ports:
+    - port: {{ .Values.agones.allocator.service2.http.port }}
+      name: {{ .Values.agones.allocator.service2.http.portName }}
+      targetPort: 8080
+      protocol: TCP
+{{- end }}
+{{- if and (.Values.agones.metrics.prometheusEnabled) (.Values.agones.metrics.serviceMonitor.enabled) }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: agones-allocator-monitor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: {{ template "agones.name" . }}
+    chart: {{ template "agones.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  selector:
+    matchLabels:
+      multicluster.agones.dev/role: allocator
+  endpoints:
+    - port: {{ .Values.agones.allocator.service2.http.portName }}
+      path: /metrics
+      interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
+{{- end }}
 ---
 # Deploy pods to run the agones-allocator code
 apiVersion: apps/v1

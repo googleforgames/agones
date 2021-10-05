@@ -190,6 +190,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.metrics.serviceMonitor.enabled`             | Enables ServiceMonitor installation for metrics auto-discovery with prometheus-operator         | `false`                 |
+| `agones.metrics.serviceMonitor.interval`            | Default scraping interval for ServiceMonitor                                                    | `30s`                 |
 | `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
 | `agones.allocator.service.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
 | `agones.allocator.service.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
@@ -201,6 +203,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.service.grpc.enabled`                        | If true the [allocator service][allocator] will respond to [gRPC requests][grpc-requests] | `true`                  |
 | `agones.allocator.service.grpc.port`                        | The port that is exposed externally by the [allocator service][allocator] for [gRPC requests][grpc-requests] | `443`                  |
 | `agones.allocator.service.grpc.targetPort`                        | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
+| `agones.allocator.service2.name`                     | Second Service name for the allocator                                                                  | `agones-allocator-service`     |
+| `agones.allocator.service2.annotations`              | [Annotations][annotations] added to the Agones allocator second Service                                | `{}`                   |
+| `agones.allocator.service2.http.port`                | The port that is exposed externally by the [allocator service][allocator] for http requests            | `8080`                  |
+| `agones.allocator.service2.http.portName`            | The name of exposed port                                                                               | `http`                  |
 |                       |                           |                            |
 {{% /feature %}}
 

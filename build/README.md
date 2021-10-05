@@ -46,6 +46,7 @@ Table of Contents
         * [make test-e2e-failure](#make-test-e2e-failure)
         * [make setup-prometheus](#make-setup-prometheus)
         * [make setup-grafana](#make-setup-grafana)
+        * [make setup-prometheus-stack](#make-setup-prometheus-stack)
         * [make prometheus-portforward](#make-prometheus-portforward)
         * [make grafana-portforward](#make-grafana-portforward)
         * [make controller-portforward](#make-controller-portforward)
@@ -76,6 +77,7 @@ Table of Contents
         * [make minikube-install](#make-minikube-install)
         * [make minikube-setup-prometheus](#make-minikube-setup-prometheus)
         * [make minikube-setup-grafana](#make-minikube-setup-grafana)
+        * [make minikube-setup-prometheus-stack](#make-minikube-setup-prometheus)
         * [make minikube-prometheus-portforward](#make-minikube-prometheus-portforward)
         * [make minikube-grafana-portforward](#make-minikube-grafana-portforward)
         * [make minikube-test-e2e](#make-minikube-test-e2e)
@@ -88,6 +90,7 @@ Table of Contents
         * [make kind-install](#make-kind-install)
         * [make kind-setup-prometheus](#make-kind-setup-prometheus)
         * [make kind-setup-grafana](#make-kind-setup-grafana)
+        * [make kind-setup-prometheus-stack](#make-kind-setup-prometheus-stack)
         * [make kind-prometheus-portforward](#make-kind-prometheus-portforward)
         * [make kind-grafana-portforward](#make-kind-grafana-portforward)
         * [make kind-test-e2e](#make-kind-test-e2e)
@@ -485,7 +488,7 @@ Run controller failure portion of the end-to-end tests.
 
 #### `make setup-prometheus`
 
-Install Prometheus server using [Prometheus Community](https://prometheus-community.github.io/helm-charts) 
+Install Prometheus server using [Prometheus Community](https://prometheus-community.github.io/helm-charts)
 chart into the current cluster.
 
 By default all exporters and alertmanager is disabled.
@@ -500,7 +503,7 @@ Run helm repo update to get the mose recent charts.
 
 #### `make setup-grafana`
 
-Install Grafana server using [grafana community](https://grafana.github.io/helm-charts) chart into 
+Install Grafana server using [grafana community](https://grafana.github.io/helm-charts) chart into
 the current cluster and setup [Agones dashboards with Prometheus datasource](./grafana/).
 
 You can set your own password using the `PASSWORD` environment variable.
@@ -671,6 +674,11 @@ Use this instead of `make setup-prometheus`, as it disables Persistent Volume Cl
 Installs grafana into the Kubernetes cluster.
 Use this instead of `make setup-grafana`, as it disables Persistent Volume Claim.
 
+#### `make minikube-setup-prometheus-stack`
+
+Installs prometheus-stack into the Kubernetes cluster.
+Use this instead of `make setup-prometheus-stack`, as it disables Persistent Volume Claim.
+
 #### `make minikube-prometheus-portforward`
 
 The minikube version of [`make prometheus-portforward`](#make-prometheus-portforward) to setup
@@ -722,14 +730,19 @@ Use this instead of `make setup-prometheus`, as it disables Persistent Volume Cl
 Installs grafana into the Kubernetes cluster.
 Use this instead of `make setup-grafana`, as it disables Persistent Volume Claim.
 
+#### `make kind-setup-prometheus-stack`
+
+Installs prometheus-stack into the Kubernetes cluster.
+Use this instead of `make setup-prometheus-stack`, as it disables Persistent Volume Claim.
+
 #### `make kind-prometheus-portforward`
 
-The minikube version of [`make prometheus-portforward`](#make-prometheus-portforward) to setup
+The kind version of [`make prometheus-portforward`](#make-prometheus-portforward) to setup
 port forwarding to the prometheus deployment.
 
 #### `make kind-grafana-portforward`
 
-The minikube version of [`make grafana-portforward`](#make-grafana-portforward) to setup
+The kind version of [`make grafana-portforward`](#make-grafana-portforward) to setup
 port forwarding to the grafana deployment.
 
 

@@ -13150,9 +13150,10 @@ spec:
   ports:
     - name: webhooks
       port: 443
-      targetPort: 8081
+      targetPort: webhooks
     - name: web
       port: 8080
+      targetPort: http
 ---
 # Source: agones/templates/service/allocation.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -13311,10 +13312,15 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-controller"
+        ports:
+        - name: webhooks
+          containerPort: 8081
+        - name: http
+          containerPort: 8080
         livenessProbe:
           httpGet:
             path: /live
-            port: 8080
+            port: http
           initialDelaySeconds: 3
           periodSeconds: 3
           failureThreshold: 3
