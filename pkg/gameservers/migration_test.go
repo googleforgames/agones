@@ -220,7 +220,7 @@ func TestMigrationControllerSyncGameServer(t *testing.T) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
-			//check values
+			// check values
 			updated := false
 			m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
 				updated = true

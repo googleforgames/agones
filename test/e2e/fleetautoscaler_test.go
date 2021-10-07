@@ -106,7 +106,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	_, err = patchFleetAutoscaler(ctx, fas, intstr.FromString("10%"), 1, fas.Spec.Policy.Buffer.MaxReplicas)
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
-	//10% with only one allocated GS means only one ready server
+	// 10% with only one allocated GS means only one ready server
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
 	// get the Status of the fleetautoscaler
@@ -251,7 +251,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	// In ticket #1156 we apply new Replicas size 2, which is smaller than 7
 	// And RollingUpdate is broken, scaling immediately from 7 to 2 and then back to 7
 	// Uncomment line below to break this test
-	//fltCopy.Spec.Replicas = 2
+	// fltCopy.Spec.Replicas = 2
 
 	flt, err = framework.AgonesClient.AgonesV1().Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.NoError(t, err)
@@ -415,7 +415,7 @@ func defaultFleetAutoscaler(f *agonesv1.Fleet, namespace string) *autoscalingv1.
 	}
 }
 
-//Test fleetautoscaler with webhook policy type
+// Test fleetautoscaler with webhook policy type
 // scaling from Replicas equals to 1 to 2
 func TestAutoscalerWebhook(t *testing.T) {
 	t.Parallel()

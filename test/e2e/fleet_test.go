@@ -126,7 +126,7 @@ func TestFleetStrategyValidation(t *testing.T) {
 func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	t.Parallel()
 
-	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	// Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 
 	for _, usePatch := range fixtures {
@@ -222,7 +222,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 func TestFleetRollingUpdate(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	// Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 	maxSurge := []string{"25%", "10%"}
 
