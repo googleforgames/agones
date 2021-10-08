@@ -290,7 +290,8 @@ func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, cond
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or returns an error if the condition can't be met in 5 minutes.
 func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(fleet *agonesv1.Fleet) bool) error {
 	t.Helper()
-	logrus.WithField("fleet", flt.Name).Info("waiting for fleet condition")
+	log := logrus.WithField("test", t.Name()).WithField("fleet", flt.Name)
+	log.Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
 		fleet, err := f.AgonesClient.AgonesV1().Fleets(flt.ObjectMeta.Namespace).Get(context.Background(), flt.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
@@ -300,7 +301,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 		return condition(fleet), nil
 	})
 	if err != nil {
-		logrus.WithField("fleet", flt.Name).WithError(err).Info("error waiting for fleet condition")
+		log.WithError(err).Info("error waiting for fleet condition")
 		return err
 	}
 	return nil
@@ -310,7 +311,8 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 // nolint: dupl
 func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(fas *autoscaling.FleetAutoscaler) bool) {
 	t.Helper()
-	logrus.WithField("fleetautoscaler", fas.Name).Info("waiting for fleetautoscaler condition")
+	log := logrus.WithField("fleetautoscaler", fas.Name).WithField("test", t.Name())
+	log.Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
 		fleetautoscaler, err := f.AgonesClient.AutoscalingV1().FleetAutoscalers(fas.ObjectMeta.Namespace).Get(context.Background(), fas.ObjectMeta.Name, metav1.GetOptions{})
 		if err != nil {
@@ -320,7 +322,7 @@ func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscali
 		return condition(fleetautoscaler), nil
 	})
 	if err != nil {
-		logrus.WithField("fleetautoscaler", fas.Name).WithError(err).Info("error waiting for fleetautoscaler condition")
+		log.WithError(err).Info("error waiting for fleetautoscaler condition")
 		t.Fatalf("error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
 	}
 }
