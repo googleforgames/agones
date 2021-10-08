@@ -4,7 +4,7 @@ Load tests aim to test the performance of the system under heavy load. For Agone
 
 The goal of performance tests is to provide metrics on various operations. For
 Agones, fleet scaling is a good example where performance metrics are useful.
-Similar to laod tests, Locust can be used for performance tests with the main
+Similar to load tests, Locust can be used for performance tests with the main
 difference being the number of workers that are launched.
 
 ## Build and run tests
