@@ -77,6 +77,13 @@ helm upgrade --install --wait \
    ...
 ```
 
+{{< alert title="Warning" color="warning">}} The parameter used to automatically
+replace the certifate changed in Agones 1.18.0. If you are using an older
+version of Agones you should pass the parameter
+`agones.allocator.http.loadBalancerIP` instead. If you need your script to work
+with both older and newer versions of Agones, you can pass both parameters as
+only one of them will effect the helm chart templates.
+
 {{% /feature %}}
 
 Another approach is to replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
