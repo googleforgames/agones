@@ -14,14 +14,16 @@
 
 
 // Run:
-//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.4.0"]
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.17.0"]
 
-provider "google" {
-  version = "~> 2.10"
-}
-
-provider "google-beta" {
-  version = "~> 2.10"
+terraform {
+  required_version = ">= 1.0.0"  
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "~> 3.88"
+    }
+  }
 }
 
 variable "project" {
@@ -142,6 +144,7 @@ output "host" {
 }
 output "token" {
   value = module.gke_cluster.token
+  sensitive = true
 }
 output "cluster_ca_certificate" {
   value = module.gke_cluster.cluster_ca_certificate
