@@ -14,7 +14,17 @@
 
 
 // Run:
-//  terraform apply [-var agones_version="1.4.0"]
+//  terraform apply [-var agones_version="1.17.0"]
+
+terraform {
+  required_version = ">= 1.0.0"  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
 
 // Install latest version of agones
 variable "agones_version" {
@@ -34,7 +44,6 @@ variable "node_count" {
 }
 
 provider "aws" {
-  version = "~> 2.8"
   region  = var.region
 }
 
@@ -49,6 +58,10 @@ variable "feature_gates" {
 }
 
 module "eks_cluster" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
+  // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/eks/?ref=main"
 
   machine_type = var.machine_type
@@ -64,6 +77,10 @@ data "aws_eks_cluster_auth" "example" {
 // Next Helm module cause "terraform destroy" timeout, unless helm release would be deleted first.
 // Therefore "helm delete --purge agones" should be executed from the CLI before executing "terraform destroy".
 module "helm_agones" {
+  // ***************************************************************************************************
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
+  // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
   udp_expose             = "false"

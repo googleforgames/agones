@@ -14,14 +14,13 @@
 
 
 // Run:
-//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.8.0"]
+//  terraform apply -var project="<YOUR_GCP_ProjectID>" [-var agones_version="1.17.0"]
 
-provider "google" {
-  version = "~> 2.10"
-}
-
-provider "google-beta" {
-  version = "~> 2.10"
+terraform {
+  required_version = ">= 1.0.0"  
+  required_providers {
+    google = "~> 3.88"
+  }
 }
 
 variable "project" {
@@ -79,8 +78,8 @@ variable "windows_machine_type" {
 
 module "gke_cluster" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.8.0 corresponds
-  // to Agones version 1.8.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/gke/?ref=main"
 
@@ -99,8 +98,8 @@ module "gke_cluster" {
 
 module "helm_agones" {
   // ***************************************************************************************************
-  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.8.0 corresponds
-  // to Agones version 1.8.0
+  // Update ?ref= to the agones release you are installing. For example, ?ref=release-1.17.0 corresponds
+  // to Agones version 1.17.0
   // ***************************************************************************************************
   source = "git::https://github.com/googleforgames/agones.git//install/terraform/modules/helm3/?ref=main"
 
@@ -117,7 +116,8 @@ output "host" {
   value = module.gke_cluster.host
 }
 output "token" {
-  value = module.gke_cluster.token
+  value     = module.gke_cluster.token
+  sensitive = true
 }
 output "cluster_ca_certificate" {
   value = module.gke_cluster.cluster_ca_certificate

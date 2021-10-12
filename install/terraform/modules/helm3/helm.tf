@@ -16,17 +16,17 @@
 # This is a Helm 3.x module, and is the module that should be actively used.
 #
 terraform {
-  required_version = ">= 0.12.6"
+  required_version = ">= 1.0"
   required_providers {
     helm = {
-      version = "~> 1.2"
+      version = "~> 2.3"
       source  = "hashicorp/helm"
     }
   }
 }
+
 provider "helm" {
   kubernetes {
-    load_config_file       = false
     host                   = var.host
     token                  = var.token
     cluster_ca_certificate = var.cluster_ca_certificate
@@ -43,7 +43,7 @@ resource "helm_release" "agones" {
   namespace        = "agones-system"
   create_namespace = true
 
-  # Use terraform of the latest >=0.12 version
+  # Use terraform of the latest >=1.0 version
   values = [
     length(var.values_file) == 0 ? "" : file(var.values_file),
   ]
