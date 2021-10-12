@@ -44,7 +44,7 @@ variable "node_count" {
 }
 
 provider "aws" {
-  region  = var.region
+  region = var.region
 }
 
 variable "machine_type" { default = "t2.large" }

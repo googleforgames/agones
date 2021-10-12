@@ -16,7 +16,7 @@
 # This is a Helm 3.x module, and is the module that should be actively used.
 #
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 1.0.0"
   required_providers {
     helm = {
       version = "~> 2.3"
@@ -43,7 +43,7 @@ resource "helm_release" "agones" {
   namespace        = "agones-system"
   create_namespace = true
 
-  # Use terraform of the latest >=1.0 version
+  # Use terraform of the latest >=1.0.0 version
   values = [
     length(var.values_file) == 0 ? "" : file(var.values_file),
   ]
