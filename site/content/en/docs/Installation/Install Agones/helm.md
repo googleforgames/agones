@@ -160,10 +160,17 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.logLevel`                         | Agones Allocator Log level. Log only entries with that severity and above                       | `info`                 |
 | `agones.allocator.install`                          | Whether to install the [allocator service][allocator]                                           | `true`                 |
 | `agones.allocator.replicas`                         | The number of replicas to run in the deployment                                                 | `3`                    |
-| `agones.allocator.http.port`                        | The port to expose on the service                                                               | `443`                  |
-| `agones.allocator.http.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
-| `agones.allocator.http.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
-| `agones.allocator.http.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
+| `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
+| `agones.allocator.service.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
+| `agones.allocator.service.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
+| `agones.allocator.service.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
+| `agones.allocator.service.annotations`                      | [Annotations][annotations] added to the Agones allocator service                                | `{}`                   |
+| `agones.allocator.service.http.enabled`                        | If true the [allocator service][allocator] will respond to [REST requests][rest-requests] | `true`                  |
+| `agones.allocator.service.http.port`                        | The port that is exposed externally by the [allocator service][allocator] for [REST requests][rest-requests] | `443`                  |
+| `agones.allocator.service.http.targetPort`                        | The port that is used by the allocator pod to listen for [REST requests][rest-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
+| `agones.allocator.service.grpc.enabled`                        | If true the [allocator service][allocator] will respond to [gRPC requests][grpc-requests] | `true`                  |
+| `agones.allocator.service.grpc.port`                        | The port that is exposed externally by the [allocator service][allocator] for [gRPC requests][grpc-requests] | `443`                  |
+| `agones.allocator.service.grpc.targetPort`                        | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
 | `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `true`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide certificates in `certs/allocator/*`| `true`                 |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
@@ -185,22 +192,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.18.0" %}}
+{{% feature publishVersion="1.19.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.allocator.service.name`                     | Service name for the allocator                                                                  | `agones-allocator`     |
-| `agones.allocator.service.serviceType`                 | The [Service Type][service] of the HTTP Service                                                 | `LoadBalancer`         |
-| `agones.allocator.service.loadBalancerIP`              | The [Load Balancer IP][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | \`\`                     |
-| `agones.allocator.service.loadBalancerSourceRanges`    | The [Load Balancer SourceRanges][loadBalancer] of the Agones allocator load balancer. Only works if the Kubernetes provider supports this option. | `[]`         |
-| `agones.allocator.service.annotations`                      | [Annotations][annotations] added to the Agones allocator service                                | `{}`                   |
-| `agones.allocator.service.http.enabled`                        | If true the [allocator service][allocator] will respond to [REST requests][rest-requests] | `true`                  |
-| `agones.allocator.service.http.port`                        | The port that is exposed externally by the [allocator service][allocator] for [REST requests][rest-requests] | `443`                  |
-| `agones.allocator.service.http.targetPort`                        | The port that is used by the allocator pod to listen for [REST requests][rest-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
-| `agones.allocator.service.grpc.enabled`                        | If true the [allocator service][allocator] will respond to [gRPC requests][grpc-requests] | `true`                  |
-| `agones.allocator.service.grpc.port`                        | The port that is exposed externally by the [allocator service][allocator] for [gRPC requests][grpc-requests] | `443`                  |
-| `agones.allocator.service.grpc.targetPort`                        | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
 |                       |                           |                            |
 {{% /feature %}}
 
