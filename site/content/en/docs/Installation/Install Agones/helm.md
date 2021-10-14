@@ -199,10 +199,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.metrics.serviceMonitor.enabled`             | Enables ServiceMonitor installation for metrics auto-discovery with prometheus-operator         | `false`                 |
 | `agones.metrics.serviceMonitor.interval`            | Default scraping interval for ServiceMonitor                                                    | `30s`                 |
-| `agones.allocator.service2.name`                    | Second Service name for the allocator                                                           | `agones-allocator-service`     |
-| `agones.allocator.service2.annotations`             | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
-| `agones.allocator.service2.http.port`               | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
-| `agones.allocator.service2.http.portName`           | The name of exposed port                                                                        | `http`                  |
+| `agones.allocator.serviceInternal.name`                    | Second Service name for the allocator                                                           | `agones-allocator-service`     |
+| `agones.allocator.serviceInternal.annotations`             | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
+| `agones.allocator.serviceInternal.http.port`               | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
+| `agones.allocator.serviceInternal.http.portName`           | The name of exposed port                                                                        | `http`                  |
 |                       |                           |                            |
 {{% /feature %}}
 

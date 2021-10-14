@@ -166,7 +166,7 @@ agones:
         port: 443
         portName: grpc
         targetPort: 8443
-    service2:
+    serviceInternal:
       name: agones-allocator-service
       annotations: {}
       http:
