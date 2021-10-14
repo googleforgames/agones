@@ -8,12 +8,6 @@ description: >
 
 To allocate a game server, Agones provides a gRPC and REST service with mTLS authentication, called `agones-allocator` that can be used instead of {{< ghlink href="pkg/apis/allocation/v1/gameserverallocation.go" >}}GameServerAllocations{{< /ghlink >}}.
 
-{{% feature expiryVersion="1.18.0" %}}
-Both services are accessible through a Kubernetes service that is externalized using a load balancer and they run on the same port. For requests to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
-The remainder of this article describes how to manually make a successful allocation request using the API.
-{{% /feature %}}
-
-{{% feature publishVersion="1.18.0" %}}
 Both gRPC and REST are accessible through a Kubernetes service that can be externalized using a load balancer. By default, gRPC and REST are served from the same port. However, either service can be disabled or the services can be served from separate ports using the [helm configuration]({{< relref "/docs/Installation/Install Agones/helm.md" >}}).
 
 {{< alert title="Warning" color="warning" >}}
@@ -24,7 +18,6 @@ If you require a fully compatible or feature compatible gRPC server implementati
 
 For requests to either service to succeed, a client certificate must be provided that is in the authorization list of the allocator service.
 The remainder of this article describes how to manually make a successful allocation request using the API.
-{{% /feature %}}
 
 The guide assumes you have command line tools installed for [jq](https://stedolan.github.io/jq/), [go](https://golang.org/) and [openssl](https://www.openssl.org/).
 
@@ -56,18 +49,6 @@ agones-allocator            LoadBalancer   10.55.251.73    <b>34.82.195.204</b> 
 
 ## Server TLS certificate
 
-{{% feature expiryVersion="1.18.0" %}}
-If the `agones-allocator` service is installed as a `LoadBalancer` [using a reserved IP]({{< relref "/docs/Installation/Install Agones/helm.md#reserved-allocator-load-balancer-ip" >}}), a valid self-signed server TLS certificate is generated using the IP provided. Otherwise, the server TLS certificate should be replaced. If you installed Agones using [helm]({{< relref "/docs/Installation/Install Agones/helm.md" >}}), you can easily reconfigure the allocator service with a preset IP address by setting the `agones.allocator.http.loadBalancerIP` parameter to the address that was automatically assigned to the service and `helm upgrade`:
-
-```bash
-EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-helm upgrade --install --wait \
-   --set agones.allocator.http.loadBalancerIP=${EXTERNAL_IP} \
-   ...
-```
-
-{{% /feature %}}
-{{% feature publishVersion="1.18.0" %}}
 If the `agones-allocator` service is installed as a `LoadBalancer` [using a reserved IP]({{< relref "/docs/Installation/Install Agones/helm.md#reserved-allocator-load-balancer-ip" >}}), a valid self-signed server TLS certificate is generated using the IP provided. Otherwise, the server TLS certificate should be replaced. If you installed Agones using [helm]({{< relref "/docs/Installation/Install Agones/helm.md" >}}), you can easily reconfigure the allocator service with a preset IP address by setting the `agones.allocator.service.loadBalancerIP` parameter to the address that was automatically assigned to the service and `helm upgrade`:
 
 ```bash
@@ -77,7 +58,13 @@ helm upgrade --install --wait \
    ...
 ```
 
-{{% /feature %}}
+{{< alert title="Warning" color="warning">}} The parameter used to automatically
+replace the certifate changed in Agones 1.18.0. If you are using an older
+version of Agones you should pass the parameter
+`agones.allocator.http.loadBalancerIP` instead. If you need your script to work
+with both older and newer versions of Agones, you can pass both parameters as
+only one of them will effect the helm chart templates.
+{{< /alert >}}
 
 Another approach is to replace the default server TLS certificate with a certificate with CN and subjectAltName. There are multiple approaches to generate a certificate. Agones recommends using [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
 

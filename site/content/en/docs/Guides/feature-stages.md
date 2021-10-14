@@ -24,19 +24,6 @@ that can be found in the [Helm configuration]({{< ref "/docs/Installation/Instal
 
 The current set of `alpha` and `beta` feature gates are:
 
-{{% feature expiryVersion="1.18.0" %}}
-| Feature Name | Gate    | Default | Stage | Since |
-|--------------|---------|---------|-------|-------|
-| Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
-| [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
-| [SDK Send GameServer on Watch execution]({{< ref "/docs/Guides/Client SDKs/_index.md#watchgameserverfunctiongameserver" >}}) | `SDKWatchSendOnExecute` | Enabled | `Beta` | 1.12.0 |
-| Fix for RollingUpdate [Scale down](https://github.com/googleforgames/agones/issues/1625) | `RollingUpdateOnReady` | Enabled | `Beta` | 1.14.0 |
-| [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
-| [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955) | `CustomFasSyncInterval` | Disabled | `Alpha` | 1.17.0 |
-| [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `StateAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
-| [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
-{{% /feature %}}
-{{% feature publishVersion="1.18.0" %}}
 | Feature Name | Gate    | Default | Stage | Since |
 |--------------|---------|---------|-------|-------|
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
@@ -47,7 +34,6 @@ The current set of `alpha` and `beta` feature gates are:
 | [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `StateAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [Graceful Termination for GameServer SDK](https://github.com/googleforgames/agones/pull/2205) | `SDKGracefulTermination` | Disabled | `Alpha` | 1.18.0 |
-{{% /feature %}}
 
 ## Description of Stages
 
