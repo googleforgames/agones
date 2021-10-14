@@ -510,6 +510,16 @@ You can set your own password using the `PASSWORD` environment variable.
 
 See [`make minikube-setup-grafana`](#make-minikube-setup-grafana) and [`make kind-setup-grafana`](#make-kind-setup-grafana) to run the installation on Minikube or Kind.
 
+#### `make setup-prometheus-stack`
+
+Install Prometheus-stack using [Prometheus Community](https://prometheus-community.github.io/helm-charts) chart into the current cluster.
+
+By default only prometheus and grafana will installed, all exporters and alertmanager is disabled.
+
+You can use this to collect Agones [Metrics](../site/content/en/docs/Guides/metrics.md) using ServiceMonitor.
+
+See [`make minikube-setup-prometheus-stack`](#make-minikube-setup-prometheus-stack) and [`make kind-setup-prometheus-stack`](#make-kind-setup-prometheus-stack) to run the installation on Minikube or Kind.
+
 #### `make prometheus-portforward`
 
 Sets up port forwarding to the
