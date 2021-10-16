@@ -23,7 +23,7 @@ cd /go/src/github.com/ahmetb/gen-crd-api-reference-docs
 
 #Use local version of agones
 go mod edit --replace=agones.dev/agones@latest=../../../agones.dev/agones/
-go build
+go build 
 
 cp /go/src/agones.dev/agones/site/assets/templates/pkg.tpl ./template
 
