@@ -116,19 +116,18 @@ class AgonesSDK {
 		});
 	}
 
-	watchGameServer(callback) {
+	watchGameServer(callback, errorCallback) {
 		const request = new messages.Empty();
 		const stream = this.client.watchGameServer(request);
 		stream.on('data', (data) => {
 			callback(data.toObject());
 		});
-		stream.on('error', (error) => {
-			if (error.code === grpc.status.CANCELLED) {
-				// Capture error when call is cancelled
-				return;
-			}
-			throw error;
-		});
+		if (errorCallback) {
+			stream.on('error', (error) => {
+				errorCallback(error);
+			});
+		}
+
 		this.streams.push(stream);
 	}
 
