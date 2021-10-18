@@ -253,31 +253,23 @@ describe('AgonesSDK', () => {
 			expect(result.status).toBeDefined();
 			expect(result.status.state).toEqual('up');
 		});
-		it('captures CANCELLED errors only', async() => {
+		it('calls the server and passes errors to the optional error callback', async () => {
 			let serverStream = stream.Readable({read: () => undefined});
 			spyOn(agonesSDK.client, 'watchGameServer').and.callFake(() => {
 				return serverStream;
 			});
 
 			let callback = jasmine.createSpy('callback');
-			agonesSDK.watchGameServer(callback);
+			let errorCallback = jasmine.createSpy('errorCallback');
+			agonesSDK.watchGameServer(callback, errorCallback);
 
-			try {
-				serverStream.emit('error', {
-					code: grpc.status.CANCELLED
-				});
-			} catch (error) {
-				fail();
-			}
-
-			try {
-				serverStream.emit('error', {
-					code: grpc.status.ABORTED
-				});
-				fail();
-			} catch (error) {
-				expect(error.code).toEqual(grpc.status.ABORTED);
-			}
+			let error = {
+				code: grpc.status.CANCELLED
+			};
+			serverStream.emit('error', error);
+			expect(errorCallback).toHaveBeenCalled();
+			let errorCallbackArgs = errorCallback.calls.argsFor(0)[0];
+			expect(errorCallbackArgs).toEqual(error);
 		});
 	});
 
