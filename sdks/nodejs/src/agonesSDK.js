@@ -127,7 +127,6 @@ class AgonesSDK {
 				errorCallback(error);
 			});
 		}
-
 		this.streams.push(stream);
 	}
 

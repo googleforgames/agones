@@ -249,9 +249,9 @@ describe('AgonesSDK', () => {
 			serverStream.emit('data', gameServer);
 
 			expect(callback).toHaveBeenCalled();
-			let result = callback.calls.argsFor(0)[0];
-			expect(result.status).toBeDefined();
-			expect(result.status.state).toEqual('up');
+			let callbackArgs = callback.calls.argsFor(0)[0];
+			expect(callbackArgs.status).toBeDefined();
+			expect(callbackArgs.status.state).toEqual('up');
 		});
 		it('calls the server and passes errors to the optional error callback', async () => {
 			let serverStream = stream.Readable({read: () => undefined});
