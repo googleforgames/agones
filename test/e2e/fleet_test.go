@@ -126,7 +126,7 @@ func TestFleetStrategyValidation(t *testing.T) {
 func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 	t.Parallel()
 
-	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	// Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 
 	for _, usePatch := range fixtures {
@@ -222,7 +222,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 func TestFleetRollingUpdate(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	//Use scaleFleetPatch (true) or scaleFleetSubresource (false)
+	// Use scaleFleetPatch (true) or scaleFleetSubresource (false)
 	fixtures := []bool{true, false}
 	maxSurge := []string{"25%", "10%"}
 
@@ -297,20 +297,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 					maxSurge, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxSurge, int(flt.Spec.Replicas), true)
 					assert.Nil(t, err)
 
-					roundUp := true
-					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-						roundUp = false
-					}
+					roundUp := false
 					maxUnavailable, err := intstr.GetValueFromIntOrPercent(flt.Spec.Strategy.RollingUpdate.MaxUnavailable, int(flt.Spec.Replicas), roundUp)
 
-					shift := 0
-					if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-						if maxUnavailable == 0 {
-							maxUnavailable = 1
-						}
-						// This difference is inevitable, also could be seen with Deployments and ReplicaSets
-						shift = maxUnavailable
+					if maxUnavailable == 0 {
+						maxUnavailable = 1
 					}
+					// This difference is inevitable, also could be seen with Deployments and ReplicaSets
+					shift := maxUnavailable
 					assert.Nil(t, err)
 
 					expectedTotal := targetScale + maxSurge + maxUnavailable + shift
@@ -349,9 +343,6 @@ func TestFleetRollingUpdate(t *testing.T) {
 }
 
 func TestUpdateFleetReplicaAndSpec(t *testing.T) {
-	if !runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-		t.SkipNow()
-	}
 	t.Parallel()
 
 	client := framework.AgonesClient.AgonesV1()

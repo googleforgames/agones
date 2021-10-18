@@ -522,7 +522,8 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 
 	totalScaleDownCount := int32(0)
 	// Check if we can scale down.
-	allGSS := append(rest, active)
+	allGSS := rest
+	allGSS = append(allGSS, active)
 	readyReplicasCount := agonesv1.GetReadyReplicaCountForGameServerSets(allGSS)
 	minAvailable := fleet.Spec.Replicas - unavailable
 
@@ -603,57 +604,7 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 
 // rollingUpdateRest applies the rolling update to the inactive GameServerSets
 func (c *Controller) rollingUpdateRest(ctx context.Context, fleet *agonesv1.Fleet, active *agonesv1.GameServerSet, rest []*agonesv1.GameServerSet) error {
-	if runtime.FeatureEnabled(runtime.FeatureRollingUpdateOnReady) {
-		return c.rollingUpdateRestFixedOnReady(ctx, fleet, active, rest)
-	}
-	return c.rollingUpdateRestBeforeFixOnReady(ctx, fleet, rest)
-}
-
-func (c *Controller) rollingUpdateRestBeforeFixOnReady(ctx context.Context, fleet *agonesv1.Fleet, rest []*agonesv1.GameServerSet) error {
-	if len(rest) == 0 {
-		return nil
-	}
-
-	r, err := intstr.GetValueFromIntOrPercent(fleet.Spec.Strategy.RollingUpdate.MaxUnavailable, int(fleet.Spec.Replicas), true)
-
-	if err != nil {
-		return errors.Wrapf(err, "error parsing MaxUnavailable value: %s", fleet.ObjectMeta.Name)
-	}
-	unavailable := int32(r)
-
-	for _, gsSet := range rest {
-
-		// if the status.Replicas are less than or equal to 0, then that means we are done
-		// scaling this GameServerSet down, and can therefore exit/move to the next one.
-		if gsSet.Status.Replicas <= 0 {
-			continue
-		}
-
-		// If the Spec.Replicas does not equal the Status.Replicas for this GameServerSet, this means
-		// that the rolling down process is currently ongoing, and we should therefore exit so we can wait for it to finish
-		if gsSet.Spec.Replicas != gsSet.Status.Replicas {
-			break
-		}
-		gsSetCopy := gsSet.DeepCopy()
-		newReplicasCount := fleet.LowerBoundReplicas(gsSetCopy.Spec.Replicas - unavailable)
-		if gsSet.Status.ShutdownReplicas == 0 {
-			gsSetCopy.Spec.Replicas = newReplicasCount
-			c.loggerForFleet(fleet).Debug(fmt.Sprintf("Replicas in a Shutdown state - %d", gsSet.Status.ShutdownReplicas))
-			c.loggerForFleet(fleet).WithField("gameserverset", gsSet.ObjectMeta.Name).WithField("replicas", gsSetCopy.Spec.Replicas).
-				Debug("applying rolling update to inactive gameserverset")
-
-			if _, err := c.gameServerSetGetter.GameServerSets(gsSetCopy.ObjectMeta.Namespace).Update(ctx, gsSetCopy, metav1.UpdateOptions{}); err != nil {
-				return errors.Wrapf(err, "error updating gameserverset %s", gsSetCopy.ObjectMeta.Name)
-			}
-			c.recorder.Eventf(fleet, corev1.EventTypeNormal, "ScalingGameServerSet",
-				"Scaling inactive GameServerSet %s from %d to %d", gsSetCopy.ObjectMeta.Name, gsSet.Spec.Replicas, gsSetCopy.Spec.Replicas)
-
-			// let's update just one at a time, slightly slower, but a simpler solution that doesn't require us
-			// to make sure we don't overshoot the amount that is being shutdown at any given point and time
-			break
-		}
-	}
-	return nil
+	return c.rollingUpdateRestFixedOnReady(ctx, fleet, active, rest)
 }
 
 // updateFleetStatus gets the GameServerSets for this Fleet and then

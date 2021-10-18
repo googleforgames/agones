@@ -22,6 +22,7 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -385,8 +386,16 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	// keep crashing, until we move to Unhealthy. Solves potential issues with controller Informer cache
 	// race conditions in which it has yet to see a GameServer is Ready before the crash.
+	var stop int32 = 0
+	defer func() {
+		atomic.StoreInt32(&stop, 1)
+	}()
 	go func() {
 		for {
+			if atomic.LoadInt32(&stop) > 0 {
+				l.Info("UDP Crash stop signal received. Stopping.")
+				return
+			}
 			conn, err := net.Dial("udp", address)
 			assert.NoError(t, err)
 			defer conn.Close() // nolint: errcheck
@@ -438,7 +447,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 
 	assert.Equal(t, readyGs.Status.State, agonesv1.GameServerStateReady)
 
-	//confirm delete works, because if the finalisers don't get removed, this won't work.
+	// confirm delete works, because if the finalisers don't get removed, this won't work.
 	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 
