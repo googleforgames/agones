@@ -51,6 +51,11 @@ const connect = async (timeout, enableAlpha) => {
 	players: ${result.status.players.count}/${result.status.players.capacity} [${result.status.players.idsList}]`;
 			}
 			console.log(output);
+		}, (error) => {
+			console.error('Watch ERROR', error);
+			clearInterval(healthInterval);
+			clearInterval(lifetimeInterval);
+			process.exit(0);
 		});
 
 		await sleep(10000);
