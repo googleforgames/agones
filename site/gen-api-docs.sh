@@ -16,6 +16,13 @@
 
 set -ex
 
+#Reinstall Go 1.15 since the version upon it won't work with gen-crd-api-reference-docs
+rm -rf /usr/local/go
+GO_VERSION=1.15.13
+cd /usr/local
+wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
+tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz
+
 export GOPROXY=http://proxy.golang.org
 echo "using go proxy as a workaround for git.agache.org being down: $GOPROXY"
 
