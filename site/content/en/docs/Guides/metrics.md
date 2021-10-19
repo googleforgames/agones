@@ -20,8 +20,6 @@ If you are running a [Prometheus](https://prometheus.io/) instance you just need
 {{% feature expiryVersion="1.19.0" %}}
 ### Prometheus Operator
 
-### Prometheus Operator
-
 If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, make sure to add a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/api.md#servicemonitorspec) to discover Agones metrics as shown below:
 
 ```yaml
