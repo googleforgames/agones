@@ -23,6 +23,10 @@ metadata:
     chart: {{ template "agones.chart" $ }}
     release: {{ $.Release.Name }}
     heritage: {{ $.Release.Service }}
+{{- if hasKey $.Values.agones.serviceaccount.sdk.annotations . }}
+  annotations:
+{{- get $.Values.agones.serviceaccount.sdk.annotations . | toYaml | nindent 4 }}
+{{- end }}
 ---
 {{- end }}
 {{- if .Values.agones.rbacEnabled }}
