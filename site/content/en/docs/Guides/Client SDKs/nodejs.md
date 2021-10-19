@@ -61,11 +61,13 @@ in {{< ghlink href="proto/sdk/sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
 let result = await agonesSDK.getGameServer();
 ```
 
-To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `watchGameServer(callback)`. The callback will be called with a parameter matching the result of `getGameServer()`.
+To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `watchGameServer(callback, errorCallback)`. The callback will be called with a parameter matching the result of `getGameServer()`. The error callback is optional and if provided will receive an error whenever emitted from the watch stream. 
 
 ```javascript
 agonesSDK.watchGameServer((result) => {
 	console.log('watch', result);
+}, (error) => {
+	console.error('error', error);
 });
 ```
 
