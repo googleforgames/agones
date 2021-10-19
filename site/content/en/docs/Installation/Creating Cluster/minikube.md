@@ -34,14 +34,15 @@ may be required for your platform of choice.
 You may need to increase the `--cpu` or `--memory` values for your minikube instance, depending on what resources are 
 available on the host and/or how many GameServers you wish to run locally.
 
-Depending on your OS, you may also need to change the `--vm-driver` 
+Depending on your Operating System, you may also need to change the `--vm-driver` 
 ([driver list](https://minikube.sigs.k8s.io/docs/drivers/)) to enable `GameServer` connectivity with or without 
 some workarounds listed below. 
 {{< /alert >}}
 
 ### Known working drivers
 
-Other OS's and drivers may work, but at this stage have not been verified. 
+Other operating systems and drivers may work, but at this stage have not been verified to work with UDP connections 
+via Agones exposed ports.
 
 **Linux**
 * kvm2
@@ -51,8 +52,9 @@ Other OS's and drivers may work, but at this stage have not been verified.
 * Hyperkit
 
 **Windows**
-* hyper-v (might need [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) 
-  for WSL support)
+* hyper-v (might need
+  [this blog post](https://blog.thepolyglotprogrammer.com/setting-up-kubernetes-on-wsl-to-work-with-minikube-on-windows-10-90dac3c72fa1)
+  and/or [this comment](https://github.com/microsoft/WSL/issues/4288#issuecomment-652259640) for WSL support)
 
 _If you have successfully tested with other platforms and drivers, please click "edit this page" in the top right hand 
 side and submit a pull request to let us know._
@@ -100,14 +102,15 @@ To connect to a different `GameServer`, run `kubectl edit service agones-gameser
 value to point to the new `GameServer` instance and/or the `${GAMESERVER_CONTAINER_PORT}` value as appropriate.
 
 {{< alert title="Warning" color="warning">}}
-`minikube tunnel` does not support UDP ([Github Issue](https://github.com/kubernetes/minikube/issues/12362)) on some 
-combination of OS platforms and drivers.
+`minikube tunnel` ([docs](https://minikube.sigs.k8s.io/docs/handbook/accessing/)) 
+does not support UDP ([Github Issue](https://github.com/kubernetes/minikube/issues/12362)) on some combination of 
+operating system, platforms and drivers, but is required when using the `Service` workaround.
 {{< /alert >}}
 
 ### Use a different driver
 
 If you cannot connect through the `Service`or use other workarounds, you may want to try a different
-[minikube driver](https://minikube.sigs.k8s.io/docs/drivers/), and if that doesn't work connection via UDP may not 
+[minikube driver](https://minikube.sigs.k8s.io/docs/drivers/), and if that doesn't work, connection via UDP may not 
 be possible with minikube, and you may want to try either a 
 [different local Kubernetes tool](https://kubernetes.io/docs/tasks/tools/) or use a cloud hosted Kubernetes cluster.
 
