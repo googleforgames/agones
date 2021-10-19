@@ -38,6 +38,7 @@ agones:
       annotations: {}
     sdk:
       name: agones-sdk
+      annotations: {}
   createPriorityClass: true
   priorityClassName: agones-system
   controller:

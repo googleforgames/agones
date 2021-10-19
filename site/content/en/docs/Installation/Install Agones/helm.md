@@ -197,6 +197,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
+| `agones.serviceaccount.sdk.annotations`             | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces | `{}`                   |
 |                       |                           |                            |
 {{% /feature %}}
 
