@@ -88,7 +88,7 @@ func main() {
 	mux := gwruntime.NewServeMux()
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", ctlConf.Address, ctlConf.HTTPPort),
-		Handler: wsproxy.WebsocketProxy(mux),
+		Handler: wsproxy.WebsocketProxy(healthCheckWrapper(mux)),
 	}
 	defer httpServer.Close() // nolint: errcheck
 
@@ -317,4 +317,17 @@ type config struct {
 	TestSdkName string
 	GRPCPort    int
 	HTTPPort    int
+}
+
+// healthCheckWrapper ensures that an http 400 response is returned
+// if the healthcheck receives a request with an empty post body
+func healthCheckWrapper(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" && r.Body == http.NoBody {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
 }
