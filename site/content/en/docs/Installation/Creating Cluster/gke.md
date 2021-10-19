@@ -25,9 +25,9 @@ Take the following steps to enable the Kubernetes Engine API:
 
 To complete this quickstart, we can use either [Google Cloud Shell][cloud-shell] or a local shell.
 
-Google Cloud Shell is a shell environment for managing resources hosted on Google Cloud Platform (GCP). Cloud Shell comes preinstalled with the [gcloud][gcloud] and [kubectl][kubectl] command-line tools. `gcloud` provides the primary command-line interface for GCP, and `kubectl` provides the command-line interface for running commands against Kubernetes clusters.
+Google Cloud Shell is a shell environment for managing resources hosted on Google Cloud Platform (GCP). Cloud Shell comes preinstalled with the [`gcloud`][gcloud] and [`kubectl`][kubectl] command-line tools. `gcloud` provides the primary command-line interface for GCP, and `kubectl` provides the command-line interface for running commands against Kubernetes clusters.
 
-If you prefer using your local shell, you must install the gcloud and kubectl command-line tools in your environment.
+If you prefer using your local shell, you must install the `gcloud` and `kubectl` command-line tools in your environment.
 
 [cloud-shell]: https://cloud.google.com/shell/
 [gcloud]: https://cloud.google.com/sdk/gcloud/
@@ -41,7 +41,7 @@ To launch Cloud Shell, perform the following steps:
 1. From the top-right corner of the console, click the
    **Activate Google Cloud Shell** button: ![cloud shell](../../../../images/cloud-shell.png)
 1. A Cloud Shell session opens inside a frame at the bottom of the console. Use this shell to run `gcloud` and `kubectl` commands.
-1. Set a compute zone in your geographical region with the following command. The compute zone will be something like `us-west1-a`. A full list can be found [here][zones].
+1. Set a compute zone in your geographical region with the following command. An example compute zone is `us-west1-a`. A full list can be found at [Available regions and zones][zones].
    ```bash
    gcloud config set compute/zone [COMPUTE_ZONE]
    ```
@@ -68,7 +68,7 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 ## Creating the cluster
 
-A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*: [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
+A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*. In Google Kubernetes Engine, nodes are [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
 
 ```bash
 gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-version %}} \
@@ -80,7 +80,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-versio
 ```
 
 {{< alert title="Note" color="info">}}
-If you're creating a cluster to run Windows game servers you'll also need to add `--enable-ip-alias`.
+If you're creating a cluster to run Windows game servers you'll also need to add `--enable-ip-alias` to create Windows node pools. For this flag, Use [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes-based networking.
 {{< /alert >}}
 
 Flag explanations:
@@ -91,10 +91,9 @@ Flag explanations:
 * num-nodes: The number of nodes to be created in each of the cluster's zones. Default: 4. Depending on the needs of your game, this parameter should be adjusted.
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
-* enable-ip-alias: Use [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes based networking. This is required to create windows node pools.
 
-_Optional_: Create a dedicated node pool for the Agones controllers. If you choose to skip this step, the Agones
-controllers will share the default node pool with your game servers which is fine for kicking the tires but is not
+_Optional_: Create a dedicated node pool for the Agones controllers. If you skip this step, the Agones
+controllers will share the default node pool with your game servers, which is fine for experimentation but not
 recommended for a production deployment.
 
 ```bash
@@ -126,13 +125,13 @@ Flag explanations:
 * node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
 * num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
 
-_Optional_: Create a dedicated Windows node pool for game servers. If you need to run game servers on Windows you'll
-need to create a dedicated node pool for it. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
+_Optional_: If you run game servers on Windows, you
+need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
 game servers.
 
 {{< alert title="Warning" color="warning">}}
-Running `GameServers` on Windows nodes is currently Alpha, and any feedback
-would be appreciated.
+Running `GameServers` on Windows nodes is currently Alpha. Feel free to file feedback
+through [Github issues](https://github.com/googleforgames/agones/issues).
 {{< /alert >}}
 
 ```bash
