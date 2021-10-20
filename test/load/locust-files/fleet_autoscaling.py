@@ -59,7 +59,7 @@ class UserBehavior(TaskSet):
                                         "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/simple-game-server:0.3")
+                                            "/simple-game-server:0.4")
                                     }
                                 ]
                             }
