@@ -29,6 +29,7 @@ spec:
   ports:
     - name: webhooks
       port: 443
-      targetPort: 8081
+      targetPort: webhooks
     - name: web
       port: {{ .Values.agones.controller.http.port }}
+      targetPort: http
