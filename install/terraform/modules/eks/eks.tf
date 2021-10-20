@@ -14,11 +14,16 @@
 
 
 terraform {
-  required_version = ">= 0.12.6"
+  required_version = ">= 1.0.0"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
 }
 
 provider "aws" {
-  version = ">= 2.55.0"
   region  = var.region
 }
 
@@ -58,7 +63,7 @@ resource "aws_security_group" "worker_group_mgmt_one" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "2.47.0"
+  version = "~> 3.0"
 
   name                 = "test-vpc-lt"
   cidr                 = "10.0.0.0/16"
