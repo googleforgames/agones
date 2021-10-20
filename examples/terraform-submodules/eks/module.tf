@@ -17,7 +17,7 @@
 //  terraform apply [-var agones_version="1.17.0"]
 
 terraform {
-  required_version = ">= 1.0.0"  
+  required_version = ">= 1.0.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
