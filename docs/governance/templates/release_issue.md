@@ -29,6 +29,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If release candidate add the label `feature-freeze-do-not-merge` to any feature pull requests.
 - [ ] `git checkout main && git pull --rebase upstream main`
 - [ ] If full release, run `make site-deploy SERVICE={version}-1`, (replace . with -)
+   - For example, if you are creating the 1.18.0 release, then you would deploy the 1-17-0 service (release minus one, and then replace dots with dashes).
 - [ ] Run `make gen-changelog` to generate the CHANGELOG.md (if release candidate 
   `make gen-changelog RELEASE_VERSION={version}-rc`). You will need your 
   [Github Personal Access Token](https://github.com/settings/tokens) for this.
