@@ -198,12 +198,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 | `agones.serviceaccount.sdk.annotations`             | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces | `{}`                   |
-| `agones.metrics.serviceMonitor.enabled`             | Enables ServiceMonitor installation for metrics auto-discovery with prometheus-operator         | `false`                 |
 | `agones.metrics.serviceMonitor.interval`            | Default scraping interval for ServiceMonitor                                                    | `30s`                 |
-| `agones.allocator.serviceInternal.name`                    | Second Service name for the allocator                                                           | `agones-allocator-service`     |
-| `agones.allocator.serviceInternal.annotations`             | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
-| `agones.allocator.serviceInternal.http.port`               | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
-| `agones.allocator.serviceInternal.http.portName`           | The name of exposed port                                                                        | `http`                  |
+| `agones.allocator.serviceMetrics.name`              | Second Service name for the allocator                                                           | `agones-allocator-metrics-service`     |
+| `agones.allocator.serviceMetrics.annotations`       | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
+| `agones.allocator.serviceMetrics.http.port`         | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
+| `agones.allocator.serviceInternal.http.portName`    | The name of exposed port                                                                        | `http`                  |
 |                       |                           |                            |
 {{% /feature %}}
 

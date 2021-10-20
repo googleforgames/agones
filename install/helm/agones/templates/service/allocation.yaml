@@ -63,12 +63,11 @@ spec:
 {{ toYaml .Values.agones.allocator.service.loadBalancerSourceRanges | indent 4 }}
   {{- end }}
 {{- end }}
-{{- if .Values.agones.allocator.serviceInternal.enabled }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.agones.allocator.serviceInternal.name }}
+  name: {{ .Values.agones.allocator.serviceMetrics.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     multicluster.agones.dev/role: allocator
@@ -76,19 +75,18 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.allocator.serviceInternal.annotations }}
+{{- if .Values.agones.allocator.serviceMetrics.annotations }}
   annotations:
-{{ toYaml .Values.agones.allocator.serviceInternal.annotations | indent 4 }}
+{{ toYaml .Values.agones.allocator.serviceMetrics.annotations | indent 4 }}
 {{- end }}
 spec:
   selector:
     multicluster.agones.dev/role: allocator
   ports:
-    - port: {{ .Values.agones.allocator.serviceInternal.http.port }}
-      name: {{ .Values.agones.allocator.serviceInternal.http.portName }}
+    - port: {{ .Values.agones.allocator.serviceMetrics.http.port }}
+      name: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
       targetPort: 8080
       protocol: TCP
-{{- end }}
 {{- if and (.Values.agones.metrics.prometheusEnabled) (.Values.agones.metrics.serviceMonitor.enabled) }}
 ---
 apiVersion: monitoring.coreos.com/v1
@@ -107,7 +105,7 @@ spec:
     matchLabels:
       multicluster.agones.dev/role: allocator
   endpoints:
-    - port: {{ .Values.agones.allocator.serviceInternal.http.portName }}
+    - port: {{ .Values.agones.allocator.serviceMetrics.http.portName }}
       path: /metrics
       interval: {{ .Values.agones.metrics.serviceMonitor.interval }}
 {{- end }}
