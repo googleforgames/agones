@@ -50,18 +50,13 @@ linters:
     - deadcode
     - megacheck
     - govet
-    - golint
-    - interfacer
+    - revive
     - unconvert
     - dupl
     - goconst
     - gocritic
     - gocyclo
     - goimports
-    - interfacer
-    - maligned
-    - megacheck
-    - scopelint
     - staticcheck
     - structcheck
     - misspell
