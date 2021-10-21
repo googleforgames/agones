@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.3
+autoscaler_webhook_tag = $(REPOSITORY)/autoscaler-webhook:0.4
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -40,6 +40,10 @@ root_path = $(realpath $(project_path)/../..)
 # Build a docker image for the server, and tag it
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(autoscaler_webhook_tag) .
+
+# Push the docker image
+push: build
+	docker push $(autoscaler_webhook_tag)
 
 # check if hosted on Google Cloud Registry
 gcr-check:
