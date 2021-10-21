@@ -61,7 +61,7 @@ in {{< ghlink href="proto/sdk/sdk.proto" >}}`sdk.proto`{{< /ghlink >}}.
 let result = await agonesSDK.getGameServer();
 ```
 
-To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `watchGameServer(callback{{% feature expiryVersion="1.19.0" %}}, errorCallback{{% /feature %}})`. The callback will be called with a parameter matching the result of `getGameServer()`.{{% feature publishVersion="1.19.0" %}} The error callback is optional and if provided will receive an error whenever emitted from the watch stream.{{% /feature %}}
+To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserverfunctiongameserver" >}}) as they happen, call `watchGameServer(callback{{% feature publishVersion="1.19.0" %}}, errorCallback{{% /feature %}})`. The callback will be called with a parameter matching the result of `getGameServer()`.{{% feature publishVersion="1.19.0" %}} The error callback is optional and if provided will receive an error whenever emitted from the watch stream.{{% /feature %}}
 
 ```javascript
 agonesSDK.watchGameServer((result) => {
