@@ -66,10 +66,8 @@ To get [updates on the backing GameServer]({{< relref "_index.md#watchgameserver
 ```javascript
 agonesSDK.watchGameServer((result) => {
 	console.log('watch', result);
-{{% feature publishVersion="1.19.0" %}}
-}, (error) => {
-	console.error('error', error);
-{{% /feature %}}
+{{% feature publishVersion="1.19.0" %}}}, (error) => {
+	console.error('error', error);{{% /feature %}}
 });
 ```
 
