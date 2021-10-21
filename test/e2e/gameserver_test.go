@@ -386,7 +386,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	// keep crashing, until we move to Unhealthy. Solves potential issues with controller Informer cache
 	// race conditions in which it has yet to see a GameServer is Ready before the crash.
-	var stop int32 = 0
+	var stop int32
 	defer func() {
 		atomic.StoreInt32(&stop, 1)
 	}()
@@ -887,7 +887,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: gcr.io/agones-images/simple-game-server:0.3
+          image: gcr.io/agones-images/simple-game-server:0.4
 `
 	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0644)
 	require.NoError(t, err)
