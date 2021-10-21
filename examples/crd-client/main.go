@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -109,7 +110,8 @@ func main() {
 			},
 		},
 	}
-	newGS, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Create(gs)
+	ctx := context.Background()
+	newGS, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
 	if err != nil {
 		logrus.Fatal("Unable to create GameServer: %v", err)
 	}
@@ -117,7 +119,7 @@ func main() {
 
 	if viper.GetBool(isHelmTest) {
 		err = wait.PollImmediate(1*time.Second, 60*time.Second, func() (bool, error) {
-			checkGs, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Get(newGS.Name, metav1.GetOptions{})
+			checkGs, err := agonesClient.AgonesV1().GameServers(gs.Namespace).Get(ctx, newGS.Name, metav1.GetOptions{})
 
 			if err != nil {
 				logrus.WithError(err).Warn("error retrieving gameserver")
@@ -139,7 +141,7 @@ func main() {
 			logrus.Fatalf("Wait GameServer to become Ready failed: %v", err)
 		}
 
-		err = agonesClient.AgonesV1().GameServers(gs.Namespace).Delete(newGS.ObjectMeta.Name, nil)
+		err = agonesClient.AgonesV1().GameServers(gs.Namespace).Delete(ctx, newGS.ObjectMeta.Name, metav1.DeleteOptions{})
 		if err != nil {
 			logrus.Fatalf("Unable to delete GameServer: %v", err)
 		}

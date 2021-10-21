@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y curl tar xz-utils
 
 COPY main.go .
 COPY go.mod .
+RUN go mod tidy
 RUN go build -o wrapper .
 
 # compile stk

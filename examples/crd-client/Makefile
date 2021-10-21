@@ -38,7 +38,7 @@ server_tag = $(REPOSITORY)/crd-client:0.6
 build:
 	docker build --tag=$(server_tag) .
 
-push:
+push: build
 	docker push $(server_tag)
 
 # check if hosted on Google Cloud Registry

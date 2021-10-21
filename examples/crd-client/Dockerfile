@@ -17,7 +17,7 @@ FROM golang:1.17.2 as builder
 WORKDIR /go/src/crd-client
 
 COPY ./main.go .
-COPY ./go.mod ./
+RUN go mod init && go mod tidy
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o client .
 
 # Create the final image that will run the webhook server for FleetAutoscaler webhook policy

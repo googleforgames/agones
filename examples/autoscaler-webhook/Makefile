@@ -41,6 +41,10 @@ root_path = $(realpath $(project_path)/../..)
 build:
 	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(autoscaler_webhook_tag) .
 
+# Push the docker image
+push: build
+	docker push $(autoscaler_webhook_tag)
+
 # check if hosted on Google Cloud Registry
 gcr-check:
 	gcloud container images describe $(autoscaler_webhook_tag)

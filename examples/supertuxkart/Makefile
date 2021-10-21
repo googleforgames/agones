@@ -40,6 +40,10 @@ image_tag = $(REPOSITORY)/supertuxkart-example:0.4
 build:
 	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
 
+# Push the docker image
+push: build
+	docker push $(image_tag)
+
 # Run tests
 test:
 	go test -v ./...
