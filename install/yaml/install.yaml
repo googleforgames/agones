@@ -13150,9 +13150,10 @@ spec:
   ports:
     - name: webhooks
       port: 443
-      targetPort: 8081
+      targetPort: webhooks
     - name: web
       port: 8080
+      targetPort: http
 ---
 # Source: agones/templates/service/allocation.yaml
 # Copyright 2019 Google LLC All Rights Reserved.
@@ -13189,6 +13190,27 @@ spec:
       targetPort: 8443
       protocol: TCP
   type: LoadBalancer
+---
+# Source: agones/templates/service/allocation.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: agones-allocator-metrics-service
+  namespace: agones-system
+  labels:
+    multicluster.agones.dev/role: allocator
+    app: agones
+    chart: agones-1.19.0-dev
+    release: agones-manual
+    heritage: Helm
+spec:
+  selector:
+    multicluster.agones.dev/role: allocator
+  ports:
+    - port: 8080
+      name: http
+      targetPort: 8080
+      protocol: TCP
 ---
 # Source: agones/templates/controller.yaml
 # Copyright 2018 Google LLC All Rights Reserved.
@@ -13311,10 +13333,15 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-controller"
+        ports:
+        - name: webhooks
+          containerPort: 8081
+        - name: http
+          containerPort: 8080
         livenessProbe:
           httpGet:
             path: /live
-            port: 8080
+            port: http
           initialDelaySeconds: 3
           periodSeconds: 3
           failureThreshold: 3

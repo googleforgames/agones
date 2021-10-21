@@ -386,7 +386,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	// keep crashing, until we move to Unhealthy. Solves potential issues with controller Informer cache
 	// race conditions in which it has yet to see a GameServer is Ready before the crash.
-	var stop int32 = 0
+	var stop int32
 	defer func() {
 		atomic.StoreInt32(&stop, 1)
 	}()

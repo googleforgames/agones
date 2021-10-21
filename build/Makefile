@@ -319,10 +319,11 @@ install: CRD_CLEANUP := true
 install: LOG_LEVEL := "debug"
 install: EXTERNAL_IP ?= $(shell $(DOCKER_RUN) kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
+install: SERVICE_MONITOR := false
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
 	$(DOCKER_RUN) \
-		helm upgrade --install --atomic --namespace=agones-system \
+		helm upgrade --install --atomic --wait --namespace=agones-system \
 		--create-namespace \
 		--set agones.image.tag=$(VERSION),agones.image.registry=$(REGISTRY) \
 		--set agones.image.controller.pullPolicy=$(IMAGE_PULL_POLICY),agones.image.sdk.alwaysPull=$(ALWAYS_PULL_SIDECAR) \
@@ -333,6 +334,7 @@ install: $(ensure-build-image) install-custom-pull-secret
 		--set agones.crds.cleanupOnDelete=$(CRD_CLEANUP) \
 		--set agones.featureGates=$(FEATURE_GATES) \
 		--set agones.allocator.service.loadBalancerIP=$(EXTERNAL_IP) \
+		--set agones.metrics.serviceMonitor.enabled=$(SERVICE_MONITOR) \
 		$(HELM_ARGS) \
 		agones $(mount_path)/install/helm/agones/
 
@@ -552,6 +554,26 @@ setup-grafana:
 uninstall-grafana: $(ensure-build-image)
 	$(DOCKER_RUN) helm uninstall grafana --namespace=metrics
 	$(DOCKER_RUN) kubectl delete -f $(mount_path)/build/grafana/
+
+# setup prometheus-stack in the current cluster by default Persistent Volume Claims are requested.
+setup-prometheus-stack: PVC ?= true
+setup-prometheus-stack: PV_SIZE ?= 64Gi
+setup-prometheus-stack: SCRAPE_INTERVAL=30s
+setup-prometheus-stack: PASSWORD ?= admin
+setup-prometheus-stack:
+	$(DOCKER_RUN) helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	$(DOCKER_RUN) helm repo update
+	$(DOCKER_RUN) helm upgrade prometheus-stack prometheus-community/kube-prometheus-stack --install --wait --version 19.0.2 \
+ 		--namespace monitoring --create-namespace \
+		--set prometheus.server.global.scrape_interval=$(SCRAPE_INTERVAL) \
+		--set prometheus.server.persistentVolume.enabled=$(PVC) \
+		--set prometheus.server.persistentVolume.size=$(PV_SIZE) \
+		--set grafana.adminPassword=$(PASSWORD) \
+		$(HELM_ARGS) -f $(mount_path)/build/prometheus-stack.yaml
+
+uninstall-prometheus-stack: $(ensure-build-image)
+	$(DOCKER_RUN) \
+		helm uninstall prometheus-stack --namespace=monitoring
 
 helm-repo-update:
 	$(DOCKER_RUN) helm repo update

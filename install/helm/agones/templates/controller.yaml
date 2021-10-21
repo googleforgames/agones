@@ -42,7 +42,7 @@ spec:
 {{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}
         prometheus.io/scrape: "true"
-        prometheus.io/port: {{ .Values.agones.controller.http.port | quote }}
+        prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
 {{- end }}
 {{- if .Values.agones.controller.annotations }}
@@ -129,10 +129,15 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTAINER_NAME
           value: "agones-controller"
+        ports:
+        - name: webhooks
+          containerPort: 8081
+        - name: http
+          containerPort: 8080
         livenessProbe:
           httpGet:
             path: /live
-            port: {{ .Values.agones.controller.http.port }}
+            port: http
           initialDelaySeconds: {{ .Values.agones.controller.healthCheck.initialDelaySeconds }}
           periodSeconds: {{ .Values.agones.controller.healthCheck.periodSeconds }}
           failureThreshold: {{ .Values.agones.controller.healthCheck.failureThreshold }}
