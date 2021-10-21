@@ -28,13 +28,13 @@ variable "disk_size" {
 
 # VMSS is used, so it is unpredictable how NICs will be given to VMs
 # So let Azure to create NICs with Public IPs as gameservers require
-# Azure Managment SDK can be used to obtain these IPs and map Agones GameServers internal IPs to public 
+# Azure Managment SDK can be used to obtain these IPs and map Agones GameServers internal IPs to public
 variable "enable_node_public_ip" {
   default = true
 }
 
 variable "kubernetes_version" {
-  default = "1.20.7"
+  default = "1.21.2"
 }
 
 variable "machine_type" {

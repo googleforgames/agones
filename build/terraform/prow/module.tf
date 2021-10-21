@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-provider "google" {
-  version = "~> 2.10"
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    google = {
+      source = "google"
+      version = "~> 3.88"
+    }
+  }
 }
 
 variable "project" {
@@ -25,7 +31,7 @@ resource "google_container_cluster" "prow-build-cluster" {
   project            = var.project
   location           = "us-west1-c"
   description        = "Prow cluster to run tests for Agones"
-  min_master_version = "1.20"
+  min_master_version = "1.21"
   initial_node_count = 8
   node_config {
     machine_type = "e2-standard-4"

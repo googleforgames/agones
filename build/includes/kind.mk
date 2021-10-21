@@ -66,6 +66,10 @@ kind-setup-prometheus:
 kind-setup-grafana:
 	$(MAKE) setup-grafana DOCKER_RUN_ARGS="--network=host" PVC=false
 
+kind-setup-prometheus-stack:
+	$(MAKE) setup-prometheus-stack DOCKER_RUN_ARGS="--network=host" PVC=false \
+		HELM_ARGS="--set prometheus.server.resources.requests.cpu=0,prometheus.server.resources.requests.memory=0"
+
 # kind port forwarding controller web
 kind-controller-portforward:
 	$(MAKE) controller-portforward DOCKER_RUN_ARGS="--network=host"

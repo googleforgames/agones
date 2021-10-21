@@ -14,7 +14,7 @@
 
 
 terraform {
-  required_version = ">= 0.12.6"
+  required_version = ">= 1.0.0"
 }
 
 data "google_client_config" "default" {}
@@ -29,7 +29,7 @@ locals {
   initialNodeCount        = lookup(var.cluster, "initialNodeCount", "4")
   network                 = lookup(var.cluster, "network", "default")
   subnetwork              = lookup(var.cluster, "subnetwork", "")
-  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.20")
+  kubernetesVersion       = lookup(var.cluster, "kubernetesVersion", "1.21")
   windowsInitialNodeCount = lookup(var.cluster, "windowsInitialNodeCount", "0")
   windowsMachineType      = lookup(var.cluster, "windowsMachineType", "e2-standard-4")
 }

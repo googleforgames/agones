@@ -1377,7 +1377,7 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		err = sc.Run(sdkCtx)
+		err := sc.Run(sdkCtx)
 		assert.Nil(t, err)
 		wg.Done()
 	}()
