@@ -46,23 +46,23 @@ output:
 
 linters:
   enable:
-    - exportloopref
+    - bodyclose
     - deadcode
-    - megacheck
-    - govet
-    - revive
-    - unconvert
     - dupl
+    - exportloopref
     - goconst
     - gocritic
     - gocyclo
     - goimports
+    - govet
+    - megacheck
+    - misspell
+    - nakedret
+    - revive
     - staticcheck
     - structcheck
-    - misspell
+    - unconvert
     - unparam
-    - nakedret
-    - bodyclose
 
 linters-settings:
   gocritic:
