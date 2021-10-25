@@ -80,7 +80,7 @@ gcloud container clusters create [CLUSTER_NAME] --cluster-version={{% k8s-versio
 ```
 
 {{< alert title="Note" color="info">}}
-If you're creating a cluster to run Windows game servers you'll also need to add `--enable-ip-alias` to create Windows node pools. For this flag, Use [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes-based networking.
+If you're creating a cluster to run Windows game servers, you need to add the `--enable-ip-alias` flag to create the cluster with [Alias IP ranges](https://cloud.google.com/vpc/docs/alias-ip) instead of routes-based networking.
 {{< /alert >}}
 
 Flag explanations:
