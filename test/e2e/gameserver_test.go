@@ -36,6 +36,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -203,7 +204,8 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 
 	gs := framework.DefaultGameServer(framework.Namespace)
 	// choose port out of the minport/maxport range
-	gs.Spec.Ports[0].HostPort = 5555
+	// also rand it, just in case there are still previous static GameServers floating around.
+	gs.Spec.Ports[0].HostPort = int32(rand.IntnRange(4000, 5000))
 	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
 
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
@@ -212,7 +214,7 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 		// using only gameserver node pool with no taints
 		if len(n.Spec.Taints) == 0 {
 			_, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs.DeepCopy())
-			assert.Nil(t, err)
+			require.NoError(t, err)
 		}
 	}
 
