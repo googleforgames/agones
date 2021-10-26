@@ -72,13 +72,13 @@ const (
 	// timestamp of the most recent allocation.
 	LastAllocatedAnnotationKey = "agones.dev/last-allocated"
 
-	secretClientCertName       = "tls.crt"
-	secretClientKeyName        = "tls.key"
-	secretCACertName           = "ca.crt"
-	allocatorPort              = "443"
-	maxBatchQueue              = 100
-	maxBatchBeforeRefresh      = 100
-	batchWaitTime              = 500 * time.Millisecond
+	secretClientCertName  = "tls.crt"
+	secretClientKeyName   = "tls.key"
+	secretCACertName      = "ca.crt"
+	allocatorPort         = "443"
+	maxBatchQueue         = 100
+	maxBatchBeforeRefresh = 100
+	batchWaitTime         = 500 * time.Millisecond
 )
 
 var allocationRetry = wait.Backoff{
