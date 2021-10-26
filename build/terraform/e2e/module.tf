@@ -16,8 +16,18 @@
 // Run:
 //  terraform apply -var project="<YOUR_GCP_ProjectID>"
 
-provider "google" {
-  version = "~> 2.10"
+terraform {
+  required_version = ">= 1.0.0"
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "~> 3.88"
+    }
+    helm = {
+      source = "hashicorp/helm"
+      version = "~> 2.3"
+    }
+  }
 }
 
 variable "project" {
@@ -39,9 +49,7 @@ module "gke_cluster" {
 }
 
 provider "helm" {
-  version = "~> 1.2"
   kubernetes {
-    load_config_file       = false
     host                   = module.gke_cluster.host
     token                  = module.gke_cluster.token
     cluster_ca_certificate = module.gke_cluster.cluster_ca_certificate
