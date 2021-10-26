@@ -56,6 +56,7 @@ func TestSidecarRun(t *testing.T) {
 
 	fixtures := map[string]struct {
 		f        func(*SDKServer, context.Context)
+		clock    clock.Clock
 		expected expected
 	}{
 		"ready": {
@@ -114,11 +115,10 @@ func TestSidecarRun(t *testing.T) {
 		},
 		"allocated": {
 			f: func(sc *SDKServer, ctx context.Context) {
-				fc := clock.NewFakeClock(now)
-				sc.clock = fc
 				_, err := sc.Allocate(ctx, &sdk.Empty{})
 				assert.NoError(t, err)
 			},
+			clock: clock.NewFakeClock(now),
 			expected: expected{
 				state:      agonesv1.GameServerStateAllocated,
 				recordings: []string{string(agonesv1.GameServerStateAllocated)},
@@ -186,6 +186,9 @@ func TestSidecarRun(t *testing.T) {
 
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
+			if v.clock != nil {
+				sc.clock = v.clock
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
