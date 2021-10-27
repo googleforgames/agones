@@ -202,28 +202,28 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	}
 	assert.True(t, len(nodes.Items) > 0)
 
-	gs := framework.DefaultGameServer(framework.Namespace)
+	template := framework.DefaultGameServer(framework.Namespace)
 	// choose port out of the minport/maxport range
 	// also rand it, just in case there are still previous static GameServers floating around.
-	gs.Spec.Ports[0].HostPort = int32(rand.IntnRange(4000, 5000))
-	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
+	template.Spec.Ports[0].HostPort = int32(rand.IntnRange(4000, 5000))
+	template.Spec.Ports[0].PortPolicy = agonesv1.Static
 
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	// one successful static port GameServer
+	gs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, template.DeepCopy())
+	require.NoError(t, err)
 
-	for _, n := range nodes.Items {
-		// using only gameserver node pool with no taints
-		if len(n.Spec.Taints) == 0 {
-			_, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs.DeepCopy())
-			require.NoError(t, err)
-		}
+	// now let's create the same one, but this time, require it be on the same node.
+	newGs := template.DeepCopy()
+
+	if newGs.Spec.Template.Spec.NodeSelector == nil {
+		newGs.Spec.Template.Spec.NodeSelector = map[string]string{}
 	}
+	newGs.Spec.Template.Spec.NodeSelector["kubernetes.io/hostname"] = gs.Status.NodeName
+	newGs, err = gameServers.Create(ctx, newGs, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	newGs, err := gameServers.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
-	if err != nil {
-		assert.FailNow(t, "Failed to create a gameserver", err.Error())
-	}
-
-	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, time.Minute)
+	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
 	assert.NoError(t, err)
 }
 
