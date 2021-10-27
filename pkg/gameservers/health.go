@@ -112,6 +112,7 @@ func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 	for _, cond := range pod.Status.Conditions {
 		if cond.Type == corev1.PodScheduled && cond.Reason == corev1.PodReasonUnschedulable {
 			if strings.Contains(cond.Message, "free ports") {
+				hc.baseLogger.WithField("gs", pod.ObjectMeta.Name).WithField("conditions", pod.Status.Conditions).Debug("Pod Unschedulable With No Free Ports")
 				return true
 			}
 		}
@@ -122,17 +123,25 @@ func (hc *HealthController) unschedulableWithNoFreePorts(pod *corev1.Pod) bool {
 // evictedPod checks if the Pod was Evicted
 // could be caused by reaching limit on Ephemeral storage
 func (hc *HealthController) evictedPod(pod *corev1.Pod) bool {
-	return pod.Status.Reason == "Evicted"
+	evicted := pod.Status.Reason == "Evicted"
+	if evicted {
+		hc.baseLogger.WithField("gs", pod.ObjectMeta.Name).WithField("status", pod.Status).Debug("Pod Evicted")
+	}
+	return evicted
 }
 
-// failedContainer checks each container, and determines if there was a failed
-// container
+// failedContainer checks each container, and determines if the main gameserver
+// container has failed
 func (hc *HealthController) failedContainer(pod *corev1.Pod) bool {
 	container := pod.Annotations[agonesv1.GameServerContainerAnnotation]
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == container {
 			// sometimes on a restart, the cs.State can be running and the last state will be merged
-			return cs.State.Terminated != nil || cs.LastTerminationState.Terminated != nil
+			failed := cs.State.Terminated != nil || cs.LastTerminationState.Terminated != nil
+			if failed {
+				hc.baseLogger.WithField("gs", pod.ObjectMeta.Name).WithField("containerStatuses", pod.Status.ContainerStatuses).WithField("container", container).Debug("Container Failed")
+			}
+			return failed
 		}
 	}
 	return false
@@ -218,6 +227,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 	if err != nil {
 		// Pod doesn't exist, so the GameServer is definitely not healthy
 		if k8serrors.IsNotFound(err) {
+			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).Debug("skipUnhealthy: Could not find Pod")
 			return false, nil
 		}
 		// if it's something else, go back into the queue
@@ -228,6 +238,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 		return false, nil
 	}
 	if gs.IsBeforeReady() {
+		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).Debug("skipUnhealthy: Is Before Ready. Checking failed container")
 		return hc.failedContainer(pod), nil
 	}
 
