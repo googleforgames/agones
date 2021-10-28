@@ -36,6 +36,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -201,27 +202,28 @@ func TestUnhealthyGameServersWithoutFreePorts(t *testing.T) {
 	}
 	assert.True(t, len(nodes.Items) > 0)
 
-	gs := framework.DefaultGameServer(framework.Namespace)
+	template := framework.DefaultGameServer(framework.Namespace)
 	// choose port out of the minport/maxport range
-	gs.Spec.Ports[0].HostPort = 5555
-	gs.Spec.Ports[0].PortPolicy = agonesv1.Static
+	// also rand it, just in case there are still previous static GameServers floating around.
+	template.Spec.Ports[0].HostPort = int32(rand.IntnRange(4000, 5000))
+	template.Spec.Ports[0].PortPolicy = agonesv1.Static
 
 	gameServers := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace)
+	// one successful static port GameServer
+	gs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, template.DeepCopy())
+	require.NoError(t, err)
 
-	for _, n := range nodes.Items {
-		// using only gameserver node pool with no taints
-		if len(n.Spec.Taints) == 0 {
-			_, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs.DeepCopy())
-			assert.Nil(t, err)
-		}
+	// now let's create the same one, but this time, require it be on the same node.
+	newGs := template.DeepCopy()
+
+	if newGs.Spec.Template.Spec.NodeSelector == nil {
+		newGs.Spec.Template.Spec.NodeSelector = map[string]string{}
 	}
+	newGs.Spec.Template.Spec.NodeSelector["kubernetes.io/hostname"] = gs.Status.NodeName
+	newGs, err = gameServers.Create(ctx, newGs, metav1.CreateOptions{})
+	require.NoError(t, err)
 
-	newGs, err := gameServers.Create(ctx, gs.DeepCopy(), metav1.CreateOptions{})
-	if err != nil {
-		assert.FailNow(t, "Failed to create a gameserver", err.Error())
-	}
-
-	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, time.Minute)
+	_, err = framework.WaitForGameServerState(newGs, agonesv1.GameServerStateUnhealthy, 5*time.Minute)
 	assert.NoError(t, err)
 }
 
@@ -386,7 +388,7 @@ func TestGameServerUnhealthyAfterReadyCrash(t *testing.T) {
 
 	// keep crashing, until we move to Unhealthy. Solves potential issues with controller Informer cache
 	// race conditions in which it has yet to see a GameServer is Ready before the crash.
-	var stop int32 = 0
+	var stop int32
 	defer func() {
 		atomic.StoreInt32(&stop, 1)
 	}()
@@ -887,7 +889,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: gcr.io/agones-images/simple-game-server:0.3
+          image: gcr.io/agones-images/simple-game-server:0.4
 `
 	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0644)
 	require.NoError(t, err)

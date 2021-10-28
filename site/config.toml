@@ -91,12 +91,12 @@ supported_k8s = "1.20"
 aks_minor_supported_k8s = "7"
 minikube_minor_supported_k8s = "9"
 # shown in development (or the next version that will be supported)
-dev_supported_k8s = "1.20"
-dev_aks_minor_supported_k8s = "7"
-dev_minikube_minor_supported_k8s = "9"
+dev_supported_k8s = "1.21"
+dev_aks_minor_supported_k8s = "2"
+dev_minikube_minor_supported_k8s = "5"
 
 # example tag
-example_image_tag = "gcr.io/agones-images/simple-game-server:0.3"
+example_image_tag = "gcr.io/agones-images/simple-game-server:0.4"
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = true
