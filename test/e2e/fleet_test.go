@@ -160,7 +160,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 			gsa := framework.CreateAndApplyAllocation(t, flt)
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 1
 			})
 
@@ -210,7 +210,7 @@ func TestFleetScaleUpEditAndScaleDown(t *testing.T) {
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 0
 			})
 		})
@@ -334,7 +334,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-				framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+				framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 					return fleet.Status.AllocatedReplicas == 0
 				})
 			})
@@ -432,7 +432,7 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 			gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 			assert.Nil(t, err)
 			assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 1
 			})
 
@@ -452,7 +452,7 @@ func TestScaleFleetUpAndDownWithGameServerAllocation(t *testing.T) {
 			assert.Nil(t, err)
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == 0
 			})
 		})
@@ -553,7 +553,7 @@ func TestUpdateGameServerConfigurationInFleet(t *testing.T) {
 	gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
 	assert.Nil(t, err, "cloud not create gameserver allocation")
 	assert.Equal(t, allocationv1.GameServerAllocationAllocated, gsa.Status.State)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
@@ -604,7 +604,7 @@ func TestReservedGameServerInFleet(t *testing.T) {
 	assert.NoError(t, err)
 
 	// make sure counts are correct
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.ReadyReplicas == 2 && fleet.Status.ReservedReplicas == 1
 	})
 
@@ -613,9 +613,9 @@ func TestReservedGameServerInFleet(t *testing.T) {
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	// one should be left behind
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		result := fleet.Status.ReservedReplicas == 1
-		logrus.WithField("reserved", fleet.Status.ReservedReplicas).WithField("result", result).Info("waiting for 1 reserved replica")
+		log.WithField("reserved", fleet.Status.ReservedReplicas).WithField("result", result).Info("waiting for 1 reserved replica")
 		return result
 	})
 
@@ -1114,7 +1114,7 @@ func TestFleetWithLongLabelsAnnotations(t *testing.T) {
 	assert.Error(t, err)
 	statusErr, ok = err.(*k8serrors.StatusError)
 	assert.True(t, ok)
-	assert.Len(t, statusErr.Status().Details.Causes, 1)
+	require.Len(t, statusErr.Status().Details.Causes, 1)
 	assert.Equal(t, "annotations", statusErr.Status().Details.Causes[0].Field)
 	assert.Equal(t, metav1.CauseTypeFieldValueInvalid, statusErr.Status().Details.Causes[0].Type)
 
@@ -1309,13 +1309,13 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
 	assert.NoError(t, err)
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		if fleet.Status.Players == nil {
-			logrus.WithField("status", fleet.Status).Info("No Players")
+			log.WithField("status", fleet.Status).Info("No Players")
 			return false
 		}
 
-		logrus.WithField("status", fleet.Status).Info("Checking Capacity")
+		log.WithField("status", fleet.Status).Info("Checking Capacity")
 		return fleet.Status.Players.Capacity == 30
 	})
 
@@ -1356,8 +1356,8 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 		}
 	}
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
-		logrus.WithField("players", fleet.Status.Players).WithField("totalCapacity", totalCapacity).
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		log.WithField("players", fleet.Status.Players).WithField("totalCapacity", totalCapacity).
 			WithField("totalPlayers", totalPlayers).Info("Checking Capacity")
 		// since UDP packets might fail, we might get an extra player, so we'll check for that.
 		return (fleet.Status.Players.Capacity == int64(totalCapacity)) && (fleet.Status.Players.Count >= int64(totalPlayers))
