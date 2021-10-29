@@ -312,7 +312,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 			gs := gsList[i]
 			log = log.WithField("gs", gs.ObjectMeta.Name)
 			log.WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("GameServer state dump:")
-			f.LogEvents(t, log, &gs)
+			f.LogEvents(t, log, gs.ObjectMeta.Namespace, &gs)
 		}
 
 		return err
@@ -751,10 +751,10 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 
 // LogEvents logs all the events for a given Kubernetes objects. Useful for debugging why something
 // went wrong.
-func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, objOrRef k8sruntime.Object) {
+func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string, objOrRef k8sruntime.Object) {
 	log.WithField("kind", objOrRef.GetObjectKind().GroupVersionKind().Kind).Info("Dumping Events:")
-	events, err := f.KubeClient.CoreV1().Events(f.Namespace).Search(scheme.Scheme, objOrRef)
-	require.NoError(t, err)
+	events, err := f.KubeClient.CoreV1().Events(namespace).Search(scheme.Scheme, objOrRef)
+	require.NoError(t, err, "error searching for events")
 	for i := range events.Items {
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")

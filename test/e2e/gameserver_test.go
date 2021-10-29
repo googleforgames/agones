@@ -521,8 +521,6 @@ func TestGameServerReadyAllocateReady(t *testing.T) {
 	gs, err = framework.WaitForGameServerState(t, gs, agonesv1.GameServerStateReady, time.Minute)
 	require.NoError(t, err)
 	require.Equal(t, agonesv1.GameServerStateReady, gs.Status.State)
-
-	framework.LogEvents(t, logrus.WithField("gs", gs.ObjectMeta.Name), gs)
 }
 
 func TestGameServerWithPortsMappedToMultipleContainers(t *testing.T) {
