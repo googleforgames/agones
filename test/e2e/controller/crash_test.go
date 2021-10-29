@@ -20,7 +20,7 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
-	"github.com/sirupsen/logrus"
+	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -29,11 +29,11 @@ import (
 )
 
 func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
-	logger := logrus.WithField("test", t.Name())
+	logger := e2eframework.TestLogger(t)
 	gs := framework.DefaultGameServer(defaultNs)
 	ctx := context.Background()
 
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(defaultNs, gs)
+	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, defaultNs, gs)
 	if err != nil {
 		t.Fatalf("Could not get a GameServer ready: %v", err)
 	}
@@ -52,7 +52,7 @@ func TestGameServerUnhealthyAfterDeletingPodWhileControllerDown(t *testing.T) {
 	err = podClient.Delete(ctx, pod.ObjectMeta.Name, metav1.DeleteOptions{})
 	assert.NoError(t, err)
 
-	_, err = framework.WaitForGameServerState(readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
+	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateUnhealthy, 3*time.Minute)
 	assert.NoError(t, err)
 	logger.Info("waiting for Agones controller to come back to running")
 	assert.NoError(t, waitForAgonesControllerRunning(ctx))

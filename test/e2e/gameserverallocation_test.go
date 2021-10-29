@@ -360,7 +360,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
 
@@ -379,7 +379,7 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	gs := framework.DefaultGameServer(framework.Namespace)
 	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
 
-	gs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "could not create GameServer")
 	}
