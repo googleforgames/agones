@@ -29,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -337,7 +338,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 			fas, err := fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
 			if err == nil {
 				defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-				assert.True(t, valid,
+				require.True(t, valid,
 					fmt.Sprintf("FleetAutoscaler created even if the parameters are NOT valid: %d %d %d",
 						bufferSize,
 						fas.Spec.Policy.Buffer.MinReplicas,
@@ -353,7 +354,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 				// the fleet autoscaler should scale the fleet now to expectedReplicas
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
 			} else {
-				assert.False(t, valid,
+				require.False(t, valid,
 					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
 						bufferSize,
 						minReplicas,
