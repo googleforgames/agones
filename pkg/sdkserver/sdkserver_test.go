@@ -654,8 +654,6 @@ func TestSDKServerWatchGameServer(t *testing.T) {
 
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
@@ -696,9 +694,6 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
@@ -763,8 +758,6 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
@@ -797,11 +790,8 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
 
 	// Acquire lock in order to be sure that
-	// no other parallel test turn on FeatureSDKWatchSendOnExecute
 	agruntime.FeatureTestMutex.Lock()
 	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
@@ -1377,7 +1367,7 @@ func TestSDKServerGracefulTerminationInterrupt(t *testing.T) {
 	wg.Add(1)
 
 	go func() {
-		err = sc.Run(sdkCtx)
+		err := sc.Run(sdkCtx)
 		assert.Nil(t, err)
 		wg.Done()
 	}()

@@ -507,16 +507,14 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
 
-	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
-		gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
-		if err != nil {
-			return err
-		}
+	gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
+	if err != nil {
+		return err
+	}
 
-		err = stream.Send(gs)
-		if err != nil {
-			return err
-		}
+	err = stream.Send(gs)
+	if err != nil {
+		return err
 	}
 
 	s.streamMutex.Lock()
