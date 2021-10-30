@@ -312,7 +312,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 			gs := gsList[i]
 			log = log.WithField("gs", gs.ObjectMeta.Name)
 			log.WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("GameServer state dump:")
-			f.LogEvents(t, log, &gs)
+			f.LogEvents(t, log, gs.ObjectMeta.Namespace, &gs)
 		}
 
 		return err
@@ -501,7 +501,7 @@ func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg strin
 func SendUDP(address, msg string) (string, error) {
 	conn, err := net.Dial("udp", address)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not dial GameServer address")
 	}
 	defer func() {
 		err = conn.Close()
@@ -511,20 +511,23 @@ func SendUDP(address, msg string) (string, error) {
 	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
 		_, err := conn.Write([]byte(msg))
 		if err != nil {
-			logrus.WithError(err).Error("Could not write message")
+			logrus.WithError(err).Error("could not write message to GameServer")
 		}
 		return err == nil, nil
 	})
+	if err != nil {
+		return "", errors.Wrap(err, "could not send message to GameServer after retries")
+	}
 
 	b := make([]byte, 1024)
 
 	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not set read deadline")
 	}
 	n, err := conn.Read(b)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not read response from the GameServer")
 	}
 	return string(b[:n]), nil
 }
@@ -751,10 +754,10 @@ func (f *Framework) DefaultGameServer(namespace string) *agonesv1.GameServer {
 
 // LogEvents logs all the events for a given Kubernetes objects. Useful for debugging why something
 // went wrong.
-func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, objOrRef k8sruntime.Object) {
+func (f *Framework) LogEvents(t *testing.T, log *logrus.Entry, namespace string, objOrRef k8sruntime.Object) {
 	log.WithField("kind", objOrRef.GetObjectKind().GroupVersionKind().Kind).Info("Dumping Events:")
-	events, err := f.KubeClient.CoreV1().Events(f.Namespace).Search(scheme.Scheme, objOrRef)
-	require.NoError(t, err)
+	events, err := f.KubeClient.CoreV1().Events(namespace).Search(scheme.Scheme, objOrRef)
+	require.NoError(t, err, "error searching for events")
 	for i := range events.Items {
 		event := events.Items[i]
 		log.WithField("lastTimestamp", event.LastTimestamp).WithField("type", event.Type).WithField("reason", event.Reason).WithField("message", event.Message).Info("Event!")
