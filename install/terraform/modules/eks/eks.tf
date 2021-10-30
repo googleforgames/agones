@@ -82,7 +82,7 @@ module "vpc" {
 }
 
 module "eks" {
-  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v12.2.0"
+  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v17.22.0"
   cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
