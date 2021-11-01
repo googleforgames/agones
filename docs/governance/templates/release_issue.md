@@ -80,6 +80,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] If full release move the [helm `Chart` version values][chart] is to {version}+1-dev
 - [ ] If full release, change to the `sdks/nodejs` directory and run the command `npm version {version}+1-dev` to update the package version
 - [ ] If full release move the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] to {version}+1-dev
+- [ ] If full release update the [`sdks/unity/package.json`][unity] package file's `Version` field to {version}+1-dev
 - [ ] If full release, remove `feature-freeze-do-not-merge` labels from all pull requests
 - [ ] Run `make gen-install gen-api-docs`
 - [ ] Create PR with these changes, and merge them with approval
