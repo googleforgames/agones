@@ -512,8 +512,7 @@ func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServer
 		return err
 	}
 
-	err = stream.Send(gs)
-	if err != nil {
+	if err := stream.Send(gs); err != nil {
 		return err
 	}
 
