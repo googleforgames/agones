@@ -992,7 +992,22 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, "gameserver", pod.ObjectMeta.Labels[agones.GroupName+"/role"])
 			assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Labels[agonesv1.GameServerPodLabel])
 			assert.True(t, metav1.IsControlledBy(pod, fixture))
-			gsContainer := pod.Spec.Containers[0]
+
+			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
+
+			sidecarContainer := pod.Spec.Containers[0]
+			assert.Equal(t, sidecarContainer.Image, c.sidecarImage)
+			assert.Equal(t, sidecarContainer.Resources.Limits.Cpu(), &c.sidecarCPULimit)
+			assert.Equal(t, sidecarContainer.Resources.Requests.Cpu(), &c.sidecarCPURequest)
+			assert.Equal(t, sidecarContainer.Resources.Limits.Memory(), &c.sidecarMemoryLimit)
+			assert.Equal(t, sidecarContainer.Resources.Requests.Memory(), &c.sidecarMemoryRequest)
+			assert.Len(t, sidecarContainer.Env, 3, "3 env vars")
+			assert.Equal(t, "GAMESERVER_NAME", sidecarContainer.Env[0].Name)
+			assert.Equal(t, fixture.ObjectMeta.Name, sidecarContainer.Env[0].Value)
+			assert.Equal(t, "POD_NAMESPACE", sidecarContainer.Env[1].Name)
+			assert.Equal(t, "FEATURE_GATES", sidecarContainer.Env[2].Name)
+
+			gsContainer := pod.Spec.Containers[1]
 			assert.Equal(t, fixture.Spec.Ports[0].HostPort, gsContainer.Ports[0].HostPort)
 			assert.Equal(t, fixture.Spec.Ports[0].ContainerPort, gsContainer.Ports[0].ContainerPort)
 			assert.Equal(t, corev1.Protocol("UDP"), gsContainer.Ports[0].Protocol)
@@ -1002,22 +1017,8 @@ func TestControllerCreateGameServerPod(t *testing.T) {
 			assert.Equal(t, fixture.Spec.Health.InitialDelaySeconds, gsContainer.LivenessProbe.InitialDelaySeconds)
 			assert.Equal(t, fixture.Spec.Health.PeriodSeconds, gsContainer.LivenessProbe.PeriodSeconds)
 			assert.Equal(t, fixture.Spec.Health.FailureThreshold, gsContainer.LivenessProbe.FailureThreshold)
-
-			assert.Len(t, pod.Spec.Containers, 2, "Should have a sidecar container")
-
-			assert.Len(t, pod.Spec.Containers[0].VolumeMounts, 1)
-			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", pod.Spec.Containers[0].VolumeMounts[0].MountPath)
-
-			assert.Equal(t, pod.Spec.Containers[1].Image, c.sidecarImage)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Cpu(), &c.sidecarCPULimit)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Cpu(), &c.sidecarCPURequest)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Limits.Memory(), &c.sidecarMemoryLimit)
-			assert.Equal(t, pod.Spec.Containers[1].Resources.Requests.Memory(), &c.sidecarMemoryRequest)
-			assert.Len(t, pod.Spec.Containers[1].Env, 3, "3 env vars")
-			assert.Equal(t, "GAMESERVER_NAME", pod.Spec.Containers[1].Env[0].Name)
-			assert.Equal(t, fixture.ObjectMeta.Name, pod.Spec.Containers[1].Env[0].Value)
-			assert.Equal(t, "POD_NAMESPACE", pod.Spec.Containers[1].Env[1].Name)
-			assert.Equal(t, "FEATURE_GATES", pod.Spec.Containers[1].Env[2].Name)
+			assert.Len(t, gsContainer.VolumeMounts, 1)
+			assert.Equal(t, "/var/run/secrets/kubernetes.io/serviceaccount", gsContainer.VolumeMounts[0].MountPath)
 
 			return true, pod, nil
 		})

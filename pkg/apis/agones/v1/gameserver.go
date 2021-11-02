@@ -606,7 +606,11 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			return nil, err
 		}
 	}
-	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
+	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
+	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
+	containers = append(containers, sidecars...)
+	containers = append(containers, pod.Spec.Containers...)
+	pod.Spec.Containers = containers
 
 	gs.podScheduling(pod)
 
