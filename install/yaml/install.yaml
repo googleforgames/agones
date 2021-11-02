@@ -13398,7 +13398,7 @@ rules:
   verbs: ["create", "patch"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["create", "delete", "list", "watch"]
+  verbs: ["create", "update", "delete", "list", "watch"]
 - apiGroups: [""]
   resources: ["nodes", "secrets"]
   verbs: ["list", "watch"]
