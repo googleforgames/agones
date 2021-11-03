@@ -30,6 +30,20 @@ provider "aws" {
 data "aws_availability_zones" "available" {
 }
 
+data "aws_eks_cluster" "eks" {
+  name = module.eks.cluster_id
+}
+
+data "aws_eks_cluster_auth" "eks" {
+  name = module.eks.cluster_id
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.eks.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.eks.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.eks.token
+}
+
 resource "aws_security_group" "worker_group_mgmt_one" {
   name_prefix = "worker_group_mgmt_one"
   vpc_id      = module.vpc.vpc_id
@@ -82,7 +96,7 @@ module "vpc" {
 }
 
 module "eks" {
-  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v12.2.0"
+  source          = "git::github.com/terraform-aws-modules/terraform-aws-eks.git?ref=v17.22.0"
   cluster_name    = var.cluster_name
   subnets         = module.vpc.public_subnets
   vpc_id          = module.vpc.vpc_id
