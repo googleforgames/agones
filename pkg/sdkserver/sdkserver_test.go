@@ -652,35 +652,6 @@ func TestSDKServerGetGameServer(t *testing.T) {
 func TestSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-
-	m := agtesting.NewMocks()
-	sc, err := defaultSidecar(m)
-	require.NoError(t, err)
-	assert.Empty(t, sc.connectedStreams)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sc.ctx = ctx
-
-	stream := newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-	assert.Equal(t, stream, sc.connectedStreams[0])
-
-	stream = newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 2))
-	assert.Len(t, sc.connectedStreams, 2)
-	assert.Equal(t, stream, sc.connectedStreams[1])
-}
-
-func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
-	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -748,16 +719,11 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 		}
 	}
 
-	// if SDKWatchSendOnExecute feature is turned on, there are two stream.Send() calls should happen:
-	// one in sendGameServerUpdate, another one in WatchGameServer.
 	assert.Equal(t, 2, totalSendCalls)
 }
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
 
 	m := agtesting.NewMocks()
 	sc, err := defaultSidecar(m)
@@ -788,10 +754,6 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
-
-	// Acquire lock in order to be sure that
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
 
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
