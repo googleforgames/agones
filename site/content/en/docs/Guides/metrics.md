@@ -17,6 +17,7 @@ We plan to support multiple exporters in the future via environment variables an
 
 If you are running a [Prometheus](https://prometheus.io/) instance you just need to ensure that metrics and kubernetes service discovery are enabled. (helm chart values `agones.metrics.prometheusEnabled` and `agones.metrics.prometheusServiceDiscovery`). This will automatically add annotations required by Prometheus to discover Agones metrics and start collecting them. (see [example](https://github.com/prometheus/prometheus/tree/main/documentation/examples/kubernetes-rabbitmq))
 
+{{% feature expiryVersion="1.19.0" %}}
 ### Prometheus Operator
 
 If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, make sure to add a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/api.md#servicemonitorspec) to discover Agones metrics as shown below:
@@ -38,6 +39,20 @@ spec:
 
 Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/user-guides/getting-started.md#include-servicemonitors), this is usually done by adding a label to the `ServiceMonitor` above that is matched by the prometheus instance of your choice.
 
+{{% /feature %}}
+{{% feature publishVersion="1.19.0" %}}
+### Prometheus Operator
+
+If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, just enable ServiceMonitor installation in values:
+
+```yaml
+agones:
+  metrics:
+    serviceMonitor:
+      enabled: true
+```
+
+{{% /feature %}}
 ### Stackdriver
 
 We support the [OpenCensus Stackdriver exporter](https://opencensus.io/exporters/supported-exporters/go/stackdriver/).

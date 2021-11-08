@@ -835,6 +835,20 @@ func (c *Controller) syncGameServerRequestReadyState(ctx context.Context, gs *ag
 		}
 	}
 
+	// Also update the pod with the same annotation, so we can check if the Pod data is up-to-date, now and also in the HealthController.
+	// But if it is already set, then ignore it, since we only need to do this one time.
+	if _, ok := pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]; !ok {
+		podCopy := pod.DeepCopy()
+		if podCopy.ObjectMeta.Annotations == nil {
+			podCopy.ObjectMeta.Annotations = map[string]string{}
+		}
+
+		podCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = gsCopy.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]
+		if _, err = c.podGetter.Pods(pod.ObjectMeta.Namespace).Update(ctx, podCopy, metav1.UpdateOptions{}); err != nil {
+			return gs, errors.Wrapf(err, "error updating ready annotation on Pod: %s", pod.ObjectMeta.Name)
+		}
+	}
+
 	gsCopy.Status.State = agonesv1.GameServerStateReady
 	gs, err = c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
