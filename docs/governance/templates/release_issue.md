@@ -38,6 +38,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 - [ ] Update SDK Package Versions
     - [ ] Update the package version in [`sdks/nodejs/package.json`][package.json] and [`sdks/nodejs/package-lock.json`][package-lock.json] by running `npm version {version}` if a full release or `npm version {version}-rc` if release candidate
     - [ ] Ensure the [`sdks/csharp/sdk/AgonesSDK.nuspec` and `sdks/csharp/sdk/csharp-sdk.csproj`][csharp] versions are correct (should be {version} if a full release, {version}-rc if release candidate)
+    - [ ] Update the package version in the [`sdks/unity/package.json`][unity] package file's `Version` field to {version} if a full release, {version}-rc if release candidate
 - [ ] Run `make gen-install`
 - [ ] Run `make test-examples-on-gcr` to ensure all example images exist on gcr.io/agones-images-
 - [ ] Create a *draft* release with the [release template][release-template]
