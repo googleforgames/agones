@@ -237,8 +237,20 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 		// This is not the Pod we are looking for 🤖
 		return false, nil
 	}
+
+	// If the GameServer is before Ready, both annotation values should be ""
+	// If the GameServer is past Ready, both the annotations should be exactly the same.
+	// If they are annotations are different, then the data between the GameServer and the Pod is out of sync,
+	// in which case, send it back to the queue to try again.
+	gsReadyContainerID := gs.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation]
+	if pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] != gsReadyContainerID {
+		return false, workerqueue.NewDebugError(errors.Errorf("pod and gameserver %s data are out of sync, retrying", gs.ObjectMeta.Name))
+	}
+
 	if gs.IsBeforeReady() {
 		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).Debug("skipUnhealthy: Is Before Ready. Checking failed container")
+		// If the reason for failure was a container failure, then we can skip moving to Unhealthy.
+		// otherwise, we know it was one of the other reasons (eviction, lack of ports), so we should definitely go to Unhealthy.
 		return hc.failedContainer(pod), nil
 	}
 
@@ -246,17 +258,23 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if cs.State.Terminated != nil {
+				hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Container is terminated, returning false")
 				return false, nil
 			}
 			if cs.LastTerminationState.Terminated != nil {
 				// if the current container is running, and is the ready container, then we know this is some
 				// other pod update, and we previously had a restart before we got to being Ready, and therefore
 				// shouldn't move to Unhealthy.
-				return cs.ContainerID == gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation], nil
+				check := cs.ContainerID == gsReadyContainerID
+				if !check {
+					hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Container crashed after Ready, returning false")
+				}
+				return check, nil
 			}
 			break
 		}
 	}
 
+	hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Should not reach here")
 	return false, nil
 }

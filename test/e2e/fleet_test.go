@@ -1155,7 +1155,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 			for _, gs := range list.Items {
 				gs := gs
 				var reply string
-				reply, err := e2e.SendGameServerUDP(&gs, "EXIT")
+				reply, err := framework.SendGameServerUDP(t, &gs, "EXIT")
 				if err != nil {
 					t.Fatalf("Could not message GameServer: %v", err)
 				}
@@ -1167,7 +1167,7 @@ func TestFleetRecreateGameServers(t *testing.T) {
 			for _, gs := range list.Items {
 				gs := gs
 				var reply string
-				reply, err := e2e.SendGameServerUDP(&gs, "UNHEALTHY")
+				reply, err := framework.SendGameServerUDP(t, &gs, "UNHEALTHY")
 				if err != nil {
 					t.Fatalf("Could not message GameServer: %v", err)
 				}
@@ -1332,7 +1332,7 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 		totalCapacity += capacity
 
 		msg := fmt.Sprintf("PLAYER_CAPACITY %d", capacity)
-		reply, err := e2e.SendGameServerUDP(gs, msg)
+		reply, err := framework.SendGameServerUDP(t, gs, msg)
 		if err != nil {
 			t.Fatalf("Could not message GameServer: %v", err)
 		}
@@ -1344,7 +1344,7 @@ func TestFleetAggregatedPlayerStatus(t *testing.T) {
 			logrus.WithField("msg", msg).WithField("gs", gs.ObjectMeta.Name).Info("Sending Player Connect")
 			// retry on failure. Will stop flakiness of UDP packets being sent/received.
 			err := wait.PollImmediate(time.Second, 5*time.Minute, func() (bool, error) {
-				reply, err := e2e.SendGameServerUDP(gs, msg)
+				reply, err := framework.SendGameServerUDP(t, gs, msg)
 				if err != nil {
 					logrus.WithError(err).Warn("error with udp packet")
 					return false, nil
