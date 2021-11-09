@@ -719,6 +719,8 @@ func TestSDKServerWatchGameServer(t *testing.T) {
 		}
 	}
 
+	// There are two stream.Send() calls should happen: one in sendGameServerUpdate,
+	// another one in WatchGameServer.
 	assert.Equal(t, 2, totalSendCalls)
 }
 
