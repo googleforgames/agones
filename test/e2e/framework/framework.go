@@ -466,7 +466,7 @@ func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) 
 // SendGameServerUDP sends a message to a gameserver and returns its reply
 // finds the first udp port from the spec to send the message to,
 // returns error if no Ports were allocated
-func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
+func (f *Framework) SendGameServerUDP(t *testing.T, gs *agonesv1.GameServer, msg string) (string, error) {
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -474,7 +474,7 @@ func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 	// use first udp port
 	for _, p := range gs.Spec.Ports {
 		if p.Protocol == corev1.ProtocolUDP {
-			return SendGameServerUDPToPort(gs, p.Name, msg)
+			return f.SendGameServerUDPToPort(t, gs, p.Name, msg)
 		}
 	}
 	return "", errors.New("No UDP ports")
@@ -482,7 +482,8 @@ func SendGameServerUDP(gs *agonesv1.GameServer, msg string) (string, error) {
 
 // SendGameServerUDPToPort sends a message to a gameserver at the named port and returns its reply
 // returns error if no Ports were allocated or a port of the specified name doesn't exist
-func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+func (f *Framework) SendGameServerUDPToPort(t *testing.T, gs *agonesv1.GameServer, portName string, msg string) (string, error) {
+	log := TestLogger(t)
 	if len(gs.Status.Ports) == 0 {
 		return "", errors.New("Empty Ports array")
 	}
@@ -493,42 +494,59 @@ func SendGameServerUDPToPort(gs *agonesv1.GameServer, portName string, msg strin
 		}
 	}
 	address := fmt.Sprintf("%s:%d", gs.Status.Address, port.Port)
-	return SendUDP(address, msg)
+	reply, err := f.SendUDP(t, address, msg)
+
+	if err != nil {
+		log.WithField("gs", gs.ObjectMeta.Name).WithField("status", fmt.Sprintf("%+v", gs.Status)).Info("Failed to send UDP packet to GameServer. Dumping Events!")
+		f.LogEvents(t, log, gs.ObjectMeta.Namespace, gs)
+	}
+
+	return reply, err
 }
 
 // SendUDP sends a message to an address, and returns its reply if
-// it returns one in 30 seconds
-func SendUDP(address, msg string) (string, error) {
-	conn, err := net.Dial("udp", address)
-	if err != nil {
-		return "", errors.Wrap(err, "could not dial GameServer address")
-	}
-	defer func() {
-		err = conn.Close()
-	}()
-
+// it returns one in 10 seconds. Will retry 5 times, in case UDP packets drop.
+func (f *Framework) SendUDP(t *testing.T, address, msg string) (string, error) {
+	log := TestLogger(t).WithField("address", address)
+	b := make([]byte, 1024)
+	var n int
 	// sometimes we get I/O timeout, so let's do a retry
-	err = wait.PollImmediate(time.Second, 5*time.Second, func() (bool, error) {
-		_, err := conn.Write([]byte(msg))
+	err := wait.PollImmediate(2*time.Second, time.Minute, func() (bool, error) {
+
+		conn, err := net.Dial("udp", address)
 		if err != nil {
-			logrus.WithError(err).Error("could not write message to GameServer")
+			log.WithError(err).Info("could not dial address")
+			return false, nil
 		}
+
+		defer func() {
+			err = conn.Close()
+		}()
+
+		_, err = conn.Write([]byte(msg))
+		if err != nil {
+			log.WithError(err).Info("could not write message to address")
+			return false, nil
+		}
+
+		err = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+		if err != nil {
+			log.WithError(err).Info("Could not set read deadline")
+			return false, nil
+		}
+
+		n, err = conn.Read(b)
+		if err != nil {
+			log.WithError(err).Info("Could not read from address")
+		}
+
 		return err == nil, nil
 	})
+
 	if err != nil {
-		return "", errors.Wrap(err, "could not send message to GameServer after retries")
+		return "", errors.Wrap(err, "timed out attempting to send UDP packet to address")
 	}
 
-	b := make([]byte, 1024)
-
-	err = conn.SetReadDeadline(time.Now().Add(30 * time.Second))
-	if err != nil {
-		return "", errors.Wrap(err, "could not set read deadline")
-	}
-	n, err := conn.Read(b)
-	if err != nil {
-		return "", errors.Wrap(err, "could not read response from the GameServer")
-	}
 	return string(b[:n]), nil
 }
 
