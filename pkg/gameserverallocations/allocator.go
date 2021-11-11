@@ -68,14 +68,17 @@ var (
 )
 
 const (
-	secretClientCertName       = "tls.crt"
-	secretClientKeyName        = "tls.key"
-	secretCACertName           = "ca.crt"
-	allocatorPort              = "443"
-	maxBatchQueue              = 100
-	maxBatchBeforeRefresh      = 100
-	batchWaitTime              = 500 * time.Millisecond
-	lastAllocatedAnnotationKey = "agones.dev/last-allocated"
+	// LastAllocatedAnnotationKey is a GameServer annotation containing an RFC 3339 formatted
+	// timestamp of the most recent allocation.
+	LastAllocatedAnnotationKey = "agones.dev/last-allocated"
+
+	secretClientCertName  = "tls.crt"
+	secretClientKeyName   = "tls.key"
+	secretCACertName      = "ca.crt"
+	allocatorPort         = "443"
+	maxBatchQueue         = 100
+	maxBatchBeforeRefresh = 100
+	batchWaitTime         = 500 * time.Millisecond
 )
 
 var allocationRetry = wait.Backoff{
@@ -593,7 +596,11 @@ func (c *Allocator) applyAllocationToGameServer(ctx context.Context, mp allocati
 	}
 
 	// add last allocated, so it always gets updated, even if it is already Allocated
-	gs.ObjectMeta.Annotations[lastAllocatedAnnotationKey] = time.Now().String()
+	ts, err := time.Now().MarshalText()
+	if err != nil {
+		return nil, err
+	}
+	gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey] = string(ts)
 	gs.Status.State = agonesv1.GameServerStateAllocated
 
 	return c.gameServerGetter.GameServers(gs.ObjectMeta.Namespace).Update(ctx, gs, metav1.UpdateOptions{})
