@@ -65,6 +65,8 @@ agones:
               - key: agones.dev/agones-system
                 operator: Exists
     generateTLS: true
+    tlsCrt: ""
+    tlsKey: ""
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
@@ -176,6 +178,8 @@ agones:
         portName: http
     disableSecretCreation: false
     generateTLS: true
+    tlsCrt: ""
+    tlsKey: ""
     generateClientTLS: true
     disableMTLS: false
     disableTLS: false
