@@ -65,7 +65,7 @@ agones:
               - key: agones.dev/agones-system
                 operator: Exists
     generateTLS: true
-    tlsCrt: ""
+    tlsCert: ""
     tlsKey: ""
     safeToEvict: false
     persistentLogs: true
@@ -178,7 +178,7 @@ agones:
         portName: http
     disableSecretCreation: false
     generateTLS: true
-    tlsCrt: ""
+    tlsCert: ""
     tlsKey: ""
     generateClientTLS: true
     disableMTLS: false

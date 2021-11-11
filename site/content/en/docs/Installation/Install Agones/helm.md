@@ -118,7 +118,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
-| `agones.controller.tlsCrt`                          | Custom TLS certificate provided as a non-encoded string (fallback: `certs/server.crt`)          | \`\`                   |
+| `agones.controller.tlsCert`                         | Custom TLS certificate provided as a non-encoded string (fallback: `certs/server.crt`)          | \`\`                   |
 | `agones.controller.tlsKey`                          | Custom TLS certificate key provided as a non-encoded string (fallback: `certs/server.key`)      | \`\`                   |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
@@ -175,7 +175,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.service.grpc.targetPort`                        | The port that is used by the allocator pod to listen for [gRPC requests][grpc-requests]. Note that the allocator server cannot bind to low numbered ports. | `8443`                  |
 | `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `true`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
-| `agones.allocator.tlsCrt`                           | Custom TLS certificate provided as a non-encoded string (fallback: `certs/allocator/server.crt`) | \`\`                   |
+| `agones.allocator.tlsCert`                          | Custom TLS certificate provided as a non-encoded string (fallback: `certs/allocator/server.crt`) | \`\`                   |
 | `agones.allocator.tlsKey`                           | Custom TLS certificate key provided as a non-encoded string (fallback: `certs/allocator/server.key`) | \`\`                   |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. Only applicable to the REST API. It currently does not work for the gRPC API. ([issue](https://github.com/googleforgames/agones/issues/1945)) | `false`                |
