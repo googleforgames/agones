@@ -34,9 +34,6 @@ const (
 	// FeaturePlayerTracking is a feature flag to enable/disable player tracking features.
 	FeaturePlayerTracking Feature = "PlayerTracking"
 
-	// FeatureSDKWatchSendOnExecute is a feature flag to enable/disable immediate game server return after SDK.WatchGameServer is called
-	FeatureSDKWatchSendOnExecute Feature = "SDKWatchSendOnExecute"
-
 	// NodeExternalDNS is a feature flag to enable/disable node ExternalDNS and InternalDNS use as GameServer address
 	NodeExternalDNS Feature = "NodeExternalDNS"
 
@@ -61,7 +58,6 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                true,
 		FeaturePlayerTracking:         false,
-		FeatureSDKWatchSendOnExecute:  true,
 		NodeExternalDNS:               false,
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
