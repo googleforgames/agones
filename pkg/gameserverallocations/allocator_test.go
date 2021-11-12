@@ -51,6 +51,8 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.NotNil(t, gs.ObjectMeta.Annotations["agones.dev/last-allocated"])
+	var ts time.Time
+	assert.NoError(t, ts.UnmarshalText([]byte(gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey])))
 
 	gs, err = allocator.applyAllocationToGameServer(ctx, allocationv1.MetaPatch{Labels: map[string]string{"foo": "bar"}}, &agonesv1.GameServer{})
 	assert.NoError(t, err)
@@ -65,5 +67,5 @@ func TestAllocatorApplyAllocationToGameServer(t *testing.T) {
 	assert.Equal(t, agonesv1.GameServerStateAllocated, gs.Status.State)
 	assert.Equal(t, "bar", gs.ObjectMeta.Labels["foo"])
 	assert.Equal(t, "foo", gs.ObjectMeta.Annotations["bar"])
-	assert.NotNil(t, gs.ObjectMeta.Annotations[lastAllocatedAnnotationKey])
+	assert.NotNil(t, gs.ObjectMeta.Annotations[LastAllocatedAnnotationKey])
 }

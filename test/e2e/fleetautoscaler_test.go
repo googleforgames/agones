@@ -29,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -96,7 +97,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 
 	// do an allocation and watch the fleet scale up
 	gsa := framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
@@ -115,7 +116,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -124,7 +125,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	assert.Nil(t, err, "could not patch fleetautoscaler")
 
 	// check that we are not able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return fas.Status.ScalingLimited
 	})
 
@@ -132,7 +133,7 @@ func TestAutoscalerBasicFunctions(t *testing.T) {
 	gp := int64(1)
 	err = stable.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0 &&
 			fleet.Status.ReadyReplicas == 1 &&
 			fleet.Status.Replicas == 1
@@ -236,7 +237,7 @@ func TestFleetAutoScalerRollingUpdate(t *testing.T) {
 	assert.True(t, fas.Status.AbleToScale, "Could not get AbleToScale status")
 
 	// check that we are able to scale
-	framework.WaitForFleetAutoScalerCondition(t, fas, func(fas *autoscalingv1.FleetAutoscaler) bool {
+	framework.WaitForFleetAutoScalerCondition(t, fas, func(log *logrus.Entry, fas *autoscalingv1.FleetAutoscaler) bool {
 		return !fas.Status.ScalingLimited
 	})
 
@@ -337,7 +338,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 			fas, err := fleetautoscalers.Create(ctx, fas, metav1.CreateOptions{})
 			if err == nil {
 				defer fleetautoscalers.Delete(ctx, fas.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-				assert.True(t, valid,
+				require.True(t, valid,
 					fmt.Sprintf("FleetAutoscaler created even if the parameters are NOT valid: %d %d %d",
 						bufferSize,
 						fas.Spec.Policy.Buffer.MinReplicas,
@@ -353,7 +354,7 @@ func TestAutoscalerStressCreate(t *testing.T) {
 				// the fleet autoscaler should scale the fleet now to expectedReplicas
 				framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(expectedReplicas))
 			} else {
-				assert.False(t, valid,
+				require.False(t, valid,
 					fmt.Sprintf("FleetAutoscaler NOT created even if the parameters are valid: %d %d %d (%s)",
 						bufferSize,
 						minReplicas,
@@ -471,11 +472,11 @@ func TestAutoscalerWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestAutoscalerWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 
@@ -701,11 +702,11 @@ func TestFleetAutoscalerTLSWebhook(t *testing.T) {
 		assert.FailNow(t, "Failed creating autoscaler, aborting TestTlsWebhook")
 	}
 	framework.CreateAndApplyAllocation(t, flt)
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 1
 	})
 
-	framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.Replicas > initialReplicasCount
 	})
 }
@@ -723,7 +724,7 @@ func defaultAutoscalerWebhook(namespace string) (*corev1.Pod, *corev1.Service) {
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{{Name: "webhook",
-				Image:           "gcr.io/agones-images/autoscaler-webhook:0.3",
+				Image:           "gcr.io/agones-images/autoscaler-webhook:0.4",
 				ImagePullPolicy: corev1.PullAlways,
 				Ports: []corev1.ContainerPort{{
 					ContainerPort: 8000,

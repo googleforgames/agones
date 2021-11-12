@@ -23,6 +23,7 @@ import (
 	"time"
 
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
+	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	agtesting "agones.dev/agones/pkg/testing"
@@ -42,6 +43,10 @@ import (
 func TestSidecarRun(t *testing.T) {
 	t.Parallel()
 
+	now := time.Now().UTC()
+	nowTs, err := now.MarshalText()
+	require.NoError(t, err)
+
 	type expected struct {
 		state       agonesv1.GameServerState
 		labels      map[string]string
@@ -51,6 +56,7 @@ func TestSidecarRun(t *testing.T) {
 
 	fixtures := map[string]struct {
 		f        func(*SDKServer, context.Context)
+		clock    clock.Clock
 		expected expected
 	}{
 		"ready": {
@@ -112,9 +118,13 @@ func TestSidecarRun(t *testing.T) {
 				_, err := sc.Allocate(ctx, &sdk.Empty{})
 				assert.NoError(t, err)
 			},
+			clock: clock.NewFakeClock(now),
 			expected: expected{
 				state:      agonesv1.GameServerStateAllocated,
 				recordings: []string{string(agonesv1.GameServerStateAllocated)},
+				annotations: map[string]string{
+					gameserverallocations.LastAllocatedAnnotationKey: string(nowTs),
+				},
 			},
 		},
 		"reserved": {
@@ -176,6 +186,9 @@ func TestSidecarRun(t *testing.T) {
 
 			assert.Nil(t, err)
 			sc.recorder = m.FakeRecorder
+			if v.clock != nil {
+				sc.clock = v.clock
+			}
 
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()

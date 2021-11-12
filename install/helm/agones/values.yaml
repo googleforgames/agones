@@ -22,6 +22,9 @@ agones:
     stackdriverEnabled: false
     stackdriverProjectID: ""
     stackdriverLabels: ""
+    serviceMonitor:
+      enabled: false
+      interval: 30s
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true
@@ -164,6 +167,13 @@ agones:
         port: 443
         portName: grpc
         targetPort: 8443
+    serviceMetrics:
+      name: agones-allocator-metrics-service
+      annotations: {}
+      http:
+        enabled: true
+        port: 8080
+        portName: http
     disableSecretCreation: false
     generateTLS: true
     generateClientTLS: true
