@@ -746,7 +746,6 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sc.ctx = ctx
-	sc.ctx = ctx
 	sc.informerFactory.Start(ctx.Done())
 
 	fakeWatch.Add(fixture.DeepCopy())
