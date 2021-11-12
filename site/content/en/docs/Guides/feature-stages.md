@@ -42,7 +42,7 @@ The current set of `alpha` and `beta` feature gates are:
 |--------------|---------|---------|-------|-------|
 | Example Gate (not in use) | `Example` | Disabled | None | 0.13.0 |
 | [Player Tracking]({{< ref "/docs/Guides/player-tracking.md" >}}) | `PlayerTracking` | Disabled | `Alpha` | 1.6.0 |
-| [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Disabled | `Alpha` | 1.12.0 |
+| [Utilize Node ExternalDNS](https://github.com/googleforgames/agones/issues/1921) and additional [details]({{< ref "/docs/FAQ/_index.md" >}}) | `NodeExternalDNS` | Enabled | `Beta` | 1.19.0 |
 | [Custom resync period for FleetAutoscaler](https://github.com/googleforgames/agones/issues/1955) | `CustomFasSyncInterval` | Disabled | `Alpha` | 1.17.0 |
 | [GameServer state filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `StateAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
 | [GameServer player capacity filtering on GameServerAllocations](https://github.com/googleforgames/agones/issues/1239) | `PlayerAllocationFilter` | Disabled | `Alpha` | 1.14.0 |
