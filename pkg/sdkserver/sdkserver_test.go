@@ -763,8 +763,6 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	// fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
-
 	sc.sendGameServerUpdate(fixture)
 
 	var sdkGS *sdk.GameServer
