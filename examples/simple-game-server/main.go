@@ -40,6 +40,7 @@ func main() {
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
 	shutdownDelay := flag.Int("automaticShutdownDelayMin", 0, "If greater than zero, automatically shut down the server this many minutes after the server becomes allocated")
+	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero and readyOnStart is true, wait this many seconds before marking the game server as ready")
 	udp := flag.Bool("udp", true, "Server will listen on UDP")
 	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
 
@@ -89,15 +90,6 @@ func main() {
 		port = &p
 	}
 
-	if *readyOnStart {
-		log.Print("Marking this server as ready")
-		ready(s)
-	}
-
-	if *shutdownDelay > 0 {
-		shutdownAfterAllocation(s, *shutdownDelay)
-	}
-
 	if *tcp {
 		go tcpListener(port, s, stop)
 	}
@@ -106,7 +98,20 @@ func main() {
 		go udpListener(port, s, stop)
 	}
 
-	// prevents program from quitting as the server is listening on goroutines
+	if *readyOnStart {
+		if *readyDelaySec > 0 {
+			log.Printf("Waiting %d seconds before moving to ready", *readyDelaySec)
+			time.Sleep(time.Duration(*readyDelaySec) * time.Second)
+		}
+		log.Print("Marking this server as ready")
+		ready(s)
+	}
+
+	if *shutdownDelay > 0 {
+		shutdownAfterAllocation(s, *shutdownDelay)
+	}
+
+	// Prevent the program from quitting as the server is listening on goroutines.
 	for {}
 }
 
