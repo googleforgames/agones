@@ -812,10 +812,6 @@ func TestSDKServerUpdateEventHandler(t *testing.T) {
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
 
-	// fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
-	// Spec: agonesv1.GameServerSpec{},
-	// }
-
 	// need to add it before it can be modified
 	fakeWatch.Add(fixture.DeepCopy())
 	fakeWatch.Modify(fixture.DeepCopy())
