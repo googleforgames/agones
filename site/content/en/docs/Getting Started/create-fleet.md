@@ -15,15 +15,15 @@ While not required, you may wish to go through the [Create a Game Server]({{< re
 
 ## Objectives
 
-- Create a Fleet in Kubernetes using Agones custom resource.
+- Create a [Fleet](https://agones.dev/site/docs/reference/fleet/) in Kubernetes using an Agones custom resource.
 - Scale the Fleet up from its initial configuration.
 - Request a GameServer allocation from the Fleet to play on.
 - Connect to the allocated GameServer.
-- Deploy a new GameServer configuration to the Fleet
+- Deploy a new GameServer configuration to the Fleet.
 
 ### 1. Create a Fleet
 
-Let's create a Fleet using the following command :
+Let's create a Fleet using the following command:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/fleet.yaml
@@ -145,12 +145,12 @@ players accessing it (and therefore, it should not be deleted until they are fin
 do this through `kubectl` as well, and ask it to return the response in yaml so that we can see what has happened.
 {{< /alert >}}
 
-We can do the allocation of a GameServer for usage through a `GameServerAllocation`, which will both 
+We can do the allocation of a GameServer for usage through a `GameServerAllocation`, which will both
 return to us the details of a `GameServer` (assuming one is available), and also move it to the `Allocated` state,
 which demarcates that it has players on it, and should not be removed until `SDK.Shutdown()` is called, or it is manually deleted.
 
-It is worth noting that there is nothing specific that ties a `GameServerAllocation` to a fleet. 
-A `GameServerAllocation` uses a [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) 
+It is worth noting that there is nothing specific that ties a `GameServerAllocation` to a fleet.
+A `GameServerAllocation` uses a [label selector](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
 to determine what group of `GameServers` it will attempt to allocate out of. That being said, a `Fleet` and `GameServerAllocation`
 are often used in conjunction.
 
@@ -189,10 +189,10 @@ status:
 
 If you look at the `status` section, there are several things to take note of. The `state` value will tell if
 a `GameServer` was allocated or not. If a `GameServer` could not be found, this will be set to `UnAllocated`.
-If there are too many concurrent requests overwhelmed the system, `state` will be set to 
+If there are too many concurrent requests overwhelmed the system, `state` will be set to
 `Contention` even though there are available `GameServers`.
 
-However, we see that the `status.state` value was set to `Allocated`. 
+However, we see that the `status.state` value was set to `Allocated`.
 This means you have been successfully allocated a `GameServer` out of the fleet, and you can now connect your players to it!
 
 You can see various immutable details of the `GameServer` in the status - the `address`, `ports` and the name
@@ -287,7 +287,7 @@ ACK: Hello World !
 EXIT
 ```
 
-You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.  
+You can finally type `EXIT` which tells the SDK to run the [Shutdown command]({{< ref "/docs/Guides/Client SDKs/_index.md#shutdown" >}}), and therefore shuts down the `GameServer`.
 
 If you run `kubectl describe gs | grep State` again - either the GameServer will be replaced with a new, `Ready` `GameServer`
 , or it will be in `Shutdown` state, on the way to being deleted.
@@ -302,7 +302,7 @@ roll out, without interrupting the currently `Allocated` `GameServers`.
 
 Let's take this for a spin! Run `kubectl scale fleet simple-game-server --replicas=5` to return Replicas count back to 5.
 
-Let's also allocate ourselves a `GameServer`
+Let's also allocate ourselves a `GameServer`:
 
 ```bash
 kubectl create -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/examples/simple-game-server/gameserverallocation.yaml -o yaml
@@ -313,31 +313,32 @@ We should now have four `Ready` `GameServers` and one `Allocated`.
 We can check this by running `kubectl get gs`.
 
 ```
-NAME                             STATE       ADDRESS          PORT   NODE       AGE 
-simple-game-server-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m       
-simple-game-server-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m   
-simple-game-server-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m   
-simple-game-server-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m   
-simple-game-server-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m   
+NAME                             STATE       ADDRESS          PORT   NODE       AGE
+simple-game-server-tfqn7-c9tz7   Ready       192.168.39.150   7136   minikube   5m
+simple-game-server-tfqn7-g8fhq   Allocated   192.168.39.150   7148   minikube   5m
+simple-game-server-tfqn7-n0wnl   Ready       192.168.39.150   7453   minikube   5m
+simple-game-server-tfqn7-hiiwp   Ready       192.168.39.150   7228   minikube   5m
+simple-game-server-tfqn7-w8z7b   Ready       192.168.39.150   7226   minikube   5m
 ```
 
 In production, we'd likely be changing a `containers > image` configuration to update our `Fleet`
 to run a new game server process, but to make this example simple, change `containerPort` from `7654`
 to `6000`.
 
-Run `kubectl edit fleet simple-game-server`, and make the necessary changes, and then save and exit your editor. 
+Run `kubectl edit fleet simple-game-server`, and make the necessary changes, and then save and exit your editor.
 
 This will start the deployment of a new set of `GameServers` running
 with a Container Port of `6000`.
 
 {{< alert title="Warning" color="warning">}}
-This will make it such that you can no longer connect to the simple-game-server game server.  
+This will make it such that you can no longer connect to the simple-game-server game server.
 {{< /alert >}}
 
-Run `watch kubectl get gs`
+Run `kubectl describe gs | grep "Container Port`
 until you can see that there is
 one with a containerPort of `7654`, which is the `Allocated` `GameServer`, and four instances with a containerPort of `6000` which
-is the new configuration.
+is the new configuration. You can also run `kubectl get gs` and look at the **Age** column to see that one `GameServer` is much
+older than the other four.
 
 You have now deployed a new version of your game!
 
