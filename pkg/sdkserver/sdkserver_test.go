@@ -1556,9 +1556,8 @@ func waitConnectedStreamCount(sc *SDKServer, count int) error {
 }
 
 func asyncWatchGameServer(t *testing.T, sc *SDKServer, stream sdk.SDK_WatchGameServerServer) {
-	// Note that new FeatureSDKWatchSendOnExecute feature gate
-	// uses getGameServer() function and therefore WatchGameServer()
-	// would block if gsWaitForSync is not Done().
+	// Note that WatchGameServer() uses getGameServer() and would block
+	// if gsWaitForSync is not Done().
 	go func() {
 		err := sc.WatchGameServer(&sdk.Empty{}, stream)
 		require.NoError(t, err)
