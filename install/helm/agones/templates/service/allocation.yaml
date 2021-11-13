@@ -358,6 +358,10 @@ data:
 {{- end }}
 {{- if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
+{{- else if .Values.agones.allocator.clientCAs }}
+  {{- range $caField, $caContent := .Values.agones.allocator.clientCAs }}
+  {{ $caField }}: {{ b64enc $caContent }}
+  {{- end }}
 {{- else }}
   {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
 {{- end }}

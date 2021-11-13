@@ -181,6 +181,7 @@ agones:
     tlsCert: ""
     tlsKey: ""
     generateClientTLS: true
+    clientCAs: {}
     disableMTLS: false
     disableTLS: false
     remoteAllocationTimeout: 10s

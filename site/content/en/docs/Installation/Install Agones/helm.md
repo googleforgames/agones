@@ -203,6 +203,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
 | `agones.allocator.tlsCert`                          | Custom TLS certificate provided as a string                                                     | \`\`                   |
 | `agones.allocator.tlsKey`                           | Custom TLS private key provided as a string                                                     | \`\`                   |
+| `agones.allocator.clientCAs`                        | A map of secret key names to allowed client CA certificates provided as strings                 | `{}`                   |
 | `agones.allocator.serviceMetrics.name`              | Second Service name for the allocator                                                           | `agones-allocator-metrics-service`     |
 | `agones.allocator.serviceMetrics.annotations`       | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
 | `agones.allocator.serviceMetrics.http.port`         | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
