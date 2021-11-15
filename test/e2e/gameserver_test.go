@@ -889,7 +889,7 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution: ERROR
       containers:
         - name: simple-game-server
-          image: gcr.io/agones-images/simple-game-server:0.4
+          image: gcr.io/agones-images/simple-game-server:0.5
 `
 	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0644)
 	require.NoError(t, err)

@@ -52,14 +52,17 @@ NAME                        READY     STATUS    RESTARTS   AGE
 simple-game-server-7pjrq    2/2       Running   0          5m
 ```
 
-As you can see above it says `READY: 2/2` this means there are two containers running in this Pod, this is because Agones injected the SDK sidecar for readiness and health checking of your Game Server.
+As you can see above it says `READY: 2/2` this means there are two containers running in this Pod, this is because Agones injected the [SDK sidecar](https://agones.dev/site/docs/guides/troubleshooting/#how-do-i-see-the-logs-for-agones) for readiness
+and health checking of your Game Server.
 
 
 For the full details of the YAML file head to the [GameServer Specification Guide]({{< ref "/docs/Reference/gameserver.md" >}})
 
 ### 2. Fetch the GameServer Status
 
-Let's wait for the GameServer state to become `Ready`:
+Let's wait for the GameServer state to become `Ready`. You can use the `watch`
+tool to see the state change. If your operating system does not have `watch`,
+manually run `kubectl describe gameserver` until the state changes.
 
 ```bash
 watch kubectl describe gameserver
@@ -144,7 +147,7 @@ simple-game-server-7pjrq   Ready   35.233.183.43   7190   agones   4m
 
 {{< alert title="Note" color="info">}}
 If you have Agones installed on minikube, or other local Kubernetes tooling, and you are having issues connecting
-to the `GameServer`, please check the 
+to the `GameServer`, please check the
 [Minikube local connection workarounds]({{% ref "/docs/Installation/Creating Cluster/minikube.md#local-connection-workarounds" %}}).
 {{< /alert >}}
 
@@ -166,7 +169,7 @@ If you do not have netcat installed
   (i.e. you get a response of `nc: command not found`),
   you can install netcat by running `sudo apt install netcat`.
 
-If you are on Windows, you can alternatively install netcat on 
+If you are on Windows, you can alternatively install netcat on
 [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10),
 or download a version of netcat for Windows from [nmap.org](https://nmap.org/ncat/).
 {{< /alert >}}

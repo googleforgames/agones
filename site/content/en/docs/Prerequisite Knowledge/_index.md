@@ -36,20 +36,26 @@ The following resources are great for learning these concepts:
 
 ## Kubernetes
 
-Kubernetes builds on top of Docker to run containers at scale, on lots of machines. 
+Kubernetes builds on top of Docker to run containers at scale, on lots of machines.
 If you have yet to learn about Kubernetes, we recommend that you have knowledge in the following
 areas before getting started with Agones:
 
-* Kubernetes as a concept
+* Kubernetes as a concept - you should take the [basics tutorial](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
 * Pods
 * Deployments
 * Services
 * Creating a Deployment with a Service
 
+### Mappings in Agones
+
+Agones extends the Kubernetes API to include new [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) such as `GameServer` and `Fleet`. See the [Reference documentation](https://agones.dev/site/docs/reference/) for more information.
+
+Agones creates a backing Pod with the appropriate configuration parameters for
+each `GameServer` that is configured in a cluster. They both have the same name.
+
 ### Resources
 
 * [You should totally read this comic and interactive tutorial](https://cloud.google.com/kubernetes-engine/kubernetes-comic/)
-* [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
 * [Katacoda's free, interactive Kubernetes course](https://www.katacoda.com/courses/kubernetes)
 * [Kubernetes concepts, explained](https://kubernetes.io/docs/concepts/)
 
@@ -63,7 +69,7 @@ Agones:
 
 * [Dedicated Game Servers, Drawn Badly (video)](https://www.youtube.com/watch?v=Nl_FIGFtYdc)
 * [What Every Programmer Needs To Know About Game Networking](https://gafferongames.com/post/what_every_programmer_needs_to_know_about_game_networking/)
-* [Fast-Paced Multiplayer (Part I): Client-Server Game Architecture](https://www.gabrielgambetta.com/client-server-game-architecture.html)  
+* [Fast-Paced Multiplayer (Part I): Client-Server Game Architecture](https://www.gabrielgambetta.com/client-server-game-architecture.html)
 * [Game Server (wikipedia)](https://en.wikipedia.org/wiki/Game_server)
 * {{< ghlink href="examples/simple-game-server" >}}Example simple gameserver that responds to UDP and/or
  TCP commands{{< /ghlink >}}
