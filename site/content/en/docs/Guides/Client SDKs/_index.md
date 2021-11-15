@@ -184,11 +184,11 @@ the `message GameServer`.
 For language specific documentation, have a look at the respective source (linked above), 
 and the {{< ghlink href="examples" >}}examples{{< /ghlink >}}.
 
-Currently, in [Beta]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}), and enabled by default, the current 
-state of the `GameServer` will be sent to the WatchGameServer function on first invocation.  
+{{% feature expiryVersion="1.19.0" %}}
+Currently, in [Beta]({{% ref "/docs/Guides/feature-stages.md#feature-gates" %}}), and enabled by default, the current state of the `GameServer` will be sent to the WatchGameServer function on first invocation.
 
-Use the feature flag `SDKWatchSendOnExecute` to disable this feature if needed, but if you run into issues,
-please [file an issue](https://github.com/googleforgames/agones/issues).
+Use the feature flag `SDKWatchSendOnExecute` to disable this feature if needed, but if you run into issues, please [file an issue](https://github.com/googleforgames/agones/issues).
+{{% /feature %}}
 
 ### Metadata Management
 

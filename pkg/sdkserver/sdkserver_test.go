@@ -665,37 +665,6 @@ func TestSDKServerGetGameServer(t *testing.T) {
 func TestSDKServerWatchGameServer(t *testing.T) {
 	t.Parallel()
 
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
-
-	m := agtesting.NewMocks()
-	sc, err := defaultSidecar(m)
-	require.NoError(t, err)
-	assert.Empty(t, sc.connectedStreams)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sc.ctx = ctx
-
-	stream := newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-	assert.Equal(t, stream, sc.connectedStreams[0])
-
-	stream = newGameServerMockStream()
-	asyncWatchGameServer(t, sc, stream)
-	assert.Nil(t, waitConnectedStreamCount(sc, 2))
-	assert.Len(t, sc.connectedStreams, 2)
-	assert.Equal(t, stream, sc.connectedStreams[1])
-}
-
-func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
-	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-
 	fixture := &agonesv1.GameServer{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test",
@@ -709,9 +678,6 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=true")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
 
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
@@ -766,20 +732,26 @@ func TestSDKServerWatchGameServerFeatureSDKWatchSendOnExecute(t *testing.T) {
 		}
 	}
 
-	// if SDKWatchSendOnExecute feature is turned on, there are two stream.Send() calls should happen:
-	// one in sendGameServerUpdate, another one in WatchGameServer.
+	// There are two stream.Send() calls should happen: one in sendGameServerUpdate,
+	// another one in WatchGameServer.
 	assert.Equal(t, 2, totalSendCalls)
 }
 
 func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	t.Parallel()
-
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
 
 	m := agtesting.NewMocks()
+	fakeWatch := watch.NewFake()
+	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
 	assert.Empty(t, sc.connectedStreams)
@@ -787,12 +759,21 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sc.ctx = ctx
+	sc.informerFactory.Start(ctx.Done())
+
+	fakeWatch.Add(fixture.DeepCopy())
+	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
+	sc.gsWaitForSync.Done()
+
+	// wait for the GameServer to be populated, as we can't rely on WaitForCacheSync
+	require.Eventually(t, func() bool {
+		_, err := sc.gameServer()
+		return err == nil
+	}, time.Minute, time.Second, "Could not find the GameServer")
 
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-
-	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server"}}
 
 	sc.sendGameServerUpdate(fixture)
 
@@ -808,35 +789,40 @@ func TestSDKServerSendGameServerUpdate(t *testing.T) {
 
 func TestSDKServerUpdateEventHandler(t *testing.T) {
 	t.Parallel()
-
-	// Acquire lock in order to be sure that
-	// no other parallel test turn on FeatureSDKWatchSendOnExecute
-	agruntime.FeatureTestMutex.Lock()
-	defer agruntime.FeatureTestMutex.Unlock()
-	err := agruntime.ParseFeatures(string(agruntime.FeatureSDKWatchSendOnExecute) + "=false")
-	require.NoError(t, err, "Can not parse FeatureSDKWatchSendOnExecute")
+	fixture := &agonesv1.GameServer{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test",
+			Namespace: "default",
+		},
+		Status: agonesv1.GameServerStatus{
+			State: agonesv1.GameServerStateReady,
+		},
+	}
 
 	m := agtesting.NewMocks()
 	fakeWatch := watch.NewFake()
 	m.AgonesClient.AddWatchReactor("gameservers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
-
 	sc, err := defaultSidecar(m)
 	require.NoError(t, err)
+	assert.Empty(t, sc.connectedStreams)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sc.ctx = ctx
-
 	sc.informerFactory.Start(ctx.Done())
+
+	fakeWatch.Add(fixture.DeepCopy())
 	assert.True(t, cache.WaitForCacheSync(ctx.Done(), sc.gameServerSynced))
 	sc.gsWaitForSync.Done()
 
+	// wait for the GameServer to be populated, as we can't rely on WaitForCacheSync
+	require.Eventually(t, func() bool {
+		_, err := sc.gameServer()
+		return err == nil
+	}, time.Minute, time.Second, "Could not find the GameServer")
 	stream := newGameServerMockStream()
 	asyncWatchGameServer(t, sc, stream)
 	assert.Nil(t, waitConnectedStreamCount(sc, 1))
-
-	fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test-server", Namespace: "default"},
-		Spec: agonesv1.GameServerSpec{},
-	}
 
 	// need to add it before it can be modified
 	fakeWatch.Add(fixture.DeepCopy())
