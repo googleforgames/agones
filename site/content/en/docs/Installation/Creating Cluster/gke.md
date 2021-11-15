@@ -66,6 +66,18 @@ To install `gcloud` and `kubectl`, perform the following steps:
 
 [gcloud-install]: https://cloud.google.com/sdk/docs/quickstarts
 
+## Creating the firewall
+
+We need a firewall to allow UDP traffic to nodes tagged as `game-server` via ports 7000-8000. These firewall rules apply to cluster nodes you will create in the
+next section.
+
+```bash
+gcloud compute firewall-rules create game-server-firewall \
+  --allow udp:7000-8000 \
+  --target-tags game-server \
+  --description "Firewall to allow game server udp traffic"
+```
+
 ## Creating the cluster
 
 A [cluster][cluster] consists of at least one *control plane* machine and multiple worker machines called *nodes*. In Google Kubernetes Engine, nodes are [Compute Engine virtual machine][vms] instances that run the Kubernetes processes necessary to make them part of the cluster.
@@ -92,8 +104,9 @@ Flag explanations:
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
-_Optional_: Create a dedicated node pool for the Agones controllers. If you skip this step, the Agones
-controllers will share the default node pool with your game servers, which is fine for experimentation but not
+_Optional_: Create a [dedicated node pool](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools)
+for the Agones resources to be installed in. If you skip this step, the Agones controllers will
+share the default node pool with your game servers, which is fine for experimentation but not
 recommended for a production deployment.
 
 ```bash
@@ -153,16 +166,6 @@ gcloud container clusters get-credentials [CLUSTER_NAME]
 [cluster]: https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture
 [vms]: https://cloud.google.com/compute/docs/instances/
 
-### Creating the firewall
-
-We need a firewall to allow UDP traffic to nodes tagged as `game-server` via ports 7000-8000.
-
-```bash
-gcloud compute firewall-rules create game-server-firewall \
-  --allow udp:7000-8000 \
-  --target-tags game-server \
-  --description "Firewall to allow game server udp traffic"
-```
 
 {{< alert title="Note" color="info">}}
 Before planning your production GKE infrastructure, it is worth reviewing the
