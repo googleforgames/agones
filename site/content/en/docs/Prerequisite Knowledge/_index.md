@@ -48,8 +48,7 @@ areas before getting started with Agones:
 
 ### Mappings in Agones
 
-Agones extends the Kubernetes API to include a new [custom resource](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
-of type [`GameServer`](https://agones.dev/site/docs/reference/gameserver/).
+Agones extends the Kubernetes API to include new [custom resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) such as `GameServer` and `Fleet`. See the [Reference documentation](https://agones.dev/site/docs/reference/) for more information.
 
 Agones creates a backing Pod with the appropriate configuration parameters for
 each `GameServer` that is configured in a cluster. They both have the same name.
