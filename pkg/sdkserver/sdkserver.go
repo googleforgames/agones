@@ -29,6 +29,7 @@ import (
 	typedv1 "agones.dev/agones/pkg/client/clientset/versioned/typed/agones/v1"
 	"agones.dev/agones/pkg/client/informers/externalversions"
 	listersv1 "agones.dev/agones/pkg/client/listers/agones/v1"
+	"agones.dev/agones/pkg/gameserverallocations"
 	"agones.dev/agones/pkg/sdk"
 	"agones.dev/agones/pkg/sdk/alpha"
 	"agones.dev/agones/pkg/sdk/beta"
@@ -329,6 +330,18 @@ func (s *SDKServer) updateState(ctx context.Context) error {
 	}
 	s.gsUpdateMutex.RUnlock()
 
+	// If we are setting the Allocated status, set the last-allocated annotation as well.
+	if gsCopy.Status.State == agonesv1.GameServerStateAllocated {
+		ts, err := s.clock.Now().MarshalText()
+		if err != nil {
+			return err
+		}
+		if gsCopy.ObjectMeta.Annotations == nil {
+			gsCopy.ObjectMeta.Annotations = map[string]string{}
+		}
+		gsCopy.ObjectMeta.Annotations[gameserverallocations.LastAllocatedAnnotationKey] = string(ts)
+	}
+
 	gs, err = gameServers.Update(ctx, gsCopy, metav1.UpdateOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "could not update GameServer %s/%s to state %s", s.namespace, s.gameServerName, gs.Status.State)
@@ -507,16 +520,13 @@ func (s *SDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameServer,
 func (s *SDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	s.logger.Debug("Received WatchGameServer request, adding stream to connectedStreams")
 
-	if runtime.FeatureEnabled(runtime.FeatureSDKWatchSendOnExecute) {
-		gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
-		if err != nil {
-			return err
-		}
+	gs, err := s.GetGameServer(context.Background(), &sdk.Empty{})
+	if err != nil {
+		return err
+	}
 
-		err = stream.Send(gs)
-		if err != nil {
-			return err
-		}
+	if err := stream.Send(gs); err != nil {
+		return err
 	}
 
 	s.streamMutex.Lock()
