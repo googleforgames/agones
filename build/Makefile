@@ -489,11 +489,6 @@ gen-install: $(ensure-build-image)
 		--set agones.allocator.generateTLS=false \
 		--set agones.allocator.generateClientTLS=false \
 		--set agones.crds.cleanupOnDelete=false \
-		--set-file agones.controller.tlsCert=$(mount_path)/install/helm/agones/certs/server.crt \
-		--set-file agones.controller.tlsKey=$(mount_path)/install/helm/agones/certs/server.key \
-		--set-file agones.allocator.tlsCert=$(mount_path)/install/helm/agones/certs/allocator/server.crt \
-		--set-file agones.allocator.tlsKey=$(mount_path)/install/helm/agones/certs/allocator/server.key \
-		--set-file "agones.allocator.clientCAs.ca\.crt"=$(mount_path)/install/helm/agones/certs/allocator/client-ca/ca.crt \
 		> $(mount_path)/install/yaml/install.yaml'
 
 # Generate the client for our CustomResourceDefinition

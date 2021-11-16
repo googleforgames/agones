@@ -38,7 +38,7 @@ spec:
         {{- if .Values.agones.controller.generateTLS }}
   caBundle: {{ b64enc $ca.Cert }}
         {{- else }}
-  caBundle: {{ b64enc .Values.agones.controller.tlsCert }}
+  caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
         {{- end }}
   version: v1
 {{- end}}
@@ -68,7 +68,7 @@ webhooks:
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ b64enc .Values.agones.controller.tlsCert }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
 {{- end }}
     rules:
       - apiGroups:
@@ -125,7 +125,7 @@ webhooks:
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
-      caBundle: {{ b64enc .Values.agones.controller.tlsCert }}
+      caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
 {{- end }}
     rules:
       - apiGroups:
@@ -164,6 +164,6 @@ data:
   server.crt: {{ b64enc $cert.Cert }}
   server.key: {{ b64enc $cert.Key }}
 {{- else }}
-  server.crt: {{ b64enc .Values.agones.controller.tlsCert }}
-  server.key: {{ b64enc .Values.agones.controller.tlsKey }}
+  server.crt: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+  server.key: {{ default (.Files.Get "certs/server.key") .Values.agones.controller.tlsKey | b64enc }}
 {{- end }}

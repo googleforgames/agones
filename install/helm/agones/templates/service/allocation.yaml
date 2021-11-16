@@ -358,11 +358,12 @@ data:
 {{- end }}
 {{- if .Values.agones.allocator.generateTLS }}
   client-ca.crt: {{ b64enc $ca.Cert }}
-{{- end }}
-{{- if .Values.agones.allocator.clientCAs }}
+{{- else if .Values.agones.allocator.clientCAs }}
   {{- range $caField, $caContent := .Values.agones.allocator.clientCAs }}
   {{ $caField }}: {{ b64enc $caContent }}
   {{- end }}
+{{- else }}
+  {{- (.Files.Glob "certs/allocator/client-ca/*").AsSecrets | nindent 2 }}
 {{- end }}
 
 ---
@@ -384,8 +385,8 @@ data:
   tls.crt: {{ b64enc $cert.Cert }}
   tls.key: {{ b64enc $cert.Key }}
 {{- else }}
-  tls.crt: {{ b64enc .Values.agones.allocator.tlsCert }}
-  tls.key: {{ b64enc .Values.agones.allocator.tlsKey }}
+  tls.crt: {{ default (.Files.Get "certs/allocator/server.crt") .Values.agones.allocator.tlsCert | b64enc }}
+  tls.key: {{ default (.Files.Get "certs/allocator/server.key") .Values.agones.allocator.tlsKey | b64enc }}
 {{- end }}
 
 ---
@@ -404,7 +405,7 @@ data:
 {{- if .Values.agones.allocator.generateTLS }}
   tls-ca.crt: {{ b64enc $ca.Cert }}
 {{- else }}
-  tls-ca.crt: {{ b64enc .Values.agones.allocator.tlsCert }}
+  tls-ca.crt: {{ default (.Files.Get "certs/allocator/server.crt") .Values.agones.allocator.tlsCert | b64enc }}
 {{- end }}
 
 # Default allocation client secret
