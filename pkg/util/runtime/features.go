@@ -58,7 +58,7 @@ var (
 	featureDefaults = map[Feature]bool{
 		FeatureExample:                true,
 		FeaturePlayerTracking:         false,
-		NodeExternalDNS:               false,
+		NodeExternalDNS:               true,
 		FeatureStateAllocationFilter:  false,
 		FeaturePlayerAllocationFilter: false,
 		FeatureCustomFasSyncInterval:  false,
