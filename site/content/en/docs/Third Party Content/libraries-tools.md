@@ -25,7 +25,7 @@ Libraries or applications that implement messaging systems.
 
 ## Match Making
 
-- [Agones x Open Match](https://github.com/Octops/agones-discover-openmatch) - How to implement a matchmaking system using Agones and Open Match
+- [Octops/Agones x Open Match](https://github.com/Octops/agones-discover-openmatch) - How to implement a matchmaking system using Agones and Open Match
 
 ## Allocation
 
