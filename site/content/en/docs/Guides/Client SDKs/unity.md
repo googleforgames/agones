@@ -33,7 +33,6 @@ Additional methods have been added for ease of use:
 
 - Connect
 
-{{% feature publishVersion="1.19.0" %}}
 ## Installation
 
 The client SDK code can be manually downloaded and added to your project hierarchy.
@@ -50,7 +49,6 @@ It can also be imported into your project via the Unity Package Manager (UPM). T
 If you want a specific release, the dependency can be pinned to that version. For example: 
 
 `"com.googleforgames.agones": "https://github.com/googleforgames/agones.git?path=/sdks/unity#1.19.0",`
-{{% feature publishVersion="1.19.0" %}}
 
 ## Download
 
