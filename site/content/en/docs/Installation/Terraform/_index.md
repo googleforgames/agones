@@ -8,18 +8,10 @@ description: >
 
 ## Prerequisites
 
-{{% feature expiryVersion="1.19.0" %}}
-- [Terraform](https://www.terraform.io/) v0.12.21
-- Access to the the Kubernetes hosting provider you are using (e.g. `gcloud`,
-  `awscli`, or `az` utility installed)
-- Git
-{{% /feature %}}
-{{% feature publishVersion="1.19.0" %}}
 - [Terraform](https://www.terraform.io/) v1.0.8
 - Access to the the Kubernetes hosting provider you are using (e.g. `gcloud`,
   `awscli`, or `az` utility installed)
 - Git
-{{% /feature %}}
 
 {{% alert color="info" title="Note" %}}
 All our Terraform modules and examples use a {{% ghlink href="install/terraform/modules/helm3" %}}Helm 3 Module{{% /ghlink %}}.

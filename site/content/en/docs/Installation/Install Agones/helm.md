@@ -94,8 +94,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.metrics.stackdriverEnabled`                 | Enables Stackdriver exporter of controller metrics                                              | `false`                |
 | `agones.metrics.stackdriverProjectID`               | This overrides the default gcp project id for use with stackdriver                              | \`\`                   |
 | `agones.metrics.stackdriverLabels`                  | A set of default labels to add to all stackdriver metrics generated in form of key value pair (`key=value,key2=value2`). By default metadata are automatically added using Kubernetes API and GCP metadata enpoint.                              | \`\` |
+| `agones.metrics.serviceMonitor.interval`            | Default scraping interval for ServiceMonitor                                                    | `30s`                 |
 | `agones.serviceaccount.controller`                  | Service account name for the controller. **Note**: Will be replaced with `agones.serviceaccount.controller.name` in Agones 1.16 | `agones-controller`    |
-| `agones.serviceaccount.sdk`                         | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16        | `agones-sdk`           |
+| `agones.serviceaccount.sdk`                         | Service account name for the sdk. **Note**: Will be replaced with `agones.serviceaccount.sdk.name` in Agones 1.16        | `agones-sdk`           | 
+| `agones.serviceaccount.sdk.annotations`             | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces | `{}`                           |
 | `agones.image.registry`                             | Global image registry for all images                                                            | `gcr.io/agones-images` |
 | `agones.image.tag`                                  | Global image tag for all images                                                                 | `{{< release-version >}}` |
 | `agones.image.controller.name`                      | Image name for the controller                                                                   | `agones-controller`    |
@@ -118,6 +120,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
+| `agones.controller.tlsCert`                         | Custom TLS certificate provided as a string                                                     | \`\`                   |
+| `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
@@ -176,11 +180,18 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
 | `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. Only applicable to the REST API. It currently does not work for the gRPC API. ([issue](https://github.com/googleforgames/agones/issues/1945)) | `false`                |
 | `agones.allocator.disableSecretCreation`            | Disables the creation of any allocator secrets. If true, you MUST provide the `allocator-tls`, `allocator-tls-ca`, and `allocator-client-ca` secrets before installation. | `false` |
+| `agones.allocator.tlsCert`                          | Custom TLS certificate provided as a string                                                     | \`\`                   |
+| `agones.allocator.tlsKey`                           | Custom TLS private key provided as a string                                                     | \`\`                   |
+| `agones.allocator.clientCAs`                        | A map of secret key names to allowed client CA certificates provided as strings                 | `{}`                   |
 | `agones.allocator.tolerations`                      | Allocator [toleration][toleration] labels for pod assignment                                    | `[]`                   |
 | `agones.allocator.affinity`                         | Allocator [affinity][affinity] settings for pod assignment                                      | `{}`                   |
 | `agones.allocator.annotations`                      | [Annotations][annotations] added to the Agones allocator pods                                   | `{}`                   |
 | `agones.allocator.resources`                        | Allocator pods [resource requests/limit][resources]                                             | `{}`                   |
 | `agones.allocator.nodeSelector`                     | Allocator [node labels][nodeSelector] for pod assignment                                        | `{}`                   |
+| `agones.allocator.serviceMetrics.name`              | Second Service name for the allocator                                                           | `agones-allocator-metrics-service`     |
+| `agones.allocator.serviceMetrics.annotations`       | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
+| `agones.allocator.serviceMetrics.http.port`         | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
+| `agones.allocator.serviceInternal.http.portName`    | The name of exposed port                                                                        | `http`                  |
 | `agones.serviceaccount.controller.name`             | Service account name for the controller                                                         | `agones-controller`    |
 | `agones.serviceaccount.sdk.name`                    | Service account name for the sdk                                                                | `agones-sdk`           |
 | `agones.serviceaccount.allocator.name`              | Service account name for the allocator                                                          | `agones-allocator`     |
@@ -192,22 +203,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.19.0" %}}
+{{% feature publishVersion="1.20.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-| `agones.serviceaccount.sdk.annotations`             | A map of namespaces to maps of [Annotations][annotations] added to the Agones SDK service account for the specified namespaces | `{}`                   |
-| `agones.metrics.serviceMonitor.interval`            | Default scraping interval for ServiceMonitor                                                    | `30s`                 |
-| `agones.controller.tlsCert`                         | Custom TLS certificate provided as a string                                                     | \`\`                   |
-| `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
-| `agones.allocator.tlsCert`                          | Custom TLS certificate provided as a string                                                     | \`\`                   |
-| `agones.allocator.tlsKey`                           | Custom TLS private key provided as a string                                                     | \`\`                   |
-| `agones.allocator.clientCAs`                        | A map of secret key names to allowed client CA certificates provided as strings                 | `{}`                   |
-| `agones.allocator.serviceMetrics.name`              | Second Service name for the allocator                                                           | `agones-allocator-metrics-service`     |
-| `agones.allocator.serviceMetrics.annotations`       | [Annotations][annotations] added to the Agones allocator second Service                         | `{}`                   |
-| `agones.allocator.serviceMetrics.http.port`         | The port that is exposed within cluster by the [allocator service][allocator] for http requests | `8080`                  |
-| `agones.allocator.serviceInternal.http.portName`    | The name of exposed port                                                                        | `http`                  |
 |                       |                           |                            |
 {{% /feature %}}
 
