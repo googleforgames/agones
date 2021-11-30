@@ -34,7 +34,7 @@ RUN cd cpp-simple && mkdir -p .build && \
     cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=.bin && \
     cmake --build . --target install
 
-FROM debian:buster
+FROM debian:bullseye
 RUN useradd -u 1000 -m server
 
 COPY --from=builder --chown=server:server /project/cpp-simple/.build/.bin/cpp-simple /home/server/cpp-simple

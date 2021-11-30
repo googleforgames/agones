@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM debian:buster
+FROM debian:bullseye
 RUN useradd -u 1000 -m server
 RUN apt-get update && apt-get install -y curl  && apt-get clean
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
