@@ -39,7 +39,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -281,17 +280,12 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
 func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) {
-	t.Helper()
 	err := f.WaitForFleetCondition(t, flt, condition)
-	if err != nil {
-		// Do not call Fatalf() from go routine other than main test go routine, because it could cause a race
-		require.Failf(t, "error waiting for fleet condition on fleet %v", flt.Name)
-	}
+	require.NoError(t, err, "error waiting for fleet condition on fleet: %v", flt.Name)
 }
 
 // WaitForFleetCondition waits for the Fleet to be in a specific condition or returns an error if the condition can't be met in 5 minutes.
 func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) error {
-	t.Helper()
 	log := TestLogger(t).WithField("fleet", flt.Name)
 	log.Info("waiting for fleet condition")
 	err := wait.PollImmediate(2*time.Second, 5*time.Minute, func() (bool, error) {
@@ -303,7 +297,12 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 		return condition(log, fleet), nil
 	})
 	if err != nil {
-		log.WithError(err).Info("error waiting for fleet condition, dumping Gameserver and pod data")
+		// save this to be returned later.
+		resultErr := err
+		log.WithField("fleetStatus", fmt.Sprintf("%+v", flt.Status)).WithError(err).
+			Info("error waiting for fleet condition, dumping Fleet and Gameserver data")
+
+		f.LogEvents(t, log, flt.ObjectMeta.Namespace, flt)
 
 		gsList, err := f.ListGameServersFromFleet(flt)
 		require.NoError(t, err)
@@ -315,7 +314,7 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 			f.LogEvents(t, log, gs.ObjectMeta.Namespace, &gs)
 		}
 
-		return err
+		return resultErr
 	}
 	return nil
 }
@@ -323,7 +322,6 @@ func (f *Framework) WaitForFleetCondition(t *testing.T, flt *agonesv1.Fleet, con
 // WaitForFleetAutoScalerCondition waits for the FleetAutoscaler to be in a specific condition or fails the test if the condition can't be met in 2 minutes.
 // nolint: dupl
 func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscaling.FleetAutoscaler, condition func(log *logrus.Entry, fas *autoscaling.FleetAutoscaler) bool) {
-	t.Helper()
 	log := TestLogger(t).WithField("fleetautoscaler", fas.Name)
 	log.Info("waiting for fleetautoscaler condition")
 	err := wait.PollImmediate(2*time.Second, 2*time.Minute, func() (bool, error) {
@@ -334,10 +332,7 @@ func (f *Framework) WaitForFleetAutoScalerCondition(t *testing.T, fas *autoscali
 
 		return condition(log, fleetautoscaler), nil
 	})
-	if err != nil {
-		log.WithError(err).Info("error waiting for fleetautoscaler condition")
-		t.Fatalf("error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
-	}
+	require.NoError(t, err, "error waiting for fleetautoscaler condition on fleetautoscaler %v", fas.Name)
 }
 
 // ListGameServersFromFleet lists GameServers from a particular fleet
@@ -456,10 +451,8 @@ func (f *Framework) CleanUp(ns string) error {
 func (f *Framework) CreateAndApplyAllocation(t *testing.T, flt *agonesv1.Fleet) *allocationv1.GameServerAllocation {
 	gsa := GetAllocation(flt)
 	gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.ObjectMeta.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
-	if !assert.NoError(t, err) {
-		assert.FailNow(t, "gameserverallocation could not be created")
-	}
-	assert.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
+	require.NoError(t, err)
+	require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(gsa.Status.State))
 	return gsa
 }
 
