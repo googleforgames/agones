@@ -153,7 +153,7 @@ After setting up `agones-allocator` with server certificate and allowlisting the
 
 Set the environment variables and store the client secrets before allocating using gRPC or REST APIs:
 
-```none
+```bash
 NAMESPACE=default # replace with any namespace
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 KEY_FILE=client.key
