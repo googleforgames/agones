@@ -196,6 +196,9 @@ You should expect to see the following output:
 {"gameServerName":"game-server-name","ports":[{"name":"default","port":7463}],"address":"1.2.3.4","nodeName":"node-name"}
 ```
 
+### API Reference
+You can communicate with the Agones controller via the kubernetes API and the agones CRD's. This way, you don't have the feature set offered by a multi cluster setups. The calculation which cluster to use for a new game server is done by the AllocationService considering the {{< ghlink href="pkg/apis/multicluster/v1/gameserverallocationpolicy.go" >}}GameServerAllocationPolicy{{< /ghlink >}} resource. For this reason you can talk directly to the AllocationService via gRPC or REST via mTLS. The AllocationService API is located as a gRPC service {{< ghlink href="proto/allocation/allocation.proto" >}}here{{< /ghlink >}}. Additionally, the RESTAPI is available as a {{< ghlink href="pkg/allocation/go/allocation.swagger.json" >}}Swagger API{{< /ghlink >}}.
+
 ### Sending Data to the Game Server
 
 The service accepts a `metadata` field, which can be used to apply `labels` and `annotations` to the allocated `GameServer`. The old `metaPatch` fields is now deprecated, but can still be used for compatibility. If both `metadata` and `metaPatch` fields are set, `metaPatch` is ignored.
@@ -254,7 +257,3 @@ If you encounter problems, explore the following potential root causes:
     kubectl get service agones-allocator -n agones-system
     agones-allocator   LoadBalancer   10.55.248.14   34.82.195.204    443:32468/TCP   6d23h
     ```
-
-## API Reference
-
-The AllocationService API is located as a gRPC service {{< ghlink href="proto/allocation/allocation.proto" >}}here{{< /ghlink >}}. Additionally, the REST API is available as a {{< ghlink href="pkg/allocation/go/allocation.swagger.json" >}}Swagger API{{< /ghlink >}}.
