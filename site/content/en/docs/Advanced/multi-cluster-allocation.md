@@ -96,7 +96,9 @@ EOF
 To enable multi-cluster allocation, set `multiClusterSetting.enabled` to `true` in {{< ghlink href="proto/allocation/allocation.proto" >}}allocation.proto{{< /ghlink >}} and send allocation requests. For more information visit [agones-allocator]({{< relref "allocator-service.md">}}). In the following, using {{< ghlink href="examples/allocator-client/main.go" >}}allocator-client sample{{< /ghlink >}}, a multi-cluster allocation request is sent to the agones-allocator service.
 
 Set the environment variables and store the client secrets before allocating using gRPC or REST APIs
-```none
+```bash
+#!/bin/bash
+
 NAMESPACE=default # replace with any namespace
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 KEY_FILE=client.key
@@ -126,7 +128,14 @@ If using REST use
 ```bash
 #!/bin/bash
 
-curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'", "multiClusterSetting":{"enabled":true}}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
+curl --key ${KEY_FILE} \
+     --cert ${CERT_FILE} \
+     --cacert ${TLS_CA_FILE} \
+     -H "Content-Type: application/json" \
+     --data '{"namespace":"'${NAMESPACE}'", "multiClusterSetting":{"enabled":true}}' \
+     https://${EXTERNAL_IP}/gameserverallocation \
+     -X POST
+     
 ```
 
 ## Troubleshooting
