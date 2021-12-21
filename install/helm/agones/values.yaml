@@ -65,6 +65,7 @@ agones:
               - key: agones.dev/agones-system
                 operator: Exists
     generateTLS: true
+    reuseGeneratedTLS: true
     tlsCert: ""
     tlsKey: ""
     safeToEvict: false

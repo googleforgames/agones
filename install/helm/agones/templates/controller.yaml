@@ -37,7 +37,7 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: {{ .Values.agones.controller.safeToEvict | quote }}
-{{- if .Values.agones.controller.generateTLS }}
+{{- if .Values.agones.controller.generateTLS | and (not .Values.agones.controller.reuseGeneratedTLS) }}
         revision/tls-cert: {{ .Release.Revision | quote }}
 {{- end }}
 {{- if and (.Values.agones.metrics.prometheusServiceDiscovery) (.Values.agones.metrics.prometheusEnabled) }}

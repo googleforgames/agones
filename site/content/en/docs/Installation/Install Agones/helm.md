@@ -120,6 +120,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
+| `agones.controller.reuseGeneratedTLS`               | Set to true to reuse generated TLS certificates with lookup existing secrets                    | `true`                 |
 | `agones.controller.tlsCert`                         | Custom TLS certificate provided as a string                                                     | \`\`                   |
 | `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
@@ -275,8 +276,10 @@ That means that you skipped the `--cleanup` flag and you should either delete th
 
 ## Controller TLS Certificates
 
-By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
-For most use cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
+By default agones chart generates tls certificates used by the admission controller and reuses them on each `helm upgrade` command using `lookup` templating function.
+This prevents agones controller from restart during update of values not related to controller itself (especially when using agones as a subchart dependency in umbrella charts).
+To turn off this feature and generate tls certificates on each `helm upgrade` command (e.g. to force integrity between versions) set `agones.controller.reuseGeneratedTLS` to `false`.
+Another approach to avoid restarts and having more control we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.

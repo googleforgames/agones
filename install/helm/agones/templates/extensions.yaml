@@ -11,11 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-{{- $ca := genCA "admission-controller-ca" 3650 }}
-{{- $cn := printf "agones-controller-service" }}
-{{- $altName1 := printf "agones-controller-service.%s"  .Release.Namespace }}
-{{- $altName2 := printf "agones-controller-service.%s.svc" .Release.Namespace }}
-{{- $cert := genSignedCert $cn nil (list $altName1 $altName2) 3650 $ca }}
+{{- $certCert := "" }}
+{{- $certKey := "" }}
+{{- if .Values.agones.controller.generateTLS }}
+  {{- $previous := lookup "v1" "Secret" .Release.Namespace (include "agones.fullname" . | printf "%s-cert") }}
+  {{- if $previous | and .Values.agones.controller.reuseGeneratedTLS }}
+    {{- $certCert = index $previous.data "server.crt" | b64dec }}
+    {{- $certKey = index $previous.data "server.key" | b64dec }}
+  {{- else }}
+    {{- $ca := genCA "admission-controller-ca" 3650 }}
+    {{- $cn := printf "agones-controller-service" }}
+    {{- $altName1 := printf "agones-controller-service.%s"  .Release.Namespace }}
+    {{- $altName2 := printf "agones-controller-service.%s.svc" .Release.Namespace }}
+    {{- $cert := genSignedCert $cn nil (list $altName1 $altName2) 3650 $ca }}
+    {{- $certCert = $cert.Cert }}
+    {{- $certKey = $cert.Key }}
+  {{- end }}
+{{- end }}
 ---
 {{- if .Values.agones.registerApiService }}
 apiVersion: apiregistration.k8s.io/v1
@@ -35,11 +47,11 @@ spec:
   service:
     name: agones-controller-service
     namespace: {{ .Release.Namespace }}
-        {{- if .Values.agones.controller.generateTLS }}
-  caBundle: {{ b64enc $ca.Cert }}
-        {{- else }}
+{{- if .Values.agones.controller.generateTLS }}
+  caBundle: {{ b64enc $certCert }}
+{{- else }}
   caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
-        {{- end }}
+{{- end }}
   version: v1
 {{- end}}
 {{- if .Values.agones.registerWebhooks }}
@@ -66,7 +78,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         path: /validate
 {{- if .Values.agones.controller.generateTLS }}
-      caBundle: {{ b64enc $ca.Cert }}
+      caBundle: {{ b64enc $certCert }}
 {{- else }}
       caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
 {{- end }}
@@ -123,7 +135,7 @@ webhooks:
         namespace: {{ .Release.Namespace }}
         path: /mutate
 {{- if .Values.agones.controller.generateTLS }}
-      caBundle: {{ b64enc $ca.Cert }}
+      caBundle: {{ b64enc $certCert }}
 {{- else }}
       caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
 {{- end }}
@@ -161,8 +173,8 @@ metadata:
 type: Opaque
 data:
 {{- if .Values.agones.controller.generateTLS }}
-  server.crt: {{ b64enc $cert.Cert }}
-  server.key: {{ b64enc $cert.Key }}
+  server.crt: {{ b64enc $certCert }}
+  server.key: {{ b64enc $certKey }}
 {{- else }}
   server.crt: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
   server.key: {{ default (.Files.Get "certs/server.key") .Values.agones.controller.tlsKey | b64enc }}
