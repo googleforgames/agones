@@ -39,7 +39,8 @@ func main() {
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
-	shutdownDelay := flag.Int("automaticShutdownDelayMin", 0, "If greater than zero, automatically shut down the server this many minutes after the server becomes allocated")
+	shutdownDelayMin := flag.Int("automaticShutdownDelayMin", 0, "[Deprecated] If greater than zero, automatically shut down the server this many minutes after the server becomes allocated (please use automaticShutdownDelaySec instead)")
+	shutdownDelaySec := flag.Int("automaticShutdownDelaySec", 0, "If greater than zero, automatically shut down the server this many seconds after the server becomes allocated (cannot be used if automaticShutdownDelayMin is set)")
 	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero and readyOnStart is true, wait this many seconds before marking the game server as ready")
 	udp := flag.Bool("udp", true, "Server will listen on UDP")
 	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
@@ -107,8 +108,15 @@ func main() {
 		ready(s)
 	}
 
-	if *shutdownDelay > 0 {
-		shutdownAfterAllocation(s, *shutdownDelay)
+
+	if *shutdownDelayMin > 0 && *shutdownDelaySec > 0 {
+		log.Fatalf("Cannot set both --automaticShutdownDelayMin and --automaticShutdownDelaySec")
+	}
+	if *shutdownDelayMin > 0 {
+		shutdownAfterAllocation(s, *shutdownDelayMin * 60)
+	}
+	if *shutdownDelaySec > 0 {
+		shutdownAfterAllocation(s, *shutdownDelaySec)
 	}
 
 	// Prevent the program from quitting as the server is listening on goroutines.
@@ -124,12 +132,12 @@ func doSignal() {
 }
 
 // shutdownAfterAllocation creates a callback to automatically shut down
-// the server a specified number of minutes after the server becomes
+// the server a specified number of seconds after the server becomes
 // allocated.
 func shutdownAfterAllocation(s *sdk.SDK, shutdownDelay int) {
 	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
 		if gs.Status.State == "Allocated" {
-			time.Sleep(time.Duration(shutdownDelay) * time.Minute)
+			time.Sleep(time.Duration(shutdownDelay) * time.Second)
 			shutdownErr := s.Shutdown()
 			if shutdownErr != nil {
 				log.Fatalf("Could not shutdown: %v", shutdownErr)
