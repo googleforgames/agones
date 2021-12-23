@@ -27,7 +27,7 @@ spec:
         spec:
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.5
+            image: gcr.io/agones-images/simple-game-server:0.6
             resources:
               requests:
                 memory: "64Mi"
@@ -36,4 +36,4 @@ spec:
                 memory: "64Mi"
                 cpu: "20m"
             args:
-              - "-automaticShutdownDelayMin=1"
+              - "-automaticShutdownDelaySec=60"
