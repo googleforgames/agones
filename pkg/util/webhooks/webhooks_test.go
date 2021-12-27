@@ -163,7 +163,7 @@ func TestWebHookFleetValidationHandler(t *testing.T) {
 							"template": {
 								"spec": {
 									"containers": [{
-										"image": "gcr.io/agones-images/simple-game-server:0.5",
+										"image": "gcr.io/agones-images/simple-game-server:0.6",
 										"name": false
 									}]
 								}
