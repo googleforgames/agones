@@ -150,7 +150,7 @@ Since the game client can get the domain name instead of the IP address, it will
 ### How is traffic routed from the allocated Port to the GameServer container?
 
 Traffic is routed to the GameServer Container utilising the `hostPort` field on a 
-[Pod's Container specification](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#containerport-v1-core).
+[Pod's Container specification]({{< k8s-api href="#containerport-v1-core" >}}).
 
 This opens a port on the host Node and routes traffic to the container 
 via [iptables](https://en.wikipedia.org/wiki/Iptables) or 

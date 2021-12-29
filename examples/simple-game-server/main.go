@@ -39,8 +39,10 @@ func main() {
 	port := flag.String("port", "7654", "The port to listen to traffic on")
 	passthrough := flag.Bool("passthrough", false, "Get listening port from the SDK, rather than use the 'port' value")
 	readyOnStart := flag.Bool("ready", true, "Mark this GameServer as Ready on startup")
-	shutdownDelay := flag.Int("automaticShutdownDelayMin", 0, "If greater than zero, automatically shut down the server this many minutes after the server becomes allocated")
-	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero and readyOnStart is true, wait this many seconds before marking the game server as ready")
+	shutdownDelayMin := flag.Int("automaticShutdownDelayMin", 0, "[Deprecated] If greater than zero, automatically shut down the server this many minutes after the server becomes allocated (please use automaticShutdownDelaySec instead)")
+	shutdownDelaySec := flag.Int("automaticShutdownDelaySec", 0, "If greater than zero, automatically shut down the server this many seconds after the server becomes allocated (cannot be used if automaticShutdownDelayMin is set)")
+	readyDelaySec := flag.Int("readyDelaySec", 0, "If greater than zero, wait this many seconds each time before marking the game server as ready")
+	readyIterations := flag.Int("readyIterations", 0, "If greater than zero, return to a ready state this number of times before shutting down")
 	udp := flag.Bool("udp", true, "Server will listen on UDP")
 	tcp := flag.Bool("tcp", false, "Server will listen on TCP")
 
@@ -65,8 +67,12 @@ func main() {
 		tcp = &t
 	}
 
-	if !*udp && !*tcp {
-		log.Fatalf("No protocol enabled, exiting")
+	// Check for incompatible flags.
+	if *shutdownDelayMin > 0 && *shutdownDelaySec > 0 {
+		log.Fatalf("Cannot set both --automaticShutdownDelayMin and --automaticShutdownDelaySec")
+	}
+	if *readyIterations > 0 && *shutdownDelayMin <= 0 && *shutdownDelaySec <= 0 {
+		log.Fatalf("Must set a shutdown delay if using ready iterations")
 	}
 
 	log.Print("Creating SDK instance")
@@ -107,8 +113,10 @@ func main() {
 		ready(s)
 	}
 
-	if *shutdownDelay > 0 {
-		shutdownAfterAllocation(s, *shutdownDelay)
+	if *shutdownDelaySec > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelaySec)
+	} else if *shutdownDelayMin > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin * 60)
 	}
 
 	// Prevent the program from quitting as the server is listening on goroutines.
@@ -123,20 +131,51 @@ func doSignal() {
 	os.Exit(0)
 }
 
-// shutdownAfterAllocation creates a callback to automatically shut down
-// the server a specified number of minutes after the server becomes
-// allocated.
-func shutdownAfterAllocation(s *sdk.SDK, shutdownDelay int) {
-	err := s.WatchGameServer(func(gs *coresdk.GameServer) {
-		if gs.Status.State == "Allocated" {
-			time.Sleep(time.Duration(shutdownDelay) * time.Minute)
-			shutdownErr := s.Shutdown()
-			if shutdownErr != nil {
-				log.Fatalf("Could not shutdown: %v", shutdownErr)
-			}
-		}
-	})
+// shutdownAfterNAllocations creates a callback to automatically shut down
+// the server a specified number of seconds after the server becomes
+// allocated the Nth time.
+//
+// The algorithm is:
+//
+//   1. Move the game server back to ready N times after it is allocated
+//   2. Shutdown the game server after the Nth time is becomes allocated
+//
+// This follows the integration pattern documented on the website at
+// https://agones.dev/site/docs/integration-patterns/reusing-gameservers/
+func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int) {
+	gs, err := s.GameServer()
 	if err != nil {
+		log.Fatalf("Could not get game server: %v", err)
+	}
+	currentState := gs.Status.State
+	if err := s.WatchGameServer(func(gs *coresdk.GameServer) {
+		log.Printf("Watch Game Server callback fired. State = %s", gs.Status.State)
+		if currentState == "Ready" && gs.Status.State == "Allocated" {
+			log.Println("Game Server Allocated")
+			readyIterations--
+			// Run asynchronously
+			go func(iterations int) {
+				time.Sleep(time.Duration(shutdownDelaySec) * time.Second)
+
+				if iterations > 0 {
+					log.Println("Moving Game Server back to Ready")
+					readyErr := s.Ready()
+					if readyErr != nil {
+						log.Fatalf("Could not set game server to ready: %v", readyErr)
+					}
+					return
+				}
+
+				log.Println("Shutting down Game Server")
+				shutdownErr := s.Shutdown()
+				if shutdownErr != nil {
+					log.Fatalf("Could not shutdown game server: %v", shutdownErr)
+				}
+				os.Exit(0)
+			}(readyIterations)
+		}
+		currentState = gs.Status.State
+	}); err != nil {
 		log.Fatalf("Could not watch Game Server events, %v", err)
 	}
 }

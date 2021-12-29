@@ -39,13 +39,15 @@ There are some text commands you can send the server to affect its behavior:
 The server has a few configuration options that can be set via command line
 flags. Some can also be set using environment variables.
 
-| Flag                      | Environment Variable | Default |
-| ------------------------- | -------------------- | ------- |
-| port                      | PORT                 | 7654    |
-| passthrough               | PASSTHROUGH          | false   |
-| ready                     | READY                | true    |
-| automaticShutdownDelayMin | _n/a_                | 0       |
-| readyDelaySec             | _n/a_                | 0       |
-| udp                       | UDP                  | true    |
-| tcp                       | TCP                  | false   |
+| Flag                                   | Environment Variable | Default |
+| -------------------------------------- | -------------------- | ------- |
+| port                                   | PORT                 | 7654    |
+| passthrough                            | PASSTHROUGH          | false   |
+| ready                                  | READY                | true    |
+| automaticShutdownDelaySec              | _n/a_                | 0       |
+| automaticShutdownDelayMin (deprecated) | _n/a_                | 0       |
+| readyDelaySec                          | _n/a_                | 0       |
+| readyIterations                        | _n/a_                | 0       |
+| udp                                    | UDP                  | true    |
+| tcp                                    | TCP                  | false   |
 

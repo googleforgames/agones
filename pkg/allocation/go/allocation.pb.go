@@ -63,7 +63,7 @@ func (x AllocationRequest_SchedulingStrategy) String() string {
 	return proto.EnumName(AllocationRequest_SchedulingStrategy_name, int32(x))
 }
 func (AllocationRequest_SchedulingStrategy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{0, 0}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{0, 0}
 }
 
 type GameServerSelector_GameServerState int32
@@ -86,7 +86,7 @@ func (x GameServerSelector_GameServerState) String() string {
 	return proto.EnumName(GameServerSelector_GameServerState_name, int32(x))
 }
 func (GameServerSelector_GameServerState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{5, 0}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{5, 0}
 }
 
 type AllocationRequest struct {
@@ -125,7 +125,7 @@ func (m *AllocationRequest) Reset()         { *m = AllocationRequest{} }
 func (m *AllocationRequest) String() string { return proto.CompactTextString(m) }
 func (*AllocationRequest) ProtoMessage()    {}
 func (*AllocationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{0}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{0}
 }
 func (m *AllocationRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationRequest.Unmarshal(m, b)
@@ -217,7 +217,7 @@ func (m *AllocationResponse) Reset()         { *m = AllocationResponse{} }
 func (m *AllocationResponse) String() string { return proto.CompactTextString(m) }
 func (*AllocationResponse) ProtoMessage()    {}
 func (*AllocationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{1}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{1}
 }
 func (m *AllocationResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationResponse.Unmarshal(m, b)
@@ -280,7 +280,7 @@ func (m *AllocationResponse_GameServerStatusPort) Reset() {
 func (m *AllocationResponse_GameServerStatusPort) String() string { return proto.CompactTextString(m) }
 func (*AllocationResponse_GameServerStatusPort) ProtoMessage()    {}
 func (*AllocationResponse_GameServerStatusPort) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{1, 0}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{1, 0}
 }
 func (m *AllocationResponse_GameServerStatusPort) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AllocationResponse_GameServerStatusPort.Unmarshal(m, b)
@@ -329,7 +329,7 @@ func (m *MultiClusterSetting) Reset()         { *m = MultiClusterSetting{} }
 func (m *MultiClusterSetting) String() string { return proto.CompactTextString(m) }
 func (*MultiClusterSetting) ProtoMessage()    {}
 func (*MultiClusterSetting) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{2}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{2}
 }
 func (m *MultiClusterSetting) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MultiClusterSetting.Unmarshal(m, b)
@@ -376,7 +376,7 @@ func (m *MetaPatch) Reset()         { *m = MetaPatch{} }
 func (m *MetaPatch) String() string { return proto.CompactTextString(m) }
 func (*MetaPatch) ProtoMessage()    {}
 func (*MetaPatch) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{3}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{3}
 }
 func (m *MetaPatch) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MetaPatch.Unmarshal(m, b)
@@ -423,7 +423,7 @@ func (m *LabelSelector) Reset()         { *m = LabelSelector{} }
 func (m *LabelSelector) String() string { return proto.CompactTextString(m) }
 func (*LabelSelector) ProtoMessage()    {}
 func (*LabelSelector) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{4}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{4}
 }
 func (m *LabelSelector) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LabelSelector.Unmarshal(m, b)
@@ -465,7 +465,7 @@ func (m *GameServerSelector) Reset()         { *m = GameServerSelector{} }
 func (m *GameServerSelector) String() string { return proto.CompactTextString(m) }
 func (*GameServerSelector) ProtoMessage()    {}
 func (*GameServerSelector) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{5}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{5}
 }
 func (m *GameServerSelector) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GameServerSelector.Unmarshal(m, b)
@@ -520,7 +520,7 @@ func (m *PlayerSelector) Reset()         { *m = PlayerSelector{} }
 func (m *PlayerSelector) String() string { return proto.CompactTextString(m) }
 func (*PlayerSelector) ProtoMessage()    {}
 func (*PlayerSelector) Descriptor() ([]byte, []int) {
-	return fileDescriptor_allocation_ffd63343a38c3b54, []int{6}
+	return fileDescriptor_allocation_df43bf861ceb174e, []int{6}
 }
 func (m *PlayerSelector) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PlayerSelector.Unmarshal(m, b)
@@ -644,10 +644,10 @@ var _AllocationService_serviceDesc = grpc.ServiceDesc{
 }
 
 func init() {
-	proto.RegisterFile("proto/allocation/allocation.proto", fileDescriptor_allocation_ffd63343a38c3b54)
+	proto.RegisterFile("proto/allocation/allocation.proto", fileDescriptor_allocation_df43bf861ceb174e)
 }
 
-var fileDescriptor_allocation_ffd63343a38c3b54 = []byte{
+var fileDescriptor_allocation_df43bf861ceb174e = []byte{
 	// 776 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x41, 0x6f, 0xe3, 0x44,
 	0x14, 0x5e, 0x3b, 0x4d, 0x9a, 0xbc, 0xb0, 0x69, 0x78, 0xdd, 0x95, 0x8c, 0x55, 0x96, 0xac, 0x0f,
