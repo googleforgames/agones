@@ -207,7 +207,7 @@ public:
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Metadata")
-	void SetAnnotation(FString& Key, FString& Value, FSetAnnotationDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+	void SetAnnotation(const FString& Key, const FString& Value, FSetAnnotationDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
 	 * \brief SetLabel sets a metadata label on the `GameServer` with the prefix 'agones.dev/sdk-'
@@ -218,7 +218,7 @@ public:
 	 * \param ErrorDelegate - Called on Unsuccessful call.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Agones | Metadata")
-	void SetLabel(FString& Key, FString& Value, FSetLabelDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
+	void SetLabel(const FString& Key, const FString& Value, FSetLabelDelegate SuccessDelegate, FAgonesErrorDelegate ErrorDelegate);
 
 	/**
 	 * \brief Shutdown marks the Game Server as ready to shutdown
