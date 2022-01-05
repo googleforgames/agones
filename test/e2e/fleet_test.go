@@ -223,8 +223,8 @@ func TestFleetRollingUpdate(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	// Use scaleFleetPatch (true) or scaleFleetSubresource (false)
-	fixtures := []bool{true}    //, false} // TODO Enable these again
-	maxSurge := []string{"25%"} //, "10%"} // TODO
+	fixtures := []bool{true}    // , false} // TODO Enable these again
+	maxSurge := []string{"25%"} // , "10%"} // TODO
 	doCycle := true             // TODO: fixture?
 
 	for _, usePatch := range fixtures {

@@ -278,6 +278,7 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 		state, gs.Namespace, gs.Name)
 }
 
+// GetGameServer gets the specified GameServer by namespace/name or fails the test with an error.
 func (f *Framework) GetGameServer(t *testing.T, namespace string, name string) *agonesv1.GameServer {
 	gs, err := f.AgonesClient.AgonesV1().GameServers(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	require.NoError(t, err, "failed to get gameserver: %s/%s", namespace, name)
