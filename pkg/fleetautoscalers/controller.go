@@ -46,7 +46,9 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/clock"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -56,16 +58,17 @@ import (
 
 // fasThread is used for tracking each Fleet's autoscaling jobs
 type fasThread struct {
-	generation      int64
-	terminateSignal chan struct{}
+	generation int64
+	cancel     context.CancelFunc
 }
 
-// Controller is a the FleetAutoscaler controller
+// Controller is the FleetAutoscaler controller
 type Controller struct {
 	baseLogger            *logrus.Entry
 	clock                 clock.Clock
 	crdGetter             apiextclientv1.CustomResourceDefinitionInterface
-	fasThreads            sync.Map
+	fasThreads            map[types.UID]fasThread
+	fasThreadMutex        sync.Mutex
 	fleetGetter           typedagonesv1.FleetsGetter
 	fleetLister           listeragonesv1.FleetLister
 	fleetSynced           cache.InformerSynced
@@ -90,7 +93,8 @@ func NewController(
 	c := &Controller{
 		clock:                 clock.RealClock{},
 		crdGetter:             extClient.ApiextensionsV1().CustomResourceDefinitions(),
-		fasThreads:            sync.Map{},
+		fasThreads:            map[types.UID]fasThread{},
+		fasThreadMutex:        sync.Mutex{},
 		fleetGetter:           agonesClient.AgonesV1(),
 		fleetLister:           fleetInformer.Lister(),
 		fleetSynced:           fleetInformer.Informer().HasSynced,
@@ -114,16 +118,28 @@ func NewController(
 	wh.AddHandler("/validate", kind, admissionv1.Update, c.validationHandler)
 
 	autoscaler.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: c.workerqueue.Enqueue,
-		UpdateFunc: func(_, newObj interface{}) {
-			c.workerqueue.Enqueue(newObj)
-		},
-		DeleteFunc: func(fas interface{}) {
-			scaler, ok := fas.(*autoscalingv1.FleetAutoscaler)
-			if !ok {
-				return
+		AddFunc: func(obj interface{}) {
+			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+				c.addFasThread(obj.(*autoscalingv1.FleetAutoscaler), true)
+			} else {
+				c.workerqueue.Enqueue(obj)
 			}
-			c.removeFasThread(scaler)
+		},
+		UpdateFunc: func(_, newObj interface{}) {
+			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+				c.updateFasThread(newObj.(*autoscalingv1.FleetAutoscaler))
+			} else {
+				c.workerqueue.Enqueue(newObj)
+			}
+		},
+		DeleteFunc: func(obj interface{}) {
+			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+				fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
+				if !ok {
+					return
+				}
+				c.deleteFasThread(fas, true)
+			}
 		},
 	})
 
@@ -146,10 +162,11 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	go func() {
 		// clean all go routines when ctx is Done
 		<-ctx.Done()
-		c.fasThreads.Range(func(k, v interface{}) bool {
-			v.(fasThread).terminateSignal <- struct{}{}
-			return true
-		})
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+		for _, thread := range c.fasThreads {
+			thread.cancel()
+		}
 	}()
 
 	c.workerqueue.Run(ctx, workers)
@@ -237,40 +254,16 @@ func (c *Controller) validationHandler(review admissionv1.AdmissionReview) (admi
 
 // syncFleetAutoscaler syncs FleetAutoScale according to different sync type
 func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error {
-	if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-		return c.syncFleetAutoscalerWithCustomSyncInterval(ctx, key)
-	}
-	return c.fleetAutoScale(ctx, key)
-}
-
-// getFleetAutoscalerByKey get the Fleet Autoscaler by key
-// a nil FleetAutoscaler returned indicates that an attempt to sync should not be retried, e.g.  if the FleetAutoscaler no longer exists.
-func (c *Controller) getFleetAutoscalerByKey(key string) (*autoscalingv1.FleetAutoscaler, error) {
-	// Convert the namespace/name string into a distinct namespace and name
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
-	if err != nil {
-		// don't return an error, as we don't want this retried
-		runtime.HandleError(c.loggerForFleetAutoscalerKey(key), errors.Wrapf(err, "invalid resource key"))
-		return nil, nil
-	}
-	fas, err := c.fleetAutoscalerLister.FleetAutoscalers(namespace).Get(name)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			c.loggerForFleetAutoscalerKey(key).Debug(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
-			return nil, nil
-		}
-		return nil, errors.Wrapf(err, "error retrieving FleetAutoscaler %s from namespace %s", name, namespace)
-	}
-	return fas, nil
-}
-
-// fleetAutoScale scales the attached fleet and
-// synchronizes the FleetAutoscaler CRD
-func (c *Controller) fleetAutoScale(ctx context.Context, key string) error {
 	c.loggerForFleetAutoscalerKey(key).Debug("Synchronising")
 
 	fas, err := c.getFleetAutoscalerByKey(key)
 	if fas == nil || err != nil {
+		// just in case we don't catch a delete event for some reason, use this as a
+		// failsafe to ensure we don't end up leaking goroutines.
+		if err == nil && runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+			c.deleteFasThread(fas, true)
+		}
+
 		return err
 	}
 
@@ -312,6 +305,27 @@ func (c *Controller) fleetAutoScale(ctx context.Context, key string) error {
 	}
 
 	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
+}
+
+// getFleetAutoscalerByKey get the Fleet Autoscaler by key
+// a nil FleetAutoscaler returned indicates that an attempt to sync should not be retried, e.g.  if the FleetAutoscaler no longer exists.
+func (c *Controller) getFleetAutoscalerByKey(key string) (*autoscalingv1.FleetAutoscaler, error) {
+	// Convert the namespace/name string into a distinct namespace and name
+	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		// don't return an error, as we don't want this retried
+		runtime.HandleError(c.loggerForFleetAutoscalerKey(key), errors.Wrapf(err, "invalid resource key"))
+		return nil, nil
+	}
+	fas, err := c.fleetAutoscalerLister.FleetAutoscalers(namespace).Get(name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			c.loggerForFleetAutoscalerKey(key).Debug(fmt.Sprintf("FleetAutoscaler %s from namespace %s is no longer available for syncing", name, namespace))
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "error retrieving FleetAutoscaler %s from namespace %s", name, namespace)
+	}
+	return fas, nil
 }
 
 // scaleFleet scales the fleet of the autoscaler to a new number of replicas
@@ -377,71 +391,76 @@ func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autosca
 	return nil
 }
 
-// createFasThread creates a FleetAutoScaler sync routine
-func (c *Controller) createFasThread(ctx context.Context, fas *autoscalingv1.FleetAutoscaler) error {
-	key, err := cache.MetaNamespaceKeyFunc(fas)
-	if err != nil {
-		return err
-	}
-	ticker := c.clock.NewTicker(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
-	c.fasThreads.Store(key, fasThread{
-		terminateSignal: make(chan struct{}),
-		generation:      fas.Generation,
-	})
-	// scale immediately when an FAS is created or updated
-	if err := c.fleetAutoScale(ctx, key); err != nil {
-		return err
+// addFasThread creates a ticker that enqueues the FleetAutoscaler for it's configured interval
+func (c *Controller) addFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool) {
+	log := c.loggerForFleetAutoscaler(fas)
+	log.WithField("seconds", fas.Spec.Sync.FixedInterval.Seconds).Debug("Thread for Autoscaler created")
+
+	duration := time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second
+
+	// store against the UID, as there is no guarantee the name is unique over time.
+	ctx, cancel := context.WithCancel(context.Background())
+	thread := fasThread{
+		cancel:     cancel,
+		generation: fas.Generation,
 	}
 
-	go func() {
-		thread, ok := c.fasThreads.Load(key)
-		if !ok {
-			return
-		}
-		for {
-			select {
-			case <-thread.(fasThread).terminateSignal:
-				ticker.Stop()
-				return
-			case <-ticker.C():
-				c.loggerForFleetAutoscalerKey(key).Debug("run routine sync")
-				err := c.fleetAutoScale(ctx, key)
-				if err != nil {
-					c.loggerForFleetAutoscaler(fas).WithError(err).Error("routine sync failed")
-				}
-			}
-		}
-	}()
-	return nil
-}
+	if lock {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+	}
 
-// removeFasThread remove a FleetAutoScaler sync routine
-func (c *Controller) removeFasThread(fas *autoscalingv1.FleetAutoscaler) {
-	key, err := cache.MetaNamespaceKeyFunc(fas)
-	if err != nil {
+	// Seems unlikely that concurrent events could fire at the same time for the same UID,
+	// but just in case, let's check.
+	if _, ok := c.fasThreads[fas.ObjectMeta.UID]; ok {
 		return
 	}
-	if thread, ok := c.fasThreads.Load(key); ok {
-		thread.(fasThread).terminateSignal <- struct{}{}
-		c.fasThreads.Delete(key)
+	c.fasThreads[fas.ObjectMeta.UID] = thread
+
+	// do immediate enqueue on addition to have an autoscale fire on addition.
+	c.workerqueue.Enqueue(fas)
+	// Add to queue for each duration period, until cancellation occurs.
+	// Workerqueue will handle if multiple attempts are made to add an existing item to the queue, and retries on failure
+	// etc.
+	go func() {
+		wait.Until(func() {
+			c.workerqueue.Enqueue(fas)
+		}, duration, ctx.Done())
+	}()
+}
+
+// updateFasThread will replace the queueing thread if the generation has changes on the FleetAutoscaler.
+func (c *Controller) updateFasThread(fas *autoscalingv1.FleetAutoscaler) {
+	c.fasThreadMutex.Lock()
+	defer c.fasThreadMutex.Unlock()
+
+	thread, ok := c.fasThreads[fas.ObjectMeta.UID]
+	if !ok {
+		// maybe the controller crashed and we are only getting update events at this point, so let's add
+		// the thread back in
+		c.addFasThread(fas, false)
+		return
+	}
+
+	if fas.Generation != thread.generation {
+		c.loggerForFleetAutoscaler(fas).WithField("generation", thread.generation).
+			Debug("Fleet autoscaler generation updated, recreating thread")
+		c.deleteFasThread(fas, false)
+		c.addFasThread(fas, false)
 	}
 }
 
-// syncFleetAutoscalerWithCustomSyncInterval syncs the fleet based on a custom interval configured in Fas
-func (c *Controller) syncFleetAutoscalerWithCustomSyncInterval(ctx context.Context, key string) error {
-	fas, err := c.getFleetAutoscalerByKey(key)
-	if fas == nil || err != nil {
-		return err
+// deleteFasThread remove a FleetAutoScaler sync routine
+func (c *Controller) deleteFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool) {
+	c.loggerForFleetAutoscaler(fas).Debug("Thread for Autoscaler removed")
+
+	if lock {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
 	}
-	thread, ok := c.fasThreads.Load(key)
-	if !ok {
-		return c.createFasThread(ctx, fas)
+
+	if thread, ok := c.fasThreads[fas.ObjectMeta.UID]; ok {
+		thread.cancel()
+		delete(c.fasThreads, fas.ObjectMeta.UID)
 	}
-	if fas.Generation != thread.(fasThread).generation {
-		c.loggerForFleetAutoscalerKey(key).Infof("fleet autoscaler generation updated from %d to %d", thread.(fasThread).generation, fas.Generation)
-		c.removeFasThread(fas)
-		return c.createFasThread(ctx, fas)
-	}
-	// do nothing if the FAS doesn't change
-	return nil
 }

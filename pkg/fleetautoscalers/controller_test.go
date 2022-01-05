@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -38,28 +38,10 @@ import (
 	admregv1 "k8s.io/api/admissionregistration/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
 )
-
-// counter defines a thread-safe counter used in tests
-type counter struct {
-	mu sync.Mutex
-	v  uint32
-}
-
-func (c *counter) Inc() {
-	c.mu.Lock()
-	c.v++
-	c.mu.Unlock()
-}
-
-func (c *counter) Value() uint32 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.v
-}
 
 var (
 	gvk = metav1.GroupVersionKind(agonesv1.SchemeGroupVersion.WithKind("FleetAutoscaler"))
@@ -858,103 +840,147 @@ func TestControllerUpdateStatusUnableToScale(t *testing.T) {
 	})
 }
 
-func TestControllerSyncFleetAutoscalerWithCustomSyncInterval(t *testing.T) {
+func TestControllerEvents(t *testing.T) {
+	t.Parallel()
+
 	utilruntime.FeatureTestMutex.Lock()
 	defer utilruntime.FeatureTestMutex.Unlock()
 
-	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=true"))
+	require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
 
-	t.Run("create fas thread", func(t *testing.T) {
-		t.Parallel()
-		c, m := newFakeController()
-		fc := clock.NewFakeClock(time.Now())
-		c.clock = fc
+	c, mocks := newFakeController()
+	fakeWatch := watch.NewFake()
+	mocks.AgonesClient.AddWatchReactor("fleetautoscalers", k8stesting.DefaultWatchReactor(fakeWatch, nil))
+	_, cancel := agtesting.StartInformers(mocks, c.fleetAutoscalerSynced)
+	defer cancel()
 
-		fas, f := defaultFixtures()
-		fasKey := fas.Namespace + "/" + fas.Name
-		fas.Spec.Sync.FixedInterval.Seconds = 10
+	// add fleet autoscaler
+	fas, _ := defaultFixtures()
+	fakeWatch.Add(fas.DeepCopy())
 
-		fasUpdatedCount := counter{v: 0}
+	require.Eventually(t, func() bool {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+		return len(c.fasThreads) == 1
+	}, 30*time.Second, time.Second, "should be added")
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
-		})
+	c.fasThreadMutex.Lock()
+	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
+	c.fasThreadMutex.Unlock()
 
-		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			ca := action.(k8stesting.UpdateAction)
-			fas := ca.GetObject().(*autoscalingv1.FleetAutoscaler)
-			fasUpdatedCount.Inc()
-			return true, fas, nil
-		})
+	// modify the fleet autoscaler
+	fas.ObjectMeta.Generation++
+	fakeWatch.Modify(fas.DeepCopy())
 
-		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
-		})
+	require.Eventually(t, func() bool {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+		return fas.ObjectMeta.Generation == c.fasThreads[fas.ObjectMeta.UID].generation
+	}, 30*time.Second, time.Second, "should be updated")
 
-		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
-		defer cancel()
+	// delete the fleet auto scaler
+	fakeWatch.Delete(fas.DeepCopy())
+	require.Eventually(t, func() bool {
+		c.fasThreadMutex.Lock()
+		defer c.fasThreadMutex.Unlock()
+		return len(c.fasThreads) == 0
+	}, 30*time.Second, time.Second, "should be deleted")
+}
 
-		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
-		assert.Nil(t, err)
-		_, ok := c.fasThreads.Load(fasKey)
-		assert.True(t, ok)
-		// set the clock forward by one sync interval forward, the fas update function should be called twice
-		c.clock.Sleep(time.Duration(fas.Spec.Sync.FixedInterval.Seconds) * time.Second)
-		// we need a small block here so that autoscale rountine can run
-		assert.Eventually(t, func() bool {
-			return uint32(2) == fasUpdatedCount.Value()
-		}, 10*time.Second, 500*time.Millisecond)
+func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
+	t.Parallel()
+
+	utilruntime.FeatureTestMutex.Lock()
+	defer utilruntime.FeatureTestMutex.Unlock()
+
+	assert.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
+
+	var counter int64
+	c, m := newFakeController()
+	c.workerqueue.SyncHandler = func(ctx context.Context, s string) error {
+		atomic.AddInt64(&counter, 1)
+		return nil
+	}
+
+	m.ExtClient.AddReactor("get", "customresourcedefinitions", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, agtesting.NewEstablishedCRD(), nil
 	})
 
-	t.Run("update fas thread", func(t *testing.T) {
-		t.Parallel()
-		c, m := newFakeController()
-		fas, _ := defaultFixtures()
-		fasKey := fas.Namespace + "/" + fas.Name
-		c.fasThreads.Store(fasKey, fasThread{
-			generation:      1, // an older version than fas
-			terminateSignal: make(chan struct{}),
-		})
-		go func() {
-			// start a mock function for receiving the terminate signal
-			thread, ok := c.fasThreads.Load(fasKey)
-			assert.True(t, ok)
-			<-thread.(fasThread).terminateSignal
-		}()
+	ctx, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+	defer cancel()
+	go func() {
+		require.NoError(t, c.Run(ctx, 1))
+	}()
 
-		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
-			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
-		})
+	fas, _ := defaultFixtures()
+	fas.Spec.Sync.FixedInterval.Seconds = 1
 
-		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
-		defer cancel()
+	c.addFasThread(fas, true)
 
-		err := c.syncFleetAutoscalerWithCustomSyncInterval(ctx, fasKey)
-		assert.Nil(t, err)
-		thread, ok := c.fasThreads.Load(fasKey)
-		assert.True(t, ok)
-		assert.Equal(t, fas.Generation, thread.(fasThread).generation)
-	})
+	// unfortunately we can't mock the timer, so we'll confirm that two enqueue processes fire. One on method execution,
+	// and then one based on the ticker.
+	require.Eventuallyf(t, func() bool {
+		return atomic.LoadInt64(&counter) >= 2
+	}, 10*time.Second, time.Second, "Should have at least two counters")
 
-	t.Run("delete fas thread", func(t *testing.T) {
-		t.Parallel()
-		c, _ := newFakeController()
-		fas, _ := defaultFixtures()
-		fasKey := fas.Namespace + "/" + fas.Name
-		c.fasThreads.Store(fasKey, fasThread{
-			generation:      fas.Generation,
-			terminateSignal: make(chan struct{}),
-		})
-		go func() {
-			// start a mock function for receiving the terminate signal
-			thread, ok := c.fasThreads.Load(fasKey)
-			assert.True(t, ok)
-			<-thread.(fasThread).terminateSignal
-		}()
-		c.removeFasThread(fas)
-		_, ok := c.fasThreads.Load(fasKey)
-		assert.False(t, ok)
-	})
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 1)
+	c.fasThreadMutex.Unlock()
+
+	// update with the same values
+	c.updateFasThread(fas)
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 1)
+	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
+	c.fasThreadMutex.Unlock()
+
+	// update duration
+	fas.Spec.Sync.FixedInterval.Seconds = 3
+	fas.ObjectMeta.Generation++
+
+	c.updateFasThread(fas)
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 1)
+	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
+	c.fasThreadMutex.Unlock()
+
+	// update, but with a second fas, that doesn't exist in the system yet
+	fas2 := fas.DeepCopy()
+	fas2.Spec.Sync.FixedInterval.Seconds = 1
+	fas2.ObjectMeta.Generation = 5
+	fas2.ObjectMeta.UID = "4321"
+
+	c.updateFasThread(fas2)
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 2)
+	require.Equal(t, fas.ObjectMeta.Generation, c.fasThreads[fas.ObjectMeta.UID].generation)
+	require.Equal(t, fas2.ObjectMeta.Generation, c.fasThreads[fas2.ObjectMeta.UID].generation)
+	c.fasThreadMutex.Unlock()
+
+	// delete the current fas.
+	c.deleteFasThread(fas, true)
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 1)
+	require.Equal(t, fas2.ObjectMeta.Generation, c.fasThreads[fas2.ObjectMeta.UID].generation)
+	c.fasThreadMutex.Unlock()
+
+	c.deleteFasThread(fas2, true)
+	c.fasThreadMutex.Lock()
+	require.Len(t, c.fasThreads, 0)
+	c.fasThreadMutex.Unlock()
+
+	// we shouldn't get any more updates, so wait for 3 checks in a row that have the
+	// same counter amount to prove that there aren't any changes for a while.
+	var check []int64
+	require.Eventually(t, func() bool {
+		check = append(check, atomic.LoadInt64(&counter))
+		l := len(check)
+		if l < 3 {
+			return false
+		}
+		l--
+		return check[l] == check[l-1] && check[l-1] == check[l-2]
+	}, 30*time.Second, 2*time.Second, "changes keep happening", check)
 }
 
 func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
@@ -981,6 +1007,7 @@ func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {
 			Name:       "fas-1",
 			Namespace:  "default",
 			Generation: 2,
+			UID:        "4567",
 		},
 		Spec: autoscalingv1.FleetAutoscalerSpec{
 			FleetName: f.ObjectMeta.Name,
