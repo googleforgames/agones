@@ -278,6 +278,38 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 		state, gs.Namespace, gs.Name)
 }
 
+func (f *Framework) GetGameServer(t *testing.T, namespace string, name string) *agonesv1.GameServer {
+	gs, err := f.AgonesClient.AgonesV1().GameServers(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	require.NoError(t, err, "failed to get gameserver: %s/%s", namespace, name)
+	return gs
+}
+
+// CycleAllocations repeatedly Allocates a GameServer in the Fleet (if one is available), once every specified period.
+// Each Allocated GameServer gets deleted allocDuration after it was Allocated.
+// GameServers will continue to be Allocated until a message is passed to the done channel.
+func (f *Framework) CycleAllocations(t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration, done <-chan bool) {
+	ticker := time.NewTicker(period)
+	for {
+		select {
+		case <-done:
+			return
+		case <-ticker.C:
+			gsa := GetAllocation(flt)
+			gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
+			if err != nil || gsa.Status.State != allocationv1.GameServerAllocationAllocated {
+				continue
+			}
+
+			// Deallocate after allocDuration.
+			go func(gsa *allocationv1.GameServerAllocation) {
+				time.Sleep(allocDuration)
+				err := f.AgonesClient.AgonesV1().GameServers(gsa.Namespace).Delete(context.Background(), gsa.Status.GameServerName, metav1.DeleteOptions{})
+				require.NoError(t, err)
+			}(gsa)
+		}
+	}
+}
+
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
 func (f *Framework) AssertFleetCondition(t *testing.T, flt *agonesv1.Fleet, condition func(*logrus.Entry, *agonesv1.Fleet) bool) {
 	err := f.WaitForFleetCondition(t, flt, condition)
