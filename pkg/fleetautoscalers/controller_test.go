@@ -36,11 +36,15 @@ import (
 	"github.com/stretchr/testify/require"
 	admissionv1 "k8s.io/api/admission/v1"
 	admregv1 "k8s.io/api/admissionregistration/v1"
+	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/watch"
 	k8stesting "k8s.io/client-go/testing"
+	"k8s.io/client-go/tools/cache"
 )
 
 var (
@@ -625,6 +629,25 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "AutoScalingFleetError")
 	})
+
+	t.Run("Missing fleet autoscaler, doesn't fail/panic", func(t *testing.T) {
+		t.Parallel()
+
+		utilruntime.FeatureTestMutex.Lock()
+		defer utilruntime.FeatureTestMutex.Unlock()
+		require.NoError(t, utilruntime.ParseFeatures(fmt.Sprintf("%s=true", utilruntime.FeatureCustomFasSyncInterval)))
+
+		c, m := newFakeController()
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		m.AgonesClient.AddReactor("get", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			ga := action.(k8stesting.GetAction)
+			return true, nil, k8serrors.NewNotFound(corev1.Resource("gameserver"), ga.GetName())
+		})
+
+		require.NoError(t, c.syncFleetAutoscaler(ctx, "default/fas-1"))
+	})
 }
 
 func TestControllerScaleFleet(t *testing.T) {
@@ -981,6 +1004,33 @@ func TestControllerAddUpdateDeleteFasThread(t *testing.T) {
 		l--
 		return check[l] == check[l-1] && check[l-1] == check[l-2]
 	}, 30*time.Second, 2*time.Second, "changes keep happening", check)
+}
+
+func TestControllerCleanFasThreads(t *testing.T) {
+	c, m := newFakeController()
+	fas, _ := defaultFixtures()
+
+	m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+		return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+	})
+
+	_, cancel := agtesting.StartInformers(m, c.fleetAutoscalerSynced)
+	defer cancel()
+
+	c.fasThreadMutex.Lock()
+	c.fasThreads = map[types.UID]fasThread{
+		"1":                {1, func() {}},
+		"2":                {2, func() {}},
+		fas.ObjectMeta.UID: {3, func() {}},
+	}
+	c.fasThreadMutex.Unlock()
+
+	key, err := cache.MetaNamespaceKeyFunc(fas)
+	require.NoError(t, err)
+	require.NoError(t, c.cleanFasThreads(key))
+
+	require.Len(t, c.fasThreads, 1)
+	require.Equal(t, int64(3), c.fasThreads[fas.ObjectMeta.UID].generation)
 }
 
 func defaultFixtures() (*autoscalingv1.FleetAutoscaler, *agonesv1.Fleet) {

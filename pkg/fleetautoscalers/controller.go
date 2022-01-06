@@ -46,6 +46,7 @@ import (
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/clock"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -261,7 +262,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		// just in case we don't catch a delete event for some reason, use this as a
 		// failsafe to ensure we don't end up leaking goroutines.
 		if err == nil && runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
-			c.deleteFasThread(fas, true)
+			return c.cleanFasThreads(key)
 		}
 
 		return err
@@ -463,4 +464,39 @@ func (c *Controller) deleteFasThread(fas *autoscalingv1.FleetAutoscaler, lock bo
 		thread.cancel()
 		delete(c.fasThreads, fas.ObjectMeta.UID)
 	}
+}
+
+// cleanFasThreads will delete any fasThread that no longer
+// can be tied to a FleetAutoscaler instance.
+func (c *Controller) cleanFasThreads(key string) error {
+	c.baseLogger.WithField("key", key).Debug("Doing full autoscaler thread cleanup")
+	namespace, _, err := cache.SplitMetaNamespaceKey(key)
+	if err != nil {
+		return errors.Wrap(err, "attempting to clean all fleet autoscaler threads")
+	}
+
+	fasList, err := c.fleetAutoscalerLister.FleetAutoscalers(namespace).List(labels.Everything())
+	if err != nil {
+		return errors.Wrap(err, "attempting to clean all fleet autoscaler threads")
+	}
+
+	c.fasThreadMutex.Lock()
+	defer c.fasThreadMutex.Unlock()
+
+	keys := map[types.UID]bool{}
+	for k := range c.fasThreads {
+		keys[k] = true
+	}
+
+	for _, fas := range fasList {
+		delete(keys, fas.ObjectMeta.UID)
+	}
+
+	// any key that doesn't match to an existing UID, stop it.
+	for k := range keys {
+		c.fasThreads[k].cancel()
+		delete(c.fasThreads, k)
+	}
+
+	return nil
 }
