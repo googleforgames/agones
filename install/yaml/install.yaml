@@ -186,9 +186,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'Fleet is the data structure for a Fleet resource'
           type: object
           properties:
             spec:
+              description: 'FleetSpec is the spec for a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               required:
                 - template
@@ -224,6 +227,7 @@ spec:
                             - type: integer
                             - type: string
                 template:                 
+                 description: 'GameServer is the data structure for a GameServer resource.'
                  type: object
                  required:
                  - spec
@@ -363,6 +367,8 @@ spec:
                            Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                          type: string
                    spec:
+                     description: 'GameServerSpec is the spec for a GameServer resource. More info:
+                       https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
                      type: object
                      required:
                      - template
@@ -4425,7 +4431,7 @@ spec:
                          title: Parameters for the SDK Server (sidecar)
                          properties:
                            logLevel:
-                             type: string 
+                             type: string
                              description: |
                                sdkServer log level parameter has three options:
                                - "Info" (default) The SDK server will output all messages except for debug messages
@@ -4486,6 +4492,8 @@ spec:
                              title: The initial player capacity of this Game Server
                              minimum: 0
             status:
+              description: 'FleetStatus is the status of a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               properties:
                 replicas:
@@ -4562,9 +4570,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'FleetAutoscaler is the data structure for a FleetAutoscaler resource.'
           type: object
           properties:
             spec:
+              description: 'FleetAutoscalerSpec is the spec for a Fleet Scaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               required:
                 - fleetName
@@ -4645,6 +4656,8 @@ spec:
                           minimum: 0
                           exclusiveMinimum: true
             status:
+              description: 'FleetAutoscalerStatus defines the current status of a FleetAutoscaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               properties:
                 currentReplicas:
@@ -4719,11 +4732,14 @@ spec:
           type: date
       schema:
         openAPIV3Schema:         
+         description: 'GameServer is the data structure for a GameServer resource.'
          type: object
          required:
          - spec
          properties:
            spec:
+             description: 'GameServerSpec is the spec for a GameServer resource. More info:
+               https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
              type: object
              required:
              - template
@@ -8786,7 +8802,7 @@ spec:
                  title: Parameters for the SDK Server (sidecar)
                  properties:
                    logLevel:
-                     type: string 
+                     type: string
                      description: |
                        sdkServer log level parameter has three options:
                        - "Info" (default) The SDK server will output all messages except for debug messages
@@ -8847,6 +8863,8 @@ spec:
                      title: The initial player capacity of this Game Server
                      minimum: 0           
            status:
+             description: 'GameServerStatus is the status for a GameServer resource. More info:
+               https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
              type: object
              title: The status values for the GameServer
              properties:
@@ -8935,9 +8953,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API.'
           type: object
           properties:
             spec:
+              description: 'GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#multicluster.agones.dev/v1.GameServerAllocationPolicy'
               type: object
               required:
                 - priority
@@ -9031,9 +9052,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'GameServerSet is the data structure for a set of GameServers.'
           type: object
           properties:
             spec:
+              description: 'GameServerSetSpec the specification for GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               required:
                 - replicas
@@ -9048,6 +9072,7 @@ spec:
                     - Packed
                     - Distributed
                 template:                  
+                  description: 'GameServer is the data structure for a GameServer resource.'
                   type: object
                   required:
                   - spec
@@ -9187,6 +9212,8 @@ spec:
                             Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                           type: string
                     spec:
+                      description: 'GameServerSpec is the spec for a GameServer resource. More info:
+                        https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
                       type: object
                       required:
                       - template
@@ -13249,7 +13276,7 @@ spec:
                           title: Parameters for the SDK Server (sidecar)
                           properties:
                             logLevel:
-                              type: string 
+                              type: string
                               description: |
                                 sdkServer log level parameter has three options:
                                 - "Info" (default) The SDK server will output all messages except for debug messages
@@ -13310,6 +13337,8 @@ spec:
                               title: The initial player capacity of this Game Server
                               minimum: 0
             status:
+              description: 'GameServerSetStatus is the status of a GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               properties:
                 replicas:
