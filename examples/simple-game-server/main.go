@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -82,8 +83,8 @@ func main() {
 	}
 
 	log.Print("Starting Health Ping")
-	stop := make(chan struct{})
-	go doHealth(s, stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	go doHealth(s, ctx)
 
 	if *passthrough {
 		var gs *coresdk.GameServer
@@ -97,11 +98,11 @@ func main() {
 	}
 
 	if *tcp {
-		go tcpListener(port, s, stop)
+		go tcpListener(port, s, cancel)
 	}
 
 	if *udp {
-		go udpListener(port, s, stop)
+		go udpListener(port, s, cancel)
 	}
 
 	if *readyOnStart {
@@ -116,11 +117,12 @@ func main() {
 	if *shutdownDelaySec > 0 {
 		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelaySec)
 	} else if *shutdownDelayMin > 0 {
-		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin * 60)
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin*60)
 	}
 
 	// Prevent the program from quitting as the server is listening on goroutines.
-	for {}
+	for {
+	}
 }
 
 // doSignal shutsdown on SIGTERM/SIGKILL
@@ -180,7 +182,7 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 	}
 }
 
-func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string, addACK bool, responseError error) {
+func handleResponse(txt string, s *sdk.SDK, cancel context.CancelFunc) (response string, addACK bool, responseError error) {
 	parts := strings.Split(strings.TrimSpace(txt), " ")
 	response = txt
 	addACK = true
@@ -194,7 +196,7 @@ func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string
 
 	// turns off the health pings
 	case "UNHEALTHY":
-		close(stop)
+		cancel()
 
 	case "GAMESERVER":
 		response = gameServerName(s)
@@ -304,24 +306,24 @@ func handleResponse(txt string, s *sdk.SDK, stop chan struct{}) (response string
 	return
 }
 
-func udpListener(port *string, s *sdk.SDK, stop chan struct{}) {
+func udpListener(port *string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("Starting UDP server, listening on port %s", *port)
 	conn, err := net.ListenPacket("udp", ":"+*port)
 	if err != nil {
 		log.Fatalf("Could not start UDP server: %v", err)
 	}
 	defer conn.Close() // nolint: errcheck
-	udpReadWriteLoop(conn, stop, s)
+	udpReadWriteLoop(conn, cancel, s)
 }
 
-func udpReadWriteLoop(conn net.PacketConn, stop chan struct{}, s *sdk.SDK) {
+func udpReadWriteLoop(conn net.PacketConn, cancel context.CancelFunc, s *sdk.SDK) {
 	b := make([]byte, 1024)
 	for {
 		sender, txt := readPacket(conn, b)
 
 		log.Printf("Received UDP: %v", txt)
 
-		response, addACK, err := handleResponse(txt, s, stop)
+		response, addACK, err := handleResponse(txt, s, cancel)
 		if err != nil {
 			response = "ERROR: " + response + "\n"
 		} else if addACK {
@@ -343,7 +345,7 @@ func udpRespond(conn net.PacketConn, sender net.Addr, txt string) {
 	}
 }
 
-func tcpListener(port *string, s *sdk.SDK, stop chan struct{}) {
+func tcpListener(port *string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("Starting TCP server, listening on port %s", *port)
 	ln, err := net.Listen("tcp", ":"+*port)
 	if err != nil {
@@ -356,24 +358,24 @@ func tcpListener(port *string, s *sdk.SDK, stop chan struct{}) {
 		if err != nil {
 			log.Printf("Unable to accept incoming TCP connection: %v", err)
 		}
-		go tcpHandleConnection(conn, s, stop)
+		go tcpHandleConnection(conn, s, cancel)
 	}
 }
 
 // handleConnection services a single tcp connection to the server
-func tcpHandleConnection(conn net.Conn, s *sdk.SDK, stop chan struct{}) {
+func tcpHandleConnection(conn net.Conn, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("TCP Client %s connected", conn.RemoteAddr().String())
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {
-		tcpHandleCommand(conn, scanner.Text(), s, stop)
+		tcpHandleCommand(conn, scanner.Text(), s, cancel)
 	}
 	log.Printf("TCP Client %s disconnected", conn.RemoteAddr().String())
 }
 
-func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, stop chan struct{}) {
+func tcpHandleCommand(conn net.Conn, txt string, s *sdk.SDK, cancel context.CancelFunc) {
 	log.Printf("TCP txt: %v", txt)
 
-	response, addACK, err := handleResponse(txt, s, stop)
+	response, addACK, err := handleResponse(txt, s, cancel)
 	if err != nil {
 		response = "ERROR: " + response + "\n"
 	} else if addACK {
@@ -558,7 +560,7 @@ func getPlayerCount(s *sdk.SDK) string {
 }
 
 // doHealth sends the regular Health Pings
-func doHealth(sdk *sdk.SDK, stop <-chan struct{}) {
+func doHealth(sdk *sdk.SDK, ctx context.Context) {
 	tick := time.Tick(2 * time.Second)
 	for {
 		log.Printf("Health Ping")
@@ -567,7 +569,7 @@ func doHealth(sdk *sdk.SDK, stop <-chan struct{}) {
 			log.Fatalf("Could not send health ping, %v", err)
 		}
 		select {
-		case <-stop:
+		case <-ctx.Done():
 			log.Print("Stopped health pings")
 			return
 		case <-tick:
