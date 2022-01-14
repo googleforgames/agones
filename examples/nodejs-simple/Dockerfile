@@ -14,17 +14,14 @@
 
 FROM debian:buster
 RUN useradd -u 1000 -m server
-RUN apt-get update && apt-get install -y curl  && apt-get clean
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
 
-WORKDIR /home/server
+WORKDIR /home/server/examples/nodejs-simple
+COPY /examples/nodejs-simple .
+RUN tar xvf node-v12.22.9-linux-x64.tar.gz
+RUN cd node-v12.22.9-linux-x64 && ln -s $(pwd)/bin/node /usr/bin/node && ln -s $(pwd)/bin/npm /usr/bin/npm
 
-COPY ./examples/nodejs-simple examples/nodejs-simple
-RUN cd examples/nodejs-simple && \
-    npm install && npm rebuild
+RUN npm install && npm rebuild
 RUN chown -R server /home/server
 USER 1000
 
-WORKDIR /home/server/examples/nodejs-simple
 ENTRYPOINT ["npm", "start", "--"]

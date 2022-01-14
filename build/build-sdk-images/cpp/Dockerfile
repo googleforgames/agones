@@ -27,5 +27,5 @@ RUN cmake --version
 WORKDIR /go/src/agones.dev/agones
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/cpp/*.sh /root/
 RUN chmod +x /root/*.sh

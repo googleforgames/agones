@@ -14,14 +14,13 @@
 ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
-## --allow-releaseinfo-change is a workaround for the new debian release
-## Can be removed when upgrading to bullseye
-RUN apt-get --allow-releaseinfo-change update && curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
+COPY ./examples/nodejs-simple/node-v12.22.9-linux-x64.tar.gz .
+RUN tar xvf node-v12.22.9-linux-x64.tar.gz
+RUN cd node-v12.22.9-linux-x64 && ln -s $(pwd)/bin/node /usr/bin/node && ln -s $(pwd)/bin/npm /usr/bin/npm
 
 # Installing request is to address a bug with node-pre-gyp
 RUN npm install --unsafe-perm --global request@2.88.2 grpc-tools@1.8.1
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/node/*.sh /root/
 RUN chmod +x /root/*.sh

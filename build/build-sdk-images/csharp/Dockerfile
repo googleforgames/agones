@@ -34,5 +34,5 @@ RUN apt-get update \
     && apt-get install -y dotnet-sdk-2.2
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/csharp/*.sh /root/
 RUN chmod +x /root/*.sh

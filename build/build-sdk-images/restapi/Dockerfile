@@ -27,13 +27,14 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir -p ${GOPATH}
 
 RUN echo '§' && apt-get -qy update 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -qq -y nodejs
+COPY ./examples/nodejs-simple/node-v12.22.9-linux-x64.tar.gz .
+RUN tar xvf node-v12.22.9-linux-x64.tar.gz
+RUN cd node-v12.22.9-linux-x64 && ln -s $(pwd)/bin/node /usr/bin/node && ln -s $(pwd)/bin/npm /usr/bin/npm
 
 RUN apt-get install -qq -y openjdk-11-jre > /dev/null
 
 ENV PATH /usr/local/go/bin:/go/bin:$PATH
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/restapi/*.sh /root/
 RUN chmod +x /root/*.sh

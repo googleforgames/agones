@@ -371,7 +371,7 @@ func patchFleetAutoscaler(ctx context.Context, fas *autoscalingv1.FleetAutoscale
 	if bufferSize.Type == intstr.Int {
 		bufferSizeFmt = fmt.Sprintf("%d", bufferSize.IntValue())
 	} else {
-		bufferSizeFmt = fmt.Sprintf(`"%s"`, bufferSize.String())
+		bufferSizeFmt = fmt.Sprintf(`"%q"`, bufferSize.String())
 	}
 
 	patch := fmt.Sprintf(

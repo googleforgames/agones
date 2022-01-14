@@ -39,7 +39,7 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && un
 ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 
 # install go tooling for development, building and testing
-RUN go get -u golang.org/x/tools/cmd/goimports
+RUN go install golang.org/x/tools/cmd/goimports@latest
 
 # RUN gcloud components update
 RUN gcloud components update && gcloud components install app-engine-go
@@ -68,7 +68,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.42.1
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
 
 #
 #  \ \      / /__| |__  ___(_) |_ ___
@@ -84,8 +84,9 @@ RUN mkdir /tmp/hugo && \
     mv /tmp/hugo/hugo /usr/local/bin/ && \
     rm -r /tmp/hugo
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
+COPY /examples/nodejs-simple/node-v12.22.9-linux-x64.tar.gz .
+RUN tar xvf node-v12.22.9-linux-x64.tar.gz
+RUN cd node-v12.22.9-linux-x64 && ln -s $(pwd)/bin/node /usr/bin/node && ln -s $(pwd)/bin/npm /usr/bin/npm
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \
@@ -108,7 +109,7 @@ RUN echo "export EDITOR=nano" >> /root/.bashrc
 RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
 
 # code generation scripts
-COPY *.sh /root/
+COPY /scripts/build-image/*.sh /root/
 RUN chmod +x /root/*.sh
 
 WORKDIR /go

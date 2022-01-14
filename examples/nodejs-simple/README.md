@@ -42,7 +42,7 @@ $ make run
 
 The example can also be run via docker:
 ```
-$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5
+$ docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.6
 ```
 Or directly via npm:
 ```
@@ -51,7 +51,7 @@ $ npm start
 
 You will see the output like the following:
 ```
-docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.5
+docker run --network=host gcr.io/agones-images/nodejs-simple-server:0.6
 
 > @ start /home/server/examples/nodejs-simple
 > node src/index.js

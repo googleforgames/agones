@@ -35,6 +35,9 @@ COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+project_path := $(dir $(mkfile_path))
+root_path = $(realpath $(project_path)/../..)
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -103,7 +106,7 @@ build-build-sdk-image-base:
 # Builds the docker image used by commands for a specific sdk
 build-build-sdk-image: DOCKER_BUILD_ARGS= --build-arg BASE_IMAGE=$(build_sdk_base_tag)
 build-build-sdk-image: ensure-build-sdk-image-base
-		docker build --tag=$(SDK_IMAGE_TAG) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
+		cd $(root_path) &&  docker build -f $(build_path)build-sdk-images/$(SDK_FOLDER)/Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(SDK_IMAGE_TAG) .
 
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI

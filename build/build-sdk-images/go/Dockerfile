@@ -34,5 +34,5 @@ RUN go get github.com/golang/protobuf/protoc-gen-go@v1.2.0 && \
     
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/go/*.sh /root/
 RUN chmod +x /root/*.sh

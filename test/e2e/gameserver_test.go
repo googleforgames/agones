@@ -891,7 +891,7 @@ spec:
         - name: simple-game-server
           image: gcr.io/agones-images/simple-game-server:0.6
 `
-	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0644)
+	err := ioutil.WriteFile("/tmp/invalid.yaml", []byte(gsYaml), 0o644)
 	require.NoError(t, err)
 
 	cmd := exec.Command("kubectl", "apply", "-f", "/tmp/invalid.yaml")

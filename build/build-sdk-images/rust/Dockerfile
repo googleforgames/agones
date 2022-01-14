@@ -32,5 +32,5 @@ RUN wget -q https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/ru
     rustc --version;
 
 # code generation scripts
-COPY *.sh /root/
+COPY scripts/rust/*.sh /root/
 RUN chmod +x /root/*.sh

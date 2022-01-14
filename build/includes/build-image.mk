@@ -20,10 +20,13 @@
 #                                               |___/
 
 build_remote_tag = $(REGISTRY)/$(build_tag)
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+project_path := $(dir $(mkfile_path))
+root_path = $(realpath $(project_path)/../..)
 
 # Creates the build docker image
 build-build-image:
-	docker build --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
+	cd $(root_path) &&  docker build -f $(build_path)/build-image/Dockerfile $(DOCKER_BUILD_ARGS) --tag=$(build_tag) .
 
 # Deletes the local build docker image
 clean-build-image:
