@@ -33,7 +33,6 @@ import (
 
 var (
 	keyFleetName          = mt.MustTagKey("fleet_name")
-	keyNodeName           = mt.MustTagKey("node_name")
 	keyClusterName        = mt.MustTagKey("cluster_name")
 	keyMultiCluster       = mt.MustTagKey("is_multicluster")
 	keyStatus             = mt.MustTagKey("status")
@@ -48,7 +47,7 @@ func init() {
 		Measure:     gameServerAllocationsLatency,
 		Description: "The distribution of gameserver allocation requests latencies.",
 		Aggregation: view.Distribution(0, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2, 3),
-		TagKeys:     []tag.Key{keyFleetName, keyNodeName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
+		TagKeys:     []tag.Key{keyFleetName, keyClusterName, keyMultiCluster, keyStatus, keySchedulingStrategy},
 	}))
 }
 
@@ -58,7 +57,6 @@ var latencyTags = []tag.Mutator{
 	tag.Insert(keyClusterName, "none"),
 	tag.Insert(keySchedulingStrategy, "none"),
 	tag.Insert(keyFleetName, "none"),
-	tag.Insert(keyNodeName, "none"),
 	tag.Insert(keyStatus, "none"),
 }
 
@@ -108,9 +106,6 @@ func (r *metrics) setResponse(o k8sruntime.Object) {
 	}
 	r.setStatus(string(out.Status.State))
 	var tags []tag.Mutator
-	if out.Status.NodeName != "" {
-		tags = append(tags, tag.Update(keyNodeName, out.Status.NodeName))
-	}
 	// sets the fleet name tag if possible
 	if out.Status.State == allocationv1.GameServerAllocationAllocated {
 		gs, err := r.gameServerLister.GameServers(out.Namespace).Get(out.Status.GameServerName)
