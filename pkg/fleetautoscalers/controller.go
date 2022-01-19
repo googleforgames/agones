@@ -135,6 +135,7 @@ func NewController(
 		},
 		DeleteFunc: func(obj interface{}) {
 			if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+				// Could be a DeletedFinalStateUnknown, in which case, just ignore it
 				fas, ok := obj.(*autoscalingv1.FleetAutoscaler)
 				if !ok {
 					return
@@ -258,14 +259,17 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	c.loggerForFleetAutoscalerKey(key).Debug("Synchronising")
 
 	fas, err := c.getFleetAutoscalerByKey(key)
-	if fas == nil || err != nil {
+	if err != nil {
+		return err
+	}
+
+	if fas == nil {
 		// just in case we don't catch a delete event for some reason, use this as a
 		// failsafe to ensure we don't end up leaking goroutines.
-		if err == nil && runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
+		if runtime.FeatureEnabled(runtime.FeatureCustomFasSyncInterval) {
 			return c.cleanFasThreads(key)
 		}
-
-		return err
+		return nil
 	}
 
 	// Retrieve the fleet by spec name
@@ -308,7 +312,7 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 	return c.updateStatus(ctx, fas, currentReplicas, desiredReplicas, desiredReplicas != fleet.Spec.Replicas, scalingLimited)
 }
 
-// getFleetAutoscalerByKey get the Fleet Autoscaler by key
+// getFleetAutoscalerByKey gets the Fleet Autoscaler by key
 // a nil FleetAutoscaler returned indicates that an attempt to sync should not be retried, e.g.  if the FleetAutoscaler no longer exists.
 func (c *Controller) getFleetAutoscalerByKey(key string) (*autoscalingv1.FleetAutoscaler, error) {
 	// Convert the namespace/name string into a distinct namespace and name
@@ -392,7 +396,9 @@ func (c *Controller) updateStatusUnableToScale(ctx context.Context, fas *autosca
 	return nil
 }
 
-// addFasThread creates a ticker that enqueues the FleetAutoscaler for it's configured interval
+// addFasThread creates a ticker that enqueues the FleetAutoscaler for it's configured interval.
+// If `lock` is set to true, the function will do appropriate locking for this operation. If set to `false`
+// make sure to lock the operation with the c.fasThreadMutex for the execution of this command.
 func (c *Controller) addFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool) {
 	log := c.loggerForFleetAutoscaler(fas)
 	log.WithField("seconds", fas.Spec.Sync.FixedInterval.Seconds).Debug("Thread for Autoscaler created")
@@ -451,7 +457,9 @@ func (c *Controller) updateFasThread(fas *autoscalingv1.FleetAutoscaler) {
 	}
 }
 
-// deleteFasThread remove a FleetAutoScaler sync routine
+// deleteFasThread removes a FleetAutoScaler sync routine.
+// If `lock` is set to true, the function will do appropriate locking for this operation. If set to `false`
+// make sure to lock the operation with the c.fasThreadMutex for the execution of this command.
 func (c *Controller) deleteFasThread(fas *autoscalingv1.FleetAutoscaler, lock bool) {
 	c.loggerForFleetAutoscaler(fas).Debug("Thread for Autoscaler removed")
 
