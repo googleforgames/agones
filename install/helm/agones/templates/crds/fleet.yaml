@@ -58,9 +58,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'Fleet is the data structure for a Fleet resource'
           type: object
           properties:
             spec:
+              description: 'FleetSpec is the spec for a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               required:
                 - template
@@ -99,6 +102,8 @@ spec:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 17 }}
             status:
+              description: 'FleetStatus is the status of a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               properties:
                 replicas:
