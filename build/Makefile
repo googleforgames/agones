@@ -322,6 +322,7 @@ install: FEATURE_GATES ?= $(ALPHA_FEATURE_GATES)
 install: SERVICE_MONITOR := false
 install: HELM_ARGS ?=
 install: $(ensure-build-image) install-custom-pull-secret
+	-$(DOCKER_RUN) bash -c "[[ $$(helm status agones -n agones-system --output json | jq -r '.info.status') =~ (failed|pending-.*) ]] && helm uninstall agones --namespace=agones-system || true"
 	$(DOCKER_RUN) \
 		helm upgrade --install --atomic --wait --namespace=agones-system \
 		--create-namespace \
