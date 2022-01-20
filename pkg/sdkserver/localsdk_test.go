@@ -151,6 +151,7 @@ func TestLocalSDKServerSetLabel(t *testing.T) {
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
@@ -219,6 +220,7 @@ func TestLocalSDKServerSetAnnotation(t *testing.T) {
 				err := l.WatchGameServer(e, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// make sure length of l.updateObservers is at least 1
 			err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
@@ -265,6 +267,8 @@ func TestLocalSDKServerWatchGameServer(t *testing.T) {
 		err := l.WatchGameServer(e, stream)
 		assert.Nil(t, err)
 	}()
+	assertInitialWatchUpdate(t, stream)
+
 	// wait for watching to begin
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
 		found := false
@@ -309,6 +313,7 @@ func TestLocalSDKServerPlayerCapacity(t *testing.T) {
 		err := l.WatchGameServer(&sdk.Empty{}, stream)
 		assert.Nil(t, err)
 	}()
+	assertInitialWatchUpdate(t, stream)
 
 	// wait for watching to begin
 	err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
@@ -457,6 +462,7 @@ func TestLocalSDKServerPlayerConnectAndDisconnect(t *testing.T) {
 				err := l.WatchGameServer(&sdk.Empty{}, stream)
 				assert.Nil(t, err)
 			}()
+			assertInitialWatchUpdate(t, stream)
 
 			// wait for watching to begin
 			err = wait.Poll(time.Second, 10*time.Second, func() (bool, error) {
@@ -700,5 +706,14 @@ func assertNoWatchUpdate(t *testing.T, stream *gameServerMockStream) {
 	case <-stream.msgs:
 		assert.Fail(t, "should not get a message")
 	case <-time.After(time.Second):
+	}
+}
+
+// assertInitialWatchUpdate checks that the initial GameServer state is sent immediately after WatchGameServer
+func assertInitialWatchUpdate(t *testing.T, stream *gameServerMockStream) {
+	select {
+	case <-stream.msgs:
+	case <-time.After(time.Second):
+		assert.Fail(t, "timeout on receiving initial message")
 	}
 }
