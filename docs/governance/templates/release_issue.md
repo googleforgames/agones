@@ -10,6 +10,7 @@ and copy it into a release issue. Fill in relevant values, found inside {}
 ## Prerequisites
 
 - [ ] Have at least `Editor` level access to `agones-images` project.
+- [ ] Have permission to publish new versions of the App Engine application.
 - [ ] Have write access to Agones github repository.
 - [ ] Have a `gcloud config configurations` configuration called `agones-images` that points to the same project.
 - [ ] Have a [Github Personal Access Token](https://github.com/settings/tokens) with repo permissions.
