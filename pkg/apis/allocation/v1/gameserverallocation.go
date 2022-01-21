@@ -20,8 +20,11 @@ import (
 	"agones.dev/agones/pkg/apis"
 	agonesv1 "agones.dev/agones/pkg/apis/agones/v1"
 	"agones.dev/agones/pkg/util/runtime"
+	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1validation "k8s.io/apimachinery/pkg/apis/meta/v1/validation"
 	"k8s.io/apimachinery/pkg/labels"
+	validationfield "k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 const (
@@ -238,6 +241,36 @@ type MetaPatch struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
+// Validate returns if the labels and/or annotations that are to be applied to a `GameServer` post
+// allocation are valid.
+func (mp *MetaPatch) Validate() ([]metav1.StatusCause, bool) {
+	var causes []metav1.StatusCause
+
+	errs := metav1validation.ValidateLabels(mp.Labels, validationfield.NewPath("labels"))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "metadata.labels",
+				Message: v.Error(),
+			})
+		}
+	}
+
+	errs = apivalidation.ValidateAnnotations(mp.Annotations, validationfield.NewPath("annotations"))
+	if len(errs) != 0 {
+		for _, v := range errs {
+			causes = append(causes, metav1.StatusCause{
+				Type:    metav1.CauseTypeFieldValueInvalid,
+				Field:   "metadata.annotations",
+				Message: v.Error(),
+			})
+		}
+	}
+
+	return causes, len(causes) == 0
+}
+
 // GameServerAllocationStatus is the status for an GameServerAllocation resource
 type GameServerAllocationStatus struct {
 	// GameServerState is the current state of an GameServerAllocation, e.g. Allocated, or UnAllocated
@@ -296,6 +329,10 @@ func (gsa *GameServerAllocation) Validate() ([]metav1.StatusCause, bool) {
 		if c, ok := gsa.Spec.Selectors[i].Validate(fmt.Sprintf("spec.selectors[%d]", i)); !ok {
 			causes = append(causes, c...)
 		}
+	}
+
+	if c, ok := gsa.Spec.MetaPatch.Validate(); !ok {
+		causes = append(causes, c...)
 	}
 
 	return causes, len(causes) == 0
