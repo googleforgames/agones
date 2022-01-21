@@ -335,7 +335,7 @@ func (l *LocalSDKServer) GetGameServer(context.Context, *sdk.Empty) (*sdk.GameSe
 // WatchGameServer will return current GameServer configuration, 3 times, every 5 seconds
 func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameServerServer) error {
 	l.logger.Info("Connected to watch GameServer...")
-	observer := make(chan struct{})
+	observer := make(chan struct{}, 1)
 
 	defer func() {
 		l.updateObservers.Delete(observer)
@@ -344,6 +344,10 @@ func (l *LocalSDKServer) WatchGameServer(_ *sdk.Empty, stream sdk.SDK_WatchGameS
 	l.updateObservers.Store(observer, true)
 
 	l.recordRequest("watch")
+
+	// send initial game server state
+	observer <- struct{}{}
+
 	for range observer {
 		l.gsMutex.RLock()
 		err := stream.Send(l.gs)
