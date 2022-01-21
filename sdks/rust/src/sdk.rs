@@ -24,10 +24,7 @@ pub use api::GameServer;
 
 pub type WatchStream = tonic::Streaming<GameServer>;
 
-use crate::{
-    alpha::Alpha,
-    errors::{Result},
-};
+use crate::{alpha::Alpha, errors::Result};
 
 #[inline]
 fn empty() -> api::Empty {
@@ -64,9 +61,11 @@ impl Sdk {
         .parse()?;
 
         let builder = tonic::transport::channel::Channel::builder(addr)
+            .connect_timeout(Duration::from_secs(30))
             .keep_alive_timeout(keep_alive.unwrap_or_else(|| Duration::from_secs(30)));
 
-        let channel = builder.connect().await?;
+        // will only attempt to connect on first invocation, so won't exit straight away.
+        let channel = builder.connect_lazy()?;
         let mut client = SdkClient::new(channel.clone());
         let alpha = Alpha::new(channel);
 
@@ -75,17 +74,14 @@ impl Sdk {
 
             loop {
                 connect_interval.tick().await;
-
                 if client.get_game_server(empty()).await.is_ok() {
                     break;
                 }
             }
-        }).await?;
-
-        Ok(Self {
-            client,
-            alpha,
         })
+        .await?;
+
+        Ok(Self { client, alpha })
     }
 
     /// Alpha returns the Alpha SDK
