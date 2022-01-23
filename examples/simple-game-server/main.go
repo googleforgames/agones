@@ -26,6 +26,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	coresdk "agones.dev/agones/pkg/sdk"
@@ -105,6 +106,12 @@ func main() {
 		go udpListener(port, s, cancel)
 	}
 
+	if *shutdownDelaySec > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelaySec)
+	} else if *shutdownDelayMin > 0 {
+		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin*60)
+	}
+
 	if *readyOnStart {
 		if *readyDelaySec > 0 {
 			log.Printf("Waiting %d seconds before moving to ready", *readyDelaySec)
@@ -112,12 +119,6 @@ func main() {
 		}
 		log.Print("Marking this server as ready")
 		ready(s)
-	}
-
-	if *shutdownDelaySec > 0 {
-		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelaySec)
-	} else if *shutdownDelayMin > 0 {
-		shutdownAfterNAllocations(s, *readyIterations, *shutdownDelayMin*60)
 	}
 
 	// Prevent the program from quitting as the server is listening on goroutines.
@@ -149,12 +150,19 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 	if err != nil {
 		log.Fatalf("Could not get game server: %v", err)
 	}
+	log.Printf("Initial game Server state = %s", gs.Status.State)
+
+	m := sync.Mutex{} // protects the following two variables
 	currentState := gs.Status.State
+	remainingIterations := readyIterations
+
 	if err := s.WatchGameServer(func(gs *coresdk.GameServer) {
+		m.Lock()
+		defer m.Unlock()
 		log.Printf("Watch Game Server callback fired. State = %s", gs.Status.State)
 		if currentState == "Ready" && gs.Status.State == "Allocated" {
 			log.Println("Game Server Allocated")
-			readyIterations--
+			remainingIterations--
 			// Run asynchronously
 			go func(iterations int) {
 				time.Sleep(time.Duration(shutdownDelaySec) * time.Second)
@@ -174,7 +182,7 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 					log.Fatalf("Could not shutdown game server: %v", shutdownErr)
 				}
 				os.Exit(0)
-			}(readyIterations)
+			}(remainingIterations)
 		}
 		currentState = gs.Status.State
 	}); err != nil {

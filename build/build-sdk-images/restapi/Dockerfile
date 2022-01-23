@@ -15,7 +15,7 @@ ARG BASE_IMAGE=agones-build-sdk-base:latest
 FROM $BASE_IMAGE
 
 RUN apt-get --allow-releaseinfo-change update && \
-    apt-get install -y wget jq && \
+    apt-get install -y wget jq software-properties-common gnupg && \
     apt-get clean
 
 # install go
@@ -27,8 +27,21 @@ RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
     tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir -p ${GOPATH}
 
 RUN echo '§' && apt-get -qy update 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -qq -y nodejs
+RUN add-apt-repository -y -r ppa:chris-lea/node.js
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
+
+ARG KEYRING=/usr/share/keyrings/nodesource.gpg
+ARG VERSION=node_12.x
+
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
+RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+
+ARG DISTRO="jessie"
+RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get update && apt-get install -y nodejs
 
 RUN apt-get install -qq -y openjdk-11-jre > /dev/null
 

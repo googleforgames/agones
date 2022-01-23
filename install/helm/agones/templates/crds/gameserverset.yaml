@@ -59,9 +59,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'GameServerSet is the data structure for a set of GameServers.'
           type: object
           properties:
             spec:
+              description: 'GameServerSetSpec the specification for GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               required:
                 - replicas
@@ -79,6 +82,8 @@ spec:
                   {{- $data := dict "metadata" true "podPreserveUnknownFields" .Values.gameservers.podPreserveUnknownFields }}
                   {{- include "gameserver.schema" $data | indent 18 }}
             status:
+              description: 'GameServerSetStatus is the status of a GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               properties:
                 replicas:
