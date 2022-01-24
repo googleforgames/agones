@@ -100,7 +100,7 @@ func (p *StatsCollector) Report() {
 		Info(p.name)
 
 	if p.outputDir != "" {
-		err := os.MkdirAll(p.outputDir, 0755)
+		err := os.MkdirAll(p.outputDir, 0o755)
 		if err != nil {
 			logrus.WithError(err).Errorf("unable to create a folder: %s", p.outputDir)
 			return
