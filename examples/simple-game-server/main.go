@@ -153,15 +153,17 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 	log.Printf("Initial game Server state = %s", gs.Status.State)
 
 	m := sync.Mutex{} // protects the following two variables
-	currentState := gs.Status.State
+	lastAllocated := gs.ObjectMeta.Annotations["agones.dev/last-allocated"]
 	remainingIterations := readyIterations
 
 	if err := s.WatchGameServer(func(gs *coresdk.GameServer) {
 		m.Lock()
 		defer m.Unlock()
-		log.Printf("Watch Game Server callback fired. State = %s", gs.Status.State)
-		if currentState == "Ready" && gs.Status.State == "Allocated" {
+		la := gs.ObjectMeta.Annotations["agones.dev/last-allocated"]
+		log.Printf("Watch Game Server callback fired. State = %s, Last Allocated = %q", gs.Status.State, la)
+		if lastAllocated != la {
 			log.Println("Game Server Allocated")
+			lastAllocated = la
 			remainingIterations--
 			// Run asynchronously
 			go func(iterations int) {
@@ -173,18 +175,19 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 					if readyErr != nil {
 						log.Fatalf("Could not set game server to ready: %v", readyErr)
 					}
+					log.Println("Game Server is Ready")
 					return
 				}
 
-				log.Println("Shutting down Game Server")
+				log.Println("Moving Game Server to Shutdown")
 				shutdownErr := s.Shutdown()
 				if shutdownErr != nil {
 					log.Fatalf("Could not shutdown game server: %v", shutdownErr)
 				}
+				log.Println("Exiting Game Server")
 				os.Exit(0)
 			}(remainingIterations)
 		}
-		currentState = gs.Status.State
 	}); err != nil {
 		log.Fatalf("Could not watch Game Server events, %v", err)
 	}
