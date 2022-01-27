@@ -155,8 +155,8 @@ webhooks:
           - CREATE
           - UPDATE
 {{- end }}
----
 {{- if not .Values.agones.controller.disableSecretCreation }}
+---
 apiVersion: v1
 kind: Secret
 metadata:
