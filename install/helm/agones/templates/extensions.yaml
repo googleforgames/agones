@@ -111,7 +111,7 @@ metadata:
   name: agones-mutation-webhook
 {{- if .Values.agones.controller.webhooks.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhooks.annotations | nindent 4 }}
+{{- toYaml .Values.agones.controller.webhooks.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
