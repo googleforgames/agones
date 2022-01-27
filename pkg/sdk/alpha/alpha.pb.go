@@ -54,7 +54,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_85112ebd625f4899, []int{0}
+	return fileDescriptor_alpha_adf85771d71a9075, []int{0}
 }
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
@@ -86,7 +86,7 @@ func (m *Count) Reset()         { *m = Count{} }
 func (m *Count) String() string { return proto.CompactTextString(m) }
 func (*Count) ProtoMessage()    {}
 func (*Count) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_85112ebd625f4899, []int{1}
+	return fileDescriptor_alpha_adf85771d71a9075, []int{1}
 }
 func (m *Count) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Count.Unmarshal(m, b)
@@ -125,7 +125,7 @@ func (m *Bool) Reset()         { *m = Bool{} }
 func (m *Bool) String() string { return proto.CompactTextString(m) }
 func (*Bool) ProtoMessage()    {}
 func (*Bool) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_85112ebd625f4899, []int{2}
+	return fileDescriptor_alpha_adf85771d71a9075, []int{2}
 }
 func (m *Bool) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Bool.Unmarshal(m, b)
@@ -164,7 +164,7 @@ func (m *PlayerID) Reset()         { *m = PlayerID{} }
 func (m *PlayerID) String() string { return proto.CompactTextString(m) }
 func (*PlayerID) ProtoMessage()    {}
 func (*PlayerID) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_85112ebd625f4899, []int{3}
+	return fileDescriptor_alpha_adf85771d71a9075, []int{3}
 }
 func (m *PlayerID) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PlayerID.Unmarshal(m, b)
@@ -203,7 +203,7 @@ func (m *PlayerIDList) Reset()         { *m = PlayerIDList{} }
 func (m *PlayerIDList) String() string { return proto.CompactTextString(m) }
 func (*PlayerIDList) ProtoMessage()    {}
 func (*PlayerIDList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_alpha_85112ebd625f4899, []int{4}
+	return fileDescriptor_alpha_adf85771d71a9075, []int{4}
 }
 func (m *PlayerIDList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PlayerIDList.Unmarshal(m, b)
@@ -600,9 +600,9 @@ var _SDK_serviceDesc = grpc.ServiceDesc{
 	Metadata: "alpha.proto",
 }
 
-func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_85112ebd625f4899) }
+func init() { proto.RegisterFile("alpha.proto", fileDescriptor_alpha_adf85771d71a9075) }
 
-var fileDescriptor_alpha_85112ebd625f4899 = []byte{
+var fileDescriptor_alpha_adf85771d71a9075 = []byte{
 	// 413 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xcf, 0xae, 0xd2, 0x40,
 	0x14, 0xc6, 0x83, 0x50, 0xfe, 0x1c, 0xff, 0x44, 0x06, 0x50, 0x1c, 0x04, 0x71, 0x34, 0x86, 0xb0,

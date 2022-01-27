@@ -14,7 +14,7 @@ Here are the few important things:
 ## Fleet Setting
 
 We used the sample [fleet configuration](./fleet.yaml) with some minor modifications. We updated the `replicas` to 4000.
-Also we set the `automaticShutdownDelayMin` parameter to 10 so simple-game-server game servers shutdown after 10
+Also we set the `automaticShutdownDelaySec` parameter to 10 so simple-game-server game servers shutdown after 10
 minutes (see below).
 This helps to easily re-run the test without having to delete the game servers and allows to run tests continously.
 
@@ -32,8 +32,8 @@ kind: Fleet
                 containers:
                 - args:
                   # We setup the simple-game-server server to shutdown 10 mins after allocation
-                  - -automaticShutdownDelayMin=10
-                  image: gcr.io/agones-images/simple-game-server:0.3
+                  - -automaticShutdownDelaySec=600
+                  image: gcr.io/agones-images/simple-game-server:0.6
                   name: simple-game-server
   ...
 ```
@@ -45,7 +45,7 @@ For more information visit [Allocator Service](https://agones.dev/site/docs/adva
 
 ## Running the test
 
-You can use the provided runAllocation.sh script by providing two parameters: 
+You can use the provided runAllocation.sh script by providing two parameters:
 - number of clients (to do parallel allocations)
 - number of allocations for client
 

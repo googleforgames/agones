@@ -19,24 +19,14 @@ If you are running a [Prometheus](https://prometheus.io/) instance you just need
 
 ### Prometheus Operator
 
-If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, make sure to add a [`ServiceMonitor`](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/api.md#servicemonitorspec) to discover Agones metrics as shown below:
+If you have [Prometheus operator](https://github.com/coreos/prometheus-operator) installed in your cluster, just enable ServiceMonitor installation in values:
 
 ```yaml
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: agones
-  labels:
-    app: agones
-spec:
-  selector:
-    matchLabels:
-        agones.dev/role: controller
-  endpoints:
-  - port: web
+agones:
+  metrics:
+    serviceMonitor:
+      enabled: true
 ```
-
-Finally include that `ServiceMonitor` in your [Prometheus instance CRD](https://github.com/coreos/prometheus-operator/blob/v0.17.0/Documentation/user-guides/getting-started.md#include-servicemonitors), this is usually done by adding a label to the `ServiceMonitor` above that is matched by the prometheus instance of your choice.
 
 ### Stackdriver
 

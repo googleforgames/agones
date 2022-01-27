@@ -13,13 +13,14 @@
 # limitations under the License.
 
 # build go
-FROM golang:1.15.13 as go-builder
+FROM golang:1.17.2 as go-builder
 WORKDIR /go/src/supertuxkart
 
 RUN apt-get update && apt-get install -y curl tar xz-utils
 
 COPY main.go .
 COPY go.mod .
+RUN go mod tidy
 RUN go build -o wrapper .
 
 # compile stk

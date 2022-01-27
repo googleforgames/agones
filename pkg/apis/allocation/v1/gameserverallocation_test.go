@@ -219,6 +219,18 @@ func TestGameServerSelectorValidate(t *testing.T) {
 				fields:   []string{"fieldName"},
 			},
 		},
+		"invalid label keys": {
+			selector: &GameServerSelector{
+				LabelSelector: metav1.LabelSelector{
+					MatchLabels: map[string]string{"$$$$": "true"},
+				},
+			},
+			expected: expected{
+				valid:    false,
+				causeLen: 1,
+				fields:   []string{"fieldName"},
+			},
+		},
 	}
 
 	for k, v := range fixtures {
@@ -233,6 +245,58 @@ func TestGameServerSelectorValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMetaPatchValidate(t *testing.T) {
+	t.Parallel()
+
+	// valid
+	mp := &MetaPatch{
+		Labels:      nil,
+		Annotations: nil,
+	}
+	causes, valid := mp.Validate()
+	assert.True(t, valid)
+	assert.Empty(t, causes)
+
+	mp.Labels = map[string]string{}
+	mp.Annotations = map[string]string{}
+	causes, valid = mp.Validate()
+	assert.True(t, valid)
+	assert.Empty(t, causes)
+
+	mp.Labels["foo"] = "bar"
+	mp.Annotations["bar"] = "foo"
+	causes, valid = mp.Validate()
+	assert.True(t, valid)
+	assert.Empty(t, causes)
+
+	// invalid label
+	invalid := mp.DeepCopy()
+	invalid.Labels["$$$$"] = "no"
+
+	causes, valid = invalid.Validate()
+	assert.False(t, valid)
+	require.Len(t, causes, 1)
+	assert.Equal(t, "metadata.labels", causes[0].Field)
+
+	// invalid annotation
+	invalid = mp.DeepCopy()
+	invalid.Annotations["$$$$"] = "no"
+
+	causes, valid = invalid.Validate()
+	assert.False(t, valid)
+	require.Len(t, causes, 1)
+	assert.Equal(t, "metadata.annotations", causes[0].Field)
+
+	// invalid both
+	invalid.Labels["$$$$"] = "no"
+	causes, valid = invalid.Validate()
+
+	assert.False(t, valid)
+	require.Len(t, causes, 2)
+	assert.Equal(t, "metadata.labels", causes[0].Field)
+	assert.Equal(t, "metadata.annotations", causes[1].Field)
 }
 
 func TestGameServerSelectorMatches(t *testing.T) {
@@ -453,16 +517,20 @@ func TestGameServerAllocationValidate(t *testing.T) {
 			Preferred: []GameServerSelector{
 				{Players: &PlayerSelector{MaxAvailable: -10}},
 			},
+			MetaPatch: MetaPatch{
+				Labels: map[string]string{"$$$": "foo"},
+			},
 		},
 	}
 	gsa.ApplyDefaults()
 
 	causes, ok = gsa.Validate()
 	assert.False(t, ok)
-	assert.Len(t, causes, 3)
+	assert.Len(t, causes, 4)
 	assert.Equal(t, "spec.required", causes[0].Field)
 	assert.Equal(t, "spec.preferred[0]", causes[1].Field)
 	assert.Equal(t, "spec.preferred[0]", causes[2].Field)
+	assert.Equal(t, "metadata.labels", causes[3].Field)
 }
 
 func TestGameServerAllocationConverter(t *testing.T) {

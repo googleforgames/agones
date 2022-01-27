@@ -240,7 +240,7 @@ void UAgonesComponent::HandleWatchMessage(const void* Data, SIZE_T Size, SIZE_T 
 }
 
 void UAgonesComponent::SetLabel(
-	FString& Key, FString& Value, const FSetLabelDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+	const FString& Key, const FString& Value, const FSetLabelDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FKeyValuePair Label = {Key, Value};
 	FString Json;
@@ -300,7 +300,7 @@ void UAgonesComponent::Shutdown(const FShutdownDelegate SuccessDelegate, const F
 }
 
 void UAgonesComponent::SetAnnotation(
-	FString& Key, FString& Value, const FSetAnnotationDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
+	const FString& Key, const FString& Value, const FSetAnnotationDelegate SuccessDelegate, const FAgonesErrorDelegate ErrorDelegate)
 {
 	const FKeyValuePair Label = {Key, Value};
 	FString Json;

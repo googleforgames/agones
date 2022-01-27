@@ -98,6 +98,7 @@ func NewAPIServer(mux *http.ServeMux) *APIServer {
 		if err != nil {
 			s.logger.WithError(errors.WithStack(err)).Error("error return openapi")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	})
 

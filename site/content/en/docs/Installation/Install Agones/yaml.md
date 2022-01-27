@@ -9,8 +9,8 @@ description: >
 ### Installing Agones
 
 {{< alert title="Warning" color="warning">}}
-Installing Agones with the `install.yaml` will setup the TLS certificates stored in this repository for securing
-kubernetes webhooks communication. 
+Installing Agones with the `install.yaml` will set up the TLS certificates
+stored in this repository for securing Kubernetes webhooks communication.
 
 If you want to generate new certificates or use your own for production workloads,
 we recommend using the [helm installation]({{< relref "helm.md" >}}).

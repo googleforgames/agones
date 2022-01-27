@@ -14,9 +14,24 @@
 
 FROM debian:bullseye
 RUN useradd -u 1000 -m server
-RUN apt-get update && apt-get install -y curl  && apt-get clean
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
+RUN apt-get update && apt-get install -y curl software-properties-common gnupg  && \
+    apt-get clean
+
+RUN add-apt-repository -y -r ppa:chris-lea/node.js
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
+
+ARG KEYRING=/usr/share/keyrings/nodesource.gpg
+ARG VERSION=node_12.x
+
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
+RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+
+ARG DISTRO="jessie"
+RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get update && apt-get install -y nodejs
 
 WORKDIR /home/server
 

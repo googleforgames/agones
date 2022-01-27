@@ -84,9 +84,14 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 func TestHealthControllerSkipUnhealthy(t *testing.T) {
 	t.Parallel()
 
+	type expected struct {
+		result bool
+		err    string
+	}
+
 	fixtures := map[string]struct {
 		setup    func(*agonesv1.GameServer, *corev1.Pod)
-		expected bool
+		expected expected
 	}{
 		"scheduled and terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -96,7 +101,7 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"after ready and terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -106,19 +111,19 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"before ready, with no terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateScheduled
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"after ready, with no terminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateAllocated
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"before ready, with a LastTerminated container": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
@@ -128,37 +133,46 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"after ready, with a LastTerminated container, not matching": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateReady
 				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
+				pod.ObjectMeta.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "4321"
 				pod.Status.ContainerStatuses = []corev1.ContainerStatus{{
 					ContainerID:          "1234",
 					Name:                 gs.Spec.Container,
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: false,
+			expected: expected{result: false},
 		},
 		"after ready, with a LastTerminated container, matching": {
 			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
 				gs.Status.State = agonesv1.GameServerStateReserved
 				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
+				pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
 				pod.Status.ContainerStatuses = []corev1.ContainerStatus{{
 					ContainerID:          "1234",
 					Name:                 gs.Spec.Container,
 					LastTerminationState: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}},
 				}}
 			},
-			expected: true,
+			expected: expected{result: true},
 		},
 		"pod is missing!": {
 			setup: func(server *agonesv1.GameServer, pod *corev1.Pod) {
 				pod.ObjectMeta.Name = "missing"
 			},
-			expected: false,
+			expected: expected{result: false},
+		},
+		"annotations do not match": {
+			setup: func(gs *agonesv1.GameServer, pod *corev1.Pod) {
+				gs.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = "1234"
+				pod.Annotations[agonesv1.GameServerReadyContainerIDAnnotation] = ""
+			},
+			expected: expected{err: "pod and gameserver test data are out of sync, retrying"},
 		},
 	}
 
@@ -181,8 +195,12 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 			defer cancel()
 
 			result, err := hc.skipUnhealthy(gs)
-			assert.NoError(t, err)
-			assert.Equal(t, v.expected, result)
+			if len(v.expected.err) > 0 {
+				require.EqualError(t, err, v.expected.err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, v.expected.result, result)
 		})
 	}
 }

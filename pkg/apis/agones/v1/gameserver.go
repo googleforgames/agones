@@ -476,13 +476,13 @@ func (gss *GameServerSpec) Validate(devAddress string) ([]metav1.StatusCause, bo
 func ValidateResource(request resource.Quantity, limit resource.Quantity, resourceName corev1.ResourceName) []error {
 	validationErrors := make([]error, 0)
 	if !limit.IsZero() && request.Cmp(limit) > 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Request must be less than or equal to %s limit", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Request must be less than or equal to %s limit", resourceName))
 	}
 	if request.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s request value must be non negative", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s request value must be non negative", resourceName))
 	}
 	if limit.Cmp(resource.Quantity{}) < 0 {
-		validationErrors = append(validationErrors, errors.New(fmt.Sprintf("Resource %s limit value must be non negative", resourceName)))
+		validationErrors = append(validationErrors, errors.Errorf("Resource %s limit value must be non negative", resourceName))
 	}
 
 	return validationErrors
@@ -606,7 +606,11 @@ func (gs *GameServer) Pod(sidecars ...corev1.Container) (*corev1.Pod, error) {
 			return nil, err
 		}
 	}
-	pod.Spec.Containers = append(pod.Spec.Containers, sidecars...)
+	// Put the sidecars at the start of the list of containers so that the kubelet starts them first.
+	containers := make([]corev1.Container, 0, len(sidecars)+len(pod.Spec.Containers))
+	containers = append(containers, sidecars...)
+	containers = append(containers, pod.Spec.Containers...)
+	pod.Spec.Containers = containers
 
 	gs.podScheduling(pod)
 

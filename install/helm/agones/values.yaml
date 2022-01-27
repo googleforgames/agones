@@ -22,6 +22,9 @@ agones:
     stackdriverEnabled: false
     stackdriverProjectID: ""
     stackdriverLabels: ""
+    serviceMonitor:
+      enabled: false
+      interval: 30s
   rbacEnabled: true
   registerServiceAccounts: true
   registerWebhooks: true
@@ -62,6 +65,8 @@ agones:
               - key: agones.dev/agones-system
                 operator: Exists
     generateTLS: true
+    tlsCert: ""
+    tlsKey: ""
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
@@ -164,16 +169,26 @@ agones:
         port: 443
         portName: grpc
         targetPort: 8443
+    serviceMetrics:
+      name: agones-allocator-metrics-service
+      annotations: {}
+      http:
+        enabled: true
+        port: 8080
+        portName: http
     disableSecretCreation: false
     generateTLS: true
+    tlsCert: ""
+    tlsKey: ""
     generateClientTLS: true
+    clientCAs: {}
     disableMTLS: false
     disableTLS: false
     remoteAllocationTimeout: 10s
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
-    tag: 1.19.0-dev
+    tag: 1.21.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

@@ -18,12 +18,12 @@ FROM debian:bullseye
 
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
-    zip nano jq graphviz gettext-base plantuml && \
+    zip nano jq graphviz gettext-base plantuml software-properties-common && \
     apt-get clean
 
 # install go
 WORKDIR /usr/local
-ENV GO_VERSION=1.15.13
+ENV GO_VERSION=1.17.2
 ENV GOPATH /go
 ENV GO111MODULE=on
 RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
@@ -39,13 +39,13 @@ RUN wget -q https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.zip && un
 ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 
 # install go tooling for development, building and testing
-RUN go get -u golang.org/x/tools/cmd/goimports
+RUN go install golang.org/x/tools/cmd/goimports@latest
 
 # RUN gcloud components update
 RUN gcloud components update && gcloud components install app-engine-go
 
 # the kubernetes version for the file
-ENV KUBERNETES_VER 1.20.9
+ENV KUBERNETES_VER 1.21.5
 
 # overwrite kubectl as we want a specific version
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
@@ -68,7 +68,7 @@ RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin v1.42.1
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.43.0
 
 #
 #  \ \      / /__| |__  ___(_) |_ ___
@@ -84,8 +84,21 @@ RUN mkdir /tmp/hugo && \
     mv /tmp/hugo/hugo /usr/local/bin/ && \
     rm -r /tmp/hugo
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get install -y nodejs
+RUN add-apt-repository -y -r ppa:chris-lea/node.js
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list
+RUN rm -f /etc/apt/sources.list.d/chris-lea-node_js-*.list.save
+
+ARG KEYRING=/usr/share/keyrings/nodesource.gpg
+ARG VERSION=node_12.x
+
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
+RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
+
+ARG DISTRO="jessie"
+RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
+RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
+
+RUN apt-get update && apt-get install -y nodejs
 
 # install API reference docs generator
 RUN mkdir -p /go/src/github.com/ahmetb && \

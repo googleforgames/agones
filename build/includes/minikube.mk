@@ -28,7 +28,7 @@ minikube_cert_mount := ~/.minikube:$(HOME)/.minikube
 # of the right version.
 minikube-test-cluster: DOCKER_RUN_ARGS+=--network=host -v $(minikube_cert_mount)
 minikube-test-cluster: $(ensure-build-image)
-	$(MINIKUBE) start --kubernetes-version v1.20.9 -p $(MINIKUBE_PROFILE) --vm-driver $(MINIKUBE_DRIVER)
+	$(MINIKUBE) start --kubernetes-version v1.21.5 -p $(MINIKUBE_PROFILE) --vm-driver $(MINIKUBE_DRIVER)
 
 # Connecting to minikube requires so enhanced permissions, so use this target
 # instead of `make shell` to start an interactive shell for development on minikube.
@@ -67,12 +67,18 @@ minikube-setup-prometheus:
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" \
 		PVC=false HELM_ARGS="--set server.resources.requests.cpu=0,server.resources.requests.memory=0"
 
-
 # grafana on minkube with dashboards and prometheus datasource installed.
 # we have to disable PVC as it's not supported on minkube.
 minikube-setup-grafana:
 	$(MAKE) setup-grafana \
 		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)"
+
+# prometheus-stack on minkube
+# we have to disable PVC as it's not supported on minkube.
+minikube-setup-prometheus-stack:
+	$(MAKE) setup-prometheus-stack \
+		DOCKER_RUN_ARGS="--network=host -v $(minikube_cert_mount)" \
+		PVC=false HELM_ARGS="--set prometheus.server.resources.requests.cpu=0,prometheus.server.resources.requests.memory=0"
 
 # minikube port forwarding
 minikube-controller-portforward:

@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"testing"
 
-	e2eframework "agones.dev/agones/test/e2e/framework"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -89,7 +88,7 @@ func TestPingUDP(t *testing.T) {
 	assert.Nil(t, err)
 
 	expected := "hello"
-	reply, err := e2eframework.SendUDP(fmt.Sprintf("%s:%d", externalIP, p), expected)
+	reply, err := framework.SendUDP(t, fmt.Sprintf("%s:%d", externalIP, p), expected)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, reply)
 }

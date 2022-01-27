@@ -360,7 +360,7 @@ func TestCreateFullFleetAndCantGameServerAllocate(t *testing.T) {
 				}
 			}
 
-			framework.AssertFleetCondition(t, flt, func(fleet *agonesv1.Fleet) bool {
+			framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 				return fleet.Status.AllocatedReplicas == replicasCount
 			})
 
@@ -376,15 +376,30 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	gs := framework.DefaultGameServer(framework.Namespace)
-	gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
+	log := logrus.WithField("test", t.Name())
+	createAndAllocate := func(input *allocationv1.GameServerAllocation) *allocationv1.GameServerAllocation {
+		gs := framework.DefaultGameServer(framework.Namespace)
+		gs.ObjectMeta.Labels = map[string]string{"test": t.Name()}
+		gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+		require.NoError(t, err)
 
-	gs, err := framework.CreateGameServerAndWaitUntilReady(framework.Namespace, gs)
-	if !assert.Nil(t, err) {
-		assert.FailNow(t, "could not create GameServer")
+		log.WithField("gs", gs.ObjectMeta.Name).Info("👍 created and ready")
+
+		// poll, as it may take a moment for the allocation cache to be populated
+		err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
+			input, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, input, metav1.CreateOptions{})
+			if err != nil {
+				log.WithError(err).Info("Failed, trying again...")
+				return false, err
+			}
+
+			return allocationv1.GameServerAllocationAllocated == input.Status.State, nil
+		})
+		require.NoError(t, err)
+		return input
 	}
-	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, gs.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint: errcheck
 
+	// two standard labels
 	gsa := &allocationv1.GameServerAllocation{ObjectMeta: metav1.ObjectMeta{GenerateName: "allocation-"},
 		Spec: allocationv1.GameServerAllocationSpec{
 			Selectors: []allocationv1.GameServerSelector{{LabelSelector: metav1.LabelSelector{MatchLabels: map[string]string{"test": t.Name()}}}},
@@ -393,25 +408,29 @@ func TestGameServerAllocationMetaDataPatch(t *testing.T) {
 				Annotations: map[string]string{"dog": "good"},
 			},
 		}}
+	result := createAndAllocate(gsa)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, result.Status.GameServerName, metav1.DeleteOptions{}) // nolint: errcheck
 
-	err = wait.PollImmediate(time.Second, 30*time.Second, func() (bool, error) {
-		gsa, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "blue", gs.ObjectMeta.Labels["red"])
+	assert.Equal(t, "good", gs.ObjectMeta.Annotations["dog"])
 
-		if err != nil {
-			return true, err
-		}
+	// use special characters that are valid
+	gsa.Spec.MetaPatch = allocationv1.MetaPatch{Labels: map[string]string{"blue-frog.fred_thing": "test"}}
+	result = createAndAllocate(gsa)
+	defer framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, result.Status.GameServerName, metav1.DeleteOptions{}) // nolint: errcheck
 
-		return allocationv1.GameServerAllocationAllocated == gsa.Status.State, nil
-	})
-	if err != nil {
-		assert.FailNow(t, err.Error())
-	}
+	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, "test", gs.ObjectMeta.Labels["blue-frog.fred_thing"])
 
-	gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gsa.Status.GameServerName, metav1.GetOptions{})
-	if assert.Nil(t, err) {
-		assert.Equal(t, "blue", gs.ObjectMeta.Labels["red"])
-		assert.Equal(t, "good", gs.ObjectMeta.Annotations["dog"])
-	}
+	// throw something invalid at it.
+	gsa.Spec.MetaPatch = allocationv1.MetaPatch{Labels: map[string]string{"$$$$$$$": "test"}}
+	result, err = framework.AgonesClient.AllocationV1().GameServerAllocations(framework.Namespace).Create(ctx, gsa.DeepCopy(), metav1.CreateOptions{})
+	log.WithField("result", result).WithError(err).Info("Failed allocation")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "GameServerAllocation is invalid")
 }
 
 func TestGameServerAllocationPreferredSelection(t *testing.T) {

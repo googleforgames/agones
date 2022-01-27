@@ -27,7 +27,7 @@ REPOSITORY = gcr.io/agones-images
 
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-image_tag = $(REPOSITORY)/supertuxkart-example:0.3
+image_tag = $(REPOSITORY)/supertuxkart-example:0.4
 
 #   _____                    _
 #  |_   _|_ _ _ __ __ _  ___| |_ ___
@@ -39,6 +39,10 @@ image_tag = $(REPOSITORY)/supertuxkart-example:0.3
 # Build a docker image for the server, and tag it
 build:
 	docker build -f $(project_path)/Dockerfile --tag=$(image_tag) .
+
+# Push the docker image
+push: build
+	docker push $(image_tag)
 
 # Run tests
 test:

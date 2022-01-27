@@ -153,7 +153,7 @@ After setting up `agones-allocator` with server certificate and allowlisting the
 
 Set the environment variables and store the client secrets before allocating using gRPC or REST APIs:
 
-```none
+```bash
 NAMESPACE=default # replace with any namespace
 EXTERNAL_IP=$(kubectl get services agones-allocator -n agones-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 KEY_FILE=client.key
@@ -187,12 +187,19 @@ go run examples/allocator-client/main.go --ip ${EXTERNAL_IP} \
 ```bash
 #!/bin/bash
 
-curl --key ${KEY_FILE} --cert ${CERT_FILE} --cacert ${TLS_CA_FILE} -H "Content-Type: application/json" --data '{"namespace":"'${NAMESPACE}'"}' https://${EXTERNAL_IP}/gameserverallocation -XPOST
+curl --key ${KEY_FILE} \
+     --cert ${CERT_FILE} \
+     --cacert ${TLS_CA_FILE} \
+     -H "Content-Type: application/json" \
+     --data '{"namespace":"'${NAMESPACE}'"}' \
+     https://${EXTERNAL_IP}/gameserverallocation \
+     -X POST
+     
 ```
 
 You should expect to see the following output:
 
-```
+```json
 {"gameServerName":"game-server-name","ports":[{"name":"default","port":7463}],"address":"1.2.3.4","nodeName":"node-name"}
 ```
 

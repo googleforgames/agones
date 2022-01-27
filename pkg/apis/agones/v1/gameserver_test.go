@@ -1205,8 +1205,8 @@ func TestGameServerPodWithSidecarNoErrors(t *testing.T) {
 	assert.Equal(t, fixture.ObjectMeta.Name, pod.ObjectMeta.Name)
 	assert.Len(t, pod.Spec.Containers, 2, "Should have two containers")
 	assert.Equal(t, "other-agones-sdk", pod.Spec.ServiceAccountName)
-	assert.Equal(t, "container", pod.Spec.Containers[0].Name)
-	assert.Equal(t, "sidecar", pod.Spec.Containers[1].Name)
+	assert.Equal(t, "sidecar", pod.Spec.Containers[0].Name)
+	assert.Equal(t, "container", pod.Spec.Containers[1].Name)
 	assert.True(t, metav1.IsControlledBy(pod, fixture))
 }
 
