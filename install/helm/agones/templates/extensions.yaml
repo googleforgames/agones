@@ -49,7 +49,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
 {{- if .Values.agones.controller.webhooks.annotations }}
-    annotations:
+  annotations:
 {{- toYaml .Values.agones.controller.webhooks.annotations | nindent 4 }}
 {{- end }}
   labels:
@@ -110,7 +110,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
 {{- if .Values.agones.controller.webhooks.annotations }}
-    annotations:
+  annotations:
 {{- toYaml .Values.agones.controller.webhooks.annotations | nindent 4 }}
 {{- end }}
   labels:
