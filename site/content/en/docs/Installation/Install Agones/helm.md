@@ -282,6 +282,53 @@ For most use cases the controller would have required a restart anyway (eg: cont
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
 
+Another approach is to use [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
+
+In order to use the cert-manager solution, first [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster.
+Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and
+last [configure](https://cert-manager.io/docs/usage/certificate/) a `Certificate` resource to manage controller `Secret`.
+Make sure to configure the `Certificate` based on your system's requirements, including the validity `duration`.
+
+Here is an example of using a self-signed `ClusterIssuer` for configuring controller `Secret` where secret name is `my-release-cert` or `{{ template "agones.fullname" . }}-cert`:
+
+```bash
+#!/bin/bash
+# Create a self-signed ClusterIssuer
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+EOF
+
+# Create a Certificate with IP for the my-release-cert )
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: my-release-cert
+  namespace: agones-system
+spec:
+  ipAddresses:
+    - agones-controller-service.agones-system.svc
+  secretName: my-release-cert
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+EOF
+```
+
+After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller webhook and disable controller secret creation by setting the following:
+
+```bash
+helm install \
+  --set agones.controller.disableSecretCreation=true
+  --set agones.controller.webhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'}
+```
+
+
 ## Reserved Allocator Load Balancer IP
 
 In order to reuse the existing load balancer IP on upgrade or install the `agones-allocator` service as a `LoadBalancer` using a reserved static IP, a user can specify the load balancer's IP with the `agones.allocator.http.loadBalancerIP` helm configuration parameter value. By setting the `loadBalancerIP` value:

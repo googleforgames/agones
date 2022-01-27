@@ -148,6 +148,7 @@ webhooks:
           - UPDATE
 {{- end }}
 ---
+{{- if not .Values.agones.controller.disableSecretCreation }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -166,4 +167,5 @@ data:
 {{- else }}
   server.crt: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
   server.key: {{ default (.Files.Get "certs/server.key") .Values.agones.controller.tlsKey | b64enc }}
+{{- end }}
 {{- end }}

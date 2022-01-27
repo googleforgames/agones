@@ -67,6 +67,9 @@ agones:
     generateTLS: true
     tlsCert: ""
     tlsKey: ""
+    disableSecretCreation: false
+    webhook:
+      annotations: {} 
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
