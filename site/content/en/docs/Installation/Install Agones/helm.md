@@ -328,7 +328,6 @@ helm install \
   --set agones.controller.webhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'}
 ```
 
-
 ## Reserved Allocator Load Balancer IP
 
 In order to reuse the existing load balancer IP on upgrade or install the `agones-allocator` service as a `LoadBalancer` using a reserved static IP, a user can specify the load balancer's IP with the `agones.allocator.http.loadBalancerIP` helm configuration parameter value. By setting the `loadBalancerIP` value:
