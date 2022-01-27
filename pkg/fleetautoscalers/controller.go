@@ -366,7 +366,13 @@ func (c *Controller) updateStatus(ctx context.Context, fas *autoscalingv1.FleetA
 
 	if !apiequality.Semantic.DeepEqual(fas.Status, fasCopy.Status) {
 		if scalingLimited {
-			c.recorder.Eventf(fas, corev1.EventTypeWarning, "ScalingLimited", "Scaling fleet %s was limited to maximum size of %d", fas.Spec.FleetName, desiredReplicas)
+			// scalingLimited indicates that the calculated scale would be above or below the range defined by MinReplicas and MaxReplicas
+			msg := "Scaling fleet %s was limited to minimum size of %d"
+			if currentReplicas > desiredReplicas {
+				msg = "Scaling fleet %s was limited to maximum size of %d"
+			}
+
+			c.recorder.Eventf(fas, corev1.EventTypeWarning, "ScalingLimited", msg, fas.Spec.FleetName, desiredReplicas)
 		}
 
 		_, err := c.fleetAutoscalerGetter.FleetAutoscalers(fas.ObjectMeta.Namespace).UpdateStatus(ctx, fasCopy, metav1.UpdateOptions{})

@@ -787,6 +787,24 @@ func TestControllerUpdateStatus(t *testing.T) {
 		assert.Nil(t, err)
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "ScalingLimited")
 	})
+
+	t.Run("update with a scaling limit with minimum", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+
+		err := c.updateStatus(context.Background(), fas, 1, 3, true, true)
+		assert.Nil(t, err)
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "limited to minimum size of 3")
+	})
+
+	t.Run("update with a scaling limit with maximum", func(t *testing.T) {
+		c, m := newFakeController()
+		fas, _ := defaultFixtures()
+
+		err := c.updateStatus(context.Background(), fas, 12, 10, true, true)
+		assert.Nil(t, err)
+		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "limited to maximum size of 10")
+	})
 }
 
 func TestControllerUpdateStatusUnableToScale(t *testing.T) {
