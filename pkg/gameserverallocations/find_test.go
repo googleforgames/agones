@@ -58,6 +58,29 @@ func TestFindGameServerForAllocationPacked(t *testing.T) {
 		test     func(*testing.T, []*agonesv1.GameServer)
 		features string
 	}{
+		"empty selector": {
+			list: []agonesv1.GameServer{{ObjectMeta: metav1.ObjectMeta{Name: "gs1", Namespace: defaultNs, Labels: oneLabel}, Status: agonesv1.GameServerStatus{NodeName: "node1", State: agonesv1.GameServerStateReady}}},
+			test: func(t *testing.T, list []*agonesv1.GameServer) {
+				require.Len(t, list, 1)
+
+				emptyGSA := &allocationv1.GameServerAllocation{
+					ObjectMeta: metav1.ObjectMeta{Namespace: defaultNs},
+					Spec: allocationv1.GameServerAllocationSpec{
+						Scheduling: apis.Packed,
+					},
+				}
+				emptyGSA.ApplyDefaults()
+				emptyGSA.Converter()
+				_, ok := emptyGSA.Validate()
+				require.True(t, ok)
+				require.Len(t, emptyGSA.Spec.Selectors, 1)
+
+				gs, index, err := findGameServerForAllocation(emptyGSA, list)
+				assert.NotNil(t, gs)
+				assert.Equal(t, 0, index)
+				assert.NoError(t, err)
+			},
+		},
 		"one label": {
 			// nolint: dupl
 			list: []agonesv1.GameServer{

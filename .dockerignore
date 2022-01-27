@@ -26,6 +26,7 @@ bin
 *.md
 *.amd64
 /site/public
+/test
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template

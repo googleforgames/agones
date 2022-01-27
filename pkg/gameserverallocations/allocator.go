@@ -258,7 +258,7 @@ func (c *Allocator) allocateFromLocalCluster(ctx context.Context, gsa *allocatio
 		var err error
 		gs, err = c.allocate(ctx, gsa)
 		if err != nil {
-			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying... ")
+			c.loggerForGameServerAllocation(gsa).WithError(err).Warn("failed to allocate. Retrying...")
 		}
 		return err
 	})

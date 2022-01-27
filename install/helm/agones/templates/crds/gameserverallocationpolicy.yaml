@@ -38,9 +38,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API.'
           type: object
           properties:
             spec:
+              description: 'GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#multicluster.agones.dev/v1.GameServerAllocationPolicy'
               type: object
               required:
                 - priority
