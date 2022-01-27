@@ -14,6 +14,7 @@
 
 {{/* schema for a gameserver spec */}}
 {{- define "gameserver.schema" }}
+description: 'GameServer is the data structure for a GameServer resource.'
 type: object
 required:
 - spec
@@ -23,6 +24,8 @@ properties:
     {{- include "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta" . | indent 4 }}
   {{- end}}
   spec:
+    description: 'GameServerSpec is the spec for a GameServer resource. More info:
+      https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
     type: object
     required:
     - template
@@ -90,7 +93,7 @@ properties:
         title: Parameters for the SDK Server (sidecar)
         properties:
           logLevel:
-            type: string 
+            type: string
             description: |
               sdkServer log level parameter has three options:
               - "Info" (default) The SDK server will output all messages except for debug messages

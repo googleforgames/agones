@@ -8,7 +8,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -33,7 +33,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -58,7 +58,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 ---
@@ -70,7 +70,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.20.0-dev"
+    chart: "agones-1.21.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 type: Opaque
@@ -87,7 +87,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.20.0-dev"
+    chart: "agones-1.21.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -103,7 +103,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.20.0-dev"
+    chart: "agones-1.21.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -119,7 +119,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: "agones-1.20.0-dev"
+    chart: "agones-1.21.0-dev"
     release: "agones-manual"
     heritage: "Helm"
 data:
@@ -149,7 +149,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -186,9 +186,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'Fleet is the data structure for a Fleet resource'
           type: object
           properties:
             spec:
+              description: 'FleetSpec is the spec for a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               required:
                 - template
@@ -224,6 +227,7 @@ spec:
                             - type: integer
                             - type: string
                 template:                 
+                 description: 'GameServer is the data structure for a GameServer resource.'
                  type: object
                  required:
                  - spec
@@ -363,6 +367,8 @@ spec:
                            Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                          type: string
                    spec:
+                     description: 'GameServerSpec is the spec for a GameServer resource. More info:
+                       https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
                      type: object
                      required:
                      - template
@@ -4425,7 +4431,7 @@ spec:
                          title: Parameters for the SDK Server (sidecar)
                          properties:
                            logLevel:
-                             type: string 
+                             type: string
                              description: |
                                sdkServer log level parameter has three options:
                                - "Info" (default) The SDK server will output all messages except for debug messages
@@ -4486,6 +4492,8 @@ spec:
                              title: The initial player capacity of this Game Server
                              minimum: 0
             status:
+              description: 'FleetStatus is the status of a Fleet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.Fleet'
               type: object
               properties:
                 replicas:
@@ -4544,7 +4552,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -4562,9 +4570,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'FleetAutoscaler is the data structure for a FleetAutoscaler resource.'
           type: object
           properties:
             spec:
+              description: 'FleetAutoscalerSpec is the spec for a Fleet Scaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               required:
                 - fleetName
@@ -4645,6 +4656,8 @@ spec:
                           minimum: 0
                           exclusiveMinimum: true
             status:
+              description: 'FleetAutoscalerStatus defines the current status of a FleetAutoscaler. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#autoscaling.agones.dev/v1.FleetAutoscaler'
               type: object
               properties:
                 currentReplicas:
@@ -4685,7 +4698,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -4719,11 +4732,14 @@ spec:
           type: date
       schema:
         openAPIV3Schema:         
+         description: 'GameServer is the data structure for a GameServer resource.'
          type: object
          required:
          - spec
          properties:
            spec:
+             description: 'GameServerSpec is the spec for a GameServer resource. More info:
+               https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
              type: object
              required:
              - template
@@ -8786,7 +8802,7 @@ spec:
                  title: Parameters for the SDK Server (sidecar)
                  properties:
                    logLevel:
-                     type: string 
+                     type: string
                      description: |
                        sdkServer log level parameter has three options:
                        - "Info" (default) The SDK server will output all messages except for debug messages
@@ -8847,6 +8863,8 @@ spec:
                      title: The initial player capacity of this Game Server
                      minimum: 0           
            status:
+             description: 'GameServerStatus is the status for a GameServer resource. More info:
+               https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
              type: object
              title: The status values for the GameServer
              properties:
@@ -8917,7 +8935,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
   name: gameserverallocationpolicies.multicluster.agones.dev
@@ -8935,9 +8953,12 @@ spec:
       storage: true
       schema:
         openAPIV3Schema:
+          description: 'GameServerAllocationPolicy is the Schema for the gameserverallocationpolicies API.'
           type: object
           properties:
             spec:
+              description: 'GameServerAllocationPolicySpec defines the desired state of GameServerAllocationPolicy. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#multicluster.agones.dev/v1.GameServerAllocationPolicy'
               type: object
               required:
                 - priority
@@ -8993,7 +9014,7 @@ metadata:
   labels:
     component: crd
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -9031,9 +9052,12 @@ spec:
           type: date
       schema:
         openAPIV3Schema:
+          description: 'GameServerSet is the data structure for a set of GameServers.'
           type: object
           properties:
             spec:
+              description: 'GameServerSetSpec the specification for GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               required:
                 - replicas
@@ -9048,6 +9072,7 @@ spec:
                     - Packed
                     - Distributed
                 template:                  
+                  description: 'GameServer is the data structure for a GameServer resource.'
                   type: object
                   required:
                   - spec
@@ -9187,6 +9212,8 @@ spec:
                             Populated by the system. Read-only. More info: http://kubernetes.io/docs/user-guide/identifiers#uids
                           type: string
                     spec:
+                      description: 'GameServerSpec is the spec for a GameServer resource. More info:
+                        https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServer'
                       type: object
                       required:
                       - template
@@ -13249,7 +13276,7 @@ spec:
                           title: Parameters for the SDK Server (sidecar)
                           properties:
                             logLevel:
-                              type: string 
+                              type: string
                               description: |
                                 sdkServer log level parameter has three options:
                                 - "Info" (default) The SDK server will output all messages except for debug messages
@@ -13310,6 +13337,8 @@ spec:
                               title: The initial player capacity of this Game Server
                               minimum: 0
             status:
+              description: 'GameServerSetStatus is the status of a GameServerSet. More info:
+                https://agones.dev/site/docs/reference/agones_crd_api_reference/#agones.dev/v1.GameServerSet'
               type: object
               properties:
                 replicas:
@@ -13358,7 +13387,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -13389,7 +13418,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -13435,7 +13464,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 rules:
@@ -13455,7 +13484,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -13475,7 +13504,7 @@ metadata:
   namespace: agones-system
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -13527,7 +13556,7 @@ metadata:
   namespace: default
   labels:
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 subjects:
@@ -13548,7 +13577,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13570,7 +13599,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13606,7 +13635,7 @@ metadata:
   labels:
     agones.dev/role: controller
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13643,7 +13672,7 @@ metadata:
   labels:
     component: allocator
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13665,7 +13694,7 @@ metadata:
   labels:
     multicluster.agones.dev/role: allocator
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13700,7 +13729,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13743,7 +13772,7 @@ spec:
       serviceAccountName: agones-controller
       containers:
       - name: agones-controller
-        image: "gcr.io/agones-images/agones-controller:1.20.0-dev"
+        image: "gcr.io/agones-images/agones-controller:1.21.0-dev"
         imagePullPolicy: IfNotPresent
         env:
         # minimum port that can be exposed to GameServer traffic
@@ -13753,7 +13782,7 @@ spec:
         - name: MAX_PORT
           value: "8000"
         - name: SIDECAR_IMAGE # overwrite the GameServer sidecar image that is used
-          value: "gcr.io/agones-images/agones-sdk:1.20.0-dev"
+          value: "gcr.io/agones-images/agones-sdk:1.21.0-dev"
         - name: ALWAYS_PULL_SIDECAR # set the sidecar imagePullPolicy to Always
           value: "false"
         - name: SIDECAR_CPU_REQUEST
@@ -13847,7 +13876,7 @@ metadata:
   labels:
     component: ping
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -13882,7 +13911,7 @@ spec:
       priorityClassName: agones-system
       containers:
         - name: agones-ping
-          image: "gcr.io/agones-images/agones-ping:1.20.0-dev"
+          image: "gcr.io/agones-images/agones-ping:1.21.0-dev"
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -13955,7 +13984,7 @@ spec:
           secretName: allocator-client-ca
       containers:
       - name: agones-allocator
-        image: "gcr.io/agones-images/agones-allocator:1.20.0-dev"
+        image: "gcr.io/agones-images/agones-allocator:1.21.0-dev"
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
@@ -14027,7 +14056,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 spec:
@@ -14063,7 +14092,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:
@@ -14115,7 +14144,7 @@ metadata:
   labels:
     component: controller
     app: agones
-    chart: agones-1.20.0-dev
+    chart: agones-1.21.0-dev
     release: agones-manual
     heritage: Helm
 webhooks:

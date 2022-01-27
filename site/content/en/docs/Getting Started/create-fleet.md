@@ -334,7 +334,7 @@ with a Container Port of `6000`.
 This will make it such that you can no longer connect to the simple-game-server game server.
 {{< /alert >}}
 
-Run `kubectl describe gs | grep "Container Port`
+Run `kubectl describe gs | grep "Container Port"`
 until you can see that there is
 one with a containerPort of `7654`, which is the `Allocated` `GameServer`, and four instances with a containerPort of `6000` which
 is the new configuration. You can also run `kubectl get gs` and look at the **Age** column to see that one `GameServer` is much

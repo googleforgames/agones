@@ -53,6 +53,7 @@ func ErrorHTTPHandler(logger *logrus.Entry, f ErrorHandlerFunc) http.HandlerFunc
 		if err != nil {
 			runtime.HandleError(LogRequest(logger, r), err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }
