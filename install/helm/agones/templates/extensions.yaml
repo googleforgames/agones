@@ -48,9 +48,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
-{{- if .Values.agones.controller.webhooks.annotations }}
+{{- if .Values.agones.controller.webhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhooks.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -109,9 +109,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
-{{- if .Values.agones.controller.webhooks.annotations }}
+{{- if .Values.agones.controller.webhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhooks.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
