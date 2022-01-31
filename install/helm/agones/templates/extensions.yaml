@@ -28,6 +28,10 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
+{{- if .Values.agones.controller.webhook.annotations }}
+  annotations:
+{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
+{{- end }}
 spec:
   group: allocation.agones.dev
   groupPriorityMinimum: 1000
