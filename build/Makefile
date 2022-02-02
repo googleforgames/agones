@@ -107,7 +107,7 @@ allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
-DOCKER_RUN ?= docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
+DOCKER_RUN ?= DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
 
 
 ifdef DOCKER_RUN
@@ -130,11 +130,11 @@ ifndef FULL_BUILD
 endif
 
 go_build_cmd = go build -mod=vendor
-GO_BUILD_LINUX_AMD64=docker run --rm --platform linux/x86_64 -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
-GO_BUILD_LINUX_ARM64=docker run --rm --platform linux/x86_64 -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
-GO_BUILD_DARWIN_AMD64=docker run --rm --platform linux/x86_64 -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
-GO_BUILD_DARWIN_ARM64=docker run --rm --platform linux/x86_64 -e "GOOS=darwin" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
-GO_BUILD_WINDOWS_AMD64=docker run --rm --platform linux/x86_64 -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_AMD64=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_ARM64=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_AMD64=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_ARM64=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -e "GOOS=darwin" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_WINDOWS_AMD64=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
 RACE_DETECTOR_ARGS=-race
 
@@ -164,7 +164,7 @@ ifdef LOCAL_GO
 	go_build_base_path=$(agones_path)
 endif
 
-ZIP_SDK=docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
+ZIP_SDK=DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/cmd/sdk-server/bin/ $(build_tag) zip $(zip_flags)
 ifdef LOCAL_ZIP
 	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
 endif
@@ -229,13 +229,13 @@ endif
 build-chart: RELEASE_VERSION ?= $(base_version)
 build-chart: CHART_DIR ?= install/helm/agones/
 build-chart: $(ensure-build-image)
-	docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"mkdir -p install/helm/bin/ && rm -rf install/helm/bin/* && \
 			helm package -d install/helm/bin/ --version $(RELEASE_VERSION) $(CHART_DIR)"
 
 # push the current chart to google cloud storage and update the index
 push-chart: $(ensure-build-image) build-chart
-	docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) bash -c \
 		"gsutil copy gs://$(GCP_BUCKET_CHARTS)/index.yaml ./install/helm/bin/index.yaml || /bin/true && \
 		helm repo index --merge ./install/helm/bin/index.yaml ./install/helm/bin && \
 		cat ./install/helm/bin/index.yaml && ls ./install/helm/bin/ && \
@@ -367,11 +367,11 @@ lint: $(ensure-build-image)
 
 # Extract licenses from source tree
 build-licenses:
-	docker run --rm --platform linux/x86_64 $(common_mounts) $(build_tag) $(mount_path)/build/extract-licenses.sh
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) $(build_tag) $(mount_path)/build/extract-licenses.sh
 
 # Tarball source for dependencies that are required to be distributed with the image (MPL)
 build-required-src-dist:
-	docker run --rm --platform linux/x86_64 $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
 # Build the image for the gameserver controller
 build-controller-image: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
@@ -432,11 +432,11 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 
 # Build linux sidecar image only (AMD64)
 build-agones-sdk-server-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-licenses build-required-src-dist
-	docker build --platform=linux/amd64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker build --platform=linux/amd64 --build-arg BINARY_PATH=sdk-server.linux.amd64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 # Build linux sidecar image only (ARM64)
 build-agones-sdk-server-image-arm64: $(ensure-build-image) build-agones-sdk-binary-linux-arm64 build-licenses build-required-src-dist
-	docker build --platform=linux/arm64 --build-arg BINARY_PATH=sdk-server.linux.arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker build --platform=linux/arm64 --build-arg BINARY_PATH=sdk-server.linux.arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-server-image-windows-$(winver))
 
@@ -494,11 +494,11 @@ push-agones-sdk-linux-images: $(ensure-build-image)
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi:
-	docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/build $(build_tag) ./export-openapi.sh
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/build $(build_tag) ./export-openapi.sh
 
 # Generate the static install script
 gen-install: $(ensure-build-image)
-	docker run --rm --platform linux/x86_64 $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) bash -c \
 		'helm template agones-manual --namespace agones-system $(mount_path)/install/helm/agones \
 		--set agones.controller.generateTLS=false \
 		--set agones.allocator.generateTLS=false \
@@ -508,8 +508,8 @@ gen-install: $(ensure-build-image)
 
 # Generate the client for our CustomResourceDefinition
 gen-crd-client: $(ensure-build-image)
-	docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-crd-client.sh
-	docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/pkg $(build_tag) goimports -w .
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path) $(build_tag) /root/gen-crd-client.sh
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -w $(workdir_path)/pkg $(build_tag) goimports -w .
 
 # Run a bash shell with the developer tools in it. (Creates the image if it doesn't exist)
 # Can use DOCKER_RUN_ARGS for extra arguments.
@@ -528,12 +528,12 @@ godoc:
 
 # start cpu profiling pprof with a web ui
 pprof-cpu-web:
-	docker run --rm --platform linux/x86_64 -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go tool pprof -http :6061 http://localhost:6060
 
 # start heap profiling
 pprof-heap-web:
-	docker run --rm --platform linux/x86_64 -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
+	DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 -it --network=host $(common_mounts) $(DOCKER_RUN_ARGS) $(build_tag) \
 		go tool pprof -http :6062 http://localhost:6060/debug/pprof/heap
 
 # setup prometheus in the current cluster by default Persistent Volume Claims are requested.
@@ -601,9 +601,9 @@ install-custom-pull-secret:
 		echo "Creating agones-system namespace..." ;\
 		$(DOCKER_RUN) kubectl create namespace agones-system; \
 		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in agones-system namespace..."; \
-		docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+		DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
 			kubectl apply --namespace agones-system -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 		echo "Installing secret $(IMAGE_PULL_SECRET_FILE) in default namespace..."; \
-		docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
+		DOCKER_CLI_EXPERIMENTAL=enabled docker run --rm --platform linux/x86_64 $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -v $(dir $(IMAGE_PULL_SECRET_FILE)):/root/secret $(DOCKER_RUN_ARGS) $(build_tag) \
 			kubectl apply --namespace default -f /root/secret/$(notdir $(IMAGE_PULL_SECRET_FILE)); \
 	fi
