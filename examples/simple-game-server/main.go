@@ -180,12 +180,12 @@ func shutdownAfterNAllocations(s *sdk.SDK, readyIterations, shutdownDelaySec int
 				}
 
 				log.Println("Moving Game Server to Shutdown")
-				shutdownErr := s.Shutdown()
-				if shutdownErr != nil {
+				if shutdownErr := s.Shutdown(); shutdownErr != nil {
 					log.Fatalf("Could not shutdown game server: %v", shutdownErr)
 				}
-				log.Println("Exiting Game Server")
-				os.Exit(0)
+				// The process will exit when Agones removes the pod and the
+				// container receives the SIGTERM signal
+				return
 			}(remainingIterations)
 		}
 	}); err != nil {
@@ -450,7 +450,8 @@ func exit(s *sdk.SDK) {
 	if shutdownErr != nil {
 		log.Printf("Could not shutdown")
 	}
-	os.Exit(0)
+	// The process will exit when Agones removes the pod and the
+	// container receives the SIGTERM signal
 }
 
 // gameServerName returns the GameServer name
