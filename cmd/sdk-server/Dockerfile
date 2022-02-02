@@ -17,7 +17,8 @@ FROM alpine:3.14
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:agones ./bin/sdk-server.linux.amd64 /home/agones/sdk-server
+ARG BINARY_PATH
+COPY --chown=agones:agones ./bin/$BINARY_PATH /home/agones/sdk-server
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000
