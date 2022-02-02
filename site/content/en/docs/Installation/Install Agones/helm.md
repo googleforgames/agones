@@ -120,8 +120,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
+| `agones.controller.disableSecretCreation`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
 | `agones.controller.tlsCert`                         | Custom TLS certificate provided as a string                                                     | \`\`                   |
 | `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
+| `agones.controller.webhook.annotations`                     | [Annotations][annotations] added to the Agones apiregistration, mutating webhook, and validating webhook                                  | `{}`                   |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
