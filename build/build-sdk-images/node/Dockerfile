@@ -28,7 +28,7 @@ ARG VERSION=node_16.x
 RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor | tee "$KEYRING" >/dev/null
 RUN gpg --no-default-keyring --keyring "$KEYRING" --list-keys
 
-ARG DISTRO="jessie"
+ARG DISTRO="buster"
 RUN echo "deb [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee /etc/apt/sources.list.d/nodesource.list
 RUN echo "deb-src [signed-by=$KEYRING] https://deb.nodesource.com/$VERSION $DISTRO main" | tee -a /etc/apt/sources.list.d/nodesource.list
 
