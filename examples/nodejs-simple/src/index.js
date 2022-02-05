@@ -13,9 +13,7 @@
 // limitations under the License.
 
 const AgonesSDK = require('@google-cloud/agones-sdk');
-const util = require('util');
-
-const sleep = util.promisify(setTimeout);
+const {setTimeout} = require('timers/promises');
 
 const DEFAULT_TIMEOUT = 60;
 const MAX_TIMEOUT = 2147483;
@@ -58,26 +56,26 @@ const connect = async (timeout, enableAlpha) => {
 			process.exit(0);
 		});
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Setting a label');
 		await agonesSDK.setLabel('test-label', 'test-value');
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Setting an annotation');
 		await agonesSDK.setAnnotation('test-annotation', 'test value');
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Marking server as ready...');
 		await agonesSDK.ready();
 		
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Allocating');
 		await agonesSDK.allocate();
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Reserving for 10 seconds');
 		await agonesSDK.reserve(10);
-		await sleep(20000);
+		await setTimeout(20000);
 
 		if (enableAlpha) {
 			console.log('Running alpha suite');
@@ -86,21 +84,21 @@ const connect = async (timeout, enableAlpha) => {
 
 		if (timeout === 0) {
 			do {
-				await sleep(MAX_TIMEOUT);
+				await setTimeout(MAX_TIMEOUT);
 			} while (true);
 		}
 
 		console.log(`Shutting down after timeout of ${timeout} seconds...`);
-		await sleep(timeout * 1000);
+		await setTimeout(timeout * 1000);
 		console.log('Shutting down...');
 		agonesSDK.shutdown();
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Closing connection to SDK server');
 		clearInterval(healthInterval);
 		agonesSDK.close();
 
-		await sleep(10000);
+		await setTimeout(10000);
 		console.log('Exiting');
 		clearInterval(lifetimeInterval);
 
@@ -115,50 +113,50 @@ const connect = async (timeout, enableAlpha) => {
 };
 
 const runAlphaSuite = async (agonesSDK) => {
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Setting capacity');
 	await agonesSDK.alpha.setPlayerCapacity(64);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Getting capacity');
 	let result = await agonesSDK.alpha.getPlayerCapacity();
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Connecting a player');
 	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Connecting a duplicate player');
 	result = await agonesSDK.alpha.playerConnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Connecting another player');
 	await agonesSDK.alpha.playerConnect('secondPlayerID');
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Getting player count');
 	result = await agonesSDK.alpha.getPlayerCount();
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Finding if firstPlayerID connected');
 	result = await agonesSDK.alpha.isPlayerConnected('firstPlayerID');
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Getting connected players');
 	result = await agonesSDK.alpha.getConnectedPlayers();
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Disconnecting a player');
 	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
 	console.log(`result: ${result}`);
 
-	await sleep(10000);
+	await setTimeout(10000);
 	console.log('Disconnecting the same player');
 	result = await agonesSDK.alpha.playerDisconnect('firstPlayerID');
 	console.log(`result: ${result}`);
