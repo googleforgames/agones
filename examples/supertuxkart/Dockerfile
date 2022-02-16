@@ -24,7 +24,7 @@ RUN go mod tidy
 RUN go build -o wrapper .
 
 # compile stk
-FROM debian:buster as stk-builder
+FROM debian:bullseye as stk-builder
 
 RUN apt update && apt-get install -y build-essential cmake libbluetooth-dev \
 libcurl4-openssl-dev libenet-dev libfreetype6-dev libharfbuzz-dev libfribidi-dev \
@@ -42,7 +42,7 @@ RUN cd stk-code && mkdir cmake_build && cd cmake_build \
     && make -j$(nproc)
 
 # final image
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt update && apt-get install -y libbluetooth3 libbz2-1.0 libc6 \
  libcurl4 libenet7 libfreetype6 libfribidi0 libgcc1 libgl1 libglu1-mesa \

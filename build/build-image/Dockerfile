@@ -14,7 +14,7 @@
 
 # ForceUpdate 12 -- change here if you need to force a rebuild
 
-FROM debian:buster
+FROM debian:bullseye
 
 RUN apt-get update && \
     apt-get install -y build-essential gnupg curl git wget psmisc rsync make python bash-completion \
