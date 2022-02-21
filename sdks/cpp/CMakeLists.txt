@@ -71,6 +71,7 @@ set(AGONES_OPENSSL_CONFIG_STRING "VC-WIN64A" CACHE STRING "See https://github.co
 
 # Prerequisities
 include(./cmake/prerequisites.cmake)
+find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Protobuf REQUIRED CONFIG)
 find_package(gRPC ${AGONES_GRPC_VERSION} ${AGONES_GRPC_VERSION_MATCH} REQUIRED CONFIG)
