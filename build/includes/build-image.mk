@@ -23,7 +23,7 @@ build_remote_tag = $(REGISTRY)/$(build_tag)
 
 # Creates the build docker image
 build-build-image:
-	docker build --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
+	docker build --platform linux/$(ARCH) --build-arg ARCH=$(ARCH) --tag=$(build_tag) $(build_path)/build-image $(DOCKER_BUILD_ARGS)
 
 # Deletes the local build docker image
 clean-build-image:

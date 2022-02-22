@@ -26,8 +26,9 @@ WORKDIR /usr/local
 ENV GO_VERSION=1.17.2
 ENV GOPATH /go
 ENV GO111MODULE=on
-RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz && \
-    tar -xzf go${GO_VERSION}.linux-amd64.tar.gz && rm go${GO_VERSION}.linux-amd64.tar.gz && mkdir ${GOPATH}
+ARG ARCH=amd64
+RUN wget -q https://dl.google.com/go/go${GO_VERSION}.linux-${ARCH}.tar.gz && \
+    tar -xzf go${GO_VERSION}.linux-${ARCH}.tar.gz && rm go${GO_VERSION}.linux-${ARCH}.tar.gz && mkdir ${GOPATH}
 
 # install gcloud + kubectl, because it's an easy way to test/dev against kubernetes.
 WORKDIR /opt
@@ -48,7 +49,7 @@ RUN gcloud components update && gcloud components install app-engine-go
 ENV KUBERNETES_VER 1.21.5
 
 # overwrite kubectl as we want a specific version
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/amd64/kubectl && \
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBERNETES_VER}/bin/linux/${ARCH}/kubectl && \
     chmod go+rx ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 RUN echo "source <(kubectl completion bash)" >> /root/.bashrc
@@ -59,12 +60,12 @@ RUN mkdir -p /go/src/k8s.io && cd /go/src/k8s.io && \
 
 # install Helm package manager
 ENV HELM_VER 3.5.0
-ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-amd64.tar.gz
+ENV HELM_URL https://get.helm.sh/helm-v${HELM_VER}-linux-${ARCH}.tar.gz
 RUN curl -L  ${HELM_URL} > /tmp/helm.tar.gz \
     && tar -zxvf /tmp/helm.tar.gz -C /tmp \
-    && mv /tmp/linux-amd64/helm /usr/local/bin/helm \
+    && mv /tmp/linux-${ARCH}/helm /usr/local/bin/helm \
     && chmod go+rx /usr/local/bin/helm \
-    && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-amd64
+    && rm /tmp/helm.tar.gz && rm -rf /tmp/linux-${ARCH}
 RUN echo "source <(helm completion bash)" >> /root/.bashrc
 
 # install golang-ci linter
@@ -107,7 +108,7 @@ RUN mkdir -p /go/src/github.com/ahmetb && \
 
 # html checker
 RUN mkdir /tmp/htmltest && \
-    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_amd64.tar.gz && \
+    wget -O /tmp/htmltest/htmltest.tar.gz https://github.com/wjdp/htmltest/releases/download/v0.13.0/htmltest_0.13.0_linux_${ARCH}.tar.gz && \
     tar -zxvf /tmp/htmltest/htmltest.tar.gz -C /tmp/htmltest && \
     mv /tmp/htmltest/htmltest /usr/local/bin && \
     rm -r /tmp/htmltest
@@ -118,7 +119,7 @@ RUN echo "export PATH=/usr/local/go/bin:/go/bin/:\$PATH" >> /root/.bashrc
 RUN echo "export EDITOR=nano" >> /root/.bashrc
 
 # install terraform
-RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_amd64.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
+RUN wget -nv -O terraform.zip https://releases.hashicorp.com/terraform/1.0.8/terraform_1.0.8_linux_${ARCH}.zip && unzip ./terraform.zip && mv terraform /usr/local/bin/
 
 # code generation scripts
 COPY *.sh /root/

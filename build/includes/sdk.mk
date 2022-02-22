@@ -35,6 +35,7 @@ COMMAND ?= gen
 SDK_IMAGE_TAG=$(build_sdk_prefix)$(SDK_FOLDER):$(build_sdk_version)
 DEFAULT_CONFORMANCE_TESTS = ready,allocate,setlabel,setannotation,gameserver,health,shutdown,watch,reserve
 ALPHA_CONFORMANCE_TESTS = getplayercapacity,setplayercapacity,playerconnect,playerdisconnect,getplayercount,isplayerconnected,getconnectedplayers
+PLATFORM=x86_64
 
 .PHONY: test-sdks test-sdk build-sdks build-sdk gen-all-sdk-grpc gen-sdk-grpc run-all-sdk-command run-sdk-command build-example
 
@@ -98,12 +99,15 @@ run-sdk-command:
 # Builds the base GRPC docker image.
 build-build-sdk-image-base: DOCKER_BUILD_ARGS= --build-arg GRPC_RELEASE_TAG=$(grpc_release_tag)
 build-build-sdk-image-base:
-	docker build --tag=$(build_sdk_base_tag) $(build_path)build-sdk-images/tool/base $(DOCKER_BUILD_ARGS)
+	docker build --tag=$(build_sdk_base_tag) --platform linux/$(ARCH) $(build_path)build-sdk-images/tool/base $(DOCKER_BUILD_ARGS)
 
+ifeq ($(ARCH), arm64) 
+PLATFORM=aarch64
+endif
 # Builds the docker image used by commands for a specific sdk
 build-build-sdk-image: DOCKER_BUILD_ARGS= --build-arg BASE_IMAGE=$(build_sdk_base_tag)
 build-build-sdk-image: ensure-build-sdk-image-base
-		docker build --tag=$(SDK_IMAGE_TAG) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
+		docker build --tag=$(SDK_IMAGE_TAG) --platform linux/$(ARCH) --build-arg ARCH=$(PLATFORM) $(build_path)build-sdk-images/$(SDK_FOLDER) $(DOCKER_BUILD_ARGS)
 
 # attempt to pull the image, if it exists and rename it to the local tag
 # exit's clean if it doesn't exist, so can be used on CI

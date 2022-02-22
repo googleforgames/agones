@@ -53,6 +53,8 @@ WINDOWS_DOCKER_PUSH_ARGS =
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
 # GKE-Windows version map: https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-cluster-windows#version_mapping
 WINDOWS_VERSIONS = ltsc2019
+# Architecture (default to amd64) 
+ARCH = amd64
 
 # Specify stress test level 1..100
 # STRESS_TEST_LEVEL=n requires capacity between 50*n up to 100*n simple-game-server Game Servers.
@@ -95,7 +97,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 workdir_path = $(mount_path)
 
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
-build_tag = agones-build:$(build_version)
+build_tag = agones-build-$(ARCH):$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
@@ -134,7 +136,8 @@ ifndef FULL_BUILD
 endif
 
 go_build_cmd = go build -mod=vendor
-GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_amd64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_arm64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
@@ -354,7 +357,7 @@ uninstall: $(ensure-build-image)
 
 # Build a static binary for the gameserver controller
 build-controller-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
+	$(GO_BUILD_LINUX_$(ARCH)) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
@@ -388,8 +391,8 @@ build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux bui
 
 # build the static binary for the gameserver sidecar for Linux
 build-agones-sdk-binary-linux: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+	$(GO_BUILD_LINUX_$(ARCH)) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
 build-agones-sdk-binary-darwin: $(ensure-build-image)
@@ -421,7 +424,7 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build sidecar image only
-build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
+build-agones-sdk-server-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-server-image-windows-$(winver))
@@ -433,7 +436,7 @@ build-agones-sdk-server-image-windows-%: $(ensure-build-image) build-agones-sdk-
 
 # Build a static binary for the ping service
 build-ping-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
+	$(GO_BUILD_LINUX_$(ARCH)) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
@@ -447,7 +450,7 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
+	$(GO_BUILD_LINUX_$(ARCH)) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 
