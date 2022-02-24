@@ -97,7 +97,7 @@ common_mounts = -v $(build_path)/.config/gcloud:/root/.config/gcloud \
 workdir_path = $(mount_path)
 
 build_version = $(call sha,$(build_path)/build-image/Dockerfile)
-build_tag = agones-build-$(ARCH):$(build_version)
+build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
