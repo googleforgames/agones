@@ -265,7 +265,7 @@ steps:
   dir: "build"
   args: [ "-j", "5", "--output-sync=target", "run-sdk-conformance-tests"]
   waitFor:
-    - build-images
+    - build-images-amd64
     - tests
 
 #
@@ -308,7 +308,7 @@ steps:
   args: [ '-m', 'cp', '*.tar.gz', 'gs://agones-artifacts/cpp-sdk']
 - name: 'gcr.io/cloud-builders/gsutil'
   waitFor:
-    - build-images
+    - build-images-amd64
     - tests
   dir: "cmd/sdk-server/bin"
   args: [ '-m', 'cp', '*.zip', 'gs://agones-artifacts/sdk-server']
