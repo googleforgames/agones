@@ -140,13 +140,13 @@ steps:
 # Build all the images and sdks, and push them up to the repository
 #
 
-- name: "make-docker-amd64"
+- name: "make-docker"
   id: build-images-amd64
   waitFor:
     - lint
   dir: "build"
   args: [ "-j", "4", "build-images"]
-- name: "make-docker-arm64"
+- name: "make-docker"
   id: build-images-arm64
   waitFor:
     - lint
