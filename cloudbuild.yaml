@@ -151,7 +151,7 @@ steps:
   waitFor:
     - lint
   dir: "build"
-  args: [ "-j", "4", "build-images", "ARCH=arm64"]
+  args: [ "-j", "4", "build-images", "ARCH=arm64", "WITH_WINDOWS=0"]
 - name: "make-docker"
   id: push-images
   waitFor:
