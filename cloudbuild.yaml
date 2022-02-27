@@ -55,24 +55,24 @@ steps:
 # Enable multi-arch container images builds
 #
 - name: gcr.io/cloud-builders/docker
-    args:
-      - run
-      - '--privileged'
-      - 'linuxkit/binfmt:v0.8'
-    id: initialize-qemu
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - buildx
-      - create
-      - '--name'
-      - mybuilder
-    id: create-builder
-  - name: gcr.io/cloud-builders/docker
-    args:
-      - buildx
-      - use
-      - mybuilder
-    id: select-builder
+  id: initialize-qemu
+  args:
+    - run
+    - '--privileged'
+    - 'linuxkit/binfmt:v0.8'
+- name: gcr.io/cloud-builders/docker
+  id: create-builder
+  args:
+    - buildx
+    - create
+    - '--name'
+    - mybuilder
+- name: gcr.io/cloud-builders/docker
+  id: select-builder 
+  args:
+    - buildx
+    - use
+    - mybuilder
 
 #
 # Creates the initial make + docker build platform
