@@ -56,23 +56,13 @@ steps:
 #
 - name: gcr.io/cloud-builders/docker
   id: initialize-qemu
-  args:
-    - run
-    - '--privileged'
-    - 'linuxkit/binfmt:v0.7'
+  args: ['run', '--privileged', 'linuxkit/binfmt:v0.8'] 
 - name: gcr.io/cloud-builders/docker
   id: create-builder
-  args:
-    - buildx
-    - create
-    - '--name'
-    - mybuilder
+  args: ['buildx', 'create', '--name', 'mybuilder'] 
 - name: gcr.io/cloud-builders/docker
   id: select-builder 
-  args:
-    - buildx
-    - use
-    - mybuilder
+  args: ['buildx', 'use', 'mybuilder'] 
 
 #
 # Creates the initial make + docker build platform
