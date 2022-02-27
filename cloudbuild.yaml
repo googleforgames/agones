@@ -52,6 +52,29 @@ steps:
   waitFor: ['-']
 
 #
+# Enable multi-arch container images builds
+#
+- name: gcr.io/cloud-builders/docker
+    args:
+      - run
+      - '--privileged'
+      - 'linuxkit/binfmt:v0.8'
+    id: initialize-qemu
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - buildx
+      - create
+      - '--name'
+      - mybuilder
+    id: create-builder
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - buildx
+      - use
+      - mybuilder
+    id: select-builder
+
+#
 # Creates the initial make + docker build platform
 #
 
