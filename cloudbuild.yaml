@@ -110,11 +110,17 @@ steps:
 #
 
 - name: "make-docker"
-  id: lint
+  id: lint-amd64
   waitFor:
     - pull-build-image
   dir: "build"
   args: ["lint"] # pull the build image if it exists
+- name: "make-docker"
+  id: lint-arm64
+  waitFor:
+    - pull-build-image
+  dir: "build"
+  args: ["lint", "ARCH=arm64"] # pull the build image if it exists
 
 #
 # Push the build image, can run while we do other things.
