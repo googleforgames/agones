@@ -128,7 +128,7 @@ steps:
 
 - name: "make-docker"
   waitFor:
-    - lint
+    - lint-amd64
   dir: "build"
   args: ["push-build-image"] # push the build image (which won't do anything if it's already there)
 
@@ -149,13 +149,13 @@ steps:
 - name: "make-docker"
   id: build-images-amd64
   waitFor:
-    - lint
+    - lint-amd64
   dir: "build"
   args: [ "-j", "4", "build-images"]
 - name: "make-docker"
   id: build-images-arm64
   waitFor:
-    - lint
+    - lint-amd64
   dir: "build"
   args: [ "-j", "4", "build-images", "ARCH=arm64", "WITH_WINDOWS=0"]
 - name: "make-docker"
@@ -173,7 +173,7 @@ steps:
 - name: "make-docker"
   id: build-sdks
   waitFor:
-    - lint
+    - lint-amd64
     - cpp-sdk-build-restore-cache
     - ensure-build-sdk-image-base
   dir: "build"
@@ -199,7 +199,7 @@ steps:
 - name: "make-docker"
   id: tests
   waitFor:
-    - lint
+    - lint-amd64
     - ensure-build-sdk-image-base
     - htmltest-restore-cache
     - build-sdks
