@@ -59,7 +59,7 @@ steps:
   args:
     - run
     - '--privileged'
-    - 'linuxkit/binfmt:v0.8'
+    - 'linuxkit/binfmt:v0.7'
 - name: gcr.io/cloud-builders/docker
   id: create-builder
   args:
