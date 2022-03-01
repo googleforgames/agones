@@ -54,15 +54,11 @@ steps:
 #
 # Enable multi-arch container images builds
 #
-- name: gcr.io/cloud-builders/docker
-  id: initialize-qemu
-  args: ['run', '--privileged', 'linuxkit/binfmt:v0.8'] 
-- name: gcr.io/cloud-builders/docker
-  id: create-builder
-  args: ['buildx', 'create', '--name', 'mybuilder'] 
-- name: gcr.io/cloud-builders/docker
-  id: select-builder 
-  args: ['buildx', 'use', 'mybuilder'] 
+
+​- ​name​: ​'​gcr.io/cloud-builders/docker​' 
+ ​ ​args​: ​['run', '--rm', '--privileged', 'multiarch/qemu-user-static', '--reset', '-p', 'yes'] 
+ ​ ​id​: ​qemu 
+ ​ ​waitFor​: ​['-'] 
 
 #
 # Creates the initial make + docker build platform
@@ -132,6 +128,7 @@ steps:
   id: lint-arm64
   waitFor:
     - pull-build-image
+    - qemu
   dir: "build"
   args: ["lint", "ARCH=arm64"] # pull the build image if it exists
 
