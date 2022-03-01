@@ -69,7 +69,7 @@ steps:
   waitFor: ['-']
 - name: "gcr.io/cloud-builders/docker"
   id: build-make-docker
-  args: ['build', '-f', '--target', 'linux/amd64,linux/arm64', 'Dockerfile.build', '-t', 'make-docker', '.'] # we need docker and make to run everything.
+  args: ['build', '-f', 'Dockerfile.build', '--target', 'linux/amd64,linux/arm64', '-t', 'make-docker', '.'] # we need docker and make to run everything.
 
 #
 # pull the main build image if it exists
