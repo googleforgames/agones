@@ -21,9 +21,10 @@ kubectl create namespace agones-system
 kubectl apply -f https://raw.githubusercontent.com/googleforgames/agones/{{< release-branch >}}/install/yaml/install.yaml
 ```
 
-If you want to change the parameters in the `install.yaml` file, you can use helm directly to generate a custom file locally, but make sure new parameters correspond to the [following ones](https://agones.dev/site/docs/installation/install-agones/helm/#configuration).
+To change the [configurable parameters](https://agones.dev/site/docs/installation/install-agones/helm/#configuration) in the `install.yaml` file, you can use helm directly to generate a custom file locally.
 
-Example of setting `featureGates` and `generateTLS` helm parameters in `install.yaml`:
+The following example sets the `featureGates` and `generateTLS` helm parameters in `install.yaml`:
+
 ```bash
 helm pull --untar https://agones.dev/chart/stable/agones-{{< release-version >}}.tgz && \
 cd agones && \
