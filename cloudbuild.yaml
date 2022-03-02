@@ -56,7 +56,7 @@ steps:
 #
 
 - name: gcr.io/cloud-builders/docker
-   args:
+  args:
     - run
     - '--privileged'
     - 'linuxkit/binfmt:v0.7'
