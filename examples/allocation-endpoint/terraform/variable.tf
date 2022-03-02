@@ -20,7 +20,7 @@ variable "project_id" {
 variable "ae_proxy_image" {
   type        = string
   description = "The docker image of the allocation proxy."
-  default     = "gcr.io/agones-images/allocation-endpoint-proxy"
+  default     = "gcr.io/agones-images/allocation-endpoint-proxy:latest"
 }
 
 variable "region" {

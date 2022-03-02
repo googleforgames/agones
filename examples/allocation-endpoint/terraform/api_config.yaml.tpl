@@ -1,4 +1,3 @@
-# API title to appear in the user interface (Google Cloud Console).
 # Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

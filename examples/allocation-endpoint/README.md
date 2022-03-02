@@ -58,7 +58,7 @@ kubectl annotate sa -n agones-system agones-allocator iam.gke.io/gcp-service-acc
 The terraform modules create resources in GCP:
 
 ```
-terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]" -var "authorized_members=[\"serviceAccount:[SERVICE-ACCOUNT-EMAIL]\"]" -var "clusters_info=[CLUSTERS-INFO]" -var "workload-pool=[GKE-PROJECT-ID].svc.id.goog"
+terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]:[VERSION]" -var "authorized_members=[\"serviceAccount:[SERVICE-ACCOUNT-EMAIL]\"]" -var "clusters_info=[CLUSTERS-INFO]" -var "workload-pool=[GKE-PROJECT-ID].svc.id.goog"
 ```
 
 `[CLUSTERS-INFO]` is in the form of `[{\"name\":\"cluster1\",\"endpoint\":\"34.83.14.82\",\"namespace\":\"default\",\"allocation_weight\":100},{...}]` deserializing to []ClusterInfo, defined in the `server/clusterselector.go`.
@@ -68,7 +68,7 @@ terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]"
 - The `namespace` is the game server namespace.
 - The `allocation_weight` is a value between 0 and 100, which sets the relative allocation rate a cluster receives compared to other clusters. By setting weight to zero, a cluster stops receiving allocation requests.
 
-`[GCR-IMAGE]` has a default set to `gcr.io/agones-images/allocation-endpoint-proxy`.
+`[GCR-IMAGE]` has a default set to `gcr.io/agones-images/allocation-endpoint-proxy:latest`.
 
 `[SERVICE-ACCOUNT-EMAIL]` is the service account to be granted access the Allocation Endpoint.
 
@@ -77,8 +77,8 @@ terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]"
 The Allocation Endpoint proxy code is in `./server` folder. You can make changes and run the following to build and push the image to your own GCR repository:
 
 ```
-docker build --tag gcr.io/[PROJECT-ID]/allocation-endpoint-proxy .
-docker push gcr.io/[PROJECT-ID]/allocation-endpoint-proxy
+docker build --tag gcr.io/[PROJECT-ID]/allocation-endpoint-proxy:[VERSION] .
+docker push gcr.io/[PROJECT-ID]/allocation-endpoint-proxy:[VERSION]
 ```
 
 ## Client
