@@ -149,7 +149,6 @@ steps:
   id: lint-arm64
   waitFor:
     - pull-build-image
-    - qemu
   dir: "build"
   args: ["lint", "ARCH=arm64"] # pull the build image if it exists
 
