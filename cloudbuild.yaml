@@ -362,6 +362,6 @@ timeout: 7200s
 images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
-  env:
+ env:
     - DOCKER_CLI_EXPERIMENTAL=enabled
  machineType: 'N1_HIGHCPU_32'
