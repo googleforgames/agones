@@ -55,10 +55,31 @@ steps:
 # Enable multi-arch container images builds
 #
 
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['run', '--rm', '--privileged', 'multiarch/qemu-user-static', '--reset', '-p', 'yes']
-  id: qemu
-  waitFor: ['-'] 
+- name: gcr.io/cloud-builders/docker
+   args:
+    - run
+    - '--privileged'
+    - 'linuxkit/binfmt:v0.7'
+  id: initialize-qemu
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - create
+    - '--name'
+    - mybuilder
+  id: create-builder
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - use
+    - mybuilder
+   id: select-builder
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - inspect
+    - '--bootstrap'
+   id: show-target-build-platforms 
 
 #
 # Creates the initial make + docker build platform
@@ -341,4 +362,6 @@ timeout: 7200s
 images: ['gcr.io/$PROJECT_ID/agones-controller', 'gcr.io/$PROJECT_ID/agones-ping']
 logsBucket: "gs://agones-build-logs"
 options:
+  env:
+    - DOCKER_CLI_EXPERIMENTAL=enabled
  machineType: 'N1_HIGHCPU_32'
