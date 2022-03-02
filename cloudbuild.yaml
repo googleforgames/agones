@@ -73,13 +73,13 @@ steps:
     - buildx
     - use
     - mybuilder
-   id: select-builder
+  id: select-builder
 - name: gcr.io/cloud-builders/docker
   args:
     - buildx
     - inspect
     - '--bootstrap'
-   id: show-target-build-platforms 
+  id: show-target-build-platforms 
 
 #
 # Creates the initial make + docker build platform
