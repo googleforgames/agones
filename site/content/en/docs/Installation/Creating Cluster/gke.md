@@ -104,7 +104,9 @@ Flag explanations:
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * machine-type: The type of machine to use for nodes. Default: e2-standard-4. Depending on the needs of your game, you may wish to [have smaller or larger machines](https://cloud.google.com/compute/docs/machine-types).
 
-_Optional_: Create a [dedicated node pool](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools)
+### (Optional) Creating a dedicated node pool
+
+Create a [dedicated node pool](https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools)
 for the Agones resources to be installed in. If you skip this step, the Agones controllers will
 share the default node pool with your game servers, which is fine for experimentation but not
 recommended for a production deployment.
@@ -117,9 +119,12 @@ gcloud container node-pools create agones-system \
   --node-labels agones.dev/agones-system=true \
   --num-nodes=1
 ```
+where [CLUSTER_NAME] is the name of the cluster you created.
 
-_Optional_: Create a node pool for [Metrics]({{< relref "../../Guides/metrics.md" >}}) if you want to monitor the
- Agones system using Prometheus with Grafana or Stackdriver.
+### (Optional) Creating a metrics node pool
+
+Create a node pool for [Metrics]({{< relref "../../Guides/metrics.md" >}}) if you want to monitor the
+ Agones system using Prometheus with Grafana or Cloud Logging and Monitoring.
 
 ```bash
 gcloud container node-pools create agones-metrics \
@@ -132,13 +137,15 @@ gcloud container node-pools create agones-metrics \
 
 Flag explanations:
 
-* cluster: The name of the cluster in which the node pool is created.
+* cluster: The name of your existing cluster in which the node pool is created.
 * no-enable-autoupgrade: Disable automatic upgrades for nodes to reduce the likelihood of in-use games being disrupted.
 * node-taints: The Kubernetes taints to automatically apply to nodes in this node pool.
 * node-labels: The Kubernetes labels to automatically apply to nodes in this node pool.
 * num-nodes: The Agones system controllers only require a single node of capacity to run. For faster recovery time in the event of a node failure, you can increase the size to 2.
 
-_Optional_: If you run game servers on Windows, you
+### (Optional) Creating a node pool for Windows
+
+If you run game servers on Windows, you
 need to create a dedicated node pool for those servers. Windows Server 2019 (`WINDOWS_LTSC`) is the recommended image for Windows
 game servers.
 
@@ -155,6 +162,10 @@ gcloud container node-pools create windows \
   --machine-type e2-standard-4 \
   --num-nodes=4
 ```
+
+where [CLUSTER_NAME] is the name of the cluster you created.
+
+## Setting up cluster credentials
 
 Finally, let's tell `gcloud` that we are speaking with this cluster, and get auth credentials for `kubectl` to use.
 
