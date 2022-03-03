@@ -109,8 +109,11 @@ spec:
     kind: ClusterIssuer
 EOF
 
-# Add ca.crt to the allocator-tls-ca Secret
+# Wait for the allocator-tls Secret
+sleep 1
 TLS_CA_VALUE=$(kubectl get secret allocator-tls -n agones-system -ojsonpath='{.data.ca\.crt}')
+
+# Add ca.crt to the allocator-tls-ca Secret
 kubectl get secret allocator-tls-ca -o json -n agones-system | jq '.data["tls-ca.crt"]="'${TLS_CA_VALUE}'"' | kubectl apply -f -
 echo $TLS_CA_VALUE | base64 -d > ca.crt
 # In case of MacOS
@@ -194,7 +197,7 @@ curl --key ${KEY_FILE} \
      --data '{"namespace":"'${NAMESPACE}'"}' \
      https://${EXTERNAL_IP}/gameserverallocation \
      -X POST
-     
+
 ```
 
 You should expect to see the following output:
