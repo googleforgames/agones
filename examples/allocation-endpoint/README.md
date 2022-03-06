@@ -44,7 +44,7 @@ helm upgrade my-release --install --namespace agones-system --create-namespace a
   --set agones.allocator.service.http.enabled=false
 ```
 
-After installing Agones, deploy [ESP](https://cloud.google.com/endpoints/docs/grpc/specify-esp-v2-startup-options) which is an envoy based proxy in front of agones `agones-alloator` container. Run the following to patch the service deployement, change the service port to ESP and add annotation to `agones-allocator` service account to impersonate GCP service account. 
+After installing Agones, deploy [ESP](https://cloud.google.com/endpoints/docs/grpc/specify-esp-v2-startup-options) which is an envoy based proxy, deployed as a sidecar along side `agones-alloator` container. Run the following to patch the service deployement, change the service port to ESP and add annotation to `agones-allocator` service account to impersonate GCP service account. 
 
 Replace [GKE-PROJECT-ID] in `patch-agones-allocator.yaml` with your project ID before runing the scripts.
 
@@ -58,7 +58,11 @@ kubectl annotate sa -n agones-system agones-allocator iam.gke.io/gcp-service-acc
 The terraform modules create resources in GCP:
 
 ```
-terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]:[VERSION]" -var "authorized_members=[\"serviceAccount:[SERVICE-ACCOUNT-EMAIL]\"]" -var "clusters_info=[CLUSTERS-INFO]" -var "workload-pool=[GKE-PROJECT-ID].svc.id.goog"
+terraform apply \
+  -var "project_id=[PROJECT-ID]" \
+  -var "authorized_members=[\"serviceAccount:[SERVICE-ACCOUNT-EMAIL]\"]" \
+  -var "clusters_info=[CLUSTERS-INFO]" \
+  -var "workload-pool=[GKE-PROJECT-ID].svc.id.goog"
 ```
 
 `[CLUSTERS-INFO]` is in the form of `[{\"name\":\"cluster1\",\"endpoint\":\"34.83.14.82\",\"namespace\":\"default\",\"allocation_weight\":100},{...}]` deserializing to []ClusterInfo, defined in the `server/clusterselector.go`.
@@ -68,9 +72,7 @@ terraform apply -var "project_id=[PROJECT-ID]" -var "ae_proxy_image=[GCR-IMAGE]:
 - The `namespace` is the game server namespace.
 - The `allocation_weight` is a value between 0 and 100, which sets the relative allocation rate a cluster receives compared to other clusters. By setting weight to zero, a cluster stops receiving allocation requests.
 
-`[GCR-IMAGE]` has a default set to `gcr.io/agones-images/allocation-endpoint-proxy:latest`.
-
-`[SERVICE-ACCOUNT-EMAIL]` is the service account to be granted access the Allocation Endpoint.
+`[SERVICE-ACCOUNT-EMAIL]` is the service account to be granted access the Allocation Endpoint. You need to have [the service account created](https://cloud.google.com/iam/docs/creating-managing-service-accounts) before running terraform.
 
 ## Server
 
@@ -81,6 +83,8 @@ docker build --tag gcr.io/[PROJECT-ID]/allocation-endpoint-proxy:[VERSION] .
 docker push gcr.io/[PROJECT-ID]/allocation-endpoint-proxy:[VERSION]
 ```
 
+If you are building your own image, you can set `ae_proxy_image` terraform variable to your image.
+
 ## Client
 
 The Allocation Endpoint client code is in `./client` folder. Get the Service Account Key for one of the Service Accounts in the list of `authorized_members` and put it under `sa_key.json`. Alternatively, you can leverage [Workload Identity](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity) to retrieve the access token using default service account from metadata serer, when deploying your client in a GCP solution, e.g. GKE.
@@ -90,7 +94,7 @@ go run *.go --url=[CLOUD-RUN-ENDPOINT]
 
 ```
 
-`[CLOUD-RUN-ENDPOINT]` is the cloud run endpoint printed out after running the terraform.
+`[CLOUD-RUN-ENDPOINT]` is the cloud run endpoint FQDN printed out after running the terraform. Leave out the scheme when setting the value e.g. `allocation-endpoint-proxy-<code>.a.run.app`.
 
 ## Future considerations
 - Requests using this example goes to public IP. For clusters in the same project you can instead leverage VPC with private IPs and remove dependency to the Service Account and Secret Manager to issue JWT in the proxy.

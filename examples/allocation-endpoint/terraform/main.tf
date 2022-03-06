@@ -150,6 +150,7 @@ resource "google_cloud_run_service" "aep_cloud_run" {
   depends_on = [
     google_secret_manager_secret_version.ae-sa-key-secret,
     google_secret_manager_secret_iam_member.secret-access,
+    google_project_service.run,
   ]
 }
 
@@ -174,16 +175,23 @@ resource "google_secret_manager_secret_iam_member" "secret-access" {
   depends_on = [google_secret_manager_secret.ae-sa-key]
 }
 
-// get project detailsf
+// get project details
 data "google_project" "project" {
 }
 
+# Enables the Secret Manager API
 resource "google_project_service" "secretmanager" {
   service  = "secretmanager.googleapis.com"
 }
 
+# Enables the Service Control API
 resource "google_project_service" "servicecontrol" {
   service  = "servicecontrol.googleapis.com"
+}
+
+# Enables the Cloud Run API
+resource "google_project_service" "run" {
+  service = "run.googleapis.com"
 }
 
 resource "google_project_service" "allocator-service" {
