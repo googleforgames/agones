@@ -451,13 +451,16 @@ func (c *Controller) syncGameServerDeletionTimestamp(ctx context.Context, gs *ag
 	return gs, errors.Wrapf(err, "error removing finalizer for GameServer %s", gsCopy.ObjectMeta.Name)
 }
 
-// syncGameServerPortAllocationState gives a port to a dynamically allocating GameServer
+// syncGameServerPortAllocationState gives a port to allocating GameServer
 func (c *Controller) syncGameServerPortAllocationState(ctx context.Context, gs *agonesv1.GameServer) (*agonesv1.GameServer, error) {
 	if !(gs.Status.State == agonesv1.GameServerStatePortAllocation && gs.ObjectMeta.DeletionTimestamp.IsZero()) {
 		return gs, nil
 	}
 
 	gsCopy := c.portAllocator.Allocate(gs.DeepCopy())
+	//The portallocator specifically handles hostport & containerport allocation for dynamically allocated portpolicies ( DYNAMIC / PASSTHROUGH )
+	//For supporting dynamic protocols such as TCPUDP on static port policies , specific allocation of container ports have to be performed
+	handleTCPUDPPortAllocationforStaticPortPolicy(gsCopy)
 
 	gsCopy.Status.State = agonesv1.GameServerStateCreating
 	c.recorder.Event(gs, corev1.EventTypeNormal, string(gs.Status.State), "Port allocated")
@@ -472,6 +475,36 @@ func (c *Controller) syncGameServerPortAllocationState(ctx context.Context, gs *
 	}
 
 	return gs, nil
+}
+
+//Allocate gameserver ports ( containerports ) for dynamic protocols such as TCPUDP
+//TODO: Going forward, this needs to be enhanced for other kinds of dynamic protocols
+func handleTCPUDPPortAllocationforStaticPortPolicy(gs *agonesv1.GameServer) {
+
+	var udpPorts []agonesv1.GameServerPort
+
+	for i, p := range gs.Spec.Ports {
+
+		if p.PortPolicy == agonesv1.Static && p.Protocol == agonesv1.ProtocolTCPUDP {
+
+			//Create the duplicate to handle the udp counterpart
+			var duplicate = p
+			duplicate.HostPort = p.HostPort
+			duplicate.ContainerPort = p.ContainerPort
+			udpPorts = append(udpPorts, duplicate)
+
+			//Create the tcp port
+			gs.Spec.Ports[i].Name = p.Name + "-tcp"
+			gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
+		}
+	}
+
+	for _, p := range udpPorts {
+		p.Name += "-udp"
+		p.Protocol = corev1.ProtocolUDP
+		gs.Spec.Ports = append(gs.Spec.Ports, p)
+	}
+
 }
 
 // syncGameServerCreatingState checks if the GameServer is in the Creating state, and if so

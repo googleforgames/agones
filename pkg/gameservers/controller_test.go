@@ -631,7 +631,16 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 		c, mocks := newFakeController()
 		fixture := &agonesv1.GameServer{ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
 			Spec: agonesv1.GameServerSpec{
-				Ports: []agonesv1.GameServerPort{{ContainerPort: 7777}},
+				Ports: []agonesv1.GameServerPort{{
+					ContainerPort: 7777,
+				}, {
+					Name:          "statictest",
+					ContainerPort: 8888,
+					HostPort:      8888,
+					Protocol:      agonesv1.ProtocolTCPUDP,
+					PortPolicy:    agonesv1.Static,
+				},
+				},
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{{Name: "container", Image: "container/image"}},
@@ -668,10 +677,16 @@ func TestControllerSyncGameServerPortAllocationState(t *testing.T) {
 		result, err := c.syncGameServerPortAllocationState(ctx, fixture)
 		require.NoError(t, err, "sync should not error")
 		assert.True(t, updated, "update should occur")
+		assert.Equal(t, 3, len(result.Spec.Ports))
 		port := result.Spec.Ports[0]
 		assert.Equal(t, agonesv1.Dynamic, port.PortPolicy)
 		assert.NotEqual(t, fixture.Spec.Ports[0].HostPort, port.HostPort)
 		assert.True(t, 10 <= port.HostPort && port.HostPort <= 20, "%s not in range", port.HostPort)
+		tcpudppstaticports := result.Spec.Ports[1:]
+		assert.Equal(t, agonesv1.Static, tcpudppstaticports[0].PortPolicy)
+		assert.Equal(t, "statictest-tcp", tcpudppstaticports[0].Name)
+		assert.Equal(t, agonesv1.Static, tcpudppstaticports[1].PortPolicy)
+		assert.Equal(t, "statictest-udp", tcpudppstaticports[1].Name)
 	})
 
 	t.Run("Error on update", func(t *testing.T) {
