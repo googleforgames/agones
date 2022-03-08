@@ -34,4 +34,4 @@ Libraries or applications that implement messaging systems.
   
 ## Development Tools
 
-= [Minikube Agones Cluster](https://github.com/comerford/minikube-agones-cluster) - Automates the creation of a complete Kubernetes/Agones Cluster locally, using Xonotic as a sample gameserver. Intended to provide a local environment for developers which approximates a production Agones deployment.
+- [Minikube Agones Cluster](https://github.com/comerford/minikube-agones-cluster) - Automates the creation of a complete Kubernetes/Agones Cluster locally, using Xonotic as a sample gameserver. Intended to provide a local environment for developers which approximates a production Agones deployment.
