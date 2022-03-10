@@ -1,4 +1,4 @@
-# Copyright 2017 Google LLC All Rights Reserved.
+# Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #
-# Makefile for building the world's simplest C++ game server
+# Makefile for building a multi-cluster allocation proxy
 #
 
 #  __     __         _       _     _
@@ -28,7 +28,7 @@ REPOSITORY = gcr.io/agones-images
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 project_path := $(dir $(mkfile_path))
-server_tag = $(REPOSITORY)/cpp-simple-server:0.14
+server_tag = $(REPOSITORY)/allocation-endpoint-proxy:0.1
 root_path = $(realpath $(project_path)/../..)
 
 #   _____                    _
@@ -38,9 +38,12 @@ root_path = $(realpath $(project_path)/../..)
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
-# build the cpp-simple binary
+# build the allocation endpoint proxy binary
 build:
-	cd $(root_path) && docker build -f $(project_path)/Dockerfile --tag=$(server_tag) .
+	cd $(root_path) && docker build -f $(project_path)/server/Dockerfile --tag=$(server_tag) .
+
+run:
+	docker run --network=host $(server_tag) $(args)
 
 # check if hosted on Google Cloud Registry
 gcr-check:
@@ -49,3 +52,7 @@ gcr-check:
 #output the tag for this image
 echo-image-tag:
 	@echo $(server_tag)
+
+# Push the docker image
+push: build
+	docker push $(server_tag)
