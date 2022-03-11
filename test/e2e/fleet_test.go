@@ -276,7 +276,8 @@ func TestFleetRollingUpdate(t *testing.T) {
 					// Simulates a rolling update on a live Fleet that continuously receives new allocations,
 					// and reproduces an issue where this causes a rolling update to get stuck.
 					const halfScale = targetScale / 2
-					go framework.CycleAllocations(t, flt, time.Second*3, time.Second*halfScale*3, done)
+					const period = 3 * time.Second
+					go framework.CycleAllocations(t, flt, period, period*halfScale, done)
 
 					// Wait for at least half of the fleet to have be cycled (either Allocated or shutting down)
 					// before updating the fleet.
@@ -286,8 +287,9 @@ func TestFleetRollingUpdate(t *testing.T) {
 				}
 
 				// Change ContainerPort to trigger creating a new GSSet
+				fltName := flt.GetName()
 				err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-					flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.GetName(), metav1.GetOptions{})
+					flt, err = client.Fleets(framework.Namespace).Get(ctx, fltName, metav1.GetOptions{})
 					if err != nil {
 						return err
 					}
