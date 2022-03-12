@@ -32,12 +32,13 @@ namespace Agones
 		public double RequestTimeoutSec { get; set; }
 
 		internal SDK.SDKClient client;
+		internal readonly Alpha alpha;
 		internal readonly Channel channel;
-		internal readonly IClientStreamWriter<Empty> healthStream;
+		internal AsyncClientStreamingCall<Empty, Empty> healthStream;
 		internal readonly CancellationTokenSource cts;
+		internal readonly bool ownsCts;
 		internal CancellationToken ctoken;
 		internal volatile bool isWatchingGameServer;
-		internal AsyncServerStreamingCall<GameServer> watchStreamingCall;
 
 		/// <summary>
 		/// Fired every time the GameServer k8s data is updated.
@@ -47,7 +48,10 @@ namespace Agones
 		private event Action<GameServer> GameServerUpdated;
 		internal Delegate[] GameServerUpdatedCallbacks => GameServerUpdated.GetInvocationList();
 		private readonly ILogger _logger;
-		internal readonly Alpha alpha;
+		private readonly SemaphoreSlim _healthStreamSemaphore = new SemaphoreSlim(1, 1);
+		private readonly object _gameServerWatchSyncRoot = new object();
+		
+		private bool _disposed;
 
 		public AgonesSDK(
 			double requestTimeoutSec = 15,
@@ -57,11 +61,20 @@ namespace Agones
 		{
 			_logger = logger;
 			RequestTimeoutSec = requestTimeoutSec;
-			cts = cancellationTokenSource ?? new CancellationTokenSource();
+			
+			if (cancellationTokenSource == null)
+			{
+				cts = new CancellationTokenSource();
+				ownsCts = true;
+			}
+			else
+			{
+				ownsCts = false;
+			}
+			
 			ctoken = cts.Token;
 			channel = new Channel(Host, Port, ChannelCredentials.Insecure);
 			client = sdkClient ?? new SDK.SDKClient(channel);
-			healthStream = client.Health().RequestStream;
 			alpha = new Alpha(channel, requestTimeoutSec, cancellationTokenSource, logger);
 		}
 
@@ -174,24 +187,42 @@ namespace Agones
 		/// Starts watching the GameServer updates in the background in it's own task.
 		/// On update, it fires the GameServerUpdate event.
 		/// </summary>
-		private async Task BeginInternalWatch()
+		private async Task BeginInternalWatchAsync()
 		{
-			//Begin WatchGameServer in the background for the provided callback.
-			try
+			// Begin WatchGameServer in the background for the provided callback(s).
+			while (!ctoken.IsCancellationRequested)
 			{
-				using (watchStreamingCall = client.WatchGameServer(new Empty(), cancellationToken: ctoken))
+				try
 				{
-					var reader = watchStreamingCall.ResponseStream;
-					while (await reader.MoveNext(ctoken))
+					using (var watchStreamingCall = client.WatchGameServer(new Empty(), cancellationToken: ctoken))
 					{
-						GameServerUpdated?.Invoke(reader.Current);
+						var reader = watchStreamingCall.ResponseStream;
+						while (await reader.MoveNext(ctoken))
+						{
+							try
+							{
+								GameServerUpdated?.Invoke(reader.Current);
+							}
+							catch
+							{
+								// Ignore any exception thrown here. We don't want a callback's exception to cause
+								// our watch to be torn down.
+							}
+						}
 					}
 				}
-			}
-			catch (RpcException ex)
-			{
-				LogError(ex, "Unable to subscribe to GameServer events.");
-				throw;
+				catch (OperationCanceledException) when (ctoken.IsCancellationRequested)
+				{
+					return;
+				}
+				catch (RpcException) when (ctoken.IsCancellationRequested)
+				{
+					return;
+				}
+				catch (RpcException ex)
+				{
+					LogError(ex, "An error occurred while watching GameServer events, will retry.");
+				}
 			}
 		}
 
@@ -203,13 +234,20 @@ namespace Agones
 		public void WatchGameServer(Action<GameServer> callback)
 		{
 			GameServerUpdated += callback;
-			if (isWatchingGameServer) return;
-			isWatchingGameServer = true;
-			//Ignoring this warning as design is intentional.
-			#pragma warning disable 4014
-			BeginInternalWatch().ContinueWith((t)=> { Dispose(); },
-				TaskContinuationOptions.OnlyOnFaulted);
-			#pragma warning restore 4014
+			
+			lock (_gameServerWatchSyncRoot)
+			{
+				if (isWatchingGameServer)
+				{
+					return;
+				}
+				
+				isWatchingGameServer = true;
+			}
+
+			// Kick off the watch in a task so the caller doesn't need to handle exceptions that could potentially be
+			// thrown before reaching the first yielding async point.
+			Task.Run(async () => await BeginInternalWatchAsync(), ctoken);
 		}
 
 		/// <summary>
@@ -286,24 +324,74 @@ namespace Agones
 		{
 			try
 			{
-				await healthStream.WriteAsync(new Empty());
+				await _healthStreamSemaphore.WaitAsync(ctoken);
+			}
+			catch (OperationCanceledException)
+			{
+				return Status.DefaultCancelled;
+			}
+
+			try
+			{
+				if (healthStream == null)
+				{
+					// Create a new stream if it's the first time we're being called or if the previous stream threw
+					// an exception.
+					healthStream = client.Health();
+				}
+
+				var writer = healthStream.RequestStream;
+				await writer.WriteAsync(new Empty());
 				return new Status(StatusCode.OK, "Health ping successful.");
 			}
 			catch (RpcException ex)
 			{
 				LogError(ex, "Unable to invoke the GameServer health check.");
+
+				if (healthStream != null)
+				{
+					try
+					{
+						// Best effort to clean up.
+						healthStream.Dispose();
+					}
+					catch
+					{
+						// Intentionally empty
+					}
+				}
+				
+				// Null out the stream so the subsequent call causes it to be recreated.
+				healthStream = null;
 				return ex.Status;
+			}
+			finally
+			{
+				_healthStreamSemaphore.Release();
 			}
 		}
 
 		public void Dispose()
 		{
-			cts.Cancel();
-		}
+			if (_disposed)
+			{
+				return;
+			}
 
-		~AgonesSDK()
-		{
-			Dispose();
+			cts.Cancel();
+            
+			if (ownsCts)
+			{
+				cts.Dispose();
+			}
+
+			// Since we don't provide any facility to unregister a WatchGameServer callback, set the event to null to
+			// clear its underlying invocation list, so we don't keep holding references to objects that would prevent
+			// them to be GC'd in case we don't go out of scope.
+			GameServerUpdated = null;
+            
+			_disposed = true;
+			GC.SuppressFinalize(this);
 		}
 
 		private void LogError(Exception ex, string message)
