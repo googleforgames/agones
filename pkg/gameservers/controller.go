@@ -458,8 +458,8 @@ func (c *Controller) syncGameServerPortAllocationState(ctx context.Context, gs *
 	}
 
 	gsCopy := c.portAllocator.Allocate(gs.DeepCopy())
-	//The portallocator specifically handles hostport & containerport allocation for dynamically allocated portpolicies ( DYNAMIC / PASSTHROUGH )
-	//For supporting dynamic protocols such as TCPUDP on static port policies , specific allocation of container ports have to be performed
+	// The portallocator specifically handles hostport & containerport allocation for dynamically allocated portpolicies ( DYNAMIC / PASSTHROUGH )
+	// For supporting dynamic protocols such as TCPUDP on static port policies , specific allocation of container ports have to be performed
 	handleTCPUDPPortAllocationforStaticPortPolicy(gsCopy)
 
 	gsCopy.Status.State = agonesv1.GameServerStateCreating
@@ -477,26 +477,25 @@ func (c *Controller) syncGameServerPortAllocationState(ctx context.Context, gs *
 	return gs, nil
 }
 
-//Allocate gameserver ports ( containerports ) for dynamic protocols such as TCPUDP
-//TODO: Going forward, this needs to be enhanced for other kinds of dynamic protocols
+// Allocate gameserver ports ( containerports ) for dynamic protocols such as TCPUDP
+// TODO: Going forward, this needs to be enhanced for other kinds of dynamic protocols
 func handleTCPUDPPortAllocationforStaticPortPolicy(gs *agonesv1.GameServer) {
 
 	var udpPorts []agonesv1.GameServerPort
 
 	for i, p := range gs.Spec.Ports {
 
-		if p.PortPolicy == agonesv1.Static && p.Protocol == agonesv1.ProtocolTCPUDP {
-
-			//Create the duplicate to handle the udp counterpart
-			var duplicate = p
-			duplicate.HostPort = p.HostPort
-			duplicate.ContainerPort = p.ContainerPort
-			udpPorts = append(udpPorts, duplicate)
-
-			//Create the tcp port
-			gs.Spec.Ports[i].Name = p.Name + "-tcp"
-			gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
+		if p.PortPolicy != agonesv1.Static || p.Protocol != agonesv1.ProtocolTCPUDP {
+			continue
 		}
+		// Create the duplicate to handle the udp counterpart
+		var duplicate = p
+		duplicate.HostPort = p.HostPort
+		duplicate.ContainerPort = p.ContainerPort
+		udpPorts = append(udpPorts, duplicate)
+		// Create the tcp port
+		gs.Spec.Ports[i].Name = p.Name + "-tcp"
+		gs.Spec.Ports[i].Protocol = corev1.ProtocolTCP
 	}
 
 	for _, p := range udpPorts {
