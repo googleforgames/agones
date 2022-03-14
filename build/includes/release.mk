@@ -37,6 +37,7 @@ gen-changelog:
 		--token $$TOKEN
 
 # outputs the markdown for the example images section of the release template
+release-example-image-markdown: example-image-markdown.allocation-endpoint
 release-example-image-markdown: example-image-markdown.autoscaler-webhook
 release-example-image-markdown: example-image-markdown.cpp-simple
 release-example-image-markdown: example-image-markdown.crd-client
