@@ -38,12 +38,18 @@ spec:
     - port: {{ .Values.agones.allocator.service.http.port }}
       name: {{ .Values.agones.allocator.service.http.portName }}
       targetPort: {{ .Values.agones.allocator.service.http.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.http.nodePort }}
+      {{- end }}
       protocol: TCP
 {{- if .Values.agones.allocator.service.grpc.enabled }}
 {{- if ne .Values.agones.allocator.service.grpc.port .Values.agones.allocator.service.http.port }}
     - port: {{ .Values.agones.allocator.service.grpc.port }}
       name: {{ .Values.agones.allocator.service.grpc.portName }}
       targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.grpc.nodePort }}
+      {{- end }}
       protocol: TCP
 {{- end }}
 {{- end }}
@@ -51,6 +57,9 @@ spec:
     - port: {{ .Values.agones.allocator.service.grpc.port }}
       name: {{ .Values.agones.allocator.service.grpc.portName }}
       targetPort: {{ .Values.agones.allocator.service.grpc.targetPort }}
+      {{- if eq .Values.agones.allocator.service.serviceType "NodePort" }}
+      nodePort: {{ .Values.agones.allocator.service.grpc.nodePort }}
+      {{- end }}
       protocol: TCP
 {{- end }}
   type: {{ .Values.agones.allocator.service.serviceType }}

@@ -178,7 +178,7 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.allocator.generateClientTLS`                | Set to true to generate client TLS certificates or false to provide certificates in `certs/allocator/allocator-client.default/*` | `true`                 |
 | `agones.allocator.generateTLS`                      | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
 | `agones.allocator.disableMTLS`                      | Turns off client cert authentication for incoming connections to the allocator.            | `false`                |
-| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator. Only applicable to the REST API. It currently does not work for the gRPC API. ([issue](https://github.com/googleforgames/agones/issues/1945)) | `false`                |
+| `agones.allocator.disableTLS`                       | Turns off TLS security for incoming connections to the allocator.                          | `false`                |
 | `agones.allocator.disableSecretCreation`            | Disables the creation of any allocator secrets. If true, you MUST provide the `allocator-tls`, `allocator-tls-ca`, and `allocator-client-ca` secrets before installation. | `false` |
 | `agones.allocator.tlsCert`                          | Custom TLS certificate provided as a string                                                     | \`\`                   |
 | `agones.allocator.tlsKey`                           | Custom TLS private key provided as a string                                                     | \`\`                   |

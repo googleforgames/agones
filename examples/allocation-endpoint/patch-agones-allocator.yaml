@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC All Rights Reserved.
+# Copyright 2022 Google LLC All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,26 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: "agones.dev/v1"
-kind: GameServer
-metadata:
-  generateName: "simple-game-server-"
 spec:
-  ports:
-  - name: default
-    portPolicy: Passthrough
   template:
     spec:
       containers:
-      - name: simple-game-server
-        image: gcr.io/agones-images/simple-game-server:0.11
-        env:
-          - name: "PASSTHROUGH"
-            value: "TRUE"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "20m"
-          limits:
-            memory: "64Mi"
-            cpu: "20m"
+      - name: esp
+        image: gcr.io/endpoints-release/endpoints-runtime:2
+        imagePullPolicy: IfNotPresent
+        args: [
+        "--listener_port=9443",
+        "--generate_self_signed_cert",
+        "--backend=grpc://127.0.0.1:8443",
+        "--service=agones-allocation.endpoints.[GKE-PROJECT-ID].cloud.goog",
+        "--rollout_strategy=managed",
+        ]
+        ports:
+        - containerPort: 9443
