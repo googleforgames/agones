@@ -24,6 +24,7 @@
 #                 |___/
 
 # test all example images exist on Google Cloud Registry
+test-examples-on-gcr: example-image-test.allocation-endpoint
 test-examples-on-gcr: example-image-test.autoscaler-webhook
 test-examples-on-gcr: example-image-test.cpp-simple
 test-examples-on-gcr: example-image-test.nodejs-simple
@@ -34,6 +35,7 @@ test-examples-on-gcr: example-image-test.crd-client
 test-examples-on-gcr: example-image-test.supertuxkart
 test-examples-on-gcr: example-image-test.simple-game-server
 
+push-example-golang-images: example-image-push.allocation-endpoint
 push-example-golang-images: example-image-push.autoscaler-webhook
 push-example-golang-images: example-image-push.crd-client
 push-example-golang-images: example-image-push.supertuxkart
