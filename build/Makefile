@@ -398,7 +398,7 @@ push-controller-image: $(ensure-build-image)
 ifeq ($(WITH_ARM64), 1)
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
-		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.linux.arm64 sdk-server.windows.amd64.exe
 else
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
