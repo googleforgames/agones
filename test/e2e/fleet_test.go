@@ -261,11 +261,9 @@ func TestFleetRollingUpdate(t *testing.T) {
 			cycleAllocations: true,
 		},
 	}
-	for _, fixture := range fixtures {
-		usePatch := fixture.usePatch
-		maxSurgeParam := fixture.maxSurge
-		cycleAllocations := fixture.cycleAllocations
-		t.Run(fmt.Sprintf("Use fleet Patch %t %s cycle %t", usePatch, maxSurgeParam, cycleAllocations), func(t *testing.T) {
+	for i := range fixtures {
+		fixture := fixtures[i]
+		t.Run(fmt.Sprintf("Use fleet Patch %t %s cycle %t", fixture.usePatch, fixture.maxSurge, fixture.cycleAllocations), func(t *testing.T) {
 			t.Parallel()
 
 			client := framework.AgonesClient.AgonesV1()
@@ -273,7 +271,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 			flt := defaultFleet(framework.Namespace)
 			flt.ApplyDefaults()
 			flt.Spec.Replicas = 1
-			rollingUpdatePercent := intstr.FromString(maxSurgeParam)
+			rollingUpdatePercent := intstr.FromString(fixture.maxSurge)
 			flt.Spec.Strategy.RollingUpdate.MaxSurge = &rollingUpdatePercent
 			flt.Spec.Strategy.RollingUpdate.MaxUnavailable = &rollingUpdatePercent
 
@@ -283,14 +281,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 			}
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
-			assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxSurge.StrVal)
-			assert.Equal(t, maxSurgeParam, flt.Spec.Strategy.RollingUpdate.MaxUnavailable.StrVal)
+			assert.Equal(t, fixture.maxSurge, flt.Spec.Strategy.RollingUpdate.MaxSurge.StrVal)
+			assert.Equal(t, fixture.maxSurge, flt.Spec.Strategy.RollingUpdate.MaxUnavailable.StrVal)
 
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
 			// scale up
 			const targetScale = 8
-			if usePatch {
+			if fixture.usePatch {
 				flt = scaleFleetPatch(ctx, t, flt, targetScale)
 				assert.Equal(t, int32(targetScale), flt.Spec.Replicas)
 			} else {
@@ -304,7 +302,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 			stopCh := make(chan struct{})
 			defer close(stopCh)
-			if cycleAllocations {
+			if fixture.cycleAllocations {
 				// Repeatedly cycle allocations to keep ~half of the GameServers Allocated. Repeatedly Allocate and
 				// delete such that both the old and new GSSet contain allocated GameServers.
 				const halfScale = targetScale / 2
@@ -397,7 +395,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 
 			// scale down, with allocation
 			const scaleDownTarget = 1
-			if usePatch {
+			if fixture.usePatch {
 				flt = scaleFleetPatch(ctx, t, flt, scaleDownTarget)
 			} else {
 				flt = scaleFleetSubresource(ctx, t, flt, scaleDownTarget)
