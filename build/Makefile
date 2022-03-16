@@ -139,6 +139,7 @@ go_build_cmd = go build -mod=vendor
 GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_LINUX_ARM64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_ARM64=docker run --rm -e "GOOS=darwin" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
 RACE_DETECTOR_ARGS=-race
@@ -396,7 +397,7 @@ push-controller-image: $(ensure-build-image)
 
 # build the static binary for the gameserver sidecar
 ifeq ($(WITH_ARM64), 1)
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64 
 	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.linux.arm64 sdk-server.windows.amd64.exe
 else
@@ -415,9 +416,12 @@ build-agones-sdk-binary-linux-arm64: $(ensure-build-image)
 
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
-build-agones-sdk-binary-darwin: $(ensure-build-image)
+build-agones-sdk-binary-darwin-amd64: $(ensure-build-image)
 	$(GO_BUILD_DARWIN_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-darwin-arm64: $(ensure-build-image)
+	$(GO_BUILD_DARWIN_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.arm64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # build the windows binary for the gameserver sidecar for Windows
 build-agones-sdk-binary-windows: $(ensure-build-image)
