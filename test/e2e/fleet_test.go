@@ -315,19 +315,16 @@ func TestFleetRollingUpdate(t *testing.T) {
 				})
 			}
 
-			// Change ContainerPort to trigger creating a new GSSet
+			// Change ContainerPort to trigger creating a new GSSet. Retry in case of a conflict.
 			fltName := flt.GetName()
-			err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+			require.Eventually(t, func() bool {
 				flt, err = client.Fleets(framework.Namespace).Get(ctx, fltName, metav1.GetOptions{})
-				if err != nil {
-					return err
-				}
+				require.NoError(t, err)
 				fltCopy := flt.DeepCopy()
 				fltCopy.Spec.Template.Spec.Ports[0].ContainerPort++
 				flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
-				return err
-			})
-			require.NoError(t, err)
+				return err == nil
+			}, time.Minute, time.Second)
 
 			selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 			// New GSS was created
