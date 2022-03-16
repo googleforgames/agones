@@ -69,6 +69,8 @@ ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAll
 
 # Build with Windows support
 WITH_WINDOWS=1
+# Build with arm64support
+WITH_ARM64=1
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -135,6 +137,7 @@ endif
 
 go_build_cmd = go build -mod=vendor
 GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_ARM64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
@@ -446,10 +449,20 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
+ifeq ($(WITH_ARM64), 1)
 build-allocator-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+else
+build-allocator-binary: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+endif
 
 # Pushes up the allocator image
 push-allocator-image: $(ensure-build-image)
