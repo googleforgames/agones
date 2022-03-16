@@ -46,7 +46,7 @@ namespace Agones
 		/// without starting a new task for every subscription request.
 		/// </summary>
 		private event Action<GameServer> GameServerUpdated;
-		internal Delegate[] GameServerUpdatedCallbacks => GameServerUpdated.GetInvocationList();
+		internal Delegate[] GameServerUpdatedCallbacks => GameServerUpdated?.GetInvocationList();
 		private readonly ILogger _logger;
 		private readonly SemaphoreSlim _healthStreamSemaphore = new SemaphoreSlim(1, 1);
 		private readonly object _gameServerWatchSyncRoot = new object();
@@ -98,7 +98,7 @@ namespace Agones
 			{
 				return true;
 			}
-			LogError(null, $"Could not connect to the sidecar at {Host}:{Port}. Exited with connection state: {channel.State}.");
+			LogError($"Could not connect to the sidecar at {Host}:{Port}. Exited with connection state: {channel.State}.");
 			return false;
 		}
 
@@ -115,7 +115,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to mark GameServer to 'Ready' state.");
+				LogError("Unable to mark GameServer to 'Ready' state.", ex);
 				return ex.Status;
 			}
 		}
@@ -135,7 +135,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to mark the GameServer to 'Allocated' state.");
+				LogError("Unable to mark the GameServer to 'Allocated' state.", ex);
 				return ex.Status;
 			}
 		}
@@ -158,7 +158,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to mark the GameServer to 'Reserved' state.");
+				LogError("Unable to mark the GameServer to 'Reserved' state.", ex);
 				return ex.Status;
 			}
 		}
@@ -178,7 +178,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to get GameServer configuration and status.");
+				LogError("Unable to get GameServer configuration and status.", ex);
 				throw;
 			}
 		}
@@ -203,10 +203,11 @@ namespace Agones
 							{
 								GameServerUpdated?.Invoke(reader.Current);
 							}
-							catch
+							catch (Exception ex)
 							{
-								// Ignore any exception thrown here. We don't want a callback's exception to cause
+								// Swallow any exception thrown here. We don't want a callback's exception to cause
 								// our watch to be torn down.
+								LogWarning($"A {nameof(WatchGameServer)} callback threw an exception", ex);
 							}
 						}
 					}
@@ -221,7 +222,7 @@ namespace Agones
 				}
 				catch (RpcException ex)
 				{
-					LogError(ex, "An error occurred while watching GameServer events, will retry.");
+					LogError("An error occurred while watching GameServer events, will retry.", ex);
 				}
 			}
 		}
@@ -263,7 +264,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to mark the GameServer to 'Shutdown' state.");
+				LogError("Unable to mark the GameServer to 'Shutdown' state.", ex);
 				return ex.Status;
 			}
 		}
@@ -287,7 +288,7 @@ namespace Agones
 			}
 			catch(RpcException ex)
 			{
-				LogError(ex, $"Unable to set the GameServer label '{key}' to '{value}'.");
+				LogError($"Unable to set the GameServer label '{key}' to '{value}'.", ex);
 				return ex.Status;
 			}
 		}
@@ -311,7 +312,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, $"Unable to set the GameServer annotation '{key}' to '{value}'.");
+				LogError($"Unable to set the GameServer annotation '{key}' to '{value}'.", ex);
 				return ex.Status;
 			}
 		}
@@ -346,7 +347,7 @@ namespace Agones
 			}
 			catch (RpcException ex)
 			{
-				LogError(ex, "Unable to invoke the GameServer health check.");
+				LogError("Unable to invoke the GameServer health check.", ex);
 
 				if (healthStream != null)
 				{
@@ -355,9 +356,9 @@ namespace Agones
 						// Best effort to clean up.
 						healthStream.Dispose();
 					}
-					catch
+					catch (Exception innerEx)
 					{
-						// Intentionally empty
+						LogWarning($"Failed to dispose existing {nameof(client.Health)} client stream", innerEx);
 					}
 				}
 				
@@ -394,7 +395,22 @@ namespace Agones
 			GC.SuppressFinalize(this);
 		}
 
-		private void LogError(Exception ex, string message)
+		private void LogDebug(string message, Exception ex = null)
+		{
+			_logger?.LogDebug(ex, message);
+		}
+
+		private void LogInformation(string message, Exception ex = null)
+		{
+			_logger?.LogInformation(ex, message);
+		}
+
+		private void LogWarning(string message, Exception ex = null)
+		{
+			_logger?.LogWarning(ex, message);
+		}
+
+		private void LogError(string message, Exception ex = null)
 		{
 			_logger?.LogError(ex, message);
 		}
