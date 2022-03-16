@@ -299,7 +299,10 @@ func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *ago
 
 		return false, nil
 	}, ctx.Done())
-	require.NoError(t, err)
+	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
+	if err != wait.ErrWaitTimeout {
+		require.NoError(t, err)
+	}
 }
 
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.
