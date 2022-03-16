@@ -276,9 +276,8 @@ func TestFleetRollingUpdate(t *testing.T) {
 			flt.Spec.Strategy.RollingUpdate.MaxUnavailable = &rollingUpdatePercent
 
 			flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
-			if assert.Nil(t, err) {
-				defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
-			}
+			require.NoError(t, err)
+			defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 
 			assert.Equal(t, int32(1), flt.Spec.Replicas)
 			assert.Equal(t, fixture.maxSurge, flt.Spec.Strategy.RollingUpdate.MaxSurge.StrVal)
@@ -298,7 +297,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 			framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
 			flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			stopCh := make(chan struct{})
 			defer close(stopCh)
@@ -328,7 +327,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 				flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 				return err
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 			// New GSS was created
