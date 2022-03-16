@@ -194,7 +194,8 @@ func TestHighDensityGameServerFlow(t *testing.T) {
 		require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(result.Status.State))
 
 		if expected != result.Status.GameServerName {
-			log.WithField("expected", expected).WithField("gsa", result).Debug("Re-allocation attempt failed. Retrying.")
+			log.WithField("expected", expected).WithField("gsa", result).Info("Re-allocation attempt failed. Retrying.")
+			return false
 		}
 
 		return true
