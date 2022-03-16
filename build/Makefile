@@ -411,7 +411,7 @@ build-agones-sdk-binary-linux-amd64: $(ensure-build-image)
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 build-agones-sdk-binary-linux-arm64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_ARM64) \
-		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.arm64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
 
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
