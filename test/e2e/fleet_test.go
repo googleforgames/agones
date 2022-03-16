@@ -306,7 +306,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 				// delete such that both the old and new GSSet contain allocated GameServers.
 				const halfScale = targetScale / 2
 				const period = 3 * time.Second
-				go framework.CycleAllocations(t, cycleCtx, flt, period, period*halfScale)
+				go framework.CycleAllocations(cycleCtx, t, flt, period, period*halfScale)
 
 				// Wait for at least half of the fleet to have be cycled (either Allocated or shutting down)
 				// before updating the fleet.
