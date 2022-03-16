@@ -281,7 +281,7 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 // CycleAllocations repeatedly Allocates a GameServer in the Fleet (if one is available), once every specified period.
 // Each Allocated GameServer gets deleted allocDuration after it was Allocated.
 // GameServers will continue to be Allocated until a message is passed to the done channel.
-func (f *Framework) CycleAllocations(t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration, stopCh <-chan struct{}) {
+func (f *Framework) CycleAllocations(t *testing.T, ctx context.Context, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
 	err := wait.PollImmediateUntil(period, func() (bool, error) {
 		gsa := GetAllocation(flt)
 		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
@@ -298,7 +298,7 @@ func (f *Framework) CycleAllocations(t *testing.T, flt *agonesv1.Fleet, period t
 		}(gsa)
 
 		return false, nil
-	}, stopCh)
+	}, ctx.Done())
 	require.NoError(t, err)
 }
 

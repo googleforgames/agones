@@ -299,14 +299,14 @@ func TestFleetRollingUpdate(t *testing.T) {
 			flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
 			require.NoError(t, err)
 
-			stopCh := make(chan struct{})
-			defer close(stopCh)
+			cycleCtx, cancelCycle := context.WithCancel(ctx)
+			defer cancelCycle()
 			if fixture.cycleAllocations {
 				// Repeatedly cycle allocations to keep ~half of the GameServers Allocated. Repeatedly Allocate and
 				// delete such that both the old and new GSSet contain allocated GameServers.
 				const halfScale = targetScale / 2
 				const period = 3 * time.Second
-				go framework.CycleAllocations(t, flt, period, period*halfScale, stopCh)
+				go framework.CycleAllocations(t, cycleCtx, flt, period, period*halfScale)
 
 				// Wait for at least half of the fleet to have be cycled (either Allocated or shutting down)
 				// before updating the fleet.
@@ -387,7 +387,7 @@ func TestFleetRollingUpdate(t *testing.T) {
 			// Stop cycling Allocations.
 			// The AssertFleetConditions below will wait until the Allocation cycling has
 			// fully stopped (when all Allocated GameServers are shut down).
-			close(stopCh)
+			cancelCycle()
 
 			// scale down, with allocation
 			const scaleDownTarget = 1
