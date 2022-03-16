@@ -454,7 +454,7 @@ build-allocator-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
-	$(GO_BUILD_LINUX_AMD64) \
+	$(GO_BUILD_LINUX_ARM64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 else
