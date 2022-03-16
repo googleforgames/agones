@@ -356,10 +356,20 @@ uninstall: $(ensure-build-image)
 
 
 # Build a static binary for the gameserver controller
+ifeq ($(WITH_ARM64), 1)
 build-controller-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+else
+build-controller-binary: $(ensure-build-image)
+	$(GO_BUILD_LINUX_AMD64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+endif
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -385,14 +395,24 @@ push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gameserver sidecar
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
+ifeq ($(WITH_ARM64), 1)
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
 	$(ZIP_SDK) \
 		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+else
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
+	$(ZIP_SDK) \
+		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+endif
 
 # build the static binary for the gameserver sidecar for Linux
-build-agones-sdk-binary-linux: $(ensure-build-image)
+build-agones-sdk-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
 build-agones-sdk-binary-darwin: $(ensure-build-image)
