@@ -76,7 +76,6 @@ resource "google_cloud_run_service_iam_binding" "binding" {
 
 
 resource "google_cloud_run_service" "aep_cloud_run" {
-  provider = google-private
   project = var.project_id
   name     = "allocation-endpoint-proxy"
   location = var.region
