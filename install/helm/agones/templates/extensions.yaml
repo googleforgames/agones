@@ -28,9 +28,9 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.controller.webhook.annotations }}
+{{- if .Values.agones.controller.allocationapiservice.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.allocationapiservice.annotations | indent 4 }}
 {{- end }}
 spec:
   group: allocation.agones.dev
@@ -52,9 +52,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
-{{- if .Values.agones.controller.webhook.annotations }}
+{{- if .Values.agones.controller.validatingwebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.validatingwebhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -113,9 +113,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
-{{- if .Values.agones.controller.webhook.annotations }}
+{{- if .Values.agones.controller.mutatingwebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.webhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.mutatingwebhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -159,7 +159,7 @@ webhooks:
           - CREATE
           - UPDATE
 {{- end }}
-{{- if not .Values.agones.controller.disableSecretCreation }}
+{{- if not .Values.agones.controller.disableSecret }}
 ---
 apiVersion: v1
 kind: Secret

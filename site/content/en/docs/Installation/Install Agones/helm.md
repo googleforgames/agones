@@ -120,10 +120,8 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `agones.controller.healthCheck.timeoutSeconds`      | Number of seconds after which the probe times out (in seconds)                                  | `1`                    |
 | `agones.controller.resources`                       | Controller [resource requests/limit][resources]                                                 | `{}`                   |
 | `agones.controller.generateTLS`                     | Set to true to generate TLS certificates or false to provide your own certificates              | `true`                 |
-| `agones.controller.disableSecretCreation`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
 | `agones.controller.tlsCert`                         | Custom TLS certificate provided as a string                                                     | \`\`                   |
 | `agones.controller.tlsKey`                          | Custom TLS private key provided as a string                                                     | \`\`                   |
-| `agones.controller.webhook.annotations`                     | [Annotations][annotations] added to the Agones apiregistration, mutating webhook, and validating webhook                                  | `{}`                   |
 | `agones.controller.nodeSelector`                    | Controller [node labels][nodeSelector] for pod assignment                                       | `{}`                   |
 | `agones.controller.tolerations`                     | Controller [toleration][toleration] labels for pod assignment                                   | `[]`                   |
 | `agones.controller.affinity`                        | Controller [affinity][affinity] settings for pod assignment                                     | `{}`                   |
@@ -211,6 +209,10 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 |                       |                           |                            |
+| `agones.controller.disableSecret`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
+| `agones.controller.allocationapiservice.annotations` | [Annotations][annotations] added to the Agones apiregistration | `{}` |
+| `agones.controller.validatingwebhook.annotations` | [Annotations][annotations] added to the Agones validating webhook | `{}` |
+| `agones.controller.mutatingwebhook.annotations` | [Annotations][annotations] added to the Agones mutating webhook | `{}` |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -278,11 +280,17 @@ That means that you skipped the `--cleanup` flag and you should either delete th
 ## Controller TLS Certificates
 
 By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
+
+### Manual
+
 For most use cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
+
+{{% feature publishVersion="1.22.0" %}}
+### Cert-Manager
 
 Another approach is to use [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
 
@@ -325,10 +333,15 @@ EOF
 After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller webhook and disable controller secret creation by setting the following:
 
 ```bash
-helm install \
-  --set agones.controller.disableSecretCreation=true
-  --set agones.controller.webhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'}
+helm install my-release \
+  --set agones.controller.disableSecret=true \
+  --set agones.controller.allocationapiservice.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.validatingwebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.mutatingwebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --namespace agones-system --create-namespace  \
+  agones/agones
 ```
+{{% /feature %}}
 
 ## Reserved Allocator Load Balancer IP
 
