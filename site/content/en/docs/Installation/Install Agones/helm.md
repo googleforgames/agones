@@ -211,8 +211,11 @@ The following tables lists the configurable parameters of the Agones chart and t
 |                       |                           |                            |
 | `agones.controller.disableSecret`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
 | `agones.controller.allocationapiservice.annotations` | [Annotations][annotations] added to the Agones apiregistration | `{}` |
+| `agones.controller.allocationapiservice.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
 | `agones.controller.validatingwebhook.annotations` | [Annotations][annotations] added to the Agones validating webhook | `{}` |
+| `agones.controller.validatingwebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
 | `agones.controller.mutatingwebhook.annotations` | [Annotations][annotations] added to the Agones mutating webhook | `{}` |
+| `agones.controller.mutatingwebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -336,8 +339,11 @@ After the certificates are generated, we will want to [inject caBundle](https://
 helm install my-release \
   --set agones.controller.disableSecret=true \
   --set agones.controller.allocationapiservice.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.allocationapiservice.disableCaBundle=true \
   --set agones.controller.validatingwebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.validatingwebhook.disableCaBundle=true \
   --set agones.controller.mutatingwebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.mutatingwebhook.disableCaBundle=true \
   --namespace agones-system --create-namespace  \
   agones/agones
 ```

@@ -39,11 +39,13 @@ spec:
   service:
     name: agones-controller-service
     namespace: {{ .Release.Namespace }}
-        {{- if .Values.agones.controller.generateTLS }}
+{{- if not .Values.agones.controller.allocationapiservice.disableCaBundle }}
+{{- if .Values.agones.controller.generateTLS }}
   caBundle: {{ b64enc $ca.Cert }}
-        {{- else }}
+{{- else }}
   caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
-        {{- end }}
+{{- end }}
+{{- end }}
   version: v1
 {{- end}}
 {{- if .Values.agones.registerWebhooks }}
@@ -73,10 +75,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /validate
+{{- if not .Values.agones.controller.validatingwebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
       caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
 {{- end }}
     rules:
       - apiGroups:
@@ -134,10 +138,12 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /mutate
+{{- if not .Values.agones.controller.mutatingwebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
       caBundle: {{ default (.Files.Get "certs/server.crt") .Values.agones.controller.tlsCert | b64enc }}
+{{- end }}
 {{- end }}
     rules:
       - apiGroups:

@@ -70,10 +70,13 @@ agones:
     disableSecret: false
     allocationapiservice:
       annotations: {}
+      disableCaBundle: false
     validatingwebhook:
       annotations: {}
+      disableCaBundle: false
     mutatingwebhook:
       annotations: {}
+      disableCaBundle: false
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
