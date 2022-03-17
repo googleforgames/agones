@@ -479,7 +479,7 @@ func (c *Controller) syncGameServerPortAllocationState(ctx context.Context, gs *
 
 // Allocate gameserver ports ( containerports ) for dynamic protocols such as TCPUDP
 // TODO: Going forward, this needs to be enhanced for other kinds of dynamic protocols
-func handleTCPUDPPortAllocationforStaticPortPolicy(gs *agonesv1.GameServer) {
+func assignStaticTCPUDPPorts(gs *agonesv1.GameServer) {
 
 	var udpPorts []agonesv1.GameServerPort
 
