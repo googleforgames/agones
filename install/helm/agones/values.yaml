@@ -67,9 +67,13 @@ agones:
     generateTLS: true
     tlsCert: ""
     tlsKey: ""
-    disableSecretCreation: false
-    webhook:
-      annotations: {} 
+    disableSecret: false
+    allocationapiservice:
+      annotations: {}
+    validatingwebhook:
+      annotations: {}
+    mutatingwebhook:
+      annotations: {}
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
