@@ -358,11 +358,9 @@ uninstall: $(ensure-build-image)
 
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
-build-controller-binary: $(ensure-build-image)
-	build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
 else
-build-controller-binary: $(ensure-build-image)
-	build-controller-binary-linux-amd64
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64
 endif
 
 build-controller-binary-linux-amd64: $(ensure-build-image)
@@ -476,11 +474,9 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 
 # Build a static binary for the allocator service
 ifeq ($(WITH_ARM64), 1)
-build-allocator-binary: $(ensure-build-image)
-	build-allocator-binary-linux-amd64 build-allocator-binary-linux-arm64
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64 build-allocator-binary-linux-arm64
 else
-build-allocator-binary: $(ensure-build-image)
-	build-allocator-binary-linux-amd64
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
 endif
 
 build-allocator-binary-linux-amd64: $(ensure-build-image)
