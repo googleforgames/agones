@@ -359,18 +359,20 @@ uninstall: $(ensure-build-image)
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
 build-controller-binary: $(ensure-build-image)
+	build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
+else
+build-controller-binary: $(ensure-build-image)
+	build-controller-binary-linux-amd64
+endif
+
+build-controller-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+build-controller-binary-linux-arm64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_ARM64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
-else
-build-controller-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
-endif
 
 # Lint the go source code.
 # use LINT_TIMEOUT to manipulate the linter timeout
@@ -475,18 +477,20 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 # Build a static binary for the allocator service
 ifeq ($(WITH_ARM64), 1)
 build-allocator-binary: $(ensure-build-image)
+	build-allocator-binary-linux-amd64 build-allocator-binary-linux-arm64
+else
+build-allocator-binary: $(ensure-build-image)
+	build-allocator-binary-linux-amd64
+endif
+
+build-allocator-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64\
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+build-allocator-binary-linux-arm64:
 	$(GO_BUILD_LINUX_ARM64) \
 	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
-else
-build-allocator-binary: $(ensure-build-image)
-	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64 \
-	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
-endif
 
 # Pushes up the allocator image
 push-allocator-image: $(ensure-build-image)
