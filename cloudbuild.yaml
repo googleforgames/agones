@@ -23,7 +23,7 @@ steps:
 #
 
 - name: "gcr.io/cloud-builders/docker"
-  id: version
+  id: docker-version
   args: ["--version"]
 
 #
