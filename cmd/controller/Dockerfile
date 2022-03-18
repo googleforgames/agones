@@ -17,7 +17,7 @@ FROM alpine:3.14
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:agones ./bin/controller /home/agones/controller
+COPY --chown=agones:agones ./bin/controller /home/agones/controller.linux.amd64
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000
