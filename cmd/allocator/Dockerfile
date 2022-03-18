@@ -17,7 +17,7 @@ FROM alpine:3.14
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:agones ./bin/allocator /home/agones/allocator.linux.amd64
+COPY --chown=agones:agones ./bin/allocator.linux.amd64 /home/agones/allocator
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000
