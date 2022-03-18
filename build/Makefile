@@ -360,15 +360,15 @@ uninstall: $(ensure-build-image)
 ifeq ($(WITH_ARM64), 1)
 build-controller-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 	$(GO_BUILD_LINUX_ARM64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 else
 build-controller-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 endif
 
@@ -476,15 +476,15 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 ifeq ($(WITH_ARM64), 1)
 build-allocator-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64\
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 	$(GO_BUILD_LINUX_ARM64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 else
 build-allocator-binary: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 endif
 
