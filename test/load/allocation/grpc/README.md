@@ -185,7 +185,7 @@ spec:
             value: 'true'
           containers:
           - name: simple-game-server
-            image: gcr.io/agones-images/simple-game-server:0.10
+            image: gcr.io/agones-images/simple-game-server:0.11
             args:
             - -automaticShutdownDelaySec=60
             - -readyIterations=10

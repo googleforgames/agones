@@ -129,6 +129,79 @@ func TestCreateFleetAndGameServerStateFilterAllocation(t *testing.T) {
 	require.NotEqual(t, gs1.ObjectMeta.Annotations["agones.dev/last-allocated"], gs2.ObjectMeta.Annotations["agones.dev/last-allocated"])
 }
 
+func TestHighDensityGameServerFlow(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	log := e2e.TestLogger(t)
+	ctx := context.Background()
+
+	fleets := framework.AgonesClient.AgonesV1().Fleets(framework.Namespace)
+	fleet := defaultFleet(framework.Namespace)
+	lockLabel := "agones.dev/sdk-available"
+	// to start they are all available
+	fleet.Spec.Template.ObjectMeta.Labels = map[string]string{lockLabel: "true"}
+
+	flt, err := fleets.Create(ctx, fleet, metav1.CreateOptions{})
+	require.NoError(t, err)
+	defer fleets.Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
+
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
+
+	fleetSelector := metav1.LabelSelector{MatchLabels: map[string]string{agonesv1.FleetNameLabel: flt.ObjectMeta.Name}}
+	allocatedSelector := fleetSelector.DeepCopy()
+
+	allocated := agonesv1.GameServerStateAllocated
+	allocatedSelector.MatchLabels[lockLabel] = "true"
+	gsa := &allocationv1.GameServerAllocation{
+		Spec: allocationv1.GameServerAllocationSpec{
+			MetaPatch: allocationv1.MetaPatch{Labels: map[string]string{lockLabel: "false"}},
+			Selectors: []allocationv1.GameServerSelector{
+				{LabelSelector: *allocatedSelector, GameServerState: &allocated},
+				{LabelSelector: fleetSelector},
+			},
+		}}
+
+	// standard allocation
+	result, err := framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+	require.NoError(t, err)
+	require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(result.Status.State))
+
+	gs, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, allocated, gs.Status.State)
+
+	// set the label to being available again
+	_, err = framework.SendGameServerUDP(t, gs, "LABEL available true")
+	require.NoError(t, err)
+
+	// wait for the label to be applied!
+	require.Eventuallyf(t, func() bool {
+		gs, err := framework.AgonesClient.AgonesV1().GameServers(fleet.ObjectMeta.Namespace).Get(ctx, result.Status.GameServerName, metav1.GetOptions{})
+		require.NoError(t, err)
+		log.WithField("labels", gs.ObjectMeta.Labels).Info("checking labels")
+		return gs.ObjectMeta.Labels[lockLabel] == "true"
+	}, time.Minute, time.Second, "GameServer did not unlock")
+
+	// Run the same allocation again, we should get back the preferred item.
+	expected := result.Status.GameServerName
+
+	// we will run this as an Eventually, as caches are eventually consistent
+	require.Eventuallyf(t, func() bool {
+		result, err = framework.AgonesClient.AllocationV1().GameServerAllocations(fleet.ObjectMeta.Namespace).Create(ctx, gsa, metav1.CreateOptions{})
+		require.NoError(t, err)
+		require.Equal(t, string(allocationv1.GameServerAllocationAllocated), string(result.Status.State))
+
+		if expected != result.Status.GameServerName {
+			log.WithField("expected", expected).WithField("gsa", result).Info("Re-allocation attempt failed. Retrying.")
+			return false
+		}
+
+		return true
+	}, time.Minute, time.Second, "Could not re-allocation")
+}
+
 func TestCreateFleetAndGameServerPlayerCapacityAllocation(t *testing.T) {
 	if !(runtime.FeatureEnabled(runtime.FeatureStateAllocationFilter) && runtime.FeatureEnabled(runtime.FeaturePlayerAllocationFilter)) {
 		t.SkipNow()
