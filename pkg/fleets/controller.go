@@ -529,7 +529,7 @@ func (c *Controller) rollingUpdateRestFixedOnReady(ctx context.Context, fleet *a
 
 	// Check if we are ready to scale down
 	allPodsCount := agonesv1.SumSpecReplicas(allGSS)
-	newGSSUnavailablePodCount := active.Spec.Replicas - active.Status.ReadyReplicas
+	newGSSUnavailablePodCount := active.Spec.Replicas - active.Status.ReadyReplicas - active.Status.AllocatedReplicas
 	maxScaledDown := allPodsCount - minAvailable - newGSSUnavailablePodCount
 
 	if maxScaledDown <= 0 {
