@@ -68,13 +68,13 @@ agones:
     tlsCert: ""
     tlsKey: ""
     disableSecret: false
-    allocationapiservice:
+    allocationApiService:
       annotations: {}
       disableCaBundle: false
-    validatingwebhook:
+    validatingWebhook:
       annotations: {}
       disableCaBundle: false
-    mutatingwebhook:
+    mutatingWebhook:
       annotations: {}
       disableCaBundle: false
     safeToEvict: false

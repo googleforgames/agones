@@ -28,9 +28,9 @@ metadata:
     chart: {{ template "agones.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
-{{- if .Values.agones.controller.allocationapiservice.annotations }}
+{{- if .Values.agones.controller.allocationApiService.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.allocationapiservice.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.allocationApiService.annotations | indent 4 }}
 {{- end }}
 spec:
   group: allocation.agones.dev
@@ -39,7 +39,7 @@ spec:
   service:
     name: agones-controller-service
     namespace: {{ .Release.Namespace }}
-{{- if not .Values.agones.controller.allocationapiservice.disableCaBundle }}
+{{- if not .Values.agones.controller.allocationApiService.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
   caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
@@ -54,9 +54,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: agones-validation-webhook
-{{- if .Values.agones.controller.validatingwebhook.annotations }}
+{{- if .Values.agones.controller.validatingWebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.validatingwebhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.validatingWebhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -75,7 +75,7 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /validate
-{{- if not .Values.agones.controller.validatingwebhook.disableCaBundle }}
+{{- if not .Values.agones.controller.validatingWebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
@@ -117,9 +117,9 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: agones-mutation-webhook
-{{- if .Values.agones.controller.mutatingwebhook.annotations }}
+{{- if .Values.agones.controller.mutatingWebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.mutatingwebhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | indent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -138,7 +138,7 @@ webhooks:
         name: agones-controller-service
         namespace: {{ .Release.Namespace }}
         path: /mutate
-{{- if not .Values.agones.controller.mutatingwebhook.disableCaBundle }}
+{{- if not .Values.agones.controller.mutatingWebhook.disableCaBundle }}
 {{- if .Values.agones.controller.generateTLS }}
       caBundle: {{ b64enc $ca.Cert }}
 {{- else }}
