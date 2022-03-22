@@ -209,6 +209,13 @@ The following tables lists the configurable parameters of the Agones chart and t
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 |                       |                           |                            |
+| `agones.controller.disableSecret`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
+| `agones.controller.allocationApiService.annotations` | [Annotations][annotations] added to the Agones apiregistration | `{}` |
+| `agones.controller.allocationApiService.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
+| `agones.controller.validatingWebhook.annotations` | [Annotations][annotations] added to the Agones validating webhook | `{}` |
+| `agones.controller.validatingWebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
+| `agones.controller.mutatingWebhook.annotations` | [Annotations][annotations] added to the Agones mutating webhook | `{}` |
+| `agones.controller.mutatingWebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -276,11 +283,71 @@ That means that you skipped the `--cleanup` flag and you should either delete th
 ## Controller TLS Certificates
 
 By default agones chart generates tls certificates used by the admission controller, while this is handy, it requires the agones controller to restart on each `helm upgrade` command.
+
+### Manual
+
 For most use cases the controller would have required a restart anyway (eg: controller image updated). However if you really need to avoid restarts we suggest that you turn off tls automatic generation (`agones.controller.generateTLS` to `false`) and provide your own certificates (`certs/server.crt`,`certs/server.key`).
 
 {{< alert title="Tip" color="info">}}
 You can use our script located at {{< ghlink href="install/helm/agones/certs/cert.sh" >}}cert.sh{{< /ghlink >}} to generate them.
 {{< /alert >}}
+
+{{% feature publishVersion="1.22.0" %}}
+### Cert-Manager
+
+Another approach is to use [cert-manager.io](https://cert-manager.io/) solution for cluster level certificate management.
+
+In order to use the cert-manager solution, first [install cert-manager](https://cert-manager.io/docs/installation/kubernetes/) on the cluster.
+Then, [configure](https://cert-manager.io/docs/configuration/) an `Issuer`/`ClusterIssuer` resource and
+last [configure](https://cert-manager.io/docs/usage/certificate/) a `Certificate` resource to manage controller `Secret`.
+Make sure to configure the `Certificate` based on your system's requirements, including the validity `duration`.
+
+Here is an example of using a self-signed `ClusterIssuer` for configuring controller `Secret` where secret name is `my-release-cert` or `{{ template "agones.fullname" . }}-cert`:
+
+```bash
+#!/bin/bash
+# Create a self-signed ClusterIssuer
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned
+spec:
+  selfSigned: {}
+EOF
+
+# Create a Certificate with IP for the my-release-cert )
+cat <<EOF | kubectl apply -f -
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: my-release-cert
+  namespace: agones-system
+spec:
+  ipAddresses:
+    - agones-controller-service.agones-system.svc
+  secretName: my-release-cert
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+EOF
+```
+
+After the certificates are generated, we will want to [inject caBundle](https://cert-manager.io/docs/concepts/ca-injector/) into controller webhook and disable controller secret creation by setting the following:
+
+```bash
+helm install my-release \
+  --set agones.controller.disableSecret=true \
+  --set agones.controller.allocationApiService.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.allocationApiService.disableCaBundle=true \
+  --set agones.controller.validatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.validatingWebhook.disableCaBundle=true \
+  --set agones.controller.mutatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
+  --set agones.controller.mutatingWebhook.disableCaBundle=true \
+  --namespace agones-system --create-namespace  \
+  agones/agones
+```
+{{% /feature %}}
 
 ## Reserved Allocator Load Balancer IP
 
