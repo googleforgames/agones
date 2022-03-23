@@ -3,9 +3,9 @@ title: "1.22.0 - Release Candidate"
 linkTitle: "1.22.0-rc"
 date: "2022-03-22"
 ---
-This is the 1.22.0-rc release of Agones.
+This is the 1.22.0-rc Release of Agones.
 
-This Release  fixes the issue with  agones-images on ARM systems, multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters and also Cert manager integration
+This Release fixes the issue with  agones-images on ARM systems, multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters and also Cert manager integration
 
 Check the <a href="https://github.com/googleforgames/agones/tree/release-1.22.0-rc" data-proofer-ignore>README</a> for details on features, installation and usage.
 
