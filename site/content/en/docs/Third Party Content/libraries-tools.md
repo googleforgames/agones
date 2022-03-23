@@ -31,6 +31,7 @@ Libraries or applications that implement messaging systems.
 
 - [agones-allocator-client](https://github.com/FairwindsOps/agones-allocator-client) - A client for testing allocation servers.
   Made by [Fairwinds](https://fairwinds.com)
+- [Multi-cluster allocation demo](https://github.com/aws-samples/multi-cluster-allocation-demo-for-agones-on-eks) - A demo project for multi-cluster allocation on Amazon EKS with Terraform templates.
   
 ## Development Tools
 
