@@ -37,7 +37,7 @@ ensure-build-config:
 	-mkdir -p $(helm_cache)
 
 # create the build image if it doesn't exist
-ensure-build-image: ensure-build-config
+ensure-build-image: ensure-build-config ensure-buildx
 	$(MAKE) ensure-image IMAGE_TAG=$(build_tag) BUILD_TARGET=build-build-image
 
 # attempt to pull the image, if it exists and rename it to the local tag
@@ -48,6 +48,10 @@ pull-build-image:
 # push the local build image up to your repository
 push-build-image:
 	$(MAKE) push-remote-build-image REMOTE_TAG=$(build_remote_tag) LOCAL_TAG=$(build_tag)
+
+# create buildx instance 
+ensure-buildx:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=linux --use
 
 # ensure passed in image exists, if not, run the target
 ensure-image:
