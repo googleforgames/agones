@@ -355,6 +355,9 @@ uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \
 		helm uninstall agones --namespace=agones-system
 
+# create buildx instance for Linux 
+ensure-buildx:
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=linux --use
 
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
