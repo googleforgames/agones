@@ -1,13 +1,11 @@
 ---
-title: "1.21.0 - Lots of Bug Fixes!"
-linkTitle: "1.21.0"
-date: "2022-02-15"
+title: "1.22.0 - Release Candidate"
+linkTitle: "1.22.0-rc"
+date: "2022-03-22"
 ---
 This is the 1.22.0-rc release of Agones.
 
-This is the 1.22.0-rc release of Agones.
-
-This Release  fixes the issue with  agones-images on ARM systems and other bug fixes. 
+This Release  fixes the issue with  agones-images on ARM systems, multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters and also Cert manager integration
 
 Check the <a href="https://github.com/googleforgames/agones/tree/release-1.22.0-rc" data-proofer-ignore>README</a> for details on features, installation and usage.
 
@@ -28,10 +26,6 @@ See <a href="https://github.com/googleforgames/agones/blob/release-1.22.0-rc/CHA
 
 Images available with this release:
 
-- [gcr.io/agones-images/agones-controller:1.22.0-rc](https://gcr.io/agones-images/agones-controller:1.22.0-rc)
-- [gcr.io/agones-images/agones-sdk:1.22.0-rc](https://gcr.io/agones-images/agones-sdk:1.22.0-rc)
-- [gcr.io/agones-images/agones-ping:1.22.0-rc](https://gcr.io/agones-images/agones-ping:1.22.0-rc)
-- [gcr.io/agones-images/agones-allocator:1.22.0-rc](https://gcr.io/agones-images/agones-allocator:1.22.0-rc)
 - [gcr.io/agones-images/agones-controller:1.22.0-rc](https://gcr.io/agones-images/agones-controller:1.22.0-rc)
 - [gcr.io/agones-images/agones-sdk:1.22.0-rc](https://gcr.io/agones-images/agones-sdk:1.22.0-rc)
 - [gcr.io/agones-images/agones-ping:1.22.0-rc](https://gcr.io/agones-images/agones-ping:1.22.0-rc)
