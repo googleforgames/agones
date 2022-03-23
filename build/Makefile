@@ -435,14 +435,14 @@ ensure-windows-buildx:
 
 # Build the image for the gameserver sidecar and SDK binaries
 ifeq ($(WITH_ARM64), 1)
-build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-image-amd64 build-agones-sdk-image-arm64
+build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-amd64 build-agones-sdk-image-arm64
 else
-build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-image-amd64
+build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-amd64
 endif
 
-build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist
+build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-agones-sdk-image-arm64: $(ensure-build-image) ensure-buildx build-agones-sdk-binary build-licenses build-required-src-dist
+build-agones-sdk-image-arm64: $(ensure-build-image) ensure-buildx build-agones-sdk-binary
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
