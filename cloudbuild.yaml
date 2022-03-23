@@ -72,7 +72,7 @@ steps:
   args:
     - buildx
     - create
-    - '--name'
+    - --name
     - mybuilder
   id: create-builder
 - name: gcr.io/cloud-builders/docker
