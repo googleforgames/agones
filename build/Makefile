@@ -438,7 +438,7 @@ build-agones-sdk-image: $(ensure-build-image) build-agones-sdk-image-amd64
 endif
 
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist
-	docker build --build-arg ARCH=amd64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist
 	docker build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
