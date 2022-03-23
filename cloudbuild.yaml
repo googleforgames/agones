@@ -51,13 +51,42 @@ steps:
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
-
+# Enable multi-arch container images builds
+# See: https://docs.docker.com/buildx/working-with-buildx/#build-multi-platform-images for details
+#
+  
 - name: gcr.io/$PROJECT_ID/restore_cache
   id: rust-sdk-build-restore-cache
   args:
     - '--bucket=gs://$_CACHE_BUCKET'
     - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
   waitFor: ['-']
+  
+- name: gcr.io/cloud-builders/docker
+  args:
+    - run
+    - '--privileged'
+    - 'linuxkit/binfmt:v0.7'
+  id: initialize-qemu
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - create
+    - '--name'
+    - mybuilder
+  id: create-builder
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - use
+    - mybuilder
+  id: select-builder
+- name: gcr.io/cloud-builders/docker
+  args:
+    - buildx
+    - inspect
+    - '--bootstrap'
+  id: show-target-build-platforms 
 
 #
 # Creates the initial make + docker build platform
