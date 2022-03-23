@@ -1,5 +1,52 @@
 # Changelog
 
+## [v1.22.0-rc](https://github.com/googleforgames/agones/tree/v1.22.0-rc) (2022-03-22)
+
+[Full Changelog](https://github.com/googleforgames/agones/compare/v1.21.0...v1.22.0-rc)
+
+**Implemented enhancements:**
+
+- Add a multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters [\#2495](https://github.com/googleforgames/agones/issues/2495)
+- Agones controller metrics becomes a huge amount of data over time [\#2424](https://github.com/googleforgames/agones/issues/2424)
+- Allow specifying agones-allocator nodePort via Helm values [\#1699](https://github.com/googleforgames/agones/issues/1699)
+- Optionally include a ServiceMonitor in the Helm chart [\#1605](https://github.com/googleforgames/agones/issues/1605)
+- Integrate with cert-manager to manage secrets on the cluster [\#1461](https://github.com/googleforgames/agones/issues/1461)
+- Load Testing Framework for internal and external usage [\#412](https://github.com/googleforgames/agones/issues/412)
+- Add Allocation Endpoint GCP solution for multi-cluster allocation to Agones examples [\#2499](https://github.com/googleforgames/agones/pull/2499) ([pooneh-m](https://github.com/pooneh-m))
+- Add a tool that can run variable allocation load scenarios [\#2493](https://github.com/googleforgames/agones/pull/2493) ([roberthbailey](https://github.com/roberthbailey))
+- updates for next release [\#2482](https://github.com/googleforgames/agones/pull/2482) ([SaitejaTamma](https://github.com/SaitejaTamma))
+
+**Fixed bugs:**
+
+- The `allocation-endpoint` sample terraform is using `goolge-private` provider [\#2512](https://github.com/googleforgames/agones/issues/2512)
+- Failed to build CPP SDK [\#2486](https://github.com/googleforgames/agones/issues/2486)
+- Allocator Service Document Bug [\#2467](https://github.com/googleforgames/agones/issues/2467)
+- GameServerAllocation is not working for "High Density GameServers" [\#2408](https://github.com/googleforgames/agones/issues/2408)
+- Fleet RollingUpdate gets stuck when Fleet has high number of allocated GameServers [\#2397](https://github.com/googleforgames/agones/issues/2397)
+- Fix panic when playertracking is false [\#2489](https://github.com/googleforgames/agones/pull/2489) ([jiwonaid](https://github.com/jiwonaid))
+- Fix Rolling Update with Allocated GameServers [\#2420](https://github.com/googleforgames/agones/pull/2420) ([WVerlaek](https://github.com/WVerlaek))
+
+**Closed issues:**
+
+- Release 1.21.0 [\#2480](https://github.com/googleforgames/agones/issues/2480)
+
+**Merged pull requests:**
+
+- e2e flow for High Density GameServers [\#2516](https://github.com/googleforgames/agones/pull/2516) ([markmandel](https://github.com/markmandel))
+- Sidecar arm64 bin [\#2514](https://github.com/googleforgames/agones/pull/2514) ([Ludea](https://github.com/Ludea))
+- Remove google-private [\#2513](https://github.com/googleforgames/agones/pull/2513) ([pooneh-m](https://github.com/pooneh-m))
+- C\# Health and WatchGameServer fixes [\#2510](https://github.com/googleforgames/agones/pull/2510) ([mleenhardt](https://github.com/mleenhardt))
+- Update the version of the simple game server in the load test samples to the current version [\#2508](https://github.com/googleforgames/agones/pull/2508) ([roberthbailey](https://github.com/roberthbailey))
+- Update simple-game-server to 0.11 everywhere [\#2506](https://github.com/googleforgames/agones/pull/2506) ([markmandel](https://github.com/markmandel))
+- Added a Development Tools section as requested [\#2502](https://github.com/googleforgames/agones/pull/2502) ([comerford](https://github.com/comerford))
+- Update CPP gRPC to v1.27.1 [\#2500](https://github.com/googleforgames/agones/pull/2500) ([markmandel](https://github.com/markmandel))
+- Fix allocator service document [\#2477](https://github.com/googleforgames/agones/pull/2477) ([jiwonaid](https://github.com/jiwonaid))
+- Add NodePort to the helm template for agones-allocator service [\#2476](https://github.com/googleforgames/agones/pull/2476) ([jiwonaid](https://github.com/jiwonaid))
+- Tweaking wording for Agones installation [\#2475](https://github.com/googleforgames/agones/pull/2475) ([karenarialin](https://github.com/karenarialin))
+- Reorganizing sections for GKE installation [\#2474](https://github.com/googleforgames/agones/pull/2474) ([karenarialin](https://github.com/karenarialin))
+- Update minor wording [\#2473](https://github.com/googleforgames/agones/pull/2473) ([karenarialin](https://github.com/karenarialin))
+- docs: Support gRPC without TLS [\#2472](https://github.com/googleforgames/agones/pull/2472) ([SpringMT](https://github.com/SpringMT))
+
 ## [v1.21.0](https://github.com/googleforgames/agones/tree/v1.21.0) (2022-02-15)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.21.0-rc...v1.21.0)
@@ -11,6 +58,10 @@
 **Closed issues:**
 
 - Release 1.21.0-rc [\#2469](https://github.com/googleforgames/agones/issues/2469)
+
+**Merged pull requests:**
+
+- Release v1.21.0 [\#2481](https://github.com/googleforgames/agones/pull/2481) ([SaitejaTamma](https://github.com/SaitejaTamma))
 
 ## [v1.21.0-rc](https://github.com/googleforgames/agones/tree/v1.21.0-rc) (2022-02-10)
 
@@ -55,6 +106,7 @@
 - v1.21.0-rc [\#2470](https://github.com/googleforgames/agones/pull/2470) ([SaitejaTamma](https://github.com/SaitejaTamma))
 - Update to nodejs 16 and npm lockfile version 2 [\#2465](https://github.com/googleforgames/agones/pull/2465) ([steven-supersolid](https://github.com/steven-supersolid))
 - Wait for the shutdown signal before having the simple game server exit [\#2463](https://github.com/googleforgames/agones/pull/2463) ([roberthbailey](https://github.com/roberthbailey))
+- Support cert-manager for controller tls [\#2453](https://github.com/googleforgames/agones/pull/2453) ([xxtanisxx](https://github.com/xxtanisxx))
 - Remove trailing space in logging statement. [\#2448](https://github.com/googleforgames/agones/pull/2448) ([markmandel](https://github.com/markmandel))
 - Regenerate package-lock.json for the two node.js projects [\#2447](https://github.com/googleforgames/agones/pull/2447) ([steven-supersolid](https://github.com/steven-supersolid))
 - Move Allocator unit tests to better test module [\#2441](https://github.com/googleforgames/agones/pull/2441) ([markmandel](https://github.com/markmandel))
@@ -160,7 +212,6 @@
 - Add ability to specify annotations for the SDK service account [\#2317](https://github.com/googleforgames/agones/pull/2317) ([highlyunavailable](https://github.com/highlyunavailable))
 - Add error callback to WatchGameServer in Node.js SDK  [\#2315](https://github.com/googleforgames/agones/pull/2315) ([steven-supersolid](https://github.com/steven-supersolid))
 - Upgraded Terraform to \>=1.0 [\#2308](https://github.com/googleforgames/agones/pull/2308) ([zaratsian](https://github.com/zaratsian))
-- Prometheus metrics: Use ServiceMonitor instead of deprecated annotation mechanism [\#2290](https://github.com/googleforgames/agones/pull/2290) ([zifter](https://github.com/zifter))
 
 **Fixed bugs:**
 
@@ -217,6 +268,10 @@
 ## [v1.18.0](https://github.com/googleforgames/agones/tree/v1.18.0) (2021-10-12)
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.18.0-rc...v1.18.0)
+
+**Implemented enhancements:**
+
+- Prometheus metrics: Use ServiceMonitor instead of deprecated annotation mechanism [\#2290](https://github.com/googleforgames/agones/pull/2290) ([zifter](https://github.com/zifter))
 
 **Closed issues:**
 
@@ -366,6 +421,10 @@
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.16.0-rc...v1.16.0)
 
+**Fixed bugs:**
+
+- Allow FILE env variable for local SDK server [\#2174](https://github.com/googleforgames/agones/pull/2174) ([markmandel](https://github.com/markmandel))
+
 **Closed issues:**
 
 - Release 1.16.0-rc [\#2179](https://github.com/googleforgames/agones/issues/2179)
@@ -408,7 +467,6 @@
 - Can't run Allocation example with Go 1.16 [\#2024](https://github.com/googleforgames/agones/issues/2024)
 - Cannot connect to a game server using Docker Desktop \(with integrated K8s cluster or Minikube\) [\#1990](https://github.com/googleforgames/agones/issues/1990)
 - Fix Rust Sample Docker image [\#2180](https://github.com/googleforgames/agones/pull/2180) ([markmandel](https://github.com/markmandel))
-- Allow FILE env variable for local SDK server [\#2174](https://github.com/googleforgames/agones/pull/2174) ([markmandel](https://github.com/markmandel))
 - Fix for failing export-openapi.sh on K8s 1.19 [\#2160](https://github.com/googleforgames/agones/pull/2160) ([markmandel](https://github.com/markmandel))
 - Fix shutdown problems in ping application. [\#2141](https://github.com/googleforgames/agones/pull/2141) ([s-shin](https://github.com/s-shin))
 
@@ -436,6 +494,7 @@
 - Updated Minikube documentation [\#2137](https://github.com/googleforgames/agones/pull/2137) ([markmandel](https://github.com/markmandel))
 - Fix a typo in the documentation. [\#2135](https://github.com/googleforgames/agones/pull/2135) ([roberthbailey](https://github.com/roberthbailey))
 - Prep for the 1.16.0 release [\#2130](https://github.com/googleforgames/agones/pull/2130) ([sawagh](https://github.com/sawagh))
+- Release 1.15.0 [\#2128](https://github.com/googleforgames/agones/pull/2128) ([sawagh](https://github.com/sawagh))
 - Fix Network Security Group Gameserver rule not applied on AKS cluster [\#2124](https://github.com/googleforgames/agones/pull/2124) ([WeetA34](https://github.com/WeetA34))
 - Update the doscy theme [\#2123](https://github.com/googleforgames/agones/pull/2123) ([roberthbailey](https://github.com/roberthbailey))
 - Adds the Missing TCP protocol spec to the example fleet [\#2122](https://github.com/googleforgames/agones/pull/2122) ([Rohansjamadagni](https://github.com/Rohansjamadagni))
@@ -448,10 +507,6 @@
 **Closed issues:**
 
 - Release 1.15.0-rc [\#2119](https://github.com/googleforgames/agones/issues/2119)
-
-**Merged pull requests:**
-
-- Release 1.15.0 [\#2128](https://github.com/googleforgames/agones/pull/2128) ([sawagh](https://github.com/sawagh))
 
 ## [v1.15.0-rc](https://github.com/googleforgames/agones/tree/v1.15.0-rc) (2021-06-02)
 
@@ -470,6 +525,7 @@
 - Flaky: Hugo occasionally fails: fatal error: concurrent map read and map write [\#1981](https://github.com/googleforgames/agones/issues/1981)
 - Return HTTP 201 on GameServerAllocation [\#2110](https://github.com/googleforgames/agones/pull/2110) ([markmandel](https://github.com/markmandel))
 - Update and audit fix Node.js dependencies [\#2099](https://github.com/googleforgames/agones/pull/2099) ([steven-supersolid](https://github.com/steven-supersolid))
+- \[docs\] hugo fails to server link without /  [\#2091](https://github.com/googleforgames/agones/pull/2091) ([dzmitry-lahoda](https://github.com/dzmitry-lahoda))
 - Clone Kubernetes objects in API Server before encoding them [\#2089](https://github.com/googleforgames/agones/pull/2089) ([highlyunavailable](https://github.com/highlyunavailable))
 
 **Closed issues:**
@@ -495,6 +551,7 @@
 - Minor updates to the release checklist. [\#2080](https://github.com/googleforgames/agones/pull/2080) ([roberthbailey](https://github.com/roberthbailey))
 - Prep for the 1.15.0 release. [\#2079](https://github.com/googleforgames/agones/pull/2079) ([roberthbailey](https://github.com/roberthbailey))
 - Documenting unity SDK functionality [\#2076](https://github.com/googleforgames/agones/pull/2076) ([domgreen](https://github.com/domgreen))
+- Add Netspeak Games logo [\#2073](https://github.com/googleforgames/agones/pull/2073) ([domgreen](https://github.com/domgreen))
 - Rename MetaPatch to Metadata for AllocationRequest [\#2070](https://github.com/googleforgames/agones/pull/2070) ([lambertwang](https://github.com/lambertwang))
 
 ## [v1.14.0](https://github.com/googleforgames/agones/tree/v1.14.0) (2021-04-28)
@@ -520,7 +577,6 @@
 
 - Release 1.14.0 [\#2078](https://github.com/googleforgames/agones/pull/2078) ([roberthbailey](https://github.com/roberthbailey))
 - Add table for all implemented SDK for Unreal [\#2074](https://github.com/googleforgames/agones/pull/2074) ([domgreen](https://github.com/domgreen))
-- Add Netspeak Games logo [\#2073](https://github.com/googleforgames/agones/pull/2073) ([domgreen](https://github.com/domgreen))
 - Suppress the long shell command to test for a file existence so that [\#2072](https://github.com/googleforgames/agones/pull/2072) ([roberthbailey](https://github.com/roberthbailey))
 - Updates to the release checklist, based on cutting my first release candidate. [\#2068](https://github.com/googleforgames/agones/pull/2068) ([roberthbailey](https://github.com/roberthbailey))
 
@@ -679,7 +735,6 @@
 
 - Move SDKWatchSendOnExecute to Beta [\#1904](https://github.com/googleforgames/agones/issues/1904)
 - Move `SDKWatchSendOnExecute` to Beta stage. [\#1960](https://github.com/googleforgames/agones/pull/1960) ([markmandel](https://github.com/markmandel))
-- Utilize ExternalDNS as well as ExternalIP [\#1928](https://github.com/googleforgames/agones/pull/1928) ([nanasi880](https://github.com/nanasi880))
 
 **Implemented enhancements:**
 
@@ -711,6 +766,7 @@
 - ObjectMeta should use additionalProperties [\#1949](https://github.com/googleforgames/agones/pull/1949) ([markmandel](https://github.com/markmandel))
 - Add Windows note for netcat in getting started [\#1948](https://github.com/googleforgames/agones/pull/1948) ([markmandel](https://github.com/markmandel))
 - Preparation for 1.12.0 release [\#1938](https://github.com/googleforgames/agones/pull/1938) ([markmandel](https://github.com/markmandel))
+- 1.11.0 Release [\#1937](https://github.com/googleforgames/agones/pull/1937) ([markmandel](https://github.com/markmandel))
 - Update documentation to note there is no GameServer update support [\#1935](https://github.com/googleforgames/agones/pull/1935) ([josephbmanley](https://github.com/josephbmanley))
 
 ## [v1.11.0](https://github.com/googleforgames/agones/tree/v1.11.0) (2020-12-22)
@@ -737,6 +793,7 @@
 
 - Upgrade to Kubernetes 1.17 [\#1824](https://github.com/googleforgames/agones/issues/1824)
 - Update apiextensions.k8s.io/v1beta1 to v1 for all CRDs [\#1799](https://github.com/googleforgames/agones/issues/1799)
+- Utilize ExternalDNS as well as ExternalIP [\#1928](https://github.com/googleforgames/agones/pull/1928) ([nanasi880](https://github.com/nanasi880))
 - Move apiregistration & admissionregistration to v1 [\#1918](https://github.com/googleforgames/agones/pull/1918) ([markmandel](https://github.com/markmandel))
 - Updated terraform scripts to 1.17 [\#1916](https://github.com/googleforgames/agones/pull/1916) ([markmandel](https://github.com/markmandel))
 - Update client-go to 0.17.14 [\#1913](https://github.com/googleforgames/agones/pull/1913) ([markmandel](https://github.com/markmandel))
@@ -872,6 +929,7 @@
 - Expand feature freeze details during RC. [\#1847](https://github.com/googleforgames/agones/pull/1847) ([markmandel](https://github.com/markmandel))
 - Revert "\[Doc\] Mark multicluster allocation feature as stable" [\#1842](https://github.com/googleforgames/agones/pull/1842) ([pooneh-m](https://github.com/pooneh-m))
 - Preparation for 1.10.0 [\#1836](https://github.com/googleforgames/agones/pull/1836) ([markmandel](https://github.com/markmandel))
+- Release 1.9.0 [\#1835](https://github.com/googleforgames/agones/pull/1835) ([markmandel](https://github.com/markmandel))
 - \[Doc\] Mark multicluster allocation feature as stable [\#1831](https://github.com/googleforgames/agones/pull/1831) ([pooneh-m](https://github.com/pooneh-m))
 
 ## [v1.9.0](https://github.com/googleforgames/agones/tree/v1.9.0) (2020-09-29)
@@ -882,10 +940,6 @@
 
 - Release 1.9.0-rc [\#1827](https://github.com/googleforgames/agones/issues/1827)
 - \[Docs\] Multi-cluster Allocation [\#1582](https://github.com/googleforgames/agones/issues/1582)
-
-**Merged pull requests:**
-
-- Release 1.9.0 [\#1835](https://github.com/googleforgames/agones/pull/1835) ([markmandel](https://github.com/markmandel))
 
 ## [v1.9.0-rc](https://github.com/googleforgames/agones/tree/v1.9.0-rc) (2020-09-23)
 
@@ -961,6 +1015,8 @@
 - Added game-server example [\#1771](https://github.com/googleforgames/agones/pull/1771) ([Bmandk](https://github.com/Bmandk))
 - Preparation for 1.9.0 [\#1762](https://github.com/googleforgames/agones/pull/1762) ([markmandel](https://github.com/markmandel))
 - Add note on GKE cluster versions [\#1743](https://github.com/googleforgames/agones/pull/1743) ([markmandel](https://github.com/markmandel))
+- Helm default values in docs \(related to controller limits\) match chart default values [\#1755](https://github.com/googleforgames/agones/pull/1755) ([pgilfillan](https://github.com/pgilfillan))
+- Improved gameserver unit tests [\#1485](https://github.com/googleforgames/agones/pull/1485) ([akremsa](https://github.com/akremsa))
 - Add Terraform GKE and Helm modules tests with Terratest [\#1483](https://github.com/googleforgames/agones/pull/1483) ([aLekSer](https://github.com/aLekSer))
 
 ## [v1.8.0](https://github.com/googleforgames/agones/tree/v1.8.0) (2020-08-18)
@@ -1117,7 +1173,6 @@
 - Additional commands for prometheus and grafana [\#1601](https://github.com/googleforgames/agones/pull/1601) ([akremsa](https://github.com/akremsa))
 - Grafana - add namespace to distinguish fleets with the same name [\#1597](https://github.com/googleforgames/agones/pull/1597) ([akremsa](https://github.com/akremsa))
 - C\# SDK Cleanup & Nuget Package [\#1596](https://github.com/googleforgames/agones/pull/1596) ([rcreasey](https://github.com/rcreasey))
-- Adding AccelByte in Companies using Agones list [\#1593](https://github.com/googleforgames/agones/pull/1593) ([accelbyte-raymond](https://github.com/accelbyte-raymond))
 - Metrics: add namespace to distinguish fleets with the same name [\#1585](https://github.com/googleforgames/agones/pull/1585) ([akremsa](https://github.com/akremsa))
 - Move ContainerPortAllocation to beta [\#1577](https://github.com/googleforgames/agones/pull/1577) ([akremsa](https://github.com/akremsa))
 - New metric - state duration [\#1468](https://github.com/googleforgames/agones/pull/1468) ([aLekSer](https://github.com/aLekSer))
@@ -1184,6 +1239,10 @@
 
 [Full Changelog](https://github.com/googleforgames/agones/compare/v1.6.0-rc...v1.6.0)
 
+**Implemented enhancements:**
+
+- Adding AccelByte in Companies using Agones list [\#1593](https://github.com/googleforgames/agones/pull/1593) ([accelbyte-raymond](https://github.com/accelbyte-raymond))
+
 **Fixed bugs:**
 
 - Fix the Unreal Plugin's GetGameServer [\#1581](https://github.com/googleforgames/agones/pull/1581) ([dotcom](https://github.com/dotcom))
@@ -1246,7 +1305,6 @@
 - Added a pull request template [\#1471](https://github.com/googleforgames/agones/pull/1471) ([akremsa](https://github.com/akremsa))
 - Update the agones-allocator doc to recommend using cert-manager [\#1459](https://github.com/googleforgames/agones/pull/1459) ([pooneh-m](https://github.com/pooneh-m))
 - Add a simple helm test [\#1449](https://github.com/googleforgames/agones/pull/1449) ([aLekSer](https://github.com/aLekSer))
-- Pass FEATURE\_GATES flag to e2e tests [\#1445](https://github.com/googleforgames/agones/pull/1445) ([akremsa](https://github.com/akremsa))
 - Add validation for CPU and Memory Resources for GameServers, Fleets and GameServerSets [\#1423](https://github.com/googleforgames/agones/pull/1423) ([aLekSer](https://github.com/aLekSer))
 
 **Fixed bugs:**
@@ -1308,7 +1366,6 @@
 - Refactor err check in GS controller a bit. Add event if Pod was not created [\#1499](https://github.com/googleforgames/agones/pull/1499) ([aLekSer](https://github.com/aLekSer))
 - Update testify package in gomod [\#1492](https://github.com/googleforgames/agones/pull/1492) ([akremsa](https://github.com/akremsa))
 - Docs: add Grafana version explicitly [\#1487](https://github.com/googleforgames/agones/pull/1487) ([aLekSer](https://github.com/aLekSer))
-- Improved gameserver unit tests [\#1485](https://github.com/googleforgames/agones/pull/1485) ([akremsa](https://github.com/akremsa))
 - Allocator client tutorial: add steps for MacOS [\#1484](https://github.com/googleforgames/agones/pull/1484) ([aLekSer](https://github.com/aLekSer))
 - Preparation for 1.6.0 Release. [\#1474](https://github.com/googleforgames/agones/pull/1474) ([markmandel](https://github.com/markmandel))
 - Update Grafana to the  6.7 release. [\#1465](https://github.com/googleforgames/agones/pull/1465) ([cyriltovena](https://github.com/cyriltovena))
@@ -1361,6 +1418,7 @@
 - Refactor Docker files for gRPC between SDK and allocation [\#1115](https://github.com/googleforgames/agones/issues/1115)
 - C\# SDK [\#884](https://github.com/googleforgames/agones/issues/884)
 - Feature Gates: EnableAllFeatures [\#1448](https://github.com/googleforgames/agones/pull/1448) ([markmandel](https://github.com/markmandel))
+- Pass FEATURE\_GATES flag to e2e tests [\#1445](https://github.com/googleforgames/agones/pull/1445) ([akremsa](https://github.com/akremsa))
 - Local implementation of Set/GetPlayerCapacity [\#1444](https://github.com/googleforgames/agones/pull/1444) ([markmandel](https://github.com/markmandel))
 - Alpha GameServer attributes added to SDK [\#1440](https://github.com/googleforgames/agones/pull/1440) ([markmandel](https://github.com/markmandel))
 - Added version to stress tests files [\#1433](https://github.com/googleforgames/agones/pull/1433) ([akremsa](https://github.com/akremsa))
@@ -1597,6 +1655,7 @@
 - Fix cleanup Agones resources script [\#1240](https://github.com/googleforgames/agones/pull/1240) ([aLekSer](https://github.com/aLekSer))
 - Fix documentation for multi-cluster allocation [\#1235](https://github.com/googleforgames/agones/pull/1235) ([pooneh-m](https://github.com/pooneh-m))
 - Health Checking: Fix doc errors and expand [\#1233](https://github.com/googleforgames/agones/pull/1233) ([markmandel](https://github.com/markmandel))
+- Setting Unreal plugin version to 3 [\#1209](https://github.com/googleforgames/agones/pull/1209) ([domgreen](https://github.com/domgreen))
 
 **Security fixes:**
 
@@ -1641,7 +1700,7 @@
 - `agones.allocator.http.expose` and `agones.allocator.http.response` are documented but not consumed by Helm [\#1216](https://github.com/googleforgames/agones/issues/1216)
 - Revert: Make it possible to create a Fleet with 0 replicas [\#1226](https://github.com/googleforgames/agones/pull/1226) ([markmandel](https://github.com/markmandel))
 - Fix documentation for allocator helm args [\#1221](https://github.com/googleforgames/agones/pull/1221) ([pooneh-m](https://github.com/pooneh-m))
-- Setting Unreal plugin version to 3 [\#1209](https://github.com/googleforgames/agones/pull/1209) ([domgreen](https://github.com/domgreen))
+- Whoops - spelling mistake in feature tag. [\#1204](https://github.com/googleforgames/agones/pull/1204) ([markmandel](https://github.com/markmandel))
 
 **Closed issues:**
 
@@ -1693,7 +1752,6 @@
 - Game server container crash before Ready, should restart, not move to Unhealthy [\#956](https://github.com/googleforgames/agones/issues/956)
 - Sidecar occasionally fails to start up [\#851](https://github.com/googleforgames/agones/issues/851)
 - Fleet Autoscaler spawn extra gs [\#443](https://github.com/googleforgames/agones/issues/443)
-- Whoops - spelling mistake in feature tag. [\#1204](https://github.com/googleforgames/agones/pull/1204) ([markmandel](https://github.com/markmandel))
 - Fix infinite creation of GameServerSets when 1000m CPU limit was used [\#1188](https://github.com/googleforgames/agones/pull/1188) ([aLekSer](https://github.com/aLekSer))
 - Flaky: TestGameServerRestartBeforeReadyCrash [\#1174](https://github.com/googleforgames/agones/pull/1174) ([markmandel](https://github.com/markmandel))
 - Allow fleet with empty Replicas [\#1168](https://github.com/googleforgames/agones/pull/1168) ([aLekSer](https://github.com/aLekSer))
@@ -1847,6 +1905,7 @@
 - Preparation for 1.1.0 [\#1060](https://github.com/googleforgames/agones/pull/1060) ([markmandel](https://github.com/markmandel))
 - Update golangci-lint to 1.18, add bodyclose check [\#1051](https://github.com/googleforgames/agones/pull/1051) ([aLekSer](https://github.com/aLekSer))
 - E2E test for Unhealthy GameServer on process crash [\#1038](https://github.com/googleforgames/agones/pull/1038) ([markmandel](https://github.com/markmandel))
+- flaky/TestGameServerShutdown [\#1022](https://github.com/googleforgames/agones/pull/1022) ([markmandel](https://github.com/markmandel))
 - Build examples make target [\#1019](https://github.com/googleforgames/agones/pull/1019) ([aLekSer](https://github.com/aLekSer))
 
 ## [v1.0.0](https://github.com/googleforgames/agones/tree/v1.0.0) (2019-09-17)
@@ -1900,7 +1959,6 @@
 - Cpp SDK. Fixed regex for version detection. Fixed mingw build. [\#1029](https://github.com/googleforgames/agones/pull/1029) ([dsazonoff](https://github.com/dsazonoff))
 - flaky/TestFleetScaleUpEditAndScaleDown [\#1024](https://github.com/googleforgames/agones/pull/1024) ([markmandel](https://github.com/markmandel))
 - add vendor grpc third\_party to be referenced by protos [\#1023](https://github.com/googleforgames/agones/pull/1023) ([pooneh-m](https://github.com/pooneh-m))
-- flaky/TestGameServerShutdown [\#1022](https://github.com/googleforgames/agones/pull/1022) ([markmandel](https://github.com/markmandel))
 - Fix typo in Makefile [\#1021](https://github.com/googleforgames/agones/pull/1021) ([orthros](https://github.com/orthros))
 - Add configuration for the prow build cluster along with a make target to create and delete it [\#1017](https://github.com/googleforgames/agones/pull/1017) ([roberthbailey](https://github.com/roberthbailey))
 - Add an OWNERS file at the root of the repository [\#1016](https://github.com/googleforgames/agones/pull/1016) ([roberthbailey](https://github.com/roberthbailey))
@@ -2171,6 +2229,7 @@
 - Update SDK page with full list of current SDKs. [\#778](https://github.com/googleforgames/agones/pull/778) ([markmandel](https://github.com/markmandel))
 - Fix spelling mistake in grafana dashboard. [\#777](https://github.com/googleforgames/agones/pull/777) ([markmandel](https://github.com/markmandel))
 - Preparation for 0.11.0 release! [\#775](https://github.com/googleforgames/agones/pull/775) ([markmandel](https://github.com/markmandel))
+- Update examples list [\#767](https://github.com/googleforgames/agones/pull/767) ([markmandel](https://github.com/markmandel))
 - Revert UnHealthy standalone GameServers to not be deleted [\#763](https://github.com/googleforgames/agones/pull/763) ([markmandel](https://github.com/markmandel))
 
 ## [v0.10.0](https://github.com/googleforgames/agones/tree/v0.10.0) (2019-05-16)
@@ -2188,7 +2247,6 @@
 **Merged pull requests:**
 
 - Release 0.10.0 [\#770](https://github.com/googleforgames/agones/pull/770) ([markmandel](https://github.com/markmandel))
-- Update examples list [\#767](https://github.com/googleforgames/agones/pull/767) ([markmandel](https://github.com/markmandel))
 - Update Fleet autoscaling documentation [\#764](https://github.com/googleforgames/agones/pull/764) ([markmandel](https://github.com/markmandel))
 - Bad copy paste on 0.10.0 rc release page [\#761](https://github.com/googleforgames/agones/pull/761) ([markmandel](https://github.com/markmandel))
 
@@ -2215,6 +2273,7 @@
 - Terraform support to generate test cluster [\#670](https://github.com/googleforgames/agones/pull/670) ([aLekSer](https://github.com/aLekSer))
 - Lightweight library for implementing APIServer extensions [\#659](https://github.com/googleforgames/agones/pull/659) ([markmandel](https://github.com/markmandel))
 - Unreal Engine 4 Plugin [\#647](https://github.com/googleforgames/agones/pull/647) ([YannickLange](https://github.com/YannickLange))
+- Add Agones Kubernetes API docs generator [\#645](https://github.com/googleforgames/agones/pull/645) ([aLekSer](https://github.com/aLekSer))
 
 **Fixed bugs:**
 
@@ -2307,7 +2366,6 @@
 **Implemented enhancements:**
 
 - Adding a section in the documentation about deploying Agones using GCP Marketplace. [\#664](https://github.com/googleforgames/agones/pull/664) ([bbf](https://github.com/bbf))
-- Add Agones Kubernetes API docs generator [\#645](https://github.com/googleforgames/agones/pull/645) ([aLekSer](https://github.com/aLekSer))
 - Added support for persisting logs in 'emptyDir' volume attached to agones controller. [\#620](https://github.com/googleforgames/agones/pull/620) ([jkowalski](https://github.com/jkowalski))
 - Adding Locust tests - initial changes for \#412 [\#611](https://github.com/googleforgames/agones/pull/611) ([pm7h](https://github.com/pm7h))
 - Emit stress test metrics in Fortio format. [\#586](https://github.com/googleforgames/agones/pull/586) ([jkowalski](https://github.com/jkowalski))
@@ -2432,6 +2490,8 @@
 - Website that contains documentation [\#410](https://github.com/googleforgames/agones/issues/410)
 - Node Affinity, Tolerations and Node selector support for helm chart [\#407](https://github.com/googleforgames/agones/issues/407)
 - As game server, I want to get the Agones sidecar version [\#310](https://github.com/googleforgames/agones/issues/310)
+- Add Node.js SDK and example - closes \#538 [\#581](https://github.com/googleforgames/agones/pull/581) ([steven-supersolid](https://github.com/steven-supersolid))
+- Emit stress test metrics in Fortio format. [\#586](https://github.com/googleforgames/agones/pull/586) ([jkowalski](https://github.com/jkowalski))
 - fix setAnnotation for simple-udp to use customized key & value [\#576](https://github.com/googleforgames/agones/pull/576) ([Yingxin-Jiang](https://github.com/Yingxin-Jiang))
 - Adding Github link and version dropdown to the navigation bar [\#566](https://github.com/googleforgames/agones/pull/566) ([markmandel](https://github.com/markmandel))
 - simple-udp: added support for customizing labels and annotations by the caller [\#564](https://github.com/googleforgames/agones/pull/564) ([jkowalski](https://github.com/jkowalski))
@@ -2734,7 +2794,7 @@
 - Remove c++ sdk destructor causing linker errors [\#369](https://github.com/googleforgames/agones/pull/369) ([nikibobi](https://github.com/nikibobi))
 - Update README.md [\#362](https://github.com/googleforgames/agones/pull/362) ([iamrare](https://github.com/iamrare))
 - Upgrade GKE version and increase test cluster size [\#360](https://github.com/googleforgames/agones/pull/360) ([markmandel](https://github.com/markmandel))
-- Fix typo in sdk readme which said only two sdks [\#356](https://github.com/googleforgames/agones/pull/356) ([ReDucTor](https://github.com/ReDucTor))
+- Fix typo in sdk readme which said only two sdks [\#356](https://github.com/googleforgames/agones/pull/356) ([reductor](https://github.com/reductor))
 - Add allocator service example and documentation [\#353](https://github.com/googleforgames/agones/pull/353) ([slartibaartfast](https://github.com/slartibaartfast))
 - Adding goimports back into the build shell. [\#352](https://github.com/googleforgames/agones/pull/352) ([markmandel](https://github.com/markmandel))
 - e2e tests for Fleet Scaling and Updates [\#351](https://github.com/googleforgames/agones/pull/351) ([markmandel](https://github.com/markmandel))
