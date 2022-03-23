@@ -24,7 +24,7 @@ steps:
 
 - name: "gcr.io/cloud-builders/docker"
   id: docker-version
-  args: ["--version"]
+  args: ["info"]
 
 #
 # Restore any caches
