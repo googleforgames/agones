@@ -5,7 +5,13 @@ date: "2022-03-22"
 ---
 This is the 1.22.0-rc release of Agones.
 
-This Release  fixes the issue with  agones-images on ARM systems, multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters and also Cert manager integration
+This release has lots of important bug fixes, examples and tools. This includes:
+
+* Fix for Fleet rolling updates getting stuck when under high load.
+* Several SDK fixes, for both Go and C++.
+* Load testing framework for better load scenario testing.
+* A GCP specific multi-cluster allocation example, 
+* Ability to integrate Agones internal certificates with cert-manager.
 
 Check the <a href="https://github.com/googleforgames/agones/tree/release-1.22.0-rc" data-proofer-ignore>README</a> for details on features, installation and usage.
 
