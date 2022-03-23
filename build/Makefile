@@ -102,7 +102,7 @@ controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
-sidecar_linux_amd64_tag = $(sidecar_tag)-linux_amd64
+sidecar_linux_amd64_tag = $(sidecar_tag)-linux
 else
 sidecar_linux_amd64_tag = $(sidecar_tag)
 endif
