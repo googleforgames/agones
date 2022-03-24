@@ -358,7 +358,7 @@ uninstall: $(ensure-build-image)
 
 # create buildx instance for Linux 
 ensure-buildx:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_LINUX_BUILDER)
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_LINUX_BUILDER)
 
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
