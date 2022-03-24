@@ -6,7 +6,6 @@
 
 **Implemented enhancements:**
 
-- Add a multi-cluster allocation example solution to leverage GCP resources to connect to multiple Agones clusters [\#2495](https://github.com/googleforgames/agones/issues/2495)
 - Agones controller metrics becomes a huge amount of data over time [\#2424](https://github.com/googleforgames/agones/issues/2424)
 - Allow specifying agones-allocator nodePort via Helm values [\#1699](https://github.com/googleforgames/agones/issues/1699)
 - Optionally include a ServiceMonitor in the Helm chart [\#1605](https://github.com/googleforgames/agones/issues/1605)
