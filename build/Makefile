@@ -48,6 +48,7 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
+BUILDX_LINUX_BUILDER = linux-builder
 WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
@@ -357,7 +358,7 @@ uninstall: $(ensure-build-image)
 
 # create buildx instance for Linux 
 ensure-buildx:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=linux --use
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_LINUX_BUILDER)
 
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
@@ -431,7 +432,7 @@ ensure-windows-buildx:
 	#
 	# Windows image builds must be directed to a specific buildx context.
 	# The default context does not support building cross platform images.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) --use
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) 
 
 # Build the image for the gameserver sidecar and SDK binaries
 ifeq ($(WITH_ARM64), 1)
@@ -443,14 +444,14 @@ endif
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-agones-sdk-image-arm64: $(ensure-build-image) ensure-buildx build-agones-sdk-binary
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform linux/arm64 --builder $(BUILDX_LINUX_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
 
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary build-licenses build-required-src-dist ensure-windows-buildx
 	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build sidecar image only
 build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
@@ -461,7 +462,7 @@ build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), bu
 # Build sidecar image only
 build-agones-sdk-server-image-windows-%: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist ensure-windows-buildx
 	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build $(agones_path)/cmd/sdk-server/ -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --builder $(BUILDX_WINDOWS_BUILDER) $(agones_path)/cmd/sdk-server/ -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: $(ensure-build-image)
