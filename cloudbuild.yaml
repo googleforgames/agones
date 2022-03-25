@@ -22,7 +22,7 @@ steps:
 # Print Docker version
 #
 
-- name: "gcr.io/cloud-builders/docker"
+- name: "gcr.io/cloud-builders/docker:20.10.3"
   id: docker-version
   args: ["--version"]
 
@@ -56,7 +56,7 @@ steps:
 #
 
 - name: "ubuntu"
-  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
+  args: ["bash", "-c", "echo 'FROM gcr.io/cloud-builders/docker:20.10.3\nRUN apt-get install make\nENTRYPOINT [\"/usr/bin/make\"]' > Dockerfile.build"]
   waitFor: ['-']
 - name: "gcr.io/cloud-builders/docker"
   id: build-make-docker
