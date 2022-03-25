@@ -51,6 +51,13 @@ steps:
     - '--key=$_CPP_SDK_CONFORMANCE_CACHE_KEY-$( checksum sdks/cpp/cmake/prerequisites.cmake )'
   waitFor: ['-']
 
+- name: gcr.io/$PROJECT_ID/restore_cache
+  id: rust-sdk-build-restore-cache
+  args:
+    - '--bucket=gs://$_CACHE_BUCKET'
+    - '--key=$_RUST_SDK_BUILD_CACHE_KEY-$( checksum test/sdk/rust/Cargo.toml )'
+  waitFor: ['-']
+
 #
 # Creates the initial make + docker build platform
 #
