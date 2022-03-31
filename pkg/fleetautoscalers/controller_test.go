@@ -283,6 +283,46 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 
 	assert.NoError(t, utilruntime.ParseFeatures(string(utilruntime.FeatureCustomFasSyncInterval)+"=false"))
 
+	t.Run("no scaling up because fleet is marked for deletion, buffer policy", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fas, f := defaultFixtures()
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(7)
+
+		f.Spec.Replicas = 5
+		f.Status.Replicas = 5
+		f.Status.AllocatedReplicas = 5
+		f.Status.ReadyReplicas = 0
+		f.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleetautoscaler should not update")
+			return false, nil, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleet should not update")
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
+		assert.Nil(t, err)
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+	})
+
 	t.Run("scaling up, buffer policy", func(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
@@ -394,6 +434,51 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 
+	t.Run("no scaling up because fleet is marked for deletion, webhook policy", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fas, f := defaultWebhookFixtures()
+		f.Spec.Replicas = 50
+		f.Status.Replicas = f.Spec.Replicas
+		f.Status.AllocatedReplicas = 45
+		f.Status.ReadyReplicas = 0
+		f.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+
+		ts := testServer{}
+		server := httptest.NewServer(ts)
+		defer server.Close()
+
+		fas.Spec.Policy.Webhook.URL = &(server.URL)
+		fas.Spec.Policy.Webhook.Service = nil
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleetautoscaler should not update")
+			return false, nil, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleet should not update")
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
+		assert.Nil(t, err)
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+	})
+
 	t.Run("scaling down, buffer policy", func(t *testing.T) {
 		t.Parallel()
 		c, m := newFakeController()
@@ -445,6 +530,47 @@ func TestControllerSyncFleetAutoscaler(t *testing.T) {
 		assert.True(t, fUpdated, "fleet should have been updated")
 		assert.True(t, fasUpdated, "fleetautoscaler should have been updated")
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "AutoScalingFleet")
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+	})
+
+	t.Run("no scaling down because fleet is marked for deletion, buffer policy", func(t *testing.T) {
+		t.Parallel()
+		c, m := newFakeController()
+		fas, f := defaultFixtures()
+		fas.Spec.Policy.Buffer.BufferSize = intstr.FromInt(8)
+
+		f.Spec.Replicas = 20
+		f.Status.Replicas = 20
+		f.Status.AllocatedReplicas = 5
+		f.Status.ReadyReplicas = 15
+		f.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+
+		m.AgonesClient.AddReactor("list", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &autoscalingv1.FleetAutoscalerList{Items: []autoscalingv1.FleetAutoscaler{*fas}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleetautoscalers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleetautoscaler should not update")
+			return true, nil, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "fleet should not update")
+
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.fleetAutoscalerSynced)
+		defer cancel()
+
+		err := c.syncFleetAutoscaler(ctx, "default/fas-1")
+		assert.Nil(t, err)
 		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
 	})
 

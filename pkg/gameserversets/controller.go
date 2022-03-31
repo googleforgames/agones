@@ -307,6 +307,12 @@ func (c *Controller) syncGameServerSet(ctx context.Context, key string) error {
 
 	numServersToAdd, toDelete, isPartial := computeReconciliationAction(gsSet.Spec.Scheduling, list, c.counter.Counts(),
 		int(gsSet.Spec.Replicas), maxGameServerCreationsPerBatch, maxGameServerDeletionsPerBatch, maxPodPendingCount)
+
+	// GameserverSet is marked for deletion then don't add gameservers.
+	if !gsSet.DeletionTimestamp.IsZero() {
+		numServersToAdd = 0
+	}
+
 	status := computeStatus(list)
 	fields := logrus.Fields{}
 

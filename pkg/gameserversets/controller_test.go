@@ -426,6 +426,40 @@ func TestControllerWatchGameServers(t *testing.T) {
 func TestSyncGameServerSet(t *testing.T) {
 	t.Parallel()
 
+	t.Run("gameservers are not recreated when set is marked for deletion", func(t *testing.T) {
+		gsSet := defaultFixture()
+		gsSet.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+		list := createGameServers(gsSet, 5)
+
+		// mark some as shutdown
+		list[0].Status.State = agonesv1.GameServerStateShutdown
+		list[1].Status.State = agonesv1.GameServerStateShutdown
+
+		c, m := newFakeController()
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+		m.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerList{Items: list}, nil
+		})
+		m.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "gameserver should not update")
+			return false, nil, nil
+		})
+		m.AgonesClient.AddReactor("create", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "new gameservers should not be created")
+
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.gameServerSetSynced, c.gameServerSynced)
+		defer cancel()
+
+		c.syncGameServerSet(ctx, gsSet.ObjectMeta.Namespace+"/"+gsSet.ObjectMeta.Name) // nolint: errcheck
+	})
+
 	t.Run("adding and deleting unhealthy gameservers", func(t *testing.T) {
 		gsSet := defaultFixture()
 		list := createGameServers(gsSet, 5)
