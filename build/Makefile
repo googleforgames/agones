@@ -521,7 +521,7 @@ push-agones-sdk-image: push-agones-sdk-linux-image
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag)--amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
 push-agones-sdk-image: push-agones-sdk-linux-image
