@@ -71,7 +71,7 @@ ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAll
 # Build with Windows support
 WITH_WINDOWS=1
 # Build with arm64support
-WITH_ARM64=0
+WITH_ARM64=1
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -519,6 +519,7 @@ endif
 
 # push the gameservers sidecar image
 push-agones-sdk-linux-image: $(ensure-build-image)
+	docker buildx imagetools inspect $(sidecar_linux_amd64_tag) 
 	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
