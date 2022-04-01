@@ -470,7 +470,7 @@ build-agones-sdk-server-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), bu
 # Build sidecar image only
 build-agones-sdk-server-image-windows-%: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist ensure-windows-buildx
 	# TODO: Use `--builder $(BUILDX_WINDOWS_BUILDER)` later once Docker 19.03.13 is the build target. Cloud Build has 19.03.08 https://cloud.google.com/cloud-build/release-notes
-	docker buildx build $(agones_path)/cmd/sdk-server/ --builder $(BUILDX_LINUX_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
+	docker buildx build $(agones_path)/cmd/sdk-server/ --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --platform windows/amd64 --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
 build-ping-binary: $(ensure-build-image)
