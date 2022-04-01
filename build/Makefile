@@ -514,13 +514,13 @@ ifeq ($(WITH_WINDOWS), 1)
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image
 	# Ensure that the sidecar manifest is removed before creating a new one.
-	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag_amd64_tag)
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_linux_amd64_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_linux_amd64_tag) $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag_amd64_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_linux_amd64_tag)
 else
 push-agones-sdk-image: push-agones-sdk-linux-image
 endif
