@@ -529,12 +529,15 @@ endif
 
 # push the gameservers sidecar image
 ifeq ($(WITH_ARM), 1) 
-push-agones-sdk-linux-image: $(ensure-build-image)
-	docker push $(sidecar_linux_arm64_tag)
-	docker push $(sidecar_linux_amd64_tag)
+push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64 push-agones-sdk-linux-image-arm64
 else
-	docker push $(sidecar_linux_amd64_tag)
+push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64
 endif
+
+push-agones-sdk-linux-image-arm64:
+	docker push $(sidecar_linux_arm64_tag)
+push-agones-sdk-linux-image-amd64
+	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi:
