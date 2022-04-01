@@ -432,7 +432,7 @@ ensure-windows-buildx:
 	#
 	# Windows image builds must be directed to a specific buildx context.
 	# The default context does not support building cross platform images.
-	docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) 
+	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) 
 
 # Build the image for the gameserver sidecar and SDK binaries
 ifeq ($(WITH_ARM64), 1)
