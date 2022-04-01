@@ -511,7 +511,7 @@ ifeq ($(WITH_WINDOWS), 1)
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image
 	# Ensure that the sidecar manifest is removed before creating a new one.
-	docker manifest rm $(sidecar_tag)
+	-docker manifest rm $(sidecar_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
