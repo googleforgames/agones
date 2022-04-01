@@ -104,11 +104,11 @@ sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
 sidecar_linux_amd64_tag = $(sidecar_tag)-linux-amd64
-else
-sidecar_linux_amd64_tag = $(sidecar_tag)
-endif
-
 sidecar_linux_arm64_tag = $(sidecar_tag)-linux-arm64
+else
+sidecar_linux_amd64_tag = $(sidecar_tag)-amd64
+sidecar_linux_arm64_tag = $(sidecar_tag)-arm64
+endif
 
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
