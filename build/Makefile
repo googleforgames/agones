@@ -528,8 +528,13 @@ push-agones-sdk-image: push-agones-sdk-linux-image
 endif
 
 # push the gameservers sidecar image
+ifeq ($(WITH_ARM, 1) 
 push-agones-sdk-linux-image: $(ensure-build-image)
+	docker push $(sidecar_linux_arm64_tag)
 	docker push $(sidecar_linux_amd64_tag)
+else
+	docker push $(sidecar_linux_amd64_tag)
+endif
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi:
