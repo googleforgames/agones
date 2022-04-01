@@ -71,7 +71,7 @@ ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAll
 # Build with Windows support
 WITH_WINDOWS=1
 # Build with arm64support
-WITH_ARM64=1
+WITH_ARM64=0
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
