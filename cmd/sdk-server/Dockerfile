@@ -20,5 +20,5 @@ RUN apk --update add ca-certificates && \
 COPY --chown=agones:agones ./bin/sdk-server.linux.$ARCH /home/agones/sdk-server
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
-USER 1000
+USER agones
 ENTRYPOINT ["/home/agones/sdk-server"]
