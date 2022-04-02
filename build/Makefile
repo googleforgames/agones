@@ -513,6 +513,7 @@ build-allocator-image: $(ensure-build-image) build-allocator-binary build-licens
 	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
 
 ifeq ($(WITH_WINDOWS), 1)
+ifeq ($(WITH_ARM64), 1)
 # push the gameservers sidecar image
 push-agones-sdk-image: docker image ls
 	push-agones-sdk-linux-image
@@ -522,11 +523,7 @@ push-agones-sdk-image: docker image ls
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	ifeq ($(WITH_ARM64), 1)
-		DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-	else
-		DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-	endif
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
 push-agones-sdk-image: push-agones-sdk-linux-image
