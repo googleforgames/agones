@@ -533,8 +533,7 @@ endif
 
 # push the gameservers sidecar image
 ifeq ($(WITH_ARM64), 1)
-push-agones-sdk-linux-image: $(ensure-build-image) docker image ls
-#push-agones-sdk-linux-image-amd64 push-agones-sdk-linux-image-arm64
+push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64 push-agones-sdk-linux-image-arm64
 else
 push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64
 endif
