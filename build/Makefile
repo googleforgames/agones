@@ -526,7 +526,7 @@ push-agones-sdk-image: push-agones-sdk-linux-image-arm64 push-agones-sdk-linux-i
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
-push-agones-sdk-linux-image:
+push-agones-sdk-image:
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
@@ -541,6 +541,7 @@ push-agones-sdk-image: push-agones-sdk-linux-image-amd64
 endif
 
 push-agones-sdk-linux-image-arm64: $(ensure-build-image)
+	docker image ls
 	docker push $(sidecar_linux_arm64_tag)
 push-agones-sdk-linux-image-amd64: $(ensure-build-image)
 	docker push $(sidecar_linux_amd64_tag)
