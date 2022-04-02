@@ -514,8 +514,8 @@ build-allocator-image: $(ensure-build-image) build-allocator-binary build-licens
 
 ifeq ($(WITH_WINDOWS), 1)
 # push the gameservers sidecar image
-push-agones-sdk-image: push-agones-sdk-linux-image
-	docker image ls
+push-agones-sdk-image: docker image ls
+	push-agones-sdk-linux-image
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
