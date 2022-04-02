@@ -539,10 +539,8 @@ else
 push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64
 endif
 
-push-agones-sdk-linux-image-arm64:
-	docker push $(sidecar_linux_arm64_tag)
-push-agones-sdk-linux-image-amd64:
-	docker push $(sidecar_linux_amd64_tag)
+push-agones-sdk-linux-image-arm64: docker image ls docker push $(sidecar_linux_arm64_tag)
+push-agones-sdk-linux-image-amd64: docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi:
