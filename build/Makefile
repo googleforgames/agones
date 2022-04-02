@@ -528,6 +528,7 @@ push-agones-sdk-image: docker image ls
 else
 push-agones-sdk-image: push-agones-sdk-linux-image
 endif
+endif
 
 # push the gameservers sidecar image
 ifeq ($(WITH_ARM64), 1)
