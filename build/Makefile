@@ -527,8 +527,18 @@ push-agones-sdk-image:
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
-push-agones-sdk-image: push-agones-sdk-linux-image
+push-agones-sdk-linux-image
+	# Ensure that the sidecar manifest is removed before creating a new one.
+	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
+	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
+	# was cached we have to rebuild the image (which should be fast since it's cached).
+	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
+	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 endif
+else
+push-agones-sdk-image: push-agones-sdk-linux-image
 endif
 
 # push the gameservers sidecar image
@@ -538,9 +548,8 @@ else
 push-agones-sdk-linux-image: $(ensure-build-image) push-agones-sdk-linux-image-amd64
 endif
 
-push-agones-sdk-linux-image-arm64: docker image ls
-#docker push $(sidecar_linux_arm64_tag)
-#push-agones-sdk-linux-image-amd64: docker push $(sidecar_linux_amd64_tag)
+push-agones-sdk-linux-image-arm64: docker push $(sidecar_linux_arm64_tag)
+push-agones-sdk-linux-image-amd64: docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
 gen-embedded-openapi:
