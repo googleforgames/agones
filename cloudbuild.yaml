@@ -62,7 +62,7 @@ steps:
 # Enable binfmt 
 #
 - name: 'gcr.io/cloud-builders/docker:20.10.3'
-  args: ['run', '--privileged', 'linuxkit/binfmt:v0.7']
+  args: ['run', '--privileged', 'tonistiigi/binfmt:qemu-v6.2.0', 'arm64', '--install']
   id: docker-binfmt
 
 #
