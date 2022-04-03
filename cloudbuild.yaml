@@ -59,6 +59,13 @@ steps:
   waitFor: ['-']
 
 #
+# Enable binfmt 
+#
+- name: binfmt
+  args: [setup-binfmt]
+  dir: build
+  id: docker-binfmt
+#
 # Creates the initial make + docker build platform
 #
 
@@ -151,6 +158,7 @@ steps:
   id: build-images
   waitFor:
     - lint
+    - docker-binfmt 
   dir: "build"
   args: [ "-j", "4", "build-images"]
 - name: "make-docker"
