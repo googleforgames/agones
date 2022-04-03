@@ -77,7 +77,7 @@ agones:
     mutatingWebhook:
       annotations: {}
       disableCaBundle: false
-    customSecretPath: {}
+    customCertSecretPath: {}
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
