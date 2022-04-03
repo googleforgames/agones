@@ -223,6 +223,11 @@ include ./includes/examples.mk
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
 
+# setup https://github.com/tonistiigi/binfmt
+# https://docs.docker.com/buildx/working-with-buildx/
+setup-binfmt:
+	docker pull tonistiigi/binfmt:qemu-v6. 2.0
+	docker run --rm --privilege tonistiigi/binfmt:qemu-v6. 2.0 --install arm64
 # build all
 build: build-images build-sdks
 
