@@ -324,7 +324,7 @@ metadata:
   name: my-release-cert
   namespace: agones-system
 spec:
-  ipAddresses:
+  dnsNames:
     - agones-controller-service.agones-system.svc
   secretName: my-release-cert
   issuerRef:
