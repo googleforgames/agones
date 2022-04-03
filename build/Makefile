@@ -103,11 +103,11 @@ controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
-sidecar_linux_amd64_tag = $(sidecar_tag)-linux-amd64
-sidecar_linux_arm64_tag = $(sidecar_tag)-linux-arm64
+sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk-amd64:$(VERSION)-linux
+sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk-arm64:$(VERSION)-linux
 else
-sidecar_linux_amd64_tag = $(sidecar_tag)-amd64
-sidecar_linux_arm64_tag = $(sidecar_tag)-arm64
+sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk-amd64:$(VERSION)
+sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk-arm64:$(VERSION)-linux
 endif
 
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
@@ -437,7 +437,7 @@ ensure-windows-buildx:
 	-docker buildx create --name=$(BUILDX_WINDOWS_BUILDER) 
 
 # Build the image for the gameserver sidecar and SDK binaries
-build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist # build-agones-sdk-image-amd64 
+build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-amd64 
 ifeq ($(WITH_ARM64), 1)
 build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-arm64
 endif
@@ -455,7 +455,7 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build sidecar image only
-build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist #build-agones-sdk-server-image-amd64
+build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist build-agones-sdk-server-image-amd64
 ifeq ($(WITH_ARM64), 1)
 build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist build-agones-sdk-server-image-arm64
 endif
