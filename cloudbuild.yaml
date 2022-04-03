@@ -64,7 +64,7 @@ steps:
 #
 
 - name: 'gcr.io/cloud-builders/docker:20.10.3'
-  args: ['run', '--privileged', '--rm, 'tonistiigi/binfmt:qemu-v6.2.0', '--install', 'arm64']
+  args: ['run', '--privileged', '--rm', 'tonistiigi/binfmt:qemu-v6.2.0', '--install', 'arm64']
   id: docker-binfmt
 
 #
