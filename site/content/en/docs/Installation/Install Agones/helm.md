@@ -341,7 +341,7 @@ helm install my-release \
   --set agones.controller.disableSecret=true \
   --set agones.controller.customCertSecretPath[0].key='ca.crt',customCertSecretPath[0].path='ca.crt'
   --set agones.controller.customCertSecretPath[1].key='tls.crt',customCertSecretPath[1].path='server.crt'
-  --set agones.controller.customCertSecretPath[0].key='tls.key',customCertSecretPath[0].path='server.key'
+  --set agones.controller.customCertSecretPath[2].key='tls.key',customCertSecretPath[2].path='server.key'
   --set agones.controller.allocationApiService.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
   --set agones.controller.allocationApiService.disableCaBundle=true \
   --set agones.controller.validatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
