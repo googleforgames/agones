@@ -445,7 +445,7 @@ endif
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 build-agones-sdk-image-arm64: $(ensure-build-image) ensure-buildx build-agones-sdk-binary
-	docker buildx build --platform linux/arm64 --builder $(BUILDX_LINUX_BUILDER) --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
+	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
 
