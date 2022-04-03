@@ -226,7 +226,7 @@ include ./includes/examples.mk
 # setup https://github.com/tonistiigi/binfmt
 # https://docs.docker.com/buildx/working-with-buildx/
 setup-binfmt:
-	docker run --rm --privilege tonistiigi/binfmt:qemu-v6.2.0 --install arm64
+	docker pull tonistiigi/binfmt:qemu-v6.2.0 && docker run --rm --privilege tonistiigi/binfmt:qemu-v6.2.0 --install arm64
 # build all
 build: build-images build-sdks
 
