@@ -107,7 +107,7 @@ sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk-amd64:$(VERSION)-linux
 sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk-arm64:$(VERSION)-linux
 else
 sidecar_linux_amd64_tag = $(REGISTRY)/agones-sdk-amd64:$(VERSION)
-sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk-arm64:$(VERSION)-linux
+sidecar_linux_arm64_tag = $(REGISTRY)/agones-sdk-arm64:$(VERSION)
 endif
 
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
@@ -358,10 +358,6 @@ uninstall: $(ensure-build-image)
 	$(DOCKER_RUN) \
 		helm uninstall agones --namespace=agones-system
 
-# create buildx instance for Linux 
-ensure-buildx:
-	docker buildx create --name=$(BUILDX_LINUX_BUILDER)
-
 # Build a static binary for the gameserver controller
 ifeq ($(WITH_ARM64), 1)
 build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
@@ -444,7 +440,7 @@ endif
 
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
-build-agones-sdk-image-arm64: $(ensure-build-image) ensure-buildx build-agones-sdk-binary
+build-agones-sdk-image-arm64: $(ensure-build-image) build-agones-sdk-binary
 	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 build-agones-sdk-image-windows: $(foreach winver, $(WINDOWS_VERSIONS), build-agones-sdk-image-windows-$(winver))
@@ -461,7 +457,7 @@ build-agones-sdk-server-image: $(ensure-build-image) build-agones-sdk-binary-lin
 endif
 
 build-agones-sdk-server-image-arm64: 
-	docker buildx build $(agones_path)/cmd/sdk-server/ --tag=$(REGISTRY)/agones-sdk:$(VERSION)-arm64 --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+	docker buildx build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_arm4_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
 build-agones-sdk-server-image-amd64: $(ensure-build-image) build-agones-sdk-binary-linux build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/sdk-server/ --tag=$(sidecar_linux_amd64_tag) $(DOCKER_BUILD_ARGS)
 
@@ -521,7 +517,7 @@ push-agones-sdk-image: push-agones-sdk-linux-image-arm64 push-agones-sdk-linux-i
 	# was cached we have to rebuild the image (which should be fast since it's cached).
 	$(MAKE) WINDOWS_DOCKER_PUSH_ARGS=--push build-agones-sdk-image-windows
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) --amend $(sidecar_linux_amd64_tag) --amend $(sidecar_linux_arm64_tag) --amend $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(sidecar_linux_amd64_tag) $(sidecar_linux_arm64_tag) $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 else
 push-agones-sdk-image:
