@@ -6,6 +6,7 @@
 
 **Fixed bugs:**
 
+- Fix annotations on allocationApiService, validatingWebhook, mutatingWebhook [\#2528](https://github.com/googleforgames/agones/pull/2528)
 - Example crd-client/go.mod can not be compiled [\#2061](https://github.com/googleforgames/agones/issues/2061)
 
 **Closed issues:**
