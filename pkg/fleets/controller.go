@@ -275,6 +275,11 @@ func (c *Controller) syncFleet(ctx context.Context, key string) error {
 		return errors.Wrapf(err, "error retrieving fleet %s from namespace %s", name, namespace)
 	}
 
+	// If Fleet is marked for deletion don't do anything.
+	if !fleet.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
 	list, err := ListGameServerSetsByFleetOwner(c.gameServerSetLister, fleet)
 	if err != nil {
 		return err
