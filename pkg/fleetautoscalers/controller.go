@@ -292,6 +292,11 @@ func (c *Controller) syncFleetAutoscaler(ctx context.Context, key string) error 
 		return err
 	}
 
+	// Don't do anything, the fleet is marked for deletion
+	if !fleet.DeletionTimestamp.IsZero() {
+		return nil
+	}
+
 	currentReplicas := fleet.Status.Replicas
 	desiredReplicas, scalingLimited, err := computeDesiredFleetSize(fas, fleet)
 	if err != nil {
