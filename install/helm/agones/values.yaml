@@ -201,7 +201,7 @@ agones:
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
-    tag: 1.22.0
+    tag: 1.23.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent
