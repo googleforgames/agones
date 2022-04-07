@@ -80,7 +80,7 @@ Easiest way to get this code is to clone the repository and drop the entire plug
 We could however turn this into a marketplace plugin that can be retrived from the marketplace directly into the UE4 editor.
 
 #### Using C++
-- Add Plugin (in your own `.uplugin` file)
+- Add Plugin (in your own `.uproject` file)
 ```json
   "Plugins": [
     {
