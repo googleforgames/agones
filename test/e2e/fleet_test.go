@@ -1221,7 +1221,12 @@ func TestFleetRecreateGameServers(t *testing.T) {
 				var reply string
 				reply, err := framework.SendGameServerUDP(t, &gs, "EXIT")
 				if err != nil {
-					t.Fatalf("Could not message GameServer: %v", err)
+					// if we didn't get a response because the GameServer has gone away, then the packet dropped on the return,
+					// but we're in the state we want, so we can ignore that we didn't get a response.
+					_, gsErr := framework.AgonesClient.AgonesV1().GameServers(gs.ObjectMeta.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
+					if !k8serrors.IsNotFound(gsErr) {
+						t.Fatalf("Could not message GameServer: %v", err)
+					}
 				}
 
 				assert.Equal(t, "ACK: EXIT\n", reply)
