@@ -159,6 +159,10 @@ spec:
       - name: certs
         secret:
           secretName: {{ template "agones.fullname" . }}-cert
+{{- if .Values.agones.controller.customCertSecretPath }}
+          items:
+{{- toYaml .Values.agones.controller.customCertSecretPath | nindent 10 }}
+{{- end }}
 {{- if .Values.agones.controller.persistentLogs }}
       - name: logs
         emptyDir: {}
