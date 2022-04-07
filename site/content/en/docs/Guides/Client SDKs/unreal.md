@@ -58,15 +58,15 @@ However as your Unreal/Agones project gets more advanced you will want to unders
 
 A few helpful links for Unreal:
 
-- [UE4 Documentation Site](https://docs.unrealengine.com/en-US/index.html)
-- [UE4 Dedicated Servers](https://docs.unrealengine.com/en-US/Gameplay/Networking/HowTo/DedicatedServers/index.html)
+- [UE4 Documentation Site](https://docs.unrealengine.com/4.27/en-US/index.html)
+- [UE4 Dedicated Servers](https://docs.unrealengine.com/4.27/en-US/Gameplay/Networking/HowTo/DedicatedServers/index.html)
   - useful guide to getting started with dedicated servers in Unreal
-- [UE4 Game Flow](https://docs.unrealengine.com/en-US/Gameplay/Framework/GameFlow/index.html)
-- [UE4 Game Mode](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html)
+- [UE4 Game Flow](https://docs.unrealengine.com/4.27/en-US/InteractiveExperiences/Framework/GameFlow/)
+- [UE4 Game Mode](https://docs.unrealengine.com/4.27/en-US/API/Runtime/Engine/GameFramework/AGameMode/index.html)
   - useful for hooking up calls to Agones
-- [UE4 Game Session](https://docs.unrealengine.com/en-US/API/Runtime/Engine/GameFramework/AGameSession/index.html)
+- [UE4 Game Session](https://docs.unrealengine.com/4.27/en-US/API/Runtime/Engine/GameFramework/AGameSession/index.html)
   - as above there are hooks in Game Session that can be used to call into Agones
-- [UE4 Building & Packaging Games](https://docs.unrealengine.com/en-US/Engine/Deployment/BuildOperations/index.html)
+- [UE4 Building & Packaging Games](https://docs.unrealengine.com/4.27/en-US/Engine/Deployment/BuildOperations/index.html)
   - only building out Unreal game servers / clients, will also need to package into a container
 
 ## Getting Started
