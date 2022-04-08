@@ -59,15 +59,6 @@ steps:
   waitFor: ['-']
 
 #
-# Enable binfmt 
-# https://docs.docker.com/buildx/working-with-buildx/
-#
-
-- name: 'gcr.io/cloud-builders/docker:20.10.3'
-  args: ['run', '--privileged', '--rm', 'tonistiigi/binfmt:qemu-v6.2.0', '--install', 'arm64']
-  id: docker-binfmt
-
-#
 # Creates the initial make + docker build platform
 #
 
