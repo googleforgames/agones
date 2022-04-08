@@ -508,7 +508,6 @@ ifeq ($(WITH_WINDOWS), 1)
 ifeq ($(WITH_ARM64), 1)
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-arm64 push-agones-sdk-linux-image-amd64
-	docker image ls
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
 	# Using docker buildx with foreign OSes is a bit awkward. Since the layers but not the tag
