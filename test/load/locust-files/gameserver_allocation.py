@@ -128,7 +128,7 @@ class AgonesUser(HttpLocust):
                                         "name": "simple-game-server",
                                         "image": (
                                             "gcr.io/agones-images"
-                                            "/simple-game-server:0.11"),
+                                            "/simple-game-server:0.12"),
                                         "resources": {
                                             "limits": {
                                                 "cpu": "20m",
