@@ -157,7 +157,7 @@ func NewFromFlags() (*Framework, error) {
 	}
 
 	viper.SetDefault(kubeconfigFlag, filepath.Join(usr.HomeDir, ".kube", "config"))
-	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/simple-game-server:0.6")
+	viper.SetDefault(gsimageFlag, "gcr.io/agones-images/simple-game-server:0.12")
 	viper.SetDefault(pullSecretFlag, "")
 	viper.SetDefault(stressTestLevelFlag, 0)
 	viper.SetDefault(perfOutputDirFlag, "")
@@ -166,7 +166,7 @@ func NewFromFlags() (*Framework, error) {
 	viper.SetDefault(namespaceFlag, "")
 
 	pflag.String(kubeconfigFlag, viper.GetString(kubeconfigFlag), "kube config path, e.g. $HOME/.kube/config")
-	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests, gcr.io/agones-images/simple-game-server:0.6")
+	pflag.String(gsimageFlag, viper.GetString(gsimageFlag), "gameserver image to use for those tests")
 	pflag.String(pullSecretFlag, viper.GetString(pullSecretFlag), "optional secret to be used for pulling the gameserver and/or Agones SDK sidecar images")
 	pflag.Int(stressTestLevelFlag, viper.GetInt(stressTestLevelFlag), "enable stress test at given level 0-100")
 	pflag.String(perfOutputDirFlag, viper.GetString(perfOutputDirFlag), "write performance statistics to the specified directory")
@@ -276,6 +276,33 @@ func (f *Framework) WaitForGameServerState(t *testing.T, gs *agonesv1.GameServer
 
 	return checkGs, errors.Wrapf(err, "waiting for GameServer to be %v %v/%v",
 		state, gs.Namespace, gs.Name)
+}
+
+// CycleAllocations repeatedly Allocates a GameServer in the Fleet (if one is available), once every specified period.
+// Each Allocated GameServer gets deleted allocDuration after it was Allocated.
+// GameServers will continue to be Allocated until a message is passed to the done channel.
+func (f *Framework) CycleAllocations(ctx context.Context, t *testing.T, flt *agonesv1.Fleet, period time.Duration, allocDuration time.Duration) {
+	err := wait.PollImmediateUntil(period, func() (bool, error) {
+		gsa := GetAllocation(flt)
+		gsa, err := f.AgonesClient.AllocationV1().GameServerAllocations(flt.Namespace).Create(context.Background(), gsa, metav1.CreateOptions{})
+		if err != nil || gsa.Status.State != allocationv1.GameServerAllocationAllocated {
+			// Ignore error. Could be that the buffer was empty, will try again next cycle.
+			return false, nil
+		}
+
+		// Deallocate after allocDuration.
+		go func(gsa *allocationv1.GameServerAllocation) {
+			time.Sleep(allocDuration)
+			err := f.AgonesClient.AgonesV1().GameServers(gsa.Namespace).Delete(context.Background(), gsa.Status.GameServerName, metav1.DeleteOptions{})
+			require.NoError(t, err)
+		}(gsa)
+
+		return false, nil
+	}, ctx.Done())
+	// Ignore wait timeout error, will always be returned when the context is cancelled at the end of the test.
+	if err != wait.ErrWaitTimeout {
+		require.NoError(t, err)
+	}
 }
 
 // AssertFleetCondition waits for the Fleet to be in a specific condition or fails the test if the condition can't be met in 5 minutes.

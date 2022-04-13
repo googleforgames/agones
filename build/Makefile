@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.22.0
+base_version = 1.23.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -63,12 +63,14 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.6
+GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.12
 
 ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true"
 
 # Build with Windows support
 WITH_WINDOWS=1
+# Build with arm64support
+WITH_ARM64=1
 
 # Directory that this Makefile is in.
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
@@ -135,7 +137,9 @@ endif
 
 go_build_cmd = go build -mod=vendor
 GO_BUILD_LINUX_AMD64=docker run --rm -e "CGO_ENABLED=0" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_LINUX_ARM64=docker run --rm -e "CGO_ENABLED=0" -e "GOOS=linux" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_DARWIN_AMD64=docker run --rm -e "GOOS=darwin" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
+GO_BUILD_DARWIN_ARM64=docker run --rm -e "GOOS=darwin" -e "GOARCH=arm64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 GO_BUILD_WINDOWS_AMD64=docker run --rm -e "GOOS=windows" -e "GOARCH=amd64" -e "$(gomod_on)" -w $(workdir_path) $(common_mounts) $(build_tag) $(go_build_cmd)
 
 RACE_DETECTOR_ARGS=-race
@@ -358,9 +362,19 @@ uninstall: $(ensure-build-image)
 
 
 # Build a static binary for the gameserver controller
-build-controller-binary: $(ensure-build-image)
+ifeq ($(WITH_ARM64), 1)
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64 build-controller-binary-linux-arm64
+else
+build-controller-binary: $(ensure-build-image) build-controller-binary-linux-amd64
+endif
+
+build-controller-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
+build-controller-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/controller/bin/controller.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/controller
 
 # Lint the go source code.
@@ -387,19 +401,26 @@ push-controller-image: $(ensure-build-image)
 	docker push $(controller_tag)
 
 # build the static binary for the gameserver sidecar
-build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux build-agones-sdk-binary-windows build-agones-sdk-binary-darwin
+build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64 
 	$(ZIP_SDK) \
-		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.linux.amd64 sdk-server.windows.amd64.exe
+		agonessdk-server-$(VERSION).zip sdk-server.darwin.amd64 sdk-server.darwin.arm64 sdk-server.linux.amd64 sdk-server.linux.arm64 sdk-server.windows.amd64.exe
 
 # build the static binary for the gameserver sidecar for Linux
-build-agones-sdk-binary-linux: $(ensure-build-image)
+build-agones-sdk-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.amd64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-linux-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.linux.arm64 $(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/sdk-server
+
 
 # build the static binary for the gameserver sidecar for Darwin (macOS)
-build-agones-sdk-binary-darwin: $(ensure-build-image)
+build-agones-sdk-binary-darwin-amd64: $(ensure-build-image)
 	$(GO_BUILD_DARWIN_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.amd64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
+build-agones-sdk-binary-darwin-arm64: $(ensure-build-image)
+	$(GO_BUILD_DARWIN_ARM64) \
+		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.darwin.arm64 $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
 # build the windows binary for the gameserver sidecar for Windows
 build-agones-sdk-binary-windows: $(ensure-build-image)
@@ -451,9 +472,19 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
-build-allocator-binary: $(ensure-build-image)
+ifeq ($(WITH_ARM64), 1)
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64 build-allocator-binary-linux-arm64
+else
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
+endif
+
+build-allocator-binary-linux-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.amd64\
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
+build-allocator-binary-linux-arm64:
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/allocator/bin/allocator.linux.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 
 # Pushes up the allocator image

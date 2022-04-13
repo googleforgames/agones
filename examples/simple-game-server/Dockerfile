@@ -14,18 +14,17 @@
 
 # build
 FROM golang:1.17.2 as builder
-WORKDIR /go/src/simple-game-server
+WORKDIR /go/src
+COPY . agones.dev/agones
 
-COPY examples/simple-game-server/main.go .
-COPY . /go/src/agones.dev/agones
-RUN go mod init && go mod tidy
+WORKDIR /go/src/agones.dev/agones/examples/simple-game-server
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # final image
 FROM alpine:3.14
 
 RUN adduser -D -u 1000 server
-COPY --from=builder /go/src/simple-game-server/server /home/server/server
+COPY --from=builder /go/src/agones.dev/agones/examples/simple-game-server/server /home/server/server
 RUN chown -R server /home/server && \
     chmod o+x /home/server/server
 

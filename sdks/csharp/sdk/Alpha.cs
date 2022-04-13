@@ -35,9 +35,11 @@ namespace Agones
         internal readonly Channel channel;
         internal readonly IClientStreamWriter<Empty> healthStream;
         internal readonly CancellationTokenSource cts;
+        internal readonly bool ownsCts;
         internal CancellationToken ctoken;
 
         private readonly ILogger _logger;
+        private bool _disposed;
 
         public Alpha(
             Channel channel,
@@ -47,7 +49,17 @@ namespace Agones
         {
             _logger = logger;
             RequestTimeoutSec = requestTimeoutSec;
-            cts = cancellationTokenSource ?? new CancellationTokenSource();
+            
+            if (cancellationTokenSource == null)
+            {
+                cts = new CancellationTokenSource();
+                ownsCts = true;
+            }
+            else
+            {
+                ownsCts = false;
+            }
+            
             ctoken = cts.Token;
             this.channel = channel;
             client = new SDK.SDKClient(channel);
@@ -200,12 +212,20 @@ namespace Agones
 
         public void Dispose()
         {
-            cts.Cancel();
-        }
+            if (_disposed)
+            {
+                return;
+            }
 
-        ~Alpha()
-        {
-            Dispose();
+            cts.Cancel();
+            
+            if (ownsCts)
+            {
+                cts.Dispose();
+            }
+            
+            _disposed = true;
+            GC.SuppressFinalize(this);
         }
 
         private void LogError(Exception ex, string message)

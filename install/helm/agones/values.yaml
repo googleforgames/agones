@@ -67,6 +67,17 @@ agones:
     generateTLS: true
     tlsCert: ""
     tlsKey: ""
+    disableSecret: false
+    allocationApiService:
+      annotations: {}
+      disableCaBundle: false
+    validatingWebhook:
+      annotations: {}
+      disableCaBundle: false
+    mutatingWebhook:
+      annotations: {}
+      disableCaBundle: false
+    customCertSecretPath: {}
     safeToEvict: false
     persistentLogs: true
     persistentLogsSizeLimitMB: 10000
@@ -190,7 +201,7 @@ agones:
     totalRemoteAllocationTimeout: 30s
   image:
     registry: gcr.io/agones-images
-    tag: 1.22.0-dev
+    tag: 1.23.0-dev
     controller:
       name: agones-controller
       pullPolicy: IfNotPresent

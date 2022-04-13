@@ -19,6 +19,14 @@
 steps:
 
 #
+# Print Docker version
+#
+
+- name: "gcr.io/cloud-builders/docker"
+  id: docker-version
+  args: ["--version"]
+
+#
 # Restore any caches
 #
 

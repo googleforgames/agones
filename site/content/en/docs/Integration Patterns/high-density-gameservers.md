@@ -17,7 +17,7 @@ systems, since it works around the common Kubernetes and/or Agones container lif
 
 Utilising the new allocation `gameServerState` filter as well as the existing ability to edit the 
 `GameServer` labels at both [allocation time]({{% ref "/docs/Reference/gameserverallocation.md" %}}), and from 
-within the game server process, [via the SDK]({{% ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" %}}), 
+within the game server process, [via the SDK][sdk], 
 means Agones is able to atomically remove a `GameServer` from the list of potentially allocatable 
 `GameServers` at allocation time, and then return it back into the pool of allocatable `GameServers` if and when the 
 game server process deems that is has room to host another game session. 
@@ -72,11 +72,20 @@ spec:
 {{< alert title="Info" color="info">}}
 It's important to note that the labels that the `GameServer` process use to add itself back into the pool of 
 allocatable instances, must start with the prefix `agones.dev/sdk-`, since only labels that have this prefix are 
-available to be [updated from the SDK]({{% ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" %}}).
+available to be [updated from the SDK][sdk].
 {{< /alert >}}
+
+## Consistency
+
+Agones, and Kubernetes itself are built as eventually consistent, self-healing systems. To that end, it is worth 
+noting that there may be minor delays between each of the operations in the above flow.  For example, depending on the 
+cluster load, it may take up to a second for an [SDK driven label change][sdk] on a `GameServer` record to be 
+visible to the Agones allocation system. We recommend building your integrations with Agones with this in mind.
 
 ## Next Steps
 
-* View the details about [using the SDK]({{% ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" %}}) to set 
+* View the details about [using the SDK][sdk] to set 
   labels on the `GameServer`.
 * Check all the options available on [`GameServerAllocation`]({{% ref "/docs/Reference/gameserverallocation.md" %}}).
+
+[sdk]: {{% ref "/docs/Guides/Client SDKs/_index.md#setlabelkey-value" %}}
