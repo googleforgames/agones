@@ -173,6 +173,11 @@ ifdef LOCAL_ZIP
 	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
 endif
 
+unameprocessor := $(shell uname -p)
+ifeq ($(unameprocessor),arm)
+	DOCKER_BUILD_ARGS += --platform linux/x86_64 
+	DOCKER_RUN_ARGS += --platform linux/x86_64
+endif
 
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___
