@@ -256,6 +256,50 @@ func TestControllerSyncFleet(t *testing.T) {
 		agtesting.AssertEventContains(t, m.FakeRecorder.Events, "CreatingGameServerSet")
 	})
 
+	t.Run("fleet marked for deletion shouldn't take any action on gameserver sets", func(t *testing.T) {
+		f := defaultFixture()
+		f.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
+		f.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 5555}}
+		f.Status.ReadyReplicas = 5
+		f.DeletionTimestamp = &metav1.Time{
+			Time: time.Now(),
+		}
+
+		c, m := newFakeController()
+		gsSet := f.GameServerSet()
+		gsSet.ObjectMeta.Name = "gsSet1"
+		gsSet.ObjectMeta.UID = "4321"
+		gsSet.Spec.Template.Spec.Ports = []agonesv1.GameServerPort{{HostPort: 7777}}
+		gsSet.Spec.Replicas = f.Spec.Replicas
+		gsSet.Spec.Scheduling = f.Spec.Scheduling
+		gsSet.Status.Replicas = 5
+
+		m.AgonesClient.AddReactor("list", "fleets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.FleetList{Items: []agonesv1.Fleet{*f}}, nil
+		})
+
+		m.AgonesClient.AddReactor("list", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			return true, &agonesv1.GameServerSetList{Items: []agonesv1.GameServerSet{*gsSet}}, nil
+		})
+
+		m.AgonesClient.AddReactor("create", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "gameserverset should not have been created")
+			return false, nil, nil
+		})
+
+		m.AgonesClient.AddReactor("update", "gameserversets", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			assert.FailNow(t, "gameserverset should not have been updated")
+			return false, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(m, c.fleetSynced, c.gameServerSetSynced)
+		defer cancel()
+
+		err := c.syncFleet(ctx, "default/fleet-1")
+		assert.Nil(t, err)
+		agtesting.AssertNoEvent(t, m.FakeRecorder.Events)
+	})
+
 	t.Run("error on getting fleet", func(t *testing.T) {
 		c, _ := newFakeController()
 		c.fleetLister = &fakeFleetListerWithErr{}

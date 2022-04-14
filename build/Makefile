@@ -24,7 +24,7 @@
 #
 
 # base version target. This is usually the next release.
-base_version = 1.22.0
+base_version = 1.23.0
 
 # agones image release registry
 release_registry = gcr.io/agones-images
@@ -63,7 +63,7 @@ KIND_PROFILE ?= agones
 KIND_CONTAINER_NAME=$(KIND_PROFILE)-control-plane
 
 # Game Server image to use while doing end-to-end tests
-GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.11
+GS_TEST_IMAGE ?= gcr.io/agones-images/simple-game-server:0.12
 
 ALPHA_FEATURE_GATES ?= "PlayerTracking=true&StateAllocationFilter=true&PlayerAllocationFilter=true&CustomFasSyncInterval=true"
 
@@ -173,6 +173,11 @@ ifdef LOCAL_ZIP
 	ZIP_SDK=cd $(agones_path)/cmd/sdk-server/bin && zip -0
 endif
 
+unameprocessor := $(shell uname -p)
+ifeq ($(unameprocessor),arm)
+	DOCKER_BUILD_ARGS += --platform linux/x86_64 
+	DOCKER_RUN_ARGS += --platform linux/x86_64
+endif
 
 #    ___  ____    ___            _           _
 #   / _ \/ ___|  |_ _|_ __   ___| |_   _  __| | ___

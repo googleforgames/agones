@@ -203,13 +203,14 @@ The following tables lists the configurable parameters of the Agones chart and t
 | `gameservers.podPreserveUnknownFields`              | Disable [field pruning][pruning] and schema validation on the Pod template for a [GameServer][gameserver] definition | `false`                |
 | `helm.installTests`                                 | Add an ability to run `helm test agones` to verify the installation                             | `8000`                 |
 
-{{% feature publishVersion="1.22.0" %}}
+{{% feature publishVersion="1.23.0" %}}
 **New Configuration Features:**
 
 | Parameter                                           | Description                                                                                     | Default                |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
 |                       |                           |                            |
 | `agones.controller.disableSecret`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
+| `agones.controller.customCertSecretPath` | Remap cert-manager path to server.crt and server.key | `{}` |
 | `agones.controller.allocationApiService.annotations` | [Annotations][annotations] added to the Agones apiregistration | `{}` |
 | `agones.controller.allocationApiService.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
 | `agones.controller.validatingWebhook.annotations` | [Annotations][annotations] added to the Agones validating webhook | `{}` |
@@ -324,7 +325,7 @@ metadata:
   name: my-release-cert
   namespace: agones-system
 spec:
-  ipAddresses:
+  dnsNames:
     - agones-controller-service.agones-system.svc
   secretName: my-release-cert
   issuerRef:
@@ -338,6 +339,9 @@ After the certificates are generated, we will want to [inject caBundle](https://
 ```bash
 helm install my-release \
   --set agones.controller.disableSecret=true \
+  --set agones.controller.customCertSecretPath[0].key='ca.crt',customCertSecretPath[0].path='ca.crt'
+  --set agones.controller.customCertSecretPath[1].key='tls.crt',customCertSecretPath[1].path='server.crt'
+  --set agones.controller.customCertSecretPath[2].key='tls.key',customCertSecretPath[2].path='server.key'
   --set agones.controller.allocationApiService.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \
   --set agones.controller.allocationApiService.disableCaBundle=true \
   --set agones.controller.validatingWebhook.annotations={'cert-manager.io/inject-ca-from': 'agones-system/my-release-cert'} \

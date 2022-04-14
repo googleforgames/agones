@@ -30,7 +30,7 @@ metadata:
     heritage: {{ .Release.Service }}
 {{- if .Values.agones.controller.allocationApiService.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.allocationApiService.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.allocationApiService.annotations | nindent 4 }}
 {{- end }}
 spec:
   group: allocation.agones.dev
@@ -56,7 +56,7 @@ metadata:
   name: agones-validation-webhook
 {{- if .Values.agones.controller.validatingWebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.validatingWebhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.validatingWebhook.annotations | nindent 4 }}
 {{- end }}
   labels:
     component: controller
@@ -119,7 +119,7 @@ metadata:
   name: agones-mutation-webhook
 {{- if .Values.agones.controller.mutatingWebhook.annotations }}
   annotations:
-{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | indent 4 }}
+{{- toYaml .Values.agones.controller.mutatingWebhook.annotations | nindent 4 }}
 {{- end }}
   labels:
     component: controller
