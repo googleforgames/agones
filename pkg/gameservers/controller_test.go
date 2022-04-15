@@ -223,6 +223,33 @@ func TestControllerSyncGameServerWithDevIP(t *testing.T) {
 		assert.Equal(t, 1, updateCount, "update reactor should fire once")
 	})
 
+	t.Run("Allocated GameServer", func(t *testing.T) {
+		c, mocks := newFakeController()
+
+		fixture := templateDevGs.DeepCopy()
+
+		fixture.ApplyDefaults()
+		fixture.Status.State = agonesv1.GameServerStateAllocated
+
+		mocks.AgonesClient.AddReactor("list", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			gameServers := &agonesv1.GameServerList{Items: []agonesv1.GameServer{*fixture}}
+			return true, gameServers, nil
+		})
+		mocks.AgonesClient.AddReactor("update", "gameservers", func(action k8stesting.Action) (bool, runtime.Object, error) {
+			require.Fail(t, "should not update")
+			return true, nil, nil
+		})
+
+		ctx, cancel := agtesting.StartInformers(mocks, c.gameServerSynced, c.portAllocator.nodeSynced)
+		defer cancel()
+
+		err := c.portAllocator.syncAll()
+		require.NoError(t, err)
+
+		err = c.syncGameServer(ctx, "default/test")
+		require.NoError(t, err)
+	})
+
 	t.Run("When a GameServer has been deleted, the sync operation should be a noop", func(t *testing.T) {
 		runReconcileDeleteGameServer(t, &agonesv1.GameServer{
 			ObjectMeta: metav1.ObjectMeta{
