@@ -990,6 +990,35 @@ func TestGameServerSetPlayerCapacity(t *testing.T) {
 	})
 }
 
+func TestPlayerConnectWithCapacityZero(t *testing.T) {
+	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
+		t.SkipNow()
+	}
+	t.Parallel()
+	ctx := context.Background()
+
+	gs := framework.DefaultGameServer(framework.Namespace)
+	playerCount := int64(0)
+	gs.Spec.Players = &agonesv1.PlayersSpec{InitialCapacity: playerCount}
+	gs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+	require.NoError(t, err)
+	assert.Equal(t, gs.Status.State, agonesv1.GameServerStateReady)
+	assert.Equal(t, playerCount, gs.Status.Players.Capacity)
+
+	// add a player
+	msg := "PLAYER_CONNECT 1"
+	logrus.WithField("msg", msg).Info("Sending Player Connect")
+	_, err = framework.SendGameServerUDP(t, gs, msg)
+	// expected error from the log.Fatalf("could not connect player: %v", err)
+	require.Error(t, err)
+	assert.Eventually(t, func() bool {
+		gs, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, gs.ObjectMeta.Name, metav1.GetOptions{})
+		require.NoError(t, err)
+
+		return assert.Equal(t, gs.Status.State, agonesv1.GameServerStateUnhealthy)
+	}, time.Minute, time.Second)
+}
+
 func TestPlayerConnectAndDisconnect(t *testing.T) {
 	if !runtime.FeatureEnabled(runtime.FeaturePlayerTracking) {
 		t.SkipNow()
