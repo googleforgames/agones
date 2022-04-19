@@ -429,9 +429,6 @@ build-agones-sdk-binary-windows: $(ensure-build-image)
 	$(GO_BUILD_WINDOWS_AMD64) \
 		-o $(go_build_base_path)/cmd/sdk-server/bin/sdk-server.windows.amd64.exe $(go_rebuild_flags) $(go_version_flags) $(agones_package)/cmd/sdk-server
 
-ensure-arm-builder:
-	 docker run -privileged --rm tonistiigi/binfmt:qemu-v6.2.0 --install arm64
-	 
 ensure-windows-buildx:
 	# TODO: Remove `--use` and specify `--builder` for each buildx command once Docker 19.03.13 is available.
 	# `--use` sets the global default buildx context to $(BUILDX_WINDOWS_BUILDER).
