@@ -30,7 +30,7 @@ clean-build-image:
 	docker rmi $(build_tag)
 
 ensure-arm-builder:
-	 docker run -privileged --rm tonistiigi/binfmt:qemu-v6.2.0 --install arm64
+	 docker run --privileged --rm tonistiigi/binfmt:qemu-v6.2.0 --install arm64
 	 
 ensure-build-config:
 	-mkdir -p $(kubeconfig_path)
