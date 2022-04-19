@@ -151,7 +151,6 @@ steps:
   id: build-images
   waitFor:
     - lint
-    - docker-binfmt 
   dir: "build"
   args: [ "-j", "4", "build-images"]
 - name: "make-docker"
