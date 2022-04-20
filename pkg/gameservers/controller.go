@@ -277,7 +277,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
-	c.loggerForGameServer(gs).WithField("review", review).Info("creationValidationHandler")
+	c.loggerForGameServer(gs).WithField("review", review).Debug("creationValidationHandler")
 
 	causes, ok := gs.Validate()
 	if !ok {
@@ -295,7 +295,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 			Details: &details,
 		}
 
-		c.loggerForGameServer(gs).WithField("review", review).Info("Invalid GameServer")
+		c.loggerForGameServer(gs).WithField("review", review).Debug("Invalid GameServer")
 		return review, nil
 	}
 

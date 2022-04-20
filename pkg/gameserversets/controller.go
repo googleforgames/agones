@@ -201,7 +201,7 @@ func (c *Controller) updateValidationHandler(review admissionv1.AdmissionReview)
 			Details: &details,
 		}
 
-		c.loggerForGameServerSet(newGss).WithField("review", review).Info("Invalid GameServerSet update")
+		c.loggerForGameServerSet(newGss).WithField("review", review).Debug("Invalid GameServerSet update")
 		return review, nil
 	}
 
@@ -481,7 +481,7 @@ func computeReconciliationAction(strategy apis.SchedulingStrategy, list []*agone
 
 // addMoreGameServers adds diff more GameServers to the set
 func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, count int) error {
-	c.loggerForGameServerSet(gsSet).WithField("count", count).Info("Adding more gameservers")
+	c.loggerForGameServerSet(gsSet).WithField("count", count).Debug("Adding more gameservers")
 
 	return parallelize(newGameServersChannel(count, gsSet), maxCreationParalellism, func(gs *agonesv1.GameServer) error {
 		gs, err := c.gameServerGetter.GameServers(gs.Namespace).Create(ctx, gs, metav1.CreateOptions{})
@@ -496,7 +496,7 @@ func (c *Controller) addMoreGameServers(ctx context.Context, gsSet *agonesv1.Gam
 }
 
 func (c *Controller) deleteGameServers(ctx context.Context, gsSet *agonesv1.GameServerSet, toDelete []*agonesv1.GameServer) error {
-	c.loggerForGameServerSet(gsSet).WithField("diff", len(toDelete)).Info("Deleting gameservers")
+	c.loggerForGameServerSet(gsSet).WithField("diff", len(toDelete)).Debug("Deleting gameservers")
 
 	return parallelize(gameServerListToChannel(toDelete), maxDeletionParallelism, func(gs *agonesv1.GameServer) error {
 		// We should not delete the gameservers directly buy set their state to shutdown and let the gameserver controller to delete

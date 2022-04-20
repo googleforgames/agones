@@ -85,7 +85,7 @@ func NewPortAllocator(minPort, maxPort int32,
 		DeleteFunc: pa.syncDeleteGameServer,
 	})
 
-	pa.logger.WithField("minPort", minPort).WithField("maxPort", maxPort).Info("Starting")
+	pa.logger.WithField("minPort", minPort).WithField("maxPort", maxPort).Debug("Starting")
 	return pa
 }
 
@@ -218,7 +218,7 @@ func (pa *PortAllocator) DeAllocate(gs *agonesv1.GameServer) {
 
 	if !found() {
 		pa.logger.WithField("gs", gs.ObjectMeta.Name).
-			Info("Did not allocate this GameServer. Ignoring for DeAllocation")
+			Debug("Did not allocate this GameServer. Ignoring for DeAllocation")
 		return
 	}
 
