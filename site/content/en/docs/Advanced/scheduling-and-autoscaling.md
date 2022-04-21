@@ -28,7 +28,6 @@ or their cloud specific documentation.
 
 ### Amazon Elastic Kubernetes Service
 * [Cluster Autoscaler for EKS](https://docs.aws.amazon.com/eks/latest/userguide/cluster-autoscaler.html)
-* [Terraform EKS Module: Autoscaling Example](https://github.com/terraform-aws-modules/terraform-aws-eks/tree/master/examples/irsa_autoscale_refresh)
 
 ### Azure Kubernetes Service
 * [Cluster Autoscaler on Azure Kubernetes Service (AKS) - Preview](https://docs.microsoft.com/en-us/azure/aks/autoscaler)
