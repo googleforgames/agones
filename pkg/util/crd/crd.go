@@ -39,7 +39,7 @@ func WaitForEstablishedCRD(ctx context.Context, crdGetter apiextclientv1.CustomR
 		for _, cond := range crd.Status.Conditions {
 			if cond.Type == apiextv1.Established {
 				if cond.Status == apiextv1.ConditionTrue {
-					logger.WithField("crd", crd.ObjectMeta.Name).Info("custom resource definition established")
+					logger.WithField("crd", crd.ObjectMeta.Name).Debug("custom resource definition established")
 					return true, err
 				}
 			}

@@ -67,7 +67,7 @@ func (wh *WebHook) AddHandler(path string, gk schema.GroupKind, op admissionv1.O
 			}
 		})
 	}
-	wh.logger.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Info("Added webhook handler")
+	wh.logger.WithField("path", path).WithField("groupKind", gk).WithField("op", op).Debug("Added webhook handler")
 	wh.handlers[path] = append(wh.handlers[path], operationHandler{groupKind: gk, operation: op, handler: h})
 }
 
