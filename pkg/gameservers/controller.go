@@ -522,7 +522,7 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 
 	// Only move from Creating -> Ready. Other manual state changes are up to the end user.
 	// We also don't want to move from Allocated -> Ready every time someone allocates a GameServer.
-	if !(gs.Status.State == agonesv1.GameServerStateCreating) {
+	if gs.Status.State != agonesv1.GameServerStateCreating {
 		return gs, nil
 	}
 

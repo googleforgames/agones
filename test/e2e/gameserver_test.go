@@ -456,7 +456,7 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
 	require.NoError(t, err)
 
-	err = wait.PollImmediate(time.Second, 10*time.Second, func() (bool, error) {
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
 		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
 		if k8serrors.IsNotFound(err) {
 			return true, nil
@@ -483,6 +483,20 @@ func TestDevelopmentGameServerLifecycle(t *testing.T) {
 	require.Equal(t, readyGs.ObjectMeta.Name, gsa.Status.GameServerName)
 
 	_, err = framework.WaitForGameServerState(t, readyGs, agonesv1.GameServerStateAllocated, time.Minute)
+	require.NoError(t, err)
+
+	// Also confirm that delete works for Allocated state, it should be fine but let's be sure.
+	err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Delete(ctx, readyGs.ObjectMeta.Name, metav1.DeleteOptions{})
+	require.NoError(t, err)
+
+	err = wait.PollImmediate(time.Second, time.Minute, func() (bool, error) {
+		_, err = framework.AgonesClient.AgonesV1().GameServers(framework.Namespace).Get(ctx, readyGs.ObjectMeta.Name, metav1.GetOptions{})
+		if k8serrors.IsNotFound(err) {
+			return true, nil
+		}
+
+		return false, err
+	})
 	require.NoError(t, err)
 }
 
