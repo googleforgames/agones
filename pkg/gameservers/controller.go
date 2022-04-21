@@ -158,7 +158,7 @@ func NewController(
 			// no point in processing unless there is a State change
 			oldGs := oldObj.(*agonesv1.GameServer)
 			newGs := newObj.(*agonesv1.GameServer)
-			if oldGs.Status.State != newGs.Status.State || oldGs.ObjectMeta.DeletionTimestamp != newGs.ObjectMeta.DeletionTimestamp {
+			if oldGs.Status.State != newGs.Status.State || !newGs.ObjectMeta.DeletionTimestamp.IsZero() {
 				c.enqueueGameServerBasedOnState(newGs)
 			}
 		},

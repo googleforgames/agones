@@ -346,6 +346,13 @@ func TestControllerWatchGameServers(t *testing.T) {
 	gsWatch.Modify(copyFixture)
 	assert.Equal(t, "default/test", <-received)
 
+	// modify a gameserver with a deletion timestamp
+	now := metav1.Now()
+	deleted := copyFixture.DeepCopy()
+	deleted.ObjectMeta.DeletionTimestamp = &now
+	gsWatch.Modify(deleted)
+	assert.Equal(t, "default/test", <-received)
+
 	podWatch.Delete(pod)
 	assert.Equal(t, "default/test", <-received)
 
