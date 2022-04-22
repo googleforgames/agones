@@ -108,7 +108,8 @@ sidecar_linux_amd64_tag = $(sidecar_tag)
 endif
 
 ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
-allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
+allocator_amd64_tag = $(REGISTRY)/agones-allocator:$(VERSION)-amd64
+allocator_arm64_tag = $(REGISTRY)/agones-allocator:$(VERSION)-arm64
 
 gomod_on = GO111MODULE=on
 
@@ -472,10 +473,9 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
-ifeq ($(WITH_ARM64), 1)
-build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64 build-allocator-binary-linux-arm64
-else
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
+ifeq ($(WITH_ARM64), 1)
+build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-arm64
 endif
 
 build-allocator-binary-linux-amd64: $(ensure-build-image)
@@ -489,11 +489,15 @@ build-allocator-binary-linux-arm64:
 
 # Pushes up the allocator image
 push-allocator-image: $(ensure-build-image)
-	docker push $(allocator_tag)
+	docker push $(allocator_amd64_tag)
 
 # Build the image for the allocator service
 build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
+ifeq ($(WITH_ARM64), 1)
+build-allocator-image:
+	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+endif
 
 ifeq ($(WITH_WINDOWS), 1)
 # push the gameservers sidecar image
