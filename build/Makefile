@@ -532,7 +532,6 @@ push-agones-sdk-image: push-agones-sdk-linux-image-amd64
 endif
 
 push-agones-sdk-linux-image-arm64: $(ensure-build-image)
-	docker image ls
 	docker push $(sidecar_linux_arm64_tag)
 push-agones-sdk-linux-image-amd64: $(ensure-build-image)
 	docker push $(sidecar_linux_amd64_tag)
