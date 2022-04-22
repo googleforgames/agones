@@ -101,6 +101,7 @@ build_tag = agones-build:$(build_version)
 controller_tag = $(REGISTRY)/agones-controller:$(VERSION)
 sidecar_tag = $(REGISTRY)/agones-sdk:$(VERSION)
 allocator_tag = $(REGISTRY)/agones-allocator:$(VERSION)
+ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 
 ifeq ($(WITH_WINDOWS), 1)
 sidecar_linux_amd64_tag = $(sidecar_tag)-linux_amd64
@@ -108,9 +109,10 @@ else
 sidecar_linux_amd64_tag = $(sidecar_tag)
 endif
 
-ping_tag = $(REGISTRY)/agones-ping:$(VERSION)
 allocator_amd64_tag = $(allocator_tag)-amd64
 allocator_arm64_tag = $(allocator_tag)-arm64
+controller_amd64_tag = $(controller_tag)-amd64
+controller_arm64_tag = $(allocator_tag)-arm64
 
 gomod_on = GO111MODULE=on
 
@@ -396,7 +398,11 @@ build-required-src-dist:
 
 # Build the image for the gameserver controller
 build-controller-image: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --tag=$(controller_tag) $(DOCKER_BUILD_ARGS)
+	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+ifeq ($(WITH_ARM64), 1)
+build-controller-image:
+	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
+endif
 
 # push the gameservers controller image
 push-controller-image: $(ensure-build-image)
