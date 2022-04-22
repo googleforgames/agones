@@ -48,7 +48,6 @@ GCP_BUCKET_CHARTS ?= agones-chart
 MINIKUBE_PROFILE ?= agones
 GO_BUILD_TAGS ?= none
 BUILDX_WINDOWS_BUILDER = windows-builder
-BUILDX_LINUX_BUILDER = linux-builder
 WINDOWS_DOCKER_PUSH_ARGS =
 # Versions of Windows Server to support, default is Windows Server 2019.
 # For the full list of tags see https://hub.docker.com/_/microsoft-windows-servercore.
