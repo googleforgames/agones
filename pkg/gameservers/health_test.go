@@ -259,7 +259,7 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 		"container recovered and starting after queueing": {
 			state: agonesv1.GameServerStateStarting,
 			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
-				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+				{Name: "container", State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{}}}}},
 			expected: expected{updated: false},
 		},
 		"container recovered and ready after queueing": {
