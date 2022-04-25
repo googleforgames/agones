@@ -191,10 +191,8 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
-			_, cancel := agtesting.StartInformers(m, hc.podSynced)
-			defer cancel()
+			result, err := hc.skipUnhealthy(gs, pod)
 
-			result, err := hc.skipUnhealthy(gs)
 			if len(v.expected.err) > 0 {
 				require.EqualError(t, err, v.expected.err)
 			} else {

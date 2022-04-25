@@ -198,8 +198,28 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 		return nil
 	}
 
-	if skip, err := hc.skipUnhealthy(gs); err != nil || skip {
-		return err
+	// retrieve the pod for the gameserver
+	pod, err := hc.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
+	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).Debug("Could not find Pod")
+		} else {
+			// if it's something else, go back into the queue
+			return errors.Wrapf(err, "error retrieving Pod %s for GameServer to check status", gs.ObjectMeta.Name)
+		}
+	}
+
+	// If the pod doesn't exist, the GameServer is definitely not healthy
+	if pod != nil {
+		if skip, err := hc.skipUnhealthy(gs, pod); err != nil || skip {
+			return err
+		}
+
+		// let's check whether the pod is in an unhealthy state. If it is not anymore, go back in the queue
+		if !hc.isUnhealthy(pod) {
+			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("GameServer is not unhealthy anymore")
+			return nil
+		}
 	}
 
 	hc.loggerForGameServer(gs).Debug("Issue with GameServer pod, marking as GameServerStateUnhealthy")
@@ -222,17 +242,7 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 // The logic is as follows:
 //   - If the GameServer is not yet Ready, allow to restart (return true)
 //   - If the GameServer is in a state past Ready, move to Unhealthy
-func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error) {
-	pod, err := hc.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
-	if err != nil {
-		// Pod doesn't exist, so the GameServer is definitely not healthy
-		if k8serrors.IsNotFound(err) {
-			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).Debug("skipUnhealthy: Could not find Pod")
-			return false, nil
-		}
-		// if it's something else, go back into the queue
-		return false, errors.Wrapf(err, "error retrieving Pod %s for GameServer to check status", gs.ObjectMeta.Name)
-	}
+func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.Pod) (bool, error) {
 	if !metav1.IsControlledBy(pod, gs) {
 		// This is not the Pod we are looking for 🤖
 		return false, nil
@@ -254,7 +264,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 		return hc.failedContainer(pod), nil
 	}
 
-	// we need to check if the failed container happened after the gameserver was ready or before.
+	// finally, we need to check if the failed container happened after the gameserver was ready or before.
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if cs.State.Terminated != nil {
@@ -273,13 +283,6 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 			}
 			break
 		}
-	}
-
-	// finally, let's check whether the pod is in an unhealthy state. If it is not anymore, it means it has healed
-	// in between the event and the processing
-	if !hc.isUnhealthy(pod) {
-		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("skipUnhealthy: GameServer is not unhealthy anymore")
-		return true, nil
 	}
 
 	hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Should not reach here")
