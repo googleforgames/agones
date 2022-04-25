@@ -256,6 +256,24 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 				{Name: "container", State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}},
 			expected: expected{updated: true},
 		},
+		"container recovered and starting after queueing": {
+			state: agonesv1.GameServerStateStarting,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and ready after queueing": {
+			state: agonesv1.GameServerStateReady,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and allocated after queueing": {
+			state: agonesv1.GameServerStateAllocated,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
+		},
 	}
 
 	for name, test := range fixtures {
