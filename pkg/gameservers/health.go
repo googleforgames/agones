@@ -254,7 +254,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 		return hc.failedContainer(pod), nil
 	}
 
-	// finally, we need to check if the failed container happened after the gameserver was ready or before.
+	// we need to check if the failed container happened after the gameserver was ready or before.
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if cs.State.Terminated != nil {
@@ -273,6 +273,13 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer) (bool, error)
 			}
 			break
 		}
+	}
+
+	// finally, let's check whether the pod is in an unhealthy state. If it is not anymore, it means it has healed
+	// in between the event and the processing
+	if !hc.isUnhealthy(pod) {
+		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("skipUnhealthy: GameServer is not unhealthy anymore")
+		return true, nil
 	}
 
 	hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Should not reach here")
