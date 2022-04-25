@@ -434,7 +434,7 @@ ensure-windows-buildx:
 # Build the image for the gameserver sidecar and SDK binaries
 build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-amd64 
 ifeq ($(WITH_ARM64), 1)
-build-agones-sdk-image: $(ensure-build-image) build-licenses build-required-src-dist build-agones-sdk-image-arm64
+build-agones-sdk-image: build-agones-sdk-image-arm64
 endif
 
 build-agones-sdk-image-amd64: $(ensure-build-image) build-agones-sdk-binary 
