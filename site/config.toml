@@ -91,9 +91,9 @@ supported_k8s = "1.21"
 aks_minor_supported_k8s = "2"
 minikube_minor_supported_k8s = "5"
 # shown in development (or the next version that will be supported)
-dev_supported_k8s = "1.21"
-dev_aks_minor_supported_k8s = "2"
-dev_minikube_minor_supported_k8s = "5"
+dev_supported_k8s = "1.22"
+dev_aks_minor_supported_k8s = "6"
+dev_minikube_minor_supported_k8s = "9"
 
 # example tag
 example_image_tag = "gcr.io/agones-images/simple-game-server:0.12"

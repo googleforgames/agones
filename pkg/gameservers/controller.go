@@ -158,7 +158,7 @@ func NewController(
 			// no point in processing unless there is a State change
 			oldGs := oldObj.(*agonesv1.GameServer)
 			newGs := newObj.(*agonesv1.GameServer)
-			if oldGs.Status.State != newGs.Status.State || oldGs.ObjectMeta.DeletionTimestamp != newGs.ObjectMeta.DeletionTimestamp {
+			if oldGs.Status.State != newGs.Status.State || !newGs.ObjectMeta.DeletionTimestamp.IsZero() {
 				c.enqueueGameServerBasedOnState(newGs)
 			}
 		},
@@ -277,7 +277,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 		return review, errors.Wrapf(err, "error unmarshalling original GameServer json: %s", obj.Raw)
 	}
 
-	c.loggerForGameServer(gs).WithField("review", review).Info("creationValidationHandler")
+	c.loggerForGameServer(gs).WithField("review", review).Debug("creationValidationHandler")
 
 	causes, ok := gs.Validate()
 	if !ok {
@@ -295,7 +295,7 @@ func (c *Controller) creationValidationHandler(review admissionv1.AdmissionRevie
 			Details: &details,
 		}
 
-		c.loggerForGameServer(gs).WithField("review", review).Info("Invalid GameServer")
+		c.loggerForGameServer(gs).WithField("review", review).Debug("Invalid GameServer")
 		return review, nil
 	}
 
@@ -551,10 +551,13 @@ func (c *Controller) syncDevelopmentGameServer(ctx context.Context, gs *agonesv1
 		return gs, nil
 	}
 
-	if !(gs.Status.State == agonesv1.GameServerStateReady) {
-		c.loggerForGameServer(gs).Debug("GS is a development game server and will not be managed by Agones.")
+	// Only move from Creating -> Ready. Other manual state changes are up to the end user.
+	// We also don't want to move from Allocated -> Ready every time someone allocates a GameServer.
+	if gs.Status.State != agonesv1.GameServerStateCreating {
+		return gs, nil
 	}
 
+	c.loggerForGameServer(gs).Debug("GS is a development game server and will not be managed by Agones.")
 	gsCopy := gs.DeepCopy()
 	var ports []agonesv1.GameServerStatusPort
 	for _, p := range gs.Spec.Ports {

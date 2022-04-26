@@ -353,7 +353,7 @@ func (c *Controller) calcDuration(oldGs, newGs *agonesv1.GameServer) (duration f
 // Run the Metrics controller. Will block until stop is closed.
 // Collect metrics via cache changes and parse the cache periodically to record resource counts.
 func (c *Controller) Run(ctx context.Context, _ int) error {
-	c.logger.Info("Wait for cache sync")
+	c.logger.Debug("Wait for cache sync")
 	if !cache.WaitForCacheSync(ctx.Done(), c.gameServerSynced, c.fleetSynced, c.fasSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
