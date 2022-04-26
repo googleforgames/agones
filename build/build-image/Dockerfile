@@ -42,7 +42,8 @@ ENV PATH /usr/local/go/bin:/go/bin:/opt/google-cloud-sdk/bin:$PATH
 RUN go install golang.org/x/tools/cmd/goimports@latest
 
 # RUN gcloud components update
-RUN gcloud components update && gcloud components install app-engine-go
+RUN gcloud components update && gcloud components install app-engine-go && \
+    gcloud components install gke-gcloud-auth-plugin
 
 # the kubernetes version for the file
 ENV KUBERNETES_VER 1.22.9
