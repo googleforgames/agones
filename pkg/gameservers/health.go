@@ -201,21 +201,20 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 	// retrieve the pod for the gameserver
 	pod, err := hc.podLister.Pods(gs.ObjectMeta.Namespace).Get(gs.ObjectMeta.Name)
 	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).Debug("Could not find Pod")
-		} else {
-			// if it's something else, go back into the queue
+		if !k8serrors.IsNotFound(err) {
+			// If the pod exists but there is an error, go back into the queue.
 			return errors.Wrapf(err, "error retrieving Pod %s for GameServer to check status", gs.ObjectMeta.Name)
 		}
+		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).Debug("Could not find Pod")
 	}
 
-	// If the pod doesn't exist, the GameServer is definitely not healthy
+	// Make sure that the pod has to be marked unhealthy
 	if pod != nil {
 		if skip, err := hc.skipUnhealthyGameContainer(gs, pod); err != nil || skip {
 			return err
 		}
 
-		// let's check whether the pod is in an unhealthy state. If it is not anymore, go back in the queue
+		// If the pod is not unhealthy anymore, go back in the queue
 		if !hc.isUnhealthy(pod) {
 			hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("GameServer is not unhealthy anymore")
 			return nil
