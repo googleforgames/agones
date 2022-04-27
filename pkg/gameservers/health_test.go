@@ -81,7 +81,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 }
 
-func TestHealthControllerSkipUnhealthy(t *testing.T) {
+func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
@@ -191,7 +191,7 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
-			result, err := hc.skipUnhealthy(gs, pod)
+			result, err := hc.skipUnhealthyGameContainer(gs, pod)
 
 			if len(v.expected.err) > 0 {
 				require.EqualError(t, err, v.expected.err)

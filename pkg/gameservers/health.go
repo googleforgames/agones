@@ -211,7 +211,7 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 
 	// If the pod doesn't exist, the GameServer is definitely not healthy
 	if pod != nil {
-		if skip, err := hc.skipUnhealthy(gs, pod); err != nil || skip {
+		if skip, err := hc.skipUnhealthyGameContainer(gs, pod); err != nil || skip {
 			return err
 		}
 
@@ -235,14 +235,14 @@ func (hc *HealthController) syncGameServer(ctx context.Context, key string) erro
 	return nil
 }
 
-// skipUnhealthy determines if it's appropriate to not move to Unhealthy when a Pod's
+// skipUnhealthyGameContainer determines if it's appropriate to not move to Unhealthy when a Pod's
 // gameserver container has crashed, or let it restart as per usual K8s operations.
 // It does this by checking a combination of the current GameServer state and annotation data that stores
 // which container instance was live if the GameServer has been marked as Ready.
 // The logic is as follows:
 //   - If the GameServer is not yet Ready, allow to restart (return true)
 //   - If the GameServer is in a state past Ready, move to Unhealthy
-func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.Pod) (bool, error) {
+func (hc *HealthController) skipUnhealthyGameContainer(gs *agonesv1.GameServer, pod *corev1.Pod) (bool, error) {
 	if !metav1.IsControlledBy(pod, gs) {
 		// This is not the Pod we are looking for 🤖
 		return false, nil
@@ -258,7 +258,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.P
 	}
 
 	if gs.IsBeforeReady() {
-		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).Debug("skipUnhealthy: Is Before Ready. Checking failed container")
+		hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("state", gs.Status.State).Debug("skipUnhealthyGameContainer: Is Before Ready. Checking failed container")
 		// If the reason for failure was a container failure, then we can skip moving to Unhealthy.
 		// otherwise, we know it was one of the other reasons (eviction, lack of ports), so we should definitely go to Unhealthy.
 		return hc.failedContainer(pod), nil
@@ -268,7 +268,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.P
 	for _, cs := range pod.Status.ContainerStatuses {
 		if cs.Name == gs.Spec.Container {
 			if cs.State.Terminated != nil {
-				hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Container is terminated, returning false")
+				hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("podStatus", pod.Status).Debug("skipUnhealthyGameContainer: Container is terminated, returning false")
 				return false, nil
 			}
 			if cs.LastTerminationState.Terminated != nil {
@@ -277,7 +277,7 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.P
 				// shouldn't move to Unhealthy.
 				check := cs.ContainerID == gsReadyContainerID
 				if !check {
-					hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Container crashed after Ready, returning false")
+					hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthyGameContainer: Container crashed after Ready, returning false")
 				}
 				return check, nil
 			}
@@ -285,6 +285,6 @@ func (hc *HealthController) skipUnhealthy(gs *agonesv1.GameServer, pod *corev1.P
 		}
 	}
 
-	hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthy: Should not reach here")
+	hc.baseLogger.WithField("gs", gs.ObjectMeta.Name).WithField("gsMeta", gs.ObjectMeta).WithField("podStatus", pod.Status).Debug("skipUnhealthyGameContainer: Game Container has not crashed, game container may be healthy")
 	return false, nil
 }
