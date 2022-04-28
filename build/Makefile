@@ -506,7 +506,6 @@ push-agones-sdk-image: push-agones-sdk-linux-image-arm64
 endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
-	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(push_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 
