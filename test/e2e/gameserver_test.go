@@ -786,51 +786,68 @@ func TestGameServerTcpProtocol(t *testing.T) {
 }
 
 func TestGameServerTcpUdpProtocol(t *testing.T) {
-	t.Parallel()
-	gs := framework.DefaultGameServer(framework.Namespace)
 
-	gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
-	gs.Spec.Ports[0].Name = "gameserver"
-	gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+	// TCPUDP Protocol now supported for both static & dynamic port policy,
+	portPolicies := []agonesv1.PortPolicy{agonesv1.Dynamic, agonesv1.Static}
+	for _, portpolicy := range portPolicies {
 
-	_, valid := gs.Validate()
-	assert.True(t, valid)
+		t.Parallel()
+		t.Run("Validating tcpudp protocol for "+fmt.Sprint(portpolicy), func(t *testing.T) {
 
-	readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
-	if err != nil {
-		assert.FailNow(t, "Could not get a GameServer ready", err.Error())
+			gs := framework.DefaultGameServer(framework.Namespace)
+
+			gs.Spec.Ports[0].Protocol = agonesv1.ProtocolTCPUDP
+			gs.Spec.Ports[0].Name = "gameserver"
+			gs.Spec.Ports[0].PortPolicy = portpolicy
+
+			if gs.Spec.Ports[0].PortPolicy == agonesv1.Static {
+				// Host port mandatory for static
+				gs.Spec.Ports[0].HostPort = 7654 //Between 7000-8000 to comply with the firewall rule for e2e cluster
+			}
+
+			gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
+
+			_, valid := gs.Validate()
+			assert.True(t, valid)
+
+			readyGs, err := framework.CreateGameServerAndWaitUntilReady(t, framework.Namespace, gs)
+			if err != nil {
+				assert.FailNow(t, "Could not get a GameServer ready", err.Error())
+			}
+
+			tcpPort := readyGs.Spec.Ports[0]
+			assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
+			assert.NotEmpty(t, tcpPort.HostPort)
+			assert.Equal(t, "gameserver-tcp", tcpPort.Name)
+
+			udpPort := readyGs.Spec.Ports[1]
+			assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
+			assert.NotEmpty(t, udpPort.HostPort)
+			assert.Equal(t, "gameserver-udp", udpPort.Name)
+
+			assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
+
+			logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
+
+			replyUDP, err := framework.SendGameServerUDPToPort(t, readyGs, udpPort.Name, "Hello World !")
+			require.NoError(t, err)
+			if err != nil {
+				t.Fatalf("Could not ping UDP GameServer: %v", err)
+			}
+
+			assert.Equal(t, "ACK: Hello World !\n", replyUDP)
+
+			logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
+
+			replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
+			if err != nil {
+				t.Fatalf("Could not ping TCP GameServer: %v", err)
+			}
+
+			assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
+		})
 	}
 
-	tcpPort := readyGs.Spec.Ports[0]
-	assert.Equal(t, corev1.ProtocolTCP, tcpPort.Protocol)
-	assert.NotEmpty(t, tcpPort.HostPort)
-	assert.Equal(t, "gameserver-tcp", tcpPort.Name)
-
-	udpPort := readyGs.Spec.Ports[1]
-	assert.Equal(t, corev1.ProtocolUDP, udpPort.Protocol)
-	assert.NotEmpty(t, udpPort.HostPort)
-	assert.Equal(t, "gameserver-udp", udpPort.Name)
-
-	assert.Equal(t, tcpPort.HostPort, udpPort.HostPort)
-
-	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("GameServer created, sending UDP ping")
-
-	replyUDP, err := framework.SendGameServerUDPToPort(t, readyGs, udpPort.Name, "Hello World !")
-	require.NoError(t, err)
-	if err != nil {
-		t.Fatalf("Could not ping UDP GameServer: %v", err)
-	}
-
-	assert.Equal(t, "ACK: Hello World !\n", replyUDP)
-
-	logrus.WithField("name", readyGs.ObjectMeta.Name).Info("UDP ping passed, sending TCP ping")
-
-	replyTCP, err := e2eframework.SendGameServerTCPToPort(readyGs, tcpPort.Name, "Hello World !")
-	if err != nil {
-		t.Fatalf("Could not ping TCP GameServer: %v", err)
-	}
-
-	assert.Equal(t, "ACK TCP: Hello World !\n", replyTCP)
 }
 
 func TestGameServerWithoutPort(t *testing.T) {
