@@ -786,13 +786,13 @@ func TestGameServerTcpProtocol(t *testing.T) {
 }
 
 func TestGameServerTcpUdpProtocol(t *testing.T) {
-
+	t.Parallel()
 	// TCPUDP Protocol now supported for both static & dynamic port policy,
 	portPolicies := []agonesv1.PortPolicy{agonesv1.Dynamic, agonesv1.Static}
 	for _, portpolicy := range portPolicies {
 
-		t.Parallel()
 		t.Run("Validating tcpudp protocol for "+fmt.Sprint(portpolicy), func(t *testing.T) {
+			t.Parallel()
 
 			gs := framework.DefaultGameServer(framework.Namespace)
 
