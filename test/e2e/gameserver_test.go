@@ -802,7 +802,7 @@ func TestGameServerTcpUdpProtocol(t *testing.T) {
 
 			if gs.Spec.Ports[0].PortPolicy == agonesv1.Static {
 				// Host port mandatory for static
-				gs.Spec.Ports[0].HostPort = 7654 //Between 7000-8000 to comply with the firewall rule for e2e cluster
+				gs.Spec.Ports[0].HostPort = 7654 // Between 7000-8000 to comply with the firewall rule for e2e cluster
 			}
 
 			gs.Spec.Template.Spec.Containers[0].Env = []corev1.EnvVar{{Name: "TCP", Value: "TRUE"}}
