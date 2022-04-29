@@ -13,11 +13,11 @@
 # limitations under the License.
 
 FROM alpine:3.14
-
+ARG ARCH=amd64
 RUN apk --update add ca-certificates && \
     adduser -D -u 1000 agones
 
-COPY --chown=agones:agones ./bin/sdk-server.linux.amd64 /home/agones/sdk-server
+COPY --chown=agones:agones ./bin/sdk-server.linux.$ARCH /home/agones/sdk-server
 COPY --chown=agones:agones ./bin/LICENSES ./bin/dependencies-src.tgz /home/agones/
 
 USER 1000
