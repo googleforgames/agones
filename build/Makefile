@@ -529,15 +529,18 @@ endif
 push-allocator-image-amd64:
 	docker push $(push_allocator_tag)
 push-allocator-image-arm64:
-	docker push $(push_allocator_tag)
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-allocator-image-arm64
 
 # Build the image for the allocator service
-build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-allocator-image: build-allocator-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-allocator-image:
-	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
+build-allocator-image: build-allocator-image-arm64
 endif
+
+build-allocator-image-amd64: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/allocator/ --tag=$(allocator_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-allocator-image-arm64:
+	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
 
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64
