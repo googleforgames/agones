@@ -81,7 +81,7 @@ func TestHealthUnschedulableWithNoFreePorts(t *testing.T) {
 	assert.False(t, hc.unschedulableWithNoFreePorts(pod))
 }
 
-func TestHealthControllerSkipUnhealthy(t *testing.T) {
+func TestHealthControllerSkipUnhealthyGameContainer(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
@@ -191,10 +191,8 @@ func TestHealthControllerSkipUnhealthy(t *testing.T) {
 				return true, &corev1.PodList{Items: []corev1.Pod{*pod}}, nil
 			})
 
-			_, cancel := agtesting.StartInformers(m, hc.podSynced)
-			defer cancel()
+			result, err := hc.skipUnhealthyGameContainer(gs, pod)
 
-			result, err := hc.skipUnhealthy(gs)
 			if len(v.expected.err) > 0 {
 				require.EqualError(t, err, v.expected.err)
 			} else {
@@ -257,6 +255,24 @@ func TestHealthControllerSyncGameServer(t *testing.T) {
 			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
 				{Name: "container", State: corev1.ContainerState{Terminated: &corev1.ContainerStateTerminated{}}}}},
 			expected: expected{updated: true},
+		},
+		"container recovered and starting after queueing": {
+			state: agonesv1.GameServerStateStarting,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Waiting: &corev1.ContainerStateWaiting{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and ready after queueing": {
+			state: agonesv1.GameServerStateReady,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
+		},
+		"container recovered and allocated after queueing": {
+			state: agonesv1.GameServerStateAllocated,
+			podStatus: &corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{
+				{Name: "container", State: corev1.ContainerState{Running: &corev1.ContainerStateRunning{}}}}},
+			expected: expected{updated: false},
 		},
 	}
 
