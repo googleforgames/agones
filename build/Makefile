@@ -502,7 +502,7 @@ build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-r
 # Build a static binary for the allocator service
 build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-amd64
 ifeq ($(WITH_ARM64), 1)
-build-allocator-binary: $(ensure-build-image) build-allocator-binary-linux-arm64
+build-allocator-binary: build-allocator-binary-linux-arm64
 endif
 
 build-allocator-binary-linux-amd64: $(ensure-build-image)
