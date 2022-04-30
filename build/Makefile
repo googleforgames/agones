@@ -116,6 +116,15 @@ allocator_arm64_tag = $(allocator_tag)-arm64
 controller_amd64_tag = $(controller_tag)-amd64
 controller_arm64_tag = $(allocator_tag)-arm64
 
+# build list of images to include in the manifest for the sidecar image.
+push_sidecar_manifest = $(sidecar_linux_amd64_tag)
+ifeq ($(WITH_WINDOWS), 1)
+push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+endif
+ifeq ($(WITH_ARM64), 1)
+push_sidecar_manifest += $(sidecar_linux_arm64_tag)
+endif
+
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
@@ -525,15 +534,6 @@ build-allocator-image:
 	docker buildx build $(agones_path)/cmd/allocator/ --tag=$(allocator_arm64_tag) --build-arg ARCH=arm64 --platform linux/arm64 $(DOCKER_BUILD_ARGS)
 endif
 
-# build list of images to include in the manifest for the sidecar image.
-push_manifest = $(sidecar_linux_amd64_tag)
-ifeq ($(WITH_WINDOWS), 1)
-push_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-endif
-ifeq ($(WITH_ARM64), 1)
-push_manifest += $(sidecar_linux_arm64_tag)
-endif
-
 # push the gameservers sidecar image
 push-agones-sdk-image: push-agones-sdk-linux-image-amd64
 ifeq ($(WITH_WINDOWS), 1)
@@ -544,7 +544,7 @@ push-agones-sdk-image: push-agones-sdk-linux-image-arm64
 endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(sidecar_tag)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(push_manifest)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(sidecar_tag) $(push_sidecar_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(sidecar_tag)
 
 push-agones-sdk-windows:
