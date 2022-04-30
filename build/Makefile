@@ -118,11 +118,16 @@ controller_arm64_tag = $(allocator_tag)-arm64
 
 # build list of images to include in the manifest for the sidecar image.
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
+push_allocator_manifest = &(allocator_amd64_tag)
+push_controller_manifest = &(controller_amd64_tag)
+
 ifeq ($(WITH_WINDOWS), 1)
 push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
 endif
 ifeq ($(WITH_ARM64), 1)
 push_sidecar_manifest += $(sidecar_linux_arm64_tag)
+push_allocator_manifest += &(allocator_arm64_tag)
+push_controller_manifest += &(controller_arm64_tag)
 endif
 
 gomod_on = GO111MODULE=on
@@ -425,9 +430,9 @@ else
 endif
 
 push-controller-image-arm64:
-	docker push $(controller_arm64_tag)
+	docker push $(push_controller_tag)
 push-controller-image-amd64:
-	docker push $(controller_amd64_tag)
+	docker push $(push_controller_tag)
 
 # build the static binary for the gameserver sidecar
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64 
@@ -522,9 +527,9 @@ else
 endif
 
 push-allocator-image-amd64:
-	docker push $(allocator_amd64_tag)
+	docker push $(push_allocator_tag)
 push-allocator-image-arm64:
-	docker push $(allocator_arm64_tag)
+	docker push $(push_allocator_tag)
 
 # Build the image for the allocator service
 build-allocator-image: $(ensure-build-image) build-allocator-binary build-licenses build-required-src-dist
