@@ -429,9 +429,9 @@ endif
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
 
-push-controller-image-amd64:
+push-controller-image-amd64: build-controller-image-amd64
 	docker push $(controller_amd64_tag)
-push-controller-image-arm64:
+push-controller-image-arm64: build-controller-image-arm64
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-controller-image-arm64
 
 # build the static binary for the gameserver sidecar
@@ -524,9 +524,9 @@ endif
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
 
-push-allocator-image-amd64:
+push-allocator-image-amd64: build-allocator-image-amd64
 	docker push $(allocator_amd64_tag)
-push-allocator-image-arm64:
+push-allocator-image-arm64: build-allocator-image-arm64
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-allocator-image-arm64
 
 # Build the image for the allocator service
