@@ -409,12 +409,15 @@ build-required-src-dist:
 	docker run --rm $(common_mounts) $(build_tag) $(mount_path)/build/build-required-src-dist.sh
 
 # Build the image for the gameserver controller
-build-controller-image: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
-	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-controller-image: build-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
-build-controller-image:
-	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
+build-controller-image: build-controller-image-arm64
 endif
+
+build-controller-image-amd64: $(ensure-build-image) build-controller-binary build-licenses build-required-src-dist
+	docker build $(agones_path)/cmd/controller/ --tag=$(controller_amd64_tag) $(DOCKER_BUILD_ARGS)
+build-controller-image-arm64:
+	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/controller/ --tag=$(controller_arm64_tag) $(DOCKER_BUILD_ARGS)
 
 # push the gameservers controller image
 push-controller-image: push-controller-image-amd64
@@ -430,7 +433,7 @@ endif
 push-controller-image-amd64:
 	docker push $(controller_amd64_tag)
 push-controller-image-arm64:
-	docker push $(controller_arm64_tag)
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-controller-image-arm64
 
 # build the static binary for the gameserver sidecar
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64 
