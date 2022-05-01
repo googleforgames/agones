@@ -417,17 +417,15 @@ build-controller-image:
 endif
 
 # push the gameservers controller image
+push-controller-image: push-controller-image-amd64
 ifeq ($(WITH_ARM64), 1)
-push-controller-image: $(ensure-build-image)
-	push-controller-image-arm64 push-controller-image-amd64
+push-controller-image: push-controller-image-arm64
+endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
-else
-	push-controller-image-amd64
-endif
 
 push-controller-image-amd64:
 	docker push $(controller_amd64_tag)
