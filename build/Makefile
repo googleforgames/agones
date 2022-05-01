@@ -426,7 +426,6 @@ push-controller-image: push-controller-image-arm64
 endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
-	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
 
