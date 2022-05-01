@@ -118,8 +118,8 @@ controller_arm64_tag = $(allocator_tag)-arm64
 
 # build list of images to include in the manifest for the sidecar image.
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
-push_allocator_manifest = &(allocator_amd64_tag)
-push_controller_manifest = &(controller_amd64_tag)
+push_allocator_manifest = $(allocator_amd64_tag)
+push_controller_manifest = $(controller_amd64_tag)
 
 ifeq ($(WITH_WINDOWS), 1)
 push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
@@ -423,16 +423,16 @@ push-controller-image: $(ensure-build-image)
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(controller_tag)
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(controller_amd64_tag) $(controller_arm64_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(controller_tag) $(push_controller_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(controller_tag)
 else
 	push-controller-image-amd64
 endif
 
 push-controller-image-arm64:
-	docker push $(push_controller_tag)
+	docker push $(controller_amd64_tag)
 push-controller-image-amd64:
-	docker push $(push_controller_tag)
+	docker push $(controller_arm64_tag)
 
 # build the static binary for the gameserver sidecar
 build-agones-sdk-binary: $(ensure-build-image) build-agones-sdk-binary-linux-amd64 build-agones-sdk-binary-linux-arm64 build-agones-sdk-binary-windows build-agones-sdk-binary-darwin-amd64 build-agones-sdk-binary-darwin-arm64 
@@ -520,14 +520,14 @@ push-allocator-image: push-allocator-image-arm64 push-allocator-image-amd64
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(allocator_tag)
 	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(allocator_amd64_tag) $(allocator_arm64_tag)
+	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
 else
 	push-allocator-image-amd64
 endif
 
 push-allocator-image-amd64:
-	docker push $(push_allocator_tag)
+	docker push $(allocator_amd64_tag)
 push-allocator-image-arm64:
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-allocator-image-arm64
 
