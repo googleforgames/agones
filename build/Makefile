@@ -450,9 +450,18 @@ build-agones-sdk-image-windows-%: $(ensure-build-image) build-agones-sdk-binary 
 	docker buildx build --platform windows/amd64 --builder $(BUILDX_WINDOWS_BUILDER) -f $(agones_path)/cmd/sdk-server/Dockerfile.windows --tag=$(sidecar_tag)-windows_amd64-$* --build-arg WINDOWS_VERSION=$* $(DOCKER_BUILD_ARGS) $(agones_path)/cmd/sdk-server/ $(WINDOWS_DOCKER_PUSH_ARGS)
 
 # Build a static binary for the ping service
-build-ping-binary: $(ensure-build-image)
+build-ping-binary: build-ping-binary-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-binary: build-ping-binary-arm64
+endif
+
+build-ping-binary-amd64: $(ensure-build-image)
 	$(GO_BUILD_LINUX_AMD64) \
-	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.amd64 \
+	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
+build-ping-binary-arm64: $(ensure-build-image)
+	$(GO_BUILD_LINUX_ARM64) \
+	-tags $(GO_BUILD_TAGS) -o $(go_build_base_path)/cmd/ping/bin/ping.arm64 \
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/ping
 
 # Pushes up the ping image
