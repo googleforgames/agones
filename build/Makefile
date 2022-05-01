@@ -429,9 +429,9 @@ else
 	push-controller-image-amd64
 endif
 
-push-controller-image-arm64:
-	docker push $(controller_amd64_tag)
 push-controller-image-amd64:
+	docker push $(controller_amd64_tag)
+push-controller-image-arm64:
 	docker push $(controller_arm64_tag)
 
 # build the static binary for the gameserver sidecar
