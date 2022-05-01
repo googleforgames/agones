@@ -126,8 +126,8 @@ push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidec
 endif
 ifeq ($(WITH_ARM64), 1)
 push_sidecar_manifest += $(sidecar_linux_arm64_tag)
-push_allocator_manifest += &(allocator_arm64_tag)
-push_controller_manifest += &(controller_arm64_tag)
+push_allocator_manifest += $(allocator_arm64_tag)
+push_controller_manifest += $(controller_arm64_tag)
 endif
 
 gomod_on = GO111MODULE=on
