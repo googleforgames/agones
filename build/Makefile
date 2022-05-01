@@ -513,16 +513,14 @@ build-allocator-binary-linux-arm64:
 	$(go_rebuild_flags) $(go_version_flags) -installsuffix cgo $(agones_package)/cmd/allocator
 
 # Pushes up the allocator image
+push-allocator-image: push-allocator-image-amd64
 ifeq ($(WITH_ARM64), 1)
-push-allocator-image: push-allocator-image-arm64 push-allocator-image-amd64
+push-allocator-image: push-allocator-image-arm64
+endif
 	# Ensure that the sidecar manifest is removed before creating a new one.
 	-DOCKER_CLI_EXPERIMENTAL=enabled docker manifest rm $(allocator_tag)
-	# Agones should start using the -linux_amd64 suffix for Linux images. This allows multi-arch support in the future.
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create $(allocator_tag) $(push_allocator_manifest)
 	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(allocator_tag)
-else
-	push-allocator-image-amd64
-endif
 
 push-allocator-image-amd64:
 	docker push $(allocator_amd64_tag)
