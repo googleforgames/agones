@@ -517,7 +517,7 @@ push-agones-sdk-windows:
 push-agones-sdk-linux-image-arm64: $(ensure-build-image)
 	$(MAKE) DOCKER_BUILD_ARGS=--push build-agones-sdk-image-arm64
 
-push-agones-sdk-linux-image-amd64: $(ensure-build-image)
+push-agones-sdk-linux-image-amd64: build-agones-sdk-image-amd64
 	docker push $(sidecar_linux_amd64_tag)
 
 # Generate the Embedded CRD openapi
