@@ -469,8 +469,15 @@ push-ping-image: $(ensure-build-image)
 	docker push $(ping_tag)
 
 # Build the image for the ping service
-build-ping-image: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
+build-ping-image: build-ping-image-amd64
+ifeq ($(WITH_ARM64), 1)
+build-ping-image: build-ping-image-arm64
+endif
+
+build-ping-image-amd64: $(ensure-build-image) build-ping-binary build-licenses build-required-src-dist
 	docker build $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
+build-ping-image-arm64: $(ensure-build-image) build-ping-binary
+	docker buildx build --platform linux/arm64 --build-arg ARCH=arm64 $(agones_path)/cmd/ping/ --tag=$(ping_tag) $(DOCKER_BUILD_ARGS)
 
 # Build a static binary for the allocator service
 ifeq ($(WITH_ARM64), 1)
