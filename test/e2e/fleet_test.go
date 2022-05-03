@@ -160,7 +160,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	// Edit PlayersInitialCapacity 4
 	// Change Players Initial Capacity to trigger creating a new GSSet
 	fltCopy := flt.DeepCopy()
-	fltCopy.Spec.Template.Spec.Players.InitialCapacity = 4
+	fltCopy.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{InitialCapacity: 4}
 	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.Nil(t, err)
 
