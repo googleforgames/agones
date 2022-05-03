@@ -142,12 +142,12 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(flt.Spec.Replicas))
 
-	//Scale up to 5 replicas
+	// Scale up to 5 replicas
 	const targetScale = 5
 	flt = scaleFleetSubresource(ctx, t, flt, targetScale)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
-	//Allocate 1 replica
+	// Allocate 1 replica
 	gsa := framework.CreateAndApplyAllocation(t, flt)
 
 	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
@@ -157,7 +157,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	flt, err = client.Fleets(framework.Namespace).Get(ctx, flt.ObjectMeta.GetName(), metav1.GetOptions{})
 	assert.Nil(t, err)
 
-	//Edit PlayersInitialCapacity 4
+	// Edit PlayersInitialCapacity 4
 	// Change Players Initial Capacity to trigger creating a new GSSet
 	fltCopy := flt.DeepCopy()
 	fltCopy.Spec.Template.Spec.Players.InitialCapacity = 4
@@ -185,7 +185,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	//Scale down to zero
+	// Scale down to zero
 	const scaleDownTarget = 0
 	flt = scaleFleetSubresource(ctx, t, flt, scaleDownTarget)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
