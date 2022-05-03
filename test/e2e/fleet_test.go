@@ -164,7 +164,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.Nil(t, err)
 
-	// Wait for one more GSSet to be created and ReadyReplicas created in new GSS
+	// Wait for one more GSSet to be created
 	err = wait.PollImmediate(1*time.Second, time.Minute, func() (bool, error) {
 		selector := labels.SelectorFromSet(labels.Set{agonesv1.FleetNameLabel: flt.ObjectMeta.Name})
 		list, err := framework.AgonesClient.AgonesV1().GameServerSets(framework.Namespace).List(ctx,
@@ -174,11 +174,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 		}
 		ready := false
 		if len(list.Items) == 2 {
-			for _, v := range list.Items {
-				if v.Status.ReadyReplicas > 0 && v.Status.AllocatedReplicas == 0 {
-					ready = true
-				}
-			}
+			ready = true
 		}
 		return ready, nil
 	})
