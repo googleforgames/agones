@@ -207,6 +207,8 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
+	// need this for streaming gRPC commands
+	s.ctx = ctx
 	logLevel := agonesv1.SdkServerLogLevelInfo
 	// grab configuration details
 	if gs.Spec.SdkServer.LogLevel != "" {
@@ -262,8 +264,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	// need this for streaming gRPC commands
-	s.ctx = ctx
 	s.workerqueue.Run(ctx, 1)
 	return nil
 }
