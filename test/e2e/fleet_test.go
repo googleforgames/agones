@@ -173,7 +173,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 			return false, err
 		}
 		ready := false
-		if len(list.Items) == 2 {
+		if len(list.Items) >= 1 {
 			ready = true
 		}
 		return ready, nil
