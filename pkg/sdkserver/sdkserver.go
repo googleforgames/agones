@@ -199,6 +199,9 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
+
+	// need this for streaming gRPC commands
+	s.ctx = ctx
 	// we have the gameserver details now
 	s.gsWaitForSync.Done()
 
@@ -207,8 +210,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 		return err
 	}
 
-	// need this for streaming gRPC commands
-	s.ctx = ctx
 	logLevel := agonesv1.SdkServerLogLevelInfo
 	// grab configuration details
 	if gs.Spec.SdkServer.LogLevel != "" {
