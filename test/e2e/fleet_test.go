@@ -144,7 +144,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 
 	// Scale up to 5 replicas
 	const targetScale = 5
-	flt = scaleFleetSubresource(ctx, t, flt, targetScale)
+	flt = scaleFleetPatch(ctx, t, flt, targetScale)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(targetScale))
 
 	// Allocate 1 replica
@@ -163,6 +163,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	fltCopy.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{InitialCapacity: 4}
 	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.Nil(t, err)
+	assert.Equal(t, int64(4), flt.Spec.Template.Spec.Players.InitialCapacity)
 
 	// Wait for one more GSSet to be created
 	err = wait.PollImmediate(1*time.Second, time.Minute, func() (bool, error) {
@@ -183,7 +184,7 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 
 	// Scale down to zero
 	const scaleDownTarget = 0
-	flt = scaleFleetSubresource(ctx, t, flt, scaleDownTarget)
+	flt = scaleFleetPatch(ctx, t, flt, scaleDownTarget)
 	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	// Expect Replicas = 0, No GSS or GS
@@ -192,10 +193,14 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	err = client.GameServers(framework.Namespace).Delete(ctx, gsa.Status.GameServerName, metav1.DeleteOptions{GracePeriodSeconds: &gp})
 	assert.Nil(t, err)
 
-	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(1))
+	framework.AssertFleetCondition(t, flt, e2e.FleetReadyCount(0))
 
 	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
 		return fleet.Status.AllocatedReplicas == 0
+	})
+
+	framework.AssertFleetCondition(t, flt, func(log *logrus.Entry, fleet *agonesv1.Fleet) bool {
+		return fleet.Status.Replicas == 0
 	})
 
 }
