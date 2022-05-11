@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -1154,109 +1155,179 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 	t.Parallel()
 
 	type expected struct {
-		inactiveSpecReplicas int32
+		inactiveSpecReplicas []int32
 		replicas             int32
 		updated              bool
 		err                  string
 	}
 
+	type gss struct {
+		specReplicas       int32
+		statusReplicas     int32
+		allocationReplicas int32
+	}
+
 	fixtures := map[string]struct {
-		fleetSpecReplicas                int32
-		activeSpecReplicas               int32
-		activeStatusReplicas             int32
-		readyReplicas                    int32
-		inactiveSpecReplicas             int32
-		inactiveStatusReplicas           int32
-		inactiveStatusAllocationReplicas int32
-		nilMaxSurge                      bool
-		nilMaxUnavailable                bool
-		expected                         expected
+		fleetSpecReplicas int32
+		active            gss
+		readyReplicas     int32
+		inactive          []gss
+		nilMaxSurge       bool
+		nilMaxUnavailable bool
+		expected          expected
 	}{
 		"nil MaxUnavailable, err expected": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
-			nilMaxUnavailable:      true,
+			fleetSpecReplicas: 100,
+			active: gss{
+				specReplicas:   0,
+				statusReplicas: 0,
+			},
+			inactive: []gss{
+				{
+					specReplicas:   100,
+					statusReplicas: 100,
+				},
+			},
+			nilMaxUnavailable: true,
 			expected: expected{
 				err: "error parsing MaxUnavailable value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"nil MaxSurge, err expected": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
-			nilMaxSurge:            true,
+			fleetSpecReplicas: 100,
+			active: gss{
+				specReplicas:   0,
+				statusReplicas: 0,
+			},
+			inactive: []gss{
+				{
+					specReplicas:   100,
+					statusReplicas: 100,
+				},
+			},
+			nilMaxSurge: true,
 			expected: expected{
 				err: "error parsing MaxSurge value: fleet-1: nil value for IntOrString",
 			},
 		},
 		"full inactive, empty inactive": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     0,
-			activeStatusReplicas:   0,
-			inactiveSpecReplicas:   100,
-			inactiveStatusReplicas: 100,
+			fleetSpecReplicas: 100,
+			active: gss{
+				specReplicas:   0,
+				statusReplicas: 0,
+			},
+			inactive: []gss{
+				{
+					specReplicas:   100,
+					statusReplicas: 100,
+				},
+			},
 			expected: expected{
-				inactiveSpecReplicas: 70,
+				inactiveSpecReplicas: []int32{70},
 				replicas:             25,
 				updated:              true,
 			},
 		},
 		"almost empty inactive with allocated, almost full active": {
-			fleetSpecReplicas:                100,
-			activeSpecReplicas:               75,
-			activeStatusReplicas:             75,
-			inactiveSpecReplicas:             10,
-			inactiveStatusReplicas:           10,
-			inactiveStatusAllocationReplicas: 5,
+			fleetSpecReplicas: 100,
+			active: gss{
+				specReplicas:   75,
+				statusReplicas: 75,
+			},
+			inactive: []gss{
+				{
+					specReplicas:       10,
+					statusReplicas:     10,
+					allocationReplicas: 5,
+				},
+			},
 
 			expected: expected{
-				inactiveSpecReplicas: 0,
+				inactiveSpecReplicas: []int32{0},
 				replicas:             95,
 				updated:              true,
 			},
 		},
 		"attempt to drive replicas over the max surge": {
-			fleetSpecReplicas:      100,
-			activeSpecReplicas:     25,
-			activeStatusReplicas:   25,
-			inactiveSpecReplicas:   95,
-			inactiveStatusReplicas: 95,
+			fleetSpecReplicas: 100,
+			active: gss{
+				specReplicas:   25,
+				statusReplicas: 25,
+			},
+			inactive: []gss{
+				{
+					specReplicas:   95,
+					statusReplicas: 95,
+				},
+			},
 			expected: expected{
-				inactiveSpecReplicas: 45,
+				inactiveSpecReplicas: []int32{45},
 				replicas:             30,
 				updated:              true,
 			},
 		},
 		"test smalled numbers of active and allocated": {
-			fleetSpecReplicas:                5,
-			activeSpecReplicas:               0,
-			activeStatusReplicas:             0,
-			inactiveSpecReplicas:             5,
-			inactiveStatusReplicas:           5,
-			inactiveStatusAllocationReplicas: 2,
+			fleetSpecReplicas: 5,
+			active: gss{
+				specReplicas:   0,
+				statusReplicas: 0,
+			},
+			inactive: []gss{
+				{
+					specReplicas:       5,
+					statusReplicas:     5,
+					allocationReplicas: 2,
+				},
+			},
 
 			expected: expected{
-				inactiveSpecReplicas: 4,
+				inactiveSpecReplicas: []int32{4},
 				replicas:             2,
 				updated:              true,
 			},
 		},
 		"activeSpecReplicas >= (fleetSpecReplicas - inactiveStatusAllocationReplicas)": {
-			fleetSpecReplicas:                75,
-			activeSpecReplicas:               75,
-			activeStatusReplicas:             75,
-			inactiveSpecReplicas:             10,
-			inactiveStatusReplicas:           10,
-			inactiveStatusAllocationReplicas: 5,
+			fleetSpecReplicas: 75,
+			active: gss{
+				specReplicas:   75,
+				statusReplicas: 75,
+			},
+			inactive: []gss{
+				{
+					specReplicas:       10,
+					statusReplicas:     10,
+					allocationReplicas: 5,
+				},
+			},
 
 			expected: expected{
-				inactiveSpecReplicas: 0,
+				inactiveSpecReplicas: []int32{0},
 				replicas:             70,
+				updated:              true,
+			},
+		},
+		"two inactive game server sets with allocations": {
+			fleetSpecReplicas: 16,
+			active: gss{
+				specReplicas:   10,
+				statusReplicas: 10,
+			},
+			inactive: []gss{
+				{
+					specReplicas:       2,
+					statusReplicas:     2,
+					allocationReplicas: 1,
+				},
+				{
+					specReplicas:       0,
+					statusReplicas:     5,
+					allocationReplicas: 5,
+				},
+			},
+
+			expected: expected{
+				inactiveSpecReplicas: []int32{0, 0},
+				replicas:             10,
 				updated:              true,
 			},
 		},
@@ -1288,16 +1359,21 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 
 			active := f.GameServerSet()
 			active.ObjectMeta.Name = "active"
-			active.Spec.Replicas = v.activeSpecReplicas
-			active.Status.Replicas = v.activeStatusReplicas
-			active.Status.ReadyReplicas = v.activeStatusReplicas
+			active.Spec.Replicas = v.active.specReplicas
+			active.Status.Replicas = v.active.statusReplicas
+			active.Status.ReadyReplicas = v.active.statusReplicas
 
-			inactive := f.GameServerSet()
-			inactive.ObjectMeta.Name = "inactive"
-			inactive.Status.ReadyReplicas = v.inactiveStatusReplicas
-			inactive.Spec.Replicas = v.inactiveSpecReplicas
-			inactive.Status.Replicas = v.inactiveStatusReplicas
-			inactive.Status.AllocatedReplicas = v.inactiveStatusAllocationReplicas
+			var inactive []*v1.GameServerSet
+			for i, ina := range v.inactive {
+				s := f.GameServerSet()
+				s.ObjectMeta.Name = strconv.Itoa(i)
+				s.Spec.Replicas = ina.specReplicas
+				s.Status.ReadyReplicas = ina.statusReplicas
+				s.Status.Replicas = ina.statusReplicas
+				s.Status.AllocatedReplicas = ina.allocationReplicas
+
+				inactive = append(inactive, s)
+			}
 
 			logrus.WithField("inactive", inactive).Info("Setting up the initial inactive")
 
@@ -1308,13 +1384,15 @@ func TestControllerRollingUpdateDeployment(t *testing.T) {
 				updated = true
 				ua := action.(k8stesting.UpdateAction)
 				gsSet := ua.GetObject().(*agonesv1.GameServerSet)
-				assert.Equal(t, inactive.ObjectMeta.Name, gsSet.ObjectMeta.Name)
-				assert.Equal(t, v.expected.inactiveSpecReplicas, gsSet.Spec.Replicas)
+				index, err := strconv.Atoi(gsSet.ObjectMeta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, v.expected.inactiveSpecReplicas[index], gsSet.Spec.Replicas)
 
 				return true, gsSet, nil
 			})
 
-			replicas, err := c.rollingUpdateDeployment(context.Background(), f, active, []*agonesv1.GameServerSet{inactive})
+			replicas, err := c.rollingUpdateDeployment(context.Background(), f, active, inactive)
 
 			if v.expected.err != "" {
 				assert.EqualError(t, err, v.expected.err)
