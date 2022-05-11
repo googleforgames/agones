@@ -199,6 +199,9 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	if !cache.WaitForCacheSync(ctx.Done(), s.gameServerSynced) {
 		return errors.New("failed to wait for caches to sync")
 	}
+
+	// need this for streaming gRPC commands
+	s.ctx = ctx
 	// we have the gameserver details now
 	s.gsWaitForSync.Done()
 
@@ -262,8 +265,6 @@ func (s *SDKServer) Run(ctx context.Context) error {
 	}()
 	defer s.server.Close() // nolint: errcheck
 
-	// need this for streaming gRPC commands
-	s.ctx = ctx
 	s.workerqueue.Run(ctx, 1)
 	return nil
 }
