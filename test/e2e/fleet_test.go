@@ -132,8 +132,11 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 
 	flt := defaultFleet(framework.Namespace)
 	flt.Spec.Replicas = 1
+	flt.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{
+		InitialCapacity: 0,
+	}
 
-	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt, metav1.CreateOptions{})
+	flt, err := client.Fleets(framework.Namespace).Create(ctx, flt.DeepCopy(), metav1.CreateOptions{})
 	if assert.Nil(t, err) {
 		defer client.Fleets(framework.Namespace).Delete(ctx, flt.ObjectMeta.Name, metav1.DeleteOptions{}) // nolint:errcheck
 	}
@@ -160,7 +163,8 @@ func TestFleetScaleUpAllocateEditAndScaleDownToZero(t *testing.T) {
 	// Edit PlayersInitialCapacity 4
 	// Change Players Initial Capacity to trigger creating a new GSSet
 	fltCopy := flt.DeepCopy()
-	fltCopy.Spec.Template.Spec.Players = &agonesv1.PlayersSpec{InitialCapacity: 4}
+	fltCopy.Spec.Template.Spec.Players.InitialCapacity = 4
+
 	flt, err = client.Fleets(framework.Namespace).Update(ctx, fltCopy, metav1.UpdateOptions{})
 	assert.Nil(t, err)
 	assert.Equal(t, int64(4), flt.Spec.Template.Spec.Players.InitialCapacity)
