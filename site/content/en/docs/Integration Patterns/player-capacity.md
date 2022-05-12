@@ -30,16 +30,15 @@ to 15 players, and if it cannot find one, will allocate a Ready one from the sam
 apiVersion: "allocation.agones.dev/v1"
 kind: GameServerAllocation
 spec:
-  preferred:
-    - gameServerState: Allocated
-      matchLabels:
+  selectors:
+    - matchLabels:
         agones.dev/fleet: lobby
+      gameServerState: Allocated
       players:
         minAvailable: 10
         maxAvailable: 15
-  required:
-    matchLabels:
-      agones.dev/fleet: lobby
+    - matchLabels:
+        agones.dev/fleet: lobby
 ```
 
 {{< alert title="Note" color="info">}}
