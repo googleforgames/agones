@@ -134,6 +134,130 @@ kubectl logs create-gs-6wz86-7qsm5  --namespace agones-system
 ```
 You have just created a GameServer using Kubernetes Go Client.
 
+## Best Practice: Using Informers and Listers
+
+Almost all  Kubernetes' controllers and custom controllers utilise `Informers` and `Listers`
+to reduce the load on the Kubernetes's control plane.
+
+Repetitive, direct access of the Kubernetes control plane API can significantly
+reduce the performance of the cluster -- and Informers and Listers help resolving that issue.
+
+Informers and Listers reduce the load on the Kubernetes control plane
+by creating, using and maintaining an eventually consistent an in-memory cache.
+This can be watched and also queried with zero cost, since it will only read against
+its in-memory model of the Kubernetes resources.
+
+Informer's role and Lister's role are different.
+
+An Informer is the mechanism for watching a Kubernetes object's event,
+such that when a Kubernetes object changes(e.g. CREATE,UPDATE,DELETE), the Informer is informed,
+and can execute a callback with the relevant object as an argument.
+
+This can be very useful for building event based systems against the Kubernetes API.
+
+A Lister is the mechanism for querying Kubernetes object's against the client side in-memory cache.
+Since the Lister stores objects in an in-memory cache, queries against a come at practically no cost.
+
+Of course, Agones itself also uses Informers and Listers in its codebase.
+
+### Example
+
+The following is an example of Informers and Listers,
+that show the GameServer's name & status & IPs in the Kubernetes cluster.
+
+```go
+package main
+
+import (
+	"context"
+	"time"
+
+	"agones.dev/agones/pkg/client/clientset/versioned"
+	"agones.dev/agones/pkg/client/informers/externalversions"
+	"agones.dev/agones/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/cache"
+)
+
+func main() {
+	config, err := rest.InClusterConfig()
+	logger := runtime.NewLoggerWithSource("main")
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create in cluster config")
+	}
+	kubeClient, err := kubernetes.NewForConfig(config)
+	agonesClient, err := versioned.NewForConfig(config)
+	if err != nil {
+		logger.WithError(err).Fatal("Could not create the agones api clientset")
+	}
+
+	// Create InformerFactory which create the informer
+	informerFactory := informers.NewSharedInformerFactory(kubeClient, time.Second*30)
+	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, time.Second*30)
+
+	// Create Pod informer by informerFactory
+	podInformer := informerFactory.Core().V1().Pods()
+
+	// Create GameServer informer by informerFactory
+	gameServers := agonesInformerFactory.Agones().V1().GameServers()
+	gsInformer := gameServers.Informer()
+
+	// Add EventHandler to informer
+	// When the object's event happens, the function will be called
+	// For example, when the pod is added, 'AddFunc' will be called and put out the "Pod Added"
+	podInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    func(new interface{}) { logger.Infof("Pod Added") },
+		UpdateFunc: func(old, new interface{}) { logger.Infof("Pod Updated") },
+		DeleteFunc: func(old interface{}) { logger.Infof("Pod Deleted") },
+	})
+	gsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc:    func(new interface{}) { logger.Infof("GameServer Added") },
+		UpdateFunc: func(old, new interface{}) { logger.Infof("GameServer Updated") },
+		DeleteFunc: func(old interface{}) { logger.Infof("GameServer Deleted") },
+	})
+
+	ctx := context.Background()
+
+	// Start Go routines for informer
+	informerFactory.Start(ctx.Done())
+	agonesInformerFactory.Start(ctx.Done())
+	// Wait until finish caching with List API
+	informerFactory.WaitForCacheSync(ctx.Done())
+	agonesInformerFactory.WaitForCacheSync(ctx.Done())
+
+	// Create Lister which can list objects from the in-memory-cache
+	podLister := podInformer.Lister()
+	gsLister := gameServers.Lister()
+
+	for {
+		// Get List objects of Pods from Pod Lister
+		p := podLister.Pods("default")
+		// Get List objects of GameServers from GameServer Lister
+		gs, err := gsLister.List(labels.Everything())
+		if err != nil {
+			panic(err)
+		}
+		// Show GameServer's name & status & IPs
+		for _, g := range gs {
+			a, err := p.Get(g.GetName())
+			if err != nil {
+				panic(err)
+			}
+			logger.Infof("------------------------------")
+			logger.Infof("Name: %s", g.GetName())
+			logger.Infof("Status: %s", g.Status.State)
+			logger.Infof("External IP: %s", g.Status.Address)
+			logger.Infof("Internal IP: %s", a.Status.PodIP)
+		}
+		time.Sleep(time.Second * 25)
+	}
+}
+```
+
+You can list GameServer's name and status and IPs using Kubernetes Informers and Listers.
+
 ## Direct Access to the REST API via Kubectl
 
 If there isn't a client written in your preferred language, it is always possible to communicate
