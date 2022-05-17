@@ -114,7 +114,7 @@ endif
 allocator_amd64_tag = $(allocator_tag)-amd64
 allocator_arm64_tag = $(allocator_tag)-arm64
 controller_amd64_tag = $(controller_tag)-amd64
-controller_arm64_tag = $(allocator_tag)-arm64
+controller_arm64_tag = $(controller_tag)-arm64
 
 # build list of images to include in the manifest for the sidecar image.
 push_sidecar_manifest = $(sidecar_linux_amd64_tag)
