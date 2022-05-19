@@ -114,7 +114,7 @@ func main() {
 		return err
 	})
 
-	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout)
+	h := newServiceHandler(kubeClient, agonesClient, health, conf.MTLSDisabled, conf.TLSDisabled, conf.remoteAllocationTimeout, conf.totalRemoteAllocationTimeout, conf.allocationBatchWaitTime)
 
 	if !h.tlsDisabled {
 		watcherTLS, err := fsnotify.NewWatcher()
@@ -280,7 +280,7 @@ func runGRPC(h *serviceHandler, grpcPort int) {
 	}()
 }
 
-func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration) *serviceHandler {
+func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.Interface, health healthcheck.Handler, mTLSDisabled bool, tlsDisabled bool, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration) *serviceHandler {
 	defaultResync := 30 * time.Second
 	agonesInformerFactory := externalversions.NewSharedInformerFactory(agonesClient, defaultResync)
 	kubeInformerFactory := informers.NewSharedInformerFactory(kubeClient, defaultResync)
@@ -293,7 +293,8 @@ func newServiceHandler(kubeClient kubernetes.Interface, agonesClient versioned.I
 		kubeClient,
 		gameserverallocations.NewAllocationCache(agonesInformerFactory.Agones().V1().GameServers(), gsCounter, health),
 		remoteAllocationTimeout,
-		totalRemoteAllocationTimeout)
+		totalRemoteAllocationTimeout,
+		allocationBatchWaitTime)
 
 	ctx := signals.NewSigKillContext()
 	h := serviceHandler{

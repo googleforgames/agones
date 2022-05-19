@@ -77,6 +77,7 @@ const (
 	logLevelFlag                 = "log-level"
 	logSizeLimitMBFlag           = "log-size-limit-mb"
 	kubeconfigFlag               = "kubeconfig"
+	allocationBatchWaitTime      = "allocation-batch-wait-time"
 	defaultResync                = 30 * time.Second
 )
 
@@ -210,7 +211,8 @@ func main() {
 	gsSetController := gameserversets.NewController(wh, health, gsCounter,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 	fleetController := fleets.NewController(wh, health, kubeClient, extClient, agonesClient, agonesInformerFactory)
-	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory, agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second)
+	gasController := gameserverallocations.NewController(api, health, gsCounter, kubeClient, kubeInformerFactory,
+		agonesClient, agonesInformerFactory, 10*time.Second, 30*time.Second, ctlConf.AllocationBatchWaitTime)
 	fasController := fleetautoscalers.NewController(wh, health,
 		kubeClient, extClient, agonesClient, agonesInformerFactory)
 
@@ -253,6 +255,7 @@ func parseEnvFlags() config {
 	viper.SetDefault(enablePrometheusMetricsFlag, true)
 	viper.SetDefault(enableStackdriverMetricsFlag, false)
 	viper.SetDefault(stackdriverLabels, "")
+	viper.SetDefault(allocationBatchWaitTime, 500*time.Millisecond)
 
 	viper.SetDefault(projectIDFlag, "")
 	viper.SetDefault(numWorkersFlag, 64)
@@ -284,6 +287,7 @@ func parseEnvFlags() config {
 	pflag.String(logDirFlag, viper.GetString(logDirFlag), "If set, store logs in a given directory.")
 	pflag.Int32(logSizeLimitMBFlag, 1000, "Log file size limit in MB")
 	pflag.String(logLevelFlag, viper.GetString(logLevelFlag), "Agones Log level")
+	pflag.Duration(allocationBatchWaitTime, viper.GetDuration(allocationBatchWaitTime), "Flag to configure the waiting period between allocations batches")
 	runtime.FeaturesBindFlags()
 	pflag.Parse()
 
@@ -336,55 +340,57 @@ func parseEnvFlags() config {
 	}
 
 	return config{
-		MinPort:               int32(viper.GetInt64(minPortFlag)),
-		MaxPort:               int32(viper.GetInt64(maxPortFlag)),
-		SidecarImage:          viper.GetString(sidecarImageFlag),
-		SidecarCPURequest:     requestCPU,
-		SidecarCPULimit:       limitCPU,
-		SidecarMemoryRequest:  requestMemory,
-		SidecarMemoryLimit:    limitMemory,
-		SdkServiceAccount:     viper.GetString(sdkServerAccountFlag),
-		AlwaysPullSidecar:     viper.GetBool(pullSidecarFlag),
-		KeyFile:               viper.GetString(keyFileFlag),
-		CertFile:              viper.GetString(certFileFlag),
-		KubeConfig:            viper.GetString(kubeconfigFlag),
-		PrometheusMetrics:     viper.GetBool(enablePrometheusMetricsFlag),
-		Stackdriver:           viper.GetBool(enableStackdriverMetricsFlag),
-		GCPProjectID:          viper.GetString(projectIDFlag),
-		NumWorkers:            int(viper.GetInt32(numWorkersFlag)),
-		APIServerSustainedQPS: int(viper.GetInt32(apiServerSustainedQPSFlag)),
-		APIServerBurstQPS:     int(viper.GetInt32(apiServerBurstQPSFlag)),
-		LogDir:                viper.GetString(logDirFlag),
-		LogLevel:              viper.GetString(logLevelFlag),
-		LogSizeLimitMB:        int(viper.GetInt32(logSizeLimitMBFlag)),
-		StackdriverLabels:     viper.GetString(stackdriverLabels),
+		MinPort:                 int32(viper.GetInt64(minPortFlag)),
+		MaxPort:                 int32(viper.GetInt64(maxPortFlag)),
+		SidecarImage:            viper.GetString(sidecarImageFlag),
+		SidecarCPURequest:       requestCPU,
+		SidecarCPULimit:         limitCPU,
+		SidecarMemoryRequest:    requestMemory,
+		SidecarMemoryLimit:      limitMemory,
+		SdkServiceAccount:       viper.GetString(sdkServerAccountFlag),
+		AlwaysPullSidecar:       viper.GetBool(pullSidecarFlag),
+		KeyFile:                 viper.GetString(keyFileFlag),
+		CertFile:                viper.GetString(certFileFlag),
+		KubeConfig:              viper.GetString(kubeconfigFlag),
+		PrometheusMetrics:       viper.GetBool(enablePrometheusMetricsFlag),
+		Stackdriver:             viper.GetBool(enableStackdriverMetricsFlag),
+		GCPProjectID:            viper.GetString(projectIDFlag),
+		NumWorkers:              int(viper.GetInt32(numWorkersFlag)),
+		APIServerSustainedQPS:   int(viper.GetInt32(apiServerSustainedQPSFlag)),
+		APIServerBurstQPS:       int(viper.GetInt32(apiServerBurstQPSFlag)),
+		LogDir:                  viper.GetString(logDirFlag),
+		LogLevel:                viper.GetString(logLevelFlag),
+		LogSizeLimitMB:          int(viper.GetInt32(logSizeLimitMBFlag)),
+		StackdriverLabels:       viper.GetString(stackdriverLabels),
+		AllocationBatchWaitTime: viper.GetDuration(allocationBatchWaitTime),
 	}
 }
 
 // config stores all required configuration to create a game server controller.
 type config struct {
-	MinPort               int32
-	MaxPort               int32
-	SidecarImage          string
-	SidecarCPURequest     resource.Quantity
-	SidecarCPULimit       resource.Quantity
-	SidecarMemoryRequest  resource.Quantity
-	SidecarMemoryLimit    resource.Quantity
-	SdkServiceAccount     string
-	AlwaysPullSidecar     bool
-	PrometheusMetrics     bool
-	Stackdriver           bool
-	StackdriverLabels     string
-	KeyFile               string
-	CertFile              string
-	KubeConfig            string
-	GCPProjectID          string
-	NumWorkers            int
-	APIServerSustainedQPS int
-	APIServerBurstQPS     int
-	LogDir                string
-	LogLevel              string
-	LogSizeLimitMB        int
+	MinPort                 int32
+	MaxPort                 int32
+	SidecarImage            string
+	SidecarCPURequest       resource.Quantity
+	SidecarCPULimit         resource.Quantity
+	SidecarMemoryRequest    resource.Quantity
+	SidecarMemoryLimit      resource.Quantity
+	SdkServiceAccount       string
+	AlwaysPullSidecar       bool
+	PrometheusMetrics       bool
+	Stackdriver             bool
+	StackdriverLabels       string
+	KeyFile                 string
+	CertFile                string
+	KubeConfig              string
+	GCPProjectID            string
+	NumWorkers              int
+	APIServerSustainedQPS   int
+	APIServerBurstQPS       int
+	LogDir                  string
+	LogLevel                string
+	LogSizeLimitMB          int
+	AllocationBatchWaitTime time.Duration
 }
 
 // validate ensures the ctlConfig data is valid.
