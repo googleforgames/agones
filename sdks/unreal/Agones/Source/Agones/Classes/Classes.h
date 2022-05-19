@@ -24,31 +24,31 @@ struct FObjectMeta
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Name;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Namespace;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Uid;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString ResourceVersion;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 Generation = 0;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 CreationTimestamp = 0;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 DeletionTimestamp = 0;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TMap<FString, FString> Annotations;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TMap<FString, FString> Labels;
 
 	FObjectMeta()
@@ -102,16 +102,16 @@ struct FHealth
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	bool bDisabled = false;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int32 PeriodSeconds = 0;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int32 FailureThreshold = 0;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int32 InitialDelaySeconds = 0;
 
 	FHealth()
@@ -132,7 +132,7 @@ struct FSpec
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FHealth Health;
 
 	FSpec()
@@ -154,10 +154,10 @@ struct FPort
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Name;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int32 Port = 0;
 
 	FPort()
@@ -176,13 +176,13 @@ struct FStatus
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString State;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Address;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TArray<FPort> Ports;
 
 	FStatus()
@@ -215,13 +215,13 @@ struct FGameServerResponse
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FStatus Status;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FObjectMeta ObjectMeta;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FSpec Spec;
 
 	FGameServerResponse()
@@ -253,10 +253,10 @@ struct FKeyValuePair
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Key;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString Value;
 };
 
@@ -265,7 +265,7 @@ struct FDuration
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 Seconds;
 };
 
@@ -274,7 +274,7 @@ struct FAgonesPlayer
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString PlayerID;
 };
 
@@ -283,7 +283,7 @@ struct FPlayerCapacity
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 Count;
 };
 
@@ -298,7 +298,7 @@ struct FAgonesError
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	FString ErrorMessage;
 };
 
@@ -307,7 +307,7 @@ struct FConnectedResponse
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	bool bConnected = false;
 
 	FConnectedResponse()
@@ -325,7 +325,7 @@ struct FDisconnectResponse
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	bool bDisconnected = false;
 
 	FDisconnectResponse()
@@ -343,7 +343,7 @@ struct FCountResponse
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	int64 Count = 0;
 
 	FCountResponse()
@@ -365,7 +365,7 @@ struct FConnectedPlayersResponse
 	{
 	}
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category="Agones")
 	TArray<FString> ConnectedPlayers;
 
 	explicit FConnectedPlayersResponse(const TSharedPtr<FJsonObject> JsonObject)
