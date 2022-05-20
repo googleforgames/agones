@@ -517,7 +517,7 @@ endif
 push-ping-image-amd64: $(ensure-build-image)
 	docker push $(ping_amd64_tag)
 push-ping-image-arm64:
-        $(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
+	$(MAKE) DOCKER_BUILD_ARGS=--push build-ping-image-arm64
 
 # Build the image for the ping service
 build-ping-image: build-ping-image-amd64
