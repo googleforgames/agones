@@ -121,20 +121,10 @@ push_sidecar_manifest = $(sidecar_linux_amd64_tag)
 push_allocator_manifest = $(allocator_amd64_tag)
 push_controller_manifest = $(controller_amd64_tag)
 
-ifeq ($(WITH_WINDOWS), 1)
-push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
-endif
-ifeq ($(WITH_ARM64), 1)
-push_sidecar_manifest += $(sidecar_linux_arm64_tag)
-push_allocator_manifest += $(allocator_arm64_tag)
-push_controller_manifest += $(controller_arm64_tag)
-endif
-
 gomod_on = GO111MODULE=on
 
 go_version_flags = -ldflags "-X agones.dev/agones/pkg.Version=$(VERSION)"
 DOCKER_RUN ?= docker run --rm $(common_mounts) -e "KUBECONFIG=/root/.kube/$(kubeconfig_file)" -e "$(gomod_on)" -w $(workdir_path) $(DOCKER_RUN_ARGS) $(build_tag)
-
 
 ifdef DOCKER_RUN
 	ensure-build-image += ensure-build-image
@@ -244,6 +234,18 @@ include ./includes/examples.mk
 #    | | (_| | | | (_| |  __/ |_\__ \
 #    |_|\__,_|_|  \__, |\___|\__|___/
 #                 |___/
+
+# Dynamic variables that impact targets below.
+# Do not move as these need to be evaluated after the `local-includes` folder to allow for local override.
+
+ifeq ($(WITH_WINDOWS), 1)
+push_sidecar_manifest += $(foreach windows_version, $(WINDOWS_VERSIONS), $(sidecar_tag)-windows_amd64-$(windows_version))
+endif
+ifeq ($(WITH_ARM64), 1)
+push_sidecar_manifest += $(sidecar_linux_arm64_tag)
+push_allocator_manifest += $(allocator_arm64_tag)
+push_controller_manifest += $(controller_arm64_tag)
+endif
 
 # build all
 build: build-images build-sdks
