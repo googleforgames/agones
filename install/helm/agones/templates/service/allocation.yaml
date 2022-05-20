@@ -185,7 +185,7 @@ spec:
       containers:
       - name: agones-allocator
         image: "{{ .Values.agones.image.registry }}/{{ .Values.agones.image.allocator.name}}:{{ default .Values.agones.image.tag .Values.agones.image.allocator.tag }}"
-        imagePullPolicy: {{ .Values.agones.image.controller.pullPolicy }}
+        imagePullPolicy: {{ .Values.agones.image.allocator.pullPolicy }}
         livenessProbe:
           httpGet:
             path: /live
