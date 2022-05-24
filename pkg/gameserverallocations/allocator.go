@@ -107,7 +107,7 @@ type Allocator struct {
 	remoteAllocationCallback     func(context.Context, string, grpc.DialOption, *pb.AllocationRequest) (*pb.AllocationResponse, error)
 	remoteAllocationTimeout      time.Duration
 	totalRemoteAllocationTimeout time.Duration
-	allocationBatchWaitTime      time.Duration
+	batchWaitTime                time.Duration
 }
 
 // request is an async request for allocation
@@ -125,7 +125,7 @@ type response struct {
 
 // NewAllocator creates an instance of Allocator
 func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPolicyInformer, secretInformer informercorev1.SecretInformer, gameServerGetter getterv1.GameServersGetter,
-	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, allocationBatchWaitTime time.Duration) *Allocator {
+	kubeClient kubernetes.Interface, allocationCache *AllocationCache, remoteAllocationTimeout time.Duration, totalRemoteAllocationTimeout time.Duration, batchWaitTime time.Duration) *Allocator {
 	ah := &Allocator{
 		pendingRequests:              make(chan request, maxBatchQueue),
 		allocationPolicyLister:       policyInformer.Lister(),
@@ -134,7 +134,7 @@ func NewAllocator(policyInformer multiclusterinformerv1.GameServerAllocationPoli
 		secretSynced:                 secretInformer.Informer().HasSynced,
 		gameServerGetter:             gameServerGetter,
 		allocationCache:              allocationCache,
-		allocationBatchWaitTime:      allocationBatchWaitTime,
+		batchWaitTime:                batchWaitTime,
 		remoteAllocationTimeout:      remoteAllocationTimeout,
 		totalRemoteAllocationTimeout: totalRemoteAllocationTimeout,
 		remoteAllocationCallback: func(ctx context.Context, endpoint string, dialOpts grpc.DialOption, request *pb.AllocationRequest) (*pb.AllocationResponse, error) {
@@ -532,7 +532,7 @@ func (c *Allocator) ListenAndAllocate(ctx context.Context, updateWorkerCount int
 			list = nil
 			requestCount = 0
 			// slow down cpu churn, and allow items to batch
-			time.Sleep(c.allocationBatchWaitTime)
+			time.Sleep(c.batchWaitTime)
 		}
 	}
 }
