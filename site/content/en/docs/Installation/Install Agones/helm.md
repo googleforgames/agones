@@ -206,17 +206,18 @@ The following tables lists the configurable parameters of the Agones chart and t
 {{% feature publishVersion="1.24.0" %}}
 **New Configuration Features:**
 
-| Parameter                                           | Description                                                                                     | Default                |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------- |
-|                       |                           |                            |
-| `agones.controller.disableSecret`            | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
-| `agones.controller.customCertSecretPath` | Remap cert-manager path to server.crt and server.key | `{}` |
-| `agones.controller.allocationApiService.annotations` | [Annotations][annotations] added to the Agones apiregistration | `{}` |
-| `agones.controller.allocationApiService.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
-| `agones.controller.validatingWebhook.annotations` | [Annotations][annotations] added to the Agones validating webhook | `{}` |
-| `agones.controller.validatingWebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
-| `agones.controller.mutatingWebhook.annotations` | [Annotations][annotations] added to the Agones mutating webhook | `{}` |
-| `agones.controller.mutatingWebhook.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager | `false` |
+| Parameter                                                | Description                                                                                                                            | Default |
+|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|---------|
+| `agones.controller.disableSecret`                        | Disables the creation of any allocator secrets. If true, you MUST provide the `{agones.releaseName}-cert` secrets before installation. | `false` |
+| `agones.controller.customCertSecretPath`                 | Remap cert-manager path to server.crt and server.key                                                                                   | `{}`    |
+| `agones.controller.allocationApiService.annotations`     | [Annotations][annotations] added to the Agones apiregistration                                                                         | `{}`    |
+| `agones.controller.allocationApiService.disableCaBundle` | Disable ca-bundle so it can be injected by cert-manager                                                                                | `false` |
+| `agones.controller.validatingWebhook.annotations`        | [Annotations][annotations] added to the Agones validating webhook                                                                      | `{}`    |
+| `agones.controller.validatingWebhook.disableCaBundle`    | Disable ca-bundle so it can be injected by cert-manager                                                                                | `false` |
+| `agones.controller.mutatingWebhook.annotations`          | [Annotations][annotations] added to the Agones mutating webhook                                                                        | `{}`    |
+| `agones.controller.mutatingWebhook.disableCaBundle`      | Disable ca-bundle so it can be injected by cert-manager                                                                                | `false` |
+| `agones.controller.allocationBatchWaitTime`              | Wait time between each allocation batch when performing allocations in controller mode                                                 | `500ms` |
+| `agones.allocator.allocationBatchWaitTime`               | Wait time between each allocation batch when performing allocations in allocator mode                                                  | `500ms` |
 {{% /feature %}}
 
 [toleration]: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
